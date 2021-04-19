@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -12,6 +13,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.calendar.Calendar;
@@ -22,18 +26,18 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.calendar.Calendars;
 import com.sos.joc.model.calendar.CalendarsFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
-
 @Path("calendars")
 public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendarsResource {
 
     private static final String API_CALL = "./calendars";
+    private static final Logger LOGGER = LoggerFactory.getLogger(CalendarsResourceImpl.class);
 
     @Override
     public JOCDefaultResponse postCalendars(String accessToken, byte[] calendarsFilter) {
@@ -52,7 +56,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             JsonValidator.validateFailFast(filterBytes, CalendarsFilter.class);
             CalendarsFilter calendarsFilter = Globals.objectMapper.readValue(filterBytes, CalendarsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getCalendars().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getCalendars().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -87,6 +91,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
             Calendars entity = new Calendars();
 
             if (dbCalendars != null && !dbCalendars.isEmpty()) {
+                JocError jocError = getJocError();
                 Stream<DBItemInventoryReleasedConfiguration> stream = dbCalendars.stream().filter(item -> folderIsPermitted(item.getFolder(), folders));
 
                 if (calendarsFilter.getRegex() != null && !calendarsFilter.getRegex().isEmpty()) {
@@ -94,20 +99,8 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                             .asPredicate();
                     stream = stream.filter(item -> regex.test(item.getPath()));
                 }
-
-                // Map<Boolean, List<Either<Exception, Calendar>>> calendarMap = stream.map(item -> {
-                // Either<Exception, Calendar> either = null;
-                // try {
-                // either = Either.right(Globals.objectMapper.readValue(item.getContent(), Calendar.class));
-                // } catch (Exception e) {
-                // either = Either.left(e);
-                // }
-                // return either;
-                // }).collect(Collectors.groupingBy(Either::isRight, Collectors.toList()));
-
-                // TODO consider Either::isLeft, maybe at least LOGGER usage
+                
                 entity.setCalendars(stream.map(item -> {
-                    Either<Exception, Calendar> either = null;
                     try {
                         Calendar cal = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
                         cal.setId(item.getId());
@@ -119,12 +112,16 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                             cal.setIncludes(null);
                             cal.setExcludes(null);
                         }
-                        either = Either.right(cal);
+                        return cal;
                     } catch (Exception e) {
-                        either = Either.left(e);
+                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                            LOGGER.info(jocError.printMetaInfo());
+                            jocError.clearMetaInfo();
+                        }
+                        LOGGER.error(String.format("[%s] %s", item.getPath(), e.toString()));
+                        return null;
                     }
-                    return either;
-                }).filter(Either::isRight).map(Either::get).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
             }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
@@ -137,15 +134,6 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
         } finally {
             Globals.disconnect(session);
         }
-    }
-
-    private static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
     }
 
 }
