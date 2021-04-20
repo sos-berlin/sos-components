@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
@@ -18,8 +21,13 @@ import com.typesafe.config.ConfigFactory;
 
 public abstract class Authenticator {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(Authenticator.class);
+	private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
+	
 	public static String login (SOSRestApiClient httpsRestApiClient, URI jocLoginURI) throws SOSException {
 		String response = httpsRestApiClient.postRestService(jocLoginURI, null);
+		LOGGER.trace("HTTP status code: " + httpsRestApiClient.statusCode());
+		LOGGER.trace("response from web server: " + response);
     	return httpsRestApiClient.getResponseHeader("X-Access-Token");
     }
 
@@ -36,11 +44,21 @@ public abstract class Authenticator {
     }
     
     public static SOSRestApiClient createHttpsRestApiClient (String privateConfPath) throws Exception {
+    	return createHttpsRestApiClient(privateConfPath, null);
+    }
+    
+    public static SOSRestApiClient createHttpsRestApiClient (String privateConfPath, String truststoreFilename) throws Exception {
     	Config privateConf = readPrivateConf(privateConfPath);
     	KeyStoreCredentials keystoreCredentials = readKeystoreCredentials(privateConf);
     	KeyStore keystore = KeyStoreUtil.readKeyStore(keystoreCredentials.getPath(), KeyStoreType.PKCS12, keystoreCredentials.getStorePwd());
-    	List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(privateConf); 
-    	KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith("https-truststore.p12")).map(item -> {
+    	List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(privateConf);
+    	final String usedTruststoreFilename;
+    	if (truststoreFilename == null) {
+    		usedTruststoreFilename = DEFAULT_TRUSTSTORE_FILENAME;
+    	} else {
+    		usedTruststoreFilename = truststoreFilename;
+    	}
+    	KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(usedTruststoreFilename)).map(item -> {
 			try {
 				return KeyStoreUtil.readTrustStore(item.getPath(), KeyStoreType.PKCS12, item.getStorePwd());
 			} catch (Exception e) {
@@ -49,8 +67,6 @@ public abstract class Authenticator {
 		}).filter(Objects::nonNull).findFirst().get();
 		SOSRestApiClient restApiClient = new SOSRestApiClient();
 		restApiClient.setSSLContext(keystore, keystoreCredentials.getKeyPwd().toCharArray(), truststore);
-		// the need for Basic Authentication has to be removed from ./login web service first
-		restApiClient.setBasicAuthorization("cm9vdDpyb290");
     	return restApiClient;
     }
 

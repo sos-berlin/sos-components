@@ -89,7 +89,7 @@ public class HttpClientTests {
 		}
 	}
 	
-	@Ignore
+//	@Ignore
 	@Test
 	public void testHttpClient () {
 		KeyStore keyStore = null;
@@ -100,7 +100,6 @@ public class HttpClientTests {
 			SOSRestApiClient restApiClient = new SOSRestApiClient();
 //			restApiClient.setAutoCloseHttpClient(true);
 			restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
-			restApiClient.setBasicAuthorization("cm9vdDpyb290");
 			String response = restApiClient.postRestService(URI.create("https://joc-2-0-secondary.sos:7543/joc/api/authentication/login"), null);
 			String accessToken = restApiClient.getResponseHeader("X-Access-Token");
 			LOGGER.info(accessToken);
