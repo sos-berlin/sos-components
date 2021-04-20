@@ -147,7 +147,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 agentDBLayer.agentIdAlreadyExists(Arrays.asList(clusterWatcher.getAgentId()), controllerId);
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
                     .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -350,7 +350,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter controllerObj = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
                     .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -420,7 +420,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 controllerId = ""; 
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getAdministration().getControllers()
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
                     .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

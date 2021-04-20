@@ -51,7 +51,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_SAVE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -195,7 +195,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_READ, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -247,7 +247,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_DELETE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -305,7 +305,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_SHARE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -358,7 +358,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         SOSHibernateSession connection = null;
         try {
             Configuration configuration = getConfiguration(API_CALL_PRIVATE, accessToken, body);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configuration.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

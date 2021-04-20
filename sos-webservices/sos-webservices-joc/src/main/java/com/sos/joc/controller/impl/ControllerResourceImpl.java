@@ -53,8 +53,8 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             UrlParameter jobSchedulerBody = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobSchedulerBody.getControllerId(), getControllerPermissions(jobSchedulerBody
-                    .getControllerId(), accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(jobSchedulerBody.getControllerId(), accessToken)
+                    .getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

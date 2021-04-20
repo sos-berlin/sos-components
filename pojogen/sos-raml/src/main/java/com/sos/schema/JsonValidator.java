@@ -67,8 +67,8 @@ public class JsonValidator {
             put("Controller", "event/controllerFilter-schema.json");
             
 
-            put("com.sos.joc.model.common.ControllerId", "common/controllerId-request-schema.json");
-            put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-request-schema.json");
+            put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-optional-schema.json");
+            put("com.sos.joc.model.controller.ControllerIdReq", "controller/controllerId-required-schema.json");
             put("UrlParameter", "controller/urlParam-schema.json");
             put("TestConnect", "controller/testParam-schema.json");
             put("RegisterParameters", "controller/registerParam-schema.json");

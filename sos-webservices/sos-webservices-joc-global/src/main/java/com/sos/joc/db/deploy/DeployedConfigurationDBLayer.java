@@ -178,32 +178,36 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public Map<String, String> getNamePathMapping(String controllerId, Collection<String> names, Integer type) throws SOSHibernateException {
+    public Map<String, String> getNamePathMapping(String controllerId, Collection<String> names, Integer type) {
         if (names == null || names.isEmpty()) {
             return Collections.emptyMap();
         }
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-        hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
-        hql.append(" where name in (:names)");
-        if (controllerId != null) {
-            hql.append(" and controllerId=:controllerId");
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
+            hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
+            hql.append(" where name in (:names)");
+            if (controllerId != null) {
+                hql.append(" and controllerId=:controllerId");
+            }
+            if (type != null) {
+                hql.append(" and type=:type");
+            }
+            Query<InventoryNamePath> query = session.createQuery(hql.toString());
+            query.setParameterList("names", names);
+            if (controllerId != null) {
+                query.setParameter("controllerId", controllerId);
+            }
+            if (type != null) {
+                query.setParameter("type", type);
+            }
+            List<InventoryNamePath> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
+            }
+            return Collections.emptyMap();
+        } catch (Exception e) {
+            return Collections.emptyMap();
         }
-        if (type != null) {
-            hql.append(" and type=:type");
-        }
-        Query<InventoryNamePath> query = session.createQuery(hql.toString());
-        query.setParameterList("names", names);
-        if (controllerId != null) {
-            query.setParameter("controllerId", controllerId);
-        }
-        if (type != null) {
-            query.setParameter("type", type);
-        }
-        List<InventoryNamePath> result = session.getResultList(query);
-        if (result != null) {
-            return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
-        }
-        return Collections.emptyMap();
     }
 
     public Map<WorkflowId, String> getNamePathMappingWithCommitIds(DeployedConfigurationFilter filter) throws SOSHibernateException {

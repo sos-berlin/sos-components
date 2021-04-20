@@ -78,7 +78,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
 
-            // TODO maybe auditlog into thenAccept?
             ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
             logAuditMessage(jobschedulerAudit);
             storeAuditLogEntry(jobschedulerAudit);
@@ -100,7 +99,7 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParameter = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
             String controllerId = urlParameter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken)
                     .getSwitchOver());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -112,7 +111,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
             appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
             
-            //TODO storeAudit in thenAccept()?
             ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
             storeAuditLogEntry(jobschedulerAudit);
 

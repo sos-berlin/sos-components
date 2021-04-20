@@ -40,7 +40,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ConfigurationsFilter.class);
             ConfigurationsFilter configurationsFilter = Globals.objectMapper.readValue(filterBytes, ConfigurationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(configurationsFilter.getControllerId(), true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

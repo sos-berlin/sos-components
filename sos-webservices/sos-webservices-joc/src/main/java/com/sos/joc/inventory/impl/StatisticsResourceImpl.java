@@ -14,7 +14,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IStatisticsResource;
-import com.sos.joc.model.common.ControllerId;
+import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.inventory.Statistics;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -27,8 +27,8 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controller = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
+            ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
             if (response != null) {

@@ -28,6 +28,7 @@ import com.sos.joc.event.resource.IEventResource;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.SessionNotExistException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.event.Controller;
 import com.sos.joc.model.event.Event;
 import com.sos.joc.model.event.EventSnapshot;
@@ -50,6 +51,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, Controller.class);
             Controller in = Globals.objectMapper.readValue(inBytes, Controller.class);
+            String controllerId = in.getControllerId();
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
             
             try {
                 session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
@@ -70,14 +77,13 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 throw new SessionNotExistException(e);
             }
             
-            String controllerId = in.getControllerId();
             boolean evtIdIsEmpty = in.getEventId() == null || in.getEventId() <= 0L;
             long eventId = evtIdIsEmpty ? Instant.now().getEpochSecond() : in.getEventId();
             entity.setEventId(eventId);
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());
             
-            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session));
+            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session), folderPermissions.getListOfFolders());
 
         } catch (ControllerConnectionRefusedException e) {
             e.addErrorMetaInfo(getJocError());
@@ -95,7 +101,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    public static Event processAfter(Event evt) {
+    public static Event processAfter(Event evt, Set<Folder> permittedFolders) {
         SOSHibernateSession connection = null;
         try {
             if (EventServiceFactory.isClosed.get()) {
@@ -118,39 +124,54 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             Set<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
                     EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
 
-            Map<String, String> namePathWorkflowMap = Collections.emptyMap();
-            Map<String, String> namePathLockMap = Collections.emptyMap();
-            Map<String, String> namePathFileOrderSourceMap = Collections.emptyMap();
-            try {
-                namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW.intValue());
-            } catch (Exception e1) {
-                LOGGER.warn(e1.toString());
-            }
-            try {
-                namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
-            } catch (Exception e1) {
-                LOGGER.warn(e1.toString());
-            }
-            try {
-                namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames, DeployType.FILEORDERSOURCE.intValue());
-            } catch (Exception e1) {
-                LOGGER.warn(e1.toString());
-            }
-            for (EventSnapshot e : evt.getEventSnapshots()) {
+            Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
+                    .intValue());
+            Map<String, String> namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
+            Map<String, String> namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames,
+                    DeployType.FILEORDERSOURCE.intValue());
+            
+            evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
+                String path = null;
                 if (e.getWorkflow() != null) {
                     String name = e.getWorkflow().getPath();
                     if (name != null) {
-                        e.getWorkflow().setPath(namePathWorkflowMap.getOrDefault(name, name));
+                        path = namePathWorkflowMap.get(e.getPath());
+                        if (path != null && canAdd(path, permittedFolders)) {
+                            e.getWorkflow().setPath(path);
+                        } else {
+                            return null;
+                        }
                     }
                 }
-                if (EventType.WORKFLOW.equals(e.getObjectType()) && e.getPath() != null) {
-                    e.setPath(namePathWorkflowMap.getOrDefault(e.getPath(), e.getPath()));
-                } else if (EventType.LOCK.equals(e.getObjectType()) && e.getPath() != null) {
-                    e.setPath(namePathLockMap.getOrDefault(e.getPath(), e.getPath()));
-                } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType()) && e.getPath() != null) {
-                    e.setPath(namePathFileOrderSourceMap.getOrDefault(e.getPath(), e.getPath()));
+                if (EventType.WORKFLOW.equals(e.getObjectType())) {
+                    path = namePathWorkflowMap.get(e.getPath());
+                    if (path != null && canAdd(path, permittedFolders)) {
+                        e.setPath(path);
+                    } else {
+                        return null;
+                    }
+                } else if (EventType.LOCK.equals(e.getObjectType())) {
+                    path = namePathLockMap.get(e.getPath());
+                    if (path != null && canAdd(path, permittedFolders)) {
+                        e.setPath(path);
+                    } else {
+                        return null;
+                    }
+                } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
+                    path = namePathFileOrderSourceMap.get(e.getPath());
+                    if (path != null && canAdd(path, permittedFolders)) {
+                        e.setPath(path);
+                    } else {
+                        return null;
+                    }
+                } else if (EventType.FOLDER.equals(e.getObjectType())) {
+                    if (!folderIsPermitted(e.getPath(), permittedFolders)) {
+                        return null;
+                    }
                 }
-            }
+                return e;
+            }).filter(Objects::nonNull).collect(Collectors.toList()));
+            
             return evt;
         } finally {
             Globals.disconnect(connection);

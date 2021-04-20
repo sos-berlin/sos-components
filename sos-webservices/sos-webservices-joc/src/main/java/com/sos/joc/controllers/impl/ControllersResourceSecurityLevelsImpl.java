@@ -14,8 +14,8 @@ import com.sos.joc.controllers.resource.IControllersResourceSecurityLevels;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.ControllerId;
 import com.sos.joc.model.controller.Controller;
+import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
 import com.sos.schema.JsonValidator;
 
@@ -75,7 +75,7 @@ public class ControllersResourceSecurityLevelsImpl extends JOCResourceImpl imple
             // TODO admin permissions to take over security level
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId.getControllerId(), permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

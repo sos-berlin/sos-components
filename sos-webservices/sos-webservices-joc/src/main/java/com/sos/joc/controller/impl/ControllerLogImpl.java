@@ -32,7 +32,7 @@ public class ControllerLogImpl extends JOCResourceImpl implements IControllerLog
             JsonValidator.validateFailFast(filterBytes, UrlParameter.class);
             UrlParameter urlParamSchema = Globals.objectMapper.readValue(filterBytes, UrlParameter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(urlParamSchema.getControllerId(), getControllerPermissions(urlParamSchema
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(urlParamSchema
                     .getControllerId(), accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

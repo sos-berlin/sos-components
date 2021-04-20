@@ -43,9 +43,9 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ClusterNodeStateText;
 import com.sos.joc.model.controller.ComponentStateText;
 import com.sos.joc.model.controller.Components;
-import com.sos.joc.model.controller.Controller;
-import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.ConnectionStateText;
+import com.sos.joc.model.controller.Controller;
+import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.joc.model.controller.OperatingSystem;
 import com.sos.joc.model.controller.Role;
 import com.sos.joc.model.joc.Cockpit;
@@ -65,8 +65,8 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
 
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
+            ControllerIdReq controllerIdObj = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerIdObj.getControllerId(), accessToken)
                     .getView());

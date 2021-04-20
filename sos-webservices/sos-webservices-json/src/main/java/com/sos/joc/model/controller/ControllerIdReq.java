@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.common;
+package com.sos.joc.model.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId"
 })
-public class ControllerId {
+public class ControllerIdReq {
 
     /**
      * controllerId
@@ -70,10 +70,10 @@ public class ControllerId {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ControllerId) == false) {
+        if ((other instanceof ControllerIdReq) == false) {
             return false;
         }
-        ControllerId rhs = ((ControllerId) other);
+        ControllerIdReq rhs = ((ControllerIdReq) other);
         return new EqualsBuilder().append(controllerId, rhs.controllerId).isEquals();
     }
 

@@ -53,7 +53,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             String controllerId = agentStoreParameter.getControllerId();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

@@ -37,7 +37,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
             String controllerId = body.getControllerId();
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permission);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -51,7 +51,6 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
             
-            // TODO maybe in then Accept()?
             body.setWithFailover(null);
             ModifyControllerAudit reassignAudit = new ModifyControllerAudit(body);
             storeAuditLogEntry(reassignAudit);

@@ -14,7 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.controller.resource.IControllerResourceSwitch;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.ControllerId;
+import com.sos.joc.model.controller.ControllerIdReq;
 import com.sos.schema.JsonValidator;
 
 @Path("controller")
@@ -28,10 +28,10 @@ public class ControllerResourceSwitchImpl extends JOCResourceImpl implements ICo
 
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
-            ControllerId controller = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            JsonValidator.validateFailFast(filterBytes, ControllerIdReq.class);
+            ControllerIdReq controller = Globals.objectMapper.readValue(filterBytes, ControllerIdReq.class);
             String controllerId = controller.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getControllerPermissions(controllerId, accessToken).getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

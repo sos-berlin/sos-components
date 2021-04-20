@@ -15,6 +15,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -37,17 +38,33 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             initLogging(API_CALL_P, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
             ReadAgents agentParameter = Globals.objectMapper.readValue(filterBytes, ReadAgents.class);
-            boolean permission = getControllerPermissions(agentParameter.getControllerId(), accessToken).getAgents().getView() || getJocPermissions(
-                    accessToken).getAdministration().getControllers().getView();
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(agentParameter.getControllerId(), permission);
+            
+            String controllerId = agentParameter.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getAgents().getView() || getJocPermissions(accessToken).getAdministration().getControllers()
+                                .getView()).collect(Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet();
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getAgents().getView() || getJocPermissions(accessToken)
+                        .getAdministration().getControllers().getView();
+            }
+            
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_P);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<String> controllerIds = agentParameter.getControllerId().isEmpty() ? null : Collections.singletonList(agentParameter.getControllerId());
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(controllerIds, false, agentParameter
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIds(allowedControllers, false, agentParameter
                     .getOnlyEnabledAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
@@ -83,6 +100,12 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_NAMES, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            // TODO restrict response for only allowed controllers/Agents??
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
