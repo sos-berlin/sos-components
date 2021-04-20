@@ -2,10 +2,17 @@ package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
 
+import js7.executor.forjava.internal.BlockingInternalJob;
+
 public class FileOperationsImpl extends AFileOperations {
 
+    public FileOperationsImpl() {
+        super();
+    }
+
     @Override
-    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception {
+    protected boolean handleOneFile(BlockingInternalJob.Step step, File sourceFile, File targetFile, boolean overwrite, boolean gracious)
+            throws Exception {
         return false;
     }
 

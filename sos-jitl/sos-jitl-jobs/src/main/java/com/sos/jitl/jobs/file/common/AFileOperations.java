@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
+import js7.executor.forjava.internal.BlockingInternalJob;
+
 public abstract class AFileOperations {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AFileOperations.class);
@@ -43,27 +45,12 @@ public abstract class AFileOperations {
 
     private List<File> resultList = null;
 
-    protected abstract boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception;
-
-    public boolean canWrite(final String file) throws Exception {
-        return canWrite(new File(file), null, 0);
+    public AFileOperations() {
+        resultList = new ArrayList<File>();
     }
 
-    public boolean canWrite(final String file, final String fileSpec) throws Exception {
-        return canWrite(new File(file), fileSpec, Pattern.CASE_INSENSITIVE);
-    }
-
-    public boolean canWrite(final String file, final String fileSpec, final int fileSpecFlags) throws Exception {
-        return canWrite(new File(file), fileSpec, fileSpecFlags);
-    }
-
-    public boolean canWrite(final File file) throws Exception {
-        return canWrite(file, null, 0);
-    }
-
-    public boolean canWrite(final File file, final String fileSpec) throws Exception {
-        return canWrite(file, fileSpec, Pattern.CASE_INSENSITIVE);
-    }
+    protected abstract boolean handleOneFile(BlockingInternalJob.Step step, File sourceFile, File targetFile, boolean overwrite, boolean gracious)
+            throws Exception;
 
     public boolean canWrite(File file, final String fileSpec, final int fileSpecFlags) throws Exception {
         if (LOGGER.isDebugEnabled()) {
@@ -130,7 +117,7 @@ public abstract class AFileOperations {
                             return false;
                         }
                     }
-                    resultList = fileList;
+                    resultList.addAll(fileList);
                     return true;
                 }
             }
@@ -138,48 +125,13 @@ public abstract class AFileOperations {
 
     }
 
-    public boolean existsFile(final String file) throws Exception {
-        return existsFile(new File(file), null, 0);
-    }
-
-    public boolean existsFile(final String file, final String fileSpec) throws Exception {
-        return existsFile(new File(file), fileSpec, Pattern.CASE_INSENSITIVE);
-    }
-
-    public boolean existsFile(final String file, final String fileSpec, final int fileSpecFlags) throws Exception {
-        return existsFile(new File(file), fileSpec, fileSpecFlags);
-    }
-
     public boolean existsFile(final String file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
             final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles) throws Exception {
-        return existsFile(new File(file), fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles, skipLastFiles);
-    }
-
-    public boolean existsFile(final String file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, final int minNumOfFiles,
-            final int maxNumOfFiles) throws Exception {
         return existsFile(new File(file), fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles, skipLastFiles,
-                minNumOfFiles, maxNumOfFiles);
+                -1, -1);
     }
 
-    public boolean existsFile(final File file) throws Exception {
-        return existsFile(file, null, 0);
-    }
-
-    public boolean existsFile(final File file, final String fileSpec) throws Exception {
-        return existsFile(file, fileSpec, Pattern.CASE_INSENSITIVE);
-    }
-
-    public boolean existsFile(final File file, final String fileSpec, final int fileSpecFlags) throws Exception {
-        return existsFile(file, fileSpec, fileSpecFlags, "0", "0", "-1", "-1", 0, 0);
-    }
-
-    public boolean existsFile(final File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles) throws Exception {
-        return existsFile(file, fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles, skipLastFiles, -1, -1);
-    }
-
-    public boolean existsFile(File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
+    private boolean existsFile(File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
             final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, final int minNumOfFiles,
             final int maxNumOfFiles) throws Exception {
         long minAge = calculateFileAge(minFileAge);
@@ -256,7 +208,6 @@ public abstract class AFileOperations {
                     LOGGER.info("file skipped");
                     return false;
                 }
-                resultList = new ArrayList<File>();
                 resultList.add(file);
                 return true;
             } else {
@@ -284,59 +235,23 @@ public abstract class AFileOperations {
                         LOGGER.info("found " + fileList.size() + " files, maximum expected " + maxNumOfFiles + " files");
                         return false;
                     }
-                    resultList = fileList;
+                    resultList.addAll(fileList);
                     return true;
                 }
             }
         }
     }
 
-    public boolean removeFile(final File file) throws Exception {
-        return removeFile(file, ".*", 0, Pattern.CASE_INSENSITIVE, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean removeFile(final File file, final int flags) throws Exception {
-        return removeFile(file, ".*", flags, Pattern.CASE_INSENSITIVE, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean removeFile(final File file, final String fileSpec) throws Exception {
-        return removeFile(file, fileSpec, 0, Pattern.CASE_INSENSITIVE, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean removeFile(final File file, final String fileSpec, final int flags) throws Exception {
-        return removeFile(file, fileSpec, flags, Pattern.CASE_INSENSITIVE, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean removeFile(final File file, final String fileSpec, final int flags, final int fileSpecFlags) throws Exception {
-        return removeFile(file, fileSpec, flags, fileSpecFlags, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean removeFile(final File file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
-            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
-            String sortCriteria, String sortOrder) throws Exception {
-        int count = removeFileCnt(file, fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
+    public int removeFileCnt(final BlockingInternalJob.Step step, final String file, final String fileSpec, final int flags, final int fileSpecFlags,
+            final String minFileAge, final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles,
+            final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
+        return removeFileCnt(step, new File(file), fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
                 skipLastFiles, sortCriteria, sortOrder);
-        return count > 0;
     }
 
-    private void removeFileNio(File f) throws Exception {
-        Path path = FileSystems.getDefault().getPath(f.getAbsolutePath());
-        try {
-            Files.delete(path);
-        } catch (NoSuchFileException x) {
-            throw new SOSFileOperationsException(path + "no exists");
-        } catch (DirectoryNotEmptyException x) {
-            throw new SOSFileOperationsException(path + "directory not empty");
-        } catch (IOException x) {
-            throw new SOSFileOperationsException(path + "file permission issue");
-        }
-    }
-
-    public int removeFileCnt(final File file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
-            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
-            String sortCriteria, String sortOrder) throws Exception {
-
-        resultList = new ArrayList<File>();
+    private int removeFileCnt(BlockingInternalJob.Step step, final File file, final String fileSpec, final int flags, final int fileSpecFlags,
+            final String minFileAge, final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles,
+            final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
 
         int removedFiles = 0;
         int removedDirectories = 0;
@@ -434,7 +349,7 @@ public abstract class AFileOperations {
                     throw new SOSFileOperationsException("cannot remove file: " + currentFile.getCanonicalPath());
                 }
             } else {
-                removeFileNio(currentFile);
+                delete(currentFile);
             }
             removedFiles++;
         }
@@ -452,7 +367,7 @@ public abstract class AFileOperations {
                             throw new SOSFileOperationsException("directory is not readable: " + f.getCanonicalPath());
                         }
                         if (f.list().length == 0) {
-                            removeFileNio(f);
+                            delete(f);
                             LOGGER.info("remove directory " + f.getPath());
                         } else {
                             LOGGER.debug("directory [" + f.getCanonicalPath() + "] cannot be removed because it is not empty");
@@ -477,40 +392,19 @@ public abstract class AFileOperations {
         }
         LOGGER.info(removedFiles + " file(s) removed" + msg);
         return removedFiles + removedDirectories;
-
     }
 
-    public List<File> listFolders(final String folder, final String regexp, final int flag, final boolean withSubFolder) throws Exception {
-        List<File> result = new ArrayList<File>();
-        result.addAll(listFolders(folder, regexp, flag));
-
-        if (withSubFolder) {
-            File[] subDir = new File(folder).listFiles();
-            for (File element : subDir) {
-                if (element.isDirectory()) {
-                    result.addAll(listFolders(element.getPath(), regexp, flag, true));
-                }
-            }
+    private void delete(File f) throws Exception {
+        Path path = FileSystems.getDefault().getPath(f.getAbsolutePath());
+        try {
+            Files.delete(path);
+        } catch (NoSuchFileException x) {
+            throw new SOSFileOperationsException(path + "no exists");
+        } catch (DirectoryNotEmptyException x) {
+            throw new SOSFileOperationsException(path + "directory not empty");
+        } catch (IOException x) {
+            throw new SOSFileOperationsException(path + "file permission issue");
         }
-        return result;
-    }
-
-    public List<File> listFolders(final String folder, final String regexp, final int flag) throws Exception {
-        if (folder == null || folder.isEmpty()) {
-            throw new FileNotFoundException("empty directory not allowed!!");
-        }
-        File f = new File(folder);
-        if (!f.exists()) {
-            throw new FileNotFoundException("directory does not exist: " + folder);
-        }
-        File[] files = f.listFiles(new FilelistFilter(regexp, flag));
-        List<File> result = new ArrayList<File>();
-        for (int i = 0; i < files.length; i++) {
-            if (!".".equals(files[i].getName()) && !"..".equals(files[i].getName())) {
-                result.add(files[i]);
-            }
-        }
-        return result;
     }
 
     private boolean recDeleteEmptyDir(final File dir, final String fileSpec, final int fileSpecFlags) throws Exception {
@@ -531,7 +425,7 @@ public abstract class AFileOperations {
             f = element;
             if (recDeleteEmptyDir(f, fileSpec, fileSpecFlags)) {
                 if (p.matcher(f.getName()).matches()) {
-                    removeFileNio(f);
+                    delete(f);
                     LOGGER.info("remove directory " + f.getPath());
                 }
             } else {
@@ -548,270 +442,141 @@ public abstract class AFileOperations {
         return dir.list().length == 0;
     }
 
-    public boolean removeFile(final String file) throws Exception {
-        return removeFile(new File(file));
+    private List<File> listFolders(final String folder, final String regexp, final int flag, final boolean withSubFolder) throws Exception {
+        List<File> result = new ArrayList<File>();
+        result.addAll(listFolders(folder, regexp, flag));
+
+        if (withSubFolder) {
+            File[] subDir = new File(folder).listFiles();
+            for (File element : subDir) {
+                if (element.isDirectory()) {
+                    result.addAll(listFolders(element.getPath(), regexp, flag, true));
+                }
+            }
+        }
+        return result;
     }
 
-    public boolean removeFile(final String file, final int flags) throws Exception {
-        return removeFile(new File(file), flags);
+    private List<File> listFolders(final String folder, final String regexp, final int flag) throws Exception {
+        if (folder == null || folder.isEmpty()) {
+            throw new FileNotFoundException("empty directory not allowed!!");
+        }
+        File f = new File(folder);
+        if (!f.exists()) {
+            throw new FileNotFoundException("directory does not exist: " + folder);
+        }
+        File[] files = f.listFiles(new FilelistFilter(regexp, flag));
+        List<File> result = new ArrayList<File>();
+        for (int i = 0; i < files.length; i++) {
+            if (!".".equals(files[i].getName()) && !"..".equals(files[i].getName())) {
+                result.add(files[i]);
+            }
+        }
+        return result;
     }
 
-    public boolean removeFile(final String file, final String fileSpec) throws Exception {
-        return removeFile(new File(file), fileSpec);
+    private List<File> listFiles(final String folder, final String regexp, final int flag) throws Exception {
+        if (folder == null || folder.isEmpty()) {
+            throw new FileNotFoundException("empty directory not allowed!!");
+        }
+        File f = new File(folder);
+        if (!f.exists()) {
+            throw new FileNotFoundException("directory does not exist: " + folder);
+        }
+        List<File> result = new ArrayList<File>();
+        File[] files = f.listFiles(new FilelistFilter(regexp, flag));
+        for (File file : files) {
+            if (file.isFile()) {
+                result.add(file);
+            }
+        }
+        return result;
     }
 
-    public boolean removeFile(final String file, final String fileSpec, final int flags) throws Exception {
-        return removeFile(new File(file), fileSpec, flags);
-    }
-
-    public boolean removeFile(final String file, final String fileSpec, final int flags, final int fileSpecFlags) throws Exception {
-        return removeFile(new File(file), fileSpec, flags, fileSpecFlags);
-    }
-
-    public boolean removeFile(final String file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
-            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
-            String sortCriteria, String sortOrder) throws Exception {
-        return removeFile(new File(file), fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                skipLastFiles, sortCriteria, sortOrder);
-    }
-
-    public int removeFileCnt(final String file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
-            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
-            String sortCriteria, String sortOrder) throws Exception {
-        return removeFileCnt(new File(file), fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                skipLastFiles, sortCriteria, sortOrder);
-    }
-
-    public boolean copyFile(final File source, final File dest) throws Exception {
-        return copyFile(source, dest, false);
-    }
-
-    public boolean copyFile(final File source, final File target, final int flags) throws Exception {
-        return copyFile(source, target, ".*", flags, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final File source, final File target, final String fileSpec) throws Exception {
-        return copyFile(source, target, fileSpec, 0, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final File source, final File target, final String fileSpec, final int flags) throws Exception {
-        return copyFile(source, target, fileSpec, flags, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final File source, final String fileSpec, final int flags, final int fileSpecFlags, final String replacing,
-            final String replacement) throws Exception {
-        return copyFile(source, null, fileSpec, flags, fileSpecFlags, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement) throws Exception {
-        return copyFile(source, target, fileSpec, flags, fileSpecFlags, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        String mode = "copy";
-        return transferFile(source, target, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize, maxFileSize,
-                skipFirstFiles, skipLastFiles, sortCriteria, sortOrder, mode);
-    }
-
-    public boolean copyFile(final String source, final String target) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile);
-    }
-
-    public boolean copyFile(final String source, final String target, final int flags) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, flags);
-    }
-
-    public boolean copyFile(final String source, final String target, final String fileSpec) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, fileSpec);
-    }
-
-    public boolean copyFile(final String source, final String target, final String fileSpec, final int flags) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, fileSpec, flags);
-    }
-
-    public boolean copyFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags)
+    private List<File> getFilelist(final String folder, final String regexp, final int flag, final boolean withSubFolder, final long minFileAge,
+            final long maxFileAge, final long minFileSize, final long maxFileSize, final int skipFirstFiles, final int skipLastFiles)
             throws Exception {
+        List<File> temp = new ArrayList<File>();
+        temp = listFiles(folder, regexp, flag);
+        temp = filelistFilterAge(temp, minFileAge, maxFileAge);
+        temp = filelistFilterSize(temp, minFileSize, maxFileSize);
+        if ((minFileSize != -1 || maxFileSize != -1) && minFileAge == 0 && maxFileAge == 0) {
+            temp = filelistSkipFiles(temp, skipFirstFiles, skipLastFiles, "sort_size");
+        } else if (minFileAge != 0 || maxFileAge != 0) {
+            temp = filelistSkipFiles(temp, skipFirstFiles, skipLastFiles, "sort_age");
+        }
+
+        List<File> result = new ArrayList<File>();
+        result.addAll(temp);
+        if (withSubFolder) {
+            File[] subDir = new File(folder).listFiles();
+            for (File element : subDir) {
+                if (element.isDirectory()) {
+                    result.addAll(getFilelist(element.getPath(), regexp, flag, true, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
+                            skipLastFiles));
+                }
+            }
+        }
+        return result;
+    }
+
+    public int copyFileCnt(final BlockingInternalJob.Step step, final String source, final String target, final String fileSpec, final int flags,
+            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
+            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
+            String sortOrder) throws Exception {
         File sourceFile = new File(source);
         File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean copyFile(final String source, final String fileSpec, final int flags, final int fileSpecFlags, final String replacing,
-            final String replacement) throws Exception {
-        File sourceFile = new File(source);
-        return copyFile(sourceFile, fileSpec, flags, fileSpecFlags, replacing, replacement);
-    }
-
-    public boolean copyFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement);
-    }
-
-    public boolean copyFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return copyFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
-                maxFileSize, skipFirstFiles, skipLastFiles, "name", "asc");
-    }
-
-    public int copyFileCnt(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return transferFileCnt(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
-                maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
-    }
-
-    public boolean renameFile(final File source, final File target) throws Exception {
-        return renameFile(source, target, ".*", 0, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final int flags) throws Exception {
-        return renameFile(source, target, ".*", flags, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec) throws Exception {
-        return renameFile(source, target, fileSpec, 0, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final int flags) throws Exception {
-        return renameFile(source, target, fileSpec, flags, Pattern.CASE_INSENSITIVE, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags)
-            throws Exception {
-        return renameFile(source, target, fileSpec, flags, fileSpecFlags, null, null, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final String replacing, final String replacement)
-            throws Exception {
-        return renameFile(source, target, fileSpec, 0, Pattern.CASE_INSENSITIVE, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final int flags, final String replacing,
-            final String replacement) throws Exception {
-        return renameFile(source, target, fileSpec, flags, Pattern.CASE_INSENSITIVE, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name",
-                "asc");
-    }
-
-    public boolean renameFile(final File source, final String fileSpec, final int flags, final int fileSpecFlags, final String replacing,
-            final String replacement) throws Exception {
-        return renameFile(source, null, fileSpec, flags, fileSpecFlags, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement) throws Exception {
-        return renameFile(source, target, fileSpec, flags, fileSpecFlags, replacing, replacement, "0", "0", "-1", "-1", 0, 0, "name", "asc");
-    }
-
-    public boolean renameFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        String mode = "rename";
-        return transferFile(source, target, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize, maxFileSize,
-                skipFirstFiles, skipLastFiles, sortCriteria, sortOrder, mode);
-    }
-
-    public boolean renameFile(final String source, final String target) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile);
-    }
-
-    public boolean renameFile(final String source, final String target, final int flags) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, flags);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final int flags) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, flags);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags)
-            throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final String replacing, final String replacement)
-            throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, replacing, replacement);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final int flags, final String replacing,
-            final String replacement) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, flags, replacing, replacement);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement);
-    }
-
-    public boolean renameFile(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return renameFile(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
-                maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
-    }
-
-    public int renameFileCnt(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        File sourceFile = new File(source);
-        File targetFile = target == null ? null : new File(target);
-        return transferFileCnt(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
-                maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
-    }
-
-    private boolean transferFile(final File source, final File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder, final String mode)
-            throws Exception {
-        int nrOfTransferedFiles = transferFileCnt(source, target, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge,
+        return transferFileCnt(step, sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge,
                 minFileSize, maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
-        return nrOfTransferedFiles > 0;
     }
 
-    private int transferFileCnt(final File source, File target, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
-            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
+    public boolean copyFile(final File source, final File dest, final boolean append) throws Exception {
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            if (LOGGER != null) {
+                LOGGER.debug("Copying file " + source.getAbsolutePath() + " with buffer of " + BUFF_SIZE + " bytes");
+            }
+            in = new FileInputStream(source);
+            out = new FileOutputStream(dest, append);
+            while (true) {
+                synchronized (buffer) {
+                    int amountRead = in.read(buffer);
+                    if (amountRead == -1) {
+                        break;
+                    }
+                    out.write(buffer, 0, amountRead);
+                }
+            }
+            if (LOGGER != null) {
+                LOGGER.debug("File " + source.getAbsolutePath() + " with buffer of " + BUFF_SIZE + " bytes");
+            }
+            return true;
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
+        }
+    }
 
-        resultList = new ArrayList<File>();
+    public int renameFileCnt(BlockingInternalJob.Step step, final String source, final String target, final String fileSpec, final int flags,
+            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
+            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
+            String sortOrder) throws Exception {
+        File sourceFile = new File(source);
+        File targetFile = target == null ? null : new File(target);
+        return transferFileCnt(step, sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge,
+                minFileSize, maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
+    }
+
+    private int transferFileCnt(BlockingInternalJob.Step step, final File source, File target, final String fileSpec, final int flags,
+            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
+            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
+            String sortOrder) throws Exception {
+
         if (sortCriteria == null || sortCriteria.isEmpty()) {
             sortCriteria = "name";
         }
@@ -987,7 +752,7 @@ public abstract class AFileOperations {
                     throw new SOSFileOperationsException("cannot create directory " + dir.getCanonicalPath());
                 }
             }
-            if (!handleOneFile(sourceFile, targetFile, overwrite, gracious)) {
+            if (!handleOneFile(step, sourceFile, targetFile, overwrite, gracious)) {
                 continue;
             }
             transferedFiles++;
@@ -1061,73 +826,12 @@ public abstract class AFileOperations {
 
     private List<File> filelistSkipFiles(List<File> filelist, final int skipFirstFiles, final int skipLastFiles, final String sorting)
             throws Exception {
-
         if ("sort_size".equals(sorting)) {
             filelist.sort(new FileComparatorSize());
         } else if ("sort_age".equals(sorting)) {
             filelist.sort(new FileComparatorAge());
         }
-
         return filelist;
-    }
-
-    public List<File> listFiles(final String folder, final String regexp, final int flag, final boolean withSubFolder) throws Exception {
-        List<File> result = new ArrayList<File>();
-        result.addAll(listFiles(folder, regexp, flag));
-        if (withSubFolder) {
-            File[] subDir = new File(folder).listFiles();
-            for (File element : subDir) {
-                if (element.isDirectory()) {
-                    result.addAll(listFiles(element.getPath(), regexp, flag, true));
-                }
-            }
-        }
-        return result;
-    }
-
-    public List<File> listFiles(final String folder, final String regexp, final int flag) throws Exception {
-        if (folder == null || folder.isEmpty()) {
-            throw new FileNotFoundException("empty directory not allowed!!");
-        }
-        File f = new File(folder);
-        if (!f.exists()) {
-            throw new FileNotFoundException("directory does not exist: " + folder);
-        }
-        List<File> result = new ArrayList<File>();
-        File[] files = f.listFiles(new FilelistFilter(regexp, flag));
-        for (File file : files) {
-            if (file.isFile()) {
-                result.add(file);
-            }
-        }
-        return result;
-    }
-
-    private List<File> getFilelist(final String folder, final String regexp, final int flag, final boolean withSubFolder, final long minFileAge,
-            final long maxFileAge, final long minFileSize, final long maxFileSize, final int skipFirstFiles, final int skipLastFiles)
-            throws Exception {
-        List<File> temp = new ArrayList<File>();
-        temp = listFiles(folder, regexp, flag);
-        temp = filelistFilterAge(temp, minFileAge, maxFileAge);
-        temp = filelistFilterSize(temp, minFileSize, maxFileSize);
-        if ((minFileSize != -1 || maxFileSize != -1) && minFileAge == 0 && maxFileAge == 0) {
-            temp = filelistSkipFiles(temp, skipFirstFiles, skipLastFiles, "sort_size");
-        } else if (minFileAge != 0 || maxFileAge != 0) {
-            temp = filelistSkipFiles(temp, skipFirstFiles, skipLastFiles, "sort_age");
-        }
-
-        List<File> result = new ArrayList<File>();
-        result.addAll(temp);
-        if (withSubFolder) {
-            File[] subDir = new File(folder).listFiles();
-            for (File element : subDir) {
-                if (element.isDirectory()) {
-                    result.addAll(getFilelist(element.getPath(), regexp, flag, true, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                            skipLastFiles));
-                }
-            }
-        }
-        return result;
     }
 
     private long calculateFileAge(final String fileage) throws Exception {
@@ -1304,14 +1008,14 @@ public abstract class AFileOperations {
         return temp;
     }
 
-    public String replaceGroups(final String input, final String replacing, final String replacements) throws Exception {
+    private String replaceGroups(final String input, final String replacing, final String replacements) throws Exception {
         if (replacements == null) {
             throw new SOSFileOperationsException("replacements missing: 0 replacements defined");
         }
         return replaceGroups(input, replacing, replacements.split(";"));
     }
 
-    public String replaceGroups(final String source, final String replacing, final String[] replacements) throws Exception {
+    private String replaceGroups(final String source, final String replacing, final String[] replacements) throws Exception {
         if (replacements == null) {
             throw new SOSFileOperationsException("replacements missing: 0 replacements defined");
         }
@@ -1354,15 +1058,6 @@ public abstract class AFileOperations {
 
     private boolean has(final int flags, final int f) {
         return (flags & f) > 0;
-    }
-
-    public String getReplacementFilename(final String input, final String replacing, final String replacements) throws Exception {
-        String result = input;
-        result = replaceGroups(result, replacing, replacements.split(";"));
-        result = substituteAllDate(result);
-        result = substituteAllFilename(result, input);
-        return result;
-
     }
 
     private boolean wipe(final File file) {
@@ -1420,38 +1115,6 @@ public abstract class AFileOperations {
             msg.append("0");
         }
         LOGGER.debug("argument fileSpecFlags=" + msg);
-    }
-
-    public boolean copyFile(final File source, final File dest, final boolean append) throws Exception {
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            if (LOGGER != null) {
-                LOGGER.debug("Copying file " + source.getAbsolutePath() + " with buffer of " + BUFF_SIZE + " bytes");
-            }
-            in = new FileInputStream(source);
-            out = new FileOutputStream(dest, append);
-            while (true) {
-                synchronized (buffer) {
-                    int amountRead = in.read(buffer);
-                    if (amountRead == -1) {
-                        break;
-                    }
-                    out.write(buffer, 0, amountRead);
-                }
-            }
-            if (LOGGER != null) {
-                LOGGER.debug("File " + source.getAbsolutePath() + " with buffer of " + BUFF_SIZE + " bytes");
-            }
-            return true;
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
-        }
     }
 
     public List<File> getResultList() {

@@ -15,13 +15,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ArgResultSetAsParametersValues;
 
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
-
-    public static final String ARG_NAME_VALUE = "name_value";
 
     public SQLExecutorJob(JobContext jobContext) {
         super(jobContext, SQLExecutorJobArguments.class);
@@ -39,7 +38,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
-            
+
             return Job.success(process(step, session, args));
         } catch (Throwable e) {
             throw e;
@@ -91,8 +90,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {
-            boolean checkResultSet = !args.getResultSetAsParameters().equalsIgnoreCase("false");
-            boolean isParamValue = args.getResultSetAsParameters().equals(ARG_NAME_VALUE);
+            boolean checkResultSet = !args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.FALSE.name());
+            boolean isParamValue = args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.NAME_VALUE.name());
             rs = executor.getResultSet(statement);
 
             if (checkResultSet || args.getResultSetAsWarning()) {

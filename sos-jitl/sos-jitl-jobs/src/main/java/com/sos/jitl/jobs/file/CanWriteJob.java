@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.file;
 
+import java.io.File;
 import java.util.regex.Pattern;
 
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
@@ -9,9 +10,9 @@ import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
-public class FileExistsJob extends AFileOperationsJob {
+public class CanWriteJob extends AFileOperationsJob {
 
-    public FileExistsJob(JobContext jobContext) {
+    public CanWriteJob(JobContext jobContext) {
         super(jobContext);
     }
 
@@ -20,13 +21,7 @@ public class FileExistsJob extends AFileOperationsJob {
         checkArguments(args);
 
         FileOperationsImpl fo = new FileOperationsImpl();
-        boolean result = fo.existsFile(args.getSourceFile().getValue(), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE, args.getMinFileAge()
-                .getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args
-                        .getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());
-
-        if (result) {
-            result = checkSteadyStateOfFiles(step, args, fo.getResultList());
-        }
+        boolean result = fo.canWrite(new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE);
         return handleResult(step, args, fo.getResultList(), result);
     }
 

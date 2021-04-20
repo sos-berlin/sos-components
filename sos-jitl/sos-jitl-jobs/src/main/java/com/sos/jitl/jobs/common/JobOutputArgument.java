@@ -1,26 +1,16 @@
 package com.sos.jitl.jobs.common;
 
-public class JobArgument<T> {
+public class JobOutputArgument<T> {
 
     private final String name;
-    private final T defaultValue;
     private T value;
 
-    public JobArgument(String name) {
-        this(name, null);
-    }
-
-    public JobArgument(String name, T defaultValue) {
+    public JobOutputArgument(String name) {
         this.name = name;
-        this.defaultValue = defaultValue;
     }
 
     public String getName() {
         return name;
-    }
-
-    public T getDefault() {
-        return defaultValue;
     }
 
     public void setValue(T val) {
@@ -30,5 +20,4 @@ public class JobArgument<T> {
     public T getValue() {
         return value;
     }
-
 }

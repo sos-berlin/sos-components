@@ -7,8 +7,12 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +21,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
+
+import js7.data_for_java.order.JOutcome;
+import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperationsJobArguments> {
 
@@ -35,16 +42,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             throw new SOSFileOperationsException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(), args
                     .getReplacement().getName()));
         }
-        setCreateOrder(args);
         setFlags(args);
-    }
-
-    private void setCreateOrder(FileOperationsJobArguments args) throws Exception {
-        if (args.getCreateOrder().getValue() || args.getCreateOrders4AllFiles().getValue()) {
-            if (SOSString.isEmpty(args.getOrderJobchainName().getValue())) {
-                throw new SOSFileOperationsException(String.format("missing '%s'", args.getOrderJobchainName().getName()));
-            }
-        }
     }
 
     private void setFlags(FileOperationsJobArguments args) {
@@ -67,19 +65,19 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.setFlags(flags);
     }
 
-    public boolean checkSteadyStateOfFiles(FileOperationsJobArguments args, List<File> files) throws Exception {
-        if (files == null || files.size() == 0) {
+    public boolean checkSteadyStateOfFiles(BlockingInternalJob.Step step, FileOperationsJobArguments args, List<File> files) throws Exception {
+        if (files == null || files.size() == 0 || !args.getCheckSteadyStateOfFiles().getValue()) {
             return true;
         }
-        Job.setTimeAsSeconds(args.getCheckSteadyStateInterval());
+        long timeout = Job.getTimeAsSeconds(args.getCheckSteadyStateInterval());
 
-        LOGGER.debug("checking file(s) for steady state");
+        Job.debug(step, "checking file(s) for steady state");
         List<FileDescriptor> list = new ArrayList<FileDescriptor>();
         for (File file : files) {
             list.add(new FileDescriptor(file));
         }
         try {
-            Thread.sleep(args.getCheckSteadyStateInterval().getNumberValue().longValue() * 1_000);
+            TimeUnit.SECONDS.sleep(timeout);
         } catch (InterruptedException e1) {
             LOGGER.error(e1.getMessage(), e1);
         }
@@ -89,24 +87,24 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             result = true;
             for (FileDescriptor fd : list) {
                 File file = new File(fd.getFileName());
-                LOGGER.debug("result is : " + file.lastModified() + ", " + fd.getLastModificationDate() + ", " + file.length() + ", " + fd
+                Job.debug(step, "result is : " + file.lastModified() + ", " + fd.getLastModificationDate() + ", " + file.length() + ", " + fd
                         .getLastFileLength());
-                if (args.getUseNioLock().getValue()) {
+                if (args.getUseFileLock().getValue()) {
                     try {
                         RandomAccessFile raf = new RandomAccessFile(file, "rw");
                         FileChannel channel = raf.getChannel();
                         FileLock lock = channel.lock();
                         try {
                             lock = channel.tryLock();
-                            LOGGER.debug(String.format("lock for file '%1$s' ok", file.getAbsolutePath()));
+                            Job.debug(step, String.format("lock for file '%1$s' ok", file.getAbsolutePath()));
                             break;
                         } catch (OverlappingFileLockException e) {
                             result = false;
-                            LOGGER.info(String.format("File '%1$s' is open by someone else", file.getAbsolutePath()));
+                            Job.info(step, String.format("File '%1$s' is open by someone else", file.getAbsolutePath()));
                             break;
                         } finally {
                             lock.release();
-                            LOGGER.debug(String.format("release lock for '%1$s'", file.getAbsolutePath()));
+                            Job.debug(step, String.format("release lock for '%1$s'", file.getAbsolutePath()));
                             if (raf != null) {
                                 channel.close();
                                 raf.close();
@@ -114,16 +112,16 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                             }
                         }
                     } catch (FileNotFoundException e) {
-                        LOGGER.error(e.getMessage(), e);
+                        Job.error(step, e.getMessage(), e);
                     } catch (IOException e) {
-                        LOGGER.error(e.getMessage(), e);
+                        Job.error(step, e.getMessage(), e);
                     }
                 }
                 if (file.lastModified() != fd.getLastModificationDate() || file.length() != fd.getLastFileLength()) {
                     result = false;
                     fd.update(file);
                     fd.setSteady(false);
-                    LOGGER.info(String.format("File '%1$s' changed during checking steady state", file.getAbsolutePath()));
+                    Job.info(step, String.format("File '%1$s' changed during checking steady state", file.getAbsolutePath()));
                     break;
                 } else {
                     fd.setSteady(true);
@@ -131,7 +129,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             }
             if (!result) {
                 try {
-                    Thread.sleep(args.getCheckSteadyStateInterval().getNumberValue().longValue() * 1_000);
+                    TimeUnit.SECONDS.sleep(timeout);
                 } catch (InterruptedException e) {
                     LOGGER.error(e.getMessage(), e);
                 }
@@ -140,13 +138,99 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             }
         }
         if (!result) {
-            LOGGER.error("not all files are steady");
+            Job.error(step, "not all files are steady");
             for (FileDescriptor fd : list) {
                 if (!fd.isSteady()) {
-                    LOGGER.info(String.format("File '%1$s' is not steady", fd.getFileName()));
+                    Job.info(step, String.format("File '%1$s' is not steady", fd.getFileName()));
                 }
             }
             throw new SOSFileOperationsException("not all files are steady");
+        }
+        return result;
+    }
+
+    public JOutcome.Completed handleResult(BlockingInternalJob.Step step, FileOperationsJobArguments args, List<File> files, boolean result)
+            throws Exception {
+        int size = 0;
+        StringBuilder fileList = new StringBuilder();
+        if (files != null && files.size() > 0) {
+            size = files.size();
+            for (File f : files) {
+                fileList.append(f.getAbsolutePath() + ";");
+            }
+        }
+        args.getOutputResultSet().setValue(fileList.toString());
+        args.getOutputResultSetSize().setValue(size);
+
+        if (args.getResultListFile().getValue() != null && fileList.length() > 0) {
+            Job.debug(step, "..try to write file:" + args.getResultListFile().getValue());
+            if (Files.isWritable(args.getResultListFile().getValue())) {
+                Files.write(args.getResultListFile().getValue(), fileList.toString().getBytes("UTF-8"));
+            } else {
+                throw new SOSFileOperationsException(String.format("file '%s'(%s) is not writable", args.getResultListFile().getValue(), args
+                        .getResultListFile().getName()));
+            }
+        }
+        if (!SOSString.isEmpty(args.getRaiseErrorIfResultSetIs().getValue())) {
+            if (compareIntValues(args.getRaiseErrorIfResultSetIs().getValue(), size, args.getExpectedSizeOfResultSet().getValue())) {
+                String msg = String.format("no of hits in result set '%s'  is '%s' expected '%s'", size, args.getRaiseErrorIfResultSetIs().getValue(),
+                        args.getExpectedSizeOfResultSet().getValue());
+                return Job.failed(msg, args.getOutputResultSet(), args.getOutputResultSetSize());
+            }
+        }
+        return Job.success(args.getOutputResultSet(), args.getOutputResultSetSize());
+    }
+
+    private boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+        map.put("eq", 1);
+        map.put("equal", 1);
+        map.put("==", 1);
+        map.put("=", 1);
+        map.put("ne", 2);
+        map.put("not equal", 2);
+        map.put("!=", 2);
+        map.put("<>", 2);
+        map.put("lt", 3);
+        map.put("less than", 3);
+        map.put("<", 3);
+        map.put("le", 4);
+        map.put("less or equal", 4);
+        map.put("<=", 4);
+        map.put("ge", 5);
+        map.put("greater or equal", 5);
+        map.put(">=", 5);
+        map.put("gt", 6);
+        map.put("greater than", 6);
+        map.put(">", 6);
+
+        boolean result = false;
+        Integer val = map.get(comparator.toLowerCase());
+        if (val != null) {
+            switch (val) {
+            case 1:
+                result = left == right;
+                break;
+            case 2:
+                result = left != right;
+                break;
+            case 3:
+                result = left < right;
+                break;
+            case 4:
+                result = left <= right;
+                break;
+            case 5:
+                result = left >= right;
+                break;
+            case 6:
+                result = left > right;
+                break;
+            default:
+                break;
+            }
+        } else {
+            throw new SOSFileOperationsException(String.format("Compare operator not known: %s", comparator));
         }
         return result;
     }

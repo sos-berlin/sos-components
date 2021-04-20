@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +41,10 @@ public class Job {
         return JOutcome.succeeded();
     }
 
+    public static JOutcome.Completed success(final JobOutputArgument<?>... returnValues) {
+        return success(getMap(returnValues));
+    }
+
     public static JOutcome.Completed success(final Map<String, Object> returnValues) {
         if (returnValues == null || returnValues.size() == 0) {
             return JOutcome.succeeded();
@@ -60,6 +65,10 @@ public class Job {
             return JOutcome.failed(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
         }
         return JOutcome.failed(msg);
+    }
+
+    public static JOutcome.Completed failed(final String msg, JobOutputArgument<?>... returnValues) {
+        return failed(msg, getMap(returnValues));
     }
 
     public static JOutcome.Completed failed(final String msg, final Map<String, Object> returnValues) {
@@ -171,24 +180,20 @@ public class Job {
         return result;
     }
 
-    public static JobArgument<String> setTimeAsSeconds(final JobArgument<String> arg) {
-        if (arg.getNumberValue() != null) {
-            return arg;
-        }
+    public static long getTimeAsSeconds(final JobArgument<String> arg) {
         String val = SOSString.isEmpty(arg.getValue()) ? arg.getDefault() : arg.getValue();
         if (SOSString.isEmpty(val)) {
-            return arg;
+            return 0L;
         }
 
         int[] num = { 1, 60, 3600, 3600 * 24 };
-        String[] arr = val.split(":");
         int j = 0;
-        int seconds = 0;
+        long seconds = 0L;
+        String[] arr = val.split(":");
         for (int i = arr.length - 1; i >= 0; i--) {
             seconds += new Integer(arr[i]) * num[j++];
         }
-        arg.setNumberValue(seconds);
-        return arg;
+        return seconds;
     }
 
     public static Map<String, Object> convert(final Map<String, Value> map) {
@@ -287,7 +292,7 @@ public class Job {
         } else if (o instanceof Boolean) {
             return BooleanValue.of((Boolean) o);
         } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o); // TODO o instanceof Number instead of Integer, Long etc
+            return NumberValue.of((Integer) o); // TODO instanceof Number instead of Integer, Long etc
         } else if (o instanceof Long) {
             return NumberValue.of((Long) o);
         } else if (o instanceof Double) {
@@ -310,5 +315,16 @@ public class Job {
             return Boolean.parseBoolean(o.convertToString());
         }
         return o;
+    }
+
+    private static Map<String, Object> getMap(JobOutputArgument<?>... returnValues) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        for (JobOutputArgument<?> arg : returnValues) {
+            if (arg.getName() == null || arg.getValue() == null) {
+                continue;
+            }
+            map.put(arg.getName(), arg.getValue());
+        }
+        return map;
     }
 }
