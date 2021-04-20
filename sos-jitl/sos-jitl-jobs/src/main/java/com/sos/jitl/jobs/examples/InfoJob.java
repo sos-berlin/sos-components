@@ -11,6 +11,7 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Authenticator;
 import com.sos.jitl.jobs.common.Job;
+import com.typesafe.config.Config;
 
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
@@ -21,10 +22,11 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     private static final String CONFIG_DIR_ENV_KEY = "JS7_AGENT_CONFIG_DIR";
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
-    private static final String TEST_WEB_SERVER_URI = "https://joc-2-0-secondary.sos:7543";
+    private static final String DEFAULT_WEB_SERVER_URI = "https://joc-2-0-secondary.sos:4443";
     
     private SOSRestApiClient httpsRestApiClient = null;
     private String accessToken = null;
+    private String jocUri = null;
 
     public InfoJob(JobContext jobContext) {
         super(jobContext, InfoJobArguments.class);
@@ -38,7 +40,13 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         LOGGER.info("System.getenv(...): " + System.getenv(CONFIG_DIR_ENV_KEY));
         String privateConfPath = Paths.get("/").resolve(System.getenv(CONFIG_DIR_ENV_KEY)).resolve("private").resolve("private.conf").normalize().toString().replace('\\', '/');
         httpsRestApiClient = Authenticator.createHttpsRestApiClient(privateConfPath);
-        URI jocLoginURI = URI.create(TEST_WEB_SERVER_URI + WS_API_LOGIN);
+        jocUri = Authenticator.getJocUriFromPrivateConf(privateConfPath);
+        URI jocLoginURI; 
+        if (jocUri != null) {
+        	jocLoginURI = URI.create(jocUri + WS_API_LOGIN);
+        } else {
+        	jocLoginURI = URI.create(DEFAULT_WEB_SERVER_URI + WS_API_LOGIN);
+        }
         accessToken = Authenticator.login(httpsRestApiClient, jocLoginURI);
 		LOGGER.info("Logged in!");
         LOGGER.info("accessToken: " + accessToken);
@@ -48,7 +56,12 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     public void onStop(InfoJobArguments args) {
         if (accessToken != null && httpsRestApiClient != null) {
         	try {
-        		URI jocLogoutURI = URI.create(TEST_WEB_SERVER_URI + WS_API_LOGOUT);
+        		URI jocLogoutURI;
+        		if (jocUri != null) {
+        			jocLogoutURI = URI.create(jocUri + WS_API_LOGOUT);
+        		} else {
+        			jocLogoutURI = URI.create(DEFAULT_WEB_SERVER_URI + WS_API_LOGOUT);
+        		}
 				Authenticator.logout(httpsRestApiClient, accessToken, jocLogoutURI);
 				LOGGER.info("Logged out!");
 			} catch (SOSException e) {
@@ -70,7 +83,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         return Job.success("info_result", result);
     }
-
+    
     private void usePrintWriter(BlockingInternalJob.Step step, long result) throws Exception {
         Job.info(step, "[OUT]----------ENV-----------------");
         Job.info(step, "[OUT]    JS7");

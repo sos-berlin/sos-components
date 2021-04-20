@@ -84,6 +84,11 @@ public abstract class Authenticator {
     	return config;
     }
     
+    public static String getJocUriFromPrivateConf(String privateConfPath) {
+    	Config privateConf = Authenticator.readPrivateConf(privateConfPath);
+    	return privateConf.getString("js7.web.joc.url");
+    }
+
     private static KeyStoreCredentials readKeystoreCredentials (Config config) {
     	String keystorePath = config.getString("js7.web.https.keystore.file");
     	String keyPasswd = config.getString("js7.web.https.keystore.key-password");
