@@ -176,8 +176,7 @@ public class SOSShiroFolderPermissions {
         if (folder == null || folder.isEmpty()) {
             return true;
         }
-        final String _folder = normalizeFolder(folder);
-        Predicate<Folder> filter = f -> f.getFolder().equals(_folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || _folder.startsWith(f
+        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
                 .getFolder() + "/")));
         return listOfFolders.stream().parallel().anyMatch(filter);
     }

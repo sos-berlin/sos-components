@@ -35,7 +35,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 return jocDefaultResponse;
             }
             
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId());
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions);
             return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -72,7 +72,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 return jocDefaultResponse;
             }
 
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId());
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter.getHistoryId(), folderPermissions);
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(logOrderContent.getStreamOutput(), logOrderContent.getDownloadFilename(),
                     logOrderContent.getUnCompressedLength());
         } catch (JocException e) {
@@ -95,7 +95,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
                 return jocDefaultResponse;
             }
             
-            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter);
+            LogOrderContent logOrderContent = new LogOrderContent(orderHistoryFilter, folderPermissions);
             return JOCDefaultResponse.responseStatus200(logOrderContent.getOrderLog());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

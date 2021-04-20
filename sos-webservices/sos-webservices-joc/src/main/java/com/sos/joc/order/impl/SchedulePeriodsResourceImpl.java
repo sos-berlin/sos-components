@@ -13,8 +13,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,11 +36,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.RunTime;
 import com.sos.joc.model.order.ScheduleDatesFilter;
+import com.sos.joc.model.security.permissions.JocPermissions;
 import com.sos.joc.order.resource.ISchedulePeriodsResource;
 import com.sos.schema.JsonValidator;
 
@@ -57,13 +61,14 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validate(filterBytes, ScheduleDatesFilter.class);
             ScheduleDatesFilter in = Globals.objectMapper.readValue(filterBytes, ScheduleDatesFilter.class);
-            // TODO permission
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, getControllerPermissions(null, accessToken).getOrders().getView());
+            JocPermissions perms = getJocPermissions(accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, perms.getCalendars().getView() || perms.getDailyPlan().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
             RunTime entity = new RunTime();
+            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             
             if (in.getCalendars() != null && !in.getCalendars().isEmpty()) {
                 
@@ -85,25 +90,27 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                 
                 final List<String> nonWorkingDays = getNonWorkingDays(dbLayer, in);
 
-                // TODO dbLayer.getCalendarsByNames from release configuration???
-                List<DBItemInventoryConfiguration> workingDbCalendars = dbLayer.getCalendarsByNames(in.getCalendars().stream().map(
+                List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
                         AssignedCalendars::getCalendarName));
                 
                 SortedSet<Period> periods = new TreeSet<>(Comparator.comparing(p -> p.getSingleStart() == null ? p.getBegin() : p.getSingleStart()));
                 
                 if (workingDbCalendars != null && !workingDbCalendars.isEmpty()) {
-                    // maybe filter by type
-                    Map<String, String> nameContentMap = workingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getName,
-                            DBItemInventoryConfiguration::getContent));
+                    Map<String, DBItemInventoryReleasedConfiguration> nameContentMap = workingDbCalendars.stream().collect(Collectors.toMap(
+                            DBItemInventoryReleasedConfiguration::getName, Function.identity()));
 
                     for (AssignedCalendars c : in.getCalendars()) {
-                        if (!nameContentMap.containsKey(c.getCalendarName())) {
+                        DBItemInventoryReleasedConfiguration item = nameContentMap.get(c.getCalendarName());
+                        if (item == null) {
+                            continue;
+                        }
+                        if (!folderIsPermitted(item.getFolder(), permittedFolders)) {
                             continue;
                         }
                         Calendar restrictions = new Calendar();
                         restrictions.setIncludes(c.getIncludes());
                         //restrictions.setExcludes(c.getExcludes());
-                        Calendar basedOn = Globals.objectMapper.readValue(nameContentMap.get(c.getCalendarName()), Calendar.class);
+                        Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
                         fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
                                 date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone)).collect(Collectors.toCollection(() -> periods));
                     }
@@ -129,13 +136,13 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         List<String> nonWorkingDays = new ArrayList<>();
         
         if (in.getNonWorkingCalendars() != null && !in.getNonWorkingCalendars().isEmpty()) {
-            List<DBItemInventoryConfiguration> nonWorkingDbCalendars = dbLayer.getCalendarsByNames(in.getNonWorkingCalendars().stream().map(
+            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingCalendars().stream().map(
                     AssignedNonWorkingCalendars::getCalendarName));
 
             if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
-                Map<String, String> nameContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryConfiguration::getName,
-                        DBItemInventoryConfiguration::getContent));
+                Map<String, String> nameContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
+                        DBItemInventoryReleasedConfiguration::getContent));
 
                 for (AssignedNonWorkingCalendars c : in.getNonWorkingCalendars()) {
                     if (!nameContentMap.containsKey(c.getCalendarName())) {

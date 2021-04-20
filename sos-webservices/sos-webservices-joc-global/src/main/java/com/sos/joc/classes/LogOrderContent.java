@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
@@ -38,6 +39,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.order.OrderLog;
 import com.sos.joc.model.order.OrderLogItem;
@@ -56,14 +58,17 @@ public class LogOrderContent {
     private Long eventId = null;
     private String orderId;
     private Long unCompressedLength = null;
+    private final SOSShiroFolderPermissions folderPermissions;
 
-    public LogOrderContent(OrderRunningLogFilter runningLog) {
+    public LogOrderContent(OrderRunningLogFilter runningLog, SOSShiroFolderPermissions folderPermissions) {
         this.historyId = runningLog.getHistoryId();
         this.eventId = runningLog.getEventId();
+        this.folderPermissions = folderPermissions;
     }
 
-    public LogOrderContent(Long historyId) {
+    public LogOrderContent(Long historyId, SOSShiroFolderPermissions folderPermissions) {
         this.historyId = historyId;
+        this.folderPermissions = folderPermissions;
     }
 
     public Long getUnCompressedLength() {
@@ -98,7 +103,6 @@ public class LogOrderContent {
     }
 
     private OrderLog getLogFromHistoryService() {
-        // TODO read joc.properties (history.propertis) to find logs/history folder
         OrderLog orderLog = new OrderLog();
         orderLog.setComplete(false);
         orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
@@ -149,8 +153,8 @@ public class LogOrderContent {
         return orderLog;
     }
 
-    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException,
-            DBMissingDataException {
+    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException,
+            SOSHibernateException, DBMissingDataException {
         SOSHibernateSession connection = null;
         try {
             connection = Globals.createSosHibernateStatelessConnection("./order/log");
@@ -164,6 +168,9 @@ public class LogOrderContent {
              // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
              // }
              // }
+            if (!folderPermissions.isPermittedForFolder(historyOrderItem.getWorkflowFolder())) {
+                throw new JocFolderPermissionsException("folder access denied: " + historyOrderItem.getWorkflowFolder());
+            }
             mainParentHistoryId = historyOrderItem.getMainParentId();
             orderId = historyOrderItem.getOrderId();
             return historyOrderItem;
@@ -187,6 +194,9 @@ public class LogOrderContent {
              // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
              // }
              // }
+            if (!folderPermissions.isPermittedForFolder(historyOrderItem.getWorkflowFolder())) {
+                throw new JocFolderPermissionsException("folder access denied: " + historyOrderItem.getWorkflowFolder());
+            }
             mainParentHistoryId = historyOrderItem.getMainParentId();
             orderId = historyOrderItem.getOrderId();
             if (historyOrderItem.getLogId() == 0L) {
@@ -217,8 +227,9 @@ public class LogOrderContent {
         }
     }
 
-    public OrderLog getOrderLog() throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
-            SOSHibernateException, DBMissingDataException, IOException, JocMissingRequiredParameterException {
+    public OrderLog getOrderLog() throws JsonParseException, JsonMappingException,
+            JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException, IOException,
+            JocMissingRequiredParameterException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }

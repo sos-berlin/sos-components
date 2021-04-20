@@ -664,6 +664,21 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemInventoryReleasedConfiguration> getReleasedCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
+        Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where type in (:types)");
+        if (!names.isEmpty()) {
+            hql.append(" and lower(name) in (:names)");
+        }
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        if (!names.isEmpty()) {
+            query.setParameterList("names", names);
+        }
+        query.setParameterList("types", JocInventory.getCalendarTypes());
+        return getSession().getResultList(query);
+    }
 
     public List<DBItemInventoryReleasedConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types)
             throws SOSHibernateException {

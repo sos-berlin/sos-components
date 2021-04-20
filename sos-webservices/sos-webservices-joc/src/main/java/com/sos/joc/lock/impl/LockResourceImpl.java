@@ -71,8 +71,9 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             if (dc == null || dc.getContent() == null || dc.getContent().isEmpty()) {
                 throw new DBMissingDataException(String.format("Lock '%s' doesn't exist", filter.getLockPath()));
             }
+            checkFolderPermissions(dc.getPath());
             
-            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), session);
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

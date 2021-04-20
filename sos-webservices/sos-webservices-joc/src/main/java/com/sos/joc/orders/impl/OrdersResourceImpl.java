@@ -75,8 +75,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             Set<String> orders = ordersFilter.getOrderIds();
             Set<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
-            boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
+            if (withOrderIdFilter) {
+                ordersFilter.setFolders(null);
+            }
+            boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
 
             Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> o
@@ -141,7 +144,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
                     .workflowId().path().string()));
 
-            // TODO Path of name from db hold in memory
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), groupedByWorkflowPath.keySet(),

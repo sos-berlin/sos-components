@@ -1,12 +1,13 @@
 package com.sos.joc.lock.common;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.lock.Lock;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
@@ -39,16 +41,17 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.lock.JLockState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
-import js7.data_for_java.workflow.JWorkflowId;
 import scala.collection.JavaConverters;
 import scala.compat.java8.OptionConverters;
 
 public class LockEntryHelper {
 
     private final String controllerId;
+    private final SOSHibernateSession session;
 
-    public LockEntryHelper(String controllerId) {
+    public LockEntryHelper(String controllerId, SOSHibernateSession session) {
         this.controllerId = controllerId;
+        this.session = session;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
@@ -58,7 +61,7 @@ public class LockEntryHelper {
         int ordersHoldingLocksCount = 0;
         int ordersWaitingForLocksCount = 0;
         SyncStateText stateText = SyncStateText.UNKNOWN;
-        Map<String, LockWorkflow> workflows = new HashMap<String, LockWorkflow>();
+        Map<WorkflowId, LockWorkflow> workflows = new HashMap<>();
 
         Lock item = Globals.objectMapper.readValue(dc.getContent(), Lock.class);
         item.setPath(dc.getPath());
@@ -97,38 +100,42 @@ public class LockEntryHelper {
                     }
                 }
             }
+            
+            final Collection<OrderId> lockOrderIds = jLockState.orderIds();
+            Set<JOrder> lockJOrders = controllerState.ordersBy(o -> lockOrderIds.contains(o.id())).collect(Collectors.toSet());
+            
+            final Collection<OrderId> lockQueuedOrderIds = jLockState.queuedOrderIds();
+            Set<JOrder> lockQueuedJOrders = controllerState.ordersBy(o -> lockQueuedOrderIds.contains(o.id())).collect(Collectors.toSet());
 
-            for (OrderId orderId : jLockState.orderIds()) {
+            Set<String> workflowNames = Stream.concat(lockJOrders.stream(), lockQueuedJOrders.stream()).map(o -> o.workflowId().path().string())
+                    .collect(Collectors.toSet());
+            final Map<String, String> namePathMap = getNamePathMap(workflowNames);
+
+            for (JOrder jo : lockJOrders) {
                 ordersHoldingLocksCount++;
-                JOrder jo = getFromEither(controllerState.idToCheckedOrder(orderId), "OrderId=" + orderId.string());
-                if (jo != null) {
-                    LockOrder lo = new LockOrder();
-                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
-                    lo.setLock(getWorkflowLock(sharedAcquired, lockId, orderId.string()));
+                LockOrder lo = new LockOrder();
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, namePathMap, null));
+                lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
-                    LockWorkflow lw = getLockWorkflow(workflows, lo);
-                    if (lw.getOrdersHoldingLocks() == null) {
-                        lw.setOrdersHoldingLocks(new ArrayList<LockOrder>());
-                    }
-                    lw.getOrdersHoldingLocks().add(lo);
+                LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());
+                if (lw.getOrdersHoldingLocks() == null) {
+                    lw.setOrdersHoldingLocks(new ArrayList<LockOrder>());
                 }
+                lw.getOrdersHoldingLocks().add(lo);
             }
 
-            Map<String, WorkflowLock> queuedWorkflowLocks = new HashMap<>();
-            for (OrderId orderId : jLockState.queuedOrderIds()) {
+            Map<WorkflowId, WorkflowLock> queuedWorkflowLocks = new HashMap<>();
+            for (JOrder jo : lockQueuedJOrders) {
                 ordersWaitingForLocksCount++;
-                JOrder jo = getFromEither(controllerState.idToCheckedOrder(orderId), "OrderId=" + orderId.string());
-                if (jo != null) {
-                    LockOrder lo = new LockOrder();
-                    lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
-                    lo.setLock(getWorkflowLock(controllerState, jo, lo, queuedWorkflowLocks, lockId));
+                LockOrder lo = new LockOrder();
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, namePathMap, null));
+                lo.setLock(getWorkflowLock(controllerState, jo, lo.getOrder().getWorkflowId(), queuedWorkflowLocks, lockId));
 
-                    LockWorkflow lw = getLockWorkflow(workflows, lo);
-                    if (lw.getOrdersWaitingForLocks() == null) {
-                        lw.setOrdersWaitingForLocks(new ArrayList<LockOrder>());
-                    }
-                    lw.getOrdersWaitingForLocks().add(lo);
+                LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());
+                if (lw.getOrdersWaitingForLocks() == null) {
+                    lw.setOrdersWaitingForLocks(new ArrayList<LockOrder>());
                 }
+                lw.getOrdersWaitingForLocks().add(lo);
             }
 
         }
@@ -141,45 +148,20 @@ public class LockEntryHelper {
         entry.setWorkflows(workflows.values().stream().collect(Collectors.toList()));
         return entry;
     }
+    
+    private Map<String, String> getNamePathMap(Collection<String> workflowNames) {
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
+            return dbLayer.getNamePathMapping(controllerId, workflowNames, DeployType.WORKFLOW.intValue());
+    }
 
-    private LockWorkflow getLockWorkflow(Map<String, LockWorkflow> workflows, LockOrder lo) {
-        String workflowName = lo.getOrder().getWorkflowId().getPath();
-        String workflowId = workflowName + lo.getOrder().getWorkflowId().getVersionId();
+    private LockWorkflow getLockWorkflow(Map<WorkflowId, LockWorkflow> workflows, WorkflowId wId) {
         LockWorkflow lw = null;
-
-        if (workflows.containsKey(workflowId)) {
-            lw = workflows.get(workflowId);
+        if (workflows.containsKey(wId)) {
+            lw = workflows.get(wId);
         } else {
             lw = new LockWorkflow();
-            SOSHibernateSession session = null;
-            try {
-                session = Globals.createSosHibernateStatelessConnection("getLockWorkflow");
-                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-
-                Set<String> names = new HashSet<String>();
-                names.add(workflowName);
-                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(controllerId, names, DeployType.WORKFLOW.intValue());
-                if (namePathMap == null || !namePathMap.containsKey(workflowName)) {
-                    lw.setPath(workflowName);
-                } else {
-                    lw.setPath(namePathMap.get(workflowName));
-                }
-
-            } catch (Throwable e) {
-                lw.setPath(workflowName);
-                LOGGER.error(e.toString(), e);
-            } finally {
-                if (session != null) {
-                    session.close();
-                }
-            }
-            workflows.put(workflowName, lw);
-        }
-
-        try {
-            lw.setVersionId(lo.getOrder().getWorkflowId().getVersionId());
-            lo.getOrder().getWorkflowId().setPath(lw.getPath());
-        } catch (Throwable e) {
+            lw.setPath(wId.getPath());
+            lw.setVersionId(wId.getVersionId());
         }
         return lw;
     }
@@ -196,19 +178,18 @@ public class LockEntryHelper {
         return l;
     }
 
-    private WorkflowLock getWorkflowLock(JControllerState controllerState, JOrder jo, LockOrder lo, Map<String, WorkflowLock> queuedWorkflowLocks,
+    private WorkflowLock getWorkflowLock(JControllerState controllerState, JOrder jo, WorkflowId wId, Map<WorkflowId, WorkflowLock> queuedWorkflowLocks,
             String lockId) {
 
-        String workflowId = lo.getOrder().getWorkflowId().getPath() + lo.getOrder().getWorkflowId().getVersionId();
-        if (queuedWorkflowLocks.containsKey(workflowId)) {
-            return queuedWorkflowLocks.get(workflowId);
+        if (queuedWorkflowLocks.containsKey(wId)) {
+            return queuedWorkflowLocks.get(wId);
         }
 
         WorkflowLock l = new WorkflowLock();
         l.setId(lockId);
         try {
-            JWorkflow jd = getFromEither(controllerState.repo().idToWorkflow(JWorkflowId.of(lo.getOrder().getWorkflowId().getPath(), lo.getOrder()
-                    .getWorkflowId().getVersionId())), "workflow=" + lo.getOrder().getWorkflowId().getPath()).withPositions();
+            JWorkflow jd = getFromEither(controllerState.repo().idToWorkflow(jo.workflowId()), "workflow=" + wId.getPath())
+                    .withPositions();
             Instruction in = jd.asScala().instruction(jo.workflowPosition().position().asScala());
             if (in != null && in instanceof LockInstruction) {
                 LockInstruction lin = (LockInstruction) in;
@@ -223,12 +204,12 @@ public class LockEntryHelper {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(String.format("[LockId=%s][%s]%s", lockId, workflowId, e.toString()), e);
+            LOGGER.error(String.format("[LockId=%s][%s]%s", lockId, wId.getPath(), e.toString()), e);
         }
         if (l.getType() == null) {
             l.setType(WorkflowLockType.UNKNOWN);
         }
-        queuedWorkflowLocks.put(workflowId, l);
+        queuedWorkflowLocks.put(wId, l);
         return l;
     }
 

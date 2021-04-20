@@ -23,6 +23,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -32,6 +33,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.job.TaskFilter;
 
@@ -48,12 +50,19 @@ public class LogTaskContent {
     private Long unCompressedLength = null;
     private Long eventId = null;
     private boolean complete = false;
+    private SOSShiroFolderPermissions folderPermissions = null;
 
-    public LogTaskContent(TaskFilter taskFilter) {
+    public LogTaskContent(TaskFilter taskFilter, SOSShiroFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
+        this.folderPermissions = folderPermissions;
         // this.controllerId = taskFilter.getControllerId();
     }
 
+    public LogTaskContent(Long taskId, SOSShiroFolderPermissions folderPermissions) {
+        this.historyId = taskId;
+        this.folderPermissions = folderPermissions;
+    }
+    
     public LogTaskContent(Long taskId) {
         this.historyId = taskId;
     }
@@ -183,6 +192,9 @@ public class LogTaskContent {
             DBItemHistoryOrderStep historyOrderStepItem = connection.get(DBItemHistoryOrderStep.class, historyId);
             if (historyOrderStepItem == null) {
                 throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
+            }
+            if (folderPermissions != null && !folderPermissions.isPermittedForFolder(historyOrderStepItem.getWorkflowFolder())) {
+                throw new JocFolderPermissionsException("folder access denied: " + historyOrderStepItem.getWorkflowFolder());
             }
             orderId = historyOrderStepItem.getHistoryOrderId();
             orderMainParentId = historyOrderStepItem.getHistoryOrderMainParentId();

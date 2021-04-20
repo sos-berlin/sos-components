@@ -15,7 +15,6 @@ import com.sos.joc.classes.tree.TreePermanent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.tree.Tree;
 import com.sos.joc.model.tree.TreeFilter;
 import com.sos.joc.model.tree.TreeType;

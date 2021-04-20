@@ -72,7 +72,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 		            try {
                         JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()), SecurityConfigurationRole.class);
                     } catch (SOSJsonSchemaException e) {
-                        throw new SOSJsonSchemaException(e.getMessage().replaceFirst("(\\[\\$\\.)", "$1roles." + entry.getKey() + "."));
+                        throw new SOSJsonSchemaException(e.getMessage().replaceFirst("(\\[\\$\\.)", "$1roles[" + entry.getKey() + "]."));
                     }
 		        }
 		    }

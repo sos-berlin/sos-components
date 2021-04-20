@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,9 +34,11 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
@@ -120,7 +123,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersCancel(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.CANCEL, accessToken, filterBytes);
-            // TODO permissions
             boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getCancel();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
@@ -142,11 +144,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     @Override
     public JOCDefaultResponse postOrdersDailyPlanCancel(String accessToken, byte[] filterBytes) {
         try {
-            initLogging(API_CALL + Action.CANCEL_DAILYPLAN.name().toLowerCase() , filterBytes, accessToken);
+            initLogging(API_CALL + "/dailyplan/cancel" , filterBytes, accessToken);
             JsonValidator.validate(filterBytes, CancelDailyPlanOrders.class);
             CancelDailyPlanOrders cancelDailyPlanOrders = Globals.objectMapper.readValue(filterBytes, CancelDailyPlanOrders.class);
             
-            // TODO permissions
             boolean perm = getControllerPermissions(cancelDailyPlanOrders.getControllerId(), accessToken).getOrders().getCancel();
             JOCDefaultResponse jocDefaultResponse = initPermissions(cancelDailyPlanOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
@@ -184,7 +185,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     public JOCDefaultResponse postOrdersRemoveWhenTerminated(String accessToken, byte[] filterBytes) {
         try {
             ModifyOrders modifyOrders = initRequest(Action.REMOVE_WHEN_TERMINATED, accessToken, filterBytes);
-            // TODO permissions
             boolean perm = getControllerPermissions(modifyOrders.getControllerId(), accessToken).getOrders().getView();
             JOCDefaultResponse jocDefaultResponse = initPermissions(modifyOrders.getControllerId(), perm);
             if (jocDefaultResponse != null) {
@@ -214,13 +214,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (workflowIds != null && workflowIds.isEmpty()) {
             modifyOrders.setWorkflowIds(null); // for AuditLog 
         }
-        // final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-
+        
         String controllerId = modifyOrders.getControllerId();
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Stream<JOrder> orderStream = Stream.empty();
-
-        // TODO folder permissions
 
         if (orders != null && !orders.isEmpty()) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
@@ -239,8 +236,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .workflowId().path()));
             orderStream = currentState.ordersBy(workflowFilter);
         }
-
-        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId);
+        
+        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders());
+        
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
@@ -280,6 +278,21 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         }
         return orderStream.collect(Collectors.toSet());
+    }
+    
+    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, Set<Folder> permittedFolders) {
+        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId);
+        // TODO from memory
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection(action.name().toLowerCase());
+            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
+            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId().path().string())
+                    .collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
+            return jOrders.stream().filter(o -> canAdd(namePathMap.get(o.workflowId().path().string()), permittedFolders)).collect(Collectors.toSet());
+        } finally {
+            Globals.disconnect(connection);
+        }
     }
 
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {
@@ -427,7 +440,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
                 List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 if (listOfPlannedOrders != null) {
-                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors.toSet()));
+                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors
+                            .toSet()));
                 }
             } finally {
                 Globals.disconnect(sosHibernateSession);

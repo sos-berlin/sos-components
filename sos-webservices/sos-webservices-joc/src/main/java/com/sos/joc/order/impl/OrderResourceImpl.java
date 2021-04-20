@@ -2,6 +2,7 @@ package com.sos.joc.order.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
                 JOrder jOrder = optional.get();
                 session = Globals.createSosHibernateStatelessConnection(API_CALL);
                 DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Arrays.asList(jOrder.workflowId()
+                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Collections.singleton(jOrder.workflowId()
                         .path().string()), DeployType.WORKFLOW.intValue());
                 OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), namePathMap, surveyDateMillis);
                 checkFolderPermissions(o.getWorkflowId().getPath());

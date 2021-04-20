@@ -46,8 +46,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
-            //checkRequiredParameter("tasks", taskLogs.getTasks());
-
             // TODO callables in several threads
             // Fake
             //RunningTaskLogs logs = new RunningTaskLogs();
@@ -104,8 +102,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("taskId", taskFilter.getTaskId());
-            LogTaskContent logTaskContent = new LogTaskContent(taskFilter);
+            LogTaskContent logTaskContent = new LogTaskContent(taskFilter, folderPermissions);
             switch (apiCall) {
             case API_CALL_LOG:
                 return JOCDefaultResponse.responsePlainStatus200(logTaskContent.getStreamOutput(), logTaskContent.getHeaders());

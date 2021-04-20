@@ -1,7 +1,7 @@
 package com.sos.joc.locks.impl;
 
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -67,7 +67,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
         try {
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(filter.getControllerId());
-            dbFilter.setObjectTypes(Arrays.asList(DeployType.LOCK.intValue()));
+            dbFilter.setObjectTypes(Collections.singleton(DeployType.LOCK.intValue()));
 
             List<String> paths = filter.getLockPaths();
             if (paths != null && !paths.isEmpty()) {
@@ -91,19 +91,17 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             } else {
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
-            Globals.disconnect(session);
-            session = null;
 
             Locks answer = new Locks();
             answer.setSurveyDate(Date.from(Instant.now()));
-            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), session);
             final JControllerState controllerState = getCurrentState(filter.getControllerId());
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
             }
             JocError jocError = getJocError();
             if (contents != null) {
-                answer.setLocks(contents.stream().map(dc -> {
+                answer.setLocks(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
                     try {
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
