@@ -86,7 +86,7 @@ public class HttpClientTests {
         }
     }
 
-    // @Ignore
+    @Ignore
     @Test
     public void testHttpClient() {
         KeyStore keyStore = null;

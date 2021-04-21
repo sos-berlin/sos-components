@@ -1,0 +1,71 @@
+package com.sos.jitl.jobs.common;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.examples.JocApiJobArguments;
+
+public class JobTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobTest.class);
+
+    @Ignore
+    @Test
+    public void testJobArguments() throws Exception {
+        JocApiJobArguments o = new JocApiJobArguments();
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(o.getJocUri().getName(), "http://localhost");
+
+        setArguments(map, o);
+        LOGGER.info("jocUri=" + o.getJocUri().getValue().getScheme());
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void setArguments(Map<String, Object> map, Object o) {
+        List<Field> fields = Job.getJobArgumentFields(o);
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                LOGGER.info("field type=" + field.getGenericType());
+                JobArgument arg = (JobArgument<?>) field.get(o);
+                if (arg != null) {
+                    if (arg.getName() == null) {// internal usage
+                        continue;
+                    }
+                    Object val = map.get(arg.getName());
+                    if (val == null || SOSString.isEmpty(val.toString())) {
+                        arg.setValue(arg.getDefault());
+                    } else {
+                        if (val instanceof String) {
+                            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+                            LOGGER.info("field parameter type=" + type);
+                            val = val.toString().trim();
+                            if (type.equals(Path.class)) {
+                                val = Paths.get(val.toString());
+                            } else if (type.equals(URI.class)) {
+                                val = URI.create(val.toString());
+                            }
+                        }
+                        arg.setValue(val);
+                    }
+                    field.set(o, arg);
+                }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[can't get field][%s.%s]%s", this.getClass().getSimpleName(), field.getName(), e.toString()), e);
+            }
+        }
+    }
+}

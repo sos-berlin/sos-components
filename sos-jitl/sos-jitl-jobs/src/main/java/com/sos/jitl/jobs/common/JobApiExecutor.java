@@ -29,14 +29,14 @@ public class JobApiExecutor {
 
     private SOSRestApiClient client = null;
     private URI jocUri = null;
-    private String truststoreFile;
+    private String truststoreFileName;
 
     public JobApiExecutor() {
         this(null, null);
     }
 
-    public JobApiExecutor(String truststoreFile, URI jocUri) {
-        this.truststoreFile = truststoreFile == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFile;
+    public JobApiExecutor(String truststoreFileName, URI jocUri) {
+        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
         this.jocUri = jocUri;
     }
 
@@ -77,7 +77,7 @@ public class JobApiExecutor {
         }
 
         List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(config);
-        KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFile)).map(item -> {
+        KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
             try {
                 return KeyStoreUtil.readTrustStore(item.getPath(), KeyStoreType.PKCS12, item.getStorePwd());
             } catch (Exception e) {
@@ -110,9 +110,7 @@ public class JobApiExecutor {
     }
 
     private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
-        List<? extends Config> list = config.getConfigList("js7.web.https.truststores");
-        List<KeyStoreCredentials> credentials = null;
-        credentials = list.stream().map(item -> {
+        List<KeyStoreCredentials> credentials = config.getConfigList("js7.web.https.truststores").stream().map(item -> {
             return new KeyStoreCredentials(item.getString("file"), item.getString("store-password"), null);
         }).filter(Objects::nonNull).collect(Collectors.toList());
         if (credentials != null) {
