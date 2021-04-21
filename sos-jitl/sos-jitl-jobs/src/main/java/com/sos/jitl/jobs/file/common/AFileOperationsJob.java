@@ -159,8 +159,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 fileList.append(f.getAbsolutePath() + ";");
             }
         }
-        args.getOutputResultSet().setValue(fileList.toString());
-        args.getOutputResultSetSize().setValue(size);
+        args.getReturnResultSet().setValue(fileList.toString());
+        args.getReturnResultSetSize().setValue(size);
 
         if (args.getResultListFile().getValue() != null && fileList.length() > 0) {
             Job.debug(step, "..try to write file:" + args.getResultListFile().getValue());
@@ -175,10 +175,10 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             if (compareIntValues(args.getRaiseErrorIfResultSetIs().getValue(), size, args.getExpectedSizeOfResultSet().getValue())) {
                 String msg = String.format("no of hits in result set '%s'  is '%s' expected '%s'", size, args.getRaiseErrorIfResultSetIs().getValue(),
                         args.getExpectedSizeOfResultSet().getValue());
-                return Job.failed(msg, args.getOutputResultSet(), args.getOutputResultSetSize());
+                return Job.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
             }
         }
-        return Job.success(args.getOutputResultSet(), args.getOutputResultSetSize());
+        return Job.success(args.getReturnResultSet(), args.getReturnResultSetSize());
     }
 
     private boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {

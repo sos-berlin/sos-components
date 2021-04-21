@@ -1,11 +1,11 @@
 package com.sos.jitl.jobs.common;
 
-public class JobOutputArgument<T> {
+public class JobReturnArgument<T> {
 
     private final String name;
     private T value;
 
-    public JobOutputArgument(String name) {
+    public JobReturnArgument(String name) {
         this.name = name;
     }
 

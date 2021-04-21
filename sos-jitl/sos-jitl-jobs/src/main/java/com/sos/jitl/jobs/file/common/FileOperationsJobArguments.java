@@ -3,13 +3,13 @@ package com.sos.jitl.jobs.file.common;
 import java.nio.file.Path;
 
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobOutputArgument;
+import com.sos.jitl.jobs.common.JobReturnArgument;
 
 public class FileOperationsJobArguments {
 
-    /* Output arguments */
-    private JobOutputArgument<String> outputResultSet = new JobOutputArgument<String>("fileoperations_result_set");
-    private JobOutputArgument<Integer> outputResultSetSize = new JobOutputArgument<Integer>("fileoperations_result_set_size");
+    /* Return arguments */
+    private JobReturnArgument<String> returnResultSet = new JobReturnArgument<String>("fileoperations_result_set");
+    private JobReturnArgument<Integer> returnResultSetSize = new JobReturnArgument<Integer>("fileoperations_result_set_size");
 
     /* Internal arguments */
     private JobArgument<Integer> flags = new JobArgument<Integer>(null, 0); // internal usage
@@ -48,12 +48,12 @@ public class FileOperationsJobArguments {
     private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false);
     private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false);
 
-    public JobOutputArgument<String> getOutputResultSet() {
-        return outputResultSet;
+    public JobReturnArgument<String> getReturnResultSet() {
+        return returnResultSet;
     }
 
-    public JobOutputArgument<Integer> getOutputResultSetSize() {
-        return outputResultSetSize;
+    public JobReturnArgument<Integer> getReturnResultSetSize() {
+        return returnResultSetSize;
     }
 
     public JobArgument<String> getFileAge() {

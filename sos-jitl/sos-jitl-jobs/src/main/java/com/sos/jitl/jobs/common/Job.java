@@ -41,7 +41,7 @@ public class Job {
         return JOutcome.succeeded();
     }
 
-    public static JOutcome.Completed success(final JobOutputArgument<?>... returnValues) {
+    public static JOutcome.Completed success(final JobReturnArgument<?>... returnValues) {
         return success(getMap(returnValues));
     }
 
@@ -67,7 +67,7 @@ public class Job {
         return JOutcome.failed(msg);
     }
 
-    public static JOutcome.Completed failed(final String msg, JobOutputArgument<?>... returnValues) {
+    public static JOutcome.Completed failed(final String msg, JobReturnArgument<?>... returnValues) {
         return failed(msg, getMap(returnValues));
     }
 
@@ -317,9 +317,9 @@ public class Job {
         return o;
     }
 
-    private static Map<String, Object> getMap(JobOutputArgument<?>... returnValues) {
+    private static Map<String, Object> getMap(JobReturnArgument<?>... returnValues) {
         Map<String, Object> map = new HashMap<String, Object>();
-        for (JobOutputArgument<?> arg : returnValues) {
+        for (JobReturnArgument<?> arg : returnValues) {
             if (arg.getName() == null || arg.getValue() == null) {
                 continue;
             }
