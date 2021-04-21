@@ -27,17 +27,22 @@ public class JobApiExecutor {
     private static final String WS_API_LOGIN = "/joc/api/authentication/login";
     private static final String WS_API_LOGOUT = "/joc/api/authentication/logout";
 
-    private SOSRestApiClient client = null;
-    private URI jocUri = null;
-    private String truststoreFileName;
+    private final String truststoreFileName;
+
+    private SOSRestApiClient client;
+    private URI jocUri;
 
     public JobApiExecutor() {
         this(null, null);
     }
 
-    public JobApiExecutor(String truststoreFileName, URI jocUri) {
-        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
+    public JobApiExecutor(URI jocUri) {
+        this(jocUri, null);
+    }
+
+    public JobApiExecutor(URI jocUri, String truststoreFileName) {
         this.jocUri = jocUri;
+        this.truststoreFileName = truststoreFileName == null ? DEFAULT_TRUSTSTORE_FILENAME : truststoreFileName;
     }
 
     public String login() throws Exception {
@@ -89,7 +94,6 @@ public class JobApiExecutor {
 
         client = new SOSRestApiClient();
         client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
-
     }
 
     private void closeClient() {

@@ -10,7 +10,7 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
 
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, JocApiJobArguments args) throws Exception {
-        JobApiExecutor ex = new JobApiExecutor(args.getTrustoreFileName(), args.getJocUri().getValue());
+        JobApiExecutor ex = new JobApiExecutor(args.getJocUri().getValue(), args.getTrustoreFileName());
         try {
             String token = ex.login();
 
