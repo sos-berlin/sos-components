@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.db.SQLExecutorJobArguments;
 import com.sos.jitl.jobs.examples.JocApiJobArguments;
 
 public class JobTest {
@@ -24,13 +25,19 @@ public class JobTest {
 
     @Ignore
     @Test
-    public void testJobArguments() throws Exception {
-        JocApiJobArguments o = new JocApiJobArguments();
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put(o.getJocUri().getName(), "http://localhost");
+    public void testJobArguments() {
+        SQLExecutorJobArguments o1 = new SQLExecutorJobArguments();
+        JocApiJobArguments o2 = new JocApiJobArguments();
 
-        setArguments(map, o);
-        LOGGER.info("jocUri=" + o.getJocUri().getValue().getScheme());
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(o1.getHibernateFile().getName(), "C://myfile");
+        map.put(o2.getJocUri().getName(), "http://localhost");
+
+        setArguments(map, o1);
+        LOGGER.info("hibernate=" + o1.getHibernateFile().getValue().toFile().toString());
+
+        setArguments(map, o2);
+        LOGGER.info("jocUri=" + o2.getJocUri().getValue().getScheme());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -39,7 +46,7 @@ public class JobTest {
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                LOGGER.info("field type=" + field.getGenericType());
+                LOGGER.debug("  field type=" + field.getGenericType());
                 JobArgument arg = (JobArgument<?>) field.get(o);
                 if (arg != null) {
                     if (arg.getName() == null) {// internal usage
@@ -51,7 +58,7 @@ public class JobTest {
                     } else {
                         if (val instanceof String) {
                             Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                            LOGGER.info("field parameter type=" + type);
+                            LOGGER.debug("    field parameter type=" + type);
                             val = val.toString().trim();
                             if (type.equals(Path.class)) {
                                 val = Paths.get(val.toString());

@@ -19,8 +19,8 @@ public class SQLExecutorJobArguments {
     private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false);
     private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false);
 
-    public Path getHibernateFile() {
-        return hibernateFile.getValue();
+    public JobArgument<Path> getHibernateFile() {
+        return hibernateFile;
     }
 
     public String getCommand() {

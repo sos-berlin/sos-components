@@ -34,7 +34,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             if (SOSString.isEmpty(args.getCommand())) {
                 throw new Exception("command is empty. please check the job/order \"command\" parameter.");
             }
-            factory = new SOSHibernateFactory(args.getHibernateFile());
+            factory = new SOSHibernateFactory(args.getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
