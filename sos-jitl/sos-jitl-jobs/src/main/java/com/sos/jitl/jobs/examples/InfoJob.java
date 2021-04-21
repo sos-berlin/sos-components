@@ -11,7 +11,6 @@ import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Authenticator;
 import com.sos.jitl.jobs.common.Job;
-import com.typesafe.config.Config;
 
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
@@ -36,9 +35,8 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     @Override
     public void onStart(InfoJobArguments args) throws Exception {
         LOGGER.info("start");
-        LOGGER.info("System.getProperty(...): " + System.getProperty(CONFIG_DIR_ENV_KEY));
-        LOGGER.info("System.getenv(...): " + System.getenv(CONFIG_DIR_ENV_KEY));
         String privateConfPath = Paths.get("/").resolve(System.getenv(CONFIG_DIR_ENV_KEY)).resolve("private").resolve("private.conf").normalize().toString().replace('\\', '/');
+        System.setProperty("js7.config-directory", System.getenv(CONFIG_DIR_ENV_KEY));
         httpsRestApiClient = Authenticator.createHttpsRestApiClient(privateConfPath);
         jocUri = Authenticator.getJocUriFromPrivateConf(privateConfPath);
         URI jocLoginURI; 
