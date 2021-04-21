@@ -35,7 +35,10 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     @Override
     public void onStart(InfoJobArguments args) throws Exception {
         LOGGER.info("start");
+        // determine the path of the private.conf file with help of the environment variable for the config directory
         String privateConfPath = Paths.get("/").resolve(System.getenv(CONFIG_DIR_ENV_KEY)).resolve("private").resolve("private.conf").normalize().toString().replace('\\', '/');
+        // set system property js7.config-directory for later substitution in private.conf file
+        // substitution does not work with the environment variable, but with the system property
         System.setProperty("js7.config-directory", System.getenv(CONFIG_DIR_ENV_KEY));
         httpsRestApiClient = Authenticator.createHttpsRestApiClient(privateConfPath);
         jocUri = Authenticator.getJocUriFromPrivateConf(privateConfPath);
