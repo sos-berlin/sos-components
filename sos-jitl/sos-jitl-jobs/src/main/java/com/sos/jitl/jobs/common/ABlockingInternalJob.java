@@ -4,6 +4,7 @@ import static io.vavr.control.Either.left;
 import static io.vavr.control.Either.right;
 
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -125,9 +126,12 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     } else {
                         if (val instanceof String) {
                             val = val.toString().trim();
-                            // TODO
-                            if (arg.getDefault() != null && arg.getDefault() instanceof Path) {
-                                val = Paths.get(val.toString());
+                            if (arg.getDefault() != null) { // TODO type detection
+                                if (arg.getDefault() instanceof Path) {
+                                    val = Paths.get(val.toString());
+                                } else if (arg.getDefault() instanceof URI) {
+                                    val = URI.create(val.toString());
+                                }
                             }
                         }
                         arg.setValue(val);

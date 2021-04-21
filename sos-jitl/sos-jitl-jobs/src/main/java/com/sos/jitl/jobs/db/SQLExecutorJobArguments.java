@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.db;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
@@ -12,8 +11,8 @@ public class SQLExecutorJobArguments {
         NAME_VALUE, TRUE, FALSE
     }
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Paths.get(Job.getAgentConfigDir(),
-            "hibernate.cfg.xml"));
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentConfigDir().resolve(
+            "hibernate.cfg.xml").normalize());
     private JobArgument<String> command = new JobArgument<String>("command");
     private JobArgument<String> resultSetAsParameters = new JobArgument<String>("resultset_as_parameters", ArgResultSetAsParametersValues.FALSE
             .name());

@@ -2,6 +2,8 @@ package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,16 +113,24 @@ public class Job {
         return val;
     }
 
-    public static String getAgentHome() {
-        return System.getenv(ENV_NAME_AGENT_HOME);
+    public static Path getAgentHome() {
+        return getPath(System.getenv(ENV_NAME_AGENT_HOME));
     }
 
-    public static String getAgentConfigDir() {
-        return System.getenv(ENV_NAME_AGENT_CONFIG_DIR);
+    public static Path getAgentConfigDir() {
+        return getPath(System.getenv(ENV_NAME_AGENT_CONFIG_DIR));
     }
 
-    public static String getAgentWorkDir() {
-        return System.getenv(ENV_NAME_AGENT_WORK_DIR);
+    public static Path getAgentWorkDir() {
+        return getPath(System.getenv(ENV_NAME_AGENT_WORK_DIR));
+    }
+
+    public static Path getAgentPrivateConfFile() {
+        return getAgentConfigDir().resolve("private").resolve("private.conf").normalize();
+    }
+
+    private static Path getPath(String val) {
+        return Paths.get(val == null ? "." : val);
     }
 
     public static SOSParameterSubstitutor getSubstitutor(final Map<String, Object> args) {
