@@ -28,7 +28,7 @@ public class JobArgument<T> {
     }
 
     public T getValue() {
-        return value;
+        return value == null ? defaultValue : value;
     }
 
 }
