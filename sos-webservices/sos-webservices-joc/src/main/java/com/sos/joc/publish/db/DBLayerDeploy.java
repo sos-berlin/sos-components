@@ -1106,6 +1106,54 @@ public class DBLayerDeploy {
         }
     }
     
+    public void saveNewInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite, Set<String> agentNames) {
+        boolean valid = false;
+        try {
+            Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
+            valid = true;
+        } catch (Exception e) {
+            valid = false;
+        }
+        // check if imported agentName is known. Has to be removed, when the Validator takes over the check!
+        if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
+            Workflow workflow = (Workflow)configuration.getConfiguration();
+            boolean allAgentNamesKnown = true;
+            for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
+                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                String agentName = job.getAgentId();
+                boolean agentNameKnown = checkAgentNamePresent(agentName);
+                if (!agentNameKnown) {
+                    allAgentNamesKnown = false;
+                    break;
+                }
+            }
+            if (!allAgentNamesKnown) {
+                valid = false;
+            }
+        }
+        try {
+			DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
+			Date now = Date.from(Instant.now());
+			newConfiguration.setModified(now);
+			newConfiguration.setCreated(now);
+			newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+			newConfiguration.setPath(configuration.getPath());
+			newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
+			newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
+			newConfiguration.setType(configuration.getObjectType());
+			newConfiguration.setAuditLogId(auditLogId);
+			newConfiguration.setDocumentationId(0L);
+			newConfiguration.setDeployed(false);
+			newConfiguration.setReleased(false);
+			newConfiguration.setValid(valid);
+			session.save(newConfiguration);
+		} catch (JsonProcessingException e) {
+            throw new JocSosHibernateException(e);
+		} catch (SOSHibernateException e) {
+            throw new JocException(e);
+		}
+    }
+
     public DBItemInventoryConfiguration getConfigurationByPath(String path, ConfigurationType type) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);

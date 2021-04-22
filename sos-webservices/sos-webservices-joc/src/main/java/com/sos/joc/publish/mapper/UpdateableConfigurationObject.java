@@ -11,11 +11,11 @@ public class UpdateableConfigurationObject {
 	private DBItemInventoryConfiguration configurationDbItem;
 	private String oldName;
 	private String newName;
-	private Set<DBItemInventoryConfiguration> referencedBy;
+	private Set<ConfigurationObject> referencedBy;
 	private String targetFolder;
 	
 	public UpdateableConfigurationObject(ConfigurationObject configuration, DBItemInventoryConfiguration configurationDbItem, String oldName,
-			String newName, Set<DBItemInventoryConfiguration> referencedBy, String targetFolder) {
+			String newName, Set<ConfigurationObject> referencedBy, String targetFolder) {
 		this.configurationObject = configuration;
 		this.configurationDbItem = configurationDbItem;
 		this.oldName = oldName;
@@ -36,7 +36,7 @@ public class UpdateableConfigurationObject {
 		return newName;
 	}
 	
-	public Set<DBItemInventoryConfiguration> getReferencedBy() {
+	public Set<ConfigurationObject> getReferencedBy() {
 		return referencedBy;
 	}
 
