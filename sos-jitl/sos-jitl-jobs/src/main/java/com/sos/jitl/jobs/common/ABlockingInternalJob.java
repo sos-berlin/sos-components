@@ -92,20 +92,17 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         };
     }
 
-    private A createJobArguments() {
+    private A createJobArguments() throws Exception {
         return createJobArguments(null);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private A createJobArguments(final BlockingInternalJob.Step step) {
-        A o;
-        try {
-            o = argumentClazz.newInstance();
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            return null;
+    private A createJobArguments(final BlockingInternalJob.Step step) throws Exception {
+        if (argumentClazz == null) {
+            throw new Exception("missing argument class");
         }
 
+        A o = argumentClazz.newInstance();
         Map<String, Object> map = null;
         if (step == null) {
             map = Job.convert(jobContext.jobArguments());

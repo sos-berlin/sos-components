@@ -9,6 +9,10 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
 
+    public JocApiJob(JobContext jobContext) {
+        super(jobContext, JocApiJobArguments.class);
+    }
+
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, JocApiJobArguments args) throws Exception {
         JobApiExecutor ex = new JobApiExecutor(args.getJocUri().getValue(), args.getTrustoreFileName());
         try {
