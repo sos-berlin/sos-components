@@ -22,6 +22,7 @@ import com.sos.commons.util.SOSString;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
@@ -30,15 +31,13 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     private static final Logger LOGGER = LoggerFactory.getLogger(ABlockingInternalJob.class);
 
     private final JobContext jobContext;
-    private final Class<A> argumentClazz;
 
     public ABlockingInternalJob() {
-        this(null, null);
+        this(null);
     }
 
-    public ABlockingInternalJob(JobContext jobContext, Class<A> argumentClazz) {
+    public ABlockingInternalJob(JobContext jobContext) {
         this.jobContext = jobContext;
-        this.argumentClazz = argumentClazz;
     }
 
     /** to override */
@@ -98,23 +97,29 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private A createJobArguments(final BlockingInternalJob.Step step) throws Exception {
-        if (argumentClazz == null) {
-            throw new Exception("missing argument class");
-        }
+        Class<A> argumentsClazz = (Class<A>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 
-        A o = argumentClazz.newInstance();
+        A a = argumentsClazz.newInstance();
         Map<String, Object> map = null;
         if (step == null) {
+            if (jobContext == null) {
+                return a;
+            }
             map = Job.convert(jobContext.jobArguments());
         } else {
-            map = Job.convert(Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments()).flatMap(m -> m.entrySet().stream())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+            Stream<Map<String, Value>> stream = null;
+            if (jobContext == null) {
+                stream = Stream.of(step.order().arguments(), step.arguments());
+            } else {
+                stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
+            }
+            map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
-        List<Field> fields = Job.getJobArgumentFields(o);
+        List<Field> fields = Job.getJobArgumentFields(a);
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                JobArgument arg = (JobArgument<?>) field.get(o);
+                JobArgument arg = (JobArgument<?>) field.get(a);
                 if (arg != null) {
                     if (arg.getName() == null) {// internal usage
                         continue;
@@ -134,13 +139,13 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                         }
                         arg.setValue(val);
                     }
-                    field.set(o, arg);
+                    field.set(a, arg);
                 }
             } catch (Throwable e) {
                 LOGGER.error(String.format("[can't get field][%s.%s]%s", this.getClass().getSimpleName(), field.getName(), e.toString()), e);
             }
         }
-        return o;
+        return a;
     }
 
 }

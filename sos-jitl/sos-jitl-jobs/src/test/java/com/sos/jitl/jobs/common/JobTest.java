@@ -16,12 +16,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.common.helper.TestJob;
+import com.sos.jitl.jobs.common.helper.TestJobArguments;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments;
 import com.sos.jitl.jobs.examples.JocApiJobArguments;
 
 public class JobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobTest.class);
+
+    @Ignore
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testABlockingJobWithoutArgumentClazzConstructor() throws Exception {
+        TestJob job = new TestJob();
+        Type t = ((ParameterizedType) job.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        LOGGER.info("type=" + t);
+
+        Class<TestJobArguments> clazz = (Class<TestJobArguments>) t;
+        LOGGER.info("clazz=" + clazz);
+
+        TestJobArguments args = clazz.newInstance();
+        LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
+        LOGGER.info("name=" + args.getTest().getName());
+    }
 
     @Ignore
     @Test

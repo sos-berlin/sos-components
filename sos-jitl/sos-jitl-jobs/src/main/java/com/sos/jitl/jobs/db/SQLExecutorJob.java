@@ -23,7 +23,7 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
 
     public SQLExecutorJob(JobContext jobContext) {
-        super(jobContext, SQLExecutorJobArguments.class);
+        super(jobContext);
     }
 
     @Override
@@ -39,7 +39,9 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory.build();
             session = factory.openStatelessSession();
 
-            return Job.success(process(step, session, args));
+            Map<String, Object> map = process(step, session, args);
+            Job.info(step, "map=" + map);
+            return Job.success(map);
         } catch (Throwable e) {
             throw e;
         } finally {

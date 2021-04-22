@@ -14,7 +14,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     private static final Logger LOGGER = LoggerFactory.getLogger(InfoJob.class);
 
     public InfoJob(JobContext jobContext) {
-        super(jobContext, InfoJobArguments.class);
+        super(jobContext);
         LOGGER.info("[CONSTRUCTOR]jobArguments=" + Job.convert(getJobContext().jobArguments()));
     }
 
