@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -136,9 +135,10 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
                 		if (existingConfiguration != null) {
                         	UpdateableConfigurationObject updateable = 
-                        			ImportUtils.createUpdateableConfiguration(existingConfiguration, configuration, filter.getPrefix(),
+                        			ImportUtils.createUpdateableConfiguration(existingConfiguration, configuration, configurations, filter.getPrefix(),
                         					filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                        	ImportUtils.replaceReferences(updateable, dbLayer);
+                        	ImportUtils.replaceReferences(updateable);
+                        	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
                 		} else {
                             if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                                 configuration.setPath(filter.getTargetFolder() + configuration.getPath());
@@ -163,16 +163,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 }
         	}
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
-            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                configurations.stream().map(item -> {
-                    item.setPath(filter.getTargetFolder() + item.getPath());
-                    return item;
-                }).forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
-                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames));
-            } else {
-                configurations.stream().forEach(item -> dbLayer.saveOrUpdateInventoryConfiguration(
-                        item, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames));
-            }
             folders = configurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
             dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
