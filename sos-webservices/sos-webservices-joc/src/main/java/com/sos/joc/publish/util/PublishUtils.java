@@ -151,9 +151,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
-import net.bytebuddy.asm.Advice.Return;
 import reactor.core.publisher.Flux;
-import shapeless.newtype;
 
 public abstract class PublishUtils {
 
@@ -3483,6 +3481,8 @@ public abstract class PublishUtils {
                     om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configurationObject.setConfiguration(fileOrderSource);
                 break;
+            default:
+            	break;
             }
 //            configurationObject.setVersion(item.getVersion());
 //            configurationObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
@@ -3533,6 +3533,8 @@ public abstract class PublishUtils {
                     om.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configuration.setConfiguration(fileOrderSource);
                 break;
+            default:
+            	break;
             }
             return configuration;
         } catch (IOException e) {
