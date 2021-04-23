@@ -36,7 +36,7 @@ public class JocConfiguration {
         securityLevel = jocSecurityLevel;
         title = SOSString.isEmpty(jocTitle) ? hostname : jocTitle;
         ordering = jocOrdering == null ? 0 : jocOrdering;
-        memberId = hostname + ":" + SOSString.hash(dataDirectory.toString());
+        memberId = hostname + ":" + SOSString.hash256(dataDirectory.toString());
     }
 
     private String setHostname() {

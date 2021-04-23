@@ -1801,12 +1801,12 @@ public class HistoryModel {
     }
 
     private String hashOrderConstraint(Long eventId, String orderId) {
-        return SOSString.hash(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).toString());
+        return SOSString.hash256(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).toString());
 
     }
 
     private String hashOrderStepConstraint(Long eventId, String orderId, String workflowPosition) {
-        return SOSString.hash(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).append(workflowPosition)
+        return SOSString.hash256(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).append(workflowPosition)
                 .toString());
     }
 

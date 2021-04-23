@@ -530,7 +530,7 @@ public class JocInventory {
     }
 
     public static String hash(IConfigurationObject config) throws JsonProcessingException {
-        return SOSString.hash(toString(config));
+        return SOSString.hash256(toString(config));
     }
 
     public static void handleWorkflowSearch(SOSHibernateSession session, Set<DBItemDeploymentHistory> deployments, boolean deleteDeployments) {

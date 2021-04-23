@@ -137,7 +137,7 @@ public class ControllersResourceComponentsImpl extends JOCResourceImpl implement
         DBItemJocCluster activeInstance = dbLayer.getCluster();
         List<Cockpit> cockpits = new ArrayList<>();
         String hostname = getHostname();
-        String curMemberId = hostname + ":" + SOSString.hash(Paths.get(System.getProperty("user.dir")).toString());
+        String curMemberId = hostname + ":" + SOSString.hash256(Paths.get(System.getProperty("user.dir")).toString());
         if (instances != null) {
             Boolean isCluster = instances.size() > 1;
             InventoryOperatingSystemsDBLayer dbOsLayer = new InventoryOperatingSystemsDBLayer(connection);
