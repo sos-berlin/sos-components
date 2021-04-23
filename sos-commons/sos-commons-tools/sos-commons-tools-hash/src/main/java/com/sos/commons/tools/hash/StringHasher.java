@@ -1,4 +1,4 @@
-package com.sos.commons.hasher;
+package com.sos.commons.tools.hash;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
