@@ -30,7 +30,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
     private static final Logger LOGGER = LoggerFactory.getLogger(AFileOperationsJob.class);
 
     public AFileOperationsJob(JobContext jobContext) {
-        super(jobContext, FileOperationsJobArguments.class);
+        super(jobContext);
     }
 
     public void checkArguments(FileOperationsJobArguments args) throws Exception {
