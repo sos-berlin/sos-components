@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="steady_state_interval" 
+    required="false" 
+    default_value="1" 
+    DataType="java.lang.String" 
+    usewith="check_steady_state_of_files, steady_state_count">
+    <note language="de">
+        <title>zeitlicher Abstand zwischen Checkpoints</title>
+            <p>
+Der Abstand in Sekunden zwischen zwei Prüfungen auf Vollständigkeit bzw. Veränderungen wird mit dem Wert dieses Parameters festgelegt.
+            </p>
+    </note>
+    <note language="en">
+        <title>Temporal distance between checkpoints</title>
+            <p>
+            The value of this option defines the temporal distance in seconds between two checkpoints.
+            </p>
+    </note>
+</param>

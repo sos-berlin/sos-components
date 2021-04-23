@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description 
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job 	name="FileExistsJob" 
+    		tasks="unbounded" 
+    		title="check wether a file exist" 
+    		>
+        <script language="java" java_class="com.sos.jitl.jobs.file.FileExistsJob" resource="1" />
+    </job>
+
+    <releases>
+		<release id="1.0" created="2021-04-23" modified="2021-04-23">
+      		<title>Version 1.0</title>
+      		<note language="de"><div xmlns="http://www.w3.org/1999/xhtml">Initiale Auslieferung</div></note>
+      		<note language="en"><div xmlns="http://www.w3.org/1999/xhtml">Initial release</div></note>
+    	</release>
+	</releases>
+
+    <resources>
+		<xi:include href="./includes/jars/sos/com.sos.commons.exception.jar.xml" parse="xml" />
+    	<xi:include href="./includes/jars/sos/com.sos.commons.util.jar.xml" parse="xml" />
+   </resources>
+
+    <configuration> 
+        <xi:include href="./includes/com.sos.jitl.jobs.file/description_result_set.xml" parse="xml" />
+      
+        <params id="job_parameter">
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_source_file.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_file_spec_fileop.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_gracious.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_age.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_max_file_size.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_age.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_min_file_size.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_skip_first_files.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_skip_last_files.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_count_files.xml" parse="xml" />
+			<xi:include href="./includes/com.sos.jitl.jobs.file/steady_state/main.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/result_set/main.xml" parse="xml" />
+        </params>
+        <params id="return_parameter">
+            <xi:include href="./includes/com.sos.jitl.jobs.file/return/main.xml" parse="xml" />
+        </params>
+        <params id="other">
+        </params>
+    </configuration>
+
+    <documentation language="de">
+    
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>Prüft auf die Existenz einer Datei, eines Verzeichnisses, oder auf bestimmte Dateien innerhalb eines Verzeichnisses.</p>
+            <p>
+                Der Job bietet folgende Funktionalitäten:
+            </p>
+            <p>
+                <features>
+                    <feature>
+                        Die Existenz einer oder mehrerer Dateien prüfen
+                    </feature>
+                    <xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                </features>
+            </p>
+        </div>
+    </documentation>
+
+    <documentation language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml" xmlns:xi="http://www.w3.org/2001/XInclude">
+            <p>
+                Checks for the existence of a file, a directory or for specific files inside of a directory.
+                The job belongs to the category "FileOperations".
+            </p>
+            <xi:include href="./includes/com.sos.jitl.jobs.file/note_file_operations.xml" parse="xml" />
+            <p>
+                <features>
+                    <feature>
+                        Checking for the existence of files
+                    </feature>
+                   	<xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                 </features>
+            </p>
+
+        </div>
+    </documentation>
+
+</description>

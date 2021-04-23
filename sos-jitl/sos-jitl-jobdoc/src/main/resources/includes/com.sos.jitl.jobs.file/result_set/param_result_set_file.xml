@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	name="result_set_file"
+	DataType="java.nio.file.Path (Job argument - String)"
+	required="false">
+	<note language="de">
+		<title>Dateiname der Ergebnisliste </title>
+		<p>
+		Wenn mit diesem Parameter ein gültiger Dateiname angegeben wurde so wird die
+		Ergebnisliste in dieser Datei gespeichert.
+		</p>
+	</note>
+	<note language="en">
+		<title>Name of the result-list file</title>
+		<p>
+		If the value of this parameter specifies a valid filename the result-list will be
+		written to this file.
+		</p>
+	</note>
+</param>
+ 

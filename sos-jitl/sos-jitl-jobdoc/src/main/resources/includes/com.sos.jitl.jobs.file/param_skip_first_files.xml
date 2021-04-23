@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="skip_first_files" 
+    DataType="java.lang.Integer"
+    default_value="0"
+    required="false" 
+    exclude="skip_last_files">
+
+    <note language="de">
+        <title>Anzahl nicht zu berücksichtigender Dateien</title>
+        <p>
+            Die angegebene Anzahl Dateien wird vom Anfang der Ergebnismenge (result-list)
+            der Operation entfernt. Auf diese Dateien wirkt sich die Operation damit nicht aus.
+            </p><p>
+            Der Parameter wirkt auf die resultierende Menge von
+            <paramref>sort_criteria</paramref> und <paramref>sort_order</paramref>
+        </p>
+        <p>
+            Die Reihenfolge der Einträge in der Ergebnismenge wird durch die Parameter bestimmt:
+            <ul>
+                <li>
+                    <paramref>sort_criteria</paramref>                   
+                </li>
+                <li>
+                    <paramref>sort_order</paramref>
+                </li>
+                
+            </ul>
+        </p>
+         
+    </note>
+    <note language="en">
+        <title>number of files to remove from the top of the result-set
+        </title>
+        <p>
+            The number of files are removed from the beginning of the set
+            resulting by<paramref>sort_criteria</paramref>,<paramref>sort_order</paramref>
+            These files are excluded from further operations.
+        </p>
+        <p>
+            The result set is sorted according to the parameters:
+            </p><p>
+            <ul>
+                <li>
+                    <paramref>sort_criteria</paramref>
+                </li>
+                <li>
+                    <paramref>sort_order</paramref>
+                </li>
+            </ul>
+        </p>
+    </note>
+</param>

@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+    <job 	name="CanWriteJob" 
+    		tasks="unbounded" 
+    		title="check wether a file is writable" 
+    		>
+        	<script language="java" java_class="com.sos.jitl.jobs.file.CanWriteJob" resource="1" />
+    </job>
+    
+    <releases>
+		<release id="1.0" created="2021-04-23" modified="2021-04-23">
+      		<title>Version 1.0</title>
+      		<note language="de"><div xmlns="http://www.w3.org/1999/xhtml">Initiale Auslieferung</div></note>
+      		<note language="en"><div xmlns="http://www.w3.org/1999/xhtml">Initial release</div></note>
+    	</release>
+	</releases>
+
+    <resources>
+		<xi:include href="./includes/jars/sos/com.sos.commons.exception.jar.xml" parse="xml" />
+    	<xi:include href="./includes/jars/sos/com.sos.commons.util.jar.xml" parse="xml" />
+   </resources>
+   	
+   <configuration>
+        <params id="job_parameter">
+          	<xi:include href="./includes/com.sos.jitl.jobs.file/param_source_file.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_file_spec_fileop.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.file/param_gracious.xml" parse="xml" />
+        </params>
+        <params id="return_parameter">
+        </params>
+        <params id="other">
+        </params>
+    </configuration>
+    
+    <documentation language="de">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>
+                Prüft ob eine oder mehrere Dateien beschreibbar sind.
+                Das schließt die Prüfung auf Existenz ein.
+            </p>
+        </div>
+    </documentation>
+    
+    <documentation language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>
+                this job checks whether one or more files can be written including check of file exist.
+            </p>
+        </div>
+    </documentation>
+</description>
+

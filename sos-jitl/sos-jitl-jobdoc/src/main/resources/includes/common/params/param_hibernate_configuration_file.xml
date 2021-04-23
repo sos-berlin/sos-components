@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="hibernate_configuration_file"
+       required="false"
+       DefaultValue="config/hibernate.cfg.xml" 
+       DataType="java.nio.file.Path (Job argument - String)">
+	
+	<note language="de">
+	<div xmlns="http://www.w3.org/1999/xhtml">
+	Speicherort der hibernate configuration Konfigurationsdatei.
+	</div>
+	</note>
+        
+    <note language="en">
+	<div xmlns="http://www.w3.org/1999/xhtml">
+    Location of the hibernate configuration file.
+    </div>
+    </note>
+</param>

@@ -14,5 +14,6 @@
 
 	<modules>
 		<module>sos-jitl-jobs</module>
+		<module>sos-jitl-jobdoc</module>
 	</modules>
 </project>

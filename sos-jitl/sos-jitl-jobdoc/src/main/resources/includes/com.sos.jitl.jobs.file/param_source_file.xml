@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param 
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xi="http://www.w3.org/2001/XInclude" 
+    name="source_file" 
+    DataType="java.lang.String" 
+    required="true">
+
+    <note language="de">
+        <title>Zu überwachende Datei oder Verzeichnis</title>
+        <p>Zu überwachende Datei oder zu überwachendes Verzeichnis.</p>
+    </note>
+    <note language="en">
+        <title>File or Folder to be monitored</title>
+        <p>Monitored file or directory.</p>
+    </note>
+    <xi:include href="./note_parameter_mask_substitution_de.xml" parse="xml" />
+    <xi:include href="./note_parameter_mask_substitution_en.xml" parse="xml" />
+    <!--
+    <xi:include href="./note_parameter_substitution_de.xml" parse="xml" />
+    <xi:include href="./note_parameter_substitution_en.xml" parse="xml" />
+    -->
+</param>

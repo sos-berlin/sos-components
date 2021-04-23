@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="file_operations_result_set" 
+	DataType="java.lang.String"
+	required="false"
+	usewith="file_operations_result_set_size"
+	>
+	<note language="de">
+		<title>Eine Liste aller Dateinamen</title>
+		<p>
+		</p>
+	</note>
+	<note language="en">
+		<title>The result of the operation as a list of items</title>
+		<p>
+		</p>
+	</note>
+</param>
