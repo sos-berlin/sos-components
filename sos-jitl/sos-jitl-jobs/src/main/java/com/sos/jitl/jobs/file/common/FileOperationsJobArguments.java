@@ -3,13 +3,13 @@ package com.sos.jitl.jobs.file.common;
 import java.nio.file.Path;
 
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobReturnArgument;
+import com.sos.jitl.jobs.common.JobReturnVariable;
 
 public class FileOperationsJobArguments {
 
     /* Return arguments */
-    private JobReturnArgument<String> returnResultSet = new JobReturnArgument<String>("fileoperations_result_set");
-    private JobReturnArgument<Integer> returnResultSetSize = new JobReturnArgument<Integer>("fileoperations_result_set_size");
+    private JobReturnVariable<String> returnResultSet = new JobReturnVariable<String>("file_operations_result_set");
+    private JobReturnVariable<Integer> returnResultSetSize = new JobReturnVariable<Integer>("file_operations_result_set_size");
 
     /* Internal arguments */
     private JobArgument<Integer> flags = new JobArgument<Integer>(null, 0); // internal usage
@@ -24,7 +24,6 @@ public class FileOperationsJobArguments {
     private JobArgument<String> fileAge = new JobArgument<String>("file_age", "0");// seconds or hh:mm:ss
     private JobArgument<String> minFileAge = new JobArgument<String>("min_file_age", "0");// seconds or hh:mm:ss
     private JobArgument<String> maxFileAge = new JobArgument<String>("max_file_age", "0");// seconds or hh:mm:ss
-    private JobArgument<String> checkSteadyStateInterval = new JobArgument<String>("check_steady_state_interval", "1");
 
     private JobArgument<String> replacement = new JobArgument<String>("replacement");
     private JobArgument<String> replacing = new JobArgument<String>("replacing");
@@ -34,25 +33,28 @@ public class FileOperationsJobArguments {
     private JobArgument<String> minFileSize = new JobArgument<String>("min_file_size", "-1");
     private JobArgument<String> maxFileSize = new JobArgument<String>("max_file_size", "-1");
 
-    private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", 0);
-    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", 30);
-
-    private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is");
-    private JobArgument<Path> resultListFile = new JobArgument<Path>("result_list_file");
-
     private JobArgument<Boolean> useFileLock = new JobArgument<Boolean>("use_file_lock", false);
     private JobArgument<Boolean> gracious = new JobArgument<Boolean>("gracious", false);
     private JobArgument<Boolean> overwrite = new JobArgument<Boolean>("overwrite", true);
     private JobArgument<Boolean> recursive = new JobArgument<Boolean>("recursive", false);
     private JobArgument<Boolean> createFile = new JobArgument<Boolean>("create_file", false);// create_dir, create_files
     private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false);
-    private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false);
 
-    public JobReturnArgument<String> getReturnResultSet() {
+    // steady state
+    private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false);
+    private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", "1");
+    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", 30);
+
+    //result set
+    private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", 0);
+    private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is");
+    private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file");
+    
+    public JobReturnVariable<String> getReturnResultSet() {
         return returnResultSet;
     }
 
-    public JobReturnArgument<Integer> getReturnResultSetSize() {
+    public JobReturnVariable<Integer> getReturnResultSetSize() {
         return returnResultSetSize;
     }
 
@@ -116,16 +118,16 @@ public class FileOperationsJobArguments {
         return steadyStateCount;
     }
 
-    public JobArgument<String> getCheckSteadyStateInterval() {
-        return checkSteadyStateInterval;
+    public JobArgument<String> getSteadyStateInterval() {
+        return steadyStateInterval;
     }
 
     public JobArgument<String> getRaiseErrorIfResultSetIs() {
         return raiseErrorIfResultSetIs;
     }
 
-    public JobArgument<Path> getResultListFile() {
-        return resultListFile;
+    public JobArgument<Path> getResultSetFile() {
+        return resultSetFile;
     }
 
     public JobArgument<String> getReplacement() {

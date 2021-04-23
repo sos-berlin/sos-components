@@ -69,15 +69,15 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         if (files == null || files.size() == 0 || !args.getCheckSteadyStateOfFiles().getValue()) {
             return true;
         }
-        long timeout = Job.getTimeAsSeconds(args.getCheckSteadyStateInterval());
+        long interval = Job.getTimeAsSeconds(args.getSteadyStateInterval());
 
-        Job.debug(step, "checking file(s) for steady state");
+        Job.debug(step, "checking file(s) for steady state, interval=%ss", interval);
         List<FileDescriptor> list = new ArrayList<FileDescriptor>();
         for (File file : files) {
             list.add(new FileDescriptor(file));
         }
         try {
-            TimeUnit.SECONDS.sleep(timeout);
+            TimeUnit.SECONDS.sleep(interval);
         } catch (InterruptedException e1) {
             LOGGER.error(e1.getMessage(), e1);
         }
@@ -129,7 +129,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             }
             if (!result) {
                 try {
-                    TimeUnit.SECONDS.sleep(timeout);
+                    TimeUnit.SECONDS.sleep(interval);
                 } catch (InterruptedException e) {
                     LOGGER.error(e.getMessage(), e);
                 }
@@ -162,13 +162,13 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.getReturnResultSet().setValue(fileList.toString());
         args.getReturnResultSetSize().setValue(size);
 
-        if (args.getResultListFile().getValue() != null && fileList.length() > 0) {
-            Job.debug(step, "..try to write file:" + args.getResultListFile().getValue());
-            if (Files.isWritable(args.getResultListFile().getValue())) {
-                Files.write(args.getResultListFile().getValue(), fileList.toString().getBytes("UTF-8"));
+        if (args.getResultSetFile().getValue() != null && fileList.length() > 0) {
+            Job.debug(step, "..try to write file:" + args.getResultSetFile().getValue());
+            if (Files.isWritable(args.getResultSetFile().getValue())) {
+                Files.write(args.getResultSetFile().getValue(), fileList.toString().getBytes("UTF-8"));
             } else {
-                throw new SOSFileOperationsException(String.format("file '%s'(%s) is not writable", args.getResultListFile().getValue(), args
-                        .getResultListFile().getName()));
+                throw new SOSFileOperationsException(String.format("file '%s'(%s) is not writable", args.getResultSetFile().getValue(), args
+                        .getResultSetFile().getName()));
             }
         }
         if (!SOSString.isEmpty(args.getRaiseErrorIfResultSetIs().getValue())) {
