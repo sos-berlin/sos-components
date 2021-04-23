@@ -19,7 +19,8 @@
 		<module>sos-commons-httpclient</module>
 		<module>sos-commons-mail</module>
 		<module>sos-commons-xml</module>
-    <module>sos-commons-sign</module>
-    <module>sos-commons-tools</module>
+		<module>sos-commons-sign</module>
+		<module>sos-commons-tools</module>
+		<module>sos-commons-credentialstore</module>
 	</modules>
 </project>
