@@ -24,4 +24,10 @@ public interface IClusterResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse switchMember(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+    
+    @POST
+    @Path(ClusterResourceImpl.IMPL_PATH_DELETE_MEMBER)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse deleteMember(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

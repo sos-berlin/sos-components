@@ -31,6 +31,18 @@ public class JocInstancesDBLayer {
         }
     }
     
+    public DBItemJocInstance getInstance(String memberId) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<DBItemJocInstance> query = session.createQuery("from " + DBLayer.DBITEM_JOC_INSTANCES + " where memberId = :memberId");
+            query.setParameter("memberId", memberId);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public DBItemJocCluster getCluster() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<DBItemJocCluster> query = session.createQuery("from " + DBLayer.DBITEM_JOC_CLUSTER);
