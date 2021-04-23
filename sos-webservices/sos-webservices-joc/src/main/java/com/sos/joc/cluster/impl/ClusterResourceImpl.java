@@ -35,6 +35,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
 
     private static final String API_CALL_RESTART = String.format("./%s/%s", API_PATH, IMPL_PATH_RESTART);
     private static final String API_CALL_SWITCH = String.format("./%s/%s", API_PATH, IMPL_PATH_SWITCH_MEMBER);
+    private static final String API_CALL_DELETE = String.format("./%s/%s", API_PATH, IMPL_PATH_DELETE_MEMBER);
 
     @Override
     public JOCDefaultResponse restart(String accessToken, byte[] filterBytes) {
@@ -84,12 +85,12 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
     public JOCDefaultResponse deleteMember(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL_SWITCH, filterBytes, accessToken);
+            initLogging(API_CALL_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ClusterSwitchMember.class);
             ClusterSwitchMember in = Globals.objectMapper.readValue(filterBytes, ClusterSwitchMember.class);
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getCluster().getManage());
             if (response == null) {
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL_SWITCH);
+                connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
 
                 JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
                 DBItemJocInstance member = dbLayer.getInstance(in.getMemberId());
