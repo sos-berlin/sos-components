@@ -61,7 +61,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             try {
                 session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
                 long timeout = session.getTimeout();
-                LOGGER.info("Session timeout: " + timeout);
+                //LOGGER.info("Session timeout: " + timeout);
                 if (timeout < 0L) {
                     //unlimited session 
                 } else if (timeout == 0L) {

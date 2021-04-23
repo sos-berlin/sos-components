@@ -31,7 +31,7 @@ public class SOSShiroFolderPermissions {
         this.objectFilter = objectFilter;
     }
 
-    private Set<Folder> getListOfFolders(String jobSchedulerId) {
+    public Set<Folder> getListOfFolders(String jobSchedulerId) {
         if (jobSchedulerId != null && !jobSchedulerId.isEmpty() && listOfFoldersForInstance.get(jobSchedulerId) != null) {
             Set<Folder> retListOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
             if (listOfFoldersForInstance.get("") != null) {

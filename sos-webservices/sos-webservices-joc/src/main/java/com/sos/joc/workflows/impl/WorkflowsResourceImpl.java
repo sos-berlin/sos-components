@@ -76,8 +76,21 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer));
             }
             
+            List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+            if (workflowIds != null && !workflowIds.isEmpty()) {
+                workflowsFilter.setFolders(null);
+                workflowsFilter.setRegex(null);
+            }
+
             Stream<DeployedContent> contentsStream = contents.stream().sorted(Comparator.comparing(DeployedContent::getCreated).reversed())
                     .distinct();
+            
+            boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
+                    .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
+            if (withoutFilter) {
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
+            }
             if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                 contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
