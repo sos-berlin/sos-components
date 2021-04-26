@@ -28,6 +28,7 @@ import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
 import com.sos.commons.hibernate.exception.SOSHibernateConvertException;
 import com.sos.commons.hibernate.exception.SOSHibernateFactoryBuildException;
@@ -126,6 +127,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
+    // to override
     public void adjustConfiguration(Configuration config) {
 
     }
@@ -456,6 +458,7 @@ public class SOSHibernateFactory implements Serializable {
         setDefaultConfigurationProperties();
         configure();
         setConfigurationProperties();
+        resolveCredentialStoreProperties();
     }
 
     private void initConfigurationProperties() {
@@ -477,12 +480,6 @@ public class SOSHibernateFactory implements Serializable {
         }
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
-
-        // SessionFactoryImplementor impl = (SessionFactoryImplementor) sessionFactory;
-        // if (impl != null) {
-        // dialect = impl.getJdbcServices().getDialect();
-        // setDbms(dialect);
-        // }
     }
 
     private void showConfigurationProperties() {
@@ -532,6 +529,37 @@ public class SOSHibernateFactory implements Serializable {
                     //
                 }
             }
+        }
+    }
+
+    private void resolveCredentialStoreProperties() throws SOSHibernateConfigurationException {
+        if (configuration == null) {
+            return;
+        }
+
+        try {
+            String f = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_FILE);
+            String kf = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_KEY_FILE);
+            String p = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_PASSWORD);
+            String ep = configuration.getProperty(SOSHibernate.HIBERNATE_SOS_PROPERTY_CREDENTIAL_STORE_ENTRY_PATH);
+            SOSKeePassResolver r = new SOSKeePassResolver(f, kf, p);
+            r.setEntryPath(ep);
+
+            String url = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL);
+            if (url != null) {
+                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_URL, r.resolve(url));
+            }
+            String username = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME);
+            if (username != null) {
+                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_USERNAME, r.resolve(username));
+            }
+            String password = configuration.getProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD);
+            if (password != null) {
+                configuration.setProperty(SOSHibernate.HIBERNATE_PROPERTY_CONNECTION_PASSWORD, r.resolve(password));
+            }
+
+        } catch (Throwable e) {
+            throw new SOSHibernateConfigurationException(e.toString(), e);
         }
     }
 

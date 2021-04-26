@@ -27,6 +27,11 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-credentialstore</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
@@ -44,14 +49,14 @@
 		</dependency>
 
 		<dependency>
-    		<groupId>org.hibernate</groupId>
-    		<artifactId>hibernate-hikaricp</artifactId>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-hikaricp</artifactId>
 		</dependency>
 		<dependency>
-      		<groupId>com.zaxxer</groupId>
-      		<artifactId>HikariCP</artifactId>
-    	</dependency>
-    
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
@@ -69,12 +74,12 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j-impl</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.json</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
