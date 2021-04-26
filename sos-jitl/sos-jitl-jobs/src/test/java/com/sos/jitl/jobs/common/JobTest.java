@@ -18,29 +18,45 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.helper.TestJob;
 import com.sos.jitl.jobs.common.helper.TestJobArguments;
+import com.sos.jitl.jobs.common.helper.TestJobSuperClass;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments;
 import com.sos.jitl.jobs.examples.JocApiJobArguments;
+import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 
 public class JobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobTest.class);
 
     @Ignore
-    @SuppressWarnings("unchecked")
     @Test
     public void testABlockingJobWithoutArgumentClazzConstructor() throws Exception {
-        TestJob job = new TestJob();
-        Type t = ((ParameterizedType) job.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        LOGGER.info("type=" + t);
+        TestJobSuperClass job = new TestJobSuperClass();
 
-        Class<TestJobArguments> clazz = (Class<TestJobArguments>) t;
-        LOGGER.info("clazz=" + clazz);
+        LOGGER.info("job class=" + job.getClass());
+        LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());
+        LOGGER.info("job super class=" + job.getClass().getSuperclass());
+        LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
 
-        TestJobArguments args = clazz.newInstance();
+        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).newInstance();
         LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
         LOGGER.info("name=" + args.getTest().getName());
     }
 
+    @Ignore
+    @Test
+    public void testExtendedABlockingJobWithoutArgumentClazzConstructor() throws Exception {
+        TestJob job = new TestJob();
+
+        LOGGER.info("job class=" + job.getClass());
+        LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());
+        LOGGER.info("job super class=" + job.getClass().getSuperclass());
+        LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
+
+        TestJobArguments args = (TestJobArguments) getJobArgumensClass(job).newInstance();
+        LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
+        LOGGER.info("name=" + args.getTest().getName());
+    }
+    
     @Ignore
     @Test
     public void testJobArguments() {
@@ -58,6 +74,16 @@ public class JobTest {
         LOGGER.info("jocUri=" + o2.getJocUri().getValue().getScheme());
     }
 
+    private static Class<?> getJobArgumensClass(Object instance) throws SOSJobArgumentException {
+        Class<?> clazz = instance.getClass();
+        while (clazz.getSuperclass() != ABlockingInternalJob.class) {
+            clazz = clazz.getSuperclass();
+            if (clazz == null)
+                throw new SOSJobArgumentException(String.format("super class not found for %s", instance.getClass()));
+        }
+        return (Class<?>) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
+    }
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void setArguments(Map<String, Object> map, Object o) {
         List<Field> fields = Job.getJobArgumentFields(o);

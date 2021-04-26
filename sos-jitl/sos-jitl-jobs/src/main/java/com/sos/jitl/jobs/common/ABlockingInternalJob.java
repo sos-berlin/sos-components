@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -97,9 +98,8 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private A createJobArguments(final BlockingInternalJob.Step step) throws Exception {
-        Class<A> argumentsClazz = (Class<A>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        A a = getJobArgumensClass().newInstance();
 
-        A a = argumentsClazz.newInstance();
         Map<String, Object> map = null;
         if (step == null) {
             if (jobContext == null) {
@@ -146,6 +146,22 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
             }
         }
         return a;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<A> getJobArgumensClass() throws SOSJobArgumentException {
+        try {
+            Class<?> clazz = getClass();
+            while (clazz.getSuperclass() != ABlockingInternalJob.class) {
+                clazz = clazz.getSuperclass();
+                if (clazz == null)
+                    throw new SOSJobArgumentException(String.format("ABlockingInternalJob super class not found for %s", getClass()));
+            }
+            return (Class<A>) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
+        } catch (Throwable e) {
+            throw new SOSJobArgumentException(String.format("can't evaluate JobArguments class for job %s: %s", getClass().getName(), e.toString()),
+                    e);
+        }
     }
 
 }

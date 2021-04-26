@@ -20,8 +20,8 @@ public class FileNotExistsJob extends AFileOperationsJob {
         checkArguments(args);
 
         FileOperationsImpl fo = new FileOperationsImpl();
-        boolean result = !fo.existsFile(args.getSourceFile().getValue(), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE, args.getMinFileAge()
-                .getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args
+        boolean result = !fo.existsFile(step, args.getSourceFile().getValue(), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE, args
+                .getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args
                         .getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());
         return handleResult(step, args, fo.getResultList(), result);
     }

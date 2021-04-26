@@ -21,7 +21,7 @@ public class CanWriteJob extends AFileOperationsJob {
         checkArguments(args);
 
         FileOperationsImpl fo = new FileOperationsImpl();
-        boolean result = fo.canWrite(new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE);
+        boolean result = fo.canWrite(step, new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE);
         return handleResult(step, args, fo.getResultList(), result);
     }
 

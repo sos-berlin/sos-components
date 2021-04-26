@@ -21,7 +21,7 @@ public class FileOperationsCopyImpl extends AFileOperations {
         }
 
         if (overwrite || !targetFile.exists()) {
-            if (copyFile(sourceFile, targetFile, false)) {
+            if (copyFile(step, sourceFile, targetFile, false)) {
                 targetFile.setLastModified(sourceFile.lastModified());
                 Job.info(step, "copy %s to %s", sourceFile.getPath(), targetFile.getPath());
                 return true;
