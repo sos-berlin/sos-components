@@ -123,6 +123,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>true</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -151,6 +152,7 @@
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<includeConstructors>true</includeConstructors>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -171,6 +173,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -191,6 +194,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -215,7 +219,7 @@
 							<targetPackage>com.sos.controller.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<annotationStyle>none</annotationStyle>
-							<!-- customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator -->
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -241,6 +245,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/inventory/schemas</sourceDirectory>
 							<targetPackage>com.sos.inventory.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -267,6 +272,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/sign/schemas</sourceDirectory>
 							<targetPackage>com.sos.sign.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -293,6 +299,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas/history</sourceDirectory>
 							<targetPackage>com.sos.jobscheduler.history</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -315,6 +322,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas/orderManagement</sourceDirectory>
 							<targetPackage>com.sos.webservices.order.initiator.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -403,6 +411,7 @@
                   				<include name="**/Junction.java"/>
                   				<include name="**/Lock.java"/>
                   				<include name="**/FileOrderSource.java"/>
+                  				<include name="**/JobResource.java"/>
                   			</fileset>
                   		</replaceregexp>
                   		<!-- Delete DeleteType setter and DeleteType from constructor -->	
@@ -414,6 +423,7 @@
                   				<include name="**/DeleteJunction.java"/>
                   				<include name="**/DeleteLock.java"/>
                   				<include name="**/DeleteFileOrderSource.java"/>
+                  				<include name="**/DeleteJobResource.java"/>
                   			</fileset>
                   		</replaceregexp>
                   		<!-- Set DeployType and DeleteType property -->	
@@ -423,19 +433,22 @@
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBCLASS;" file="${project.build.directory}/java-gen/com/sos/inventory/model/jobclass/JobClass.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JUNCTION;" file="${project.build.directory}/java-gen/com/sos/inventory/model/junction/Junction.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.LOCK;"     file="${project.build.directory}/java-gen/com/sos/inventory/model/lock/Lock.java" preserveLastModified="true" />
-                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/inventory/model/fileordersource/fileOrderSource.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/inventory/model/fileordersource/FileOrderSource.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBRESOURCE;" file="${project.build.directory}/java-gen/com/sos/inventory/model/jobresource/JobResource.java" preserveLastModified="true" />
                   		
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.WORKFLOW;" file="${project.build.directory}/java-gen/com/sos/sign/model/workflow/Workflow.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBCLASS;" file="${project.build.directory}/java-gen/com/sos/sign/model/jobclass/JobClass.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JUNCTION;" file="${project.build.directory}/java-gen/com/sos/sign/model/junction/Junction.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.LOCK;"     file="${project.build.directory}/java-gen/com/sos/sign/model/lock/Lock.java" preserveLastModified="true" />
-                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/sign/model/fileordersource/fileOrderSource.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.FILEORDERSOURCE;" file="${project.build.directory}/java-gen/com/sos/sign/model/fileordersource/FileOrderSource.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeployType tYPE = ).*;" replace="\1\DeployType.JOBRESOURCE;" file="${project.build.directory}/java-gen/com/sos/sign/model/jobresource/JobResource.java" preserveLastModified="true" />
                   		
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.WORKFLOW;"  file="${project.build.directory}/java-gen/com/sos/controller/model/workflow/DeleteWorkflow.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.JOBCLASS;"  file="${project.build.directory}/java-gen/com/sos/controller/model/jobclass/DeleteJobClass.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.JUNCTION;"  file="${project.build.directory}/java-gen/com/sos/controller/model/junction/DeleteJunction.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.LOCK;"      file="${project.build.directory}/java-gen/com/sos/controller/model/lock/DeleteLock.java" preserveLastModified="true" />
                   		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.FILEORDERSOURCE;"    file="${project.build.directory}/java-gen/com/sos/controller/model/fileordersource/DeleteFileOrderSource.java" preserveLastModified="true" />
+                  		<replaceregexp flags="i" byline="true" match="(private DeleteType tYPE = ).*;" replace="\1\DeleteType.JOBRESOURCE;"    file="${project.build.directory}/java-gen/com/sos/controller/model/jobresource/DeleteJobResource.java" preserveLastModified="true" />
                   		<replaceregexp flags="ig" byline="false" match="(\/[^\/]*\/\s*)?(public ExecutableScript\(String script), ExecutableScript\.TYPE tYPE(\) \{)[^}]*(\})" replace="\2\3&#xA;        this.script = script;&#xA;    \4" file="${project.build.directory}/java-gen/com/sos/inventory/model/job/ExecutableScript.java" preserveLastModified="true" />
                   		<replaceregexp flags="ig" byline="false" match="(public NamedJob\()(\) \{\s*\})" replace="\1\2&#xA;&#xA;    \1String jobName) {&#xA;        super();&#xA;        this.jobName = jobName;&#xA;    }" file="${project.build.directory}/java-gen/com/sos/inventory/model/instruction/NamedJob.java" preserveLastModified="true" />
                   		<!-- replaceregexp flags="ig" byline="false" match="(public AnonymousJob\()(\) \{\s*\})" replace="\1\2&#xA;&#xA;    \1Job job) {&#xA;        super();&#xA;        this.job = job;&#xA;    }" file="${project.build.directory}/java-gen/com/sos/jobscheduler/model/instruction/AnonymousJob.java" preserveLastModified="true" / -->

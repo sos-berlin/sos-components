@@ -1,6 +1,7 @@
 
 package com.sos.webservices.json.jobscheduler.history.order;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -24,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "logLevel",
     "logEvent",
     "position",
-    "agentPath",
+    "agentId",
     "agentUrl",
     "job",
     "taskId",
@@ -45,7 +46,6 @@ public class OrderLogEntry {
     private String agentDatetime;
     /**
      * 
-     * (Required)
      * (Required)
      * 
      */
@@ -74,8 +74,11 @@ public class OrderLogEntry {
      */
     @JsonProperty("position")
     private String position;
-    @JsonProperty("agentPath")
-    private String agentPath;
+    @JsonProperty("agentId")
+    @JsonAlias({
+        "agentPath"
+    })
+    private String agentId;
     @JsonProperty("agentUrl")
     private String agentUrl;
     @JsonProperty("job")
@@ -88,46 +91,6 @@ public class OrderLogEntry {
     private Error error;
     @JsonProperty("lock")
     private Lock lock;
-
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public OrderLogEntry() {
-    }
-
-    /**
-     * 
-     * @param orderId
-     * @param error
-     * @param agentDatetime
-     * @param logEvent
-     * @param agentPath
-     * @param returnCode
-     * @param controllerDatetime
-     * @param logLevel
-     * @param lock
-     * @param position
-     * @param agentUrl
-     * @param job
-     * @param taskId
-     */
-    public OrderLogEntry(String controllerDatetime, String agentDatetime, String orderId, String logLevel, EventType logEvent, String position, String agentPath, String agentUrl, String job, Long taskId, Long returnCode, Error error, Lock lock) {
-        super();
-        this.controllerDatetime = controllerDatetime;
-        this.agentDatetime = agentDatetime;
-        this.orderId = orderId;
-        this.logLevel = logLevel;
-        this.logEvent = logEvent;
-        this.position = position;
-        this.agentPath = agentPath;
-        this.agentUrl = agentUrl;
-        this.job = job;
-        this.taskId = taskId;
-        this.returnCode = returnCode;
-        this.error = error;
-        this.lock = lock;
-    }
 
     /**
      * 
@@ -243,14 +206,14 @@ public class OrderLogEntry {
         this.position = position;
     }
 
-    @JsonProperty("agentPath")
-    public String getAgentPath() {
-        return agentPath;
+    @JsonProperty("agentId")
+    public String getAgentId() {
+        return agentId;
     }
 
-    @JsonProperty("agentPath")
-    public void setAgentPath(String agentPath) {
-        this.agentPath = agentPath;
+    @JsonProperty("agentId")
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
     }
 
     @JsonProperty("agentUrl")
@@ -315,12 +278,12 @@ public class OrderLogEntry {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(orderId).append(error).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -332,7 +295,7 @@ public class OrderLogEntry {
             return false;
         }
         OrderLogEntry rhs = ((OrderLogEntry) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
 }

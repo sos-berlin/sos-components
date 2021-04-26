@@ -51,9 +51,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.jobclass.JobClassPublish;
-import com.sos.joc.model.inventory.junction.JunctionPublish;
-import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
@@ -1045,7 +1042,7 @@ public class DBLayerDeploy {
                 boolean allAgentNamesKnown = true;
                 for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
                     Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentName = job.getAgentId();
+                    String agentName = job.getAgentName();
                     boolean agentNameKnown = checkAgentNamePresent(agentName);
                     if (!agentNameKnown) {
                         allAgentNamesKnown = false;
@@ -1120,7 +1117,7 @@ public class DBLayerDeploy {
             boolean allAgentNamesKnown = true;
             for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
                 Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                String agentName = job.getAgentId();
+                String agentName = job.getAgentName();
                 boolean agentNameKnown = checkAgentNamePresent(agentName);
                 if (!agentNameKnown) {
                     allAgentNamesKnown = false;

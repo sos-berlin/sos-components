@@ -25,11 +25,11 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.problem.Problem;
 import js7.base.web.Uri;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.item.VersionId;
-import js7.data.lock.LockId;
+import js7.data.lock.LockPath;
 import js7.data_for_java.agent.JAgentRef;
-import js7.data_for_java.item.JSimpleItem;
+import js7.data_for_java.item.JUnsignedSimpleItem;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.proxy.javaapi.JControllerApi;
@@ -73,11 +73,11 @@ public class DeployTest {
 
         try {
             Lock lock = new Lock();
-            lock.setId("my_lock");
+            lock.setPath("my_lock");
             lock.setLimit(1);
 
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
-            addOrChangeSimpleItem(api, JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+            addOrChangeSimpleItem(api, JLock.of(LockPath.of(lock.getPath()), lock.getLimit()));
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -166,15 +166,15 @@ public class DeployTest {
     }
 
     private void addOrChangeAgent(JControllerApi api, String agentId, Uri agentUri) throws InterruptedException, ExecutionException {
-        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(Collections.singleton(JAgentRef.of(AgentId.of(agentId), agentUri))).map(
-                JUpdateItemOperation::addOrChange)).get();
+        Either<Problem, Void> answer = api.updateItems(Flux.fromIterable(Collections.singleton(JAgentRef.of(AgentPath.of(agentId), agentUri))).map(
+                JUpdateItemOperation::addOrChangeSimple)).get();
         LOGGER.info("[addOrChangeAgent][" + agentId + "]" + SOSString.toString(answer));
     }
 
     private void addOrChangeSignedItem(JControllerApi api, String contentOriginal, String contentSigned, String signatureType, String versionId)
             throws InterruptedException, ExecutionException {
         Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
-        JUpdateItemOperation operation = JUpdateItemOperation.addOrChange(SignedString.of(contentOriginal, signatureType, contentSigned));
+        JUpdateItemOperation operation = JUpdateItemOperation.addOrChangeSigned(SignedString.of(contentOriginal, signatureType, contentSigned));
         operations.add(operation);
 
         Either<Problem, Void> answer = api.updateItems(Flux.concat(Flux.just(JUpdateItemOperation.addVersion(VersionId.of(versionId))), Flux
@@ -182,7 +182,7 @@ public class DeployTest {
         LOGGER.info("[addOrChangeSignedItem][" + CONTROLLER_URI_PRIMARY + "]" + SOSString.toString(answer));
     }
 
-    private void addOrChangeSimpleItem(JControllerApi api, JSimpleItem item) throws InterruptedException, ExecutionException {
+    private void addOrChangeSimpleItem(JControllerApi api, JUnsignedSimpleItem item) throws InterruptedException, ExecutionException {
         Set<JUpdateItemOperation> operations = new HashSet<JUpdateItemOperation>();
         JUpdateItemOperation operation = JUpdateItemOperation.addOrChangeSimple(item);
         operations.add(operation);

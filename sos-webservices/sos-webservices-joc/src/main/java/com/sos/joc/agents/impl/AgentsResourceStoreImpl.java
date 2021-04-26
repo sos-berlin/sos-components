@@ -33,7 +33,7 @@ import com.sos.joc.model.agent.StoreAgents;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
@@ -138,7 +138,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         agentDBLayer.updateAgent(dbAgent);
                     }
                     if (controllerUpdateRequired) {
-                        agentRefs.add(JAgentRef.of(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
+                        agentRefs.add(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
                     }
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -165,7 +165,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
-                    agentRefs.add(JAgentRef.of(AgentId.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
+                    agentRefs.add(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri())));
                 }
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -179,7 +179,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
             // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChange)).thenAccept(
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             }
 

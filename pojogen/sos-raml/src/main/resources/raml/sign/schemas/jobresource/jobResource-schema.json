@@ -1,35 +1,34 @@
 {
-  "title": "lock",
+  "title": "JobResource",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.sign.model.lock.Lock",
+  "javaType": "com.sos.sign.model.jobresource.JobResource",
   "type": "object",
   "javaInterfaces" : [
     "com.sos.joc.model.common.IDeployObject"
   ],
   "required": [
-    "TYPE",
+	"TYPE",
     "path",
-    "limit"
+    "env"
   ],
   "propertyOrder": [
     "TYPE",
     "path",
-    "limit"
+    "env"
   ],
   
-  "description": "deploy object with fixed property 'TYPE':'Lock'",
+  
+  "description": "deploy object with fixed property 'TYPE':'JobResource'",
   "properties": {
     "TYPE": {
       "$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
-      "default": "Lock" 
+      "default": "JobResource" 
     },
     "path": {
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
-    "limit": {
-      "type": "integer",
-      "minimum": 0,
-      "default": 1
+    "env": {
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
     }
   },
   "additionalProperties": false

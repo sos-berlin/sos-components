@@ -81,7 +81,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     }
 
     @Override
-    public OrderProcess toOrderProcess(BlockingInternalJob.Step step) throws Exception {
+    public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
         return () -> {
             try {
                 return onOrderProcess(step, createJobArguments(step));

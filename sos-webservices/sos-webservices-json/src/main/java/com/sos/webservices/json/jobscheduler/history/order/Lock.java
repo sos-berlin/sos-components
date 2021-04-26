@@ -1,6 +1,7 @@
 
 package com.sos.webservices.json.jobscheduler.history.order;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -10,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "lockId",
+    "lockName",
     "limit",
     "count",
     "lockState"
@@ -22,8 +23,9 @@ public class Lock {
      * (Required)
      * 
      */
-    @JsonProperty("lockId")
-    private String lockId;
+    @JsonProperty("lockName")
+    @JsonAlias({ "lockPath", "lockId" })
+    private String lockName;
     /**
      * 
      * (Required)
@@ -37,25 +39,13 @@ public class Lock {
     private LockState lockState;
 
     /**
-     * No args constructor for use in serialization
+     * 
+     * (Required)
      * 
      */
-    public Lock() {
-    }
-
-    /**
-     * 
-     * @param lockId
-     * @param limit
-     * @param count
-     * @param lockState
-     */
-    public Lock(String lockId, Integer limit, Integer count, LockState lockState) {
-        super();
-        this.lockId = lockId;
-        this.limit = limit;
-        this.count = count;
-        this.lockState = lockState;
+    @JsonProperty("lockName")
+    public String getLockName() {
+        return lockName;
     }
 
     /**
@@ -63,19 +53,9 @@ public class Lock {
      * (Required)
      * 
      */
-    @JsonProperty("lockId")
-    public String getLockId() {
-        return lockId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("lockId")
-    public void setLockId(String lockId) {
-        this.lockId = lockId;
+    @JsonProperty("lockName")
+    public void setLockName(String lockName) {
+        this.lockName = lockName;
     }
 
     /**
@@ -120,12 +100,12 @@ public class Lock {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("lockId", lockId).append("limit", limit).append("count", count).append("lockState", lockState).toString();
+        return new ToStringBuilder(this).append("lockName", lockName).append("limit", limit).append("count", count).append("lockState", lockState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lockId).append(limit).append(count).append(lockState).toHashCode();
+        return new HashCodeBuilder().append(limit).append(count).append(lockName).append(lockState).toHashCode();
     }
 
     @Override
@@ -137,7 +117,7 @@ public class Lock {
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().append(lockId, rhs.lockId).append(limit, rhs.limit).append(count, rhs.count).append(lockState, rhs.lockState).isEquals();
+        return new EqualsBuilder().append(limit, rhs.limit).append(count, rhs.count).append(lockName, rhs.lockName).append(lockState, rhs.lockState).isEquals();
     }
 
 }

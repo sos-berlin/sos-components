@@ -2,6 +2,7 @@
 package com.sos.joc.model.controller;
 
 import java.net.URI;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -22,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "url",
-    "withFailover",
+    "withSwitchover",
     "auditLog"
 })
 public class UrlParameter {
@@ -45,8 +46,11 @@ public class UrlParameter {
     @JsonProperty("url")
     @JsonPropertyDescription("URI of a Controller")
     private URI url;
-    @JsonProperty("withFailover")
-    private Boolean withFailover = true;
+    @JsonProperty("withSwitchover")
+    @JsonAlias({
+        "withFailover"
+    })
+    private Boolean withSwitchover = true;
     /**
      * auditParams
      * <p>
@@ -102,14 +106,14 @@ public class UrlParameter {
         this.url = url;
     }
 
-    @JsonProperty("withFailover")
-    public Boolean getWithFailover() {
-        return withFailover;
+    @JsonProperty("withSwitchover")
+    public Boolean getWithSwitchover() {
+        return withSwitchover;
     }
 
-    @JsonProperty("withFailover")
-    public void setWithFailover(Boolean withFailover) {
-        this.withFailover = withFailover;
+    @JsonProperty("withSwitchover")
+    public void setWithSwitchover(Boolean withSwitchover) {
+        this.withSwitchover = withSwitchover;
     }
 
     /**
@@ -136,12 +140,12 @@ public class UrlParameter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("withFailover", withFailover).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("withSwitchover", withSwitchover).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(auditLog).append(url).append(withFailover).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(url).append(withSwitchover).toHashCode();
     }
 
     @Override
@@ -153,7 +157,7 @@ public class UrlParameter {
             return false;
         }
         UrlParameter rhs = ((UrlParameter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(withFailover, rhs.withFailover).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(url, rhs.url).append(withSwitchover, rhs.withSwitchover).isEquals();
     }
 
 }

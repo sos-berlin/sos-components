@@ -1,6 +1,7 @@
 
 package com.sos.sign.model.fileordersource;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -21,9 +22,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "id",
+    "path",
     "workflowPath",
-    "agentId",
+    "agentPath",
     "directory",
     "pattern",
     "timeZone",
@@ -49,8 +50,8 @@ public class FileOrderSource implements IDeployObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    private String id;
+    @JsonProperty("path")
+    private String path;
     /**
      * string without < and >
      * <p>
@@ -61,14 +62,16 @@ public class FileOrderSource implements IDeployObject
     @JsonProperty("workflowPath")
     private String workflowPath;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    private String agentId;
+    @JsonProperty("agentPath")
+    @JsonAlias({
+        "agentId",
+        "agentName"
+    })
+    private String agentPath;
     /**
      * string without < and >
      * <p>
@@ -101,22 +104,22 @@ public class FileOrderSource implements IDeployObject
 
     /**
      * 
-     * @param agentId
+     * @param agentPath
+     * @param path
      * @param delay
      * @param workflowPath
      * @param orderIdExpression
      * @param pattern
      * @param timeZone
-     * @param id
      * @param tYPE
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String id, String workflowPath, String agentId, String directory, String pattern, String timeZone, String orderIdExpression, Long delay) {
+    public FileOrderSource(DeployType tYPE, String path, String workflowPath, String agentPath, String directory, String pattern, String timeZone, String orderIdExpression, Long delay) {
         super();
         this.tYPE = tYPE;
-        this.id = id;
+        this.path = path;
         this.workflowPath = workflowPath;
-        this.agentId = agentId;
+        this.agentPath = agentPath;
         this.directory = directory;
         this.pattern = pattern;
         this.timeZone = timeZone;
@@ -155,9 +158,9 @@ public class FileOrderSource implements IDeployObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public String getId() {
-        return id;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -167,9 +170,9 @@ public class FileOrderSource implements IDeployObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public void setId(String id) {
-        this.id = id;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     /**
@@ -197,27 +200,23 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
+    @JsonProperty("agentPath")
+    public String getAgentPath() {
+        return agentPath;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentPath")
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
     }
 
     /**
@@ -294,12 +293,12 @@ public class FileOrderSource implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("workflowPath", workflowPath).append("agentPath", agentPath).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(id).append(tYPE).append(directory).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(path).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(tYPE).append(directory).toHashCode();
     }
 
     @Override
@@ -311,7 +310,7 @@ public class FileOrderSource implements IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(id, rhs.id).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(path, rhs.path).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
     }
 
 }

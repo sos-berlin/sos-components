@@ -332,10 +332,10 @@ public class LogOrderContent {
             if (!SOSString.isEmpty(item.getAgentUrl())) {
                 info.add("url=" + item.getAgentUrl());
             }
-            if (!SOSString.isEmpty(item.getAgentPath())) {
-                info.add("id=" + item.getAgentPath());
+            if (!SOSString.isEmpty(item.getAgentId())) {
+                info.add("id=" + item.getAgentId());
             }
-            if (!SOSString.isEmpty(item.getAgentPath())) {
+            if (!SOSString.isEmpty(item.getAgentDatetime())) {
                 info.add("time=" + item.getAgentDatetime());
             }
             if (!info.isEmpty()) {

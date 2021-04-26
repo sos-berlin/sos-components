@@ -212,7 +212,7 @@ public class PerformanceTest {
         ExecutableScript executable = new ExecutableScript();
         executable.setScript(jobScript);
         Job job = new Job();
-        job.setAgentId(agentName);
+        job.setAgentPath(agentName);
         job.setExecutable(executable);
         job.setTaskLimit(1); //required
         return job;

@@ -82,6 +82,43 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			
+			<!-- this would be state of the art -->
+			<!-- plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>xml-maven-plugin</artifactId>
+				<version>1.0.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>transform</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<transformationSets>
+						<transformationSet>
+							<dir>src/main/resources</dir>
+							<includes>
+								<include>*CanWriteJob.xml</include>
+							</includes>
+							<excludes>
+								<exclude>jobdoc.languages.xml</exclude>
+							</excludes>
+							<outputDir>${target.dir}</outputDir>
+							<xincludeAware>true</xincludeAware>
+							<stylesheet>src/main/resources/xsl/JobDoc.xsl</stylesheet>
+						</transformationSet>
+					</transformationSets>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>net.sf.saxon</groupId>
+						<artifactId>saxon</artifactId>
+						<version>8.7</version>
+					</dependency>
+				</dependencies>
+			</plugin -->
 
 
 			<plugin>

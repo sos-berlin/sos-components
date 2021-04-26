@@ -14,13 +14,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * delete FileOrderSource
  * <p>
- * delete object with fixed property 'TYPE':'FileWatchId'
+ * delete object with fixed property 'TYPE':'FileWatchPath'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "id"
+    "path"
 })
 public class DeleteFileOrderSource implements IDeleteObject
 {
@@ -40,8 +40,8 @@ public class DeleteFileOrderSource implements IDeleteObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    private String id;
+    @JsonProperty("path")
+    private String path;
 
     /**
      * No args constructor for use in serialization
@@ -52,12 +52,12 @@ public class DeleteFileOrderSource implements IDeleteObject
 
     /**
      * 
-     * @param id
+     * @param path
      * 
      */
-    public DeleteFileOrderSource(String id) {
+    public DeleteFileOrderSource(String path) {
         super();
-        this.id = id;
+        this.path = path;
     }
 
     /**
@@ -78,9 +78,9 @@ public class DeleteFileOrderSource implements IDeleteObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public String getId() {
-        return id;
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
     }
 
     /**
@@ -90,19 +90,19 @@ public class DeleteFileOrderSource implements IDeleteObject
      * (Required)
      * 
      */
-    @JsonProperty("id")
-    public void setId(String id) {
-        this.id = id;
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("id", id).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(id).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(path).toHashCode();
     }
 
     @Override
@@ -114,7 +114,7 @@ public class DeleteFileOrderSource implements IDeleteObject
             return false;
         }
         DeleteFileOrderSource rhs = ((DeleteFileOrderSource) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 
 }

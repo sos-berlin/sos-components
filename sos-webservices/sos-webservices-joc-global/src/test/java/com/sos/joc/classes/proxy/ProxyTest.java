@@ -70,7 +70,7 @@ public class ProxyTest {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh.class, "pending");
+                    put(Order.Fresh$.class, "pending");
                     put(Order.Awaiting.class, "waiting");
                     put(Order.DelayedAfterError.class, "waiting");
                     put(Order.Forked.class, "waiting");
@@ -221,7 +221,7 @@ public class ProxyTest {
                 LOGGER.info(order.get().toJson());
             }
             final Instant now = Instant.ofEpochMilli(controllerState.eventId() / 1000);
-            Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh.class))
+            Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class))
                 .map(o -> {
                     System.out.println(o.asScala().state().maybeDelayedUntil());
                     return o.asScala().state().maybeDelayedUntil();

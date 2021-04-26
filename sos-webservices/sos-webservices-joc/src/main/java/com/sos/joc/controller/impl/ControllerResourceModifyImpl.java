@@ -43,7 +43,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
 
             boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getTerminate();
             Terminate terminateCommand = new Terminate();
-            if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
+            if (urlParameter.getWithSwitchover() == Boolean.TRUE) {
                 terminateCommand.setClusterAction(new ClusterAction());
             }
             return executeModifyJobSchedulerCommand("terminate", terminateCommand, urlParameter, accessToken, permission);
@@ -62,7 +62,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
 
             boolean permission = getControllerPermissions(urlParameter.getControllerId(), accessToken).getRestart();
             Terminate terminateCommand = new Terminate(true, null);
-            if (urlParameter.getWithFailover() != null && urlParameter.getWithFailover()) {
+            if (urlParameter.getWithSwitchover() == Boolean.TRUE) {
                 terminateCommand.setClusterAction(new ClusterAction());
             }
             return executeModifyJobSchedulerCommand("restart", terminateCommand, urlParameter, accessToken, permission);

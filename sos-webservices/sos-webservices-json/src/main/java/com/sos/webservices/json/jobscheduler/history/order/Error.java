@@ -26,28 +26,6 @@ public class Error {
     @JsonProperty("errorText")
     private String errorText;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public Error() {
-    }
-
-    /**
-     * 
-     * @param errorText
-     * @param errorState
-     * @param errorReason
-     * @param errorCode
-     */
-    public Error(String errorState, String errorReason, String errorCode, String errorText) {
-        super();
-        this.errorState = errorState;
-        this.errorReason = errorReason;
-        this.errorCode = errorCode;
-        this.errorText = errorText;
-    }
-
     @JsonProperty("errorState")
     public String getErrorState() {
         return errorState;

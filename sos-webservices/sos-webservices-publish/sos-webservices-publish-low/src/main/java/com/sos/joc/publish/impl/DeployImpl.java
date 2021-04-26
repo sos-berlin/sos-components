@@ -168,7 +168,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         try {
                             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                                     Globals.objectMapper.readValue(item.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                            fileOrderSource.setAgentId(update.getAgentId());
+                            fileOrderSource.setAgentName(update.getAgentId());
                             item.setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
                             updateableAgentNamesFileOrderSources.add(update);
                         } catch (Exception e) {}
@@ -192,7 +192,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         try {
                             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                                     Globals.objectMapper.readValue(item.getInvContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-                            fileOrderSource.setAgentId(update.getAgentId());
+                            fileOrderSource.setAgentName(update.getAgentId());
                             item.setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
                             updateableAgentNamesFileOrderSources.add(update);
                         } catch (Exception e) {}

@@ -17,15 +17,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
-    "agentName"
+    "agentPath"
 })
 public class OrderTransferredToAgent
     extends Event
 {
 
-    @JsonProperty("agentName")
-    private String agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    private String agentPath;
 
     /**
      * No args constructor for use in serialization
@@ -36,33 +40,43 @@ public class OrderTransferredToAgent
 
     /**
      * 
+     * @param agentPath
      * @param eventId
-     * @param agentName
      * 
      */
-    public OrderTransferredToAgent(String agentName, Long eventId) {
+    public OrderTransferredToAgent(String agentPath, Long eventId) {
         super(eventId);
-        this.agentName = agentName;
+        this.agentPath = agentPath;
     }
 
-    @JsonProperty("agentName")
-    public String getAgentName() {
-        return agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    public String getAgentPath() {
+        return agentPath;
     }
 
-    @JsonProperty("agentName")
-    public void setAgentName(String agentName) {
-        this.agentName = agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentName", agentName).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("agentPath", agentPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentName).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(agentPath).toHashCode();
     }
 
     @Override
@@ -74,7 +88,7 @@ public class OrderTransferredToAgent
             return false;
         }
         OrderTransferredToAgent rhs = ((OrderTransferredToAgent) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentName, rhs.agentName).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(agentPath, rhs.agentPath).isEquals();
     }
 
 }

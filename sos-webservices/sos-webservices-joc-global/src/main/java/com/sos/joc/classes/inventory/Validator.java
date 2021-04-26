@@ -137,7 +137,7 @@ public class Validator {
                     // }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
-                    validateWorkflowRef(fileOrderSource.getWorkflowPath(), dbLayer);
+                    validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer);
                 }
             } finally {
                 Globals.disconnect(session);

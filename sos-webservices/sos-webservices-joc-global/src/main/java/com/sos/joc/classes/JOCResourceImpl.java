@@ -451,12 +451,7 @@ public class JOCResourceImpl {
     }
     
     protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
-                .getFolder() + "/")));
-        return listOfFolders.stream().parallel().anyMatch(filter);
+        return SOSShiroFolderPermissions.isPermittedForFolder(folder, listOfFolders);
     }
 
     public String getAccount() {

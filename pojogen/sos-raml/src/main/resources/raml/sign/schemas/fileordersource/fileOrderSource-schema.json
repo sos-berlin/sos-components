@@ -8,16 +8,16 @@
   ],
   "required": [
     "TYPE",
-    "id",
+    "path",
     "workflowPath",
-    "agentId",
+    "agentPath",
     "directory"
   ],
   "propertyOrder": [
     "TYPE",
-    "id",
+    "path",
     "workflowPath",
-    "agentId",
+    "agentPath",
     "pattern",
     "orderIdExpression",
     "delay"
@@ -29,14 +29,18 @@
       "$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
       "default": "FileWatch" 
     },
-    "id": {
+    "path": {
       "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "workflowPath": {
       "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
-    "agentId": {
-    	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
+    "agentPath": {
+    	"alias": "agentId,agentName",
+    	"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
     },
     "directory": {
     	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"

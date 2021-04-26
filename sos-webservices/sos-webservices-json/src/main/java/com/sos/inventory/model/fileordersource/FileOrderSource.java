@@ -1,6 +1,7 @@
 
 package com.sos.inventory.model.fileordersource;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -22,8 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "workflowPath",
-    "agentId",
+    "workflowName",
+    "agentName",
     "directory",
     "pattern",
     "timeZone",
@@ -43,23 +44,26 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.FILEORDERSOURCE;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("workflowPath")
-    private String workflowPath;
+    @JsonProperty("workflowName")
+    @JsonAlias({
+        "workflowPath"
+    })
+    private String workflowName;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    private String agentId;
+    @JsonProperty("agentName")
+    @JsonAlias({
+        "agentId",
+        "agentPath"
+    })
+    private String agentName;
     /**
      * string without < and >
      * <p>
@@ -79,12 +83,6 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("timeZone")
     private String timeZone;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("delay")
     private Long delay;
     /**
@@ -115,19 +113,19 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
-     * @param agentId
      * @param delay
-     * @param workflowPath
      * @param pattern
+     * @param agentName
      * @param timeZone
+     * @param workflowName
      * 
      * @param title
      * @param directory
      */
-    public FileOrderSource(String workflowPath, String agentId, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
+    public FileOrderSource(String workflowName, String agentName, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
         super();
-        this.workflowPath = workflowPath;
-        this.agentId = agentId;
+        this.workflowName = workflowName;
+        this.agentName = agentName;
         this.directory = directory;
         this.pattern = pattern;
         this.timeZone = timeZone;
@@ -148,51 +146,43 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("workflowPath")
-    public String getWorkflowPath() {
-        return workflowPath;
+    @JsonProperty("workflowName")
+    public String getWorkflowName() {
+        return workflowName;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("workflowPath")
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    @JsonProperty("workflowName")
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     /**
@@ -251,23 +241,11 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
         this.timeZone = timeZone;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("delay")
     public Long getDelay() {
         return delay;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("delay")
     public void setDelay(Long delay) {
         this.delay = delay;
@@ -319,12 +297,12 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowPath", workflowPath).append("agentId", agentId).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationPath", documentationPath).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowName", workflowName).append("agentName", agentName).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationPath", documentationPath).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(agentId).append(delay).append(workflowPath).append(pattern).append(timeZone).append(tYPE).append(title).append(directory).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(tYPE).append(title).append(directory).toHashCode();
     }
 
     @Override
@@ -336,7 +314,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(agentId, rhs.agentId).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
     }
 
 }

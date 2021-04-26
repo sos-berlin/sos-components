@@ -40,7 +40,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
@@ -454,7 +454,7 @@ public class Proxies {
             }
             List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
             if (dbAvailableAgents != null) {
-                return dbAvailableAgents.stream().map(a -> JAgentRef.of(AgentId.of(a.getAgentId()), Uri.of(a.getUri()))).collect(Collectors.toList());
+                return dbAvailableAgents.stream().map(a -> JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()))).collect(Collectors.toList());
 
             }
             return Collections.emptyList();

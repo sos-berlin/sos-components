@@ -20,24 +20,6 @@ public class LockState {
     @JsonProperty("queuedOrderIds")
     private String queuedOrderIds;
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public LockState() {
-    }
-
-    /**
-     * 
-     * @param queuedOrderIds
-     * @param orderIds
-     */
-    public LockState(String orderIds, String queuedOrderIds) {
-        super();
-        this.orderIds = orderIds;
-        this.queuedOrderIds = queuedOrderIds;
-    }
-
     @JsonProperty("orderIds")
     public String getOrderIds() {
         return orderIds;

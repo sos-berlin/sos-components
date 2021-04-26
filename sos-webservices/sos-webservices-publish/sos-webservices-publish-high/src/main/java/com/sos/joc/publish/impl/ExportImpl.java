@@ -89,7 +89,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource)deployable.getContent();
-                            updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource.getId(),
+                            updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource.getPath(),
                                     om.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}
                     }

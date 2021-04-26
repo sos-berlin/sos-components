@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler object
+ * Controller object
  * <p>
  * 
  * 

@@ -2,6 +2,7 @@
 package com.sos.inventory.model.instruction;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "lockId",
+    "lockName",
     "lockedWorkflow",
     "count"
 })
@@ -27,14 +28,16 @@ public class Lock
 {
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("lockId")
-    private String lockId;
+    @JsonProperty("lockName")
+    @JsonAlias({
+        "lockId",
+        "lockPath"
+    })
+    private String lockName;
     /**
      * instructions
      * <p>
@@ -62,40 +65,36 @@ public class Lock
 
     /**
      * 
-     * @param lockId
      * @param count
      * @param lockedWorkflow
      * 
+     * @param lockName
      */
-    public Lock(String lockId, Instructions lockedWorkflow, Integer count) {
+    public Lock(String lockName, Instructions lockedWorkflow, Integer count) {
         super();
-        this.lockId = lockId;
+        this.lockName = lockName;
         this.lockedWorkflow = lockedWorkflow;
         this.count = count;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("lockId")
-    public String getLockId() {
-        return lockId;
+    @JsonProperty("lockName")
+    public String getLockName() {
+        return lockName;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("lockId")
-    public void setLockId(String lockId) {
-        this.lockId = lockId;
+    @JsonProperty("lockName")
+    public void setLockName(String lockName) {
+        this.lockName = lockName;
     }
 
     /**
@@ -146,12 +145,12 @@ public class Lock
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("lockId", lockId).append("lockedWorkflow", lockedWorkflow).append("count", count).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("lockName", lockName).append("lockedWorkflow", lockedWorkflow).append("count", count).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(lockId).append(count).append(lockedWorkflow).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(count).append(lockedWorkflow).append(lockName).toHashCode();
     }
 
     @Override
@@ -163,7 +162,7 @@ public class Lock
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(lockId, rhs.lockId).append(count, rhs.count).append(lockedWorkflow, rhs.lockedWorkflow).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(count, rhs.count).append(lockedWorkflow, rhs.lockedWorkflow).append(lockName, rhs.lockName).isEquals();
     }
 
 }

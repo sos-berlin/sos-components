@@ -4,13 +4,17 @@
   "javaType": "com.sos.sign.model.job.Job",
   "type": "object",
   "required": [
-    "agentId",
+    "agentPath",
     "executable",
     "taskLimit"
   ],
   "properties": {
-    "agentId": {
-	  "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    "agentPath": {
+		"alias": "agentId,agentName",
+    	"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
 	},
 	"executable": {
 	  "javaType": "com.sos.inventory.model.job.Executable",
@@ -38,6 +42,13 @@
     },
     "defaultArguments": {
       "$ref": "../../../inventory/schemas/common/variables-schema.json"
+    },
+    "jobResourcePaths": {
+      "alias": "jobResourceNames",
+      "type": "array",
+      "items": {
+        "type": "../../../inventory/schemas/common/string255-schema.json"
+      }
     }
   },
   "additionalProperties": false

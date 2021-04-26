@@ -21,7 +21,7 @@ public class ModifyControllerAudit extends UrlParameter implements IAuditLog {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(uriParamSchema.getUrl());
-            setWithFailover(uriParamSchema.getWithFailover());
+            setWithSwitchover(uriParamSchema.getWithSwitchover());
             setControllerId(uriParamSchema.getControllerId()); 
         }
     }
@@ -30,7 +30,7 @@ public class ModifyControllerAudit extends UrlParameter implements IAuditLog {
         if (uriParamSchema != null) {
             setAuditParams(uriParamSchema.getAuditLog());
             setUrl(null);
-            setWithFailover(null);
+            setWithSwitchover(null);
             setControllerId(uriParamSchema.getControllerId()); 
         }
     }
@@ -38,7 +38,7 @@ public class ModifyControllerAudit extends UrlParameter implements IAuditLog {
     public ModifyControllerAudit(String controllerId, AuditParams auditLog) {
         setAuditParams(auditLog);
         setUrl(null);
-        setWithFailover(null);
+        setWithSwitchover(null);
         setControllerId(controllerId);
     }
 

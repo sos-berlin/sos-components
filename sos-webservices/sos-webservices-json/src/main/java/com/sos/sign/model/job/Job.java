@@ -1,6 +1,8 @@
 
 package com.sos.sign.model.job;
 
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -21,26 +23,29 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "agentId",
+    "agentPath",
     "executable",
     "returnCodeMeaning",
     "taskLimit",
     "timeout",
     "graceTimeout",
     "jobClass",
-    "defaultArguments"
+    "defaultArguments",
+    "jobResourcePaths"
 })
 public class Job {
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    private String agentId;
+    @JsonProperty("agentPath")
+    @JsonAlias({
+        "agentId",
+        "agentName"
+    })
+    private String agentPath;
     /**
      * 
      * (Required)
@@ -97,6 +102,11 @@ public class Job {
     @JsonProperty("defaultArguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables defaultArguments;
+    @JsonProperty("jobResourcePaths")
+    @JsonAlias({
+        "jobResourceNames"
+    })
+    private List<Object> jobResourcePaths = null;
 
     /**
      * No args constructor for use in serialization
@@ -107,18 +117,19 @@ public class Job {
 
     /**
      * 
+     * @param agentPath
      * @param returnCodeMeaning
      * @param taskLimit
-     * @param agentId
      * @param graceTimeout
      * @param defaultArguments
+     * @param jobResourcePaths
      * @param jobClass
      * @param executable
      * @param timeout
      */
-    public Job(String agentId, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments) {
+    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<Object> jobResourcePaths) {
         super();
-        this.agentId = agentId;
+        this.agentPath = agentPath;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
         this.taskLimit = taskLimit;
@@ -126,30 +137,27 @@ public class Job {
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
+        this.jobResourcePaths = jobResourcePaths;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
+    @JsonProperty("agentPath")
+    public String getAgentPath() {
+        return agentPath;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentPath")
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
     }
 
     /**
@@ -302,14 +310,24 @@ public class Job {
         this.defaultArguments = defaultArguments;
     }
 
+    @JsonProperty("jobResourcePaths")
+    public List<Object> getJobResourcePaths() {
+        return jobResourcePaths;
+    }
+
+    @JsonProperty("jobResourcePaths")
+    public void setJobResourcePaths(List<Object> jobResourcePaths) {
+        this.jobResourcePaths = jobResourcePaths;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(returnCodeMeaning).append(taskLimit).append(agentId).append(graceTimeout).append(defaultArguments).append(jobClass).append(executable).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(taskLimit).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(executable).append(timeout).toHashCode();
     }
 
     @Override
@@ -321,7 +339,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
     }
 
 }

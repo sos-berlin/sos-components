@@ -3,6 +3,7 @@ package com.sos.joc.model.order;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,7 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "logEvent",
     "position",
     "agentDatetime",
-    "agentPath",
+    "agentId",
     "agentUrl",
     "job",
     "taskId",
@@ -76,8 +77,11 @@ public class OrderLogItem {
     @JsonProperty("agentDatetime")
     @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
     private String agentDatetime;
-    @JsonProperty("agentPath")
-    private String agentPath;
+    @JsonProperty("agentId")
+    @JsonAlias({
+        "agentPath"
+    })
+    private String agentId;
     @JsonProperty("agentUrl")
     private String agentUrl;
     @JsonProperty("job")
@@ -211,14 +215,14 @@ public class OrderLogItem {
         this.agentDatetime = agentDatetime;
     }
 
-    @JsonProperty("agentPath")
-    public String getAgentPath() {
-        return agentPath;
+    @JsonProperty("agentId")
+    public String getAgentId() {
+        return agentId;
     }
 
-    @JsonProperty("agentPath")
-    public void setAgentPath(String agentPath) {
-        this.agentPath = agentPath;
+    @JsonProperty("agentId")
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
     }
 
     @JsonProperty("agentUrl")
@@ -307,12 +311,12 @@ public class OrderLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentPath", agentPath).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentId", agentId).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(orderId).append(error).append(agentDatetime).append(logEvent).append(agentPath).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(orderId).append(error).append(agentDatetime).append(logEvent).append(returnCode).append(controllerDatetime).append(logLevel).append(lock).append(position).append(agentUrl).append(job).append(taskId).toHashCode();
     }
 
     @Override
@@ -324,7 +328,7 @@ public class OrderLogItem {
             return false;
         }
         OrderLogItem rhs = ((OrderLogItem) other);
-        return new EqualsBuilder().append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(agentPath, rhs.agentPath).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
     }
 
     public enum LogEvent {

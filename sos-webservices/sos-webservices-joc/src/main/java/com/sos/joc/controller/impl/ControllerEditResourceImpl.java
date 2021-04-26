@@ -60,7 +60,7 @@ import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
@@ -299,7 +299,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                     agentDBLayer.saveAgent(dbAgent);
                 }
                 if (updateAgentRequired) {
-                    agentRefs.add(JAgentRef.of(AgentId.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl())));
+                    agentRefs.add(JAgentRef.of(AgentPath.of(clusterWatcher.getAgentId()), Uri.of(clusterWatcher.getUrl())));
                 }
             }
             
@@ -320,7 +320,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             if (!agentRefs.isEmpty()) {
                 final String cId = controllerId;
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChange)).thenAccept(
+                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             

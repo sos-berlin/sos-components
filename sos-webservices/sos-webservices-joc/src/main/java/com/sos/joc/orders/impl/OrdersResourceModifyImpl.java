@@ -299,10 +299,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Stream<JOrder> cyclicOrderStream = Stream.empty();
         // determine cyclic ids
         Set<String> freshCyclicIds = orderIds.stream().filter(s -> s.matches(".*#C[0-9]+-.*")).map(s -> currentState.idToOrder(OrderId.of(s))).filter(
-                Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh.class.isInstance(o.asScala().state())).map(o -> o.id().string()
+                Optional::isPresent).map(Optional::get).filter(o -> Order.Fresh$.class.isInstance(o.asScala().state())).map(o -> o.id().string()
                         .substring(0, 24)).collect(Collectors.toSet());
         if (!freshCyclicIds.isEmpty()) {
-            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh.class), o -> freshCyclicIds
+            cyclicOrderStream = currentState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> freshCyclicIds
                     .contains(o.id().string().substring(0, 24))));
         }
         return cyclicOrderStream;

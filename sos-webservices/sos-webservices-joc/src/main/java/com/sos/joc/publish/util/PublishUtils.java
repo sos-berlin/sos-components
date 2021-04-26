@@ -143,10 +143,10 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.item.VersionId;
-import js7.data.lock.LockId;
-import js7.data.orderwatch.OrderWatchId;
+import js7.data.lock.LockPath;
+import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
@@ -687,18 +687,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(item.getName());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(item.getName());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(item.getName());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -731,18 +731,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -793,18 +793,18 @@ public abstract class PublishUtils {
             case LOCK:
                 try {
                     Lock lock = (Lock) item.getContent();
-                    if (lock.getId() == null) {
-                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (lock.getPath() == null) {
+                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
             case FILEORDERSOURCE:
                 try {
                     FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
-                    if (fileOrderSource.getId() == null) {
-                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (fileOrderSource.getPath() == null) {
+                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                 } catch (JocDeployException e) {
@@ -839,18 +839,18 @@ public abstract class PublishUtils {
             case LOCK:
                 try {
                     Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getId() == null) {
-                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (lock.getPath() == null) {
+                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
             case FILEORDERSOURCE:
                 try {
                     FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getId() == null) {
-                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (fileOrderSource.getPath() == null) {
+                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                 } catch (JocDeployException e) {
@@ -891,18 +891,18 @@ public abstract class PublishUtils {
             case LOCK:
                 try {
                     Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getId() == null) {
-                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (lock.getPath() == null) {
+                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
             case FILEORDERSOURCE:
                 try {
                     FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getId() == null) {
-                        fileOrderSource.setId(item.getName());
+                    if (fileOrderSource.getPath() == null) {
+                        fileOrderSource.setPath(item.getName());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                 } catch (JocDeployException e) {
@@ -945,18 +945,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(item.getName());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(item.getName());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(item.getName());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(item.getName());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -990,18 +990,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1046,19 +1046,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(item.getName());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(item.getName());
                                 }
-                                // JLock jLock = JLock.of(LockId.of(lock.getId()), lock.getLimit());
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(item.getName());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(item.getName());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1093,18 +1092,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(item.getName());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(item.getName());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1152,18 +1151,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = (Lock) item.getContent();
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1196,18 +1195,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(item.getName());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(item.getName());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1255,18 +1254,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = (Lock) item.getContent();
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1300,18 +1299,18 @@ public abstract class PublishUtils {
                         case LOCK:
                             try {
                                 Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1352,18 +1351,18 @@ public abstract class PublishUtils {
             case LOCK:
                 try {
                     Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getId() == null) {
-                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (lock.getPath() == null) {
+                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
             case FILEORDERSOURCE:
                 try {
                     FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getId() == null) {
-                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (fileOrderSource.getPath() == null) {
+                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                 } catch (JocDeployException e) {
@@ -1401,18 +1400,18 @@ public abstract class PublishUtils {
             case LOCK:
                 try {
                     Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getId() == null) {
-                        lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (lock.getPath() == null) {
+                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
-                    return JUpdateItemOperation.addOrChangeSimple(JLock.of(LockId.of(lock.getId()), lock.getLimit()));
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 } catch (Exception e) {
                     throw new JocDeployException(e);
                 }
             case FILEORDERSOURCE:
                 try {
                     FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getId() == null) {
-                        fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                    if (fileOrderSource.getPath() == null) {
+                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                     }
                     return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                 } catch (JocDeployException e) {
@@ -1450,18 +1449,18 @@ public abstract class PublishUtils {
                             Lock lock;
                             try {
                                 lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.deleteSimple(LockId.of(lock.getId()));
+                                return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
                             } catch (Exception e) {
                                 throw new JocDeployException(e);
                             }
                         case FILEORDERSOURCE:
                             try {
                                 FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getId() == null) {
-                                    fileOrderSource.setId(Paths.get(item.getPath()).getFileName().toString());
+                                if (fileOrderSource.getPath() == null) {
+                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
                                 return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                             } catch (JocDeployException e) {
@@ -1548,9 +1547,9 @@ public abstract class PublishUtils {
                 com.sos.inventory.model.workflow.Workflow workflow = om.readValue(json, com.sos.inventory.model.workflow.Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     com.sos.inventory.model.job.Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentNameOrAlias = job.getAgentId();
+                    String agentNameOrAlias = job.getAgentName();
                     String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId, path, jobname);
-                    update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentId(), agentId, controllerId));
+                    update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentName(), agentId, controllerId));
                 });
             }
         } catch (IOException e) {
@@ -1575,7 +1574,7 @@ public abstract class PublishUtils {
         try {
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                     om.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
-            String agentNameOrAlias = fileOrderSource.getAgentId();
+            String agentNameOrAlias = fileOrderSource.getAgentName();
             String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
             update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
         } catch (IOException e) {
@@ -2411,8 +2410,8 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                if (lock.getId() == null) {
-                                    lock.setId(Paths.get(deployable.getPath()).getFileName().toString());
+                                if (lock.getPath() == null) {
+                                    lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 }
                                 content = om.writeValueAsString(lock);
                                 break;
@@ -2613,7 +2612,7 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                lock.setId(Paths.get(deployable.getPath()).getFileName().toString());
+                                lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
@@ -2968,7 +2967,7 @@ public abstract class PublishUtils {
                 .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
+            job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
                     .getControllerId())).findFirst().get().getAgentId());
         });
         draft.setContent(om.writeValueAsString(workflow));
@@ -2980,7 +2979,7 @@ public abstract class PublishUtils {
                 .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
+            job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
                     .getControllerId())).findFirst().get().getAgentId());
         });
     }
@@ -2988,8 +2987,8 @@ public abstract class PublishUtils {
     private static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
         Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream()
-                .filter(item -> item.getFileOrderSourceId().equals(fileOrderSource.getId())).collect(Collectors.toSet());
-        fileOrderSource.setAgentId(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get().getAgentId());
+                .filter(item -> item.getFileOrderSourceId().equals(fileOrderSource.getPath())).collect(Collectors.toSet());
+        fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get().getAgentId());
     }
 
     private static String getContentWithOrigAgentNameForWorkflow(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
@@ -2999,7 +2998,7 @@ public abstract class PublishUtils {
                 .getPath()) && controllerId.equals(item.getControllerId())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentId(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
+            job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
         return om.writeValueAsString(workflow);
     }
@@ -3008,7 +3007,7 @@ public abstract class PublishUtils {
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
         com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                 om.readValue(draft.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-        fileOrderSource.setAgentId(updateableFileOrderSourceAgentNames.stream()
+        fileOrderSource.setAgentName(updateableFileOrderSourceAgentNames.stream()
                 .filter(item -> item.getFileOrderSourceId().equals(draft.getName()) && controllerId.equals(item.getControllerId()))
                 .findFirst().get().getAgentName());
         return om.writeValueAsString(fileOrderSource);
@@ -3595,8 +3594,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentId() == null && fileOrderSource.getDelay() == null 
-                && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowPath() == null
+        if (fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentName() == null && fileOrderSource.getDelay() == null 
+                && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowName() == null
                 && fileOrderSource.getDirectory() == null) {
             return false;
         } else {
@@ -3669,7 +3668,7 @@ public abstract class PublishUtils {
                         break;
                     case LOCK:
                         Lock lock = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Lock.class);
-                        lock.setId(((DBItemInventoryConfiguration) item).getName());
+                        lock.setPath(((DBItemInventoryConfiguration) item).getName());
                         ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(lock));
                         break;
                     case JUNCTION:
@@ -3717,8 +3716,8 @@ public abstract class PublishUtils {
                         break;
                     case LOCK:
                         Lock lock = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Lock.class);
-                        if (lock.getId().startsWith("/")) {
-                            lock.setId(((DBItemDeploymentHistory) item).getName());
+                        if (lock.getPath().startsWith("/")) {
+                            lock.setPath(((DBItemDeploymentHistory) item).getName());
                             ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(lock));
                         }
                         break;
@@ -3816,16 +3815,20 @@ public abstract class PublishUtils {
     }
     
     private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
-        // TODO AgentName -> AgentId??
+        // TODO AgentName -> AgentPath??
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
-        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchId.of(fileOrderSource.getId()), WorkflowPath.of(fileOrderSource
-                .getWorkflowPath()), AgentId.of(fileOrderSource.getAgentId()), Paths.get(fileOrderSource.getDirectory()), getFileOrderSourcePattern(
+        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
+                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()), getFileOrderSourcePattern(
                         fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
         if (fileWatch.isLeft()) {
             throw new JocDeployException(fileWatch.getLeft().toString());
         } else {
             return fileWatch.get();
         }
+    }
+    
+    private static JLock getJLock(Lock lock) {
+        return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
@@ -3844,5 +3847,5 @@ public abstract class PublishUtils {
         fileOrderSource.setTimeZone(null);
         return Optional.of(String.format(idPattern, timeZone));
     }
-
+    
 }

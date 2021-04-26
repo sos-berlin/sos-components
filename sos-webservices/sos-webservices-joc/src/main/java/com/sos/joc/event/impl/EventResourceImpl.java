@@ -61,12 +61,13 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             try {
                 session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
                 long timeout = session.getTimeout();
-                //LOGGER.info("Session timeout: " + timeout);
+                // LOGGER.info("Session timeout: " + timeout);
                 if (timeout < 0L) {
-                    //unlimited session 
+                    // unlimited session 
                 } else if (timeout == 0L) {
                     throw new SessionNotExistException("Session has expired");
                 } else if (timeout - 1000L < 0L) {
+                    // doesn't send events in the last second of a session before it expires
                     TimeUnit.SECONDS.sleep(1);
                 }
             } catch (SessionNotExistException e) {
@@ -110,6 +111,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
                 return evt;
             }
+            LOGGER.info(permittedFolders.toString());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
@@ -136,32 +138,40 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                     String name = e.getWorkflow().getPath();
                     if (name != null) {
                         path = namePathWorkflowMap.get(e.getPath());
+                        LOGGER.info(e.getObjectType().value() + " event: " + (path != null ? path : ""));
                         if (path != null && canAdd(path, permittedFolders)) {
                             e.getWorkflow().setPath(path);
                         } else {
+                            LOGGER.info("event is skipped");
                             return null;
                         }
                     }
                 }
                 if (EventType.WORKFLOW.equals(e.getObjectType())) {
                     path = namePathWorkflowMap.get(e.getPath());
+                    LOGGER.info("WORKFLOW event: " + (path != null ? path : ""));
                     if (path != null && canAdd(path, permittedFolders)) {
                         e.setPath(path);
                     } else {
+                        LOGGER.info("event is skipped");
                         return null;
                     }
                 } else if (EventType.LOCK.equals(e.getObjectType())) {
                     path = namePathLockMap.get(e.getPath());
+                    LOGGER.info("LOCK event: " + (path != null ? path : ""));
                     if (path != null && canAdd(path, permittedFolders)) {
                         e.setPath(path);
                     } else {
+                        LOGGER.info("event is skipped");
                         return null;
                     }
                 } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
+                    LOGGER.info("FILEORDERSOURCE event: " + (path != null ? path : ""));
                     path = namePathFileOrderSourceMap.get(e.getPath());
                     if (path != null && canAdd(path, permittedFolders)) {
                         e.setPath(path);
                     } else {
+                        LOGGER.info("event is skipped");
                         return null;
                     }
                 } else if (EventType.FOLDER.equals(e.getObjectType())) {

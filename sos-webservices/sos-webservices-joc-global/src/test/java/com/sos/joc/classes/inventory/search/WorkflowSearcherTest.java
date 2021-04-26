@@ -59,7 +59,7 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getJobsByAgentId(agent-.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getAgentId());
+            LOGGER.info("           " + j.getJob().getAgentName());
         }
 
         jobs = ws.getJobsByJobClass("/job_class.*");
@@ -67,7 +67,7 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getJobsByJobClass(/job_class.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            LOGGER.info("           " + j.getJob().getAgentId());
+            LOGGER.info("           " + j.getJob().getAgentName());
         }
 
         jobs = ws.getJobsByScript("job_[0-9]? script.*");
@@ -177,14 +177,14 @@ public class WorkflowSearcherTest {
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions()][size] " + locks.size());
         for (WorkflowInstruction<Lock> l : locks) {
-            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockName());
         }
 
         locks = ws.getLockInstructions("lock_10");
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions(lock_10)][size] " + locks.size());
         for (WorkflowInstruction<Lock> l : locks) {
-            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockName());
         }
 
         // Predicate<WorkflowInstruction<Lock>> filter = isCountGreaterThan(1);
@@ -197,7 +197,7 @@ public class WorkflowSearcherTest {
         LOGGER.info(" ");
         LOGGER.info("[getLockInstructions(filter)][size] " + locks.size());
         for (WorkflowInstruction<Lock> l : locks) {
-            LOGGER.info("  LOCK: " + l.getInstruction().getLockId());
+            LOGGER.info("  LOCK: " + l.getInstruction().getLockName());
         }
 
         List<WorkflowInstruction<NamedJob>> jobs = ws.getJobInstructions();

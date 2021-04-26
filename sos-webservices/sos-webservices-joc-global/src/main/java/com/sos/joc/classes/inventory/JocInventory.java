@@ -35,6 +35,7 @@ import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
+import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.junction.Junction;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.workflow.Workflow;
@@ -77,6 +78,7 @@ public class JocInventory {
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, "classpath:/raml/inventory/schemas/calendar/calendar-schema.json");
             put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/job/job-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
+            put(ConfigurationType.JOBRESOURCE, "classpath:/raml/inventory/schemas/jobresource/jobResource-schema.json");
             put(ConfigurationType.JUNCTION, "classpath:/raml/inventory/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
@@ -112,6 +114,7 @@ public class JocInventory {
         {
             put(ConfigurationType.JOB, Job.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
+            put(ConfigurationType.JOBRESOURCE, JobResource.class);
             put(ConfigurationType.JUNCTION, Junction.class);
             put(ConfigurationType.LOCK, Lock.class);
             put(ConfigurationType.FILEORDERSOURCE, FileOrderSource.class);
@@ -125,7 +128,7 @@ public class JocInventory {
 
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
             ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
-            ConfigurationType.WORKFLOW)));
+            ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
@@ -764,7 +767,7 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"lockId\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
+                    workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);
                     if (i != -1) {
@@ -797,7 +800,7 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> fileOrderSources = dbLayer.getUsedFileOrderSourcesByWorkflowName(config.getName());
             if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
                 for (DBItemInventoryConfiguration fileOrderSource : fileOrderSources) {
-                    fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowPath\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
+                    fileOrderSource.setContent(fileOrderSource.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"", "$1"
                             + newName + "\""));
                     fileOrderSource.setDeployed(false);
                     int i = items.indexOf(fileOrderSource);

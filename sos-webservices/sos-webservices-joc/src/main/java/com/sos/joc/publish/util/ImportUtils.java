@@ -86,16 +86,16 @@ public class ImportUtils {
                 case WORKFLOW:
                 	for (Instruction instruction : ((WorkflowEdit)configurationWithReference).getConfiguration().getInstructions()) {
                 		if (InstructionType.LOCK.equals(instruction.getTYPE()) && (
-                				((Lock)instruction).getLockId().equals(updateableItem.getOldName())
-                				|| ((Lock)instruction).getLockId().equals(updateableItem.getConfigurationObject().getName()))) {
-                			((Lock)instruction).setLockId(updateableItem.getNewName());
+                				((Lock)instruction).getLockName().equals(updateableItem.getOldName())
+                				|| ((Lock)instruction).getLockName().equals(updateableItem.getConfigurationObject().getName()))) {
+                			((Lock)instruction).setLockName(updateableItem.getNewName());
                 		}
                 	}
                     break;
                 case FILEORDERSOURCE:
-                	if (((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowPath().equals(updateableItem.getOldName())
-                			|| ((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowPath().equals(updateableItem.getConfigurationObject().getName())) {
-                		((FileOrderSourceEdit)configurationWithReference).getConfiguration().setWorkflowPath(updateableItem.getNewName());
+                	if (((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName())
+                			|| ((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getConfigurationObject().getName())) {
+                		((FileOrderSourceEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
                 	}
                     break;
                 case SCHEDULE:
@@ -127,7 +127,7 @@ public class ImportUtils {
     	return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
     			.map(item -> {
     				for (Instruction wfInstruction : ((WorkflowEdit)item.getConfiguration()).getConfiguration().getInstructions()) {
-    					if (InstructionType.LOCK.equals(wfInstruction.getTYPE()) && ((Lock)wfInstruction).getLockId().equals(name)) {
+    					if (InstructionType.LOCK.equals(wfInstruction.getTYPE()) && ((Lock)wfInstruction).getLockName().equals(name)) {
 							 return item;
     					}
     				}
@@ -137,7 +137,7 @@ public class ImportUtils {
 
     private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {
     	return configurations.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(item.getObjectType())
-    			&& ((FileOrderSourceEdit)item).getConfiguration().getWorkflowPath().equals(name)).collect(Collectors.toSet());
+    			&& ((FileOrderSourceEdit)item).getConfiguration().getWorkflowName().equals(name)).collect(Collectors.toSet());
     }
 
     private static Set<ConfigurationObject> getUsedSchedulesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {

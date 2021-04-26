@@ -42,7 +42,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.event.EventSnapshot;
 import com.sos.joc.model.event.EventType;
 
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
 import js7.data.cluster.ClusterEvent;
 import js7.data.controller.ControllerEvent;
@@ -50,10 +50,10 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.item.ItemPath;
-import js7.data.item.SimpleItemEvent;
-import js7.data.item.SimpleItemId;
+import js7.data.item.SimpleItemPath;
+import js7.data.item.UnsignedSimpleItemEvent;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
-import js7.data.lock.LockId;
+import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -71,7 +71,7 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
-import js7.data.orderwatch.OrderWatchId;
+import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -89,7 +89,7 @@ public class EventService {
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
-            OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, SimpleItemEvent.class, 
+            OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, UnsignedSimpleItemEvent.class, 
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -297,26 +297,26 @@ public class EventService {
                     // TODO other versioned objects
                 }
                 
-            }  else if (evt instanceof SimpleItemEvent) {
-                // SimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
-                String eventType = evt.getClass().getSimpleName().replaceFirst("Simple", "");
-                SimpleItemId itemId = ((SimpleItemEvent) evt).id();
-                if (itemId instanceof AgentId) {
-                    eventType = evt.getClass().getSimpleName().replaceFirst("SimpleItem", "Agent");
+            }  else if (evt instanceof UnsignedSimpleItemEvent) {
+                // UnsignedSimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
+                SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
+                if (itemId instanceof AgentPath) {
+                    eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
-                } else if (itemId instanceof LockId) {
+                } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
-                } else if (itemId instanceof OrderWatchId) {
+                } else if (itemId instanceof OrderWatchPath) {
                     addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
                 } else {
                     // TODO other simple objects
                 }
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
-                addEvent(createAgentEvent(eventId, ((AgentId) key).string()));
+                addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
                 
             } else if (evt instanceof OrderLockEvent) {
-                addEvent(createLockEvent(eventId, ((LockId) key).string()));
+                addEvent(createLockEvent(eventId, ((LockPath) key).string()));
             }
             
         } catch (Exception e) {

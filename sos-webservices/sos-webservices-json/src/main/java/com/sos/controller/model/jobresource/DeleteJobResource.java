@@ -1,5 +1,5 @@
 
-package com.sos.controller.model.lock;
+package com.sos.controller.model.jobresource;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,9 +12,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * delete lock
+ * delete JobResourcePath
  * <p>
- * delete object with fixed property 'TYPE':'LockPath'
+ * delete object with fixed property 'TYPE':'JobResourcePath'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path"
 })
-public class DeleteLock implements IDeleteObject
+public class DeleteJobResource implements IDeleteObject
 {
 
     /**
@@ -32,7 +32,7 @@ public class DeleteLock implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.LOCK;
+    private DeleteType tYPE = DeleteType.JOBRESOURCE;
     /**
      * string without < and >
      * <p>
@@ -47,7 +47,7 @@ public class DeleteLock implements IDeleteObject
      * No args constructor for use in serialization
      * 
      */
-    public DeleteLock() {
+    public DeleteJobResource() {
     }
 
     /**
@@ -55,7 +55,7 @@ public class DeleteLock implements IDeleteObject
      * @param path
      * 
      */
-    public DeleteLock(String path) {
+    public DeleteJobResource(String path) {
         super();
         this.path = path;
     }
@@ -110,10 +110,10 @@ public class DeleteLock implements IDeleteObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeleteLock) == false) {
+        if ((other instanceof DeleteJobResource) == false) {
             return false;
         }
-        DeleteLock rhs = ((DeleteLock) other);
+        DeleteJobResource rhs = ((DeleteJobResource) other);
         return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 

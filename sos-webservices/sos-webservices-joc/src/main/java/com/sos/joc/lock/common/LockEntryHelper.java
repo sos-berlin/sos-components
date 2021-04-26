@@ -32,7 +32,7 @@ import com.sos.joc.model.lock.common.WorkflowLockType;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.lock.Acquired;
-import js7.data.lock.LockId;
+import js7.data.lock.LockPath;
 import js7.data.lock.LockState;
 import js7.data.order.OrderId;
 import js7.data.workflow.Instruction;
@@ -72,7 +72,7 @@ public class LockEntryHelper {
         JLockState jLockState = null;
         if (controllerState != null) {
             stateText = SyncStateText.NOT_IN_SYNC;
-            Either<Problem, JLockState> lockV = controllerState.idToLockState(LockId.of(lockId));
+            Either<Problem, JLockState> lockV = controllerState.pathToLockState(LockPath.of(lockId));
             if (lockV != null && lockV.isRight()) {
                 stateText = SyncStateText.IN_SYNC;
                 jLockState = lockV.get();
@@ -193,7 +193,7 @@ public class LockEntryHelper {
             Instruction in = jd.asScala().instruction(jo.workflowPosition().position().asScala());
             if (in != null && in instanceof LockInstruction) {
                 LockInstruction lin = (LockInstruction) in;
-                if (lockId.equals(lin.lockId().string())) {
+                if (lockId.equals(lin.lockPath().string())) {
                     Optional<Object> c = OptionConverters.toJava(lin.count());
                     if (c != null && c.isPresent()) {
                         l.setType(WorkflowLockType.SHARED);

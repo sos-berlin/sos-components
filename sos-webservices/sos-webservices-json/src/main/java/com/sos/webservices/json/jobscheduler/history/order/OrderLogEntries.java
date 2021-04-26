@@ -26,22 +26,6 @@ public class OrderLogEntries {
     @JsonProperty("entries")
     private List<OrderLogEntry> entries = new ArrayList<OrderLogEntry>();
 
-    /**
-     * No args constructor for use in serialization
-     * 
-     */
-    public OrderLogEntries() {
-    }
-
-    /**
-     * 
-     * @param entries
-     */
-    public OrderLogEntries(List<OrderLogEntry> entries) {
-        super();
-        this.entries = entries;
-    }
-
     @JsonProperty("entries")
     public List<OrderLogEntry> getEntries() {
         return entries;

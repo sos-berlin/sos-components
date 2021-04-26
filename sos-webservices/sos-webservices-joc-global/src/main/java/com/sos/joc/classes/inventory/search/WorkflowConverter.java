@@ -169,8 +169,8 @@ public class WorkflowConverter {
                 if (!SOSString.isEmpty(job.getTitle())) {
                     titels.add(job.getTitle());
                 }
-                if (!SOSString.isEmpty(job.getAgentId())) {
-                    agentIds.add(job.getAgentId());
+                if (!SOSString.isEmpty(job.getAgentName())) {
+                    agentIds.add(job.getAgentName());
                 }
                 if (!SOSString.isEmpty(job.getJobClass())) {
                     jobClasses.add(job.getJobClass());
@@ -336,13 +336,13 @@ public class WorkflowConverter {
             List<WorkflowInstruction<Lock>> locks = searcher.getLockInstructions();
             if (locks != null) {
                 for (WorkflowInstruction<Lock> lock : locks) {
-                    if (!SOSString.isEmpty(lock.getInstruction().getLockId())) {
-                        lockIds.add(lock.getInstruction().getLockId());
+                    if (!SOSString.isEmpty(lock.getInstruction().getLockName())) {
+                        lockIds.add(lock.getInstruction().getLockName());
 
                         Integer currentCount = lock.getInstruction().getCount() == null ? -1 : lock.getInstruction().getCount();
-                        Integer previousCount = this.locks.get(lock.getInstruction().getLockId());
+                        Integer previousCount = this.locks.get(lock.getInstruction().getLockName());
                         if (previousCount == null || currentCount > previousCount) {
-                            this.locks.put(lock.getInstruction().getLockId(), currentCount);
+                            this.locks.put(lock.getInstruction().getLockName(), currentCount);
                         }
                     }
                 }

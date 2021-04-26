@@ -130,7 +130,7 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getAgentId() != null && j.getJob().getAgentId().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getAgentName() != null && j.getJob().getAgentName().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByJobClass(String regex) {
@@ -254,7 +254,7 @@ public class WorkflowSearcher {
         if (r.isEmpty() || lockIdRegex == null) {
             return r;
         }
-        return r.stream().filter(l -> l.getInstruction().getLockId().matches(lockIdRegex)).collect(Collectors.toList());
+        return r.stream().filter(l -> l.getInstruction().getLockName().matches(lockIdRegex)).collect(Collectors.toList());
     }
 
     /** filter e.g.:

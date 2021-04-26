@@ -166,9 +166,9 @@ public class ProxyContext {
             try {
                 List<JAgentRef> agents = Proxies.getAgents(credentials.getControllerId(), null);
                 if (!agents.isEmpty()) {
-                    if (p.currentState().idToAgentRef(agents.get(0).id()).isLeft()) { // Agents doesn't exists
+                    if (p.currentState().pathToAgentRef(agents.get(0).path()).isLeft()) { // Agents doesn't exists
                         LOGGER.info(toString() + ": Redeploy Agents");
-                        p.api().updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChange)).thenAccept(e -> {
+                        p.api().updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(e -> {
                             if (e.isLeft()) {
                                 LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                             }

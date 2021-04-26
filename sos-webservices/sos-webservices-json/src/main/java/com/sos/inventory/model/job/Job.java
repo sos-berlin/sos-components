@@ -1,6 +1,8 @@
 
 package com.sos.inventory.model.job;
 
+import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -20,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "agentId",
+    "agentName",
     "executable",
     "returnCodeMeaning",
     "taskLimit",
@@ -28,6 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "graceTimeout",
     "jobClass",
     "defaultArguments",
+    "jobResourceNames",
     "title",
     "documentationPath",
     "logLevel",
@@ -37,14 +40,16 @@ public class Job implements IConfigurationObject
 {
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    private String agentId;
+    @JsonProperty("agentName")
+    @JsonAlias({
+        "agentId",
+        "agentPath"
+    })
+    private String agentName;
     /**
      * 
      * (Required)
@@ -101,6 +106,11 @@ public class Job implements IConfigurationObject
     @JsonProperty("defaultArguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables defaultArguments;
+    @JsonProperty("jobResourceNames")
+    @JsonAlias({
+        "jobResourcePaths"
+    })
+    private List<Object> jobResourceNames = null;
     /**
      * string without < and >
      * <p>
@@ -145,21 +155,22 @@ public class Job implements IConfigurationObject
     /**
      * 
      * @param documentationPath
-     * @param returnCodeMeaning
      * @param taskLimit
-     * @param agentId
+     * @param jobResourceNames
+     * @param criticality
+     * @param agentName
+     * @param title
+     * @param executable
+     * @param timeout
+     * @param returnCodeMeaning
      * @param graceTimeout
      * @param defaultArguments
      * @param logLevel
      * @param jobClass
-     * @param criticality
-     * @param title
-     * @param executable
-     * @param timeout
      */
-    public Job(String agentId, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<Object> jobResourceNames, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
         super();
-        this.agentId = agentId;
+        this.agentName = agentName;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
         this.taskLimit = taskLimit;
@@ -167,6 +178,7 @@ public class Job implements IConfigurationObject
         this.graceTimeout = graceTimeout;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
+        this.jobResourceNames = jobResourceNames;
         this.title = title;
         this.documentationPath = documentationPath;
         this.logLevel = logLevel;
@@ -174,27 +186,23 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
     /**
@@ -347,6 +355,16 @@ public class Job implements IConfigurationObject
         this.defaultArguments = defaultArguments;
     }
 
+    @JsonProperty("jobResourceNames")
+    public List<Object> getJobResourceNames() {
+        return jobResourceNames;
+    }
+
+    @JsonProperty("jobResourceNames")
+    public void setJobResourceNames(List<Object> jobResourceNames) {
+        this.jobResourceNames = jobResourceNames;
+    }
+
     /**
      * string without < and >
      * <p>
@@ -437,12 +455,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(agentId).append(criticality).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(jobResourceNames).append(criticality).append(agentName).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
     }
 
     @Override
@@ -454,7 +472,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(agentId, rhs.agentId).append(criticality, rhs.criticality).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
     }
 
 }

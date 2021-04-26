@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflows",
     "jobs",
     "jobClasses",
+    "jobResources",
     "locks",
     "junctions",
     "fileOrderSources",
@@ -65,6 +66,9 @@ public class ResponseFolder {
     @JsonProperty("jobClasses")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> jobClasses = new LinkedHashSet<ResponseFolderItem>();
+    @JsonProperty("jobResources")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ResponseFolderItem> jobResources = new LinkedHashSet<ResponseFolderItem>();
     @JsonProperty("locks")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseFolderItem> locks = new LinkedHashSet<ResponseFolderItem>();
@@ -162,6 +166,16 @@ public class ResponseFolder {
         this.jobClasses = jobClasses;
     }
 
+    @JsonProperty("jobResources")
+    public Set<ResponseFolderItem> getJobResources() {
+        return jobResources;
+    }
+
+    @JsonProperty("jobResources")
+    public void setJobResources(Set<ResponseFolderItem> jobResources) {
+        this.jobResources = jobResources;
+    }
+
     @JsonProperty("locks")
     public Set<ResponseFolderItem> getLocks() {
         return locks;
@@ -224,12 +238,12 @@ public class ResponseFolder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobs", jobs).append("jobClasses", jobClasses).append("locks", locks).append("junctions", junctions).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("calendars", calendars).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("path", path).append("workflows", workflows).append("jobs", jobs).append("jobClasses", jobClasses).append("jobResources", jobResources).append("locks", locks).append("junctions", junctions).append("fileOrderSources", fileOrderSources).append("schedules", schedules).append("calendars", calendars).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(fileOrderSources).append(folders).append(calendars).append(jobs).append(schedules).append(jobClasses).append(workflows).append(deliveryDate).append(locks).append(junctions).toHashCode();
+        return new HashCodeBuilder().append(folders).append(jobs).append(jobClasses).append(workflows).append(locks).append(junctions).append(path).append(fileOrderSources).append(calendars).append(schedules).append(deliveryDate).append(jobResources).toHashCode();
     }
 
     @Override
@@ -241,7 +255,7 @@ public class ResponseFolder {
             return false;
         }
         ResponseFolder rhs = ((ResponseFolder) other);
-        return new EqualsBuilder().append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(folders, rhs.folders).append(calendars, rhs.calendars).append(jobs, rhs.jobs).append(schedules, rhs.schedules).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(deliveryDate, rhs.deliveryDate).append(locks, rhs.locks).append(junctions, rhs.junctions).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(jobs, rhs.jobs).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(junctions, rhs.junctions).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }

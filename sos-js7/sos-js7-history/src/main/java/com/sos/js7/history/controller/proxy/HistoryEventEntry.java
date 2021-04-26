@@ -18,7 +18,7 @@ import com.sos.js7.history.controller.exception.FatEventProblemException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.base.time.Timestamp;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
 import js7.data.controller.ControllerEvent.ControllerReady;
@@ -26,8 +26,8 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.lock.Lock;
-import js7.data.lock.LockId;
-import js7.data.order.Order.Fresh;
+import js7.data.lock.LockPath;
+import js7.data.order.Order.Fresh$;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockQueued;
@@ -169,7 +169,7 @@ public class HistoryEventEntry {
         public Date getScheduledFor() {
             if (order != null) {
                 try {
-                    Optional<Timestamp> ot = OptionConverters.toJava(((Fresh) order.asScala().state()).scheduledFor());
+                    Optional<Timestamp> ot = OptionConverters.toJava(((Fresh$) order.asScala().state()).maybeDelayedUntil());
                     return ot.isPresent() ? Date.from(ot.get().toInstant()) : null;
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][getScheduledFor]%s", getOrderId(), e.toString()), e);
@@ -259,32 +259,32 @@ public class HistoryEventEntry {
         }
 
         public OrderLock getOrderLock(OrderLockAcquired event) throws FatEventProblemException {
-            return getOrderLock(event.lockId(), event.count(), false);
+            return getOrderLock(event.lockPath(), event.count(), false);
         }
 
         public OrderLock getOrderLock(OrderLockQueued event) throws FatEventProblemException {
-            return getOrderLock(event.lockId(), event.count(), true);
+            return getOrderLock(event.lockPath(), event.count(), true);
         }
 
         public OrderLock getOrderLock(OrderLockReleased event) throws FatEventProblemException {
             // count not available
-            return getOrderLock(event.lockId(), null, false);
+            return getOrderLock(event.lockPath(), null, false);
         }
 
-        private OrderLock getOrderLock(LockId lockId, Option<Object> count, boolean checkState) throws FatEventProblemException {
+        private OrderLock getOrderLock(LockPath lockPath, Option<Object> count, boolean checkState) throws FatEventProblemException {
             Lock l = null;
             Collection<OrderId> orderIds = null;
             List<OrderId> queuedOrderIds = null;
             if (checkState) {
-                JLockState jl = getFromEither(state.idToLockState(lockId));
+                JLockState jl = getFromEither(state.pathToLockState(lockPath));
                 l = jl.lock();
                 orderIds = jl.orderIds();
                 queuedOrderIds = jl.queuedOrderIds();
             } else {
-                JLock jl = getFromEither(state.idToLock(lockId));
+                JLock jl = getFromEither(state.pathToLock(lockPath));
                 l = jl.asScala();
             }
-            return new OrderLock(l.id().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
+            return new OrderLock(l.path().string(), l.limit(), count == null ? null : OptionConverters.toJava(count), orderIds, queuedOrderIds);
         }
 
         public class OrderLock {
@@ -508,8 +508,8 @@ public class HistoryEventEntry {
                         throw new Exception(String.format("[%s][%s]missing JOrder", eventId, orderId));
                     }
 
-                    Either<Problem, AgentId> pa = order.attached();
-                    AgentId arp = getFromEither(pa);
+                    Either<Problem, AgentPath> pa = order.attached();
+                    AgentPath arp = getFromEither(pa);
                     agentId = arp.string();
                 }
                 return agentId;
@@ -615,7 +615,7 @@ public class HistoryEventEntry {
         private String message;
 
         public HistoryAgentCouplingFailed() throws FatEventProblemException {
-            AgentId arp = (AgentId) keyedEvent.key();
+            AgentPath arp = (AgentPath) keyedEvent.key();
             id = arp.string();
 
             Problem p = ((AgentCouplingFailed) event).problem();
@@ -642,10 +642,10 @@ public class HistoryEventEntry {
         public HistoryAgentReady() throws FatEventProblemException {
             timezone = ((AgentReady) event).timezone();
 
-            AgentId arp = (AgentId) keyedEvent.key();
+            AgentPath arp = (AgentPath) keyedEvent.key();
             id = arp.string();
 
-            Either<Problem, JAgentRef> pa = eventAndState.state().idToAgentRef(arp);
+            Either<Problem, JAgentRef> pa = eventAndState.state().pathToAgentRef(arp);
             JAgentRef ar = getFromEither(pa);
             if (ar != null) {
                 uri = ar.uri().toString();

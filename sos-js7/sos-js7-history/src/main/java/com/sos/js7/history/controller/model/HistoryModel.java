@@ -1619,7 +1619,7 @@ public class HistoryModel {
         }
         if (logEntry.getOrderLock() != null) {
             Lock lock = new Lock();
-            lock.setLockId(logEntry.getOrderLock().getLockId());
+            lock.setLockName(logEntry.getOrderLock().getLockId());
             lock.setLimit(logEntry.getOrderLock().getLimit());
             lock.setCount(logEntry.getOrderLock().getCount());
             if (logEntry.getOrderLock().getState() != null) {
@@ -1666,7 +1666,7 @@ public class HistoryModel {
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
             orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
-            orderEntry.setAgentPath(entry.getAgentId());
+            orderEntry.setAgentId(entry.getAgentId());
             orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());

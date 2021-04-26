@@ -127,7 +127,7 @@ public class SOSShiroCurrentUsersList {
                 }
             } catch (ShiroException e) {
                 sosShiroCurrentUserAnswer.setMessage("token not valid");
-                sosShiroCurrentUserAnswer.setSessionTimeout(0l);
+                sosShiroCurrentUserAnswer.setSessionTimeout(0L);
                 sosShiroCurrentUserAnswer.setIsAuthenticated(false);
                 sosShiroCurrentUserAnswer.setAccessToken(NOT_VALID);
             }

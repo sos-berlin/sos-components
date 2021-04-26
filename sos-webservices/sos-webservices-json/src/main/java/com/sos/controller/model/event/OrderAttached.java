@@ -20,11 +20,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "workflowPosition",
     "state",
     "parent",
-    "agentName",
+    "agentPath",
     "payload"
 })
 public class OrderAttached
@@ -56,8 +55,13 @@ public class OrderAttached
      */
     @JsonProperty("parent")
     private String parent;
-    @JsonProperty("agentName")
-    private String agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    private String agentPath;
     /**
      * orderPayload
      * <p>
@@ -76,20 +80,20 @@ public class OrderAttached
 
     /**
      * 
+     * @param agentPath
      * @param parent
      * @param eventId
      * @param payload
      * @param workflowPosition
-     * @param agentName
      * @param state
      * 
      */
-    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, String agentName, OrderPayload payload, Long eventId) {
+    public OrderAttached(WorkflowPosition workflowPosition, OrderState state, String parent, String agentPath, OrderPayload payload, Long eventId) {
         super(eventId);
         this.workflowPosition = workflowPosition;
         this.state = state;
         this.parent = parent;
-        this.agentName = agentName;
+        this.agentPath = agentPath;
         this.payload = payload;
     }
 
@@ -161,14 +165,24 @@ public class OrderAttached
         this.parent = parent;
     }
 
-    @JsonProperty("agentName")
-    public String getAgentName() {
-        return agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    public String getAgentPath() {
+        return agentPath;
     }
 
-    @JsonProperty("agentName")
-    public void setAgentName(String agentName) {
-        this.agentName = agentName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("agentPath")
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
     }
 
     /**
@@ -195,12 +209,12 @@ public class OrderAttached
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowPosition", workflowPosition).append("state", state).append("parent", parent).append("agentName", agentName).append("payload", payload).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowPosition", workflowPosition).append("state", state).append("parent", parent).append("agentPath", agentPath).append("payload", payload).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowPosition).append(parent).append(agentName).append(state).append(payload).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowPosition).append(agentPath).append(parent).append(state).append(payload).toHashCode();
     }
 
     @Override
@@ -212,7 +226,7 @@ public class OrderAttached
             return false;
         }
         OrderAttached rhs = ((OrderAttached) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowPosition, rhs.workflowPosition).append(parent, rhs.parent).append(agentName, rhs.agentName).append(state, rhs.state).append(payload, rhs.payload).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowPosition, rhs.workflowPosition).append(agentPath, rhs.agentPath).append(parent, rhs.parent).append(state, rhs.state).append(payload, rhs.payload).isEquals();
     }
 
 }

@@ -91,6 +91,13 @@ public class TreePermanent {
                     }
                 }
                 break;
+            case JOBRESOURCE:
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                }
+                break;
             case LOCK:
                 if (treeForInventory || treeForInventoryTrash) {
                     if (inventoryPermission) {

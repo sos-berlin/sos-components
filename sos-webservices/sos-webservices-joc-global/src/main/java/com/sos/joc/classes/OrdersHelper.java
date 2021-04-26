@@ -58,7 +58,7 @@ import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.data.agent.AgentId;
+import js7.data.agent.AgentPath;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.value.BooleanValue;
@@ -83,7 +83,7 @@ public class OrdersHelper {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh.class, OrderStateText.PENDING);
+                    put(Order.Fresh$.class, OrderStateText.PENDING);
                     put(Order.Awaiting.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
@@ -223,7 +223,7 @@ public class OrdersHelper {
         if (compact != Boolean.TRUE) {
             o.setHistoricOutcome(outcomes);
         }
-        Either<Problem, AgentId> opt = jOrder.attached();
+        Either<Problem, AgentPath> opt = jOrder.attached();
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
         }
