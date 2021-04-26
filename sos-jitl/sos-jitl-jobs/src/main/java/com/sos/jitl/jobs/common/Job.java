@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -27,6 +30,8 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
 
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
@@ -238,7 +243,12 @@ public class Job {
     }
 
     public static void warn(final BlockingInternalJob.Step step, final Object msg) {
+        warn(step, msg, null);
+    }
+
+    public static void warn(final BlockingInternalJob.Step step, final Object msg, Throwable e) {
         step.out().println(String.format("[WARN]%s", msg));
+        LOGGER.warn(String.format("[WARN]%s", msg), e);
     }
 
     public static void warn(final BlockingInternalJob.Step step, final String format, final Object... msg) {
@@ -246,7 +256,12 @@ public class Job {
     }
 
     public static void error(final BlockingInternalJob.Step step, final Object msg) {
+        error(step, msg, null);
+    }
+
+    public static void error(final BlockingInternalJob.Step step, final Object msg, final Throwable e) {
         step.err().println(String.format("[ERROR]%s", msg));
+        LOGGER.error(String.format("[ERROR]%s", msg), e);
     }
 
     public static void error(final BlockingInternalJob.Step step, final String format, final Object... msg) {

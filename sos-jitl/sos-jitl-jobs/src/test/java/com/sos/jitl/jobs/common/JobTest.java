@@ -19,6 +19,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.helper.TestJob;
 import com.sos.jitl.jobs.common.helper.TestJobArguments;
 import com.sos.jitl.jobs.common.helper.TestJobSuperClass;
+import com.sos.jitl.jobs.common.helper.TestJobWithoutJobArgumentsClass;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments;
 import com.sos.jitl.jobs.examples.JocApiJobArguments;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
@@ -56,7 +57,21 @@ public class JobTest {
         LOGGER.info("name(superClass)=" + args.getTestSuperClass().getName());
         LOGGER.info("name=" + args.getTest().getName());
     }
-    
+
+    @Ignore
+    @Test
+    public void testEJobWithoutJobArgumentsClass() throws Exception {
+        TestJobWithoutJobArgumentsClass job = new TestJobWithoutJobArgumentsClass();
+
+        LOGGER.info("job class=" + job.getClass());
+        LOGGER.info("job class(generic super class)=" + job.getClass().getGenericSuperclass());
+        LOGGER.info("job super class=" + job.getClass().getSuperclass());
+        LOGGER.info("job super class(generic super class)=" + job.getClass().getSuperclass().getGenericSuperclass());
+
+        Object args = (Object) getJobArgumensClass(job).newInstance();
+        LOGGER.info("args=" + args.getClass());
+    }
+
     @Ignore
     @Test
     public void testJobArguments() {
@@ -81,9 +96,17 @@ public class JobTest {
             if (clazz == null)
                 throw new SOSJobArgumentException(String.format("super class not found for %s", instance.getClass()));
         }
-        return (Class<?>) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
+        Type gsc = clazz.getGenericSuperclass();
+        try {
+            return (Class<?>) ((ParameterizedType) gsc).getActualTypeArguments()[0];
+        } catch (Throwable e) {
+            if (gsc.getTypeName().endsWith(">")) {
+                throw e;
+            }
+            return Object.class;
+        }
     }
-    
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void setArguments(Map<String, Object> map, Object o) {
         List<Field> fields = Job.getJobArgumentFields(o);

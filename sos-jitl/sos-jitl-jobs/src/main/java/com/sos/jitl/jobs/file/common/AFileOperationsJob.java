@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
@@ -26,8 +23,6 @@ import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperationsJobArguments> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AFileOperationsJob.class);
 
     public AFileOperationsJob(JobContext jobContext) {
         super(jobContext);
@@ -78,8 +73,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         }
         try {
             TimeUnit.SECONDS.sleep(interval);
-        } catch (InterruptedException e1) {
-            LOGGER.error(e1.getMessage(), e1);
+        } catch (InterruptedException e) {
+            Job.error(step, e.toString(), e);
         }
 
         boolean result = true;
@@ -131,7 +126,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 try {
                     TimeUnit.SECONDS.sleep(interval);
                 } catch (InterruptedException e) {
-                    LOGGER.error(e.getMessage(), e);
+                    Job.error(step, e.toString(), e);
                 }
             } else {
                 break;

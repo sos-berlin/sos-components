@@ -21,9 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSDate;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
@@ -31,8 +28,6 @@ import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class AFileOperations {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AFileOperations.class);
 
     protected static final int CREATE_DIR = 0x01;
     protected static final int GRACIOUS = 0x02;
@@ -1001,8 +996,7 @@ public abstract class AFileOperations {
             Job.debug(step, "[%s][deleting file]%s", file.getCanonicalPath(), rc);
             return rc;
         } catch (Exception e) {
-            Job.warn(step, "Failed to wipe file: " + e);
-            LOGGER.warn("Failed to wipe file: " + e.toString(), e);
+            Job.warn(step, "Failed to wipe file: " + e.toString(), e);
             return false;
         }
     }
@@ -1014,33 +1008,38 @@ public abstract class AFileOperations {
             sb.append("target_file=").append(targetFile.toString()).append(",");
         }
         sb.append("fileSpec=").append(fileSpec).append(",");
-        sb.append("fileSpecFlags=");
-        if (has(fileSpecFlags, Pattern.CANON_EQ)) {
+        sb.append(getDebugFileSpecFlags(fileSpecFlags));
+        return sb;
+    }
+
+    private StringBuilder getDebugFileSpecFlags(final int flags) {
+        StringBuilder sb = new StringBuilder("fileSpecFlags=");
+        if (has(flags, Pattern.CANON_EQ)) {
             sb.append("CANON_EQ");
         }
-        if (has(fileSpecFlags, Pattern.CASE_INSENSITIVE)) {
+        if (has(flags, Pattern.CASE_INSENSITIVE)) {
             sb.append("CASE_INSENSITIVE");
         }
-        if (has(fileSpecFlags, Pattern.COMMENTS)) {
+        if (has(flags, Pattern.COMMENTS)) {
             sb.append("COMMENTS");
         }
-        if (has(fileSpecFlags, Pattern.DOTALL)) {
+        if (has(flags, Pattern.DOTALL)) {
             sb.append("DOTALL");
         }
-        if (has(fileSpecFlags, Pattern.MULTILINE)) {
+        if (has(flags, Pattern.MULTILINE)) {
             sb.append("MULTILINE");
         }
-        if (has(fileSpecFlags, Pattern.UNICODE_CASE)) {
+        if (has(flags, Pattern.UNICODE_CASE)) {
             sb.append("UNICODE_CASE");
         }
-        if (has(fileSpecFlags, Pattern.UNIX_LINES)) {
+        if (has(flags, Pattern.UNIX_LINES)) {
             sb.append("UNIX_LINES");
         }
         return sb;
     }
 
     private StringBuilder getDebugRemoveFlags(final int flags) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("flags=");
         if (has(flags, GRACIOUS)) {
             sb.append("GRACIOUS ");
         }
@@ -1057,7 +1056,7 @@ public abstract class AFileOperations {
     }
 
     private StringBuilder getDebugCopyFlags(final int flags) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder("flags=");
         if (has(flags, CREATE_DIR)) {
             sb.append("CREATE_DIR ");
         }
@@ -1069,9 +1068,6 @@ public abstract class AFileOperations {
         }
         if (has(flags, RECURSIVE)) {
             sb.append("RECURSIVE ");
-        }
-        if (sb.length() == 0) {
-            sb.append("0");
         }
         return sb;
     }

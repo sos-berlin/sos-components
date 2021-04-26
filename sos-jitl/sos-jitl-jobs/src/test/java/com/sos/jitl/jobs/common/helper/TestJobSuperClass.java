@@ -8,6 +8,7 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class TestJobSuperClass extends ABlockingInternalJob<TestJobArguments> {
 
+    @Override
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, TestJobArguments args) throws Exception {
         return Job.success();
     }

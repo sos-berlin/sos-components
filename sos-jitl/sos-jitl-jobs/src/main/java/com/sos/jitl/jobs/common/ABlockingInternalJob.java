@@ -56,6 +56,11 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         return JOutcome.succeeded(Collections.emptyMap());
     }
 
+    /** to override */
+    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step) throws Exception {
+        return onOrderProcess(step, null);
+    }
+
     public JobContext getJobContext() {
         return jobContext;
     }
@@ -142,7 +147,8 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     field.set(a, arg);
                 }
             } catch (Throwable e) {
-                LOGGER.error(String.format("[can't get field][%s.%s]%s", this.getClass().getSimpleName(), field.getName(), e.toString()), e);
+                throw new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
+                        .toString()), e);
             }
         }
         return a;
@@ -155,9 +161,18 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
             while (clazz.getSuperclass() != ABlockingInternalJob.class) {
                 clazz = clazz.getSuperclass();
                 if (clazz == null)
-                    throw new SOSJobArgumentException(String.format("ABlockingInternalJob super class not found for %s", getClass()));
+                    throw new SOSJobArgumentException(String.format("%s super class not found for %s", ABlockingInternalJob.class.getSimpleName(),
+                            getClass()));
             }
-            return (Class<A>) ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
+            Type gsc = clazz.getGenericSuperclass();
+            try {
+                return (Class<A>) ((ParameterizedType) gsc).getActualTypeArguments()[0];
+            } catch (Throwable e) {
+                if (gsc.getTypeName().endsWith(">")) {// com.sos.jitl.jobs.common.ABlockingInternalJob<com.sos.jitl.jobs....Arguments>
+                    throw e;
+                }
+                return (Class<A>) Object.class;
+            }
         } catch (Throwable e) {
             throw new SOSJobArgumentException(String.format("can't evaluate JobArguments class for job %s: %s", getClass().getName(), e.toString()),
                     e);
