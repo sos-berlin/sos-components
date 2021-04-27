@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl "?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+  <job name  = "SOSPLSQLJob"
+       title = "Execute PL/SQL procedure"
+       category="PLSQL;SQL;Database;JITL;Oracle"
+       >
+    <script language   = "java"
+            java_class = "com.sos.jitl.jobs.db.oracle.SOSPLSQLJob"
+            resource   = "1">
+    </script>
+  </job>
+
+  <releases>
+    <release id="1.0" created="2021-04-26" modified="2021-04-26">
+      <title>Version 1.0</title>
+      <note language="en"><div xmlns="http://www.w3.org/1999/xhtml">Initial release</div></note>
+    </release>
+  </releases>
+
+  <resources>
+  </resources>
+
+  <configuration>
+     
+    <params id="job_parameter">
+
+      <param name="command" required="one of command or command_script_file">
+        <note language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+        
+        <title>Database Commands for the Job</title>
+          <p>
+            It is possible to define more than one instruction in the COMMAND field.
+            Such instructions  are then carried out in the order in which they are written
+            and must be separated by a semicolon and a subsequent new line.
+            Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
+            at any given point in a command. This variable is then given the value of the
+            instruction parameter with the name [param] before execution.
+          </p>
+          <p>
+             The command in command and then the content of the file command_script_file will be executed.
+          </p>
+
+ 
+          </div>
+        </note>
+      </param>
+      
+      <param name="command_script_file" required="one of command or command_script_file">
+       
+        <note language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+        
+        <title>Name of a file that contains the database commands for the Job</title>
+          <p>
+            It is possible to define more than one instruction in a file.
+            Such instructions  are then carried out in the order in which they are written
+            and must be separated by a semicolon and a subsequent new line.
+            Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
+            at any given point in a command. This variable is then given the value of the
+            instruction parameter with the name [param] before execution.
+          </p>
+          <p>
+             The command in command and then the content of the file command_script_file will be executed.
+          </p>
+          </div>
+        </note>
+      </param>
+
+
+      <param name="db_url" required="true">
+        
+        <note language="en">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            jdbc url (e.g. jdbc:oracle:thin:@localhost:1521:XE)
+            with credential store: cs://path/url
+          </div>
+        </note>
+      </param>
+
+      <param name="db_user" required="true">
+        
+        <note language="en">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            database user
+            with credential store: cs://path/user
+          </div>
+        </note>
+      </param>
+
+      <param name="db_password" required="false">
+        
+        <note language="en">
+        <title>The user password for accessing the database</title>
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            database password
+            with credential store: cs://path/password
+          </div>
+        </note>
+      </param>
+
+      <xi:include href="./params/param_variable_parser_reg_expr.xml" parse="xml" />
+
+
+    <param name="credential_store_file" required="false">
+       
+        <note language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+        
+        <title>Location of the Credential Store file</title>
+          <p>
+            The name of the keepass file that contains the credentials for the access to the database.
+          </p>
+          <p>
+            Alternatively it is possible to specify the value in the url with ?file=
+          </p>
+          </div>
+        </note>
+      </param>
+	  
+    <param name="credential_store_key_file" required="false">
+       
+        <note language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+        
+        <title>Location of the Credential Store file</title>
+          <p>
+            The name of the keepass key file that contains the key for the credentials for the access to the database (if a key file is assigned to the keepass file). When no keepass key file is given, the file name is build with the name of the keepass file with changing the extension to .key.
+          </p>
+          <p>
+            Alternatively it is possible to specify the value in the url with ?keyfile=
+          </p>
+          </div>
+        </note>
+      </param>
+	  
+    <param name="credential_store_entry_path" required="false">
+        
+        <note language="en">
+        <div xmlns="http://www.w3.org/1999/xhtml">        
+        <title>Path for the entries in the keepass file</title>
+          <p>
+           To speciy a path for all entries. This makes the values for e.g. the password shorter.
+		   Example: 
+		 
+		   credential_store_entry_path=/sos/scheduler
+		   value for password: cs://mydb
+		   In the keepass file you find the entry in /sos/scheduler/mydb
+		   
+          </p>
+          <p>
+            Alternatively it is possible to specify the value in the url with ?entry_path=
+          </p>
+          </div>
+        </note>
+      </param>
+
+
+      </params>
+
+      <params id="return_parameter">
+            <param name="sql_error" required="false" default_value="" DataType="String" Category="database" OptionName="sql_error" Alias=""
+                usewith="" see="" since="">
+                
+                <note language="en">
+                    <title>Error Messages of the client or the server</title>
+                    <xhtml:div>
+                        <p>
+                            If during the execution of the code one (or more) errors occurs, the error-text will be stored on this variable in the order.
+                            If no error occurs then the contents of the variable will remain empty.
+                        </p>
+                    </xhtml:div>
+                </note>
+            </param>
+
+            <xi:include href="./params/param_std_out_output.xml" parse="xml">
+                <xi:fallback>./params/param_std_out_output.xml not found</xi:fallback>
+            </xi:include>
+
+    </params>
+  </configuration>
+
+  <documentation>
+    
+    <note language="en">
+        <title>What is the purpose of this job?</title>
+        <p>The job executes PL/SQL code.</p>
+    </note>
+
+   
+    <note language="en">
+        <title>How is the script defined?</title>
+        <p>
+        The script can be saved to a separate file.
+             Or it can be specified as the value of the parameter <paramref>command</paramref>.
+             </p>
+             <p>
+Before the script is executed, the script is modified by the job.
+All directly specified name of JobScheduler parameters are substituted by their current value.
+The following notations are supported: %parameter_name%, ${parameter_name}
+</p>
+
+    </note>
+
+ 
+    <note language="en">
+        <title>How can results be reused in subsequent jobs?</title>
+        <p>
+        The job transfers the appropriate parameters in the order.
+     The first of these are static parameters, such as those in the template docu described in the section "return parameters".
+     On the other hand, these are dynamic parameters.
+     The job analyzing the output of the script, and extracted there from using a regular expression, both
+     Names and the values of these parameters.
+     The regular expression is defined by the parameter <paramref>variable_parser_reg_exp</paramref>.
+        </p>
+        <p>
+        These parameters are readable by all jobs in all job steps.
+     The value of the parameter can be changed by other jobs.
+        </p>
+    </note>
+
+    <p>
+<codeexample type="plsql">
+<embeddedExample type="plsql">
+    declare
+      howmany NUMBER;
+      p_id varchar2(20) := null;
+    begin
+      dbms_output.put_line('set variable1=value1');
+      p_id := '12345';
+      --
+      -- If the job or order contains the parameter
+      --
+      -- table_name=scheduler_variables
+      --
+      -- then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
+      --
+      select count(*) into howmany from ${SCHEDULER_PARAM_table_name};
+      select count(*) into howmany from %table_name%;
+      select count(*) into howmany from %TABLE_NAME%;
+      select count(*) into howmany from ${SCHEDULER_PARAM_TABLE_NAME};
+      select count(*) into howmany from ${scheduler_param_table_name};
+      select count(*) into howmany from ${sChEdUlEr_pArAm_tAbLe_nAmE};
+      --
+      -- now put the results to the buffer
+      -- JS will get the results from the buffer
+      --
+      dbms_output.put_line('The table %table_name% has ' || howmany || ' rows.');
+      dbms_output.put_line('set howmany is ' || howmany);
+      dbms_output.put_line('set variable1 is ' || p_id);
+      dbms_output.put_line('set variable2 is value2');
+    end;
+</embeddedExample>
+
+<explanation language="en">
+<title >Example: PL/SQL code</title>
+<p>
+If the job or order contains the parameter
+"table_name=scheduler_variables"
+then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
+</p>
+            <p>
+             If the job is started in a job chain by an order, then the following parameters are added to the order as additional parameters
+              (see the parameter <paramref>variable_parser_reg_expr</paramref>).
+              For this purpose, the output of the script is parsed with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
+            </p>
+            <p>
+             In the above example the following parameters are returned:
+            </p>
+            <p>
+            <ul>
+                <li>howmany=8</li>
+                <li>variable1=12345</li>
+                <li>variable2=value2</li>
+            </ul>
+            </p>
+            <p>If a parameter is set several times then the last value is used as the order parameter.</p>
+</explanation>
+</codeexample>
+</p>
+
+  </documentation>
+
+
+</description>
