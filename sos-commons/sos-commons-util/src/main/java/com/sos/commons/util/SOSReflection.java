@@ -46,7 +46,7 @@ public class SOSReflection {
         return isEnum(Class.forName(className));
     }
 
-    public static boolean isEnum(Class<?> cls) throws ClassNotFoundException {
+    public static boolean isEnum(Class<?> cls) {
         return Enum.class.isAssignableFrom(cls);
     }
 
