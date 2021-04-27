@@ -60,6 +60,9 @@ public class FileOrderSource implements IDeployObject
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonAlias({
+        "workflowName"
+    })
     private String workflowPath;
     /**
      * 
