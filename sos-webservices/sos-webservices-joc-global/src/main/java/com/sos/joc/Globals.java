@@ -377,7 +377,7 @@ public class Globals {
                     Properties properties = new Properties();
                     properties.load(stream);
                     try {
-                        Globals.jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", JocSecurityLevel.LOW.value())
+                        Globals.jocSecurityLevel = JocSecurityLevel.fromValue(properties.getProperty("security_level", defaultLevel.value())
                                 .toUpperCase());
                     } catch (Exception e) {
                         //

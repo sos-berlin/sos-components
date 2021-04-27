@@ -440,7 +440,7 @@ public class JOCResourceImpl {
     }
 
     protected static boolean canAdd(String path, Set<Folder> listOfFolders) {
-        if (path == null || path.isEmpty()) {
+        if (path == null || !path.startsWith("/")) {
             return false;
         }
         return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);

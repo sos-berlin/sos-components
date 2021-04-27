@@ -50,9 +50,12 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.item.ItemPath;
+import js7.data.item.SignableItemKey;
+import js7.data.item.SignedItemEvent;
 import js7.data.item.SimpleItemPath;
 import js7.data.item.UnsignedSimpleItemEvent;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
+import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
@@ -312,6 +315,13 @@ public class EventService {
                     // TODO other simple objects
                 }
                 
+            } else if (evt instanceof SignedItemEvent) {
+                String eventType = evt.getClass().getSimpleName().replaceFirst(".*Signed", "");
+                SignableItemKey itemId = ((SignedItemEvent) evt).key();
+                if (itemId instanceof JobResourcePath) {
+                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
+                } 
+                
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
                 
@@ -398,6 +408,14 @@ public class EventService {
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.FILEORDERSOURCE);
+        return evt;
+    }
+    
+    private EventSnapshot createJobResourceEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.JOBRESOURCE);
         return evt;
     }
     

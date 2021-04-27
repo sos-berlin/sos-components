@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.apache.shiro.session.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -39,7 +37,7 @@ import com.sos.schema.JsonValidator;
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
     @Override
@@ -111,7 +109,6 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             if (evt.getEventSnapshots() == null || evt.getEventSnapshots().isEmpty()) {
                 return evt;
             }
-            LOGGER.info(permittedFolders.toString());
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
@@ -119,64 +116,63 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
             Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
                     .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
-
+            
             Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
                     .filter(Objects::nonNull).collect(Collectors.toSet());
             
             Set<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
                     EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
-
+            
+            Set<String> jobResourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.JOBRESOURCE.equals(e.getObjectType())).map(
+                    EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
+            
             Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
                     .intValue());
             Map<String, String> namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
             Map<String, String> namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames,
                     DeployType.FILEORDERSOURCE.intValue());
+            Map<String, String> namePathJobResourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), jobResourceNames,
+                    DeployType.JOBRESOURCE.intValue());
             
             evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
-                String path = null;
+                //LOGGER.info(e.toString());
                 if (e.getWorkflow() != null) {
                     String name = e.getWorkflow().getPath();
                     if (name != null) {
-                        path = namePathWorkflowMap.get(e.getPath());
-                        LOGGER.info(e.getObjectType().value() + " event: " + (path != null ? path : ""));
-                        if (path != null && canAdd(path, permittedFolders)) {
-                            e.getWorkflow().setPath(path);
-                        } else {
-                            LOGGER.info("event is skipped");
+                        name = namePathWorkflowMap.getOrDefault(name, name);
+                        if (!canAdd(name, permittedFolders)) {
                             return null;
+                        } else {
+                            e.getWorkflow().setPath(name);
                         }
                     }
                 }
-                if (EventType.WORKFLOW.equals(e.getObjectType())) {
-                    path = namePathWorkflowMap.get(e.getPath());
-                    LOGGER.info("WORKFLOW event: " + (path != null ? path : ""));
-                    if (path != null && canAdd(path, permittedFolders)) {
-                        e.setPath(path);
-                    } else {
-                        LOGGER.info("event is skipped");
-                        return null;
-                    }
-                } else if (EventType.LOCK.equals(e.getObjectType())) {
-                    path = namePathLockMap.get(e.getPath());
-                    LOGGER.info("LOCK event: " + (path != null ? path : ""));
-                    if (path != null && canAdd(path, permittedFolders)) {
-                        e.setPath(path);
-                    } else {
-                        LOGGER.info("event is skipped");
-                        return null;
-                    }
-                } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
-                    LOGGER.info("FILEORDERSOURCE event: " + (path != null ? path : ""));
-                    path = namePathFileOrderSourceMap.get(e.getPath());
-                    if (path != null && canAdd(path, permittedFolders)) {
-                        e.setPath(path);
-                    } else {
-                        LOGGER.info("event is skipped");
-                        return null;
-                    }
-                } else if (EventType.FOLDER.equals(e.getObjectType())) {
-                    if (!folderIsPermitted(e.getPath(), permittedFolders)) {
-                        return null;
+                String path = e.getPath();
+                if (path != null) {
+                    if (EventType.WORKFLOW.equals(e.getObjectType())) {
+                        e.setPath(namePathWorkflowMap.getOrDefault(path, path));
+                        if (!canAdd(e.getPath(), permittedFolders)) {
+                            return null;
+                        }
+                    } else if (EventType.LOCK.equals(e.getObjectType())) {
+                        e.setPath(namePathLockMap.getOrDefault(path, path));
+                        if (!canAdd(e.getPath(), permittedFolders)) {
+                            return null;
+                        }
+                    } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
+                        e.setPath(namePathFileOrderSourceMap.getOrDefault(path, path));
+                        if (!canAdd(e.getPath(), permittedFolders)) {
+                            return null;
+                        }
+                    } else if (EventType.JOBRESOURCE.equals(e.getObjectType())) {
+                        e.setPath(namePathJobResourceMap.getOrDefault(path, path));
+                        if (!canAdd(e.getPath(), permittedFolders)) {
+                            return null;
+                        }
+                    } else if (EventType.FOLDER.equals(e.getObjectType())) {
+                        if (!folderIsPermitted(path, permittedFolders)) {
+                            return null;
+                        }
                     }
                 }
                 return e;
