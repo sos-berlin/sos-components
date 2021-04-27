@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
@@ -30,8 +27,6 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Job.class);
 
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
@@ -222,56 +217,6 @@ public class Job {
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
     }
 
-    public static void info(final BlockingInternalJob.Step step, final Object msg) {
-        step.out().println(msg);
-    }
-
-    public static void info(final BlockingInternalJob.Step step, final String format, final Object... msg) {
-        info(step, String.format(format, msg));
-    }
-
-    public static void debug(final BlockingInternalJob.Step step, final Object msg) {
-        step.out().println(String.format("[DEBUG]%s", msg));
-    }
-
-    public static void debug(final BlockingInternalJob.Step step, final String format, final Object... msg) {
-        debug(step, String.format(format, msg));
-    }
-
-    public static void trace(final BlockingInternalJob.Step step, final Object msg) {
-        step.out().println(String.format("[TRACE]%s", msg));
-    }
-
-    public static void trace(final BlockingInternalJob.Step step, final String format, final Object... msg) {
-        trace(step, String.format(format, msg));
-    }
-
-    public static void warn(final BlockingInternalJob.Step step, final Object msg) {
-        warn(step, msg, null);
-    }
-
-    public static void warn(final BlockingInternalJob.Step step, final Object msg, Throwable e) {
-        step.out().println(String.format("[WARN]%s", msg));
-        LOGGER.warn(String.format("[WARN]%s", msg), e);
-    }
-
-    public static void warn(final BlockingInternalJob.Step step, final String format, final Object... msg) {
-        warn(step, String.format(format, msg));
-    }
-
-    public static void error(final BlockingInternalJob.Step step, final Object msg) {
-        error(step, msg, null);
-    }
-
-    public static void error(final BlockingInternalJob.Step step, final Object msg, final Throwable e) {
-        step.err().println(String.format("[ERROR]%s", msg));
-        LOGGER.error(String.format("[ERROR]%s", msg), e);
-    }
-
-    public static void error(final BlockingInternalJob.Step step, final String format, final Object... msg) {
-        error(step, String.format(format, msg));
-    }
-
     public static <T> T getFromEither(final Either<Problem, T> either) throws SOSJobProblemException {
         if (either.isLeft()) {
             throw new SOSJobProblemException(either.getLeft());
@@ -279,28 +224,29 @@ public class Job {
         return either.get();
     }
 
-    public static String getOrderId(final BlockingInternalJob.Step step) throws SOSJobProblemException {
-        return step.order().id().string();
+    public static String getOrderId(final JobStep step) throws SOSJobProblemException {
+        return step.getInternalStep().order().id().string();
     }
 
-    public static String getAgentId(final BlockingInternalJob.Step step) throws SOSJobProblemException {
-        return getFromEither(step.order().attached()).string();
+    public static String getAgentId(final JobStep step) throws SOSJobProblemException {
+        return getFromEither(step.getInternalStep().order().attached()).string();
     }
 
-    public static String getJobName(final BlockingInternalJob.Step step) throws SOSJobProblemException {
-        return getFromEither(step.workflow().checkedJobName(step.order().workflowPosition().position())).toString();
+    public static String getJobName(final JobStep step) throws SOSJobProblemException {
+        return getFromEither(step.getInternalStep().workflow().checkedJobName(step.getInternalStep().order().workflowPosition().position()))
+                .toString();
     }
 
-    public static String getWorkflowName(final BlockingInternalJob.Step step) {
-        return step.order().workflowId().path().name();
+    public static String getWorkflowName(final JobStep step) {
+        return step.getInternalStep().order().workflowId().path().name();
     }
 
-    public static String getWorkflowVersionId(final BlockingInternalJob.Step step) {
-        return step.order().workflowId().versionId().toString();
+    public static String getWorkflowVersionId(final JobStep step) {
+        return step.getInternalStep().order().workflowId().versionId().toString();
     }
 
-    public static String getWorkflowPosition(final BlockingInternalJob.Step step) {
-        return step.order().workflowPosition().position().toString();
+    public static String getWorkflowPosition(final JobStep step) {
+        return step.getInternalStep().order().workflowPosition().position().toString();
     }
 
     private static Map<String, Value> convert4engine(final Map<String, Object> map) {

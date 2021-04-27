@@ -20,13 +20,11 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobStep;
 
-import js7.base.problem.Problem;
-import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
-import scala.util.Either;
 
 public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
 
@@ -39,27 +37,27 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, SOSPLSQLJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, SOSPLSQLJobArguments args) throws Exception {
 
         try {
 
             Map<String, Value> variables = new HashMap<String, Value>();
             if (step != null) {
                 variables.putAll(getJobContext().jobArguments());
-                variables.putAll(step.arguments());
-                variables.putAll(step.order().arguments());
+                variables.putAll(step.getInternalStep().arguments());
+                variables.putAll(step.getInternalStep().order().arguments());
             }
 
             for (Entry<String, Object> entry : Job.convert(variables).entrySet()) {
                 String log = String.format("%1$s = %2$s", entry.getKey(), entry.getValue().toString());
                 LOGGER.debug(log);
                 if (step != null) {
-                    Job.info(step, log);
+                    step.getLogger().info(log);
                 }
             }
 
             Connection connection = getConnection(args);
-            return Job.success(process(step, connection, args));
+            return Job.success(process(step.getLogger(), connection, args));
         } catch (Throwable e) {
             throw e;
         }
@@ -135,8 +133,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         return newValue;
     }
 
-    private Map<String, Object> process(final BlockingInternalJob.Step step, final Connection connection, SOSPLSQLJobArguments args)
-            throws Exception {
+    private Map<String, Object> process(JobLogger logger, final Connection connection, SOSPLSQLJobArguments args) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
 
@@ -154,8 +151,8 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
         plsql = Job.replaceVars(Job.getSubstitutor(args), plsql);
         LOGGER.info(String.format("substituted Statement: %s will be executed.", plsql));
-        if (step != null) {
-            Job.info(step, String.format("substituted Statement: %s will be executed.", plsql));
+        if (logger != null) {
+            logger.info(String.format("substituted Statement: %s will be executed.", plsql));
         }
         dbmsOutput = new DbmsOutput(connection);
         dbmsOutput.enable(1000000);
@@ -167,8 +164,8 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                 String output = dbmsOutput.getOutput();
 
                 LOGGER.info(output);
-                if (step != null) {
-                    Job.info(step, output);
+                if (logger != null) {
+                    logger.info(output);
                 }
 
                 if (output != null) {

@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
@@ -29,74 +30,74 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, InfoJobArguments args) throws Exception {
-        boolean isDebugEnabled = args.isDebugEnabled();
-        boolean isTraceEnabled = args.isTraceEnabled();
+    public JOutcome.Completed onOrderProcess(JobStep step, InfoJobArguments args) throws Exception {
 
-        Job.info(step, "----------USAGE-----------------");
-        Job.info(step, "declare and set order variables:");
-        Job.info(step, "     \"show_env\"=true (Boolean) to show environment variables");
-        Job.info(step, "     \"redefine_show_env\"=true (Boolean) to redefine \"show_env\" value and see effect in the next step");
-        Job.info(step, "     \"log_level\"=INFO|DEBUG|TRACE (case insensitive)");
+        step.getLogger().info("----------USAGE-----------------");
+        step.getLogger().info("declare and set order variables:");
+        step.getLogger().info("     \"show_env\"=true (Boolean) to show environment variables");
+        step.getLogger().info("     \"redefine_show_env\"=true (Boolean) to redefine \"show_env\" value and see effect in the next step");
+        step.getLogger().info("     \"log_level\"=INFO|DEBUG|TRACE (case insensitive)");
 
-        if (isDebugEnabled) {
-            Job.debug(step, "-----------------------------------");
-            Job.debug(step, "job DEBUG message");
+        if (step.getLogger().isDebugEnabled()) {
+            step.getLogger().debug("-----------------------------------");
+            step.getLogger().debug("job DEBUG message");
         }
-        if (isTraceEnabled) {
-            Job.trace(step, "-----------------------------------");
-            Job.trace(step, "job TRACE message");
+        if (step.getLogger().isTraceEnabled()) {
+            step.getLogger().trace("-----------------------------------");
+            step.getLogger().trace("job TRACE message");
         }
-        Job.info(step, "----------JOB Instance-----------------");
-        Job.info(step, "[jobContext.jobArguments()][scala]" + getJobContext().jobArguments());
-        Job.info(step, "[jobContext.jobArguments()][java]" + Job.convert(getJobContext().jobArguments()));
+        step.getLogger().info("----------JOB Instance-----------------");
+        step.getLogger().info("[jobContext.jobArguments()][scala]" + getJobContext().jobArguments());
+        step.getLogger().info("[jobContext.jobArguments()][java]" + Job.convert(getJobContext().jobArguments()));
 
-        Job.info(step, "----------Workflow-----------------");
-        Job.info(step, "[name]" + Job.getWorkflowName(step));
-        Job.info(step, "[versionId]" + Job.getWorkflowVersionId(step));
-        Job.info(step, "[position]" + Job.getWorkflowPosition(step));
-        Job.error(step, "[position written to err]" + Job.getWorkflowPosition(step));
+        step.getLogger().info("----------Workflow-----------------");
+        step.getLogger().info("[name]" + Job.getWorkflowName(step));
+        step.getLogger().info("[versionId]" + Job.getWorkflowVersionId(step));
+        step.getLogger().info("[position]" + Job.getWorkflowPosition(step));
+        step.getLogger().error("[position written to err]" + Job.getWorkflowPosition(step));
 
-        Job.info(step, "----------ORDER-----------------");
-        Job.info(step, "[id]" + Job.getOrderId(step));
-        Job.info(step, "[step.order().arguments()][scala]" + step.order().arguments());
-        Job.info(step, "[step.order().arguments()][java]" + Job.convert(step.order().arguments()));
+        step.getLogger().info("----------ORDER-----------------");
+        step.getLogger().info("[id]" + Job.getOrderId(step));
+        step.getLogger().info("[step.order().arguments()][scala]" + step.getInternalStep().order().arguments());
+        step.getLogger().info("[step.order().arguments()][java]" + Job.convert(step.getInternalStep().order().arguments()));
 
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
-        Job.info(step, "----------NODE/STEP-----------------");
-        Job.info(step, "[agentId]" + Job.getAgentId(step));
-        Job.info(step, "[name]" + Job.getJobName(step));
-        Job.info(step, "[step.arguments()][scala]" + step.arguments());
-        Job.info(step, "[step.arguments()][java]" + Job.convert(step.arguments()));
+        step.getLogger().info("----------NODE/STEP-----------------");
+        step.getLogger().info("[agentId]" + Job.getAgentId(step));
+        step.getLogger().info("[name]" + Job.getJobName(step));
+        step.getLogger().info("[step.arguments()][scala]" + step.getInternalStep().arguments());
+        step.getLogger().info("[step.arguments()][java]" + Job.convert(step.getInternalStep().arguments()));
 
-        Job.info(step, "[step.namedValue(%s)]%s", args.getShowEnv().getName(), step.namedValue(args.getShowEnv().getName()));
-        Job.info(step, "[step.namedValue(%s)]%s", args.getRedefineShowEnv().getName(), step.namedValue(args.getRedefineShowEnv().getName()));
-        Job.info(step, "[step.namedValue(%s)]%s", args.getLogLevel().getName(), step.namedValue(args.getLogLevel().getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", args.getShowEnv().getName(), step.getInternalStep().namedValue(args.getShowEnv().getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", args.getRedefineShowEnv().getName(), step.getInternalStep().namedValue(args
+                .getRedefineShowEnv().getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", args.getLogLevel().getName(), step.getInternalStep().namedValue(args.getLogLevel()
+                .getName()));
 
         if (args.getShowEnv().getValue()) {
-            printEnvs(step);
+            printEnvs(step.getLogger());
         }
 
-        Job.info(step, "----------RETURN-----------------");
+        step.getLogger().info("----------RETURN-----------------");
         if (args.getRedefineShowEnv().getValue()) {
-            Job.info(step, "[SUCCESS]set step outcome \"%s\"=%s", args.getShowEnv().getName(), !args.getShowEnv().getValue());
+            step.getLogger().info("[SUCCESS]set step outcome \"%s\"=%s", args.getShowEnv().getName(), !args.getShowEnv().getValue());
             return Job.success(args.getShowEnv().getName(), !args.getShowEnv().getValue());
         } else {
-            Job.info(step, "[SUCCESS]");
+            step.getLogger().info("[SUCCESS]");
             return Job.success();
         }
     }
 
-    private void printEnvs(BlockingInternalJob.Step step) {
-        Job.info(step, "----------ENV-----------------");
-        Job.info(step, "    JS7");
+    private void printEnvs(JobLogger logger) {
+        logger.info("----------ENV-----------------");
+        logger.info("    JS7");
         System.getenv().entrySet().stream().filter(e -> e.getKey().startsWith("JS7")).forEach(e -> {
-            Job.info(step, "        " + e.getKey() + "=" + e.getValue());
+            logger.info("        " + e.getKey() + "=" + e.getValue());
         });
-        Job.info(step, "    System");
+        logger.info("    System");
         System.getenv().entrySet().stream().filter(e -> !e.getKey().startsWith("JS7")).forEach(e -> {
-            Job.info(step, "        " + e.getKey() + "=" + e.getValue());
+            logger.info("        " + e.getKey() + "=" + e.getValue());
         });
     }
 

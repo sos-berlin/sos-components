@@ -15,10 +15,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ArgResultSetAsParametersValues;
 
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments> {
 
@@ -27,7 +28,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, SQLExecutorJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, SQLExecutorJobArguments args) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -39,8 +40,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             factory.build();
             session = factory.openStatelessSession();
 
-            Map<String, Object> map = process(step, session, args);
-            Job.info(step, "map=" + map);
+            Map<String, Object> map = process(step.getLogger(), session, args);
+            step.getLogger().info("map=" + map);
             return Job.success(map);
         } catch (Throwable e) {
             throw e;
@@ -54,20 +55,16 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         }
     }
 
-    private Map<String, Object> process(final BlockingInternalJob.Step step, final SOSHibernateSession session, SQLExecutorJobArguments args)
-            throws Exception {
+    private Map<String, Object> process(JobLogger logger, final SOSHibernateSession session, SQLExecutorJobArguments args) throws Exception {
         args.setCommand(args.getCommand().replaceAll(Pattern.quote("\\${"), "\\${")); // replace \${ to ${ TODO - is needed?
         args.setCommand(Job.replaceVars(Job.getSubstitutor(args), args.getCommand()));
 
-        boolean isDebugEnabled = args.isDebugEnabled();
         SOSHibernateSQLExecutor executor = session.getSQLExecutor();
         List<String> statements = null;
         try {
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
-                if (isDebugEnabled) {
-                    Job.debug(step, "[load from file]%s", path);
-                }
+                logger.debug("[load from file]%s", path);
                 statements = executor.getStatements(path);
             }
         } catch (Throwable e) {
@@ -79,9 +76,9 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         Map<String, Object> map = new HashMap<String, Object>();
         session.beginTransaction();
         for (String statement : statements) {
-            Job.info(step, "executing database statement: %s", statement);
+            logger.info("executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
-                executeResultSet(step, args, executor, statement, map, isDebugEnabled);
+                executeResultSet(logger, args, executor, statement, map);
             } else {
                 executor.executeUpdate(statement);
             }
@@ -90,8 +87,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         return map;
     }
 
-    private void executeResultSet(final BlockingInternalJob.Step step, final SQLExecutorJobArguments args, final SOSHibernateSQLExecutor executor,
-            final String statement, Map<String, Object> map, boolean isDebugEnabled) throws Exception {
+    private void executeResultSet(JobLogger logger, final SQLExecutorJobArguments args, final SOSHibernateSQLExecutor executor,
+            final String statement, Map<String, Object> map) throws Exception {
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {
@@ -122,8 +119,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 }
                             }
                             if (paramKey != null && paramValue != null) {
-                                if (isDebugEnabled) {
-                                    Job.debug(step, "[order][set param]%s=%s", paramKey, paramValue);
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("[order][set param]%s=%s", paramKey, paramValue);
                                 }
                                 map.put(paramKey, paramValue);
                             }
@@ -131,8 +128,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                             if (rowCount == 1) {
                                 for (String key : record.keySet()) {
                                     String value = record.get(key);
-                                    if (isDebugEnabled) {
-                                        Job.debug(step, "[order][set param]%s=%s", key, value);
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug("[order][set param]%s=%s", key, value);
                                     }
                                     map.put(key, value);
                                 }
@@ -159,7 +156,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         } finally {
             executor.close(rs);
             if (warning.length() > 0) {
-                Job.warn(step, warning);
+                logger.warn(warning);
             }
         }
     }

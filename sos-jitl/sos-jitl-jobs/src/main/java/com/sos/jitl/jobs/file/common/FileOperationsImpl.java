@@ -2,16 +2,16 @@ package com.sos.jitl.jobs.file.common;
 
 import java.io.File;
 
-import js7.executor.forjava.internal.BlockingInternalJob;
+import com.sos.jitl.jobs.common.JobLogger;
 
 public class FileOperationsImpl extends AFileOperations {
 
-    public FileOperationsImpl(boolean isDebugEnabled) {
-        super(isDebugEnabled);
+    public FileOperationsImpl(JobLogger logger) {
+        super(logger);
     }
 
     @Override
-    protected boolean handleOneFile(BlockingInternalJob.Step step, File sourceFile, File targetFile, boolean overwrite, boolean gracious)
+    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious)
             throws Exception {
         return false;
     }

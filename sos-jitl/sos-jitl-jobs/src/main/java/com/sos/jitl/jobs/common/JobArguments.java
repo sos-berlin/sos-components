@@ -1,10 +1,8 @@
 package com.sos.jitl.jobs.common;
 
-public class JobArguments {
+import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 
-    public enum LogLevel {
-        INFO, DEBUG, TRACE
-    }
+public class JobArguments {
 
     private JobArgument<LogLevel> logLevel = new JobArgument<LogLevel>("log_level", LogLevel.INFO);
 
@@ -12,11 +10,4 @@ public class JobArguments {
         return logLevel;
     }
 
-    public boolean isDebugEnabled() {
-        return logLevel.getValue().equals(LogLevel.DEBUG) || logLevel.getValue().equals(LogLevel.TRACE);
-    }
-
-    public boolean isTraceEnabled() {
-        return logLevel.getValue().equals(LogLevel.TRACE);
-    }
 }

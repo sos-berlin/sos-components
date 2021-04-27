@@ -2,8 +2,9 @@ package com.sos.jitl.jobs.db.oracle;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArguments;
 
-public class SOSSQLPlusJobArguments {
+public class SOSSQLPlusJobArguments extends JobArguments {
 
     private JobArgument<String> shellCommand = new JobArgument<String>("shell_command");
     private JobArgument<String> osName = new JobArgument<String>("os_name");
@@ -18,8 +19,6 @@ public class SOSSQLPlusJobArguments {
     private JobArgument<String> dbUser = new JobArgument<String>("db_user");
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url");
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
-
-   
 
     private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file");
     private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file");
@@ -153,16 +152,14 @@ public class SOSSQLPlusJobArguments {
     public void setSqlError(String sqlError) {
         this.sqlError.setValue(sqlError);
     }
-    
+
     public String getCommand() {
         return command.getValue();
     }
-    
+
     public void setCommand(String command) {
         this.command.setValue(command);
     }
-
-
 
     public String getConnectionString() {
         String connectionString = "";
@@ -201,11 +198,10 @@ public class SOSSQLPlusJobArguments {
 
     public String getCommandLineForLog(String tempFileName) {
         String savPassword = this.getDbPassword();
-         this.setDbPassword("************");
-         String commandLine = this.getCommandLine(tempFileName);
-         this.setDbPassword(savPassword);
-         return commandLine;
+        this.setDbPassword("************");
+        String commandLine = this.getCommandLine(tempFileName);
+        this.setDbPassword(savPassword);
+        return commandLine;
     }
 
-    
 }

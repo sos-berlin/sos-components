@@ -1,14 +1,14 @@
 package com.sos.jitl.jobs.common.helper;
 
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class TestJob extends TestJobSuperClass {
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, TestJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, TestJobArguments args) throws Exception {
         return Job.success();
     }
 }

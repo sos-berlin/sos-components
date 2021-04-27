@@ -17,10 +17,10 @@ import java.util.concurrent.TimeUnit;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperationsJobArguments> {
 
@@ -60,13 +60,13 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.setFlags(flags);
     }
 
-    public boolean checkSteadyStateOfFiles(BlockingInternalJob.Step step, FileOperationsJobArguments args, List<File> files) throws Exception {
+    public boolean checkSteadyStateOfFiles(JobLogger logger, FileOperationsJobArguments args, List<File> files) throws Exception {
         if (files == null || files.size() == 0 || !args.getCheckSteadyStateOfFiles().getValue()) {
             return true;
         }
         long interval = Job.getTimeAsSeconds(args.getSteadyStateInterval());
 
-        Job.debug(step, "checking file(s) for steady state, interval=%ss", interval);
+        logger.debug("checking file(s) for steady state, interval=%ss", interval);
         List<FileDescriptor> list = new ArrayList<FileDescriptor>();
         for (File file : files) {
             list.add(new FileDescriptor(file));
@@ -74,7 +74,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         try {
             TimeUnit.SECONDS.sleep(interval);
         } catch (InterruptedException e) {
-            Job.error(step, e.toString(), e);
+            logger.error(e.toString(), e);
         }
 
         boolean result = true;
@@ -82,7 +82,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             result = true;
             for (FileDescriptor fd : list) {
                 File file = new File(fd.getFileName());
-                Job.debug(step, "result is : " + file.lastModified() + ", " + fd.getLastModificationDate() + ", " + file.length() + ", " + fd
+                logger.debug("result is : " + file.lastModified() + ", " + fd.getLastModificationDate() + ", " + file.length() + ", " + fd
                         .getLastFileLength());
                 if (args.getUseFileLock().getValue()) {
                     try {
@@ -91,15 +91,15 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                         FileLock lock = channel.lock();
                         try {
                             lock = channel.tryLock();
-                            Job.debug(step, String.format("lock for file '%1$s' ok", file.getAbsolutePath()));
+                            logger.debug(String.format("lock for file '%1$s' ok", file.getAbsolutePath()));
                             break;
                         } catch (OverlappingFileLockException e) {
                             result = false;
-                            Job.info(step, String.format("File '%1$s' is open by someone else", file.getAbsolutePath()));
+                            logger.info(String.format("File '%1$s' is open by someone else", file.getAbsolutePath()));
                             break;
                         } finally {
                             lock.release();
-                            Job.debug(step, String.format("release lock for '%1$s'", file.getAbsolutePath()));
+                            logger.debug(String.format("release lock for '%1$s'", file.getAbsolutePath()));
                             if (raf != null) {
                                 channel.close();
                                 raf.close();
@@ -107,16 +107,16 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                             }
                         }
                     } catch (FileNotFoundException e) {
-                        Job.error(step, e.getMessage(), e);
+                        logger.error(e.getMessage(), e);
                     } catch (IOException e) {
-                        Job.error(step, e.getMessage(), e);
+                        logger.error(e.getMessage(), e);
                     }
                 }
                 if (file.lastModified() != fd.getLastModificationDate() || file.length() != fd.getLastFileLength()) {
                     result = false;
                     fd.update(file);
                     fd.setSteady(false);
-                    Job.info(step, String.format("File '%1$s' changed during checking steady state", file.getAbsolutePath()));
+                    logger.info(String.format("File '%1$s' changed during checking steady state", file.getAbsolutePath()));
                     break;
                 } else {
                     fd.setSteady(true);
@@ -126,17 +126,17 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 try {
                     TimeUnit.SECONDS.sleep(interval);
                 } catch (InterruptedException e) {
-                    Job.error(step, e.toString(), e);
+                    logger.error(e.toString(), e);
                 }
             } else {
                 break;
             }
         }
         if (!result) {
-            Job.error(step, "not all files are steady");
+            logger.error("not all files are steady");
             for (FileDescriptor fd : list) {
                 if (!fd.isSteady()) {
-                    Job.info(step, String.format("File '%1$s' is not steady", fd.getFileName()));
+                    logger.info(String.format("File '%1$s' is not steady", fd.getFileName()));
                 }
             }
             throw new SOSFileOperationsException("not all files are steady");
@@ -144,8 +144,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         return result;
     }
 
-    public JOutcome.Completed handleResult(BlockingInternalJob.Step step, FileOperationsJobArguments args, List<File> files, boolean result)
-            throws Exception {
+    public JOutcome.Completed handleResult(JobLogger logger, FileOperationsJobArguments args, List<File> files, boolean result) throws Exception {
         int size = 0;
         StringBuilder fileList = new StringBuilder();
         if (files != null && files.size() > 0) {
@@ -158,7 +157,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.getReturnResultSetSize().setValue(size);
 
         if (args.getResultSetFile().getValue() != null && fileList.length() > 0) {
-            Job.debug(step, "..try to write file:" + args.getResultSetFile().getValue());
+            logger.debug("..try to write file:" + args.getResultSetFile().getValue());
             if (Files.isWritable(args.getResultSetFile().getValue())) {
                 Files.write(args.getResultSetFile().getValue(), fileList.toString().getBytes("UTF-8"));
             } else {

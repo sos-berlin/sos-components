@@ -9,8 +9,9 @@ import java.util.stream.Stream;
 
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArguments;
 
-public class SOSPLSQLJobArguments {
+public class SOSPLSQLJobArguments extends JobArguments {
 
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentConfigDir().resolve(
             "hibernate.cfg.xml").normalize());

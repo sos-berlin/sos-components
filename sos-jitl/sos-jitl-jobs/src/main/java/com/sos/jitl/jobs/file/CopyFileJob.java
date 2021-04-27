@@ -3,13 +3,13 @@ package com.sos.jitl.jobs.file;
 import java.util.regex.Pattern;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsCopyImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class CopyFileJob extends AFileOperationsJob {
 
@@ -18,10 +18,10 @@ public class CopyFileJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, FileOperationsJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, FileOperationsJobArguments args) throws Exception {
         checkArguments(args);
 
-        FileOperationsCopyImpl fo = new FileOperationsCopyImpl(args.isDebugEnabled());
+        FileOperationsCopyImpl fo = new FileOperationsCopyImpl(step.getLogger());
 
         String[] sourceArr = args.getSourceFile().getValue().split(";");
         String[] targetArr = null;
@@ -45,17 +45,17 @@ public class CopyFileJob extends AFileOperationsJob {
             if (!SOSString.isEmpty(args.getFileSpec().getValue()) && checkLen) {
                 args.setFileSpec(fileSpecsArr[i]);
             }
-            files += doFileOperation(step, args, fo, source, target);
+            files += doFileOperation(args, fo, source, target);
         }
-        return handleResult(step, args, fo.getResultList(), files > 0);
+        return handleResult(step.getLogger(), args, fo.getResultList(), files > 0);
     }
 
-    private int doFileOperation(final BlockingInternalJob.Step step, final FileOperationsJobArguments args, FileOperationsCopyImpl fo,
-            final String strSource, final String strTarget) throws Exception {
-        return fo.copyFileCnt(step, strSource, strTarget, args.getFileSpec().getValue(), args.getFlags(), Pattern.CASE_INSENSITIVE, args
-                .getReplacing().getValue(), args.getReplacement().getValue(), args.getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args
-                        .getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args.getSkipFirstFiles().getValue(), args.getSkipLastFiles()
-                                .getValue(), args.getSortCriteria().getValue(), args.getSortOrder().getValue());
+    private int doFileOperation(final FileOperationsJobArguments args, FileOperationsCopyImpl fo, final String strSource, final String strTarget)
+            throws Exception {
+        return fo.copyFileCnt(strSource, strTarget, args.getFileSpec().getValue(), args.getFlags(), Pattern.CASE_INSENSITIVE, args.getReplacing()
+                .getValue(), args.getReplacement().getValue(), args.getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize()
+                        .getValue(), args.getMaxFileSize().getValue(), args.getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue(), args
+                                .getSortCriteria().getValue(), args.getSortOrder().getValue());
     }
 
 }

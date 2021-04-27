@@ -22,10 +22,8 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
-
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class AFileOperations {
 
@@ -38,29 +36,28 @@ public abstract class AFileOperations {
 
     private final int BUFF_SIZE = 100000;
     private final byte[] buffer = new byte[BUFF_SIZE];
-    private final boolean isDebugEnabled;
+    private final JobLogger logger;
 
     private List<File> resultList = null;
 
-    public AFileOperations(boolean isDebugEnabled) {
-        this.isDebugEnabled = isDebugEnabled;
+    public AFileOperations(JobLogger logger) {
+        this.logger = logger;
         this.resultList = new ArrayList<File>();
     }
 
-    protected abstract boolean handleOneFile(BlockingInternalJob.Step step, File sourceFile, File targetFile, boolean overwrite, boolean gracious)
-            throws Exception;
+    protected abstract boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception;
 
-    public boolean canWrite(BlockingInternalJob.Step step, File file, final String fileSpec, final int fileSpecFlags) throws Exception {
-        if (isDebugEnabled) {
-            Job.debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags));
+    public boolean canWrite(File file, final String fileSpec, final int fileSpecFlags) throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug(getDebugMain(file, null, fileSpec, fileSpecFlags));
         }
         file = new File(substituteAllDate(file.getPath()));
         if (!file.exists()) {
-            Job.info(step, "[%s]no such file or directory", file.getCanonicalPath());
+            logger.info("[%s]no such file or directory", file.getCanonicalPath());
             return true;
         } else {
             if (!file.isDirectory()) {
-                Job.info(step, "[%s]file exists", file.getCanonicalPath());
+                logger.info("[%s]file exists", file.getCanonicalPath());
                 boolean writable = false;
                 RandomAccessFile f = null;
                 try {
@@ -76,25 +73,25 @@ public abstract class AFileOperations {
                     }
                 }
                 if (!writable) {
-                    Job.info(step, "[%s]cannot be written", file.getCanonicalPath());
+                    logger.info("[%s]cannot be written", file.getCanonicalPath());
                     return false;
                 } else {
                     return true;
                 }
             } else {
                 if (fileSpec == null || fileSpec.isEmpty()) {
-                    Job.info(step, "[%s]directory exists", file.getCanonicalPath());
+                    logger.info("[%s]directory exists", file.getCanonicalPath());
                     return true;
                 }
                 List<File> fileList = getFilelist(file.getPath(), fileSpec, fileSpecFlags, false, 0, 0, -1, -1, 0, 0);
                 if (fileList.isEmpty()) {
-                    Job.info(step, "[%s]directory contains no files matching %s", file.getCanonicalPath(), fileSpec);
+                    logger.info("[%s]directory contains no files matching %s", file.getCanonicalPath(), fileSpec);
                     return false;
                 } else {
-                    Job.info(step, "[%s]directory contains %s file(s) matching %s", file.getCanonicalPath(), fileList.size(), fileSpec);
+                    logger.info("[%s]directory contains %s file(s) matching %s", file.getCanonicalPath(), fileList.size(), fileSpec);
                     for (int i = 0; i < fileList.size(); i++) {
                         File checkFile = fileList.get(i);
-                        Job.info(step, "[%s]found file", checkFile.getCanonicalPath());
+                        logger.info("[%s]found file", checkFile.getCanonicalPath());
                         boolean writable = false;
                         RandomAccessFile f = null;
                         try {
@@ -110,7 +107,7 @@ public abstract class AFileOperations {
                             }
                         }
                         if (!writable) {
-                            Job.info(step, "[%s]cannot be written", checkFile.getCanonicalPath());
+                            logger.info("[%s]cannot be written", checkFile.getCanonicalPath());
                             return false;
                         }
                     }
@@ -122,23 +119,22 @@ public abstract class AFileOperations {
 
     }
 
-    public boolean existsFile(BlockingInternalJob.Step step, final String file, final String fileSpec, final int fileSpecFlags,
-            final String minFileAge, final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles,
-            final int skipLastFiles) throws Exception {
-        return existsFile(step, new File(file), fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                skipLastFiles, -1, -1);
+    public boolean existsFile(final String file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
+            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles) throws Exception {
+        return existsFile(new File(file), fileSpec, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles, skipLastFiles,
+                -1, -1);
     }
 
-    private boolean existsFile(BlockingInternalJob.Step step, File file, final String fileSpec, final int fileSpecFlags, final String minFileAge,
-            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
-            final int minNumOfFiles, final int maxNumOfFiles) throws Exception {
+    private boolean existsFile(File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
+            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, final int minNumOfFiles,
+            final int maxNumOfFiles) throws Exception {
         long minAge = calculateFileAge(minFileAge);
         long maxAge = calculateFileAge(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        if (isDebugEnabled) {
-            debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
+        if (logger.isDebugEnabled()) {
+            debug(getDebugMain(file, null, fileSpec, fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
                     skipLastFiles, minNumOfFiles, maxNumOfFiles, null, null);
         }
 
@@ -156,11 +152,11 @@ public abstract class AFileOperations {
         }
         file = new File(substituteAllDate(file.getPath()));
         if (!file.exists()) {
-            Job.info(step, "[%s]no such file or directory", file.getCanonicalPath());
+            logger.info("[%s]no such file or directory", file.getCanonicalPath());
             return false;
         } else {
             if (!file.isDirectory()) {
-                Job.info(step, "[%s]file exists", file.getCanonicalPath());
+                logger.info("[%s]file exists", file.getCanonicalPath());
                 long currentTime = System.currentTimeMillis();
                 if (minAge > 0) {
                     long interval = currentTime - file.lastModified();
@@ -169,7 +165,7 @@ public abstract class AFileOperations {
                                 + "] was modified in the future.");
                     }
                     if (interval < minAge) {
-                        Job.info(step, "[%s][checking file age]%s, minimum age required is %s", file.getCanonicalPath(), file.lastModified(), minAge);
+                        logger.info("[%s][checking file age]%s, minimum age required is %s", file.getCanonicalPath(), file.lastModified(), minAge);
                         return false;
                     }
                 }
@@ -180,47 +176,47 @@ public abstract class AFileOperations {
                                 + "] was modified in the future.");
                     }
                     if (interval > maxAge) {
-                        Job.info(step, "[%s][checking file age]%s, maximum age required is %s", file.getCanonicalPath(), file.lastModified(), maxAge);
+                        logger.info("[%s][checking file age]%s, maximum age required is %s", file.getCanonicalPath(), file.lastModified(), maxAge);
                         return false;
                     }
                 }
                 if (minSize > -1 && minSize > file.length()) {
-                    Job.info(step, "[%s][checking file size]%s, minimum size required is %s", file.getCanonicalPath(), file.length(), minFileSize);
+                    logger.info("[%s][checking file size]%s, minimum size required is %s", file.getCanonicalPath(), file.length(), minFileSize);
                     return false;
                 }
                 if (maxSize > -1 && maxSize < file.length()) {
-                    Job.info(step, "[%s][checking file size]%s, maximum size required is %s", file.getCanonicalPath(), file.length(), maxFileSize);
+                    logger.info("[%s][checking file size]%s, maximum size required is %s", file.getCanonicalPath(), file.length(), maxFileSize);
                     return false;
                 }
                 if (skipFirstFiles > 0 || skipLastFiles > 0) {
-                    Job.info(step, "[%s]skipped", file.getCanonicalPath());
+                    logger.info("[%s]skipped", file.getCanonicalPath());
                     return false;
                 }
                 resultList.add(file);
                 return true;
             } else {
                 if (fileSpec == null || fileSpec.isEmpty()) {
-                    Job.info(step, "[%s]directory exists", file.getCanonicalPath());
+                    logger.info("[%s]directory exists", file.getCanonicalPath());
                     return true;
                 }
                 List<File> fileList = getFilelist(file.getPath(), fileSpec, fileSpecFlags, false, minAge, maxAge, minSize, maxSize, skipFirstFiles,
                         skipLastFiles);
                 if (fileList.isEmpty()) {
-                    Job.info(step, "[%s]directory contains no files matching %s", file.getCanonicalPath(), fileSpec);
+                    logger.info("[%s]directory contains no files matching %s", file.getCanonicalPath(), fileSpec);
                     return false;
                 } else {
-                    Job.info(step, "[%s]directory contains %s file(s) matching %s", file.getCanonicalPath(), fileList.size(), fileSpec);
+                    logger.info("[%s]directory contains %s file(s) matching %s", file.getCanonicalPath(), fileList.size(), fileSpec);
 
                     for (int i = 0; i < fileList.size(); i++) {
                         File checkFile = fileList.get(i);
-                        Job.info(step, "[%s]found", checkFile.getCanonicalPath());
+                        logger.info("[%s]found", checkFile.getCanonicalPath());
                     }
                     if (minNumOfFiles >= 0 && fileList.size() < minNumOfFiles) {
-                        Job.info(step, "found %s files, minimum expected %s files", fileList.size(), minNumOfFiles);
+                        logger.info("found %s files, minimum expected %s files", fileList.size(), minNumOfFiles);
                         return false;
                     }
                     if (maxNumOfFiles >= 0 && fileList.size() > maxNumOfFiles) {
-                        Job.info(step, "found %s files, maximum expected %s files", fileList.size(), maxNumOfFiles);
+                        logger.info("found %s files, maximum expected %s files", fileList.size(), maxNumOfFiles);
                         return false;
                     }
                     resultList.addAll(fileList);
@@ -230,16 +226,16 @@ public abstract class AFileOperations {
         }
     }
 
-    public int removeFileCnt(final BlockingInternalJob.Step step, final String file, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String minFileAge, final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles,
-            final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
-        return removeFileCnt(step, new File(file), fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
+    public int removeFileCnt(final String file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
+            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
+            String sortCriteria, String sortOrder) throws Exception {
+        return removeFileCnt(new File(file), fileSpec, flags, fileSpecFlags, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
                 skipLastFiles, sortCriteria, sortOrder);
     }
 
-    private int removeFileCnt(BlockingInternalJob.Step step, final File file, final String fileSpec, final int flags, final int fileSpecFlags,
-            final String minFileAge, final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles,
-            final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
+    private int removeFileCnt(final File file, final String fileSpec, final int flags, final int fileSpecFlags, final String minFileAge,
+            final String maxFileAge, final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles,
+            String sortCriteria, String sortOrder) throws Exception {
 
         int removedFiles = 0;
         int removedDirectories = 0;
@@ -253,9 +249,9 @@ public abstract class AFileOperations {
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        if (isDebugEnabled) {
-            debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize,
-                    maxFileSize, skipFirstFiles, skipLastFiles, -1, -1, null, null);
+        if (logger.isDebugEnabled()) {
+            debug(getDebugMain(file, null, fileSpec, fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
+                    skipFirstFiles, skipLastFiles, -1, -1, null, null);
         }
 
         if (skipFirstFiles < 0) {
@@ -272,7 +268,7 @@ public abstract class AFileOperations {
         }
         if (!file.exists()) {
             if (gracious) {
-                Job.info(step, "[%s]cannot remove file, file does not exist", file.getCanonicalPath());
+                logger.info("[%s]cannot remove file, file does not exist", file.getCanonicalPath());
                 return 0;
             } else {
                 throw new SOSFileOperationsException("file does not exist: " + file.getCanonicalPath());
@@ -283,7 +279,7 @@ public abstract class AFileOperations {
             if (!file.canRead()) {
                 throw new SOSFileOperationsException("directory is not readable: " + file.getCanonicalPath());
             }
-            Job.info(step, "[%s]remove [%s] %s", file.getCanonicalPath(), fileSpec, (recursive ? " (recursive)" : ""));
+            logger.info("[%s]remove [%s] %s", file.getCanonicalPath(), fileSpec, (recursive ? " (recursive)" : ""));
             fileList = getFilelist(file.getPath(), fileSpec, fileSpecFlags, has(flags, RECURSIVE), minAge, maxAge, minSize, maxSize, 0, 0);
         } else {
             fileList = new ArrayList<File>();
@@ -308,9 +304,9 @@ public abstract class AFileOperations {
         for (int i = skipFirstFiles; i < fileList.size() - skipLastFiles; i++) {
             currentFile = fileList.get(i);
             resultList.add(currentFile);
-            Job.info(step, "[%s]remove file", currentFile.getCanonicalPath());
+            logger.info("[%s]remove file", currentFile.getCanonicalPath());
             if (wipe) {
-                if (!wipe(step, currentFile)) {
+                if (!wipe(currentFile)) {
                     throw new SOSFileOperationsException("cannot remove file: " + currentFile.getCanonicalPath());
                 }
             } else {
@@ -321,7 +317,7 @@ public abstract class AFileOperations {
         if (removeDir) {
             int firstSize = listFolders(file.getPath(), ".*", 0, recursive).size();
             if (recursive) {
-                recDeleteEmptyDir(step, file, fileSpec, fileSpecFlags);
+                recDeleteEmptyDir(file, fileSpec, fileSpecFlags);
             } else {
                 List<File> list = listFolders(file.getPath(), fileSpec, fileSpecFlags);
                 File f;
@@ -333,17 +329,17 @@ public abstract class AFileOperations {
                         }
                         if (f.list().length == 0) {
                             delete(f);
-                            Job.info(step, "[%s]remove directory", f.getCanonicalPath());
+                            logger.info("[%s]remove directory", f.getCanonicalPath());
                         } else {
-                            if (isDebugEnabled) {
-                                Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
                             }
                             String lst = f.list()[0];
                             for (int n = 1; n < f.list().length; n++) {
                                 lst += ", " + f.list()[n];
                             }
-                            if (isDebugEnabled) {
-                                Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("          contained files " + f.list().length + ": " + lst);
                             }
                         }
                     }
@@ -359,7 +355,7 @@ public abstract class AFileOperations {
                 msg = " + " + removedDirectories + " directories removed";
             }
         }
-        Job.info(step, removedFiles + " file(s) removed" + msg);
+        logger.info(removedFiles + " file(s) removed" + msg);
         return removedFiles + removedDirectories;
     }
 
@@ -376,8 +372,7 @@ public abstract class AFileOperations {
         }
     }
 
-    private boolean recDeleteEmptyDir(BlockingInternalJob.Step step, final File dir, final String fileSpec, final int fileSpecFlags)
-            throws Exception {
+    private boolean recDeleteEmptyDir(final File dir, final String fileSpec, final int fileSpecFlags) throws Exception {
         if (dir.isDirectory()) {
             if (!dir.canRead()) {
                 throw new SOSFileOperationsException("directory is not readable: " + dir.getCanonicalPath());
@@ -393,22 +388,22 @@ public abstract class AFileOperations {
         File f;
         for (File element : list) {
             f = element;
-            if (recDeleteEmptyDir(step, f, fileSpec, fileSpecFlags)) {
+            if (recDeleteEmptyDir(f, fileSpec, fileSpecFlags)) {
                 if (p.matcher(f.getName()).matches()) {
                     delete(f);
-                    Job.info(step, "[%s]remove directory", f.getCanonicalPath());
+                    logger.info("[%s]remove directory", f.getCanonicalPath());
                 }
             } else {
                 if (f.isDirectory()) {
-                    if (isDebugEnabled) {
-                        Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
                     }
                     String lst = f.list()[0];
                     for (int n = 1; n < f.list().length; n++) {
                         lst += ", " + f.list()[n];
                     }
-                    if (isDebugEnabled) {
-                        Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("          contained files " + f.list().length + ": " + lst);
                     }
                 }
             }
@@ -494,17 +489,16 @@ public abstract class AFileOperations {
         return result;
     }
 
-    public int copyFileCnt(final BlockingInternalJob.Step step, final String source, final String target, final String fileSpec, final int flags,
-            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
-            String sortOrder) throws Exception {
+    public int copyFileCnt(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
+            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
+            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
         File sourceFile = new File(source);
         File targetFile = target == null ? null : new File(target);
-        return transferFileCnt(step, sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge,
-                minFileSize, maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
+        return transferFileCnt(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
+                maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
     }
 
-    public boolean copyFile(BlockingInternalJob.Step step, final File source, final File dest, final boolean append) throws Exception {
+    public boolean copyFile(final File source, final File dest, final boolean append) throws Exception {
         InputStream in = null;
         OutputStream out = null;
         try {
@@ -530,20 +524,18 @@ public abstract class AFileOperations {
         }
     }
 
-    public int renameFileCnt(BlockingInternalJob.Step step, final String source, final String target, final String fileSpec, final int flags,
-            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
-            String sortOrder) throws Exception {
+    public int renameFileCnt(final String source, final String target, final String fileSpec, final int flags, final int fileSpecFlags,
+            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
+            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
         File sourceFile = new File(source);
         File targetFile = target == null ? null : new File(target);
-        return transferFileCnt(step, sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge,
-                minFileSize, maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
+        return transferFileCnt(sourceFile, targetFile, fileSpec, flags, fileSpecFlags, replacing, replacement, minFileAge, maxFileAge, minFileSize,
+                maxFileSize, skipFirstFiles, skipLastFiles, sortCriteria, sortOrder);
     }
 
-    private int transferFileCnt(BlockingInternalJob.Step step, final File source, File target, final String fileSpec, final int flags,
-            final int fileSpecFlags, final String replacing, final String replacement, final String minFileAge, final String maxFileAge,
-            final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria,
-            String sortOrder) throws Exception {
+    private int transferFileCnt(final File source, File target, final String fileSpec, final int flags, final int fileSpecFlags,
+            final String replacing, final String replacement, final String minFileAge, final String maxFileAge, final String minFileSize,
+            final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, String sortCriteria, String sortOrder) throws Exception {
 
         if (sortCriteria == null || sortCriteria.isEmpty()) {
             sortCriteria = "name";
@@ -561,9 +553,9 @@ public abstract class AFileOperations {
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        if (isDebugEnabled) {
-            debug(step, getDebugMain(source, target, fileSpec, fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize,
-                    maxFileSize, skipFirstFiles, skipLastFiles, -1, -1, replacement, replacing);
+        if (logger.isDebugEnabled()) {
+            debug(getDebugMain(source, target, fileSpec, fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
+                    skipFirstFiles, skipLastFiles, -1, -1, replacement, replacing);
         }
 
         String targetFilename;
@@ -593,7 +585,7 @@ public abstract class AFileOperations {
         }
         if (!source.exists()) {
             if (gracious) {
-                Job.info(step, transferedFiles + " file(s) renamed");
+                logger.info(transferedFiles + " file(s) renamed");
                 return transferedFiles;
             } else {
                 throw new SOSFileOperationsException("file or directory does not exist: " + source.getCanonicalPath());
@@ -610,7 +602,7 @@ public abstract class AFileOperations {
         }
         if (createDir && target != null && !target.exists()) {
             if (target.mkdirs()) {
-                Job.info(step, "[%s]create target directory", target.getCanonicalPath());
+                logger.info("[%s]create target directory", target.getCanonicalPath());
             } else {
                 throw new SOSFileOperationsException("cannot create directory " + target.getCanonicalPath());
             }
@@ -682,17 +674,17 @@ public abstract class AFileOperations {
             dir = new File(targetFile.getParent());
             if (!dir.exists()) {
                 if (dir.mkdirs()) {
-                    Job.info(step, "[%s]create directory", dir.getCanonicalPath());
+                    logger.info("[%s]create directory", dir.getCanonicalPath());
                 } else {
                     throw new SOSFileOperationsException("cannot create directory " + dir.getCanonicalPath());
                 }
             }
-            if (!handleOneFile(step, sourceFile, targetFile, overwrite, gracious)) {
+            if (!handleOneFile(sourceFile, targetFile, overwrite, gracious)) {
                 continue;
             }
             transferedFiles++;
         }
-        Job.info(step, transferedFiles + " file(s)");
+        logger.info(transferedFiles + " file(s)");
         return transferedFiles;
     }
 
@@ -995,7 +987,7 @@ public abstract class AFileOperations {
         return (flags & f) > 0;
     }
 
-    private boolean wipe(BlockingInternalJob.Step step, final File file) {
+    private boolean wipe(final File file) {
         try {
             RandomAccessFile rwFile = new RandomAccessFile(file, "rw");
             byte[] bytes = new byte[(int) rwFile.length()];
@@ -1010,12 +1002,12 @@ public abstract class AFileOperations {
             rwFile.write(bytes);
             rwFile.close();
             boolean rc = file.delete();
-            if (isDebugEnabled) {
-                Job.debug(step, "[%s][deleting file]%s", file.getCanonicalPath(), rc);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[%s][deleting file]%s", file.getCanonicalPath(), rc);
             }
             return rc;
         } catch (Exception e) {
-            Job.warn(step, "Failed to wipe file: " + e.toString(), e);
+            logger.warn("Failed to wipe file: " + e.toString(), e);
             return false;
         }
     }
@@ -1091,9 +1083,8 @@ public abstract class AFileOperations {
         return sb;
     }
 
-    private void debug(BlockingInternalJob.Step step, StringBuilder main, StringBuilder flags, String minFileAge, String maxFileAge,
-            String minFileSize, String maxFileSize, int skipFirstFiles, int skipLastFiles, int minNumOfFiles, int maxNumOfFiles, String replacement,
-            String replacing) {
+    private void debug(StringBuilder main, StringBuilder flags, String minFileAge, String maxFileAge, String minFileSize, String maxFileSize,
+            int skipFirstFiles, int skipLastFiles, int minNumOfFiles, int maxNumOfFiles, String replacement, String replacing) {
         StringBuilder sb = new StringBuilder(main);
         if (flags != null) {
             sb.append(",").append(flags);
@@ -1112,11 +1103,15 @@ public abstract class AFileOperations {
             sb.append(",").append("replacement=").append(replacement);
             sb.append(",").append("replacing=").append(replacing);
         }
-        Job.debug(step, sb);
+        logger.debug(sb);
     }
 
     public List<File> getResultList() {
         return resultList;
+    }
+
+    public JobLogger getLogger() {
+        return logger;
     }
 
 }

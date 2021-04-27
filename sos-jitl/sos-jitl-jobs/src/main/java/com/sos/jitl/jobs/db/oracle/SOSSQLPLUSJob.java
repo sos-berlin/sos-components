@@ -13,10 +13,10 @@ import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> {
 
@@ -27,7 +27,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, SOSSQLPlusJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, SOSSQLPlusJobArguments args) throws Exception {
 
         try {
             if (SOSString.isEmpty(args.getCommandScriptFile())) {
@@ -39,7 +39,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
         }
     }
 
-    public Map<String, Object> process(BlockingInternalJob.Step step, SOSSQLPlusJobArguments args) throws Exception {
+    public Map<String, Object> process(JobStep step, SOSSQLPlusJobArguments args) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
@@ -65,8 +65,8 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
             Map<String, Value> variables = new HashMap<String, Value>();
             if (step != null) {
                 variables.putAll(getJobContext().jobArguments());
-                variables.putAll(step.arguments());
-                variables.putAll(step.order().arguments());
+                variables.putAll(step.getInternalStep().arguments());
+                variables.putAll(step.getInternalStep().order().arguments());
             }
 
             SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables);
@@ -77,10 +77,10 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
             LOGGER.debug(args.getCommandLineForLog(tempFileName));
             if (step != null) {
 
-                Job.info(step,"dbUrl: " + args.getDbUrl());
-                Job.info(step,"dbUser: " + args.getDbUser());
-                Job.info(step,"dbPassword: " + "********");
-                Job.info(step, args.getCommandLineForLog(tempFileName));
+                step.getLogger().info("dbUrl: " + args.getDbUrl());
+                step.getLogger().info("dbUser: " + args.getDbUser());
+                step.getLogger().info("dbPassword: " + "********");
+                step.getLogger().info(args.getCommandLineForLog(tempFileName));
             }
 
             SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));

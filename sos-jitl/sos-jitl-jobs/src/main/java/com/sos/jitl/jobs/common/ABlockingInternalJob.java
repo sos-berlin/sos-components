@@ -54,12 +54,17 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     }
 
     /** to override */
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, A args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, A args) throws Exception {
         return JOutcome.succeeded(Collections.emptyMap());
     }
 
     /** to override */
-    public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep step, JobLogger logger, A args) throws Exception {
+        return JOutcome.succeeded(Collections.emptyMap());
+    }
+
+    /** to override */
+    public JOutcome.Completed onOrderProcess(JobStep step) throws Exception {
         return onOrderProcess(step, null);
     }
 
@@ -91,7 +96,8 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
         return () -> {
             try {
-                return onOrderProcess(step, createJobArguments(step));
+                A args = createJobArguments(step);
+                return onOrderProcess(new JobStep(step, new JobLogger(step, args)), args);
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
                 return Job.failed(e.toString(), e);
