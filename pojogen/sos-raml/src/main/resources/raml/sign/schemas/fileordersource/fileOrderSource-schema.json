@@ -33,7 +33,11 @@
       "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
     "workflowPath": {
-      "$ref": "../../../inventory/schemas/common/string255Required-schema.json"
+    	"alias": "workflowName",
+    	"type": "string",
+  		"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
     },
     "agentPath": {
     	"alias": "agentId,agentName",
