@@ -71,6 +71,10 @@ public class SOSPath {
         return !rep;
     }
 
+    public static void appendFile(final Path source, final Path dest) throws IOException {
+        copyFile(source, dest, true);
+    }
+
     public static void copyFile(final Path source, final Path dest) throws IOException {
         copyFile(source, dest, false);
     }

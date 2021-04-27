@@ -1,7 +1,12 @@
 package com.sos.commons.util;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
@@ -20,6 +25,8 @@ public class SOSShell {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShell.class);
 
+    private static final String CHARACTER_ENCODING = "Cp1252";
+
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String OS_VERSION = System.getProperty("os.version");
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
@@ -27,12 +34,91 @@ public class SOSShell {
 
     private static String hostname;
 
-    public static void executeCommand(String script) {
-        executeCommand(script, LOGGER);
+    public static SOSCommandResult executeCommand(String script, Boolean showCommand) {
+        if (showCommand == null) {
+            showCommand = false;
+        }
+        return executeCommand(script, LOGGER, showCommand);
     }
 
-    public static void executeCommand(String script, Logger logger) {
+    public static SOSCommandResult executeCommand(String script) {
+        return executeCommand(script, LOGGER, false);
+    }
+
+    public static SOSCommandResult executeCommand(String script, Logger logger, Boolean showCommand) {
+        SOSCommandResult sosCommandResult = new SOSCommandResult(script);
         BufferedReader br = null;
+
+        try {
+
+            ByteArrayOutputStream bytStdOut = new ByteArrayOutputStream();
+            ByteArrayOutputStream bytStdErr = new ByteArrayOutputStream();
+            PrintStream psStdOut = new PrintStream(bytStdOut, true, CHARACTER_ENCODING);
+            PrintStream psStdErr = new PrintStream(bytStdErr, true, CHARACTER_ENCODING);
+
+            ProcessBuilder pb = null;
+
+            String[] command = new String[2 + 1];
+            if (IS_WINDOWS) {
+                command[0] = System.getenv("comspec");
+                command[1] = "/C";
+                command[2] = script;
+            } else {
+                String shell = System.getenv("SHELL");
+                if (shell == null) {
+                    shell = "/bin/sh";
+                }
+                command[0] = shell;
+                command[1] = "-c";
+                command[2] = script;
+            }
+
+            pb = new ProcessBuilder(command);
+
+            final Process proc = pb.start();
+            createOutputPipe(proc.getInputStream(), psStdOut);
+            createOutputPipe(proc.getErrorStream(), psStdErr);
+            pipein(System.in, proc.getOutputStream());
+            sosCommandResult.setExitCode(proc.waitFor());
+            sosCommandResult.setStdOut(bytStdOut.toString(CHARACTER_ENCODING));
+            sosCommandResult.setStdErr(bytStdErr.toString(CHARACTER_ENCODING));
+            String cmd = pb.command().get(pb.command().size() - 1);
+            String stdOut = sosCommandResult.getStdOut().toString();
+            if (!SOSString.isEmpty(stdOut)) {
+                if (showCommand) {
+                    LOGGER.info(String.format("[%s][stdout]%s", cmd, stdOut.trim()));
+                } else {
+                    LOGGER.info(String.format("[%s][stdout]%s", "***", stdOut.trim()));
+                }
+            }
+            String line = "";
+            br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            while ((line = br.readLine()) != null) {
+                logger.info(String.format("[out]%s", line));
+            }
+            br.close();
+            br = null;
+
+        } catch (Throwable e) {
+            logger.error(String.format("[executeCommand]%s", e.toString()), e);
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+        return sosCommandResult;
+    }
+
+    private static void createOutputPipe(final InputStream in, final PrintStream out) {
+        new Thread(new OutputPipe(in, out)).start();
+    }
+
+    public static SOSCommandResult executeCommand_(String script, Logger logger) {
+        BufferedReader br = null;
+        SOSCommandResult sosCommandResult = new SOSCommandResult(script);
         try {
             String[] command = new String[2 + 1];
             if (IS_WINDOWS) {
@@ -51,8 +137,10 @@ public class SOSShell {
 
             Runtime rt = Runtime.getRuntime();
             Process proc = rt.exec(command);
+            sosCommandResult.setExitCode(proc.waitFor());
+
+            String line = "";
             br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line;
             while ((line = br.readLine()) != null) {
                 logger.info(String.format("[out]%s", line));
             }
@@ -69,6 +157,7 @@ public class SOSShell {
                 }
             }
         }
+        return sosCommandResult;
     }
 
     public static String getHostname() throws UnknownHostException {
@@ -157,4 +246,21 @@ public class SOSShell {
         }
     }
 
+    private static void pipein(final InputStream is, final OutputStream os) {
+        new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    int ret = -1;
+                    while ((ret = is.read()) != -1) {
+                        os.write(ret);
+                        os.flush();
+                    }
+                } catch (IOException e) {
+                    //
+                }
+            }
+        }).start();
+    }
 }
