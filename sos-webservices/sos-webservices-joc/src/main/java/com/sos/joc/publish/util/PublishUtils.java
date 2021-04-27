@@ -1462,7 +1462,7 @@ public abstract class PublishUtils {
                                 if (fileOrderSource.getPath() == null) {
                                     fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                                 }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                                return JUpdateItemOperation.deleteSimple(getJFileWatch(fileOrderSource).path());
                             } catch (JocDeployException e) {
                                 throw e;
                             } catch (Exception e) {
