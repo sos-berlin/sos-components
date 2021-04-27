@@ -16,6 +16,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
@@ -70,7 +71,14 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
                 }
                 for (String path : scheduleSelector.getSelector().getSchedulePaths()) {
                     String name = Paths.get(path).getFileName().toString();
-                    scheduleSelector.getSelector().getScheduleNames().add(name);
+                    String folder = Paths.get(path).getParent().toString();
+                    try {
+                        checkFolderPermissions(folder);
+                        scheduleSelector.getSelector().getScheduleNames().add(name);
+                    } catch (JocFolderPermissionsException e) {
+                        LOGGER.debug("Folder permission for " + folder + " is missing. Schedule" + name + " will not be added ");
+                    }
+
                 }
             }
             if (scheduleSelector.getSelector().getWorkflowPaths() != null) {
@@ -80,13 +88,31 @@ public class SchedulesImpl extends JOCResourceImpl implements ISchedulesResource
 
                 for (String path : scheduleSelector.getSelector().getWorkflowPaths()) {
                     String name = Paths.get(path).getFileName().toString();
-                    scheduleSelector.getSelector().getWorkflowNames().add(name);
+                    String folder = Paths.get(path).getParent().toString();
+                    try {
+                        checkFolderPermissions(folder);
+                        scheduleSelector.getSelector().getWorkflowNames().add(name);
+                    } catch (JocFolderPermissionsException e) {
+                        LOGGER.debug("Folder permission for " + folder + " is missing. Workflow" + name + " will not be added ");
+                    }
                 }
             }
             filterSchedules.setListOfControllerIds(scheduleSelector.getSelector().getControllerIds());
             filterSchedules.addControllerId(scheduleSelector.getControllerId());
             filterSchedules.setListOfScheduleNames(scheduleSelector.getSelector().getScheduleNames());
-            filterSchedules.setListOfFolders(scheduleSelector.getSelector().getFolders());
+            List<Folder> folders = null;
+            if (scheduleSelector.getSelector().getFolders() != null) {
+                folders = new ArrayList<Folder>();
+                for (Folder folder : scheduleSelector.getSelector().getFolders()) {
+                    try {
+                        checkFolderPermissions(folder.getFolder());
+                        folders.add(folder);
+                    } catch (JocFolderPermissionsException e) {
+                        LOGGER.debug("Folder permission for " + folder + " is missing. Folder" + folder.getFolder() + " will not be added ");
+                    }
+                }
+            }
+            filterSchedules.setListOfFolders(folders);
             filterSchedules.setListOfWorkflowNames(scheduleSelector.getSelector().getWorkflowNames());
 
             List<DBItemInventoryReleasedConfiguration> listOfSchedules = dbLayerSchedules.getSchedules(filterSchedules, 0);
