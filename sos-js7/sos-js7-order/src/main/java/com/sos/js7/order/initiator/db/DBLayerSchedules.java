@@ -159,18 +159,20 @@ public class DBLayerSchedules {
                     filteredResultset.add(dbItemInventoryConfiguration);
                 } else {
                     String s = "WARN:Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath();
-                    DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                    if (filter.getListOfControllerIds().size() > 0) {
-                        dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
-                    }
-                    dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                    dbItemDailyPlanHistory.setSubmitted(false);
-                    dbItemDailyPlanHistory.setMessage(s);
-                    dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
-                    dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
-                    dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
-                    dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
+                    if (OrderInitiatorGlobals.dailyPlanDate != null) {
+                        DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
+                        if (filter.getListOfControllerIds().size() > 0) {
+                            dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
+                        }
+                        dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
+                        dbItemDailyPlanHistory.setSubmitted(false);
+                        dbItemDailyPlanHistory.setMessage(s);
+                        dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
+                        dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
+                        dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+                        dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
 
+                    }
                     LOGGER.warn(s);
                 }
             }
