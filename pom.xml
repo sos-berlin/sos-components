@@ -40,9 +40,9 @@
 		<jsonschema2pojo.version>0.5.1</jsonschema2pojo.version>
 		<junit.version>4.11</junit.version>
 		<slf4j.version>1.7.30</slf4j.version>
-		<!-- guava.version>29.0-jre</guava.version -->
+		<guava.version>30.1.1-jre</guava.version>
 		<javassist.version>3.25.0-GA</javassist.version>
-		<log4j2.version>2.14.0</log4j2.version>
+		<log4j2.version>2.14.1</log4j2.version>
 		<logback.version>1.1.2</logback.version>
 		<!-- joda.time.version>2.9.9</joda.time.version -->
 		<jta.version>1.1</jta.version>
@@ -78,7 +78,7 @@
 		<javax.ws.rs-api.version>2.0.1</javax.ws.rs-api.version>
 		<commons.beanutils.version>1.9.4</commons.beanutils.version>
 		<byte.buddy.version>1.8.12</byte.buddy.version>
-		<bouncycastle.version>1.66</bouncycastle.version>
+		<bouncycastle.version>1.68</bouncycastle.version>
 		<dom4j.version>1.6.1</dom4j.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
 		<google.findbugs.version>3.0.2</google.findbugs.version>
@@ -415,8 +415,11 @@
 				<artifactId>js7-executor-for-java_2.13</artifactId>
 				<version>${sos.engine.version}</version>
 			</dependency>
-			<!-- dependency> <groupId>com.google.guava</groupId> <artifactId>guava</artifactId> 
-				<version>${guava.version}</version> </dependency -->
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId> 
+				<version>${guava.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>commons-lang</groupId>
 				<artifactId>commons-lang</artifactId>

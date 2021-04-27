@@ -1,6 +1,7 @@
 package com.sos.joc.xmleditor.impl;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -20,7 +21,6 @@ import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
 import com.sos.joc.xmleditor.resource.IDeleteAllResource;
 import com.sos.schema.JsonValidator;
 
-import jersey.repackaged.com.google.common.base.Joiner;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDeleteAllResource {
@@ -48,7 +48,7 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
                     break;
                 default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), Joiner.on(",").join(in.getObjectTypes()))));
+                            "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), in.getObjectTypes().stream().map(ObjectType::value).collect(Collectors.joining(",")))));
                 }
             }
             return response;
