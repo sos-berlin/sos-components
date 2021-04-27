@@ -1,17 +1,18 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArguments;
 
-public class InfoJobArguments {
+public class InfoJobArguments extends JobArguments {
 
-    private JobArgument<String> infoResult = new JobArgument<String>("info_result", "my_default_info_result");
+    private JobArgument<Boolean> showEnv = new JobArgument<Boolean>("show_env", false);
+    private JobArgument<Boolean> redefineShowEnv = new JobArgument<Boolean>("redefine_show_env", false);
 
-    public String getInfoResult() {
-        return infoResult.getValue();
+    public JobArgument<Boolean> getShowEnv() {
+        return showEnv;
     }
 
-    public void setInfoResult(String val) {
-        infoResult.setValue(val);
+    public JobArgument<Boolean> getRedefineShowEnv() {
+        return redefineShowEnv;
     }
-
 }

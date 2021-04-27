@@ -12,12 +12,14 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 
@@ -92,9 +94,20 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                 return onOrderProcess(step, createJobArguments(step));
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
-                return JOutcome.failed(e.toString());
+                return Job.failed(e.toString(), e);
             }
         };
+    }
+
+    public Object getNamedValue(final BlockingInternalJob.Step step, final String name) {
+        if (step == null) {
+            return null;
+        }
+        Optional<Value> op = step.namedValue(name);
+        if (op.isPresent()) {
+            return Job.getValue(op.get());
+        }
+        return null;
     }
 
     private A createJobArguments() throws Exception {
@@ -129,17 +142,34 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     if (arg.getName() == null) {// internal usage
                         continue;
                     }
-                    Object val = map.get(arg.getName());
+                    // Object val = map.get(arg.getName());
+                    // if (val == null) {
+                    // val = getNamedValue(step, arg.getName());
+                    // } else {
+                    // Object nv = getNamedValue(step, arg.getName());
+                    // if (nv != null) {
+                    // val = nv;
+                    // }
+                    // }
+                    Object val = getNamedValue(step, arg.getName());
+                    if (val == null) {
+                        val = map.get(arg.getName());
+                    }
                     if (val == null || SOSString.isEmpty(val.toString())) {
                         arg.setValue(arg.getDefault());
                     } else {
                         if (val instanceof String) {
                             val = val.toString().trim();
                             Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                            if (type.equals(Path.class)) {
-                                val = Paths.get(val.toString());
-                            } else if (type.equals(URI.class)) {
-                                val = URI.create(val.toString());
+                            if (!type.equals(String.class)) {
+                                if (type.equals(Path.class)) {
+                                    val = Paths.get(val.toString());
+                                } else if (type.equals(URI.class)) {
+                                    val = URI.create(val.toString());
+                                } else if (SOSReflection.isEnum(type.getTypeName())) {
+                                    Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
+                                    val = v == null ? arg.getDefault() : v;
+                                }
                             }
                         }
                         arg.setValue(val);

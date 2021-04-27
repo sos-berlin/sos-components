@@ -19,7 +19,7 @@ public class RemoveFileJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, FileOperationsJobArguments args) throws Exception {
         checkArguments(args);
 
-        FileOperationsImpl fo = new FileOperationsImpl();
+        FileOperationsImpl fo = new FileOperationsImpl(args.isDebugEnabled());
         int result = fo.removeFileCnt(step, args.getSourceFile().getValue(), args.getFileSpec().getValue(), args.getFlags(), Pattern.CASE_INSENSITIVE,
                 args.getMinFileAge().getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(),
                 args.getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue(), args.getSortCriteria().getValue(), args.getSortOrder()

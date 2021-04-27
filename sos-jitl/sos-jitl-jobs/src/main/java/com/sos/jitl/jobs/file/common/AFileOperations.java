@@ -38,19 +38,22 @@ public abstract class AFileOperations {
 
     private final int BUFF_SIZE = 100000;
     private final byte[] buffer = new byte[BUFF_SIZE];
+    private final boolean isDebugEnabled;
 
     private List<File> resultList = null;
 
-    public AFileOperations() {
-        resultList = new ArrayList<File>();
+    public AFileOperations(boolean isDebugEnabled) {
+        this.isDebugEnabled = isDebugEnabled;
+        this.resultList = new ArrayList<File>();
     }
 
     protected abstract boolean handleOneFile(BlockingInternalJob.Step step, File sourceFile, File targetFile, boolean overwrite, boolean gracious)
             throws Exception;
 
     public boolean canWrite(BlockingInternalJob.Step step, File file, final String fileSpec, final int fileSpecFlags) throws Exception {
-        Job.debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags));
-
+        if (isDebugEnabled) {
+            Job.debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags));
+        }
         file = new File(substituteAllDate(file.getPath()));
         if (!file.exists()) {
             Job.info(step, "[%s]no such file or directory", file.getCanonicalPath());
@@ -134,8 +137,10 @@ public abstract class AFileOperations {
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                skipLastFiles, minNumOfFiles, maxNumOfFiles, null, null);
+        if (isDebugEnabled) {
+            debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
+                    skipLastFiles, minNumOfFiles, maxNumOfFiles, null, null);
+        }
 
         if (skipFirstFiles < 0) {
             throw new SOSFileOperationsException("[" + skipFirstFiles + "] is no valid value for skipFirstFiles");
@@ -248,8 +253,10 @@ public abstract class AFileOperations {
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
-                skipFirstFiles, skipLastFiles, -1, -1, null, null);
+        if (isDebugEnabled) {
+            debug(step, getDebugMain(file, null, fileSpec, fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize,
+                    maxFileSize, skipFirstFiles, skipLastFiles, -1, -1, null, null);
+        }
 
         if (skipFirstFiles < 0) {
             throw new SOSFileOperationsException("[" + skipFirstFiles + "] is no valid value for skipFirstFiles");
@@ -328,12 +335,16 @@ public abstract class AFileOperations {
                             delete(f);
                             Job.info(step, "[%s]remove directory", f.getCanonicalPath());
                         } else {
-                            Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                            if (isDebugEnabled) {
+                                Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                            }
                             String lst = f.list()[0];
                             for (int n = 1; n < f.list().length; n++) {
                                 lst += ", " + f.list()[n];
                             }
-                            Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                            if (isDebugEnabled) {
+                                Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                            }
                         }
                     }
                 }
@@ -389,12 +400,16 @@ public abstract class AFileOperations {
                 }
             } else {
                 if (f.isDirectory()) {
-                    Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                    if (isDebugEnabled) {
+                        Job.debug(step, "[%s]directory cannot be removed because it is not empty", f.getCanonicalPath());
+                    }
                     String lst = f.list()[0];
                     for (int n = 1; n < f.list().length; n++) {
                         lst += ", " + f.list()[n];
                     }
-                    Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                    if (isDebugEnabled) {
+                        Job.debug(step, "          contained files " + f.list().length + ": " + lst);
+                    }
                 }
             }
         }
@@ -546,8 +561,10 @@ public abstract class AFileOperations {
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
-        debug(step, getDebugMain(source, target, fileSpec, fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
-                skipFirstFiles, skipLastFiles, -1, -1, replacement, replacing);
+        if (isDebugEnabled) {
+            debug(step, getDebugMain(source, target, fileSpec, fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize,
+                    maxFileSize, skipFirstFiles, skipLastFiles, -1, -1, replacement, replacing);
+        }
 
         String targetFilename;
         int transferedFiles = 0;
@@ -993,7 +1010,9 @@ public abstract class AFileOperations {
             rwFile.write(bytes);
             rwFile.close();
             boolean rc = file.delete();
-            Job.debug(step, "[%s][deleting file]%s", file.getCanonicalPath(), rc);
+            if (isDebugEnabled) {
+                Job.debug(step, "[%s][deleting file]%s", file.getCanonicalPath(), rc);
+            }
             return rc;
         } catch (Exception e) {
             Job.warn(step, "Failed to wipe file: " + e.toString(), e);

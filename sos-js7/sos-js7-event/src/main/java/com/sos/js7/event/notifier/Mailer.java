@@ -90,7 +90,7 @@ public class Mailer extends DefaultNotifier {
             }
             if (t != null) {
                 sb.append(DefaultNotifier.NEW_LINE).append(DefaultNotifier.NEW_LINE);
-                sb.append(SOSString.convertStackTraceToString(t));
+                sb.append(SOSString.toString(t));
             }
         }
         return sb.toString();

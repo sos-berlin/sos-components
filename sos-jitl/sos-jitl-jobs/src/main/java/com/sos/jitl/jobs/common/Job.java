@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
@@ -63,8 +63,11 @@ public class Job {
         return JOutcome.failed();
     }
 
-    public static JOutcome.Completed failed(final String msg) {
-        return JOutcome.failed(msg);
+    public static JOutcome.Completed failed(final String msg, Throwable e) {
+        if (e == null) {
+            return JOutcome.failed(msg);
+        }
+        return JOutcome.failed(new StringBuilder(msg).append("\n").append(SOSString.toString(e)).toString());
     }
 
     public static JOutcome.Completed failed(final String msg, final String returnValueKey, final Object returnValue) {
@@ -173,7 +176,8 @@ public class Job {
     }
 
     public static List<Field> getJobArgumentFields(Object o) {
-        return Arrays.stream(o.getClass().getDeclaredFields()).filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors.toList());
+        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
+                .toList());
     }
 
     public static String replaceVars(SOSParameterSubstitutor substitutor, final String val) {
@@ -328,7 +332,7 @@ public class Job {
         return null;
     }
 
-    private static Object getValue(final Value o) {
+    public static Object getValue(final Value o) {
         if (o == null) {
             return null;
         }

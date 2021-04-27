@@ -59,12 +59,15 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         args.setCommand(args.getCommand().replaceAll(Pattern.quote("\\${"), "\\${")); // replace \${ to ${ TODO - is needed?
         args.setCommand(Job.replaceVars(Job.getSubstitutor(args), args.getCommand()));
 
+        boolean isDebugEnabled = args.isDebugEnabled();
         SOSHibernateSQLExecutor executor = session.getSQLExecutor();
         List<String> statements = null;
         try {
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
-                Job.debug(step, "[load from file]%s", path);
+                if (isDebugEnabled) {
+                    Job.debug(step, "[load from file]%s", path);
+                }
                 statements = executor.getStatements(path);
             }
         } catch (Throwable e) {
@@ -78,7 +81,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         for (String statement : statements) {
             Job.info(step, "executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
-                executeResultSet(step, args, executor, statement, map);
+                executeResultSet(step, args, executor, statement, map, isDebugEnabled);
             } else {
                 executor.executeUpdate(statement);
             }
@@ -88,7 +91,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
     }
 
     private void executeResultSet(final BlockingInternalJob.Step step, final SQLExecutorJobArguments args, final SOSHibernateSQLExecutor executor,
-            final String statement, Map<String, Object> map) throws Exception {
+            final String statement, Map<String, Object> map, boolean isDebugEnabled) throws Exception {
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {
@@ -119,14 +122,18 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 }
                             }
                             if (paramKey != null && paramValue != null) {
-                                Job.debug(step, "[order][set param]%s=%s", paramKey, paramValue);
+                                if (isDebugEnabled) {
+                                    Job.debug(step, "[order][set param]%s=%s", paramKey, paramValue);
+                                }
                                 map.put(paramKey, paramValue);
                             }
                         } else {
                             if (rowCount == 1) {
                                 for (String key : record.keySet()) {
                                     String value = record.get(key);
-                                    Job.debug(step, "[order][set param]%s=%s", key, value);
+                                    if (isDebugEnabled) {
+                                        Job.debug(step, "[order][set param]%s=%s", key, value);
+                                    }
                                     map.put(key, value);
                                 }
                             }

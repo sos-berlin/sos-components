@@ -19,7 +19,7 @@ public class RenameFileJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, FileOperationsJobArguments args) throws Exception {
         checkArguments(args);
 
-        FileOperationsImpl fo = new FileOperationsImpl();
+        FileOperationsImpl fo = new FileOperationsImpl(args.isDebugEnabled());
         int result = fo.renameFileCnt(step, args.getSourceFile().getValue(), args.getTargetFile().getValue(), args.getFileSpec().getValue(), args
                 .getFlags(), Pattern.CASE_INSENSITIVE, args.getReplacing().getValue(), args.getReplacement().getValue(), args.getMinFileAge()
                         .getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args

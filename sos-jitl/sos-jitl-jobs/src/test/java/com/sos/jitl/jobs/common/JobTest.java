@@ -15,9 +15,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.helper.TestJob;
 import com.sos.jitl.jobs.common.helper.TestJobArguments;
+import com.sos.jitl.jobs.common.helper.TestJobArgumentsSuperClass;
 import com.sos.jitl.jobs.common.helper.TestJobSuperClass;
 import com.sos.jitl.jobs.common.helper.TestJobWithoutJobArgumentsClass;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments;
@@ -74,19 +76,27 @@ public class JobTest {
 
     @Ignore
     @Test
-    public void testJobArguments() {
+    public void testJobArguments() throws Exception {
         SQLExecutorJobArguments o1 = new SQLExecutorJobArguments();
         JocApiJobArguments o2 = new JocApiJobArguments();
+        TestJobArgumentsSuperClass o3 = new TestJobArgumentsSuperClass();
 
         Map<String, Object> map = new HashMap<String, Object>();
         map.put(o1.getHibernateFile().getName(), "C://myfile");
         map.put(o2.getJocUri().getName(), "http://localhost");
+        map.put(o3.getLogLevel().getName(), "xxx");
 
+        LOGGER.info(o1.getClass().getSimpleName() + "---");
         setArguments(map, o1);
         LOGGER.info("hibernate=" + o1.getHibernateFile().getValue().toFile().toString());
 
+        LOGGER.info(o2.getClass().getSimpleName() + "---");
         setArguments(map, o2);
         LOGGER.info("jocUri=" + o2.getJocUri().getValue().getScheme());
+
+        LOGGER.info(o3.getClass().getSimpleName() + "---");
+        setArguments(map, o3);
+        LOGGER.info("logLevel=" + o3.getLogLevel().getValue().name());
     }
 
     private static Class<?> getJobArgumensClass(Object instance) throws SOSJobArgumentException {
@@ -113,7 +123,7 @@ public class JobTest {
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
-                LOGGER.debug("  field type=" + field.getGenericType());
+                LOGGER.debug("  [" + field.getName() + "]field type=" + field.getGenericType());
                 JobArgument arg = (JobArgument<?>) field.get(o);
                 if (arg != null) {
                     if (arg.getName() == null) {// internal usage
@@ -125,12 +135,16 @@ public class JobTest {
                     } else {
                         if (val instanceof String) {
                             Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                            LOGGER.debug("    field parameter type=" + type);
+                            LOGGER.debug("    field parameter type=" + type.getTypeName());
                             val = val.toString().trim();
-                            if (type.equals(Path.class)) {
-                                val = Paths.get(val.toString());
-                            } else if (type.equals(URI.class)) {
-                                val = URI.create(val.toString());
+                            if (!type.equals(String.class)) {
+                                if (type.equals(Path.class)) {
+                                    val = Paths.get(val.toString());
+                                } else if (type.equals(URI.class)) {
+                                    val = URI.create(val.toString());
+                                } else if (SOSReflection.isEnum(type.getTypeName())) {
+                                    val = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
+                                }
                             }
                         }
                         arg.setValue(val);

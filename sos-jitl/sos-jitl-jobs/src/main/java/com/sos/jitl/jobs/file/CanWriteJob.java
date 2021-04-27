@@ -20,7 +20,7 @@ public class CanWriteJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, FileOperationsJobArguments args) throws Exception {
         checkArguments(args);
 
-        FileOperationsImpl fo = new FileOperationsImpl();
+        FileOperationsImpl fo = new FileOperationsImpl(args.isDebugEnabled());
         boolean result = fo.canWrite(step, new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE);
         return handleResult(step, args, fo.getResultList(), result);
     }

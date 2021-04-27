@@ -21,7 +21,7 @@ public class CopyFileJob extends AFileOperationsJob {
     public JOutcome.Completed onOrderProcess(BlockingInternalJob.Step step, FileOperationsJobArguments args) throws Exception {
         checkArguments(args);
 
-        FileOperationsCopyImpl fo = new FileOperationsCopyImpl();
+        FileOperationsCopyImpl fo = new FileOperationsCopyImpl(args.isDebugEnabled());
 
         String[] sourceArr = args.getSourceFile().getValue().split(";");
         String[] targetArr = null;

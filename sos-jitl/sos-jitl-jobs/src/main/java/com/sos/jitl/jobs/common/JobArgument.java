@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.common;
 
+/** TODO name ignoreCase?(js7 supports different spelling), argument required? */
 public class JobArgument<T> {
 
     private final String name;
@@ -28,7 +29,10 @@ public class JobArgument<T> {
     }
 
     public T getValue() {
-        return value == null ? defaultValue : value;
+        if (value == null) {// for unit tests. otherwise see ABlockingInternalJob createJobArguments
+            return defaultValue;
+        }
+        return value;
     }
 
 }

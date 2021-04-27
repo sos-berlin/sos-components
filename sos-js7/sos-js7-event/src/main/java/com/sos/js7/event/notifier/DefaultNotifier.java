@@ -64,7 +64,7 @@ public class DefaultNotifier implements INotifier {
 
     @Override
     public void notifyOnRecovery(String title, Throwable ex) {
-        notifyOnRecovery(title, ex == null ? null : SOSString.convertStackTraceToString(ex));
+        notifyOnRecovery(title, ex == null ? null : SOSString.toString(ex));
     }
 
     public boolean smartNotifyOnError(Class<?> clazz, Throwable e) {

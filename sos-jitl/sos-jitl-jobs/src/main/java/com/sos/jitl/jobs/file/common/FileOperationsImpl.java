@@ -6,8 +6,8 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class FileOperationsImpl extends AFileOperations {
 
-    public FileOperationsImpl() {
-        super();
+    public FileOperationsImpl(boolean isDebugEnabled) {
+        super(isDebugEnabled);
     }
 
     @Override

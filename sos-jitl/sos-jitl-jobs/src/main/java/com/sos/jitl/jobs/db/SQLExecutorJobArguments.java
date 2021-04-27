@@ -4,8 +4,9 @@ import java.nio.file.Path;
 
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArguments;
 
-public class SQLExecutorJobArguments {
+public class SQLExecutorJobArguments extends JobArguments {
 
     public enum ArgResultSetAsParametersValues {
         NAME_VALUE, TRUE, FALSE

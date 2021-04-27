@@ -3,9 +3,10 @@ package com.sos.jitl.jobs.file.common;
 import java.nio.file.Path;
 
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArguments;
 import com.sos.jitl.jobs.common.JobReturnVariable;
 
-public class FileOperationsJobArguments {
+public class FileOperationsJobArguments extends JobArguments {
 
     /* Return arguments */
     private JobReturnVariable<String> returnResultSet = new JobReturnVariable<String>("file_operations_result_set");
@@ -45,11 +46,11 @@ public class FileOperationsJobArguments {
     private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", "1");
     private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", 30);
 
-    //result set
+    // result set
     private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", 0);
     private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is");
     private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file");
-    
+
     public JobReturnVariable<String> getReturnResultSet() {
         return returnResultSet;
     }

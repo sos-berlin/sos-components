@@ -55,14 +55,15 @@ public class SOSString {
         }
         return o.toString();
     }
-    
+
     public static String hash256(String val) {
-    	return hash(val, "SHA-256");
+        return hash(val, "SHA-256");
     }
+
     public static String hash512(String val) {
-    	return hash(val, "SHA-512");
+        return hash(val, "SHA-512");
     }
-    
+
     private static String hash(String val, String hashAlgorithm) {
         try {
             MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
@@ -83,7 +84,7 @@ public class SOSString {
         }
     }
 
-    public static String convertStackTraceToString(Throwable throwable) {
+    public static String toString(Throwable throwable) {
         try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
             throwable.printStackTrace(pw);
             return sw.toString();

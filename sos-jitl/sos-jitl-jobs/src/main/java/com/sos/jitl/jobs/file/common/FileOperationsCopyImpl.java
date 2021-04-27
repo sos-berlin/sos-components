@@ -9,8 +9,8 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class FileOperationsCopyImpl extends AFileOperations {
 
-    public FileOperationsCopyImpl() {
-        super();
+    public FileOperationsCopyImpl(boolean isDebugEnabled) {
+        super(isDebugEnabled);
     }
 
     @Override
