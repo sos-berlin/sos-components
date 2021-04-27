@@ -16,17 +16,18 @@ public class FileExistsJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, FileOperationsJobArguments args) throws Exception {
-        checkArguments(args);
+    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
+        checkArguments(step.getArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
-        boolean result = fo.existsFile(args.getSourceFile().getValue(), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE, args.getMinFileAge()
-                .getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args
-                        .getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue());
+        boolean result = fo.existsFile(step.getArguments().getSourceFile().getValue(), step.getArguments().getFileSpec().getValue(),
+                Pattern.CASE_INSENSITIVE, step.getArguments().getMinFileAge().getValue(), step.getArguments().getMaxFileAge().getValue(), step
+                        .getArguments().getMinFileSize().getValue(), step.getArguments().getMaxFileSize().getValue(), step.getArguments()
+                                .getSkipFirstFiles().getValue(), step.getArguments().getSkipLastFiles().getValue());
         if (result) {
-            result = checkSteadyStateOfFiles(step.getLogger(), args, fo.getResultList());
+            result = checkSteadyStateOfFiles(step.getLogger(), step.getArguments(), fo.getResultList());
         }
-        return handleResult(step.getLogger(), args, fo.getResultList(), result);
+        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), result);
     }
 
 }

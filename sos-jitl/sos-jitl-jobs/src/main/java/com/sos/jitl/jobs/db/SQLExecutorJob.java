@@ -15,7 +15,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
-import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ArgResultSetAsParametersValues;
 
@@ -28,19 +27,19 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, SQLExecutorJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<SQLExecutorJobArguments> step) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            if (SOSString.isEmpty(args.getCommand())) {
+            if (SOSString.isEmpty(step.getArguments().getCommand())) {
                 throw new Exception("command is empty. please check the job/order \"command\" parameter.");
             }
-            factory = new SOSHibernateFactory(args.getHibernateFile().getValue());
+            factory = new SOSHibernateFactory(step.getArguments().getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
             session = factory.openStatelessSession();
 
-            Map<String, Object> map = process(step.getLogger(), session, args);
+            Map<String, Object> map = process(step, session);
             step.getLogger().info("map=" + map);
             return Job.success(map);
         } catch (Throwable e) {
@@ -55,7 +54,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         }
     }
 
-    private Map<String, Object> process(JobLogger logger, final SOSHibernateSession session, SQLExecutorJobArguments args) throws Exception {
+    private Map<String, Object> process(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
+        SQLExecutorJobArguments args = step.getArguments();
         args.setCommand(args.getCommand().replaceAll(Pattern.quote("\\${"), "\\${")); // replace \${ to ${ TODO - is needed?
         args.setCommand(Job.replaceVars(Job.getSubstitutor(args), args.getCommand()));
 
@@ -64,7 +64,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         try {
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
-                logger.debug("[load from file]%s", path);
+                step.getLogger().debug("[load from file]%s", path);
                 statements = executor.getStatements(path);
             }
         } catch (Throwable e) {
@@ -76,9 +76,9 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         Map<String, Object> map = new HashMap<String, Object>();
         session.beginTransaction();
         for (String statement : statements) {
-            logger.info("executing database statement: %s", statement);
+            step.getLogger().info("executing database statement: %s", statement);
             if (SOSHibernateSQLExecutor.isResultListQuery(statement, args.getExecReturnsResultset())) {
-                executeResultSet(logger, args, executor, statement, map);
+                executeResultSet(step, executor, statement, map);
             } else {
                 executor.executeUpdate(statement);
             }
@@ -87,11 +87,13 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         return map;
     }
 
-    private void executeResultSet(JobLogger logger, final SQLExecutorJobArguments args, final SOSHibernateSQLExecutor executor,
-            final String statement, Map<String, Object> map) throws Exception {
+    private void executeResultSet(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSQLExecutor executor, final String statement,
+            Map<String, Object> map) throws Exception {
         ResultSet rs = null;
         StringBuilder warning = new StringBuilder();
         try {
+            SQLExecutorJobArguments args = step.getArguments();
+
             boolean checkResultSet = !args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.FALSE.name());
             boolean isParamValue = args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.NAME_VALUE.name());
             rs = executor.getResultSet(statement);
@@ -119,8 +121,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 }
                             }
                             if (paramKey != null && paramValue != null) {
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("[order][set param]%s=%s", paramKey, paramValue);
+                                if (step.getLogger().isDebugEnabled()) {
+                                    step.getLogger().debug("[order][set param]%s=%s", paramKey, paramValue);
                                 }
                                 map.put(paramKey, paramValue);
                             }
@@ -128,8 +130,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                             if (rowCount == 1) {
                                 for (String key : record.keySet()) {
                                     String value = record.get(key);
-                                    if (logger.isDebugEnabled()) {
-                                        logger.debug("[order][set param]%s=%s", key, value);
+                                    if (step.getLogger().isDebugEnabled()) {
+                                        step.getLogger().debug("[order][set param]%s=%s", key, value);
                                     }
                                     map.put(key, value);
                                 }
@@ -156,7 +158,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         } finally {
             executor.close(rs);
             if (warning.length() > 0) {
-                logger.warn(warning);
+                step.getLogger().warn(warning);
             }
         }
     }

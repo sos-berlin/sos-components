@@ -30,7 +30,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, InfoJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<InfoJobArguments> step) throws Exception {
 
         step.getLogger().info("----------USAGE-----------------");
         step.getLogger().info("declare and set order variables:");
@@ -69,20 +69,22 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[step.arguments()][scala]" + step.getInternalStep().arguments());
         step.getLogger().info("[step.arguments()][java]" + Job.convert(step.getInternalStep().arguments()));
 
-        step.getLogger().info("[step.namedValue(%s)]%s", args.getShowEnv().getName(), step.getInternalStep().namedValue(args.getShowEnv().getName()));
-        step.getLogger().info("[step.namedValue(%s)]%s", args.getRedefineShowEnv().getName(), step.getInternalStep().namedValue(args
-                .getRedefineShowEnv().getName()));
-        step.getLogger().info("[step.namedValue(%s)]%s", args.getLogLevel().getName(), step.getInternalStep().namedValue(args.getLogLevel()
-                .getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getShowEnv().getName(), step.getInternalStep().namedValue(step
+                .getArguments().getShowEnv().getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getRedefineShowEnv().getName(), step.getInternalStep().namedValue(step
+                .getArguments().getRedefineShowEnv().getName()));
+        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getLogLevel().getName(), step.getInternalStep().namedValue(step
+                .getArguments().getLogLevel().getName()));
 
-        if (args.getShowEnv().getValue()) {
+        if (step.getArguments().getShowEnv().getValue()) {
             printEnvs(step.getLogger());
         }
 
         step.getLogger().info("----------RETURN-----------------");
-        if (args.getRedefineShowEnv().getValue()) {
-            step.getLogger().info("[SUCCESS]set step outcome \"%s\"=%s", args.getShowEnv().getName(), !args.getShowEnv().getValue());
-            return Job.success(args.getShowEnv().getName(), !args.getShowEnv().getValue());
+        if (step.getArguments().getRedefineShowEnv().getValue()) {
+            step.getLogger().info("[SUCCESS]set step outcome \"%s\"=%s", step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv()
+                    .getValue());
+            return Job.success(step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv().getValue());
         } else {
             step.getLogger().info("[SUCCESS]");
             return Job.success();

@@ -27,23 +27,22 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, SOSSQLPlusJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<SOSSQLPlusJobArguments> step) throws Exception {
 
         try {
-            if (SOSString.isEmpty(args.getCommandScriptFile())) {
+            if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
                 throw new Exception("command is empty. please check the   \"command_script_file\" parameter.");
             }
-            return Job.success(process(step, args));
+            return Job.success(process(step, step.getArguments()));
         } catch (Throwable e) {
             throw e;
         }
     }
 
-    public Map<String, Object> process(JobStep step, SOSSQLPlusJobArguments args) throws Exception {
+    public Map<String, Object> process(JobStep<SOSSQLPlusJobArguments> step, SOSSQLPlusJobArguments args) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
-
             if (args.getCredentialStoreFile() != null) {
                 SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
                         .getCredentialStorePassword());

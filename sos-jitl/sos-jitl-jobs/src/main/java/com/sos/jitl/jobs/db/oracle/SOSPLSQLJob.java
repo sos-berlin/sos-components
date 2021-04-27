@@ -37,7 +37,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, SOSPLSQLJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<SOSPLSQLJobArguments> step) throws Exception {
 
         try {
 
@@ -56,8 +56,8 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                 }
             }
 
-            Connection connection = getConnection(args);
-            return Job.success(process(step.getLogger(), connection, args));
+            Connection connection = getConnection(step.getArguments());
+            return Job.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
             throw e;
         }

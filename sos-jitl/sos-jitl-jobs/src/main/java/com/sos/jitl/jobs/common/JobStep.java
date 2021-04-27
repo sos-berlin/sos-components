@@ -2,14 +2,16 @@ package com.sos.jitl.jobs.common;
 
 import js7.executor.forjava.internal.BlockingInternalJob;
 
-public class JobStep {
+public class JobStep<A> {
 
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
+    private final A arguments;
 
-    protected JobStep(BlockingInternalJob.Step step, JobLogger logger) {
+    protected JobStep(BlockingInternalJob.Step step, JobLogger logger, A arguments) {
         this.internalStep = step;
         this.logger = logger;
+        this.arguments = arguments;
     }
 
     public BlockingInternalJob.Step getInternalStep() {
@@ -20,4 +22,7 @@ public class JobStep {
         return logger;
     }
 
+    public A getArguments() {
+        return arguments;
+    }
 }

@@ -17,12 +17,13 @@ public class CanWriteJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, FileOperationsJobArguments args) throws Exception {
-        checkArguments(args);
+    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
+        checkArguments(step.getArguments());
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
-        boolean result = fo.canWrite(new File(args.getSourceFile().getValue()), args.getFileSpec().getValue(), Pattern.CASE_INSENSITIVE);
-        return handleResult(step.getLogger(), args, fo.getResultList(), result);
+        boolean result = fo.canWrite(new File(step.getArguments().getSourceFile().getValue()), step.getArguments().getFileSpec().getValue(),
+                Pattern.CASE_INSENSITIVE);
+        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), result);
     }
 
 }

@@ -16,7 +16,8 @@ public class RemoveFileJob extends AFileOperationsJob {
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep step, FileOperationsJobArguments args) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<FileOperationsJobArguments> step) throws Exception {
+        FileOperationsJobArguments args = step.getArguments();
         checkArguments(args);
 
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
