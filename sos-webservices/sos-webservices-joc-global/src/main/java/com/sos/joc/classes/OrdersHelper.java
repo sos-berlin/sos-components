@@ -2,6 +2,8 @@ package com.sos.joc.classes;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderItem;
@@ -33,6 +36,7 @@ import com.sos.joc.classes.audit.ModifyOrderAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.BulkError;
@@ -44,9 +48,11 @@ import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
@@ -208,8 +214,8 @@ public class OrdersHelper {
         return state;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<String, String> namePathMap, Long surveyDateMillis)
-            throws JsonParseException, JsonMappingException, IOException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
+            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         OrderV o = new OrderV();
@@ -238,13 +244,12 @@ public class OrdersHelper {
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.PENDING.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
         }
-        if (namePathMap != null) {
-            WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
-            wId.setPath(namePathMap.getOrDefault(wId.getPath(), wId.getPath()));
-            o.setWorkflowId(wId);
-        } else {
-            o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
+        WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
+        wId.setPath(WorkflowPaths.getPath(oItem.getWorkflowPosition().getWorkflowId()));
+        if (listOfFolders != null && !canAdd(wId.getPath(), listOfFolders)) {
+            throw new JocFolderPermissionsException("Access denied for folder: " + getParent(wId.getPath()));
         }
+        o.setWorkflowId(wId);
         return o;
     }
     
@@ -545,6 +550,22 @@ public class OrdersHelper {
             }
             return Either.right(null);
         });
+    }
+    
+    private static boolean canAdd(String path, Set<Folder> listOfFolders) {
+        if (path == null || !path.startsWith("/")) {
+            return false;
+        }
+        return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
+    }
+    
+    private static String getParent(String path) {
+        Path p = Paths.get(path).getParent();
+        if (p == null) {
+            return null;
+        } else {
+            return p.toString().replace('\\', '/');
+        }
     }
     
 }

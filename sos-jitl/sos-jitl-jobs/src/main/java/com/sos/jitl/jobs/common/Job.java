@@ -1,11 +1,9 @@
 package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,7 +20,6 @@ import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
-import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
 import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
@@ -31,90 +28,6 @@ public class Job {
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
     private static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";
-
-    public static JOutcome.Completed success() {
-        return JOutcome.succeeded();
-    }
-
-    public static JOutcome.Completed success(final String returnValueKey, final Object returnValue) {
-        if (returnValueKey != null && returnValue != null) {
-            return JOutcome.succeeded(convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
-        }
-        return JOutcome.succeeded();
-    }
-
-    public static JOutcome.Completed success(final JobReturnVariable<?>... returnValues) {
-        return success(getMap(returnValues));
-    }
-
-    public static JOutcome.Completed success(final Map<String, Object> returnValues) {
-        if (returnValues == null || returnValues.size() == 0) {
-            return JOutcome.succeeded();
-        }
-        return JOutcome.succeeded(convert4engine(returnValues));
-    }
-
-    public static JOutcome.Completed failed() {
-        return JOutcome.failed();
-    }
-
-    public static JOutcome.Completed failed(final String msg, Throwable e) {
-        if (e == null) {
-            return JOutcome.failed(msg);
-        }
-        return JOutcome.failed(new StringBuilder(msg).append("\n").append(SOSString.toString(e)).toString());
-    }
-
-    public static JOutcome.Completed failed(final String msg, final String returnValueKey, final Object returnValue) {
-        if (returnValueKey != null && returnValue != null) {
-            return JOutcome.failed(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
-        }
-        return JOutcome.failed(msg);
-    }
-
-    public static JOutcome.Completed failed(final String msg, JobReturnVariable<?>... returnValues) {
-        return failed(msg, getMap(returnValues));
-    }
-
-    public static JOutcome.Completed failed(final String msg, final Map<String, Object> returnValues) {
-        if (returnValues == null || returnValues.size() == 0) {
-            return JOutcome.failed(msg);
-        }
-        return JOutcome.failed(msg, convert4engine(returnValues));
-    }
-
-    @Deprecated
-    public static Map<String, Object> mergeArguments(final JobContext jobContext, final BlockingInternalJob.Step step) {
-        if (step == null) {
-            return convert(jobContext.jobArguments());
-        }
-        Stream<Map<String, Value>> stream = null;
-        if (jobContext == null) {
-            stream = Stream.of(step.order().arguments(), step.arguments());
-        } else {
-            stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
-        }
-        return convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-    }
-
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    public static <T> T getArgument(Map<String, Object> args, String name) {
-        T val = (T) args.get(name);
-        if (val != null && val instanceof String) {
-            val = (T) val.toString().trim();
-        }
-        return val;
-    }
-
-    @Deprecated
-    public static <T> T getArgument(Map<String, Object> args, String name, T defaultValue) {
-        T val = getArgument(args, name);
-        if (val == null || val.toString().length() == 0) {
-            val = defaultValue;
-        }
-        return val;
-    }
 
     public static Path getAgentHome() {
         return getPath(System.getenv(ENV_NAME_AGENT_HOME));
@@ -132,8 +45,8 @@ public class Job {
         return getAgentConfigDir().resolve("private").resolve("private.conf").normalize();
     }
 
-    private static Path getPath(String val) {
-        return Paths.get(val == null ? "." : val);
+    public static Path getAgentHibernateFile() {
+        return Job.getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
     }
 
     public static SOSParameterSubstitutor getSubstitutor(final Map<String, Object> args) {
@@ -224,60 +137,6 @@ public class Job {
         return either.get();
     }
 
-    public static String getOrderId(final JobStep step) throws SOSJobProblemException {
-        return step.getInternalStep().order().id().string();
-    }
-
-    public static String getAgentId(final JobStep step) throws SOSJobProblemException {
-        return getFromEither(step.getInternalStep().order().attached()).string();
-    }
-
-    public static String getJobName(final JobStep step) throws SOSJobProblemException {
-        return getFromEither(step.getInternalStep().workflow().checkedJobName(step.getInternalStep().order().workflowPosition().position()))
-                .toString();
-    }
-
-    public static String getWorkflowName(final JobStep step) {
-        return step.getInternalStep().order().workflowId().path().name();
-    }
-
-    public static String getWorkflowVersionId(final JobStep step) {
-        return step.getInternalStep().order().workflowId().versionId().toString();
-    }
-
-    public static String getWorkflowPosition(final JobStep step) {
-        return step.getInternalStep().order().workflowPosition().position().toString();
-    }
-
-    private static Map<String, Value> convert4engine(final Map<String, Object> map) {
-        if (map == null || map.size() == 0) {
-            return Collections.emptyMap();
-        }
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
-    }
-
-    private static Value getValue(final Object o) {
-        if (o == null) {
-            return null;
-        }
-        if (o instanceof Value) {
-            return (Value) o;
-        } else if (o instanceof String) {
-            return StringValue.of((String) o);
-        } else if (o instanceof Boolean) {
-            return BooleanValue.of((Boolean) o);
-        } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o); // TODO instanceof Number instead of Integer, Long etc
-        } else if (o instanceof Long) {
-            return NumberValue.of((Long) o);
-        } else if (o instanceof Double) {
-            return NumberValue.of(BigDecimal.valueOf((Double) o));
-        } else if (o instanceof BigDecimal) {
-            return NumberValue.of((BigDecimal) o);
-        }
-        return null;
-    }
-
     public static Object getValue(final Value o) {
         if (o == null) {
             return null;
@@ -292,14 +151,41 @@ public class Job {
         return o;
     }
 
-    private static Map<String, Object> getMap(JobReturnVariable<?>... returnValues) {
-        Map<String, Object> map = new HashMap<String, Object>();
-        for (JobReturnVariable<?> arg : returnValues) {
-            if (arg.getName() == null || arg.getValue() == null) {
-                continue;
-            }
-            map.put(arg.getName(), arg.getValue());
+    @Deprecated
+    public static Map<String, Object> mergeArguments(final JobContext jobContext, final BlockingInternalJob.Step step) {
+        if (step == null) {
+            return convert(jobContext.jobArguments());
         }
-        return map;
+        Stream<Map<String, Value>> stream = null;
+        if (jobContext == null) {
+            stream = Stream.of(step.order().arguments(), step.arguments());
+        } else {
+            stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
+        }
+        return convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
     }
+
+    @Deprecated
+    @SuppressWarnings("unchecked")
+    public static <T> T getArgument(Map<String, Object> args, String name) {
+        T val = (T) args.get(name);
+        if (val != null && val instanceof String) {
+            val = (T) val.toString().trim();
+        }
+        return val;
+    }
+
+    @Deprecated
+    public static <T> T getArgument(Map<String, Object> args, String name, T defaultValue) {
+        T val = getArgument(args, name);
+        if (val == null || val.toString().length() == 0) {
+            val = defaultValue;
+        }
+        return val;
+    }
+
+    private static Path getPath(String val) {
+        return Paths.get(val == null ? "." : val);
+    }
+
 }

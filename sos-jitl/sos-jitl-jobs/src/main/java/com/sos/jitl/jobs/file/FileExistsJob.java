@@ -27,7 +27,7 @@ public class FileExistsJob extends AFileOperationsJob {
         if (result) {
             result = checkSteadyStateOfFiles(step.getLogger(), step.getArguments(), fo.getResultList());
         }
-        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), result);
+        return handleResult(step, fo.getResultList(), result);
     }
 
 }

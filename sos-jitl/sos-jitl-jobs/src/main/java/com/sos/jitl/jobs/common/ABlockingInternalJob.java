@@ -90,7 +90,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                 return onOrderProcess(new JobStep<A>(step, new JobLogger(step, args), args));
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
-                return Job.failed(e.toString(), e);
+                return JobStep.failed(e.toString(), e);
             }
         };
     }

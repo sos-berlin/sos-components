@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.ImplicitEnd;
@@ -17,7 +18,6 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.model.workflow.WorkflowId;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;

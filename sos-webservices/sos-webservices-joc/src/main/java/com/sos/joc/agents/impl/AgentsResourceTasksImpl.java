@@ -35,6 +35,8 @@ import js7.data_for_java.order.JOrderPredicates;
 public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsResourceTasks {
 
     private static String API_CALL = "./agents/tasks";
+    
+    // obsolete: the same like ./agents with compact=false
 
     @Override
     public JOCDefaultResponse getTasks(String accessToken, byte[] filterBytes) {
@@ -50,8 +52,6 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            checkRequiredParameter("controllerId", controllerId);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);

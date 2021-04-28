@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
@@ -145,7 +146,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         return result;
     }
 
-    public JOutcome.Completed handleResult(JobLogger logger, FileOperationsJobArguments args, List<File> files, boolean result) throws Exception {
+    public JOutcome.Completed handleResult(JobStep<FileOperationsJobArguments> step, List<File> files, boolean result) throws Exception {
+        FileOperationsJobArguments args = step.getArguments();
         int size = 0;
         StringBuilder fileList = new StringBuilder();
         if (files != null && files.size() > 0) {
@@ -158,7 +160,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         args.getReturnResultSetSize().setValue(size);
 
         if (args.getResultSetFile().getValue() != null && fileList.length() > 0) {
-            logger.debug("..try to write file:" + args.getResultSetFile().getValue());
+            step.getLogger().debug("..try to write file:" + args.getResultSetFile().getValue());
             if (Files.isWritable(args.getResultSetFile().getValue())) {
                 Files.write(args.getResultSetFile().getValue(), fileList.toString().getBytes("UTF-8"));
             } else {
@@ -170,10 +172,10 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             if (compareIntValues(args.getRaiseErrorIfResultSetIs().getValue(), size, args.getExpectedSizeOfResultSet().getValue())) {
                 String msg = String.format("no of hits in result set '%s'  is '%s' expected '%s'", size, args.getRaiseErrorIfResultSetIs().getValue(),
                         args.getExpectedSizeOfResultSet().getValue());
-                return Job.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
+                return step.failed(msg, args.getReturnResultSet(), args.getReturnResultSetSize());
             }
         }
-        return Job.success(args.getReturnResultSet(), args.getReturnResultSetSize());
+        return step.success(args.getReturnResultSet(), args.getReturnResultSetSize());
     }
 
     private boolean compareIntValues(final String comparator, final int left, final int right) throws Exception {

@@ -50,12 +50,9 @@ import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.item.ItemPath;
-import js7.data.item.SignableItemKey;
-import js7.data.item.SignedItemEvent;
 import js7.data.item.SimpleItemPath;
 import js7.data.item.UnsignedSimpleItemEvent;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
-import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
@@ -74,7 +71,6 @@ import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
-import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -309,18 +305,20 @@ public class EventService {
                     addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
-                } else if (itemId instanceof OrderWatchPath) {
-                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
+//                } else if (itemId instanceof OrderWatchPath) {
+//                 // We don't need an Item event for FileOrderSource
+//                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
                 } else {
                     // TODO other simple objects
                 }
                 
-            } else if (evt instanceof SignedItemEvent) {
-                String eventType = evt.getClass().getSimpleName().replaceFirst(".*Signed", "");
-                SignableItemKey itemId = ((SignedItemEvent) evt).key();
-                if (itemId instanceof JobResourcePath) {
-                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
-                } 
+//            } else if (evt instanceof SignedItemEvent) {
+//                // We don't need an Item event for JobResource
+//                String eventType = evt.getClass().getSimpleName().replaceFirst(".*Signed", "");
+//                SignableItemKey itemId = ((SignedItemEvent) evt).key();
+//                if (itemId instanceof JobResourcePath) {
+//                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
+//                } 
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
@@ -385,6 +383,7 @@ public class EventService {
     
     private EventSnapshot createAgentEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.AGENT);
@@ -397,30 +396,34 @@ public class EventService {
     
     private EventSnapshot createLockEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.LOCK);
         return evt;
     }
     
-    private EventSnapshot createFileOrderSourceEvent(long eventId, String path, String eventType) {
-        EventSnapshot evt = new EventSnapshot();
-        evt.setEventType(eventType);
-        evt.setPath(path);
-        evt.setObjectType(EventType.FILEORDERSOURCE);
-        return evt;
-    }
+//    private EventSnapshot createFileOrderSourceEvent(long eventId, String path, String eventType) {
+//        EventSnapshot evt = new EventSnapshot();
+//        evt.setEventId(eventId);
+//        evt.setEventType(eventType);
+//        evt.setPath(path);
+//        evt.setObjectType(EventType.FILEORDERSOURCE);
+//        return evt;
+//    }
     
-    private EventSnapshot createJobResourceEvent(long eventId, String path, String eventType) {
-        EventSnapshot evt = new EventSnapshot();
-        evt.setEventType(eventType);
-        evt.setPath(path);
-        evt.setObjectType(EventType.JOBRESOURCE);
-        return evt;
-    }
+//    private EventSnapshot createJobResourceEvent(long eventId, String path, String eventType) {
+//        EventSnapshot evt = new EventSnapshot();
+//        evt.setEventId(eventId);
+//        evt.setEventType(eventType);
+//        evt.setPath(path);
+//        evt.setObjectType(EventType.JOBRESOURCE);
+//        return evt;
+//    }
     
     private EventSnapshot createWorkflowEvent(long eventId, String path, String eventType) {
         EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.WORKFLOW);

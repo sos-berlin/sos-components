@@ -2,22 +2,17 @@ package com.sos.joc.order.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.ws.rs.Path;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
@@ -39,7 +34,6 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
@@ -56,11 +50,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
-                session = Globals.createSosHibernateStatelessConnection(API_CALL);
-                DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-                final Map<String, String> namePathMap = dbLayer.getNamePathMapping(orderFilter.getControllerId(), Collections.singleton(jOrder.workflowId()
-                        .path().string()), DeployType.WORKFLOW.intValue());
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), namePathMap, surveyDateMillis);
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), surveyDateMillis);
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
@@ -77,8 +67,6 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(session);
         }
     }
 

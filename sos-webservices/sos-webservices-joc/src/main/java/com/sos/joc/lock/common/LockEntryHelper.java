@@ -7,21 +7,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.lock.Lock;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.model.lock.common.LockEntry;
 import com.sos.joc.model.lock.common.LockOrder;
@@ -47,11 +43,9 @@ import scala.compat.java8.OptionConverters;
 public class LockEntryHelper {
 
     private final String controllerId;
-    private final SOSHibernateSession session;
 
-    public LockEntryHelper(String controllerId, SOSHibernateSession session) {
+    public LockEntryHelper(String controllerId) {
         this.controllerId = controllerId;
-        this.session = session;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LockEntryHelper.class);
@@ -107,14 +101,10 @@ public class LockEntryHelper {
             final Collection<OrderId> lockQueuedOrderIds = jLockState.queuedOrderIds();
             Set<JOrder> lockQueuedJOrders = controllerState.ordersBy(o -> lockQueuedOrderIds.contains(o.id())).collect(Collectors.toSet());
 
-            Set<String> workflowNames = Stream.concat(lockJOrders.stream(), lockQueuedJOrders.stream()).map(o -> o.workflowId().path().string())
-                    .collect(Collectors.toSet());
-            final Map<String, String> namePathMap = getNamePathMap(workflowNames);
-
             for (JOrder jo : lockJOrders) {
                 ordersHoldingLocksCount++;
                 LockOrder lo = new LockOrder();
-                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, namePathMap, null));
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
                 lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
                 LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());
@@ -128,7 +118,7 @@ public class LockEntryHelper {
             for (JOrder jo : lockQueuedJOrders) {
                 ordersWaitingForLocksCount++;
                 LockOrder lo = new LockOrder();
-                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, namePathMap, null));
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
                 lo.setLock(getWorkflowLock(controllerState, jo, lo.getOrder().getWorkflowId(), queuedWorkflowLocks, lockId));
 
                 LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());
@@ -147,11 +137,6 @@ public class LockEntryHelper {
         entry.setLock(item);
         entry.setWorkflows(workflows.values().stream().collect(Collectors.toList()));
         return entry;
-    }
-    
-    private Map<String, String> getNamePathMap(Collection<String> workflowNames) {
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-            return dbLayer.getNamePathMapping(controllerId, workflowNames, DeployType.WORKFLOW.intValue());
     }
 
     private LockWorkflow getLockWorkflow(Map<WorkflowId, LockWorkflow> workflows, WorkflowId wId) {

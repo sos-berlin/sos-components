@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceState;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -25,7 +24,6 @@ import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -35,6 +33,7 @@ import com.sos.joc.model.agent.AgentStateText;
 import com.sos.joc.model.agent.AgentV;
 import com.sos.joc.model.agent.AgentsV;
 import com.sos.joc.model.agent.ReadAgentsV;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderV;
 import com.sos.schema.JsonValidator;
 
@@ -79,11 +78,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
 
-            //checkRequiredParameter("controllerId", controllerId);
-            
-//            Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
-//            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(names, DeployType.WORKFLOW.intValue());
-
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(controllerId, agentsParam.getAgentIds(),
@@ -109,13 +103,11 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
                                 o -> 1, Integer::sum))));
                     } else {
+                        Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
-                        DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
-                        Set<String> names = jOrders.stream().map(o -> o.workflowId().path().string()).collect(Collectors.toSet());
-                        final Map<String, String> namePathMap = dbCLayer.getNamePathMapping(controllerId, names, DeployType.WORKFLOW.intValue());
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, false, namePathMap, surveyDateMillis);
+                                return OrdersHelper.mapJOrderToOrderV(o, false, permittedFolders, surveyDateMillis);
                             } catch (Exception e) {
                                 return null;
                             }

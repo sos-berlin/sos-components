@@ -44,6 +44,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -1728,6 +1730,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setVersion(null);
                 try {
                     session.save(newDepHistoryItem);
+                    postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1755,6 +1758,7 @@ public class DBLayerDeploy {
                 deploy.setVersion(null);
                 try {
                     session.save(deploy);
+                    postDeployHistoryWorkflowEvent(deploy);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1827,6 +1831,7 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setVersion(null);
                 try {
                     session.save(newDepHistoryItem);
+                    postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1857,6 +1862,7 @@ public class DBLayerDeploy {
                 deploy.setInventoryConfigurationId(inventoryConfig.getId());
                 try {
                     session.save(deploy);
+                    postDeployHistoryWorkflowEvent(deploy);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1886,6 +1892,7 @@ public class DBLayerDeploy {
                 deploy.setErrorMessage(errorMessage);
                 try {
                     session.save(deploy);
+                    //postDeployHistoryWorkflowEvent(deploy);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1932,6 +1939,7 @@ public class DBLayerDeploy {
                 // TODO: get Version to set here
                 newDepHistoryItem.setVersion(null);
                 session.save(newDepHistoryItem);
+                postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 depHistoryFailed.add(newDepHistoryItem);
             }
         } catch (SOSHibernateException e) {
@@ -1963,6 +1971,7 @@ public class DBLayerDeploy {
                 deploy.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 session.save(deploy);
+                // postDeployHistoryWorkflowEvent(deploy);
                 depHistoryFailed.add(deploy);
             }
         } catch (SOSHibernateException e) {
@@ -2623,5 +2632,12 @@ public class DBLayerDeploy {
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameter("calendarName", "%\"" + calendarName + "\"%");
         return getSession().getResultList(query);
+    }
+    
+    private void postDeployHistoryWorkflowEvent(DBItemDeploymentHistory dbItem) {
+        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath()));
+        }
     }
 }

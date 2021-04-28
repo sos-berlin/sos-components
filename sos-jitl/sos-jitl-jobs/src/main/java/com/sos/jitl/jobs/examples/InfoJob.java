@@ -51,21 +51,21 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[jobContext.jobArguments()][java]" + Job.convert(getJobContext().jobArguments()));
 
         step.getLogger().info("----------Workflow-----------------");
-        step.getLogger().info("[name]" + Job.getWorkflowName(step));
-        step.getLogger().info("[versionId]" + Job.getWorkflowVersionId(step));
-        step.getLogger().info("[position]" + Job.getWorkflowPosition(step));
-        step.getLogger().error("[position written to err]" + Job.getWorkflowPosition(step));
+        step.getLogger().info("[name]" + step.getWorkflowName());
+        step.getLogger().info("[versionId]" + step.getWorkflowVersionId());
+        step.getLogger().info("[position]" + step.getWorkflowPosition());
+        step.getLogger().error("[position written to err]" + step.getWorkflowPosition());
 
         step.getLogger().info("----------ORDER-----------------");
-        step.getLogger().info("[id]" + Job.getOrderId(step));
+        step.getLogger().info("[id]" + step.getOrderId());
         step.getLogger().info("[step.order().arguments()][scala]" + step.getInternalStep().order().arguments());
         step.getLogger().info("[step.order().arguments()][java]" + Job.convert(step.getInternalStep().order().arguments()));
 
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
         step.getLogger().info("----------NODE/STEP-----------------");
-        step.getLogger().info("[agentId]" + Job.getAgentId(step));
-        step.getLogger().info("[name]" + Job.getJobName(step));
+        step.getLogger().info("[agentId]" + step.getAgentId());
+        step.getLogger().info("[name]" + step.getJobName());
         step.getLogger().info("[step.arguments()][scala]" + step.getInternalStep().arguments());
         step.getLogger().info("[step.arguments()][java]" + Job.convert(step.getInternalStep().arguments()));
 
@@ -84,10 +84,10 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         if (step.getArguments().getRedefineShowEnv().getValue()) {
             step.getLogger().info("[SUCCESS]set step outcome \"%s\"=%s", step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv()
                     .getValue());
-            return Job.success(step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv().getValue());
+            return step.success(step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv().getValue());
         } else {
             step.getLogger().info("[SUCCESS]");
-            return Job.success();
+            return step.success();
         }
     }
 

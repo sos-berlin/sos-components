@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobApiExecutor;
 import com.sos.jitl.jobs.common.JobStep;
 
@@ -29,6 +28,6 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
         } finally {
             ex.close();
         }
-        return Job.success();
+        return step.success();
     }
 }

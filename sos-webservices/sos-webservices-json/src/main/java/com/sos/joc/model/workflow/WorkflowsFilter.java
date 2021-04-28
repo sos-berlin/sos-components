@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -60,11 +61,11 @@ public class WorkflowsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
+    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
 
     /**
@@ -148,7 +149,7 @@ public class WorkflowsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -159,7 +160,7 @@ public class WorkflowsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
