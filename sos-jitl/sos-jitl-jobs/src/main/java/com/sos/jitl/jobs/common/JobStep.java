@@ -162,8 +162,9 @@ public class JobStep<A> {
         Optional<Value> op = internalStep.namedValue(name);
         if (op.isPresent()) {
             return Job.getValue(op.get());
+        } else {
+            return Job.getValue(internalStep.arguments().get(name));
         }
-        return null;
     }
 
     public JOutcome.Completed success() {

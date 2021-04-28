@@ -88,7 +88,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[java][name]" + step.getJobName());
         step.getLogger().info("[scala][step.arguments()]" + step.getInternalStep().arguments());
         step.getLogger().info("[java][step.arguments()]" + Job.convert(step.getInternalStep().arguments()));
-        step.getLogger().info(" ");
+
         step.getLogger().info("----------NODE/STEP GET ARGUMENT BY NAME-----------------");
         step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getShowEnv().getName(), step.getCurrentValue(args.getShowEnv().getName()));
         step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getRedefineShowEnv().getName(), step.getCurrentValue(args
@@ -96,7 +96,6 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getLogLevel().getName(), step.getCurrentValue(args.getLogLevel().getName()));
         step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getStringArgument().getName(), step.getCurrentValue(args.getStringArgument()
                 .getName()));
-
         step.getLogger().info("[scala][step.getInternalStep().namedValue(%s)]%s", args.getStringArgument().getName(), step.getInternalStep()
                 .namedValue(args.getStringArgument().getName()));
 
