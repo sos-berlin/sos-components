@@ -97,7 +97,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                 LOGGER.debug("dbPassword: " + "********");
 
                 DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
-                connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbUser());
+                connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
             }
         } catch (Throwable e) {
             throw e;
