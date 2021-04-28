@@ -84,6 +84,7 @@
 		<google.findbugs.version>3.0.2</google.findbugs.version>
 		<typesafe.config.version>1.4.1</typesafe.config.version>
 		<keepass.java2.version>2.1.4</keepass.java2.version>
+		<sshj.version>0.31.0</sshj.version>
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.18.v20190429</jetty.version>
 
@@ -480,6 +481,11 @@
             	<artifactId>jsr305</artifactId>
             	<version>${google.findbugs.version}</version>
         	</dependency>
+			<dependency>
+			    <groupId>com.hierynomus</groupId>
+			    <artifactId>sshj</artifactId>
+			    <version>${sshj.version}</version>
+			</dependency>
 
 
 			<!-- hibernate libraries -->
