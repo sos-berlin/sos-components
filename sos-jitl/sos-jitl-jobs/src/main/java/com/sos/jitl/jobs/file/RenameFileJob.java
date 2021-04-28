@@ -27,7 +27,7 @@ public class RenameFileJob extends AFileOperationsJob {
                                 .getSkipFirstFiles().getValue(), args.getSkipLastFiles().getValue(), args.getSortCriteria().getValue(), args
                                         .getSortOrder().getValue());
 
-        return handleResult(step.getLogger(), args, fo.getResultList(), result > 0);
+        return handleResult(step, fo.getResultList(), result > 0);
     }
 
 }

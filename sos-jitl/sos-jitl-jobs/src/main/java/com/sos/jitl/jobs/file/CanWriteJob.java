@@ -23,7 +23,7 @@ public class CanWriteJob extends AFileOperationsJob {
         FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
         boolean result = fo.canWrite(new File(step.getArguments().getSourceFile().getValue()), step.getArguments().getFileSpec().getValue(),
                 Pattern.CASE_INSENSITIVE);
-        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), result);
+        return handleResult(step, fo.getResultList(), result);
     }
 
 }

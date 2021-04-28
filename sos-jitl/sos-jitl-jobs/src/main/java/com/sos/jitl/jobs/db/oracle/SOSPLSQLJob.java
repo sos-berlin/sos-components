@@ -57,7 +57,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
             }
 
             Connection connection = getConnection(step.getArguments());
-            return Job.success(process(step.getLogger(), connection, step.getArguments()));
+            return step.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
             throw e;
         }

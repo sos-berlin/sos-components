@@ -12,7 +12,6 @@ import com.sos.commons.util.SOSCommandResult;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data.value.Value;
@@ -33,7 +32,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
             if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
                 throw new Exception("command is empty. please check the   \"command_script_file\" parameter.");
             }
-            return Job.success(process(step, step.getArguments()));
+            return step.success(process(step, step.getArguments()));
         } catch (Throwable e) {
             throw e;
         }

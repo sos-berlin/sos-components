@@ -47,7 +47,7 @@ public class CopyFileJob extends AFileOperationsJob {
             }
             files += doFileOperation(step.getArguments(), fo, source, target);
         }
-        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), files > 0);
+        return handleResult(step, fo.getResultList(), files > 0);
     }
 
     private int doFileOperation(final FileOperationsJobArguments args, FileOperationsCopyImpl fo, final String strSource, final String strTarget)

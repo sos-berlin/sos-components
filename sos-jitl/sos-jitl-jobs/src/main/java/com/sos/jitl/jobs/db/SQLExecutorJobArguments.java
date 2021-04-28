@@ -8,15 +8,14 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SQLExecutorJobArguments extends JobArguments {
 
-    public enum ArgResultSetAsParametersValues {
+    public enum ResultSetAsParameters {
         NAME_VALUE, TRUE, FALSE
     }
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentConfigDir().resolve(
-            "hibernate.cfg.xml").normalize());
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command");
-    private JobArgument<String> resultSetAsParameters = new JobArgument<String>("resultset_as_parameters", ArgResultSetAsParametersValues.FALSE
-            .name());
+    private JobArgument<ResultSetAsParameters> resultSetAsParameters = new JobArgument<ResultSetAsParameters>("resultset_as_parameters",
+            ResultSetAsParameters.FALSE);
     private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false);
     private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false);
 
@@ -32,7 +31,7 @@ public class SQLExecutorJobArguments extends JobArguments {
         command.setValue(val);
     }
 
-    public String getResultSetAsParameters() {
+    public ResultSetAsParameters getResultSetAsParameters() {
         return resultSetAsParameters.getValue();
     }
 

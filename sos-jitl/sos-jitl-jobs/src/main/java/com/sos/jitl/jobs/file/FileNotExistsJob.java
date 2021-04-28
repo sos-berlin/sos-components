@@ -24,7 +24,7 @@ public class FileNotExistsJob extends AFileOperationsJob {
                 Pattern.CASE_INSENSITIVE, step.getArguments().getMinFileAge().getValue(), step.getArguments().getMaxFileAge().getValue(), step
                         .getArguments().getMinFileSize().getValue(), step.getArguments().getMaxFileSize().getValue(), step.getArguments()
                                 .getSkipFirstFiles().getValue(), step.getArguments().getSkipLastFiles().getValue());
-        return handleResult(step.getLogger(), step.getArguments(), fo.getResultList(), result);
+        return handleResult(step, fo.getResultList(), result);
     }
 
 }

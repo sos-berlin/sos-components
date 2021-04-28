@@ -16,7 +16,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ArgResultSetAsParametersValues;
+import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsParameters;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -41,7 +41,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
 
             Map<String, Object> map = process(step, session);
             step.getLogger().info("map=" + map);
-            return Job.success(map);
+            return step.success(map);
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -94,8 +94,8 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         try {
             SQLExecutorJobArguments args = step.getArguments();
 
-            boolean checkResultSet = !args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.FALSE.name());
-            boolean isParamValue = args.getResultSetAsParameters().equalsIgnoreCase(ArgResultSetAsParametersValues.NAME_VALUE.name());
+            boolean checkResultSet = !args.getResultSetAsParameters().equals(ResultSetAsParameters.FALSE);
+            boolean isParamValue = args.getResultSetAsParameters().equals(ResultSetAsParameters.NAME_VALUE);
             rs = executor.getResultSet(statement);
 
             if (checkResultSet || args.getResultSetAsWarning()) {

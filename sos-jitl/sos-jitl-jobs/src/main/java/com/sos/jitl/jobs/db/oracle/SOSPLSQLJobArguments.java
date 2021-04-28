@@ -13,8 +13,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSPLSQLJobArguments extends JobArguments {
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentConfigDir().resolve(
-            "hibernate.cfg.xml").normalize());
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command");
     private JobArgument<String> commandScripFile = new JobArgument<String>("command_script_file");
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
