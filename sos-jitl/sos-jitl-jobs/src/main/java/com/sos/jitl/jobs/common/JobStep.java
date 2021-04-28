@@ -1,20 +1,29 @@
 package com.sos.jitl.jobs.common;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
+import js7.data.order.HistoricOutcome;
+import js7.data.order.Outcome;
+import js7.data.order.Outcome.Completed;
 import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
+import scala.collection.JavaConverters;
 
 public class JobStep<A> {
 
@@ -38,6 +47,70 @@ public class JobStep<A> {
 
     public A getArguments() {
         return arguments;
+    }
+
+    public List<HistoricOutcome> getHistoricOutcomes() {
+        if (internalStep == null) {
+            return null;
+        }
+        return JavaConverters.asJava(internalStep.order().asScala().historicOutcomes());
+    }
+
+    public Map<String, Object> historicOutcomes2map() {
+        List<HistoricOutcome> l = getHistoricOutcomes();
+        if (l == null || l.size() == 0) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> map = new HashMap<String, Object>();
+        for (HistoricOutcome ho : l) {
+            Map<String, Object> m = map2java(ho);
+            if (m != null) {
+                m.entrySet().forEach(e -> {
+                    map.remove(e.getKey());
+                    map.put(e.getKey(), e.getValue());
+                });
+            }
+        }
+        map.remove(Job.NAMED_NAME_RETURN_CODE);
+        return map;
+    }
+
+    public List<String> argumentsInfo() throws Exception {
+        return argumentsInfo(false);
+    }
+
+    public List<String> argumentsInfo(boolean withExtendedInfos) throws Exception {
+        if (internalStep == null || arguments == null) {
+            return null;
+        }
+        List<String> l = new ArrayList<String>();
+        List<Field> fields = Job.getJobArgumentFields(arguments);
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                JobArgument<?> arg = (JobArgument<?>) field.get(arguments);
+                if (arg != null) {
+                    if (arg.getName() == null) {// internal usage
+                        if (withExtendedInfos) {
+                            l.add(String.format("[internal argument][%s]%s", arg.getName(), SOSString.toString(arg)));
+                        } else {
+                            l.add(String.format("[internal argument]%s=%s", arg.getName(), arg.getValue()));
+                        }
+                        continue;
+                    }
+                    if (withExtendedInfos) {
+                        l.add(String.format("[%s]%s", arg.getName(), SOSString.toString(arg)));
+                    } else {
+                        l.add(String.format("%s=%s", arg.getName(), arg.getValue()));
+                    }
+
+                }
+            } catch (Throwable e) {
+                throw new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
+                        .toString()), e);
+            }
+        }
+        return l;
     }
 
     public String getOrderId() throws SOSJobProblemException {
@@ -80,6 +153,17 @@ public class JobStep<A> {
             return null;
         }
         return internalStep.order().workflowPosition().position().toString();
+    }
+
+    public Object getCurrentValue(final String name) {
+        if (internalStep == null) {
+            return null;
+        }
+        Optional<Value> op = internalStep.namedValue(name);
+        if (op.isPresent()) {
+            return Job.getValue(op.get());
+        }
+        return null;
     }
 
     public JOutcome.Completed success() {
@@ -144,14 +228,14 @@ public class JobStep<A> {
         return map;
     }
 
-    private static Map<String, Value> convert4engine(final Map<String, Object> map) {
+    private Map<String, Value> convert4engine(final Map<String, Object> map) {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
-        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getValue(e.getValue())));
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
     }
 
-    private static Value getValue(final Object o) {
+    private Value getEngineValue(final Object o) {
         if (o == null) {
             return null;
         }
@@ -169,6 +253,20 @@ public class JobStep<A> {
             return NumberValue.of(BigDecimal.valueOf((Double) o));
         } else if (o instanceof BigDecimal) {
             return NumberValue.of((BigDecimal) o);
+        }
+        return null;
+    }
+
+    private Map<String, Object> map2java(HistoricOutcome ho) {
+        Outcome outcome = ho.outcome();
+        if (outcome == null) {
+            return null;
+        }
+        if (outcome instanceof Completed) {
+            Completed c = (Completed) outcome;
+            if (c.namedValues() != null) {
+                return Job.convert(JavaConverters.asJava(c.namedValues()));
+            }
         }
         return null;
     }

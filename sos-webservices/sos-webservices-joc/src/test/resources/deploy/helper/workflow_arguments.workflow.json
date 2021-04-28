@@ -1,0 +1,74 @@
+{
+	"TYPE": "Workflow",
+	"path": "workflow_arguments",
+	"versionId": "1",
+	"orderRequirements": {
+		"parameters": {
+			"SHOW_ENV": {
+				"type": "String",
+				"default": "mystring"
+			},
+			"show_env": {
+				"type": "Boolean",
+				"default": true
+			},
+			"log_level": {
+				"type": "String"
+			},
+			"string_argument": {
+				"type": "String",
+				"default": "order_string_argument"
+			},
+			"redefine_show_env": {
+				"type": "Boolean",
+				"default": true
+			}
+		}
+	},
+	"instructions": [
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "job_1",
+			"label": "job_1",
+			"defaultArguments": {
+				"string_argument": "job_1_node_string_argument"
+			}
+		},
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "job_2",
+			"label": "job_2"
+		}
+	],
+	"jobs": {
+		"job_1": {
+			"agentName": "agent_name",
+			"executable": {
+				"TYPE": "InternalExecutable",
+				"className": "com.sos.jitl.jobs.examples.InfoJob",
+				"jobArguments": {
+					"job_argument": "my_job_argument"
+				},
+				"arguments": {
+					"string_argument": "'job_1_string_argument'"
+				}
+			},
+			"taskLimit": 1,
+			"logLevel": "DEBUG"
+		},
+		"job_2": {
+			"agentName": "agent_name",
+			"executable": {
+				"TYPE": "InternalExecutable",
+				"className": "com.sos.jitl.jobs.examples.InfoJob",
+				"jobArguments": {
+					
+				},
+				"arguments": {
+					
+				}
+			},
+			"taskLimit": 1
+		}
+	}
+}

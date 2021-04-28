@@ -95,7 +95,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         };
     }
 
-    public Object getNamedValue(final BlockingInternalJob.Step step, final String name) {
+    private Object getNamedValue(final BlockingInternalJob.Step step, final String name) {
         if (step == null) {
             return null;
         }
@@ -123,9 +123,9 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         } else {
             Stream<Map<String, Value>> stream = null;
             if (jobContext == null) {
-                stream = Stream.of(step.order().arguments(), step.arguments());
+                stream = Stream.of(step.arguments(), step.order().arguments());
             } else {
-                stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
+                stream = Stream.of(jobContext.jobArguments(), step.arguments(), step.order().arguments());
             }
             map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
@@ -138,15 +138,6 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     if (arg.getName() == null) {// internal usage
                         continue;
                     }
-                    // Object val = map.get(arg.getName());
-                    // if (val == null) {
-                    // val = getNamedValue(step, arg.getName());
-                    // } else {
-                    // Object nv = getNamedValue(step, arg.getName());
-                    // if (nv != null) {
-                    // val = nv;
-                    // }
-                    // }
                     Object val = getNamedValue(step, arg.getName());
                     if (val == null) {
                         val = map.get(arg.getName());

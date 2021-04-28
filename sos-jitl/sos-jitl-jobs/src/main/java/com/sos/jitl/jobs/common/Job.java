@@ -25,6 +25,8 @@ import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
 
+    public static final String NAMED_NAME_RETURN_CODE = "returnCode";
+
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
     private static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";

@@ -1,13 +1,19 @@
 package com.sos.jitl.jobs.examples;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
+import js7.data.order.HistoricOutcome;
 import js7.data_for_java.order.JOutcome;
 
 public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
@@ -31,12 +37,18 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<InfoJobArguments> step) throws Exception {
+        InfoJobArguments args = step.getArguments();
 
         step.getLogger().info("----------USAGE-----------------");
-        step.getLogger().info("declare and set order variables:");
-        step.getLogger().info("     \"show_env\"=true (Boolean) to show environment variables");
-        step.getLogger().info("     \"redefine_show_env\"=true (Boolean) to redefine \"show_env\" value and see effect in the next step");
-        step.getLogger().info("     \"log_level\"=INFO|DEBUG|TRACE (case insensitive)");
+        step.getLogger().info("declare and set order/step variables:");
+        step.getLogger().info("     \"%s\"=true (Boolean) to show environment variables", args.getShowEnv().getName());
+        step.getLogger().info("     \"%s\"=true (Boolean) to redefine \"%s\" value and see effect in the next step", args.getRedefineShowEnv()
+                .getName(), args.getShowEnv().getName());
+        step.getLogger().info("     \"%s\"=INFO|DEBUG|TRACE (case insensitive)", args.getLogLevel().getName());
+        step.getLogger().info("     \"%s\"=... to show in the ORDER HISTORIC OUTCOME", args.getReturnVariables().getName());
+        step.getLogger().info("                e.g.: \"%s\"= 'myvar1_xyz__myvar2_123'", args.getReturnVariables().getName());
+        step.getLogger().info("                  means set 2 return variables: 1) myvar1=xyz 2)myvar2=123");
+        step.getLogger().info("     \"%s\"='some value'", args.getStringArgument().getName());
 
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
@@ -47,44 +59,71 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().trace("job TRACE message");
         }
         step.getLogger().info("----------JOB Instance-----------------");
-        step.getLogger().info("[jobContext.jobArguments()][scala]" + getJobContext().jobArguments());
-        step.getLogger().info("[jobContext.jobArguments()][java]" + Job.convert(getJobContext().jobArguments()));
+        step.getLogger().info("[scala][jobContext.jobArguments()]" + getJobContext().jobArguments());
+        step.getLogger().info("[java][jobContext.jobArguments()]" + Job.convert(getJobContext().jobArguments()));
 
         step.getLogger().info("----------Workflow-----------------");
-        step.getLogger().info("[name]" + step.getWorkflowName());
-        step.getLogger().info("[versionId]" + step.getWorkflowVersionId());
-        step.getLogger().info("[position]" + step.getWorkflowPosition());
-        step.getLogger().error("[position written to err]" + step.getWorkflowPosition());
+        step.getLogger().info("[java][name]" + step.getWorkflowName());
+        step.getLogger().info("[java][versionId]" + step.getWorkflowVersionId());
+        step.getLogger().info("[java][position]" + step.getWorkflowPosition());
+        // step.getLogger().error("[position written to err]" + step.getWorkflowPosition());
 
         step.getLogger().info("----------ORDER-----------------");
-        step.getLogger().info("[id]" + step.getOrderId());
-        step.getLogger().info("[step.order().arguments()][scala]" + step.getInternalStep().order().arguments());
-        step.getLogger().info("[step.order().arguments()][java]" + Job.convert(step.getInternalStep().order().arguments()));
-
+        step.getLogger().info("[java][id]" + step.getOrderId());
+        step.getLogger().info("[scala][step.order().arguments()]" + step.getInternalStep().order().arguments());
+        step.getLogger().info("[java][step.order().arguments()]" + Job.convert(step.getInternalStep().order().arguments()));
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
 
-        step.getLogger().info("----------NODE/STEP-----------------");
-        step.getLogger().info("[agentId]" + step.getAgentId());
-        step.getLogger().info("[name]" + step.getJobName());
-        step.getLogger().info("[step.arguments()][scala]" + step.getInternalStep().arguments());
-        step.getLogger().info("[step.arguments()][java]" + Job.convert(step.getInternalStep().arguments()));
+        step.getLogger().info("----------ORDER HISTORIC OUTCOME-----------------");
+        step.getLogger().info("-ENGINE HISTORIC OUTCOME-----------------");
+        List<HistoricOutcome> list = step.getHistoricOutcomes();
+        for (HistoricOutcome ho : list) {
+            step.getLogger().info("[scala]" + SOSString.toString(ho));
+        }
+        step.getLogger().info("-CONVERTED HISTORIC OUTCOME (last var values)-----------------");
+        step.getLogger().info("[java]" + step.historicOutcomes2map());
 
-        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getShowEnv().getName(), step.getInternalStep().namedValue(step
-                .getArguments().getShowEnv().getName()));
-        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getRedefineShowEnv().getName(), step.getInternalStep().namedValue(step
-                .getArguments().getRedefineShowEnv().getName()));
-        step.getLogger().info("[step.namedValue(%s)]%s", step.getArguments().getLogLevel().getName(), step.getInternalStep().namedValue(step
-                .getArguments().getLogLevel().getName()));
+        step.getLogger().info("----------NODE/STEP-----------------");
+        step.getLogger().info("[java][agentId]" + step.getAgentId());
+        step.getLogger().info("[java][name]" + step.getJobName());
+        step.getLogger().info("[scala][step.arguments()]" + step.getInternalStep().arguments());
+        step.getLogger().info("[java][step.arguments()]" + Job.convert(step.getInternalStep().arguments()));
+        step.getLogger().info(" ");
+        step.getLogger().info("----------NODE/STEP GET ARGUMENT BY NAME-----------------");
+        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getShowEnv().getName(), step.getCurrentValue(args.getShowEnv().getName()));
+        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getRedefineShowEnv().getName(), step.getCurrentValue(args
+                .getRedefineShowEnv().getName()));
+        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getLogLevel().getName(), step.getCurrentValue(args.getLogLevel().getName()));
+        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getStringArgument().getName(), step.getCurrentValue(args.getStringArgument()
+                .getName()));
+
+        step.getLogger().info("[scala][step.getInternalStep().namedValue(%s)]%s", args.getStringArgument().getName(), step.getInternalStep()
+                .namedValue(args.getStringArgument().getName()));
+
+        step.getLogger().info("----------NODE/STEP Java Job used/known argumens-----------------");
+        step.getLogger().info("[java]" + String.join("\n", step.argumentsInfo(true)));
 
         if (step.getArguments().getShowEnv().getValue()) {
             printEnvs(step.getLogger());
         }
 
         step.getLogger().info("----------RETURN-----------------");
-        if (step.getArguments().getRedefineShowEnv().getValue()) {
-            step.getLogger().info("[SUCCESS]set step outcome \"%s\"=%s", step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv()
-                    .getValue());
-            return step.success(step.getArguments().getShowEnv().getName(), !step.getArguments().getShowEnv().getValue());
+        if (args.getRedefineShowEnv().getValue() || args.getReturnVariables().getValue() != null) {
+            Map<String, Object> map = new HashMap<String, Object>();
+            if (args.getRedefineShowEnv().getValue()) {
+                map.put(args.getShowEnv().getName(), !args.getShowEnv().getValue());
+            }
+            if (args.getReturnVariables().getValue() != null) {
+                String[] arr = args.getReturnVariables().getValue().split("__");
+                for (String val : arr) {
+                    String[] valArr = val.trim().split("_");
+                    if (valArr.length > 1) {
+                        map.put(valArr[0].trim(), valArr[1].trim());
+                    }
+                }
+            }
+            step.getLogger().info("[SUCCESS]set step outcome: %s", map);
+            return step.success(map);
         } else {
             step.getLogger().info("[SUCCESS]");
             return step.success();
