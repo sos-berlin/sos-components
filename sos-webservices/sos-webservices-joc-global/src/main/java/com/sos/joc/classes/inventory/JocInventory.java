@@ -762,7 +762,7 @@ public class JocInventory {
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
-        switch (config.getTypeAsEnum()) {
+        switch (config.getTypeAsEnum()) { //getUsedWorkflowsByJobResource
         case LOCK: // determine Workflows with Lock instructions
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
@@ -780,6 +780,36 @@ public class JocInventory {
                 }
             }
             break;
+        case JOBRESOURCE: // determine Workflows with Jobs containing JobResource
+            List<DBItemInventoryConfiguration> workflows2 = dbLayer.getUsedWorkflowsByJobResource(config.getName());
+            if (workflows2 != null && !workflows2.isEmpty()) {
+                for (DBItemInventoryConfiguration workflow : workflows2) {
+                    Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                    if (w.getJobs() != null) {
+                        w.getJobs().getAdditionalProperties().forEach((k, v) -> {
+                            if (v.getJobResourceNames() != null && v.getJobResourceNames().contains(config.getName())) {
+                                for (int i = 0; i < v.getJobResourceNames().size(); i++) {
+                                    if (v.getJobResourceNames().get(i).equals(config.getName())) {
+                                        v.getJobResourceNames().set(i, newName);
+                                    }
+                                }
+                            }
+                        });
+                        workflow.setContent(Globals.objectMapper.writeValueAsString(w));
+                        workflow.setDeployed(false);
+                    }
+                    int i = items.indexOf(workflow);
+                    if (i != -1) {
+                        items.get(i).setContent(workflow.getContent());
+                        items.get(i).setDeployed(false);
+                    } else{
+                        JocInventory.updateConfiguration(dbLayer, workflow);
+                        events.add(workflow.getFolder());
+                    }
+                }
+            }
+            break;
+        
         case WORKFLOW: // determine Schedules and FileOrderSources with Workflow reference
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {

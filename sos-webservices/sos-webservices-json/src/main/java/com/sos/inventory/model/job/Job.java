@@ -110,7 +110,7 @@ public class Job implements IConfigurationObject
     @JsonAlias({
         "jobResourcePaths"
     })
-    private List<Object> jobResourceNames = null;
+    private List<String> jobResourceNames = null;
     /**
      * string without < and >
      * <p>
@@ -168,7 +168,7 @@ public class Job implements IConfigurationObject
      * @param logLevel
      * @param jobClass
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<Object> jobResourceNames, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -356,12 +356,12 @@ public class Job implements IConfigurationObject
     }
 
     @JsonProperty("jobResourceNames")
-    public List<Object> getJobResourceNames() {
+    public List<String> getJobResourceNames() {
         return jobResourceNames;
     }
 
     @JsonProperty("jobResourceNames")
-    public void setJobResourceNames(List<Object> jobResourceNames) {
+    public void setJobResourceNames(List<String> jobResourceNames) {
         this.jobResourceNames = jobResourceNames;
     }
 

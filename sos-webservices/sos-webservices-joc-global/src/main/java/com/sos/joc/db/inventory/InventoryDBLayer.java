@@ -1123,9 +1123,23 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
         hql.append("on ic.id=sw.inventoryConfigurationId ");
         hql.append("where ic.type=:type ");
-        hql.append("and sw.deployed=false ");
+        //hql.append("and sw.deployed=false ");
         hql.append("and ");
         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks.\"" + lockName + "\"")).append(" is not null");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobResource(String jobResourceName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        //hql.append("and sw.deployed=false ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs", "$.jobResources.\"" + jobResourceName + "\"")).append(" is not null");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());

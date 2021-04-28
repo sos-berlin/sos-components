@@ -41,7 +41,7 @@ public class WorkflowPaths {
     
     @Subscribe({ DeployHistoryWorkflowEvent.class })
     public void updateMap(DeployHistoryWorkflowEvent evt) {
-        LOGGER.info(String.format("add Workflow from event: %s/%s/%s", evt.getName(), evt.getCommitId(), evt.getPath()));
+        //LOGGER.debug(String.format("add Workflow from event: %s/%s/%s", evt.getName(), evt.getCommitId(), evt.getPath()));
         namePathMap.put(evt.getName(), evt.getPath());
         workflowIdPathMap.put(new WorkflowId(evt.getName(), evt.getCommitId()), evt.getPath());
     }

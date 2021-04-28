@@ -150,7 +150,7 @@ public class Validator {
         } else if (ConfigurationType.JOBRESOURCE.equals(type)) {
             JobResource jobResource = (JobResource) config;
             if (jobResource.getEnv() != null) {
-                validateExpression(jobResource.getEnv().getAdditionalProperties());
+                validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
             }
         }
     }
@@ -421,18 +421,16 @@ public class Validator {
         }
     }
     
-    private static void validateExpression(Map<String, String> map) throws JocConfigurationException {
+    private static void validateExpression(String prefix, Map<String, String> map) throws JocConfigurationException {
         if (map != null) {
-            map.forEach((k, v) -> {
-                validateExpression(v);
-            });
+            map.forEach((k, v) -> validateExpression(prefix, k, v));
         }
     }
     
-    private static void validateExpression(String value) throws JocConfigurationException {
+    private static void validateExpression(String prefix, String key, String value) throws JocConfigurationException {
         Either<Problem, JExpression> e = JExpression.parse(value);
         if (e.isLeft()) {
-            throw new JocConfigurationException(e.getLeft().message());
+            throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
         }
     }
 }

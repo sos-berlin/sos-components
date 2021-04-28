@@ -60,6 +60,7 @@ public class WorkflowConverter {
         private List<String> titels;
         private List<String> agentIds;
         private List<String> jobClasses;
+        private List<String> jobResources;
         private List<String> criticalities;
         private List<String> scripts;
         private List<String> argNames;
@@ -98,6 +99,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "titels", titels);
             jsonAddStringValues(builder, "agentIds", agentIds);
             jsonAddStringValues(builder, "jobClasses", jobClasses);
+            jsonAddStringValues(builder, "jobResources", jobResources);
             jsonAddStringValues(builder, "criticalities", criticalities);
             mainInfo = builder.build();
         }
@@ -142,6 +144,10 @@ public class WorkflowConverter {
         public List<String> getJobClasses() {
             return jobClasses;
         }
+        
+        public List<String> getJobResources() {
+            return jobResources;
+        }
 
         public List<String> getCriticalities() {
             return criticalities;
@@ -174,6 +180,9 @@ public class WorkflowConverter {
                 }
                 if (!SOSString.isEmpty(job.getJobClass())) {
                     jobClasses.add(job.getJobClass());
+                }
+                if (job.getJobResourceNames() != null && !job.getJobResourceNames().isEmpty()) {
+                    jobResources.addAll(job.getJobResourceNames());
                 }
                 if (job.getCriticality() != null) {
                     if (SOSString.isEmpty(job.getCriticality().value())) {
@@ -209,6 +218,7 @@ public class WorkflowConverter {
             titels = WorkflowConverter.removeDuplicates(titels);
             agentIds = WorkflowConverter.removeDuplicates(agentIds);
             jobClasses = WorkflowConverter.removeDuplicates(jobClasses);
+            jobResources = WorkflowConverter.removeDuplicates(jobResources);
             criticalities = WorkflowConverter.removeDuplicates(criticalities);
             scripts = WorkflowConverter.removeDuplicates(scripts);
             argNames = WorkflowConverter.removeDuplicates(argNames);
