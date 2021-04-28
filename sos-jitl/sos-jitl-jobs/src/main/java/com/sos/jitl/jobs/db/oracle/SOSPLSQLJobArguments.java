@@ -124,7 +124,7 @@ public class SOSPLSQLJobArguments extends JobArguments {
     }
 
     public boolean useHibernateFile() {
-        return (dbUrl == null) && (dbUser == null);
+        return ((dbUrl.getValue() == null) && (dbUser.getValue() == null)) || ((dbUrl.getValue().isEmpty()) && (dbUser.getValue().isEmpty()))  ;
     }
 
     public String getCommandScripFile() {
