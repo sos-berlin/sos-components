@@ -79,7 +79,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         item -> updateableAgentNamesFileOrderSources.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer)));
 
                 verifiedRedeployables.putAll(PublishUtils.getDeploymentsWithSignature(commitId, account, unsignedRedeployables, hibernateSession,
-                        JocSecurityLevel.MEDIUM));
+                        JocSecurityLevel.LOW));
             }
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
 //                SignedItemsSpec spec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
