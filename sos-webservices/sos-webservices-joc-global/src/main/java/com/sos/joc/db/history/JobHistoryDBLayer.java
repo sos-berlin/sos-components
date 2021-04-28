@@ -1,6 +1,7 @@
 package com.sos.joc.db.history;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
+import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -22,6 +24,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 
 public class JobHistoryDBLayer {
@@ -117,12 +120,18 @@ public class JobHistoryDBLayer {
         return null;
     }
 
-    public Long getCountJobs(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
+    public long getCountJobs(HistoryStateText state, Collection<Folder> permittedFolders) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             filter.setState(state);
-            Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
+            Query<String> query = createQuery(new StringBuilder().append("select workflowFolder ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     getOrderStepsWhere()).toString());
-            return session.getSingleResult(query);
+            List<String> result = session.getResultList(query);
+            if (result == null) {
+                return 0L;
+            } else {
+                return result.stream().filter(folder -> SOSShiroFolderPermissions.isPermittedForFolder(folder, permittedFolders)).count();
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

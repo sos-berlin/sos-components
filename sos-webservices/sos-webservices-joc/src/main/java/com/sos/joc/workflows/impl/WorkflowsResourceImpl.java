@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.Workflow;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -34,7 +35,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.workflow.WorkflowId;
 import com.sos.joc.model.workflow.Workflows;
 import com.sos.joc.model.workflow.WorkflowsFilter;
 import com.sos.joc.workflows.resource.IWorkflowsResource;

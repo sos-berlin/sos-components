@@ -11,6 +11,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 
 public class JocServletContainer extends ServletContainer {
 
@@ -28,8 +29,9 @@ public class JocServletContainer extends ServletContainer {
         super.init();
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        Globals.getJocSecurityLevel(MapUrls.getSecurityLevelByUser());
+        Globals.setJocSecurityLevel(MapUrls.getSecurityLevelByUser());
         Proxies.startAll(Globals.sosCockpitProperties, 0, ProxyUser.JOC, MapUrls.getUrlMapperByUser());
+        WorkflowPaths.init();
         SOSShell.printSystemInfos();
         SOSShell.printJVMInfos();
         Globals.readUnmodifiables();

@@ -83,7 +83,7 @@
 				</dependencies>
 			</plugin>
 			
-			<!-- this would be state of the art -->
+			<!-- this would be state of the art instead of above maven-antrun-plugin -->
 			<!-- plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>xml-maven-plugin</artifactId>
@@ -100,7 +100,7 @@
 						<transformationSet>
 							<dir>src/main/resources</dir>
 							<includes>
-								<include>*CanWriteJob.xml</include>
+								<include>*.xml</include>
 							</includes>
 							<excludes>
 								<exclude>jobdoc.languages.xml</exclude>

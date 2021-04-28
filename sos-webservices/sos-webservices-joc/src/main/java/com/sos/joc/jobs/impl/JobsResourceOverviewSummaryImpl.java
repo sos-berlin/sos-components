@@ -18,6 +18,7 @@ import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.jobs.resource.IJobsResourceOverviewSummary;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.JobsFilter;
 import com.sos.joc.model.job.JobsHistoricSummary;
@@ -64,11 +65,6 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setControllerIds(allowedControllers);
             
-//            boolean withFolderFilter = jobsFilter.getFolders() != null && !jobsFilter.getFolders().isEmpty();
-//            boolean hasPermission = true;
-            
-//            Set<Folder> folders = addPermittedFolder(jobsFilter.getFolders());
-
             if (jobsFilter.getDateFrom() != null) {
                 historyFilter.setExecutedFrom(JobSchedulerDate.getDateFrom(jobsFilter.getDateFrom(), jobsFilter.getTimeZone()));
             }
@@ -76,31 +72,14 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
                 historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(jobsFilter.getDateTo(), jobsFilter.getTimeZone()));
             }
             
-//            if (jobsFilter.getJobs() != null && !jobsFilter.getJobs().isEmpty()) {
-//                final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-//                historyFilter.setJobs(jobsFilter.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders))
-//                        .collect(Collectors.groupingBy(job -> normalizePath(job.getWorkflowPath()), Collectors.mapping(JobPath::getJob, Collectors
-//                                .toSet()))));
-//                jobsFilter.setRegex("");
-//
-//            } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-//                hasPermission = false;
-//            } else if (folders != null && !folders.isEmpty()) {
-//                historyFilter.setFolders(folders.stream().map(folder -> {
-//                    folder.setFolder(normalizeFolder(folder.getFolder()));
-//                    return folder;
-//                }).collect(Collectors.toSet()));
-//            }
-
+            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             JobsOverView entity = new JobsOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setJobs(jobsHistoricSummary);
-//            if (hasPermission) {
-                connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-                JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
-                jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobs(HistoryStateText.FAILED));
-                jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobs(HistoryStateText.SUCCESSFUL));
-//            }
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
+            jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobs(HistoryStateText.FAILED, permittedFolders));
+            jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobs(HistoryStateText.SUCCESSFUL, permittedFolders));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

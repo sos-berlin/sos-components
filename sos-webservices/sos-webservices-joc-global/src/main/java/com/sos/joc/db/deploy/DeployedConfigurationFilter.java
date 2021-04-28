@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sos.joc.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.common.Folder;
 
 public class DeployedConfigurationFilter {

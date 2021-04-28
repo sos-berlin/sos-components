@@ -4,7 +4,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
-import com.sos.joc.model.workflow.WorkflowId;
+import com.sos.controller.model.workflow.WorkflowId;
 
 public class InventoryNamePath {
     
@@ -18,7 +18,7 @@ public class InventoryNamePath {
     }
     
     public InventoryNamePath(String name, String commitId, String path) {
-        this.name = name + "/" + commitId;
+        this.name = name + "/" + commitId ;
         this.path = path;
         this.workflowId = new WorkflowId(name, commitId);
     }

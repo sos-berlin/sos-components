@@ -199,11 +199,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Long surveyDateMillis = currentState.eventId() / 1000;
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+            //Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), namePathMap, surveyDateMillis);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, surveyDateMillis);
                     // special BLOCKED handling
                     if (withStatesFilter) {
                         if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {

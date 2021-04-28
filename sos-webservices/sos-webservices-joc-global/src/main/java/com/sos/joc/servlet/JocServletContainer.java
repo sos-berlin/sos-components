@@ -26,6 +26,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
 public class JocServletContainer extends ServletContainer {
@@ -48,6 +49,7 @@ public class JocServletContainer extends ServletContainer {
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         Globals.readUnmodifiables();
         Globals.setProperties();
+        WorkflowPaths.init();
         CompletableFuture.runAsync(() -> {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();
