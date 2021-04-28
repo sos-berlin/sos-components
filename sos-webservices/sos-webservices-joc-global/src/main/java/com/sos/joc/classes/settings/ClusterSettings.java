@@ -35,7 +35,11 @@ public class ClusterSettings {
     }
     
     public static String getDefaultProfileAccount(ConfigurationGlobalsJoc settings) {
-        return settings.getDefaultProfileAccount().getValue();
+        String account = settings.getDefaultProfileAccount().getValue();
+        if (account == null) {  // for tests 
+            return settings.getDefaultProfileAccount().getDefault();
+        }
+        return account;
     }
     
     public static List<String> getCommentsForAuditLog(ConfigurationGlobalsJoc settings) {

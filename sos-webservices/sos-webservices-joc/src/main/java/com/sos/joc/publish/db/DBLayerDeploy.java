@@ -1730,7 +1730,6 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setVersion(null);
                 try {
                     session.save(newDepHistoryItem);
-                    postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1758,7 +1757,6 @@ public class DBLayerDeploy {
                 deploy.setVersion(null);
                 try {
                     session.save(deploy);
-                    postDeployHistoryWorkflowEvent(deploy);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1831,7 +1829,6 @@ public class DBLayerDeploy {
                 newDepHistoryItem.setVersion(null);
                 try {
                     session.save(newDepHistoryItem);
-                    postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1862,7 +1859,6 @@ public class DBLayerDeploy {
                 deploy.setInventoryConfigurationId(inventoryConfig.getId());
                 try {
                     session.save(deploy);
-                    postDeployHistoryWorkflowEvent(deploy);
                 } catch (SOSHibernateException e) {
                     throw new JocSosHibernateException(e);
                 }
@@ -1939,7 +1935,6 @@ public class DBLayerDeploy {
                 // TODO: get Version to set here
                 newDepHistoryItem.setVersion(null);
                 session.save(newDepHistoryItem);
-                postDeployHistoryWorkflowEvent(newDepHistoryItem);
                 depHistoryFailed.add(newDepHistoryItem);
             }
         } catch (SOSHibernateException e) {
@@ -2632,12 +2627,5 @@ public class DBLayerDeploy {
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameter("calendarName", "%\"" + calendarName + "\"%");
         return getSession().getResultList(query);
-    }
-    
-    private void postDeployHistoryWorkflowEvent(DBItemDeploymentHistory dbItem) {
-        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
-            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath()));
-        }
     }
 }
