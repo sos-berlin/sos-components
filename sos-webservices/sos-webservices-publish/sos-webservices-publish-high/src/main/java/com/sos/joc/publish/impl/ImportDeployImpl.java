@@ -48,6 +48,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
+import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.junction.JunctionPublish;
 import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
@@ -63,6 +64,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.jobresource.JobResource;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -175,6 +177,17 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     workflowPublish.setObjectType(DeployType.WORKFLOW);
                     importedObjects.put(workflowPublish, workflowDbItemSignature);
                     break;
+                case JOBRESOURCE:
+                    JobResourcePublish jobResourcePublish = new JobResourcePublish();
+                    jobResourcePublish.setContent((JobResource) config.getContent());
+                    jobResourcePublish.setSignedContent(signaturePath.getSignature().getSignatureString());
+                    DBItemInventoryConfiguration jobResourceDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBRESOURCE);
+                    objectsToCheckPathRenaming.add(jobResourceDbItem);
+                    DBItemDepSignatures jobResourceDbItemSignature = dbLayer.saveOrUpdateSignature(jobResourceDbItem.getId(), jobResourcePublish, account,
+                            DeployType.JOBRESOURCE);
+                    jobResourcePublish.setObjectType(DeployType.JOBRESOURCE);
+                    importedObjects.put(jobResourcePublish, jobResourceDbItemSignature);
+                    break;
                 case LOCK:
                     LockPublish lockPublish = new LockPublish();
                     lockPublish.setContent((Lock) config.getContent());
@@ -239,11 +252,11 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
                 long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
-                long countJunctions = deployedObjects.stream().filter(item -> ConfigurationType.JUNCTION.intValue() == item.getType()).count();
-                long countJobClasses = deployedObjects.stream().filter(item -> ConfigurationType.JOBCLASS.intValue() == item.getType()).count();
+                long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
+                long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
                 LOGGER.info(String.format(
-                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d Junction(s) and %5$d Jobclass(es).",
-                        controllerId, countWorkflows, countLocks, countJunctions, countJobClasses));
+                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s) and %5$d JobResource(s).",
+                        controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
             DeployAudit audit = new DeployAudit(filter.getAuditLog(), controllerId, commitId, "update", account);
@@ -252,7 +265,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             X509Certificate cert = null;
             switch (keyPair.getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                PublishUtils.updateItemsAddOrUpdatePGP2(commitIdForUpdate, importedObjects, null, controllerId, dbLayer).thenAccept(either -> {
+                PublishUtils.updateItemsAddOrUpdatePGPFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer).thenAccept(either -> {
                     StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                 });
                 break;

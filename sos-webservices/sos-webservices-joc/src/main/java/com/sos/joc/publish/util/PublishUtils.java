@@ -134,6 +134,7 @@ import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.job.Job;
 import com.sos.sign.model.jobclass.JobClass;
+import com.sos.sign.model.jobresource.JobResource;
 import com.sos.sign.model.junction.Junction;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
@@ -151,6 +152,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
+import js7.data_for_java.jobresource.JJobResource;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -679,852 +681,625 @@ public abstract class PublishUtils {
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
             String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> {
-                        switch (item.getTypeAsEnum()) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsVersioned.addAll(drafts.keySet().stream()
-            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(item -> {
+            updateItemOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+            		.map(item -> {
             			LOGGER.debug("JSON send to controller: ");
             			LOGGER.debug(item.getContent());
-            			return JUpdateItemOperation.addOrChangeVersioned(
-            					SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+            			return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
             		}).collect(Collectors.toSet()));
-        }
-        if (alreadyDeployed != null) {
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != ConfigurationType.WORKFLOW
-                    .intValue()).map(item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+            updateItemOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBRESOURCE))
+            		.map(item -> {
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+            			return JUpdateItemOperation.addOrChangeSigned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+            		}).collect(Collectors.toSet()));
+            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.LOCK))
+            		.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        if (alreadyDeployed != null) {
+            updateItemOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> { 
             			LOGGER.debug("JSON send to controller: ");
             			LOGGER.debug(item.getContent());
-                    	return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME,
-                            alreadyDeployed.get(item).getSignature()));
+                    	return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, alreadyDeployed.get(item).getSignature()));
                     }).collect(Collectors.toSet()));
+            updateItemOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+                    .map(item -> { 
+            			LOGGER.debug("JSON send to controller: ");
+            			LOGGER.debug(item.getContent());
+                    	return JUpdateItemOperation.addOrChangeSigned(SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, alreadyDeployed.get(item).getSignature()));
+                    }).collect(Collectors.toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.LOCK.intValue())
+            		.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsSigned)));
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP2(String commitId,
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGPFromImport(String commitId,
             Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
             DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
-            try {
-    			LOGGER.debug("JSON send to controller: ");
-    			String json = om.writeValueAsString(item.getContent());
-    			LOGGER.debug(json);
-                return JUpdateItemOperation.addOrChangeVersioned(
-                		SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
-            } catch (JsonProcessingException e1) {
-                throw new JocDeployException(e1);
-            }
-        }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(drafts.keySet().stream().map(item -> {
-            switch (item.getObjectType()) {
-            case LOCK:
+        if (drafts != null) {
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
                 try {
-                    Lock lock = (Lock) item.getContent();
-                    if (lock.getPath() == null) {
-                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
+        			LOGGER.debug("JSON send to controller: ");
+        			String json = om.writeValueAsString(item.getContent());
+        			LOGGER.debug(json);
+                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+                } catch (JsonProcessingException e1) {
+                    throw new JocDeployException(e1);
                 }
-            case FILEORDERSOURCE:
+            }).collect(Collectors.toSet()));
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(item -> {
                 try {
-                    FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
-                    if (fileOrderSource.getPath() == null) {
-                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
+        			LOGGER.debug("JSON send to controller: ");
+        			String json = om.writeValueAsString(item.getContent());
+        			LOGGER.debug(json);
+                    return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+                } catch (JsonProcessingException e1) {
+                    throw new JocDeployException(e1);
                 }
-            case JUNCTION:
-                // TODO: When implemented in controller
-                return null;
-            case JOBCLASS:
-                // TODO: When implemented in controller
-                return null;
-            default:
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                item -> {
-                    try {
-            			LOGGER.debug("JSON send to controller: ");
-            			String json = om.writeValueAsString(item.getContent());
-            			LOGGER.debug(json);
-                        return JUpdateItemOperation.addOrChangeVersioned(
-                        		SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
-                    } catch (JsonProcessingException e1) {
-                        throw new JocDeployException(e1);
-                    }
-                }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().map(item -> {
-            switch (DeployType.fromValue(item.getType())) {
-            case LOCK:
-                try {
-                    Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getPath() == null) {
-                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case FILEORDERSOURCE:
-                try {
-                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getPath() == null) {
-                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case JUNCTION:
-                // TODO: When implemented in controller
-                return null;
-            case JOBCLASS:
-                // TODO: When implemented in controller
-                return null;
-            default:
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK))
+            		.map(item -> {
+    		            try {
+    		                Lock lock = (Lock) item.getContent();
+    		                lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+    		                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+    		            } catch (Exception e) {
+    		                throw new JocDeployException(e);
+    		            }
+    		        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                            if (fileOrderSource.getPath() == null) {
+                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+    		        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
+        if (alreadyDeployed != null) {
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+            		.map(item -> {
+                        try {
+                			LOGGER.debug("JSON send to controller: ");
+                			String json = om.writeValueAsString(item.getContent());
+                			LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+            		.map(item -> {
+                        try {
+                			LOGGER.debug("JSON send to controller: ");
+                			String json = om.writeValueAsString(item.getContent());
+                			LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
+            		.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            if (fileOrderSource.getPath() == null) {
+                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+        }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId, List<DBItemDeploymentHistory> alreadyDeployed,
-            String controllerId) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(item -> {
-            try {
-    			LOGGER.debug("JSON send to controller: ");
-    			LOGGER.debug(item.getContent());
-                return JUpdateItemOperation.addOrChangeVersioned(
-                		SignedString.of(item.getContent(), SOSKeyConstants.PGP_ALGORITHM_NAME, item.getSignedContent()));
-            } catch (Exception e1) {
-                throw new JocDeployException(e1);
-            }
-        }).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().map(item -> {
-            switch (DeployType.fromValue(item.getType())) {
-            case LOCK:
-                try {
-                    Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getPath() == null) {
-                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case FILEORDERSOURCE:
-                try {
-                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getPath() == null) {
-                        fileOrderSource.setPath(item.getName());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case JUNCTION:
-                // TODO: When implemented in controller
-                return null;
-            case JOBCLASS:
-                // TODO: When implemented in controller
-                return null;
-            default:
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
             String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate) throws SOSException, IOException,
             InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(drafts.keySet().stream()
-            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
-            		.map(item -> {
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getContent());
-            			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), drafts.get(item)
-                                .getSignature(), signatureAlgorithm, certificate));
-            		}).collect(Collectors.toSet()));
-            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> {
-                        switch (item.getTypeAsEnum()) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+        	// workflows
+            updateRepoOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+            		.map(item -> JUpdateItemOperation.addOrChangeVersioned(
+            					getSignedStringWithCertificate(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, certificate)))
+            		.collect(Collectors.toSet()));
+            // job resources
+            updateRepoOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBRESOURCE))
+            		.map(item -> JUpdateItemOperation.addOrChangeSigned(
+            				getSignedStringWithCertificate(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, certificate)))
+            		.collect(Collectors.toSet()));
+            // locks
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.LOCK))
+                	.map(item -> {
+                        try {
+    	            		Lock lock = om.readValue(item.getContent(), Lock.class);
+    	                    lock.setPath(item.getName());
+    	                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
-                    }).collect(Collectors.toSet()));
+                	}).collect(Collectors.toSet()));
+            // file order sources
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
+                	.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                	}).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         if (alreadyDeployed != null) {
-            updateRepoOperationsVersioned.addAll(alreadyDeployed.entrySet().stream()
-            		.filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
-            		.map(item -> { 
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getKey().getContent());
-            			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getKey().getContent(),
-                            item.getValue().getSignature(), signatureAlgorithm, certificate));
-            			}).collect(Collectors.toSet()));
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+        	// workflows
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
+            		.map(item -> JUpdateItemOperation.addOrChangeVersioned(
+            					getSignedStringWithCertificate(item.getKey().getContent(), item.getValue().getSignature(), signatureAlgorithm, certificate)))
+            		.collect(Collectors.toSet()));
+            // job resources
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE.intValue())
+            		.map(item -> JUpdateItemOperation.addOrChangeSigned(
+            					getSignedStringWithCertificate(item.getKey().getContent(), item.getValue().getSignature(), signatureAlgorithm, certificate)))
+            		.collect(Collectors.toSet()));
+            // locks
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
+            		.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
+            // file order sources
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            if (fileOrderSource.getPath() == null) {
+                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
             String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException,
             InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateRepoOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateRepoOperationsVersioned.addAll(drafts.keySet().stream()
-            		.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
-            		.map(item -> {
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getContent());
-            			return JUpdateItemOperation.addOrChangeVersioned(
-            					SignedString.x509WithSignedId(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, 
-            							SignerId.of(signerDN)));
-            		}).collect(Collectors.toSet()));
-            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW)).map(
-                    item -> {
-                        switch (item.getTypeAsEnum()) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+        	// workflows
+            updateRepoOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+            		.map(item -> JUpdateItemOperation.addOrChangeVersioned(
+            				getSignedStringWithSignerDN(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, signerDN)))
+            		.collect(Collectors.toSet()));
+            // job resources
+            updateRepoOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.JOBRESOURCE))
+            		.map(item -> JUpdateItemOperation.addOrChangeSigned(
+            				getSignedStringWithSignerDN(item.getContent(), drafts.get(item).getSignature(), signatureAlgorithm, signerDN)))
+            		.collect(Collectors.toSet()));
+            // locks
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.LOCK))
+                	.map(item -> {
+                		try {
+                			Lock lock = om.readValue(item.getContent(), Lock.class);
+                			lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                			return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                		} catch (Exception e) {
+                			throw new JocDeployException(e);
+                		}
+                	}).collect(Collectors.toSet()));
+            // file order sources
+            updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
+                	.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
-                    }).collect(Collectors.toSet()));
+                	}).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         if (alreadyDeployed != null) {
-            updateRepoOperationsVersioned.addAll(alreadyDeployed.keySet().stream()
-            		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-            		.map(item -> {
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getContent());
-            			return JUpdateItemOperation.addOrChangeVersioned(
-            					SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, 
-            							SignerId.of(signerDN)));
-        			}).collect(Collectors.toSet()));
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
+        	// workflows
+            updateRepoOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+            		.map(item -> JUpdateItemOperation.addOrChangeVersioned(
+            					getSignedStringWithSignerDN(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, signerDN)))
+            		.collect(Collectors.toSet()));
+            // job resources
+            updateRepoOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+            		.map(item -> JUpdateItemOperation.addOrChangeSigned(
+            					getSignedStringWithSignerDN(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, signerDN)))
+            		.collect(Collectors.toSet()));
+            // locks
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.LOCK.intValue()).map(
                     item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
+            // file order sources
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.FILEORDERSOURCE.intValue()).map(
+                    item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(String commitId,
             Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
             DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate) throws SOSException, IOException, InterruptedException,
             ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                    item -> {
+        	// workflows
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW))
+            		.map(item -> {
                         try {
-                			LOGGER.debug("JSON send to controller: ");
-                			String json = om.writeValueAsString(item.getContent());
-                			LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeVersioned(
-                            		SignedString.x509WithCertificate(json, drafts.get(item).getSignature(), signatureAlgorithm, certificate));
-                        } catch (JsonProcessingException e1) {
-                            throw new JocDeployException(e1);
+                            return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithCertificate(
+                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                        } catch (JsonProcessingException e) {
+                            throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                    item -> {
-                        switch (item.getObjectType()) {
-                        case LOCK:
-                            try {
-                                Lock lock = (Lock) item.getContent();
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+            // job resources
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE))
+            		.map(item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
+                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                        } catch (JsonProcessingException e) {
+                            throw new JocDeployException(e);
                         }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+                    }).collect(Collectors.toSet()));
+            // locks
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(ConfigurationType.LOCK))
+                	.map(item -> {
+                        try {
+                            Lock lock = (Lock) item.getContent();
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                	}).collect(Collectors.toSet()));
+            // file order sources
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(ConfigurationType.FILEORDERSOURCE))
+                	.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                	}).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         if (alreadyDeployed != null) {
-            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+        	// workflows
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> {
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getContent());
-                        return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), alreadyDeployed.get(item)
-                                .getSignature(), signatureAlgorithm, certificate));
+                        return JUpdateItemOperation.addOrChangeVersioned(
+                        		getSignedStringWithCertificate(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, certificate));
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(item.getName());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+            // job resources
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+                    .map(item -> {
+                        return JUpdateItemOperation.addOrChangeSigned(
+                        		getSignedStringWithCertificate(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, certificate));
+                    }).collect(Collectors.toSet()));
+            // locks
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
+                	.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+                	}).collect(Collectors.toSet()));
+            // file order sources
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+                	.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(item.getName());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                	}).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(String commitId,
             Map<ControllerObject, DBItemDepSignatures> drafts, Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId,
             DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException, InterruptedException,
             ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemsOperationsVersioned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                    item -> {
+        	// workflows
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW))
+            		.map(item -> {
                         try {
-                			LOGGER.debug("JSON send to controller: ");
-                			String json = om.writeValueAsString(item.getContent());
-                			LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeVersioned(
-                            		SignedString.x509WithSignedId(json, drafts.get(item).getSignature(), signatureAlgorithm, SignerId.of(signerDN)));
-                        } catch (JsonProcessingException e1) {
-                            throw new JocDeployException(e1);
+                            return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithSignerDN(
+                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
+                        } catch (JsonProcessingException e) {
+                            throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(DeployType.WORKFLOW)).map(
-                    item -> {
-                        switch (item.getObjectType()) {
-                        case LOCK:
-                            try {
-                                Lock lock = (Lock) item.getContent();
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+            // job resources
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE))
+            		.map(item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
+                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
+                        } catch (JsonProcessingException e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            // locks
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK))
+            		.map(item -> {
+                        try {
+                            Lock lock = (Lock) item.getContent();
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // file order sources
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
+                            if (fileOrderSource.getPath() == null) {
+                                fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         if (alreadyDeployed != null) {
-            updateItemsOperationsVersioned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+        	// workflows
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> {
-            			LOGGER.debug("JSON send to controller: ");
-            			LOGGER.debug(item.getContent());
-                        return JUpdateItemOperation.addOrChangeVersioned(
-                        		SignedString.x509WithSignedId(item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm, 
-                        				SignerId.of(signerDN)));
+                        return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithSignerDN(
+                        		item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm,signerDN));
                     }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            try {
-                                Lock lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+        	// job resources
+            updateItemsOperationsSigned.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+                    .map(item -> {
+                        return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
+                        		item.getContent(), alreadyDeployed.get(item).getSignature(), signatureAlgorithm,signerDN));
+                    }).collect(Collectors.toSet()));
+        	// locks
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
+            		.map(item -> {
+                        try {
+                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
+        	// file order sources
+            updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+            		.map(item -> {
+                        try {
+                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // junctions
+            // TODO: when implemented in controller
+            // job classes
+            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
-            List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String certificate) throws SOSException,
-            IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream()
-        		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-        		.map(item -> {
-        			LOGGER.debug("JSON send to controller: ");
-        			LOGGER.debug(item.getContent());
-        			return JUpdateItemOperation.addOrChangeVersioned(SignedString.x509WithCertificate(item.getContent(), item.getSignedContent(),
-        					signatureAlgorithm, certificate));
-    			}).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
-            switch (DeployType.fromValue(item.getType())) {
-            case LOCK:
-                try {
-                    Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getPath() == null) {
-                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case FILEORDERSOURCE:
-                try {
-                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getPath() == null) {
-                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case JUNCTION:
-                // TODO: When implemented in controller
-                return null;
-            case JOBCLASS:
-                // TODO: When implemented in controller
-                return null;
-            default:
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
-    }
-
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
-            List<DBItemDeploymentHistory> alreadyDeployed, String controllerId, String signatureAlgorithm, String signerDN) throws SOSException,
-            IOException, InterruptedException, ExecutionException, TimeoutException {
-        Set<JUpdateItemOperation> updateItemsOperationsVersioned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
-        updateItemsOperationsVersioned.addAll(alreadyDeployed.stream()
-        		.filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-        		.map(item -> {
-        			return JUpdateItemOperation.addOrChangeVersioned(
-        					SignedString.x509WithSignedId(item.getContent(), item.getSignedContent(), signatureAlgorithm, SignerId.of(signerDN)));
-    			}).collect(Collectors.toSet()));
-        updateItemsOperationsSimple.addAll(alreadyDeployed.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(item -> {
-            switch (DeployType.fromValue(item.getType())) {
-            case LOCK:
-                try {
-                    Lock lock = om.readValue(item.getContent(), Lock.class);
-                    if (lock.getPath() == null) {
-                        lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case FILEORDERSOURCE:
-                try {
-                    FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                    if (fileOrderSource.getPath() == null) {
-                        fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                    }
-                    return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
-                } catch (JocDeployException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new JocDeployException(e);
-                }
-            case JUNCTION:
-                // TODO: When implemented in controller
-                return null;
-            case JOBCLASS:
-                // TODO: When implemented in controller
-                return null;
-            default:
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String controllerId) {
         // keyAlgorithm obsolete
-        Set<JUpdateItemOperation> updateItemOperationsVersioned = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
-            updateItemOperationsVersioned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
+            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
                     .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
                             .toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() != DeployType.WORKFLOW.intValue()).map(
-                    item -> {
-                        switch (DeployType.fromValue(item.getType())) {
-                        case LOCK:
-                            Lock lock;
-                            try {
-                                lock = om.readValue(item.getContent(), Lock.class);
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case FILEORDERSOURCE:
-                            try {
-                                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
-                                if (fileOrderSource.getPath() == null) {
-                                    fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
-                                }
-                                return JUpdateItemOperation.deleteSimple(getJFileWatch(fileOrderSource).path());
-                            } catch (JocDeployException e) {
-                                throw e;
-                            } catch (Exception e) {
-                                throw new JocDeployException(e);
-                            }
-                        case JOBCLASS:
-                            // TODO: When implemented in controller
-                            return null;
-                        case JUNCTION:
-                            // TODO: When implemented in controller
-                            return null;
-                        default:
-                            return null;
+            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+                    .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
+                            .toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
+            		.map(item -> {
+                        try {
+                        	Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+            		.map(item -> {
+                        try {
+                        	Lock lock = om.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsVersioned)));
+                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsSigned)));
     }
 
-    @SuppressWarnings("incomplete-switch")
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId) throws JsonParseException,
             JsonMappingException, IOException, JocNotImplementedException {
-        switch (ConfigurationType.fromValue(draft.getType())) {
-        case WORKFLOW:
+    	if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(draft.getType()))) {
             Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
             workflow.setVersionId(commitId);
             draft.setContent(om.writeValueAsString(workflow));
-            break;
-        case LOCK:
-        case FILEORDERSOURCE:
-            // SimpleItem(s) - versionId not stored on object as object itself is not signed
-            break;
-        case WORKINGDAYSCALENDAR:
-        case NONWORKINGDAYSCALENDAR:
-        case FOLDER:
-        case SCHEDULE:
-            // not deployable
-            break;
-        case JOBCLASS:
-        case JUNCTION:
-            throw new JocNotImplementedException();
-        }
+    	}
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String commitId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
-
-        switch (DeployType.fromValue(deployed.getType())) {
-        case WORKFLOW:
+    	if (DeployType.WORKFLOW.equals(DeployType.fromValue(deployed.getType()))) {
             Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
             workflow.setVersionId(commitId);
             deployed.setContent(om.writeValueAsString(workflow));
-            break;
-        case LOCK:
-        case FILEORDERSOURCE:
-            // SimpleItem(s) - versionId not stored on object as object itself is not signed
-            break;
-        case JUNCTION:
-        case JOBCLASS:
-            throw new JocNotImplementedException();
-        }
+    	}
     }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemInventoryConfiguration item, String controllerId,
@@ -3829,6 +3604,18 @@ public abstract class PublishUtils {
     
     private static JLock getJLock(Lock lock) {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
+    }
+    
+    private static SignedString getSignedStringWithCertificate (String jsonContent, String signature, String signatureAlgorithm, String certificate) {
+		LOGGER.debug("JSON send to controller: ");
+		LOGGER.debug(jsonContent);
+    	return SignedString.x509WithCertificate(jsonContent, signature, signatureAlgorithm, certificate);
+    }
+
+    private static SignedString getSignedStringWithSignerDN (String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
+		LOGGER.debug("JSON send to controller: ");
+		LOGGER.debug(jsonContent);
+    	return SignedString.x509WithSignedId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
