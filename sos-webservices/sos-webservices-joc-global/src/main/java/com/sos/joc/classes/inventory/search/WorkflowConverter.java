@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory.search;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,7 @@ public class WorkflowConverter {
             titels = new ArrayList<String>();
             agentIds = new ArrayList<String>();
             jobClasses = new ArrayList<String>();
+            jobResources = new ArrayList<String>();
             criticalities = new ArrayList<String>();
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
@@ -372,7 +374,7 @@ public class WorkflowConverter {
 
     private static <T> List<T> removeDuplicates(List<T> list) {
         if (list == null) {
-            return new ArrayList<T>();
+            return Collections.emptyList();
         }
         return list.stream().distinct().collect(Collectors.toList());
     }
