@@ -157,7 +157,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 		DBItemInventoryConfiguration existingConfiguration = 
                 				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
                 		if (existingConfiguration == null) {
-                			dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                			if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                				configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                    			dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                			} else {
+                    			dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                			}
                 		}
                 	}
                 	
