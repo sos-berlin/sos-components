@@ -13,43 +13,43 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobReturnVariable<Integer> returnResultSetSize = new JobReturnVariable<Integer>("file_operations_result_set_size");
 
     /* Internal arguments */
-    private JobArgument<Integer> flags = new JobArgument<Integer>(null, 0); // internal usage
+    private JobArgument<Integer> flags = new JobArgument<Integer>(null, false, 0); // internal usage
 
     /* Input arguments */
-    private JobArgument<String> sourceFile = new JobArgument<String>("source_file");
-    private JobArgument<String> targetFile = new JobArgument<String>("target_file");
-    private JobArgument<String> sortCriteria = new JobArgument<String>("sort_criteria", "name");
-    private JobArgument<String> sortOrder = new JobArgument<String>("sort_order", "asc");
-    private JobArgument<String> fileSpec = new JobArgument<String>("file_spec", ".*");
+    private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true);
+    private JobArgument<String> targetFile = new JobArgument<String>("target_file", false);
+    private JobArgument<String> sortCriteria = new JobArgument<String>("sort_criteria", false, "name");
+    private JobArgument<String> sortOrder = new JobArgument<String>("sort_order", false, "asc");
+    private JobArgument<String> fileSpec = new JobArgument<String>("file_spec", false, ".*");
 
-    private JobArgument<String> fileAge = new JobArgument<String>("file_age", "0");// seconds or hh:mm:ss
-    private JobArgument<String> minFileAge = new JobArgument<String>("min_file_age", "0");// seconds or hh:mm:ss
-    private JobArgument<String> maxFileAge = new JobArgument<String>("max_file_age", "0");// seconds or hh:mm:ss
+    private JobArgument<String> fileAge = new JobArgument<String>("file_age", false, "0");// seconds or hh:mm:ss
+    private JobArgument<String> minFileAge = new JobArgument<String>("min_file_age", false, "0");// seconds or hh:mm:ss
+    private JobArgument<String> maxFileAge = new JobArgument<String>("max_file_age", false, "0");// seconds or hh:mm:ss
 
-    private JobArgument<String> replacement = new JobArgument<String>("replacement");
-    private JobArgument<String> replacing = new JobArgument<String>("replacing");
+    private JobArgument<String> replacement = new JobArgument<String>("replacement", false);
+    private JobArgument<String> replacing = new JobArgument<String>("replacing", false);
 
-    private JobArgument<Integer> skipFirstFiles = new JobArgument<Integer>("skip_first_files", 0);
-    private JobArgument<Integer> skipLastFiles = new JobArgument<Integer>("skip_last_files", 0);
-    private JobArgument<String> minFileSize = new JobArgument<String>("min_file_size", "-1");
-    private JobArgument<String> maxFileSize = new JobArgument<String>("max_file_size", "-1");
+    private JobArgument<Integer> skipFirstFiles = new JobArgument<Integer>("skip_first_files", false, 0);
+    private JobArgument<Integer> skipLastFiles = new JobArgument<Integer>("skip_last_files", false, 0);
+    private JobArgument<String> minFileSize = new JobArgument<String>("min_file_size", false, "-1");
+    private JobArgument<String> maxFileSize = new JobArgument<String>("max_file_size", false, "-1");
 
-    private JobArgument<Boolean> useFileLock = new JobArgument<Boolean>("use_file_lock", false);
-    private JobArgument<Boolean> gracious = new JobArgument<Boolean>("gracious", false);
-    private JobArgument<Boolean> overwrite = new JobArgument<Boolean>("overwrite", true);
-    private JobArgument<Boolean> recursive = new JobArgument<Boolean>("recursive", false);
-    private JobArgument<Boolean> createFile = new JobArgument<Boolean>("create_file", false);// create_dir, create_files
-    private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false);
+    private JobArgument<Boolean> useFileLock = new JobArgument<Boolean>("use_file_lock", false, false);
+    private JobArgument<Boolean> gracious = new JobArgument<Boolean>("gracious", false, false);
+    private JobArgument<Boolean> overwrite = new JobArgument<Boolean>("overwrite", false, true);
+    private JobArgument<Boolean> recursive = new JobArgument<Boolean>("recursive", false, false);
+    private JobArgument<Boolean> createFile = new JobArgument<Boolean>("create_file", false, false);// create_dir, create_files
+    private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false, false);
 
     // steady state
-    private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false);
-    private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", "1");
-    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", 30);
+    private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false, false);
+    private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", false, "1");
+    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", false, 30);
 
     // result set
-    private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", 0);
-    private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is");
-    private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file");
+    private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", false, 0);
+    private JobArgument<String> raiseErrorIfResultSetIs = new JobArgument<String>("raise_error_if_result_set_is", false);
+    private JobArgument<Path> resultSetFile = new JobArgument<Path>("result_set_file", false);
 
     public JobReturnVariable<String> getReturnResultSet() {
         return returnResultSet;

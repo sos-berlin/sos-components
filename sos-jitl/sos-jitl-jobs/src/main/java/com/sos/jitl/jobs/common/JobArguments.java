@@ -4,7 +4,7 @@ import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 
 public class JobArguments {
 
-    private JobArgument<LogLevel> logLevel = new JobArgument<LogLevel>("log_level", LogLevel.INFO);
+    private JobArgument<LogLevel> logLevel = new JobArgument<LogLevel>("log_level", false, LogLevel.INFO);
 
     public JobArgument<LogLevel> getLogLevel() {
         return logLevel;

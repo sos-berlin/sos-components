@@ -2,28 +2,30 @@ package com.sos.jitl.jobs.db.oracle;
 
 import com.sos.commons.util.SOSShell;
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSSQLPlusJobArguments extends JobArguments {
 
-    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command");
-    private JobArgument<String> osName = new JobArgument<String>("os_name");
-    private JobArgument<String> ignoreOraMessages = new JobArgument<String>("ignore_ora_messages", "");
-    private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", "");
-    private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", "");
-    private JobArgument<String> command = new JobArgument<String>("command", "");
-    private JobArgument<String> commandLineOptions = new JobArgument<String>("command_line_options", "");
-    private JobArgument<String> includeFiles = new JobArgument<String>("include_files", "");
-    private JobArgument<String> sqlError = new JobArgument<String>("sqlError");
-    private JobArgument<String> dbPassword = new JobArgument<String>("db_password");
-    private JobArgument<String> dbUser = new JobArgument<String>("db_user");
-    private JobArgument<String> dbUrl = new JobArgument<String>("db_url");
-    private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
+    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false);
+    private JobArgument<String> osName = new JobArgument<String>("os_name", false);
+    private JobArgument<String> ignoreOraMessages = new JobArgument<String>("ignore_ora_messages", false, "");
+    private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", false, "");
+    private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false, "");
+    private JobArgument<String> command = new JobArgument<String>("command", false, "");
+    private JobArgument<String> commandLineOptions = new JobArgument<String>("command_line_options", false, "");
+    private JobArgument<String> includeFiles = new JobArgument<String>("include_files", false, "");
+    private JobArgument<String> sqlError = new JobArgument<String>("sqlError", false);
+    private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false, DisplayMode.MASK);
+    private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
+    private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
+    private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,
+            "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
 
-    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file");
-    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file");
-    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password");
-    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path");
+    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
+    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
+    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
+    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
 
     public String getVariableParserRegExpr() {
         return variableParserRegExpr.getValue();

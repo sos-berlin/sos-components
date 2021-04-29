@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -139,8 +140,11 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                         continue;
                     }
                     Object val = getNamedValue(step, arg.getName());
+                    boolean isNamedValue = false;
                     if (val == null) {
                         val = map.get(arg.getName());
+                    } else {
+                        isNamedValue = true;
                     }
                     if (val == null || SOSString.isEmpty(val.toString())) {
                         arg.setValue(arg.getDefault());
@@ -161,14 +165,36 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                         }
                         arg.setValue(val);
                     }
+                    if (arg.isRequired() && arg.getValue() == null) {
+                        throw new SOSJobRequiredArgumentMissingException(arg.getName());
+                    }
+                    setValueSource(step, arg, isNamedValue);
                     field.set(a, arg);
                 }
+            } catch (SOSJobRequiredArgumentMissingException e) {
+                throw e;
             } catch (Throwable e) {
                 throw new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
                         .toString()), e);
             }
         }
         return a;
+    }
+
+    private void setValueSource(final BlockingInternalJob.Step step, JobArgument<A> arg, boolean isNamedValue) {
+        if (arg.getValue() == null || arg.getName() == null) {// internal
+            return;
+        }
+        if (isNamedValue) {// order or node
+            arg.setValueSource(step.order().arguments().containsKey(arg.getName()) ? JobArgument.ValueSource.ORDER : JobArgument.ValueSource.NODE);
+        } else {
+            if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
+                arg.setValueSource(JobArgument.ValueSource.JOB_ARGUMENT);
+            }
+            if (step != null && step.arguments().containsKey(arg.getName())) {
+                arg.setValueSource(JobArgument.ValueSource.JOB);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")

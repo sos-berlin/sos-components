@@ -13,19 +13,20 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSPLSQLJobArguments extends JobArguments {
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentHibernateFile());
-    private JobArgument<String> command = new JobArgument<String>("command");
-    private JobArgument<String> commandScripFile = new JobArgument<String>("command_script_file");
-    private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
-    private JobArgument<String> dbPassword = new JobArgument<String>("db_password");
-    private JobArgument<String> dbUrl = new JobArgument<String>("db_url");
-    private JobArgument<String> dbUser = new JobArgument<String>("db_user");
-    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file");
-    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file");
-    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password");
-    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path");
-    private JobArgument<Boolean> resultSetAsParameters = new JobArgument<Boolean>("resultset_as_parameters", false);
-    private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false);
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, Job.getAgentHibernateFile());
+    private JobArgument<String> command = new JobArgument<String>("command", false);
+    private JobArgument<String> commandScripFile = new JobArgument<String>("command_script_file", false);
+    private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,
+            "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
+    private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false);
+    private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
+    private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
+    private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
+    private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
+    private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
+    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
+    private JobArgument<Boolean> resultSetAsParameters = new JobArgument<Boolean>("resultset_as_parameters", false, false);
+    private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false, false);
 
     public Path getHibernateFile() {
         return hibernateFile.getValue();
@@ -124,7 +125,7 @@ public class SOSPLSQLJobArguments extends JobArguments {
     }
 
     public boolean useHibernateFile() {
-        return ((dbUrl.getValue() == null) && (dbUser.getValue() == null)) || ((dbUrl.getValue().isEmpty()) && (dbUser.getValue().isEmpty()))  ;
+        return ((dbUrl.getValue() == null) && (dbUser.getValue() == null)) || ((dbUrl.getValue().isEmpty()) && (dbUser.getValue().isEmpty()));
     }
 
     public String getCommandScripFile() {

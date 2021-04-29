@@ -19,7 +19,7 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.exception.SOSJobArgumentException;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
 import js7.data_for_java.order.JOutcome;
@@ -31,12 +31,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
     }
 
     public void checkArguments(FileOperationsJobArguments args) throws Exception {
-        if (args.getSourceFile().getValue() == null) {
-            throw new SOSJobArgumentException(String.format("missing '%s'", args.getSourceFile().getName()));
-        }
-
         if (SOSString.isEmpty(args.getReplacing().getValue()) && !SOSString.isEmpty(args.getReplacement().getValue())) {
-            throw new SOSJobArgumentException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(), args
+            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(), args
                     .getReplacement().getName()));
         }
         setFlags(args);

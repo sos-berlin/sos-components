@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
@@ -81,7 +82,9 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().info("[scala]" + SOSString.toString(ho));
         }
         step.getLogger().info("-CONVERTED HISTORIC OUTCOME (last var values)-----------------");
-        step.getLogger().info("[java]" + step.historicOutcomes2map());
+        step.getLogger().info("[java][all]" + step.historicOutcomes2map());
+        step.getLogger().info("[java][succeeded]" + step.succeededHistoricOutcomes2map());
+        step.getLogger().info("[java][failed]" + step.failedHistoricOutcomes2map());
 
         step.getLogger().info("----------NODE/STEP-----------------");
         step.getLogger().info("[java][agentId]" + step.getAgentId());
@@ -100,7 +103,10 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
                 .namedValue(args.getStringArgument().getName()));
 
         step.getLogger().info("----------NODE/STEP Java Job used/known argumens-----------------");
-        step.getLogger().info("[java]" + String.join("\n", step.argumentsInfo(true)));
+        Map<ValueSource, List<String>> amap = step.argumentsInfo();
+        amap.entrySet().stream().forEach(e -> {
+            step.getLogger().info("[java][%s]%s", e.getKey().getValue(), String.join(",", e.getValue()));
+        });
 
         if (step.getArguments().getShowEnv().getValue()) {
             printEnvs(step.getLogger());

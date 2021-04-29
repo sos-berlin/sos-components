@@ -57,60 +57,46 @@ public class JobStep<A> {
     }
 
     public Map<String, Object> historicOutcomes2map() {
-        List<HistoricOutcome> l = getHistoricOutcomes();
-        if (l == null || l.size() == 0) {
-            return Collections.emptyMap();
-        }
-        Map<String, Object> map = new HashMap<String, Object>();
-        for (HistoricOutcome ho : l) {
-            Map<String, Object> m = map2java(ho);
-            if (m != null) {
-                m.entrySet().forEach(e -> {
-                    map.remove(e.getKey());
-                    map.put(e.getKey(), e.getValue());
-                });
-            }
-        }
-        map.remove(Job.NAMED_NAME_RETURN_CODE);
-        return map;
+        return historicOutcomes2map(Outcome.Completed.class);
     }
 
-    public List<String> argumentsInfo() throws Exception {
-        return argumentsInfo(false);
+    public Map<String, Object> succeededHistoricOutcomes2map() {
+        return historicOutcomes2map(Outcome.Succeeded.class);
     }
 
-    public List<String> argumentsInfo(boolean withExtendedInfos) throws Exception {
+    public Map<String, Object> failedHistoricOutcomes2map() {
+        return historicOutcomes2map(Outcome.Failed.class);
+    }
+
+    public Map<JobArgument.ValueSource, List<String>> argumentsInfo() throws Exception {
         if (internalStep == null || arguments == null) {
             return null;
         }
-        List<String> l = new ArrayList<String>();
         List<Field> fields = Job.getJobArgumentFields(arguments);
+        Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
         for (Field field : fields) {
             try {
                 field.setAccessible(true);
                 JobArgument<?> arg = (JobArgument<?>) field.get(arguments);
                 if (arg != null) {
                     if (arg.getName() == null) {// internal usage
-                        if (withExtendedInfos) {
-                            l.add(String.format("[internal argument][%s]%s", arg.getName(), SOSString.toString(arg)));
-                        } else {
-                            l.add(String.format("[internal argument]%s=%s", arg.getName(), arg.getValue()));
-                        }
                         continue;
                     }
-                    if (withExtendedInfos) {
-                        l.add(String.format("[%s]%s", arg.getName(), SOSString.toString(arg)));
+                    List<String> l;
+                    if (map.containsKey(arg.getValueSource())) {
+                        l = map.get(arg.getValueSource());
                     } else {
-                        l.add(String.format("%s=%s", arg.getName(), arg.getValue()));
+                        l = new ArrayList<String>();
                     }
-
+                    l.add(String.format("%s=%s", arg.getName(), arg.getDisplayValue()));
+                    map.put(arg.getValueSource(), l);
                 }
             } catch (Throwable e) {
-                throw new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
-                        .toString()), e);
+                throw new SOSJobArgumentException(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()),
+                        e);
             }
         }
-        return l;
+        return map;
     }
 
     public String getOrderId() throws SOSJobProblemException {
@@ -258,13 +244,33 @@ public class JobStep<A> {
         return null;
     }
 
-    private Map<String, Object> map2java(HistoricOutcome ho) {
+    private Map<String, Object> historicOutcomes2map(Class<? extends Completed> clazz) {
+        List<HistoricOutcome> l = getHistoricOutcomes();
+        if (l == null || l.size() == 0) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> map = new HashMap<String, Object>();
+        for (HistoricOutcome ho : l) {
+            Map<String, Object> m = map2java(ho, clazz);
+            if (m != null) {
+                m.entrySet().forEach(e -> {
+                    map.remove(e.getKey());
+                    map.put(e.getKey(), e.getValue());
+                });
+            }
+        }
+        map.remove(Job.NAMED_NAME_RETURN_CODE);
+        return map;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Completed> Map<String, Object> map2java(HistoricOutcome ho, Class<T> clazz) {
         Outcome outcome = ho.outcome();
         if (outcome == null) {
             return null;
         }
-        if (outcome instanceof Completed) {
-            Completed c = (Completed) outcome;
+        if (clazz.isInterface() || clazz.isInstance(outcome)) {
+            T c = (T) outcome;
             if (c.namedValues() != null) {
                 return Job.convert(JavaConverters.asJava(c.namedValues()));
             }

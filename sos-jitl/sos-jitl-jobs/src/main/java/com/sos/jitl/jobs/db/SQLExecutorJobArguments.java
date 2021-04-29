@@ -12,12 +12,12 @@ public class SQLExecutorJobArguments extends JobArguments {
         NAME_VALUE, TRUE, FALSE
     }
 
-    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", Job.getAgentHibernateFile());
-    private JobArgument<String> command = new JobArgument<String>("command");
-    private JobArgument<ResultSetAsParameters> resultSetAsParameters = new JobArgument<ResultSetAsParameters>("resultset_as_parameters",
+    private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", true, Job.getAgentHibernateFile());
+    private JobArgument<String> command = new JobArgument<String>("command", true);
+    private JobArgument<ResultSetAsParameters> resultSetAsParameters = new JobArgument<ResultSetAsParameters>("resultset_as_parameters", false,
             ResultSetAsParameters.FALSE);
-    private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false);
-    private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false);
+    private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false, false);
+    private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false, false);
 
     public JobArgument<Path> getHibernateFile() {
         return hibernateFile;
