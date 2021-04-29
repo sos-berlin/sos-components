@@ -3602,6 +3602,8 @@ public abstract class PublishUtils {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
     
+    
+    
     private static SignedString getSignedStringWithCertificate (String jsonContent, String signature, String signatureAlgorithm, String certificate) {
 		LOGGER.debug("JSON send to controller: ");
 		LOGGER.debug(jsonContent);
@@ -3622,7 +3624,7 @@ public abstract class PublishUtils {
     }
 
     private static Optional<String> getFileOrderIdPattern(FileOrderSource fileOrderSource) {
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$epochSecond-$orderWatchId:$0\"";
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$epochSecond-$orderWatchPath:$0\"";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
