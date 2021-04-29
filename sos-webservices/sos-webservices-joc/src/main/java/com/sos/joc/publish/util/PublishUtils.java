@@ -2044,6 +2044,9 @@ public abstract class PublishUtils {
         if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             WorkflowEdit workflowEdit = new WorkflowEdit();
             com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
                     com.sos.inventory.model.workflow.Workflow.class);
@@ -2060,6 +2063,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             LockEdit lockEdit = new LockEdit();
             com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
             if (checkObjectNotEmpty(lock)) {
@@ -2075,6 +2081,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             JunctionEdit junctionEdit = new JunctionEdit();
             com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
                     com.sos.inventory.model.junction.Junction.class);
@@ -2091,6 +2100,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             JobClassEdit jobClassEdit = new JobClassEdit();
             com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
                     com.sos.inventory.model.jobclass.JobClass.class);
@@ -2107,6 +2119,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
                     com.sos.inventory.model.fileordersource.FileOrderSource.class);
@@ -2123,6 +2138,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
             Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
             if (checkObjectNotEmpty(schedule)) {
@@ -2138,6 +2156,9 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
             String normalizedPath = Globals
                     .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
             Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
             if (checkObjectNotEmpty(cal)) {
                 if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {

@@ -1042,13 +1042,15 @@ public class DBLayerDeploy {
             if (configuration.getObjectType().equals(ConfigurationType.WORKFLOW)) {
                 Workflow workflow = (Workflow)configuration.getConfiguration();
                 boolean allAgentNamesKnown = true;
-                for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
-                    Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-                    String agentName = job.getAgentName();
-                    boolean agentNameKnown = checkAgentNamePresent(agentName);
-                    if (!agentNameKnown) {
-                        allAgentNamesKnown = false;
-                        break;
+                if (workflow.getJobs() != null && workflow.getJobs().getAdditionalProperties() != null) {
+                    for (String jobname : workflow.getJobs().getAdditionalProperties().keySet()) {
+                        Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                        String agentName = job.getAgentName();
+                        boolean agentNameKnown = checkAgentNamePresent(agentName);
+                        if (!agentNameKnown) {
+                            allAgentNamesKnown = false;
+                            break;
+                        }
                     }
                 }
                 if (!allAgentNamesKnown) {
