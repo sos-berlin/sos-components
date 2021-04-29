@@ -268,6 +268,10 @@ public abstract class PublishUtils {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
+                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	jobResource.setPath(draft.getName());
+                    	draft.setContent(om.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
@@ -288,6 +292,10 @@ public abstract class PublishUtils {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
+                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	jobResource.setPath(draft.getName());
+                    	draft.setContent(om.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -304,6 +312,10 @@ public abstract class PublishUtils {
                             workflow.setPath(draft.getName());
                             draft.setContent(om.writeValueAsString(workflow));
                         }
+                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	jobResource.setPath(draft.getName());
+                    	draft.setContent(om.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -344,6 +356,10 @@ public abstract class PublishUtils {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
+                } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	jobResource.setPath(unsignedDraft.getName());
+                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), unsignedDraftUpdated.getContent(), null));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -364,6 +380,10 @@ public abstract class PublishUtils {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
+                } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	jobResource.setPath(unsignedDraft.getName());
+                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signX509(kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -380,6 +400,10 @@ public abstract class PublishUtils {
                         workflow.setPath(unsignedDraft.getName());
                         unsignedDraft.setContent(om.writeValueAsString(workflow));
                     }
+                } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	jobResource.setPath(unsignedDraft.getName());
+                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -446,6 +470,10 @@ public abstract class PublishUtils {
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         // workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
+                    } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    	JobResource jobResource = om.readValue(deployed.getContent(), JobResource.class);
+                    	jobResource.setPath(deployed.getName());
+                    	deployed.setContent(om.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
@@ -461,33 +489,14 @@ public abstract class PublishUtils {
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         // workflow.setPath(deployed.getPath());
                         deployed.setContent(om.writeValueAsString(workflow));
+                    } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                    	JobResource jobResource = om.readValue(deployed.getContent(), JobResource.class);
+                    	jobResource.setPath(deployed.getName());
+                    	deployed.setContent(om.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
                 }
-                // else {
-                // KeyPair kp = null;
-                // String signerAlgorithm = null;
-                // if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                // kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
-                // signerAlgorithm = SOSKeyConstants.RSA_SIGNER_ALGORITHM;
-                // } else {
-                // kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
-                // signerAlgorithm = SOSKeyConstants.ECDSA_SIGNER_ALGORITHM;
-                // }
-                // sig = new DBItemDepSignatures();
-                // sig.setAccount(account);
-                // sig.setDepHistoryId(deployed.getId());
-                // sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
-                // sig.setModified(Date.from(Instant.now()));
-                // if(deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                // Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
-                // workflow.setPath(deployed.getPath());
-                // deployed.setContent(om.writeValueAsString(workflow));
-                // }
-                // sig.setSignature(SignObject.signX509(signerAlgorithm, kp.getPrivate(), deployed.getContent()));
-                // signedReDeployable.put(deployed, sig);
-                // }
                 if (sig != null) {
                     session.save(sig);
                 }
