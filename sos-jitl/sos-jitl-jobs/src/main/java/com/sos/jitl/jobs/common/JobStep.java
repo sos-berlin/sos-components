@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
@@ -30,11 +31,13 @@ public class JobStep<A> {
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
     private final A arguments;
+    private Map<String, Map<String, Object>> lastOutcomes;
 
     protected JobStep(BlockingInternalJob.Step step, JobLogger logger, A arguments) {
         this.internalStep = step;
         this.logger = logger;
         this.arguments = arguments;
+        logParameterization();
     }
 
     public BlockingInternalJob.Step getInternalStep() {
@@ -56,16 +59,19 @@ public class JobStep<A> {
         return JavaConverters.asJava(internalStep.order().asScala().historicOutcomes());
     }
 
-    public Map<String, Object> historicOutcomes2map() {
-        return historicOutcomes2map(Outcome.Completed.class);
+    public Map<String, Map<String, Object>> getLastOutcomes() {
+        if (lastOutcomes == null) {
+            lastOutcomes = historicOutcomes2map();
+        }
+        return lastOutcomes;
     }
 
-    public Map<String, Object> succeededHistoricOutcomes2map() {
-        return historicOutcomes2map(Outcome.Succeeded.class);
+    public Map<String, Object> getLastSucceededOutcomes() {
+        return getLastOutcomes().get(Outcome.Succeeded.class.getSimpleName());
     }
 
-    public Map<String, Object> failedHistoricOutcomes2map() {
-        return historicOutcomes2map(Outcome.Failed.class);
+    public Map<String, Object> getLastFailedOutcomes() {
+        return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
     public Map<JobArgument.ValueSource, List<String>> argumentsInfo() throws Exception {
@@ -244,37 +250,77 @@ public class JobStep<A> {
         return null;
     }
 
-    private Map<String, Object> historicOutcomes2map(Class<? extends Completed> clazz) {
+    private Map<String, Map<String, Object>> historicOutcomes2map() {
         List<HistoricOutcome> l = getHistoricOutcomes();
         if (l == null || l.size() == 0) {
             return Collections.emptyMap();
         }
-        Map<String, Object> map = new HashMap<String, Object>();
+
+        Map<String, Map<String, Object>> resultMap = new HashMap<String, Map<String, Object>>();
         for (HistoricOutcome ho : l) {
-            Map<String, Object> m = map2java(ho, clazz);
-            if (m != null) {
-                m.entrySet().forEach(e -> {
-                    map.remove(e.getKey());
-                    map.put(e.getKey(), e.getValue());
-                });
+            Outcome outcome = ho.outcome();
+            if (outcome instanceof Completed) {
+                Completed c = (Completed) outcome;
+                if (c.namedValues() != null) {
+                    String key = outcome.getClass().getSimpleName();
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    if (resultMap.containsKey(key)) {
+                        map = resultMap.get(key);
+                    } else {
+                        map = new HashMap<String, Object>();
+                    }
+                    Map<String, Object> m = Job.convert(JavaConverters.asJava(c.namedValues()));
+                    if (m != null) {
+                        for (Map.Entry<String, Object> entry : m.entrySet()) {
+                            map.remove(entry.getKey());
+                            map.put(entry.getKey(), entry.getValue());
+                        }
+                    }
+                    map.remove(Job.NAMED_NAME_RETURN_CODE);
+                    resultMap.put(key, map);
+                }
             }
         }
-        map.remove(Job.NAMED_NAME_RETURN_CODE);
-        return map;
+        return resultMap;
     }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Completed> Map<String, Object> map2java(HistoricOutcome ho, Class<T> clazz) {
-        Outcome outcome = ho.outcome();
-        if (outcome == null) {
-            return null;
-        }
-        if (clazz.isInterface() || clazz.isInstance(outcome)) {
-            T c = (T) outcome;
-            if (c.namedValues() != null) {
-                return Job.convert(JavaConverters.asJava(c.namedValues()));
+    private void logParameterization() {
+        try {
+            logger.info("Job Parameterization:");
+            Map<ValueSource, List<String>> map = argumentsInfo();
+            if (map == null || map.size() == 0) {
+                logOutcomes();
+                return;
             }
+            logInfo(map, ValueSource.ORDER);
+            logInfo(map, ValueSource.NODE);
+            logInfo(map, ValueSource.JOB);
+            logInfo(map, ValueSource.JOB_ARGUMENT);
+
+            logOutcomes();
+
+        } catch (Exception e) {
+            logger.error(e.toString(), e);
         }
-        return null;
+    }
+
+    // TODO mask password ...
+    private void logOutcomes() {
+        logInfo("Last Succeeded Outcomes: ", getLastSucceededOutcomes());
+        logInfo("Last Failed Outcomes: ", getLastFailedOutcomes());
+    }
+
+    private void logInfo(Map<ValueSource, List<String>> map, ValueSource source) {
+        List<String> list = map.get(source);
+        if (list != null && list.size() > 0) {
+            logger.info("%s: %s", source.getValue(), String.join(", ", list));
+        }
+    }
+
+    private void logInfo(String title, Map<String, Object> map) {
+        if (map != null && map.size() > 0) {
+            String v = map.toString();
+            logger.info("%s: %s", title, v.substring(1, v.length() - 1));
+        }
     }
 }

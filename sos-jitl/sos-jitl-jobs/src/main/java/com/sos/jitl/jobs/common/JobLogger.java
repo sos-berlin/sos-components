@@ -71,8 +71,8 @@ public class JobLogger {
     }
 
     public void warn(final Object msg, Throwable e) {
-        step.out().println(String.format("[WARN]%s", msg));
         LOGGER.warn(String.format("[WARN]%s", msg), e);
+        step.out().println(String.format("[WARN]%s", msg));
     }
 
     public void warn(final String format, final Object... msg) {
@@ -88,8 +88,8 @@ public class JobLogger {
     }
 
     public void error(final Object msg, final Throwable e) {
-        step.err().println(String.format("[ERROR]%s", msg));
         LOGGER.error(String.format("[ERROR]%s", msg), e);
+        step.err().println(String.format("[ERROR]%s", msg));
     }
 
     public boolean isDebugEnabled() {

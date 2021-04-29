@@ -4,7 +4,7 @@ package com.sos.jitl.jobs.common;
 public class JobArgument<T> {
 
     public enum ValueSource {
-        JAVA("Java"), ORDER("Order Variable"), NODE("Node Argument"), JOB("Argument"), JOB_ARGUMENT("Job Argument");
+        JAVA("Java"), ORDER("Order Variables"), NODE("Order Default Variables or Node Arguments"), JOB("Arguments"), JOB_ARGUMENT("Job Arguments");
 
         private final String value;
 

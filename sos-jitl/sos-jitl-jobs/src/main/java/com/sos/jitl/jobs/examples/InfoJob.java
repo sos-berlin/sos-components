@@ -82,9 +82,9 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             step.getLogger().info("[scala]" + SOSString.toString(ho));
         }
         step.getLogger().info("-CONVERTED HISTORIC OUTCOME (last var values)-----------------");
-        step.getLogger().info("[java][all]" + step.historicOutcomes2map());
-        step.getLogger().info("[java][succeeded]" + step.succeededHistoricOutcomes2map());
-        step.getLogger().info("[java][failed]" + step.failedHistoricOutcomes2map());
+        step.getLogger().info("[java][all]" + step.getLastOutcomes());
+        step.getLogger().info("[java][succeeded]" + step.getLastSucceededOutcomes());
+        step.getLogger().info("[java][failed]" + step.getLastFailedOutcomes());
 
         step.getLogger().info("----------NODE/STEP-----------------");
         step.getLogger().info("[java][agentId]" + step.getAgentId());
