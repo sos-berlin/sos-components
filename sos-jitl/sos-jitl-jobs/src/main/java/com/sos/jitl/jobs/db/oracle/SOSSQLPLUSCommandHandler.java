@@ -40,8 +40,10 @@ public class SOSSQLPLUSCommandHandler {
 
         Path sqlScript = Paths.get(tempFileName);
         for (Entry<String, Object> entry : Job.convert(variables).entrySet()) {
-            String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
-            writeln(sqlScript, writeLine);
+            if ((entry.getKey() != "db_url") && (entry.getKey() != "db_user") && (entry.getKey() != "db_password")) {
+                String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
+                writeln(sqlScript, writeLine);
+            }
         }
 
         if (!args.getIncludeFiles().isEmpty()) {
@@ -58,7 +60,7 @@ public class SOSSQLPLUSCommandHandler {
         }
 
         String scriptFile = args.getCommandScriptFile();
-        
+
         Path dest = Paths.get(scriptFile);
         SOSPath.appendFile(dest, sqlScript);
 

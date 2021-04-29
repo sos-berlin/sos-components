@@ -1,6 +1,9 @@
 package com.sos.jitl.jobs.db.oracle;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,7 +91,11 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
 
             sqlPlusCommandHandler.getVariables(args, sosCommandResult, resultMap, stdOutStringArray);
             sqlPlusCommandHandler.handleMessages(args, sosCommandResult, resultMap, stdOutStringArray);
-
+            try {
+                Files.delete(Paths.get(tempFileName));
+            } catch (IOException ioException) {
+                LOGGER.warn("File " + tempFileName + " could not deleted");
+            }
         } catch (Exception e) {
             throw e;
         }
@@ -103,6 +110,14 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
         arguments.setDbPassword("scheduler");
         arguments.setDbUser("scheduler");
         arguments.setDbUrl("xe");
+
+        arguments.setDbPassword("cs://sos/db/ur/@password");
+        arguments.setDbUser("cs://sos/db/ur/@user");
+        arguments.setCredentialStoreFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
+        arguments.setCredentialStoreKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
+     
+
+        
         try {
             sosSQLPlusJob.process(null, arguments);
         } catch (Exception e) {

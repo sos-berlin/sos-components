@@ -7,7 +7,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSSQLPlusJobArguments extends JobArguments {
 
-    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false);
+    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false,"sqlplus");
     private JobArgument<String> osName = new JobArgument<String>("os_name", false);
     private JobArgument<String> ignoreOraMessages = new JobArgument<String>("ignore_ora_messages", false, "");
     private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", false, "");
