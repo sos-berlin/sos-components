@@ -18,7 +18,7 @@ public class JobArgument<T> {
     }
 
     public enum DisplayMode {
-        MASK("********"), UNMASK;
+        MASKED("********"), UNMASKED;
 
         private final String value;
 
@@ -35,7 +35,7 @@ public class JobArgument<T> {
         }
     }
 
-    private static final String MASKED = JobArgument.DisplayMode.MASK.getValue();
+    private static final String MASKED = JobArgument.DisplayMode.MASKED.getValue();
 
     private final String name;
     private final boolean required;
@@ -46,11 +46,11 @@ public class JobArgument<T> {
     private ValueSource valueSource;
 
     public JobArgument(String name, boolean required) {
-        this(name, required, null, DisplayMode.UNMASK);
+        this(name, required, null, DisplayMode.UNMASKED);
     }
 
     public JobArgument(String name, boolean required, T defaultValue) {
-        this(name, required, defaultValue, DisplayMode.UNMASK);
+        this(name, required, defaultValue, DisplayMode.UNMASKED);
     }
 
     public JobArgument(String name, boolean required, DisplayMode displayMode) {
@@ -89,7 +89,7 @@ public class JobArgument<T> {
     }
 
     public boolean isMasked() {
-        return displayMode.equals(DisplayMode.MASK);
+        return displayMode.equals(DisplayMode.MASKED);
     }
 
     public String getDisplayValue() {
