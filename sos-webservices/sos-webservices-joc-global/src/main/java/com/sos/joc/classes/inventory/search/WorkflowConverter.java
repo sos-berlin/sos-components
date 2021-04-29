@@ -144,7 +144,7 @@ public class WorkflowConverter {
         public List<String> getJobClasses() {
             return jobClasses;
         }
-        
+
         public List<String> getJobResources() {
             return jobResources;
         }
@@ -371,15 +371,18 @@ public class WorkflowConverter {
     }
 
     private static <T> List<T> removeDuplicates(List<T> list) {
+        if (list == null) {
+            return new ArrayList<T>();
+        }
         return list.stream().distinct().collect(Collectors.toList());
     }
-    
+
     private static void jsonAddStringValues(JsonObjectBuilder builder, String key, List<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArray(list));
         }
     }
-    
+
     private static JsonArrayBuilder getJsonArray(List<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         for (String n : list) {
