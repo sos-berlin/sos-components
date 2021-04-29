@@ -3,8 +3,8 @@ package com.sos.joc.orders.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
@@ -21,12 +21,13 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -37,7 +38,6 @@ import com.sos.joc.model.order.OrdersSummary;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
-import js7.base.time.Timestamp;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
@@ -108,7 +108,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
             if (withWorkFlowFilter) {
                 if (!workflowIds.isEmpty()) {
-
                     orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
                     if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                         freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
@@ -120,13 +119,13 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     orderStates = Collections.emptyMap();
                 }
             } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId().path().string(),
+                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId(),
                         permittedFolders));
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
-                            && orderIsPermitted(o.workflowId().path().string(), permittedFolders));
+                            && orderIsPermitted(o.workflowId(), permittedFolders));
                 }
-                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId().path().string(), permittedFolders))
+                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId(), permittedFolders))
                         .mapToInt(e -> 1).sum();
             } else {
                 orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
@@ -148,8 +147,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, body.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
-                        scala.Option<Timestamp> scheduledFor = o.asScala().state().maybeDelayedUntil();
-                        return scheduledFor.isEmpty() || !scheduledFor.get().toInstant().isAfter(until);
+                        Optional<Instant> scheduledFor = o.scheduledFor();
+                        return !scheduledFor.isPresent() || !scheduledFor.get().isAfter(until);
                     };
                     numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
                             e -> 1).sum();
@@ -157,8 +156,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
                 }
                 numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
-                    scala.Option<Timestamp> scheduledFor = o.asScala().state().maybeDelayedUntil();
-                    return !scheduledFor.isEmpty() && scheduledFor.get().toInstant().isBefore(now);
+                    Optional<Instant> scheduledFor = o.scheduledFor();
+                    return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
                 }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
             }
             
@@ -190,25 +189,24 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
     }
 
     private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(Set<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
-        Set<VersionedItemId<WorkflowPath>> wIds = new HashSet<>();
-        if (workflowIds != null) {
-            if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                wIds = workflowIds.stream().filter(w -> folderIsPermitted(w.getPath(), permittedFolders)).map(w -> JWorkflowId.of(JocInventory
-                        .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
-            } else {
-                wIds = workflowIds.stream().map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(
-                        Collectors.toSet());
-            }
+        Stream<WorkflowId> workflowStream = workflowIds != null ? workflowIds.stream() : Stream.empty();
+        if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            workflowStream = workflowStream.filter(w -> folderIsPermitted(w.getPath(), permittedFolders));
         }
-        return wIds;
+        return workflowStream.map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
     }
 
-    private static boolean orderIsPermitted(String orderPath, Set<Folder> listOfFolders) {
-        // TODO order.workflowId().path().string() is only a name
-        return true;
-//      if (listOfFolders == null || listOfFolders.isEmpty()) {
-//      return true;
-//  }
-//      return folderIsPermitted(Paths.get(order.workflowId().path().string()).getParent().toString().replace('\\', '/'), listOfFolders);
+    private static boolean orderIsPermitted(VersionedItemId<WorkflowPath> w, Set<Folder> listOfFolders) {
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
+        }
+        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
+    }
+    
+    private static boolean orderIsPermitted(JWorkflowId w, Set<Folder> listOfFolders) {
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
+        }
+        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
     }
 }

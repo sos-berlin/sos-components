@@ -35,7 +35,6 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
-import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
@@ -700,29 +699,6 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameterList("types", types);
         }
         return getSession().getResultList(query);
-    }
-
-    public Map<String, String> getNamePathMapping(Collection<String> names, Integer type) throws SOSHibernateException {
-        if (names == null || names.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-        hql.append("(name, path) from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where name in (:names)");
-        if (type != null) {
-            hql.append(" and type=:type");
-        }
-        Query<InventoryNamePath> query = getSession().createQuery(hql.toString());
-        query.setParameterList("names", names);
-        if (type != null) {
-            query.setParameter("type", type);
-        }
-
-        List<InventoryNamePath> result = getSession().getResultList(query);
-        if (result != null) {
-            return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
-        }
-        return Collections.emptyMap();
     }
 
     public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations(Collection<Long> ids) throws SOSHibernateException {

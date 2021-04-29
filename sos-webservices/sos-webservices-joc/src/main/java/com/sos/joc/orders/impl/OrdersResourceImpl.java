@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -31,7 +30,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
@@ -130,12 +129,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 CyclicOrderInfos cycle = new CyclicOrderInfos();
                 cycle.setCount(t.size());
                 cycle.setFirstOrderId(t.first().id().string());
-                if (!t.first().asScala().state().maybeDelayedUntil().isEmpty()) {
-                    cycle.setFirstStart(Date.from(t.first().asScala().state().maybeDelayedUntil().get().toInstant()));
+                if (t.first().scheduledFor().isPresent()) {
+                    cycle.setFirstStart(Date.from(t.first().scheduledFor().get()));
                 }
                 cycle.setLastOrderId(t.last().id().string());
-                if (!t.last().asScala().state().maybeDelayedUntil().isEmpty()) {
-                    cycle.setLastStart(Date.from(t.last().asScala().state().maybeDelayedUntil().get().toInstant()));
+                if (t.last().scheduledFor().isPresent()) {
+                    cycle.setLastStart(Date.from(t.last().scheduledFor().get()));
                 }
                 return cycle;
             }).collect(Collectors.toMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
@@ -144,13 +143,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
                     .workflowId().path().string()));
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
-            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(ordersFilter.getControllerId(), groupedByWorkflowPath.keySet(),
-                    DeployType.WORKFLOW.intValue());
-
-            orderStream = groupedByWorkflowPath.entrySet().stream().filter(e -> namePathMap.containsKey(e.getKey())).filter(e -> canAdd(namePathMap
-                    .get(e.getKey()), folders)).flatMap(e -> e.getValue().stream());
+            orderStream = groupedByWorkflowPath.entrySet().stream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders)).flatMap(e -> e
+                    .getValue().stream());
 
             if (withStatesFilter) {
                 // special BLOCKED handling
@@ -179,9 +173,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
-                        Order.State state = o.asScala().state();
-                        if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(state.getClass()))) {
-                            if (!state.maybeDelayedUntil().isEmpty() && state.maybeDelayedUntil().get().toInstant().isAfter(until)) {
+                        if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                            if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
                                 return false;
                             }
                         }
@@ -193,7 +186,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                orderStream = orderStream.filter(o -> regex.test(namePathMap.get(o.workflowId().path().string()) + "/" + o.id().string()));
+                orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
             }
 
             Long surveyDateMillis = currentState.eventId() / 1000;

@@ -21,6 +21,8 @@ import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.model.publish.OperationType;
 
+import js7.data_for_java.workflow.JWorkflowId;
+
 public class WorkflowPaths {
     
     private static WorkflowPaths instance;
@@ -56,6 +58,10 @@ public class WorkflowPaths {
     
     public static String getPath(WorkflowId workflowId) {
         return WorkflowPaths.getInstance()._getPath(workflowId);
+    }
+    
+    public static String getPath(JWorkflowId workflowId) {
+        return WorkflowPaths.getInstance()._getPath(new WorkflowId(workflowId.path().string(), workflowId.versionId().string()));
     }
     
     public static String getPath(String name) {

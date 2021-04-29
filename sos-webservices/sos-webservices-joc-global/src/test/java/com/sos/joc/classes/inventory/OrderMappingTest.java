@@ -34,7 +34,7 @@ public class OrderMappingTest {
         }
         o.setHistoricOutcome(outcomes);
         o.setPosition(oItem.getWorkflowPosition().getPosition());
-        Long scheduledFor = oItem.getState().getScheduledFor();
+        Long scheduledFor = oItem.getScheduledFor();
         o.setState(OrdersHelper.getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         o.setScheduledFor(scheduledFor);
         o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());

@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -32,9 +31,9 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
@@ -282,17 +281,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     
     private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, Set<Folder> permittedFolders) {
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId);
-        // TODO from memory
-        SOSHibernateSession connection = null;
-        try {
-            connection = Globals.createSosHibernateStatelessConnection(action.name().toLowerCase());
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-            final Map<String, String> namePathMap = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId().path().string())
-                    .collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
-            return jOrders.stream().filter(o -> canAdd(namePathMap.get(o.workflowId().path().string()), permittedFolders)).collect(Collectors.toSet());
-        } finally {
-            Globals.disconnect(connection);
-        }
+        return jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId().path().string()), permittedFolders)).collect(Collectors.toSet());
     }
 
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {

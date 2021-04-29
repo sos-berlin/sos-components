@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -36,7 +38,7 @@ import com.sos.schema.JsonValidator;
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
-    //private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
     @Override
@@ -136,7 +138,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             //Map<WorkflowId, String> namePathWorkflowMap = WorkflowPaths.getNamePathMap();
             
             evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
-                //LOGGER.info(e.toString());
+                LOGGER.info(e.toString());
                 if (e.getWorkflow() != null) {
                     e.setWorkflow(WorkflowPaths.getWorkflowId(e.getWorkflow()));
                     if (!canAdd(e.getWorkflow().getPath(), permittedFolders)) {

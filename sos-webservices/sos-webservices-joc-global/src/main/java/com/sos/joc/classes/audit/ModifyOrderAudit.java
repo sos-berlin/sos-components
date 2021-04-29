@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.order.ModifyOrders;
 
@@ -34,39 +35,36 @@ public class ModifyOrderAudit extends ModifyOrders implements IAuditLog {
     private String ticketLink;
 
 
-    public ModifyOrderAudit(JOrder jOrder, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JOrder jOrder, String controllerId, AuditParams auditParams) {
         setControllerId(controllerId);
         this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
-        this.workflow = jOrder.workflowId().path().string();
-        this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        this.workflow = WorkflowPaths.getPath(jOrder.workflowId().path().string());
         setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');
         setAuditParams(auditParams);
     }
     
-    public ModifyOrderAudit(JFreshOrder jOrder, String controllerId, AuditParams auditParams, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JFreshOrder jOrder, String controllerId, AuditParams auditParams) {
         setControllerId(controllerId);
         this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
-        this.workflow = jOrder.asScala().workflowPath().string();
-        this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        this.workflow = WorkflowPaths.getPath(jOrder.asScala().workflowPath().string());
         setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');
         setAuditParams(auditParams);
     }
     
-    public ModifyOrderAudit(JOrder jOrder, String controllerId, ModifyOrders modifyOrders, Map<String, String> nameToPath) {
+    public ModifyOrderAudit(JOrder jOrder, String controllerId, ModifyOrders modifyOrders) {
         setControllerId(controllerId);
         this.orderId = jOrder.id().string();
         setOrderIds(Collections.singleton(this.orderId));
         setKill(modifyOrders.getKill());
         setArguments(modifyOrders.getArguments());
         setOrderType(modifyOrders.getOrderType());
-        this.workflow = jOrder.workflowId().path().string();
-        this.workflow = nameToPath.getOrDefault(this.workflow, this.workflow);
+        this.workflow = WorkflowPaths.getPath(jOrder.workflowId().path().string());
         setWorkflowIds(Collections.singletonList(new WorkflowId(this.workflow, null)));
         Path f = Paths.get(this.workflow).getParent();
         this.folder = f == null ? "/" : f.toString().replace('\\', '/');

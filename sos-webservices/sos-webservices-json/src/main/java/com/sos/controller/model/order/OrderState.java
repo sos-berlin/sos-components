@@ -17,21 +17,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
-    "scheduledFor"
+    "TYPE"
 })
 public class OrderState {
 
     @JsonProperty("TYPE")
     private String tYPE;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    private Long scheduledFor;
 
     /**
      * No args constructor for use in serialization
@@ -42,13 +33,11 @@ public class OrderState {
 
     /**
      * 
-     * @param scheduledFor
      * @param tYPE
      */
-    public OrderState(String tYPE, Long scheduledFor) {
+    public OrderState(String tYPE) {
         super();
         this.tYPE = tYPE;
-        this.scheduledFor = scheduledFor;
     }
 
     @JsonProperty("TYPE")
@@ -61,36 +50,14 @@ public class OrderState {
         this.tYPE = tYPE;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    public Long getScheduledFor() {
-        return scheduledFor;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledFor")
-    public void setScheduledFor(Long scheduledFor) {
-        this.scheduledFor = scheduledFor;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("scheduledFor", scheduledFor).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(scheduledFor).toHashCode();
+        return new HashCodeBuilder().append(tYPE).toHashCode();
     }
 
     @Override
@@ -102,7 +69,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(scheduledFor, rhs.scheduledFor).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

@@ -17,7 +17,6 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.model.order.OrdersHistoricSummary;
@@ -60,13 +59,9 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                 return jocDefaultResponse;
             }
 
-            // boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
-            // boolean hasPermission = true;
-            // Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
-            Set<Folder> folders = folderPermissions.getListOfFolders();
-
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setControllerIds(allowedControllers);
+            historyFilter.setFolders(folderPermissions.getListOfFolders());
             historyFilter.setMainOrder(true);
 
             if (ordersFilter.getDateFrom() != null) {
@@ -75,36 +70,15 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             if (ordersFilter.getDateTo() != null) {
                 historyFilter.setExecutedTo(JobSchedulerDate.getDateTo(ordersFilter.getDateTo(), ordersFilter.getTimeZone()));
             }
-
-            // if (ordersFilter.getOrderIds() != null && !ordersFilter.getOrderIds().isEmpty()) {
-            // final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            // // TODO consider workflowId in groupingby???
-            // historyFilter.setOrders(ordersFilter.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowId().getPath(),
-            // permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowId().getPath()), Collectors.mapping(
-            // OrderPath::getOrderId, Collectors.toSet()))));
-            // } else
-            // if (withFolderFilter && (folders == null || folders.isEmpty())) {
-            // hasPermission = false;
-            // } else if (folders != null && !folders.isEmpty()) {
-            // historyFilter.setFolders(folders.stream().map(folder -> {
-            // folder.setFolder(normalizeFolder(folder.getFolder()));
-            // return folder;
-            // }).collect(Collectors.toSet()));
-            // }
-            if (folders != null && !folders.isEmpty()) {
-                historyFilter.setFolders(folders.stream().collect(Collectors.toSet()));
-            }
-
+            
             OrdersHistoricSummary ordersHistoricSummary = new OrdersHistoricSummary();
             OrdersOverView entity = new OrdersOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setOrders(ordersHistoricSummary);
-            // if (hasPermission) {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
             ordersHistoricSummary.setFailed(jobHistoryDBLayer.getCountOrders(HistoryStateText.FAILED));
             ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL));
-            // }
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

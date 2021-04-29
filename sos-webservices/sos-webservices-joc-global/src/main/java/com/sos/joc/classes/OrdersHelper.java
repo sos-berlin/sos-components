@@ -26,7 +26,6 @@ import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -37,15 +36,14 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.BulkError;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -234,7 +232,7 @@ public class OrdersHelper {
             o.setAgentId(opt.get().string());
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
-        Long scheduledFor = oItem.getState().getScheduledFor();
+        Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis) {
             o.setState(getState("Blocked", oItem.getIsSuspended()));
         } else {
@@ -360,10 +358,7 @@ public class OrdersHelper {
                     args = variablesToScalaValuedArguments(checkArguments(vars, workflow.getOrderRequirements()));
                 }
                 // modify scheduledFor if necessary
-                Optional<Instant> scheduledFor = Optional.empty();
-                if (!order.asScala().state().maybeDelayedUntil().isEmpty()) {
-                    scheduledFor = Optional.of(order.asScala().state().maybeDelayedUntil().get().toInstant());
-                }
+                Optional<Instant> scheduledFor = order.scheduledFor();
                 if (dailyplanModifyOrder.getStartTime() != null) {
                     scheduledFor = Optional.of(dailyplanModifyOrder.getStartTime().toInstant());
                 }
@@ -483,12 +478,9 @@ public class OrdersHelper {
                 try {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
-                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-                        final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.workflowId()
-                                .path().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
                         jocAuditLog.logAuditMessage(modifyOrders.getAuditLog());
                         for (JOrder o : jOrders) {
-                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders, nameToPath);
+                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         }
                     } finally {
@@ -509,12 +501,9 @@ public class OrdersHelper {
                 try {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
-                        DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-                        final Map<String, String> nameToPath = dbLayer.getNamePathMapping(controllerId, jOrders.stream().map(o -> o.asScala()
-                                .workflowPath().string()).collect(Collectors.toSet()), DeployType.WORKFLOW.intValue());
                         jocAuditLog.logAuditMessage(auditParams);
                         for (JFreshOrder o : jOrders) {
-                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams, nameToPath);
+                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams);
                             jocAuditLog.storeAuditLogEntry(audit, connection);
                         }
                     } finally {

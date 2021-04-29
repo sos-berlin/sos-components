@@ -222,12 +222,9 @@ public class ProxyTest {
             }
             final Instant now = Instant.ofEpochMilli(controllerState.eventId() / 1000);
             Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class))
-                .map(o -> {
-                    System.out.println(o.asScala().state().maybeDelayedUntil());
-                    return o.asScala().state().maybeDelayedUntil();
-                })
-                .filter(o -> !o.isEmpty())
-                .filter(t -> t.get().toInstant().isBefore(now))
+                .map(o -> o.scheduledFor())
+                .filter(Optional::isPresent)
+                .filter(t -> t.get().isBefore(now))
                 .mapToInt(e -> 1).sum();
             LOGGER.info("+++++++++++++++++++++++" + i + "++++++++++++++++++++++++++++");
 

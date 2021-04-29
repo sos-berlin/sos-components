@@ -1,5 +1,6 @@
 package com.sos.js7.history.controller.proxy;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -169,8 +170,8 @@ public class HistoryEventEntry {
         public Date getScheduledFor() {
             if (order != null) {
                 try {
-                    Optional<Timestamp> ot = OptionConverters.toJava(((Fresh$) order.asScala().state()).maybeDelayedUntil());
-                    return ot.isPresent() ? Date.from(ot.get().toInstant()) : null;
+                    Optional<Instant> ot = order.scheduledFor();
+                    return ot.isPresent() ? Date.from(ot.get()) : null;
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][getScheduledFor]%s", getOrderId(), e.toString()), e);
                 }

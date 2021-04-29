@@ -762,7 +762,7 @@ public class JocInventory {
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
-        switch (config.getTypeAsEnum()) { //getUsedWorkflowsByJobResource
+        switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
