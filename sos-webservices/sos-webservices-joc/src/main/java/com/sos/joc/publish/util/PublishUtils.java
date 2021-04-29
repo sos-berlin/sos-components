@@ -94,7 +94,6 @@ import com.sos.joc.exceptions.JocKeyNotParseableException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocNotImplementedException;
-import com.sos.joc.exceptions.JocSignatureVerificationException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -108,6 +107,8 @@ import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
 import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
+import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
+import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.junction.JunctionEdit;
 import com.sos.joc.model.inventory.junction.JunctionPublish;
 import com.sos.joc.model.inventory.lock.LockEdit;
@@ -155,7 +156,6 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
-import js7.data_for_java.jobresource.JJobResource;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -1945,20 +1945,32 @@ public abstract class PublishUtils {
     
     private static ControllerObject createControllerObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
             throws JsonParseException, JsonMappingException, IOException {
-        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+    	if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
             WorkflowPublish workflowPublish = new WorkflowPublish();
             com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
                     com.sos.inventory.model.workflow.Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowPublish.setContent(workflow);
             } else {
-                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
+                		Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
             }
-            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION
-                    .value(), "")));
+            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
             workflowPublish.setObjectType(DeployType.WORKFLOW);
             return workflowPublish;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
+            JobResourcePublish jobResourcePublish = new JobResourcePublish();
+            com.sos.inventory.model.jobresource.JobResource jobResource = om.readValue(outBuffer.toString(),
+                    com.sos.inventory.model.jobresource.JobResource.class);
+            if (checkObjectNotEmpty(jobResource)) {
+                jobResourcePublish.setContent(jobResource);
+            } else {
+                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.", 
+                		Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), ""))));
+            }
+            jobResourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), "")));
+            jobResourcePublish.setObjectType(DeployType.JOBRESOURCE);
+            return jobResourcePublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
             LockPublish lockPublish = new LockPublish();
             com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
@@ -2023,14 +2035,22 @@ public abstract class PublishUtils {
         SignaturePath signaturePath = new SignaturePath();
         Signature signature = new Signature();
         if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
@@ -2041,15 +2061,13 @@ public abstract class PublishUtils {
     private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
             throws JsonParseException, JsonMappingException, IOException {
         // process deployables and releaseables
-        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")); 
+    	if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
-                    com.sos.inventory.model.workflow.Workflow.class);
+            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(), com.sos.inventory.model.workflow.Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
@@ -2060,9 +2078,25 @@ public abstract class PublishUtils {
             workflowEdit.setPath(normalizedPath);
             workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
             return workflowEdit;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), "")); 
+            if (normalizedPath.startsWith("//")) {
+            	normalizedPath = normalizedPath.substring(1);
+            }
+            JobResourceEdit jobResourceEdit = new JobResourceEdit();
+            com.sos.inventory.model.jobresource.JobResource jobResource = om.readValue(outBuffer.toString(), com.sos.inventory.model.jobresource.JobResource.class);
+            if (checkObjectNotEmpty(jobResource)) {
+                jobResourceEdit.setConfiguration(jobResource);
+            } else {
+                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            jobResourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            jobResourceEdit.setPath(normalizedPath);
+            jobResourceEdit.setObjectType(ConfigurationType.JOBRESOURCE);
+            return jobResourceEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
@@ -2079,14 +2113,12 @@ public abstract class PublishUtils {
             lockEdit.setObjectType(ConfigurationType.LOCK);
             return lockEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
             JunctionEdit junctionEdit = new JunctionEdit();
-            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
-                    com.sos.inventory.model.junction.Junction.class);
+            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(), com.sos.inventory.model.junction.Junction.class);
             if (checkObjectNotEmpty(junction)) {
                 junctionEdit.setConfiguration(junction);
             } else {
@@ -2098,14 +2130,12 @@ public abstract class PublishUtils {
             junctionEdit.setObjectType(ConfigurationType.JUNCTION);
             return junctionEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
             JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
-                    com.sos.inventory.model.jobclass.JobClass.class);
+            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(), com.sos.inventory.model.jobclass.JobClass.class);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
             } else {
@@ -2117,14 +2147,12 @@ public abstract class PublishUtils {
             jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
             return jobClassEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
-                    com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -2136,8 +2164,7 @@ public abstract class PublishUtils {
             fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
             return fileOrderSourceEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
@@ -2154,8 +2181,7 @@ public abstract class PublishUtils {
             scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
             return scheduleEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals
-                    .normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
@@ -2210,12 +2236,16 @@ public abstract class PublishUtils {
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 content = om.writeValueAsString(workflow);
                                 break;
+                            case JOBRESOURCE:
+                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
+                                JobResource jobResource = (JobResource) deployable.getContent();
+                                jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                content = om.writeValueAsString(jobResource);
+                                break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
-                                if (lock.getPath() == null) {
-                                    lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                }
+                                lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 content = om.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
@@ -2309,6 +2339,9 @@ public abstract class PublishUtils {
                             switch (deployable.getObjectType()) {
                             case WORKFLOW:
                                 extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
+                                break;
+                            case JOBRESOURCE:
+                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
@@ -2411,6 +2444,12 @@ public abstract class PublishUtils {
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 // workflow.setPath(deployable.getPath());
                                 content = om.writeValueAsString(workflow);
+                                break;
+                            case JOBRESOURCE:
+                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
+                                JobResource jobResource = (JobResource) deployable.getContent();
+                                jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                content = om.writeValueAsString(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
@@ -2537,6 +2576,9 @@ public abstract class PublishUtils {
                             case WORKFLOW:
                                 extension = ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.toString();
                                 break;
+                            case JOBRESOURCE:
+                                extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
+                                break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 break;
@@ -2630,84 +2672,6 @@ public abstract class PublishUtils {
             }
         };
         return streamingOutput;
-    }
-
-    public static boolean verifyDeployable(SOSHibernateSession hibernateSession, SignaturePath signaturePath, ConfigurationObject deployable,
-            String account) throws JocSignatureVerificationException, SOSHibernateException {
-        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-        boolean verified = false;
-        try {
-            if (signaturePath != null && signaturePath.getSignature() != null) {
-                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
-                String publicKey = keyPair.getPublicKey();
-                if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
-                    Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
-                    verified = VerifySignature.verifyX509(certificate, om.writeValueAsString(deployable), signaturePath.getSignature()
-                            .getSignatureString());
-                } else if (publicKey != null && !publicKey.isEmpty()) {
-                    if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(deployable), signaturePath.getSignature()
-                                .getSignatureString());
-                    } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey));
-                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(deployable), signaturePath.getSignature()
-                                .getSignatureString());
-                    } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey);
-                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(deployable), signaturePath.getSignature()
-                                .getSignatureString());
-                    }
-                }
-                if (!verified) {
-                    LOGGER.debug(String.format("signature verification for deployable %1$s was not successful!", deployable.getPath()));
-                    return verified;
-                }
-            }
-        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
-                | CertificateException | NoSuchProviderException e) {
-            throw new JocSignatureVerificationException(e);
-        }
-        return verified;
-    }
-
-    public static Signature verifyWorkflows(SOSHibernateSession hibernateSession, Set<SignaturePath> signaturePaths, Workflow workflow,
-            String account) throws JocSignatureVerificationException, SOSHibernateException {
-        SignaturePath signaturePath = signaturePaths.stream().filter(signaturePathFromStream -> signaturePathFromStream.getObjectPath().equals(
-                workflow.getPath())).map(signaturePathFromStream -> signaturePathFromStream).findFirst().get();
-        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-        Boolean verified = null;
-        try {
-            if (signaturePath != null && signaturePath.getSignature() != null) {
-                JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
-                String publicKey = keyPair.getPublicKey();
-                if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
-                    Certificate certificate = KeyUtil.getCertificate(keyPair.getCertificate());
-                    verified = VerifySignature.verifyX509(certificate, om.writeValueAsString(workflow), signaturePath.getSignature()
-                            .getSignatureString());
-                } else if (publicKey != null && !publicKey.isEmpty()) {
-                    if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        verified = VerifySignature.verifyPGP(publicKey, om.writeValueAsString(workflow), signaturePath.getSignature()
-                                .getSignatureString());
-                    } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(publicKey));
-                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(workflow), signaturePath.getSignature()
-                                .getSignatureString());
-                    } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                        PublicKey pubKey = KeyUtil.getECDSAPublicKeyFromString(publicKey);
-                        verified = VerifySignature.verifyX509(pubKey, om.writeValueAsString(workflow), signaturePath.getSignature()
-                                .getSignatureString());
-                    }
-                }
-                if (!verified) {
-                    LOGGER.debug(String.format("signature verification for workflow %1$s was not successful!", workflow.getPath()));
-                    return null;
-                }
-            }
-        } catch (IOException | PGPException | NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException | SignatureException
-                | CertificateException | NoSuchProviderException e) {
-            throw new JocSignatureVerificationException(e);
-        }
-        return signaturePath.getSignature();
     }
 
     public static boolean jocKeyPairNotEmpty(JocKeyPair keyPair) {
@@ -3211,7 +3175,6 @@ public abstract class PublishUtils {
     private static ControllerObject getContollerObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
         try {
             ControllerObject jsObject = new ControllerObject();
-            // jsObject.setId(item.getId());
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
@@ -3372,6 +3335,14 @@ public abstract class PublishUtils {
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
         if (workflow.getDocumentationPath() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
                 .getTYPE() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
+        if (jobResource.getDocumentationPath() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3608,17 +3579,14 @@ public abstract class PublishUtils {
             try {
                 cert.verify(caCert.getPublicKey());
                 return true;
-            } catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
-                // Do nothing if verification fails,
-                // as an exception here only indicates that
-                // the verification failed
+            } catch (Exception e) {
+                // Do nothing if verification fails, as an exception here only indicates that the verification failed
             }
         }
         return false;
     }
     
     private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
-        // TODO AgentName -> AgentPath??
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
         Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
                 .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()), getFileOrderSourcePattern(
