@@ -21,6 +21,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DeployAudit;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -73,7 +74,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
+            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             String publicKey = null;
             String reason = null;
             if (keyFromFile != null) {

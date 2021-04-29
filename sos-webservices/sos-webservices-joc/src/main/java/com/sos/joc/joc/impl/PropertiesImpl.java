@@ -38,7 +38,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             ConfigurationGlobalsJoc custerSettings = Globals.getConfigurationGlobalsJoc();
             entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(custerSettings));
             entity.setComments(ClusterSettings.getCommentsForAuditLog(custerSettings));
-            entity.setDefaultProfileAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
+            entity.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(custerSettings));
             entity.setCopy(ClusterSettings.getCopyPasteSuffixPrefix(custerSettings));
             entity.setRestore(ClusterSettings.getRestoreSuffixPrefix(custerSettings));
             entity.setShowViews(ClusterSettings.getShowViews(custerSettings, true));

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -190,13 +191,26 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         case WORKFLOW:
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.LOCK, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll("(\"lockId\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                                json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                            }
+                            Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
+                            if (oldNewJobResourceNames.size() > 0) {
+                                Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                                if (w.getJobs() != null) {
+                                    w.getJobs().getAdditionalProperties().forEach((k, v) -> {
+                                        if (v.getJobResourceNames() != null) {
+                                            v.setJobResourceNames(v.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s, s))
+                                                    .collect(Collectors.toList()));
+                                        }
+                                    });
+                                    json = Globals.objectMapper.writeValueAsString(w);
+                                }
                             }
                             break;
                         case FILEORDERSOURCE:
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll("(\"workflowPath\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
+                                json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue()
                                         + "\"");
                             }
                             break;

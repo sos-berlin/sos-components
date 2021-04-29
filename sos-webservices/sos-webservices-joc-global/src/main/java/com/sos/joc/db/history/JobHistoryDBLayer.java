@@ -124,7 +124,7 @@ public class JobHistoryDBLayer {
             DBInvalidDataException {
         try {
             filter.setState(state);
-            Query<String> query = createQuery(new StringBuilder().append("select workflowFolder ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
+            Query<String> query = createQuery(new StringBuilder().append("select workflowFolder from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
                     getOrderStepsWhere()).toString());
             List<String> result = session.getResultList(query);
             if (result == null) {

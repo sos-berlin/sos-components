@@ -46,7 +46,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue(), null,
+                    keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null,
                             secondsToExpire);
                 } else {
                     keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null, null);

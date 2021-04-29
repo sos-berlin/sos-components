@@ -18,6 +18,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
@@ -164,8 +165,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 }
             }
             if (allDeployments != null && !allDeployments.isEmpty()) {
-                String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getConfigurationGlobalsJoc()
-                        .getDefaultProfileAccount().getValue() : getAccount();
+                String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
+                        .getConfigurationGlobalsJoc()) : getAccount();
                 DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(),
                         true);
             }
@@ -201,8 +202,8 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
 
             List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
             if (deployables != null && !deployables.isEmpty()) {
-                String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? Globals.getConfigurationGlobalsJoc()
-                        .getDefaultProfileAccount().getValue() : getAccount();
+                String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
+                        .getConfigurationGlobalsJoc()) : getAccount();
                 DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
                         account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(), true, false);
             }

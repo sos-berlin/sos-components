@@ -33,6 +33,7 @@ import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
+import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
@@ -47,6 +48,10 @@ import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data_for_java.value.JExpression;
 
 public class Validator {
 
@@ -142,6 +147,11 @@ public class Validator {
             } finally {
                 Globals.disconnect(session);
             }
+        } else if (ConfigurationType.JOBRESOURCE.equals(type)) {
+            JobResource jobResource = (JobResource) config;
+            if (jobResource.getEnv() != null) {
+                validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
+            }
         }
     }
 
@@ -214,6 +224,7 @@ public class Validator {
     private static void validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             try {
+                // TODO check JobResources references in Job
                 JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()), URI.create(JocInventory.SCHEMA_LOCATION
                         .get(ConfigurationType.JOB)));
             } catch (SOSJsonSchemaException e) {
@@ -407,6 +418,19 @@ public class Validator {
                     validateEnvironmentKeys(script.getEnv(), "$.jobs['" + key + "'].executable.env");
                 }
             });
+        }
+    }
+    
+    private static void validateExpression(String prefix, Map<String, String> map) throws JocConfigurationException {
+        if (map != null) {
+            map.forEach((k, v) -> validateExpression(prefix, k, v));
+        }
+    }
+    
+    private static void validateExpression(String prefix, String key, String value) throws JocConfigurationException {
+        Either<Problem, JExpression> e = JExpression.parse(value);
+        if (e.isLeft()) {
+            throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
         }
     }
 }

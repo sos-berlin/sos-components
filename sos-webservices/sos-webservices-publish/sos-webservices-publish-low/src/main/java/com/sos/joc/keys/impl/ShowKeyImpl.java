@@ -24,6 +24,7 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IShowKey;
@@ -52,7 +53,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue(),
+            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()),
                     JocSecurityLevel.LOW);
             if (!PublishUtils.jocKeyPairNotEmpty(jocKeyPair)) {
                 jocKeyPair = new JocKeyPair();

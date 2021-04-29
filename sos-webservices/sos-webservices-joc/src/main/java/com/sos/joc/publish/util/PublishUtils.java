@@ -70,6 +70,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -78,6 +79,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -1399,6 +1402,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
+                postDeployHistoryWorkflowEvent(newDeployedObject);
                 DBItemDepSignatures signature = signedItemsSpec.getVerifiedConfigurations().get(draft);
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
@@ -1527,6 +1531,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
+                postDeployHistoryWorkflowEvent(newDeployedObject);
                 DBItemDepSignatures signature = draftsWithSignature.get(draft);
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
@@ -1567,6 +1572,7 @@ public abstract class PublishUtils {
                 deployed.setOperation(OperationType.UPDATE.value());
                 deployed.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(deployed);
+                postDeployHistoryWorkflowEvent(deployed);
                 if (signature != null) {
                     signature.setDepHistoryId(deployed.getId());
                     dbLayerDeploy.getSession().update(signature);
@@ -1594,6 +1600,7 @@ public abstract class PublishUtils {
                 redeployed.setOperation(OperationType.UPDATE.value());
                 redeployed.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(redeployed);
+                postDeployHistoryWorkflowEvent(redeployed);
                 deployedObjects.add(redeployed);
             }
         } catch (SOSHibernateException e) {
@@ -3170,7 +3177,7 @@ public abstract class PublishUtils {
                 jsObject.setContent(fileOrderSource);
                 break;
             }
-            jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
+            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             // TODO: setVersion
             // jsObject.setVersion(item.getVersion());
             jsObject.setModified(item.getModified());
@@ -3215,7 +3222,7 @@ public abstract class PublishUtils {
                 break;
             }
             jsObject.setVersion(item.getVersion());
-            jsObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
+            jsObject.setAccount(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()));
             return jsObject;
         } catch (IOException e) {
             throw new JocException(e);
@@ -3635,4 +3642,10 @@ public abstract class PublishUtils {
         return Optional.of(String.format(idPattern, timeZone));
     }
     
+    private static void postDeployHistoryWorkflowEvent(DBItemDeploymentHistory dbItem) {
+        if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath()));
+        }
+    }
 }

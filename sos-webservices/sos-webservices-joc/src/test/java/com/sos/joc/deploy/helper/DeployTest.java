@@ -49,7 +49,7 @@ public class DeployTest {
     private static final Path WORKFLOW_WITH_FORK = Paths.get("src/test/resources/deploy/helper/workflow_fork.workflow.json");
     private static final Path WORKFLOW_WITH_LOCK = Paths.get("src/test/resources/deploy/helper/workflow_lock.workflow.json");
     private static final Path WORKFLOW_WITH_JAVA_JOB = Paths.get("src/test/resources/deploy/helper/workflow_java.workflow.json");
-    private static final Path WORKFLOW_WITH_ORDER_PARAMETERS = Paths.get("src/test/resources/deploy/helper/workflow_order_parameters.workflow.json");
+    private static final Path WORKFLOW_WITH_ARGUMENTS = Paths.get("src/test/resources/deploy/helper/workflow_arguments.workflow.json");
 
     @Ignore
     @Test
@@ -132,12 +132,12 @@ public class DeployTest {
 
     @Ignore
     @Test
-    public void testDeployWorkflowWithOrderParameters() throws Exception {
+    public void testDeployWorkflowWithArguments() throws Exception {
         JProxyTestClass proxy = new JProxyTestClass();
 
         try {
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
-            deployWorkflow(api, WORKFLOW_WITH_ORDER_PARAMETERS, "3");
+            deployWorkflow(api, WORKFLOW_WITH_ARGUMENTS, "1");
         } catch (Throwable e) {
             throw e;
         } finally {

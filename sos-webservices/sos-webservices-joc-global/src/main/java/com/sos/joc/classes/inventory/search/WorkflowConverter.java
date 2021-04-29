@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory.search;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class WorkflowConverter {
         private List<String> titels;
         private List<String> agentIds;
         private List<String> jobClasses;
+        private List<String> jobResources;
         private List<String> criticalities;
         private List<String> scripts;
         private List<String> argNames;
@@ -74,6 +76,7 @@ public class WorkflowConverter {
             titels = new ArrayList<String>();
             agentIds = new ArrayList<String>();
             jobClasses = new ArrayList<String>();
+            jobResources = new ArrayList<String>();
             criticalities = new ArrayList<String>();
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
@@ -98,6 +101,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "titels", titels);
             jsonAddStringValues(builder, "agentIds", agentIds);
             jsonAddStringValues(builder, "jobClasses", jobClasses);
+            jsonAddStringValues(builder, "jobResources", jobResources);
             jsonAddStringValues(builder, "criticalities", criticalities);
             mainInfo = builder.build();
         }
@@ -143,6 +147,10 @@ public class WorkflowConverter {
             return jobClasses;
         }
 
+        public List<String> getJobResources() {
+            return jobResources;
+        }
+
         public List<String> getCriticalities() {
             return criticalities;
         }
@@ -174,6 +182,9 @@ public class WorkflowConverter {
                 }
                 if (!SOSString.isEmpty(job.getJobClass())) {
                     jobClasses.add(job.getJobClass());
+                }
+                if (job.getJobResourceNames() != null && !job.getJobResourceNames().isEmpty()) {
+                    jobResources.addAll(job.getJobResourceNames());
                 }
                 if (job.getCriticality() != null) {
                     if (SOSString.isEmpty(job.getCriticality().value())) {
@@ -209,6 +220,7 @@ public class WorkflowConverter {
             titels = WorkflowConverter.removeDuplicates(titels);
             agentIds = WorkflowConverter.removeDuplicates(agentIds);
             jobClasses = WorkflowConverter.removeDuplicates(jobClasses);
+            jobResources = WorkflowConverter.removeDuplicates(jobResources);
             criticalities = WorkflowConverter.removeDuplicates(criticalities);
             scripts = WorkflowConverter.removeDuplicates(scripts);
             argNames = WorkflowConverter.removeDuplicates(argNames);
@@ -361,15 +373,18 @@ public class WorkflowConverter {
     }
 
     private static <T> List<T> removeDuplicates(List<T> list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
         return list.stream().distinct().collect(Collectors.toList());
     }
-    
+
     private static void jsonAddStringValues(JsonObjectBuilder builder, String key, List<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArray(list));
         }
     }
-    
+
     private static JsonArrayBuilder getJsonArray(List<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         for (String n : list) {

@@ -4,13 +4,21 @@
 	"versionId": "1",
 	"orderRequirements": {
 		"parameters": {
-			"order_req_param_1": {
-				"type": "String",
-				"default": "order_req_param_1_value"
+			"show_env": {
+				"type": "Boolean",
+				"default": true
 			},
-			"order_req_param_2": {
+			"log_level": {
 				"type": "String",
-				"default": "order_req_param_2_value"
+				"default": "INFO"
+			},
+			"redefine_show_env": {
+				"type": "Boolean",
+				"default": true
+			},
+			"string_argument": {
+				"type": "String",
+				"default": "order_string_argument"
 			}
 		}
 	},
@@ -18,9 +26,9 @@
 		{
 			"TYPE": "Execute.Named",
 			"jobName": "info",
-			"label": "info_1_label",
+			"label": "info_node_1_label",
 			"defaultArguments": {
-				"job_inst_1_param_1": "job_inst_1_param_1_value"
+				"string_argument": "node_1_info_job_string_argument"
 			}
 		},
 		{
@@ -31,9 +39,9 @@
 		{
 			"TYPE": "Execute.Named",
 			"jobName": "info",
-			"label": "info_2_label",
+			"label": "info_node_2_label",
 			"defaultArguments": {
-				"job_inst_1_param_1": "job_inst_2_param_1_value"
+				"string_argument": "node_2_info_job_string_argument"
 			}
 		}
 	],
@@ -48,6 +56,8 @@
 					"job_job_arg_2": 2
 				},
 				"arguments": {
+					"string_argument": "'job_info_string_argument'",
+					"return_variables": "'var1_xyz__var2_123'",
 					"my_order_req_param_1": "$order_req_param_1",
 					"my_info_result": "variable('info_result', default='NO $\\ info_result')",
 					"my_order_req_param_3": "'XXX'++$order_req_param_1",

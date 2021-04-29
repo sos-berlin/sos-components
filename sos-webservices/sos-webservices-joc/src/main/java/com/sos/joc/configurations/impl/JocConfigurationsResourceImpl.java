@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -108,7 +109,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                                 .anyMatch(item -> ConfigurationType.PROFILE.value().equals(item.getConfigurationType()) && account.equals(item
                                         .getAccount()) && configurationsFilter.getControllerId().equals(item.getControllerId()))) {
                             // then copy from default_profile_account 
-                            String defaultProfileAccount = Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue();
+                            String defaultProfileAccount = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
                             JocConfigurationFilter filter2 = new JocConfigurationFilter();
                             filter2.setAccount(defaultProfileAccount);
                             filter2.setConfigurationType(ConfigurationType.PROFILE.value());
