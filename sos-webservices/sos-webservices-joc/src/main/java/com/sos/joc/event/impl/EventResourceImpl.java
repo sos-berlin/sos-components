@@ -12,8 +12,6 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.apache.shiro.session.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
@@ -38,7 +36,7 @@ import com.sos.schema.JsonValidator;
 public class EventResourceImpl extends JOCResourceImpl implements IEventResource {
 
     private static final String API_CALL = "./events";
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(EventResourceImpl.class);
     
 
     @Override
@@ -138,12 +136,12 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             //Map<WorkflowId, String> namePathWorkflowMap = WorkflowPaths.getNamePathMap();
             
             evt.setEventSnapshots(evt.getEventSnapshots().stream().map(e -> {
-                LOGGER.info(e.toString());
+                //LOGGER.info(e.toString());
                 if (e.getWorkflow() != null) {
                     e.setWorkflow(WorkflowPaths.getWorkflowId(e.getWorkflow()));
-                    LOGGER.info("workflowPath: " + e.getWorkflow().getPath());
+                    //LOGGER.info("workflowPath: " + e.getWorkflow().getPath());
                     if (!canAdd(e.getWorkflow().getPath(), permittedFolders)) {
-                        LOGGER.info("event skipped");
+                        //LOGGER.info("event skipped");
                         return null;
                     }
                 }
@@ -151,16 +149,16 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 if (path != null) {
                     if (EventType.WORKFLOW.equals(e.getObjectType())) {
                         e.setPath(WorkflowPaths.getPath(path));
-                        LOGGER.info("workflowPath2: " + e.getPath());
+                        //LOGGER.info("workflowPath2: " + e.getPath());
                         if (!canAdd(e.getPath(), permittedFolders)) {
-                            LOGGER.info("event skipped");
+                            //LOGGER.info("event skipped");
                             return null;
                         }
                     } else if (EventType.LOCK.equals(e.getObjectType())) {
                         e.setPath(namePathLockMap.getOrDefault(path, path));
-                        LOGGER.info("lockPath: " + e.getPath());
+                        //LOGGER.info("lockPath: " + e.getPath());
                         if (!canAdd(e.getPath(), permittedFolders)) {
-                            LOGGER.info("event skipped");
+                            //LOGGER.info("event skipped");
                             return null;
                         }
 //                    } else if (EventType.FILEORDERSOURCE.equals(e.getObjectType())) {
@@ -174,9 +172,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 //                            return null;
 //                        }
                     } else if (EventType.FOLDER.equals(e.getObjectType())) {
-                        LOGGER.info("folder: " + path);
+                        //LOGGER.info("folder: " + path);
                         if (!folderIsPermitted(path, permittedFolders)) {
-                            LOGGER.info("event skipped");
+                            //LOGGER.info("event skipped");
                             return null;
                         }
                     }
