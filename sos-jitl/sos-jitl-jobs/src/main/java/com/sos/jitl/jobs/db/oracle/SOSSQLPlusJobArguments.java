@@ -3,11 +3,12 @@ package com.sos.jitl.jobs.db.oracle;
 import com.sos.commons.util.SOSShell;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSSQLPlusJobArguments extends JobArguments {
 
-    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false,"sqlplus");
+    private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false, "sqlplus");
     private JobArgument<String> osName = new JobArgument<String>("os_name", false);
     private JobArgument<String> ignoreOraMessages = new JobArgument<String>("ignore_ora_messages", false, "");
     private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", false, "");
@@ -204,6 +205,24 @@ public class SOSSQLPlusJobArguments extends JobArguments {
         String commandLine = this.getCommandLine(tempFileName);
         this.setDbPassword(savPassword);
         return commandLine;
+    }
+
+    public void checkRequired() throws SOSJobRequiredArgumentMissingException {
+        if ((command.getValue() == null || command.getValue().isEmpty()) && (commandScriptFile.getValue() == null || commandScriptFile.getValue()
+                .isEmpty())) {
+            throw new SOSJobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
+        }
+
+        if ((shellCommand.getValue() == null) || (shellCommand.getValue().isEmpty())) {
+            throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+        }
+        if ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) {
+            throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+        }
+        if ((dbUser.getValue() == null) || dbUser.getValue().isEmpty()) {
+            throw new SOSJobRequiredArgumentMissingException(dbUser.getName());
+        }
+
     }
 
 }

@@ -43,6 +43,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
 
     public Map<String, Object> process(JobStep<SOSSQLPlusJobArguments> step, SOSSQLPlusJobArguments args) throws Exception {
 
+        args.checkRequired();
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
             if (args.getCredentialStoreFile() != null) {

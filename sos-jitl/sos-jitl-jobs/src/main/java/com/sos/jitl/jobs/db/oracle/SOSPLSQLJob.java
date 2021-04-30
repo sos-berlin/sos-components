@@ -28,6 +28,7 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
@@ -67,7 +68,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                     step.getLogger().info(log);
                 }
             }
-
+                       
             Connection connection = getConnection(step.getLogger(),step.getArguments());
             return step.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
@@ -80,32 +81,12 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         SOSHibernateSession session = null;
         Connection connection = null;
 
+        args.checkRequired();
+
         try {
 
             if (args.useHibernateFile()) {
-                factory = new SOSHibernateFactory(args.getHibernateFile());
-                factory.setIdentifier(SOSPLSQLJob.class.getSimpleName());
-                factory.build();
-                session = factory.openStatelessSession();
-
-                EntityManagerFactory emFactory;
-
-                emFactory = Persistence.createEntityManagerFactory("com.concretepage");
-                EntityManager em = emFactory.createEntityManager();
-                em.getTransaction().begin();
-
-                Session session2 = em.unwrap(Session.class);
-                session2.doWork(new Work() {
-
-                    @Override
-                    public void execute(Connection con) throws SQLException {
-         
-                    }
-                });
-
-                em.getTransaction().commit();
-                em.close();
-
+               
             } else {
                 if (args.getCredentialStoreFile() != null) {
                     SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
@@ -175,7 +156,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         if (args.getCommand() != null) {
             plsql = args.getCommand();
         }
-        if (args.getCommandScripFile() != null) {
+        if (args.getCommandScriptFile() != null) {
             plsql += args.getCommandScriptFileContent();
         }
 
@@ -257,10 +238,10 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         SOSPLSQLJobArguments arguments = new SOSPLSQLJobArguments();
         arguments.setCommandScripFile("c:/temp/2.sql");
         arguments.setDbPassword("scheduler");
-        // arguments.setDbUser("scheduler");
+        arguments.setDbUser("scheduler");
         arguments.setVariableParserRegExpr("");
         // arguments.setDbUrl("jdbc:oracle:thin:@//LAPTOP-7RSACSCV:1521/xe");
-        arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
+        //arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
 
         Connection connection;
         try {

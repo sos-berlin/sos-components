@@ -10,12 +10,13 @@ import java.util.stream.Stream;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class SOSPLSQLJobArguments extends JobArguments {
 
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, Job.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command", false);
-    private JobArgument<String> commandScripFile = new JobArgument<String>("command_script_file", false);
+    private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false);
     private JobArgument<String> variableParserRegExpr = new JobArgument<String>("variable_parser_reg_expr", false,
             "^SET\\s+([^\\s]+)\\s*IS\\s+(.*)$");
     private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false);
@@ -125,18 +126,18 @@ public class SOSPLSQLJobArguments extends JobArguments {
     }
 
     public boolean useHibernateFile() {
-        return ((dbUrl.getValue() == null) && (dbUser.getValue() == null)) || ((dbUrl.getValue().isEmpty()) && (dbUser.getValue().isEmpty()));
+        return ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) && ((dbUser.getValue() == null) || dbUser.getValue().isEmpty());
     }
 
-    public String getCommandScripFile() {
-        return commandScripFile.getValue();
+    public String getCommandScriptFile() {
+        return commandScriptFile.getValue();
     }
 
     public String getCommandScriptFileContent() throws IOException {
         StringBuilder contentBuilder = new StringBuilder();
         Stream<String> stream = null;
         try {
-            stream = Files.lines(Paths.get(commandScripFile.getValue()), StandardCharsets.UTF_8);
+            stream = Files.lines(Paths.get(commandScriptFile.getValue()), StandardCharsets.UTF_8);
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         } finally {
             if (stream != null) {
@@ -148,8 +149,29 @@ public class SOSPLSQLJobArguments extends JobArguments {
 
     }
 
-    public void setCommandScripFile(String commandScripFile) {
-        this.commandScripFile.setValue(commandScripFile);
+    public void setCommandScripFile(String commandScriptFile) {
+        this.commandScriptFile.setValue(commandScriptFile);
+    }
+
+    public void checkRequired() throws SOSJobRequiredArgumentMissingException {
+        if ((command.getValue() == null || command.getValue().isEmpty()) && (commandScriptFile.getValue() == null || commandScriptFile.getValue()
+                .isEmpty())) {
+            throw new SOSJobRequiredArgumentMissingException(command.getName() + " or " + commandScriptFile.getName());
+        }
+        if (!useHibernateFile()) {
+            if (dbUrl.getValue() == null || dbUrl.getValue().isEmpty()) {
+                throw new SOSJobRequiredArgumentMissingException(dbUrl.getName());
+            }
+            if (dbUser.getValue() == null || dbUser.getValue().isEmpty()) {
+                throw new SOSJobRequiredArgumentMissingException(dbUser.getName());
+            }
+        } else {
+            if (hibernateFile.getValue().toString().isEmpty()) {
+                throw new SOSJobRequiredArgumentMissingException(hibernateFile.getName() + " or " + dbUrl.getName() + " + username and password");
+            }
+
+        }
+
     }
 
 }
