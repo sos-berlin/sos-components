@@ -27,6 +27,11 @@ public class ExecutableJava
     extends Executable
 {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("className")
     private String className;
     /**
@@ -39,14 +44,14 @@ public class ExecutableJava
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables jobArguments;
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables arguments;
+    private Environment arguments;
 
     /**
      * No args constructor for use in serialization
@@ -60,20 +65,29 @@ public class ExecutableJava
      * @param className
      * @param jobArguments
      * @param arguments
-     * @param tYPE
      */
-    public ExecutableJava(String className, Variables jobArguments, Variables arguments, ExecutableType tYPE) {
-        super(tYPE);
+    public ExecutableJava(String className, Variables jobArguments, Environment arguments) {
+        super();
         this.className = className;
         this.jobArguments = jobArguments;
         this.arguments = arguments;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("className")
     public String getClassName() {
         return className;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("className")
     public void setClassName(String className) {
         this.className = className;
@@ -87,10 +101,6 @@ public class ExecutableJava
      */
     @JsonProperty("jobArguments")
     public Variables getJobArguments() {
-        //tmp : controller not accept null value
-        if(jobArguments == null) {
-            jobArguments = new Variables();
-        }
         return jobArguments;
     }
 
@@ -106,28 +116,24 @@ public class ExecutableJava
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public Variables getArguments() {
-        //tmp : controller not accept null value
-        if(arguments == null) {
-            arguments = new Variables();
-        }
+    public Environment getArguments() {
         return arguments;
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public void setArguments(Variables arguments) {
+    public void setArguments(Environment arguments) {
         this.arguments = arguments;
     }
 

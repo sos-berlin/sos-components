@@ -380,6 +380,7 @@
 	                		<replaceregexp flags="ig" byline="true" match="(private OrderMode mode = )null;" replace="\1new OrderMode();" file="${project.build.directory}/java-gen/com/sos/controller/model/command/CancelSuspendOrder.java" preserveLastModified="true" />
 	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/joc/model/security/permissions/SecurityConfigurationRoles.java" preserveLastModified="true" />
 	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/inventory/model/job/Environment.java" preserveLastModified="true" />
+	                		<replaceregexp flags="ig" byline="true" match="(HashMap)" replace="Linked\1" file="${project.build.directory}/java-gen/com/sos/controller/model/common/Variables.java" preserveLastModified="true" />
 	                	</target>
 	                </configuration>
 	        	</execution>

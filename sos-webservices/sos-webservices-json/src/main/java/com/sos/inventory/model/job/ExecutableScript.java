@@ -55,11 +55,11 @@ public class ExecutableScript
     /**
      * 
      * @param env
-     * @param tYPE
      * @param script
      * @param v1Compatible
      */
     public ExecutableScript(String script, Environment env, Boolean v1Compatible) {
+        super();
         this.script = script;
         this.env = env;
         this.v1Compatible = v1Compatible;

@@ -30,6 +30,7 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
@@ -223,13 +224,27 @@ public class Validator {
     
     private static void validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
+            // TODO check JobResources references in Job
             try {
-                // TODO check JobResources references in Job
                 JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()), URI.create(JocInventory.SCHEMA_LOCATION
                         .get(ConfigurationType.JOB)));
             } catch (SOSJsonSchemaException e) {
                 String msg = e.getMessage().replaceAll("(\\$\\.)", "$1jobs['" + entry.getKey() + "'].");
                 throw new SOSJsonSchemaException(msg);
+            }
+            switch (entry.getValue().getExecutable().getTYPE()) {
+            case InternalExecutable:
+                ExecutableJava ej = entry.getValue().getExecutable().cast();
+                if (ej.getArguments() != null) {
+                    validateExpression("$.jobs['" + entry.getKey() + "'].executable.arguments", ej.getArguments().getAdditionalProperties());
+                }
+                break;
+            case ScriptExecutable:
+                ExecutableScript es = entry.getValue().getExecutable().cast();
+                if (es.getEnv() != null) {
+                    validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
+                }
+                break;
             }
         }
     }
