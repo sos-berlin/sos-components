@@ -1,6 +1,5 @@
 package com.sos.jitl.jobs.db.oracle;
 
-import java.nio.file.Paths;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,12 +11,6 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
-import org.hibernate.Session;
-import org.hibernate.jdbc.Work;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +21,6 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
@@ -36,7 +28,7 @@ import js7.data_for_java.order.JOutcome;
 public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
 
     private static final String STD_OUT_OUTPUT = "std_out_output";
-    private static final String DBMS_OUTPUT = "dbmsOutput";
+    private static final String DBMS_OUTPUT = "dbms_output";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPLSQLJob.class);
 
     public SOSPLSQLJob(JobContext jobContext) {
@@ -65,18 +57,32 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                 String log = String.format("%1$s = %2$s", entry.getKey(), value);
                 LOGGER.debug(log);
                 if (step != null) {
-                    step.getLogger().info(log);
+                    step.getLogger().debug(log);
                 }
             }
-                       
-            Connection connection = getConnection(step.getLogger(),step.getArguments());
+
+            Connection connection = getConnection(step.getLogger(), step.getArguments());
             return step.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
             throw e;
         }
     }
 
-    private Connection getConnection(JobLogger logger,SOSPLSQLJobArguments args) throws Exception {
+    private void log(JobLogger logger, String log) {
+        LOGGER.info(log);
+        if (logger != null) {
+            logger.info(log);
+        }
+    }
+
+    private void debug(JobLogger logger, String log) {
+        LOGGER.debug(log);
+        if (logger != null) {
+            logger.debug(log);
+        }
+    }
+
+    private Connection getConnection(JobLogger logger, SOSPLSQLJobArguments args) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         Connection connection = null;
@@ -86,27 +92,26 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         try {
 
             if (args.useHibernateFile()) {
-               
+
             } else {
                 if (args.getCredentialStoreFile() != null) {
                     SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
                             .getCredentialStorePassword());
- 
 
                     r.setEntryPath(args.getCredentialStoreEntryPath());
 
                     args.setDbUrl(r.resolve(args.getDbUrl()));
-                  
+
                     args.setDbUser(r.resolve(args.getDbUser()));
                     args.setDbPassword(r.resolve(args.getDbPassword()));
-                    LOGGER.debug(args.getCredentialStoreFile());
-                    LOGGER.debug(args.getCredentialStoreKeyFile());
-                    LOGGER.debug(args.getCredentialStoreEntryPath());
-                } 
+                    debug(logger, args.getCredentialStoreFile());
+                    debug(logger, args.getCredentialStoreKeyFile());
+                    debug(logger, args.getCredentialStoreEntryPath());
+                }
 
-                LOGGER.debug("dbUrl: " + args.getDbUrl());
-                LOGGER.debug("dbUser: " + args.getDbUser());
-                LOGGER.debug("dbPassword: " + "********");
+                debug(logger, "dbUrl: " + args.getDbUrl());
+                debug(logger, "dbUser: " + args.getDbUser());
+                debug(logger, "dbPassword: " + "********");
 
                 DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
                 connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
@@ -148,12 +153,14 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
     private Map<String, Object> process(JobLogger logger, final Connection connection, SOSPLSQLJobArguments args) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
+        resultMap.put(DBMS_OUTPUT, "");
+        resultMap.put(STD_OUT_OUTPUT, "");
 
         CallableStatement callableStatement = null;
         DbmsOutput dbmsOutput = null;
 
         String plsql = "";
-        if (args.getCommand() != null) {
+        if ((args.getCommand() != null) && !args.getCommand().isEmpty()) {
             plsql = args.getCommand();
         }
         if (args.getCommandScriptFile() != null) {
@@ -162,10 +169,9 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
 
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
         plsql = Job.replaceVars(Job.getSubstitutor(args), plsql);
-        LOGGER.info(String.format("substituted Statement: %s will be executed.", plsql));
-        if (logger != null) {
-            logger.info(String.format("substituted Statement: %s will be executed.", plsql));
-        }
+
+        log(logger, String.format("substituted Statement: %s will be executed.", plsql));
+
         dbmsOutput = new DbmsOutput(connection);
         dbmsOutput.enable(1000000);
         callableStatement = connection.prepareCall(plsql);
@@ -175,10 +181,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
             if (dbmsOutput != null) {
                 String output = dbmsOutput.getOutput();
 
-                LOGGER.info(output);
-                if (logger != null) {
-                    logger.info(output);
-                }
+                log(logger, output);
 
                 if (output != null) {
                     resultMap.put(DBMS_OUTPUT, output);
@@ -198,20 +201,20 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
                     }
                     dbmsOutput.close();
                     if (!aVariableFound) {
-                        LOGGER.debug(String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
+                        debug(logger, String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
                     }
                     ResultSetMetaData resultSetMetaData = callableStatement.getMetaData();
                     if (resultSetMetaData != null) {
                         int nCols;
                         nCols = resultSetMetaData.getColumnCount();
                         for (int i = 1; i <= nCols; i++) {
-                            LOGGER.info(resultSetMetaData.getColumnName(i));
+                            debug(logger, resultSetMetaData.getColumnName(i));
                             int colSize = resultSetMetaData.getColumnDisplaySize(i);
                             for (int k = 0; k < colSize - resultSetMetaData.getColumnName(i).length(); k++) {
-                                LOGGER.info(" ");
+                                debug(logger, " ");
                             }
                         }
-                        LOGGER.info("");
+                        debug(logger, "");
                     }
                 }
             }
@@ -240,12 +243,12 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         arguments.setDbPassword("scheduler");
         arguments.setDbUser("scheduler");
         arguments.setVariableParserRegExpr("");
-        // arguments.setDbUrl("jdbc:oracle:thin:@//LAPTOP-7RSACSCV:1521/xe");
-        //arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
+        arguments.setDbUrl("jdbc:oracle:thin:@//LAPTOP-7RSACSCV:1521/xe");
+        // arguments.setHibernateFile(Paths.get("D:/documents/sos-berlin.com/scheduler_joc_cockpit/oracle/hibernate.cfg.xml"));
 
         Connection connection;
         try {
-            connection = sosPLSQLJob.getConnection(null,arguments);
+            connection = sosPLSQLJob.getConnection(null, arguments);
             sosPLSQLJob.process(null, connection, arguments);
         } catch (Exception e) {
             e.printStackTrace();

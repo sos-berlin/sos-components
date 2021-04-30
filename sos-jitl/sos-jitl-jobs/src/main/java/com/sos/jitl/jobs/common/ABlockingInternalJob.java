@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
@@ -67,7 +69,12 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     @Override
     public Either<Problem, Void> start() {
         try {
-            onStart(createJobArguments());
+            List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
+            A args = createJobArguments(exceptions);
+            // TODO
+            // checkExceptions(exceptions);
+
+            onStart(args);
             return right(null);
         } catch (Throwable e) {
             return left(Problem.fromThrowable(e));
@@ -77,7 +84,12 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     @Override
     public void stop() {
         try {
-            onStop(createJobArguments());
+            List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
+            A args = createJobArguments(exceptions);
+            // TODO
+            // checkExceptions(exceptions);
+
+            onStop(args);
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
@@ -86,33 +98,51 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
         return () -> {
+            JobStep<A> jobStep = new JobStep<A>(getClass().getName(), step);
             try {
-                A args = createJobArguments(step);
-                return onOrderProcess(new JobStep<A>(step, new JobLogger(step, args), args));
+                List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
+                A args = createJobArguments(exceptions, jobStep);
+                jobStep.init(args);
+                jobStep.logParameterization();
+                checkExceptions(exceptions);
+
+                return onOrderProcess(jobStep);
             } catch (Throwable e) {
-                LOGGER.error(e.toString(), e);
-                return JobStep.failed(e.toString(), e);
+                return jobStep.failed(e.toString(), e);
             }
         };
     }
 
-    private Object getNamedValue(final BlockingInternalJob.Step step, final String name) {
+    private void checkExceptions(List<SOSJobArgumentException> exceptions) throws Exception {
+        if (exceptions.size() > 0) {
+            List<String> l = exceptions.stream().filter(e -> e instanceof SOSJobRequiredArgumentMissingException).map(e -> {
+                return ((SOSJobRequiredArgumentMissingException) e).getArgumentName();
+            }).collect(Collectors.toList());
+            if (l.size() > 0) {
+                throw new SOSJobRequiredArgumentMissingException(String.join(", ", l));
+            } else {
+                throw exceptions.get(0);
+            }
+        }
+    }
+
+    private Object getNamedValue(final JobStep<A> step, final String name) {
         if (step == null) {
             return null;
         }
-        Optional<Value> op = step.namedValue(name);
+        Optional<Value> op = step.getInternalStep().namedValue(name);
         if (op.isPresent()) {
             return Job.getValue(op.get());
         }
         return null;
     }
 
-    private A createJobArguments() throws Exception {
-        return createJobArguments(null);
+    private A createJobArguments(List<SOSJobArgumentException> exceptions) throws Exception {
+        return createJobArguments(exceptions, null);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private A createJobArguments(final BlockingInternalJob.Step step) throws Exception {
+    private A createJobArguments(List<SOSJobArgumentException> exceptions, final JobStep<A> step) throws Exception {
         A a = getJobArgumensClass().newInstance();
 
         Map<String, Object> map = null;
@@ -124,12 +154,13 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         } else {
             Stream<Map<String, Value>> stream = null;
             if (jobContext == null) {
-                stream = Stream.of(step.arguments(), step.order().arguments());
+                stream = Stream.of(step.getInternalStep().arguments(), step.getInternalStep().order().arguments());
             } else {
-                stream = Stream.of(jobContext.jobArguments(), step.arguments(), step.order().arguments());
+                stream = Stream.of(jobContext.jobArguments(), step.getInternalStep().arguments(), step.getInternalStep().order().arguments());
             }
             map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
+        Map<String, Object> lastSuccededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
         List<Field> fields = Job.getJobArgumentFields(a);
         for (Field field : fields) {
             try {
@@ -139,61 +170,110 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     if (arg.getName() == null) {// internal usage
                         continue;
                     }
-                    Object val = getNamedValue(step, arg.getName());
-                    boolean isNamedValue = false;
-                    if (val == null) {
-                        val = map.get(arg.getName());
+                    if (lastSuccededOutcomes != null && lastSuccededOutcomes.containsKey(arg.getName())) {
+                        arg.setValue(getValue(field, arg, lastSuccededOutcomes.get(arg.getName())));
+                        setValueSource(arg, ValueSource.LAST_SUCCEEDED_OUTCOME);
                     } else {
-                        isNamedValue = true;
-                    }
-                    if (val == null || SOSString.isEmpty(val.toString())) {
-                        arg.setValue(arg.getDefault());
-                    } else {
-                        if (val instanceof String) {
-                            val = val.toString().trim();
-                            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                            if (!type.equals(String.class)) {
-                                if (type.equals(Path.class)) {
-                                    val = Paths.get(val.toString());
-                                } else if (type.equals(URI.class)) {
-                                    val = URI.create(val.toString());
-                                } else if (SOSReflection.isEnum(type.getTypeName())) {
-                                    Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
-                                    val = v == null ? arg.getDefault() : v;
-                                }
-                            }
+                        Object val = getNamedValue(step, arg.getName());
+                        boolean isNamedValue = false;
+                        if (val == null) {
+                            val = map.get(arg.getName());
+                        } else {
+                            isNamedValue = true;
                         }
-                        arg.setValue(val);
+                        if (val == null || SOSString.isEmpty(val.toString())) {
+                            arg.setValue(arg.getDefault());
+                        } else {
+                            arg.setValue(getValue(field, arg, val));
+                        }
+                        if (step != null && arg.isRequired() && arg.getValue() == null) {
+                            throw new SOSJobRequiredArgumentMissingException(arg.getName(), arg.getName());
+                        }
+                        setValueSource(step, arg, isNamedValue);
                     }
-                    if (arg.isRequired() && arg.getValue() == null) {
-                        throw new SOSJobRequiredArgumentMissingException(arg.getName());
-                    }
-                    setValueSource(step, arg, isNamedValue);
+
                     field.set(a, arg);
+                    setReference(fields, a, arg);
                 }
             } catch (SOSJobRequiredArgumentMissingException e) {
-                throw e;
+                exceptions.add(e);
             } catch (Throwable e) {
-                throw new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
-                        .toString()), e);
+                exceptions.add(new SOSJobArgumentException(String.format("[%s.%s][can't get or set field]%s", getClass().getName(), field.getName(), e
+                        .toString()), e));
             }
         }
         return a;
     }
 
-    private void setValueSource(final BlockingInternalJob.Step step, JobArgument<A> arg, boolean isNamedValue) {
-        if (arg.getValue() == null || arg.getName() == null) {// internal
+    private Object getValue(Field field, JobArgument<A> arg, Object val) throws ClassNotFoundException {
+        if (val instanceof String) {
+            val = val.toString().trim();
+            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            if (!type.equals(String.class)) {
+                if (type.equals(Path.class)) {
+                    val = Paths.get(val.toString());
+                } else if (type.equals(URI.class)) {
+                    val = URI.create(val.toString());
+                } else if (SOSReflection.isEnum(type.getTypeName())) {
+                    Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
+                    if (v == null) {
+                        arg.setNotAcceptedValue(val);
+                        val = arg.getDefault();
+                    } else {
+                        val = v;
+                    }
+
+                }
+            }
+        }
+        return val;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void setReference(List<Field> fields, A jobArguments, JobArgument<A> arg) throws IllegalArgumentException, IllegalAccessException {
+        if (arg.getReference() != null && arg.isDirty()) {
+            Field ref = fields.stream().filter(f -> f.getName().equals(arg.getReference().getName())).findAny().orElse(null);
+            if (ref != null) {
+                ref.setAccessible(true);
+                JobArgument ja = (JobArgument<?>) ref.get(jobArguments);
+                if (ja != null) {
+                    if (!ja.isDirty()) {
+                        ja.setValue(arg.getValue());
+                        ja.setIsDirty(true);
+                    }
+                }
+            }
+        }
+    }
+
+    private void setValueSource(final JobStep<A> step, JobArgument<A> arg, boolean isNamedValue) {
+        if (arg.getValue() == null || arg.getName() == null) {// source Java or internal usage
             return;
         }
+        ValueSource source = null;
         if (isNamedValue) {// order or node
-            arg.setValueSource(step.order().arguments().containsKey(arg.getName()) ? JobArgument.ValueSource.ORDER : JobArgument.ValueSource.NODE);
+            if (step != null) {
+                source = step.getInternalStep().order().arguments().containsKey(arg.getName()) ? JobArgument.ValueSource.ORDER
+                        : JobArgument.ValueSource.ORDER_OR_NODE;
+            }
         } else {
             if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
-                arg.setValueSource(JobArgument.ValueSource.JOB_ARGUMENT);
+                source = JobArgument.ValueSource.JOB_ARGUMENT;
             }
-            if (step != null && step.arguments().containsKey(arg.getName())) {
-                arg.setValueSource(JobArgument.ValueSource.JOB);
+            if (step != null && step.getInternalStep().arguments().containsKey(arg.getName())) {
+                source = JobArgument.ValueSource.JOB;
             }
+        }
+        if (source != null) {
+            setValueSource(arg, source);
+        }
+    }
+
+    private void setValueSource(JobArgument<A> arg, ValueSource source) {
+        if (arg.getNotAcceptedValue() != null) {
+            arg.getNotAcceptedValue().setSource(source);
+        } else {
+            arg.setValueSource(source);
         }
     }
 

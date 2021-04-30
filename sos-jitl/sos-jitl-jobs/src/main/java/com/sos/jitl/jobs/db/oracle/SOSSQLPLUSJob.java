@@ -15,6 +15,7 @@ import com.sos.commons.util.SOSCommandResult;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data.value.Value;
@@ -44,6 +45,10 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
     public Map<String, Object> process(JobStep<SOSSQLPlusJobArguments> step, SOSSQLPlusJobArguments args) throws Exception {
 
         args.checkRequired();
+        JobLogger logger = null;
+        if (step != null) {
+            logger = step.getLogger();
+        }
         Map<String, Object> resultMap = new HashMap<String, Object>();
         try {
             if (args.getCredentialStoreFile() != null) {
@@ -55,14 +60,14 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
                 args.setDbUrl(r.resolve(args.getDbUrl()));
                 args.setDbUser(r.resolve(args.getDbUser()));
                 args.setDbPassword(r.resolve(args.getDbPassword()));
-                LOGGER.debug(args.getCredentialStoreFile());
-                LOGGER.debug(args.getCredentialStoreKeyFile());
-                LOGGER.debug(args.getCredentialStoreEntryPath());
+                debug(logger, args.getCredentialStoreFile());
+                debug(logger, args.getCredentialStoreKeyFile());
+                debug(logger, args.getCredentialStoreEntryPath());
             }
 
-            LOGGER.debug("dbUrl: " + args.getDbUrl());
-            LOGGER.debug("dbUser: " + args.getDbUser());
-            LOGGER.debug("dbPassword: " + "********");
+            debug(logger, "dbUrl: " + args.getDbUrl());
+            debug(logger, "dbUser: " + args.getDbUser());
+            debug(logger, "dbPassword: " + "********");
 
             Map<String, Value> variables = new HashMap<String, Value>();
             if (step != null) {
@@ -71,19 +76,10 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
                 variables.putAll(step.getInternalStep().order().arguments());
             }
 
-            SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables);
+            SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables,logger);
             File tempFile = File.createTempFile("sos", ".sql");
             String tempFileName = tempFile.getAbsolutePath();
             sqlPlusCommandHandler.createSqlFile(args, tempFileName);
-
-            LOGGER.debug(args.getCommandLineForLog(tempFileName));
-            if (step != null) {
-
-                step.getLogger().info("dbUrl: " + args.getDbUrl());
-                step.getLogger().info("dbUser: " + args.getDbUser());
-                step.getLogger().info("dbPassword: " + "********");
-                step.getLogger().info(args.getCommandLineForLog(tempFileName));
-            }
 
             SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
             final String conNL = System.getProperty("line.separator");
@@ -103,6 +99,20 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
         return resultMap;
     }
 
+    private void log(JobLogger logger, String log) {
+        LOGGER.info(log);
+        if (logger != null) {
+            logger.info(log);
+        }
+    }
+
+    private void debug(JobLogger logger, String log) {
+        LOGGER.debug(log);
+        if (logger != null) {
+            logger.debug(log);
+        }
+    }
+
     public static void main(String[] args) {
         SOSSQLPLUSJob sosSQLPlusJob = new SOSSQLPLUSJob(null);
         SOSSQLPlusJobArguments arguments = new SOSSQLPlusJobArguments();
@@ -116,9 +126,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
         arguments.setDbUser("cs://sos/db/ur/@user");
         arguments.setCredentialStoreFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.kdbx");
         arguments.setCredentialStoreKeyFile("D:/documents/sos-berlin.com/scheduler_joc_cockpit/config/profiles/sos.key");
-     
 
-        
         try {
             sosSQLPlusJob.process(null, arguments);
         } catch (Exception e) {

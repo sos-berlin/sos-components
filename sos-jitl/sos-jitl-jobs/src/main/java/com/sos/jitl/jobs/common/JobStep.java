@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
+import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
@@ -28,16 +28,22 @@ import scala.collection.JavaConverters;
 
 public class JobStep<A> {
 
+    private final String jobClassName;
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
-    private final A arguments;
+    private A arguments;
     private Map<String, Map<String, Object>> lastOutcomes;
+    private List<JobArgument<?>> argumentsInfo;
 
-    protected JobStep(BlockingInternalJob.Step step, JobLogger logger, A arguments) {
+    protected JobStep(String jobClassName, BlockingInternalJob.Step step) {
+        this.jobClassName = jobClassName;
         this.internalStep = step;
-        this.logger = logger;
+        this.logger = new JobLogger(internalStep, getStepInfo());
+    }
+
+    protected void init(A arguments) {
         this.arguments = arguments;
-        logParameterization();
+        this.logger.init(arguments);
     }
 
     public BlockingInternalJob.Step getInternalStep() {
@@ -74,35 +80,74 @@ public class JobStep<A> {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
-    public Map<JobArgument.ValueSource, List<String>> argumentsInfo() throws Exception {
+    public Map<JobArgument.ValueSource, List<String>> argumentsInfoBySetter() throws Exception {
+        List<JobArgument<?>> arguments = getArgumentsInfo();
+        if (arguments == null || arguments.size() == 0) {
+            return null;
+        }
+        Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
+        for (JobArgument<?> arg : arguments) {
+            List<String> l;
+            ValueSource key = arg.getValueSource();
+            if (map.containsKey(key)) {
+                l = map.get(key);
+            } else {
+                l = new ArrayList<String>();
+            }
+            l.add(String.format("%s=%s", arg.getName(), arg.getDisplayValue()));
+            map.put(key, l);
+
+            if (arg.getNotAcceptedValue() != null) {
+                key = arg.getNotAcceptedValue().getSource();
+                if (map.containsKey(key)) {
+                    l = map.get(key);
+                } else {
+                    l = new ArrayList<String>();
+                }
+                l.add(String.format("[not accepted]%s=%s[use default]%s", arg.getName(), arg.getNotAcceptedValue().getDisplayValue(), arg
+                        .getDisplayValue()));
+                map.put(key, l);
+            }
+
+        }
+        return map;
+    }
+
+    public List<JobArgument<?>> getArgumentsInfo() throws Exception {
         if (internalStep == null || arguments == null) {
             return null;
         }
-        List<Field> fields = Job.getJobArgumentFields(arguments);
-        Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
-        for (Field field : fields) {
-            try {
-                field.setAccessible(true);
-                JobArgument<?> arg = (JobArgument<?>) field.get(arguments);
-                if (arg != null) {
-                    if (arg.getName() == null) {// internal usage
-                        continue;
+        if (argumentsInfo == null) {
+            List<Field> fields = Job.getJobArgumentFields(arguments);
+            List<JobArgument<?>> l = new ArrayList<JobArgument<?>>();
+            for (Field field : fields) {
+                try {
+                    field.setAccessible(true);
+                    JobArgument<?> arg = (JobArgument<?>) field.get(arguments);
+                    if (arg != null) {
+                        if (arg.getName() == null) {// internal usage
+                            continue;
+                        }
+                        l.add(arg);
                     }
-                    List<String> l;
-                    if (map.containsKey(arg.getValueSource())) {
-                        l = map.get(arg.getValueSource());
-                    } else {
-                        l = new ArrayList<String>();
-                    }
-                    l.add(String.format("%s=%s", arg.getName(), arg.getDisplayValue()));
-                    map.put(arg.getValueSource(), l);
+                } catch (Throwable e) {
+                    throw new SOSJobArgumentException(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
+                            .toString()), e);
                 }
-            } catch (Throwable e) {
-                throw new SOSJobArgumentException(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()),
-                        e);
             }
+            argumentsInfo = l;
         }
-        return map;
+        return argumentsInfo;
+    }
+
+    private String getStepInfo() {
+        try {
+            return String.format("[Order %s][Workflow %s, versionId=%s, pos=%s][Job %s, agent=%s, class=%s]", getOrderId(), getWorkflowName(),
+                    getWorkflowVersionId(), getWorkflowPosition(), getJobName(), getAgentId(), jobClassName);
+        } catch (SOSJobProblemException e) {
+            return String.format("[Workflow %s, versionId=%s, pos=%s][Job class=%s]", getWorkflowName(), getWorkflowVersionId(),
+                    getWorkflowPosition(), jobClassName);
+        }
     }
 
     public String getOrderId() throws SOSJobProblemException {
@@ -181,22 +226,11 @@ public class JobStep<A> {
         return JOutcome.succeeded(convert4engine(returnValues));
     }
 
-    public JOutcome.Completed failed() {
-        return JOutcome.failed();
-    }
-
-    protected static JOutcome.Completed failed(final String msg, Throwable e) {
-        if (e == null) {
-            return JOutcome.failed(msg);
-        }
-        return JOutcome.failed(new StringBuilder(msg).append("\n").append(SOSString.toString(e)).toString());
-    }
-
     public JOutcome.Completed failed(final String msg, final String returnValueKey, final Object returnValue) {
         if (returnValueKey != null && returnValue != null) {
-            return JOutcome.failed(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
+            return failedWithMap(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
         }
-        return JOutcome.failed(msg);
+        return failed(msg);
     }
 
     public JOutcome.Completed failed(final String msg, JobReturnVariable<?>... returnValues) {
@@ -205,9 +239,30 @@ public class JobStep<A> {
 
     public JOutcome.Completed failed(final String msg, final Map<String, Object> returnValues) {
         if (returnValues == null || returnValues.size() == 0) {
-            return JOutcome.failed(msg);
+            return failed(msg);
         }
-        return JOutcome.failed(msg, convert4engine(returnValues));
+        return failedWithMap(msg, convert4engine(returnValues));
+    }
+
+    public JOutcome.Completed failed() {
+        logger.failed2slf4j();
+        return JOutcome.failed();
+    }
+
+    public JOutcome.Completed failed(String msg) {
+        logger.failed2slf4j(msg);
+        return JOutcome.failed(msg);
+    }
+
+    public JOutcome.Completed failed(final String msg, Throwable e) {
+        Throwable ex = logger.handleException(e);
+        logger.failed2slf4j(e.toString(), ex);
+        return JOutcome.failed(logger.err2String(msg, ex));
+    }
+
+    private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> returnValues) {
+        logger.failed2slf4j(msg, returnValues);
+        return JOutcome.failed(msg, returnValues);
     }
 
     private Map<String, Object> getMap(JobReturnVariable<?>... returnValues) {
@@ -284,37 +339,72 @@ public class JobStep<A> {
         return resultMap;
     }
 
-    private void logParameterization() {
+    protected void logParameterization() {
         try {
             logger.info("Job Parameterization:");
-            Map<ValueSource, List<String>> map = argumentsInfo();
+            Map<ValueSource, List<String>> map = argumentsInfoBySetter();
             if (map == null || map.size() == 0) {
                 logOutcomes();
+                logAllJavaJobArguments(false);
+                logAllJavaJobArguments(true);
                 return;
             }
-            logInfo(map, ValueSource.ORDER);
-            logInfo(map, ValueSource.NODE);
-            logInfo(map, ValueSource.JOB);
-            logInfo(map, ValueSource.JOB_ARGUMENT);
+            log(LogLevel.INFO, map, ValueSource.ORDER);
+            log(LogLevel.INFO, map, ValueSource.ORDER_OR_NODE);
+            log(LogLevel.INFO, map, ValueSource.JOB);
+            log(LogLevel.INFO, map, ValueSource.JOB_ARGUMENT);
 
             logOutcomes();
+            logAllJavaJobArguments(false);
+            logAllJavaJobArguments(true);
+
+            if (logger.isDebugEnabled()) {
+                // logAllJavaJobArguments();
+            }
 
         } catch (Exception e) {
             logger.error(e.toString(), e);
         }
     }
 
-    // TODO mask password ...
-    private void logOutcomes() {
-        logInfo("Last Succeeded Outcomes: ", getLastSucceededOutcomes());
-        logInfo("Last Failed Outcomes: ", getLastFailedOutcomes());
-    }
-
-    private void logInfo(Map<ValueSource, List<String>> map, ValueSource source) {
+    private void log(LogLevel logLevel, Map<ValueSource, List<String>> map, ValueSource source) {
         List<String> list = map.get(source);
         if (list != null && list.size() > 0) {
-            logger.info("%s: %s", source.getValue(), String.join(", ", list));
+            String msg = String.format("%s: %s", source.getValue(), String.join(", ", list));
+            if (logLevel.equals(LogLevel.INFO)) {
+                logger.info(msg);
+            } else {
+                logger.debug(msg);
+            }
         }
+    }
+
+    private void logAllJavaJobArguments(boolean all) throws Exception {
+        List<JobArgument<?>> arguments = getArgumentsInfo();
+        if (arguments == null || arguments.size() == 0) {
+            return;
+        }
+        if (all) {
+            logger.info(String.format("%s(all JobArguments declared in the Java Job): %s", ValueSource.JAVA.getValue(), arguments.stream().map(
+                    Object::toString).collect(Collectors.joining(", "))));
+        } else {
+            logger.info(String.format("%s: %s", ValueSource.JAVA.getValue(), arguments.stream().filter(a -> {
+                if (a.isDirty()) {
+                    return true;
+                } else {
+                    if (!a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
+                        return true;
+                    }
+                }
+                return false;
+            }).map(Object::toString).collect(Collectors.joining(", "))));
+        }
+    }
+
+    // TODO mask password ...
+    private void logOutcomes() {
+        logInfo(JobArgument.ValueSource.LAST_SUCCEEDED_OUTCOME.getValue() + ": ", getLastSucceededOutcomes());
+        logInfo(JobArgument.ValueSource.LAST_FAILED_OUTCOME.getValue() + ": ", getLastFailedOutcomes());
     }
 
     private void logInfo(String title, Map<String, Object> map) {

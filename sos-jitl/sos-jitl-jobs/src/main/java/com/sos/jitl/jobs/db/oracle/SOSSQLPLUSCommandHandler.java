@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSCommandResult;
 import com.sos.commons.util.SOSPath;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobLogger;
 
 import js7.data.value.Value;
 
@@ -26,9 +27,11 @@ public class SOSSQLPLUSCommandHandler {
     private static final String EXIT_CODE = "exitCode";
     private static final String SQL_ERROR = "sql_error";
     private Map<String, Value> variables = new HashMap<String, Value>();
+    private JobLogger logger = null;
 
-    public SOSSQLPLUSCommandHandler(Map<String, Value> variables) {
+    public SOSSQLPLUSCommandHandler(Map<String, Value> variables, JobLogger logger) {
         this.variables.putAll(variables);
+        this.logger = logger;
     }
 
     private void writeln(Path file, String line) throws IOException {
@@ -49,7 +52,7 @@ public class SOSSQLPLUSCommandHandler {
         if (!args.getIncludeFiles().isEmpty()) {
             String[] includeFileNames = args.getIncludeFiles().split(";");
             for (String includeFileName : includeFileNames) {
-                LOGGER.debug(String.format("Append file '%1$s' to script", includeFileName));
+                debug(logger, String.format("Append file '%1$s' to script", includeFileName));
                 Path dest = Paths.get(includeFileName);
                 SOSPath.appendFile(sqlScript, dest);
             }
@@ -99,7 +102,7 @@ public class SOSSQLPLUSCommandHandler {
             }
         }
         if (!aVariableFound) {
-            LOGGER.debug(String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
+            debug(logger, String.format("no JS-variable definitions found using reg-exp '%1$s'.", regExp));
         }
         return stdOutStringArray;
     }
@@ -144,9 +147,9 @@ public class SOSSQLPLUSCommandHandler {
                 }
                 if (isError) {
                     sqlError += stdoutLine;
-                    LOGGER.debug("error found: " + stdoutLine);
+                    log(logger, "error found: " + stdoutLine);
                 } else {
-                    LOGGER.info(String.format("Error '%1$s' ignored due to settings", stdoutLine));
+                    log(logger, String.format("Error '%1$s' ignored due to settings", stdoutLine));
                 }
             }
         }
@@ -163,6 +166,20 @@ public class SOSSQLPLUSCommandHandler {
         resultMap.put(EXIT_CODE, sosCommandResult.getExitCode());
         if (sosCommandResult.getExitCode() != 0 && !args.getIgnoreOraMessages().contains(strCC)) {
             throw new Exception(String.format("Exit-Code set to '%1$s': %2$s", sosCommandResult.getExitCode(), sqlError.trim()));
+        }
+    }
+
+    private void log(JobLogger logger, String log) {
+        LOGGER.info(log);
+        if (logger != null) {
+            logger.info(log);
+        }
+    }
+
+    private void debug(JobLogger logger, String log) {
+        LOGGER.debug(log);
+        if (logger != null) {
+            logger.debug(log);
         }
     }
 }
