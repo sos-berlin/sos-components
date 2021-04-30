@@ -1462,6 +1462,22 @@ public abstract class PublishUtils {
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
+                case JOBRESOURCE:
+                    String jobResource = Globals.objectMapper.writeValueAsString(((JobResourcePublish) draft).getContent());
+                    newDeployedObject.setContent(jobResource);
+                    if (draft.getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JOBRESOURCE.intValue());
+                    }
+                    newDeployedObject.setPath(original.getPath());
+                    if (original.getName() != null && !original.getName().isEmpty()) {
+                        newDeployedObject.setName(original.getName());
+                    } else {
+                        newDeployedObject.setName(Paths.get(original.getPath()).getFileName().toString());
+                    }
+                    newDeployedObject.setFolder(original.getFolder());
+                    newDeployedObject.setInvContent(original.getContent());
+                    newDeployedObject.setInventoryConfigurationId(original.getId());
+                	break;
                 case LOCK:
                     String lock = Globals.objectMapper.writeValueAsString(((LockPublish) draft).getContent());
                     newDeployedObject.setContent(lock);
@@ -1683,38 +1699,6 @@ public abstract class PublishUtils {
         }
     }
 
-//    public static DeployType mapConfigurationType(ConfigurationType inventoryType) {
-//        switch (inventoryType) {
-//        case WORKFLOW:
-//            return DeployType.WORKFLOW;
-//        case LOCK:
-//            return DeployType.LOCK;
-//        case JUNCTION:
-//            return DeployType.JUNCTION;
-//        case JOBCLASS:
-//            return DeployType.JOBCLASS;
-//        case FILEORDERSOURCE:
-//            return DeployType.FILEORDERSOURCE;
-//        }
-//        return null;
-//    }
-//
-//    public static ConfigurationType mapDeployType(DeployType deployType) {
-//        switch (deployType) {
-//        case WORKFLOW:
-//            return ConfigurationType.WORKFLOW;
-//        case LOCK:
-//            return ConfigurationType.LOCK;
-//        case JUNCTION:
-//            return ConfigurationType.JUNCTION;
-//        case JOBCLASS:
-//            return ConfigurationType.JOBCLASS;
-//        case FILEORDERSOURCE:
-//            return ConfigurationType.FILEORDERSOURCE;
-//        }
-//        return null;
-//    }
-//
     public static <T extends DBItem> List<DBItemDeploymentHistory> checkRenamingForUpdate(Set<T> verifiedObjects, String controllerId,
             DBLayerDeploy dbLayer, String keyAlgorithm) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         DBItemDeploymentHistory depHistory = null;
@@ -3151,6 +3135,10 @@ public abstract class PublishUtils {
                 }
                 jsObject.setContent(workflow);
                 break;
+            case JOBRESOURCE:
+                JobResource jobResource = om.readValue(item.getContent().getBytes(), JobResource.class);
+                jsObject.setContent(jobResource);
+                break;
             case LOCK:
                 Lock lock = om.readValue(item.getContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
@@ -3194,6 +3182,10 @@ public abstract class PublishUtils {
                 }
                 jsObject.setContent(workflow);
                 break;
+            case JOBRESOURCE:
+                JobResource jobResource = om.readValue(item.getInvContent().getBytes(), JobResource.class);
+                jsObject.setContent(jobResource);
+                break;
             case JOBCLASS:
                 JobClass jobClass = om.readValue(item.getInvContent().getBytes(), JobClass.class);
                 jsObject.setContent(jobClass);
@@ -3235,6 +3227,11 @@ public abstract class PublishUtils {
                     om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
                 configurationObject.setConfiguration(workflow);
                 break;
+            case JOBRESOURCE:
+                com.sos.inventory.model.jobresource.JobResource jobResource = 
+                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                configurationObject.setConfiguration(jobResource);
+                break;
             case JOBCLASS:
                 com.sos.inventory.model.jobclass.JobClass jobClass = 
                     om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
@@ -3273,39 +3270,44 @@ public abstract class PublishUtils {
             configuration.setPath(item.getPath());
             configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configuration.getObjectType()) {
-            case WORKINGDAYSCALENDAR:
-            case NONWORKINGDAYSCALENDAR:
-                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
-                configuration.setConfiguration(calendar);
-                break;
-            case SCHEDULE:
-                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
-                configuration.setConfiguration(schedule);
-                break;
             case WORKFLOW:
                 com.sos.inventory.model.workflow.Workflow workflow = 
                     om.readValue(item.getContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
                 configuration.setConfiguration(workflow);
                 break;
-            case JOBCLASS:
-                com.sos.inventory.model.jobclass.JobClass jobClass = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
-                configuration.setConfiguration(jobClass);
+            case JOBRESOURCE:
+                com.sos.inventory.model.jobresource.JobResource jobResource = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                configuration.setConfiguration(jobResource);
                 break;
             case LOCK:
                 com.sos.inventory.model.lock.Lock lock = 
                     om.readValue(item.getContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
                 configuration.setConfiguration(lock);
                 break;
-            case JUNCTION:
-                com.sos.inventory.model.junction.Junction junction = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
-                configuration.setConfiguration(junction);
-                break;
             case FILEORDERSOURCE:
                 com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                     om.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configuration.setConfiguration(fileOrderSource);
+                break;
+            case SCHEDULE:
+                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
+                configuration.setConfiguration(schedule);
+                break;
+            case WORKINGDAYSCALENDAR:
+            case NONWORKINGDAYSCALENDAR:
+                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
+                configuration.setConfiguration(calendar);
+                break;
+            case JOBCLASS:
+                com.sos.inventory.model.jobclass.JobClass jobClass = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                configuration.setConfiguration(jobClass);
+                break;
+            case JUNCTION:
+                com.sos.inventory.model.junction.Junction junction = 
+                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
+                configuration.setConfiguration(junction);
                 break;
             default:
             	break;
@@ -3342,7 +3344,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
-        if (workflow.getDocumentationPath() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
+        if (workflow != null && workflow.getDocumentationPath() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3351,7 +3353,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource.getDocumentationPath() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
+        if (jobResource!= null && jobResource.getDocumentationPath() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3359,7 +3361,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.junction.Junction junction) {
-        if (junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction
+        if (junction != null && junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3368,7 +3370,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
+        if (jobClass != null && jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3377,7 +3379,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentName() == null && fileOrderSource.getDelay() == null 
+        if (fileOrderSource != null && fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentName() == null && fileOrderSource.getDelay() == null 
                 && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowName() == null
                 && fileOrderSource.getDirectory() == null) {
             return false;
@@ -3387,7 +3389,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
-        if (lock.getDocumentationPath() == null && lock.getLimit() == null && lock.getTYPE() == null) {
+        if (lock != null && lock.getDocumentationPath() == null && lock.getLimit() == null && lock.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3395,7 +3397,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule.getDocumentationPath() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
+        if (schedule != null && schedule.getDocumentationPath() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
                 .getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null && schedule
                         .getNonWorkingCalendars() == null && schedule.getVariables() == null) {
             return false;
@@ -3405,7 +3407,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar.getDocumentationPath() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
+        if (calendar != null && calendar.getDocumentationPath() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
                 && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar.getType() == null) {
             return false;
         } else {
@@ -3449,10 +3451,20 @@ public abstract class PublishUtils {
                             ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(workflow));
                         }
                         break;
+                    case JOBRESOURCE:
+                    	JobResource jobResource = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), JobResource.class);
+                        jobResource.setPath(((DBItemInventoryConfiguration) item).getName());
+                        ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(jobResource));
+                        break;
                     case LOCK:
                         Lock lock = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Lock.class);
                         lock.setPath(((DBItemInventoryConfiguration) item).getName());
                         ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(lock));
+                        break;
+                    case FILEORDERSOURCE:
+                    	FileOrderSource fileOrderSource = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), FileOrderSource.class);
+                        fileOrderSource.setPath(((DBItemInventoryConfiguration) item).getName());
+                        ((DBItemInventoryConfiguration) item).setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
                         break;
                     case JUNCTION:
                         Junction junction = Globals.objectMapper.readValue(((DBItemInventoryConfiguration) item).getContent(), Junction.class);
@@ -3481,7 +3493,6 @@ public abstract class PublishUtils {
                         break;
                     case JOB:
                     case FOLDER:
-                    case FILEORDERSOURCE:
                         break;
                     }
                 } catch (Exception e) {
@@ -3497,11 +3508,25 @@ public abstract class PublishUtils {
                             ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(workflow));
                         }
                         break;
+                    case JOBRESOURCE:
+                        JobResource jobResource = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), JobResource.class);
+                        if (jobResource.getPath().startsWith("/")) {
+                            jobResource.setPath(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(jobResource));
+                        }
+                        break;
                     case LOCK:
                         Lock lock = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), Lock.class);
                         if (lock.getPath().startsWith("/")) {
                             lock.setPath(((DBItemDeploymentHistory) item).getName());
                             ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(lock));
+                        }
+                        break;
+                    case FILEORDERSOURCE:
+                    	FileOrderSource fileOrderSource = Globals.objectMapper.readValue(((DBItemDeploymentHistory) item).getContent(), FileOrderSource.class);
+                        if (fileOrderSource.getPath().startsWith("/")) {
+                        	fileOrderSource.setPath(((DBItemDeploymentHistory) item).getName());
+                            ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
                         }
                         break;
                     case JUNCTION:
@@ -3517,9 +3542,6 @@ public abstract class PublishUtils {
                             jobClass.setPath(((DBItemDeploymentHistory) item).getName());
                             ((DBItemDeploymentHistory) item).setContent(Globals.objectMapper.writeValueAsString(jobClass));
                         }
-                        break;
-                    case FILEORDERSOURCE:
-                        // FileOrderSources have no path property
                         break;
                     }
                 } catch (Exception e) {

@@ -122,21 +122,17 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             StreamingOutput stream = null;
             if (filter.getExportFile().getFormat().equals(ArchiveFormat.TAR_GZ)) {
                 if (forSigning != null) {
-                    stream = PublishUtils.writeTarGzipFileForSigning(deployablesForSigning, releasables, 
-                            updateableWorkflowJobsAgentNames, updateableFileOrderSourceAgentNames,
-                            commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = PublishUtils.writeTarGzipFileForSigning(deployablesForSigning, releasables, updateableWorkflowJobsAgentNames, 
+                    		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = PublishUtils.writeTarGzipFileShallow(deployablesForShallowCopy, releasables, 
-                            dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = PublishUtils.writeTarGzipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             } else {
                 if (forSigning != null) {
-                    stream = PublishUtils.writeZipFileForSigning(deployablesForSigning, releasables,
-                            updateableWorkflowJobsAgentNames, updateableFileOrderSourceAgentNames,
-                            commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = PublishUtils.writeZipFileForSigning(deployablesForSigning, releasables, updateableWorkflowJobsAgentNames, 
+                    		updateableFileOrderSourceAgentNames, commitId, controllerId, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 } else { // shallow copy
-                    stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables,
-                            dbLayer, jocVersion, apiVersion, inventoryVersion);
+                    stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
             DeployAudit audit = null;
