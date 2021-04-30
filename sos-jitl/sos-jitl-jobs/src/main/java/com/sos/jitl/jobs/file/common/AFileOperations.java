@@ -49,7 +49,7 @@ public abstract class AFileOperations {
 
     public boolean canWrite(File file, final String fileSpec, final int fileSpecFlags) throws Exception {
         if (logger.isDebugEnabled()) {
-            logger.debug(getDebugMain(file, null, fileSpec, fileSpecFlags));
+            logger.debug(getDebugMain(fileSpecFlags));
         }
         file = new File(substituteAllDate(file.getPath()));
         if (!file.exists()) {
@@ -134,8 +134,7 @@ public abstract class AFileOperations {
         long maxSize = calculateFileSize(maxFileSize);
 
         if (logger.isDebugEnabled()) {
-            debug(getDebugMain(file, null, fileSpec, fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize, skipFirstFiles,
-                    skipLastFiles, minNumOfFiles, maxNumOfFiles, null, null);
+            debug(getDebugMain(fileSpecFlags), null, minFileAge, maxFileAge, minFileSize, maxFileSize);
         }
 
         if (skipFirstFiles < 0) {
@@ -250,8 +249,7 @@ public abstract class AFileOperations {
         long maxSize = calculateFileSize(maxFileSize);
 
         if (logger.isDebugEnabled()) {
-            debug(getDebugMain(file, null, fileSpec, fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
-                    skipFirstFiles, skipLastFiles, -1, -1, null, null);
+            debug(getDebugMain(fileSpecFlags), getDebugRemoveFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize);
         }
 
         if (skipFirstFiles < 0) {
@@ -554,8 +552,7 @@ public abstract class AFileOperations {
         long maxSize = calculateFileSize(maxFileSize);
 
         if (logger.isDebugEnabled()) {
-            debug(getDebugMain(source, target, fileSpec, fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize,
-                    skipFirstFiles, skipLastFiles, -1, -1, replacement, replacing);
+            debug(getDebugMain(fileSpecFlags), getDebugCopyFlags(flags), minFileAge, maxFileAge, minFileSize, maxFileSize);
         }
 
         String targetFilename;
@@ -1012,15 +1009,8 @@ public abstract class AFileOperations {
         }
     }
 
-    private StringBuilder getDebugMain(File sourceFile, File targetFile, String fileSpec, int fileSpecFlags) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("source_file=").append(sourceFile.toString()).append(",");
-        if (targetFile != null) {
-            sb.append("target_file=").append(targetFile.toString()).append(",");
-        }
-        sb.append("fileSpec=").append(fileSpec).append(",");
-        sb.append(getDebugFileSpecFlags(fileSpecFlags));
-        return sb;
+    private StringBuilder getDebugMain(int fileSpecFlags) {
+        return getDebugFileSpecFlags(fileSpecFlags);
     }
 
     private StringBuilder getDebugFileSpecFlags(final int flags) {
@@ -1083,8 +1073,7 @@ public abstract class AFileOperations {
         return sb;
     }
 
-    private void debug(StringBuilder main, StringBuilder flags, String minFileAge, String maxFileAge, String minFileSize, String maxFileSize,
-            int skipFirstFiles, int skipLastFiles, int minNumOfFiles, int maxNumOfFiles, String replacement, String replacing) {
+    private void debug(StringBuilder main, StringBuilder flags, String minFileAge, String maxFileAge, String minFileSize, String maxFileSize) {
         StringBuilder sb = new StringBuilder(main);
         if (flags != null) {
             sb.append(",").append(flags);
@@ -1093,16 +1082,6 @@ public abstract class AFileOperations {
         sb.append(",").append("maxFileAge=").append(maxFileAge);
         sb.append(",").append("minFileSize=").append(minFileSize);
         sb.append(",").append("maxFileSize=").append(maxFileSize);
-        sb.append(",").append("skipFirstFiles=").append(skipFirstFiles);
-        sb.append(",").append("skipLastFiles=").append(skipLastFiles);
-        if (minNumOfFiles > -1) {
-            sb.append(",").append("minNumOfFiles=").append(minNumOfFiles);
-            sb.append(",").append("maxNumOfFiles=").append(maxNumOfFiles);
-        }
-        if (replacement != null) {
-            sb.append(",").append("replacement=").append(replacement);
-            sb.append(",").append("replacing=").append(replacing);
-        }
         logger.debug(sb);
     }
 

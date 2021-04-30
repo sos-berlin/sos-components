@@ -103,7 +103,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
                 .namedValue(args.getStringArgument().getName()));
 
         step.getLogger().info("----------NODE/STEP Java Job used/known argumens-----------------");
-        Map<ValueSource, List<String>> amap = step.argumentsInfo();
+        Map<ValueSource, List<String>> amap = step.argumentsInfoBySetter();
         amap.entrySet().stream().forEach(e -> {
             step.getLogger().info("[java][%s]%s", e.getKey().getValue(), String.join(",", e.getValue()));
         });

@@ -17,6 +17,9 @@ public class FileOperationsJobArguments extends JobArguments {
 
     /* Input arguments */
     private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true);
+    @SuppressWarnings("unused")
+    private JobArgument<String> file = new JobArgument<String>("file", sourceFile);// alias for source file
+
     private JobArgument<String> targetFile = new JobArgument<String>("target_file", false);
     private JobArgument<String> sortCriteria = new JobArgument<String>("sort_criteria", false, "name");
     private JobArgument<String> sortOrder = new JobArgument<String>("sort_order", false, "asc");

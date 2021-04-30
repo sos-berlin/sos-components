@@ -1,8 +1,14 @@
 package com.sos.jitl.jobs.common;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
+
+import js7.data.value.Value;
 import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class JobLogger {
@@ -14,26 +20,21 @@ public class JobLogger {
     private static final Logger LOGGER = LoggerFactory.getLogger(JobLogger.class);
 
     private final BlockingInternalJob.Step step;
+    private final String stepInfo;
     private boolean isDebugEnabled;
     private boolean isTraceEnabled;
 
-    protected JobLogger(BlockingInternalJob.Step step) {
-        this(step, null);
+    protected JobLogger(BlockingInternalJob.Step step, String stepInfo) {
+        this.step = step;
+        this.stepInfo = stepInfo;
     }
 
-    public JobLogger(BlockingInternalJob.Step step, Object args) {
-        this(step, false, false);
+    protected void init(Object args) {
         if (args != null && args instanceof JobArguments) {
             JobArguments ja = (JobArguments) args;
             isTraceEnabled = ja.getLogLevel().getValue().equals(LogLevel.TRACE);
             isDebugEnabled = ja.getLogLevel().getValue().equals(LogLevel.DEBUG) || isTraceEnabled;
         }
-    }
-
-    public JobLogger(BlockingInternalJob.Step step, boolean isDebugEnabled, boolean isTraceEnabled) {
-        this.step = step;
-        this.isDebugEnabled = isDebugEnabled;
-        this.isTraceEnabled = isTraceEnabled;
     }
 
     public void info(final Object msg) {
@@ -66,30 +67,24 @@ public class JobLogger {
         step.out().println(String.format("[TRACE]%s", msg));
     }
 
-    public void warn(final Object msg) {
-        warn(msg, null);
-    }
-
-    public void warn(final Object msg, Throwable e) {
-        LOGGER.warn(String.format("[WARN]%s", msg), e);
-        step.out().println(String.format("[WARN]%s", msg));
+    public void warn(final String msg, Throwable e) {
+        Throwable ex = handleException(e);
+        warn2slf4j(msg, ex);
+        step.out().println(String.format("[WARN]%s", warn2String(msg, ex)));
     }
 
     public void warn(final String format, final Object... msg) {
         warn(String.format(format, msg));
     }
 
-    public void error(final Object msg) {
-        error(msg, null);
-    }
-
     public void error(final String format, final Object... msg) {
         error(String.format(format, msg));
     }
 
-    public void error(final Object msg, final Throwable e) {
-        LOGGER.error(String.format("[ERROR]%s", msg), e);
-        step.err().println(String.format("[ERROR]%s", msg));
+    public void error(final String msg, final Throwable e) {
+        Throwable ex = handleException(e);
+        error2slf4j(msg, ex);
+        step.err().println(String.format("[ERROR]%s", err2String(msg, ex)));
     }
 
     public boolean isDebugEnabled() {
@@ -98,5 +93,50 @@ public class JobLogger {
 
     public boolean isTraceEnabled() {
         return isTraceEnabled;
+    }
+
+    protected String warn2String(String msg, Throwable e) {
+        return err2String(msg, e);
+    }
+
+    protected Throwable handleException(Throwable e) {
+        if (e == null || e instanceof SOSJobRequiredArgumentMissingException) {
+            return null;
+        }
+        return e;
+    }
+
+    protected void failed2slf4j() {
+        LOGGER.error(String.format("[failed]%s", stepInfo));
+    }
+
+    protected void failed2slf4j(String msg) {
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg));
+    }
+
+    // TODO
+    protected void failed2slf4j(String msg, Map<String, Value> returnValues) {
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg));
+    }
+
+    protected void failed2slf4j(String msg, Throwable e) {
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg), e);
+    }
+
+    private void warn2slf4j(String msg, Throwable e) {
+        LOGGER.warn(String.format("%s%s", stepInfo, msg), e);
+    }
+
+    private void error2slf4j(String msg, Throwable e) {
+        LOGGER.error(String.format("%s%s", stepInfo, msg), e);
+    }
+
+    protected String err2String(String msg, Throwable e) {
+        if (e == null) {
+            return msg;
+        }
+        StringBuilder sb = new StringBuilder(msg);
+        sb.append("\n").append(SOSString.toString(e)).toString();
+        return sb.toString();
     }
 }

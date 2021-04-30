@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobStep;
@@ -31,9 +30,6 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
-            if (SOSString.isEmpty(step.getArguments().getCommand())) {
-                throw new Exception("command is empty. please check the job/order \"command\" parameter.");
-            }
             factory = new SOSHibernateFactory(step.getArguments().getHibernateFile().getValue());
             factory.setIdentifier(SQLExecutorJob.class.getSimpleName());
             factory.build();
@@ -158,7 +154,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         } finally {
             executor.close(rs);
             if (warning.length() > 0) {
-                step.getLogger().warn(warning);
+                step.getLogger().warn(warning.toString());
             }
         }
     }
