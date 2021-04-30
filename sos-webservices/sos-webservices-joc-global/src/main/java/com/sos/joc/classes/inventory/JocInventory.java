@@ -785,6 +785,15 @@ public class JocInventory {
             if (workflows2 != null && !workflows2.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows2) {
                     Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                    // JobResources on Workflow level
+                    if (w.getJobResourceNames() != null && w.getJobResourceNames().contains(config.getName())) {
+                        for (int i = 0; i < w.getJobResourceNames().size(); i++) {
+                            if (w.getJobResourceNames().get(i).equals(config.getName())) {
+                                w.getJobResourceNames().set(i, newName);
+                            }
+                        }
+                    }
+                    // JobResources on Job level
                     if (w.getJobs() != null) {
                         w.getJobs().getAdditionalProperties().forEach((k, v) -> {
                             if (v.getJobResourceNames() != null && v.getJobResourceNames().contains(config.getName())) {

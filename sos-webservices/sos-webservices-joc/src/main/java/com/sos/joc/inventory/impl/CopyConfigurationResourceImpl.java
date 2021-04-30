@@ -196,6 +196,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames.size() > 0) {
                                 Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
+                                // JobResources on Workflow level
+                                if (w.getJobResourceNames() != null) {
+                                    w.setJobResourceNames(w.getJobResourceNames().stream().map(s -> oldNewJobResourceNames.getOrDefault(s, s))
+                                            .collect(Collectors.toList()));
+                                }
+                                // JobResources on Job level
                                 if (w.getJobs() != null) {
                                     w.getJobs().getAdditionalProperties().forEach((k, v) -> {
                                         if (v.getJobResourceNames() != null) {
