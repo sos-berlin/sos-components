@@ -79,6 +79,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean getTaskFromHistoryIdAndNode = false;
             boolean getTaskFromOrderHistory = false;
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
+            boolean folderPermissionsAreChecked = false;
 
             HistoryFilter dbFilter = new HistoryFilter();
             dbFilter.setControllerIds(allowedControllers);
@@ -111,7 +112,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         dbFilter.setJobs(in.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders)).collect(
                                 Collectors.groupingBy(job -> job.getWorkflowPath(), Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         in.setRegex("");
-
+                        folderPermissionsAreChecked = true;
                     } else {
 
                         if (SearchStringHelper.isDBWildcardSearch(in.getRegex())) {
@@ -126,11 +127,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                         if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
                             hasPermission = false;
-                        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                            dbFilter.setFolders(permittedFolders.stream().map(folder -> {
-                                folder.setFolder(normalizeFolder(folder.getFolder()));
-                                return folder;
-                            }).collect(Collectors.toSet()));
+                        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+                            dbFilter.setFolders(in.getFolders().stream().filter(folder -> folderIsPermitted(folder.getFolder(), permittedFolders))
+                                    .collect(Collectors.toSet()));
+                            folderPermissionsAreChecked = true;
                         }
                     }
                 }
@@ -161,6 +161,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors
                                         .groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition,
                                                 Collectors.toSet())))));
+                        folderPermissionsAreChecked = true;
                     } else {
                         sr = dbLayer.getJobs();
                     }
@@ -191,7 +192,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                             if (predicate != null && !predicate.test(step.getWorkflowPath() + "," + step.getJobName())) {
                                 continue;
                             }
-                            if (!canAdd(step.getWorkflowPath(), permittedFolders)) {
+                            if (!folderPermissionsAreChecked && !canAdd(step.getWorkflowPath(), permittedFolders)) {
                                 continue;
                             }
                             history.add(HistoryMapper.map2TaskHistoryItem(step));
