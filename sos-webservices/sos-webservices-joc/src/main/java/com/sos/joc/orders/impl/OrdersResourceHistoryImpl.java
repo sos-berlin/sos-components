@@ -72,7 +72,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             List<OrderHistoryItem> history = new ArrayList<OrderHistoryItem>();
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             boolean hasPermission = true;
-            Set<Folder> folders = addPermittedFolder(in.getFolders());
+            Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
 
             HistoryFilter dbFilter = new HistoryFilter();
             dbFilter.setControllerIds(allowedControllers);
@@ -91,7 +91,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 }
 
                 if (in.getOrders() != null && !in.getOrders().isEmpty()) {
-                    final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                     // TODO consider workflowId in groupingby???
                     dbFilter.setOrders(in.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowPath(), permittedFolders))
                             .collect(Collectors.groupingBy(order -> order.getWorkflowPath(), Collectors.mapping(OrderPath::getOrderId, Collectors
@@ -109,10 +108,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                                 Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     }
 
-                    if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                    if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
                         hasPermission = false;
-                    } else if (folders != null && !folders.isEmpty()) {
-                        dbFilter.setFolders(folders.stream().map(folder -> {
+                    } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                        dbFilter.setFolders(permittedFolders.stream().map(folder -> {
                             folder.setFolder(normalizeFolder(folder.getFolder()));
                             return folder;
                         }).collect(Collectors.toSet()));
@@ -154,6 +153,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         // }
 
                         if (predicate != null && !predicate.test(item.getWorkflowPath() + "," + item.getOrderId())) {
+                            continue;
+                        }
+                        if (!canAdd(item.getWorkflowPath(), permittedFolders)) {
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));

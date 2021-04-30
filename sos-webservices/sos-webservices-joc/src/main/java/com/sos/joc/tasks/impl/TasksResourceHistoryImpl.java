@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -78,7 +78,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
             boolean getTaskFromOrderHistory = false;
-            Set<Folder> folders = addPermittedFolder(in.getFolders());
+            Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
 
             HistoryFilter dbFilter = new HistoryFilter();
             dbFilter.setControllerIds(allowedControllers);
@@ -108,7 +108,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
 
                     if (in.getJobs() != null && !in.getJobs().isEmpty()) {
-                        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         dbFilter.setJobs(in.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders)).collect(
                                 Collectors.groupingBy(job -> job.getWorkflowPath(), Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         in.setRegex("");
@@ -125,10 +124,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                     Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         }
 
-                        if (withFolderFilter && (folders == null || folders.isEmpty())) {
+                        if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
                             hasPermission = false;
-                        } else if (folders != null && !folders.isEmpty()) {
-                            dbFilter.setFolders(folders.stream().map(folder -> {
+                        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                            dbFilter.setFolders(permittedFolders.stream().map(folder -> {
                                 folder.setFolder(normalizeFolder(folder.getFolder()));
                                 return folder;
                             }).collect(Collectors.toSet()));
@@ -158,7 +157,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
                                         TaskIdOfOrder::getPosition, Collectors.toSet()))));
                     } else if (getTaskFromOrderHistory) {
-                        final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         sr = dbLayer.getJobsFromOrder(in.getOrders().stream().filter(Objects::nonNull).filter(order -> canAdd(order.getWorkflowPath(),
                                 permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors
                                         .groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition,
@@ -166,10 +164,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     } else {
                         sr = dbLayer.getJobs();
                     }
-
-                    Matcher matcher = null;
+                    
+                    Predicate<String> predicate = null;
                     if (in.getRegex() != null && !in.getRegex().isEmpty()) {
-                        matcher = Pattern.compile(in.getRegex()).matcher("");
+                        predicate = Pattern.compile(in.getRegex()).asPredicate();
                     }
 
                     if (sr != null) {
@@ -190,7 +188,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                     .getView()) {
                                 continue;
                             }
-                            if (matcher != null && !matcher.reset(step.getWorkflowPath() + "," + step.getJobName()).find()) {
+                            if (predicate != null && !predicate.test(step.getWorkflowPath() + "," + step.getJobName())) {
+                                continue;
+                            }
+                            if (!canAdd(step.getWorkflowPath(), permittedFolders)) {
                                 continue;
                             }
                             history.add(HistoryMapper.map2TaskHistoryItem(step));

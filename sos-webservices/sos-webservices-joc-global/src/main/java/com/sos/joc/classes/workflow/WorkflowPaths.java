@@ -99,10 +99,12 @@ public class WorkflowPaths {
     }
     
     private WorkflowId _getWorkflowId(WorkflowId workflowId) {
-        return new WorkflowId(workflowIdPathMap.getOrDefault(workflowId, workflowId.getPath()), workflowId.getVersionId());
+        workflowId.setPath(workflowIdPathMap.getOrDefault(workflowId, workflowId.getPath()));
+        return workflowId;
     }
     
     private void _init(SOSHibernateSession connection) {
+        LOGGER.info("... init workflow name->path mapping");
         _initNamePath(connection);
         _initWorkflowIdPath(connection);
     }

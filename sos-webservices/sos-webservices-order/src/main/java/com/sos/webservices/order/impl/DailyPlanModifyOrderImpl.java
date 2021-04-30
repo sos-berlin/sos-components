@@ -97,7 +97,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             List<String> orderIds = dailyplanModifyOrder.getOrderIds();
             Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
             List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
-                    getJocAuditLog());
+                    getJocAuditLog(), folderPermissions);
             orderIds.removeAll(temporaryOrderIds);
 
             List<String> listOfOrderIds = new ArrayList<String>();

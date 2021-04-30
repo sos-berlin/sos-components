@@ -324,7 +324,7 @@ public class OrdersHelper {
     }
 
     public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
-            JocError jocError, JocAuditLog jocAuditLog) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            JocError jocError, JocAuditLog jocAuditLog, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         String controllerId = dailyplanModifyOrder.getControllerId();
@@ -332,8 +332,6 @@ public class OrdersHelper {
         JControllerState currentState = proxy.currentState();
         Instant now = Instant.now();
         
-        // TODO consider dailyplanModifyOrder.getAuditLog()
-
         Function<JOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
@@ -345,6 +343,10 @@ public class OrdersHelper {
                     Variables vars = scalaValuedArgumentsToVariables(args);
                     Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                     ProblemHelper.throwProblemIfExist(e);
+                    String workflowPath = WorkflowPaths.getPath(e.get().id());
+                    if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
+                        throw new JocFolderPermissionsException(workflowPath);
+                    }
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
                         vars.getAdditionalProperties().putAll(dailyplanModifyOrder.getVariables().getAdditionalProperties());
