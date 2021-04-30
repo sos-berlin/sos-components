@@ -37,6 +37,10 @@
     "graceTimeout": {
       "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
     },
+    "failOnErrWritten": {
+    	"type": "boolean",
+    	"default": false
+    },
     "jobClass": {
       "$ref": "../../../inventory/schemas/common/path-schema.json"
     },
@@ -47,7 +51,7 @@
       "alias": "jobResourceNames",
       "type": "array",
       "items": {
-        "type": "../../../inventory/schemas/common/string255-schema.json"
+        "$ref": "../../../inventory/schemas/common/string255-schema.json"
       }
     }
   },

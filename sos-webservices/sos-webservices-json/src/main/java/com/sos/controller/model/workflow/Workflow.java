@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
@@ -25,7 +24,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE",
     "path",
     "isCurrentVersion",
     "versionDate",
@@ -79,13 +77,15 @@ public class Workflow
      * @param versionId
      * @param isCurrentVersion
      * @param orderRequirements
+     * @param jobResourceNames
      * @param jobs
      * @param state
+     * @param tYPE
      * @param title
      * @param versionDate
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
-        super(versionId, orderRequirements, instructions, title, documentationPath, jobs);
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+        super(versionId, orderRequirements, jobResourceNames, instructions, title, documentationPath, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;

@@ -2,6 +2,7 @@
 package com.sos.inventory.model.workflow;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -26,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "versionId",
     "orderRequirements",
+    "jobResourceNames",
     "instructions",
     "title",
     "documentationPath",
@@ -58,6 +60,11 @@ public class Workflow implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("orderRequirements")
     private Requirements orderRequirements;
+    @JsonProperty("jobResourceNames")
+    @JsonAlias({
+        "jobResourcePaths"
+    })
+    private List<String> jobResourceNames = null;
     /**
      * 
      * (Required)
@@ -105,14 +112,16 @@ public class Workflow implements IConfigurationObject, IDeployObject
      * @param instructions
      * @param versionId
      * @param orderRequirements
+     * @param jobResourceNames
      * @param jobs
      * 
      * @param title
      */
-    public Workflow(String versionId, Requirements orderRequirements, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
         super();
         this.versionId = versionId;
         this.orderRequirements = orderRequirements;
+        this.jobResourceNames = jobResourceNames;
         this.instructions = instructions;
         this.title = title;
         this.documentationPath = documentationPath;
@@ -172,6 +181,16 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("orderRequirements")
     public void setOrderRequirements(Requirements orderRequirements) {
         this.orderRequirements = orderRequirements;
+    }
+
+    @JsonProperty("jobResourceNames")
+    public List<String> getJobResourceNames() {
+        return jobResourceNames;
+    }
+
+    @JsonProperty("jobResourceNames")
+    public void setJobResourceNames(List<String> jobResourceNames) {
+        this.jobResourceNames = jobResourceNames;
     }
 
     /**
@@ -264,12 +283,12 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(instructions).append(versionId).append(orderRequirements).append(jobs).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(instructions).append(versionId).append(orderRequirements).append(jobResourceNames).append(jobs).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -281,7 +300,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

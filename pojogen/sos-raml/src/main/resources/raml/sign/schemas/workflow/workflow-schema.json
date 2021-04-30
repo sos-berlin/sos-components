@@ -37,6 +37,13 @@
     "orderRequirements": {
     	"$ref": "../../../inventory/schemas/workflow/orderRequirements-schema.json"
     },
+    "jobResourcePaths": {
+      "alias": "jobResourceNames",
+      "type": "array",
+      "items": {
+        "$ref": "../../../inventory/schemas/common/string255-schema.json"
+      }
+    },
     "instructions": {
       "type": "array",
       "minItems" : 1,

@@ -28,6 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "taskLimit",
     "timeout",
     "graceTimeout",
+    "failOnErrWritten",
     "jobClass",
     "defaultArguments",
     "jobResourceNames",
@@ -88,6 +89,8 @@ public class Job implements IConfigurationObject
      */
     @JsonProperty("graceTimeout")
     private Integer graceTimeout;
+    @JsonProperty("failOnErrWritten")
+    private Boolean failOnErrWritten = false;
     /**
      * path
      * <p>
@@ -159,6 +162,7 @@ public class Job implements IConfigurationObject
      * @param jobResourceNames
      * @param criticality
      * @param agentName
+     * @param failOnErrWritten
      * @param title
      * @param executable
      * @param timeout
@@ -168,7 +172,7 @@ public class Job implements IConfigurationObject
      * @param logLevel
      * @param jobClass
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationPath, JobLogLevel logLevel, JobCriticality criticality) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -176,6 +180,7 @@ public class Job implements IConfigurationObject
         this.taskLimit = taskLimit;
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
+        this.failOnErrWritten = failOnErrWritten;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
         this.jobResourceNames = jobResourceNames;
@@ -309,6 +314,16 @@ public class Job implements IConfigurationObject
     @JsonProperty("graceTimeout")
     public void setGraceTimeout(Integer graceTimeout) {
         this.graceTimeout = graceTimeout;
+    }
+
+    @JsonProperty("failOnErrWritten")
+    public Boolean getFailOnErrWritten() {
+        return failOnErrWritten;
+    }
+
+    @JsonProperty("failOnErrWritten")
+    public void setFailOnErrWritten(Boolean failOnErrWritten) {
+        this.failOnErrWritten = failOnErrWritten;
     }
 
     /**
@@ -455,12 +470,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationPath", documentationPath).append("logLevel", logLevel).append("criticality", criticality).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(jobResourceNames).append(criticality).append(agentName).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(taskLimit).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).toHashCode();
     }
 
     @Override
@@ -472,7 +487,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(taskLimit, rhs.taskLimit).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).isEquals();
     }
 
 }

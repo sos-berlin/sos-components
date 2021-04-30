@@ -2,6 +2,7 @@
 package com.sos.sign.model.workflow;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -26,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "versionId",
     "orderRequirements",
+    "jobResourcePaths",
     "instructions",
     "jobs"
 })
@@ -67,6 +69,11 @@ public class Workflow implements IDeployObject
      */
     @JsonProperty("orderRequirements")
     private Requirements orderRequirements;
+    @JsonProperty("jobResourcePaths")
+    @JsonAlias({
+        "jobResourceNames"
+    })
+    private List<String> jobResourcePaths = null;
     /**
      * 
      * (Required)
@@ -96,14 +103,18 @@ public class Workflow implements IDeployObject
      * @param path
      * @param instructions
      * @param versionId
+     * @param jobResourcePaths
      * @param orderRequirements
      * @param jobs
+     * @param tYPE
      */
-    public Workflow(String path, String versionId, Requirements orderRequirements, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderRequirements, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
         super();
+        this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
         this.orderRequirements = orderRequirements;
+        this.jobResourcePaths = jobResourcePaths;
         this.instructions = instructions;
         this.jobs = jobs;
     }
@@ -202,6 +213,16 @@ public class Workflow implements IDeployObject
         this.orderRequirements = orderRequirements;
     }
 
+    @JsonProperty("jobResourcePaths")
+    public List<String> getJobResourcePaths() {
+        return jobResourcePaths;
+    }
+
+    @JsonProperty("jobResourcePaths")
+    public void setJobResourcePaths(List<String> jobResourcePaths) {
+        this.jobResourcePaths = jobResourcePaths;
+    }
+
     /**
      * 
      * (Required)
@@ -248,12 +269,12 @@ public class Workflow implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderRequirements", orderRequirements).append("instructions", instructions).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourcePaths", jobResourcePaths).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(orderRequirements).append(jobs).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(jobResourcePaths).append(orderRequirements).append(jobs).append(tYPE).toHashCode();
     }
 
     @Override
@@ -265,7 +286,7 @@ public class Workflow implements IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourcePaths, rhs.jobResourcePaths).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).isEquals();
     }
 
 }

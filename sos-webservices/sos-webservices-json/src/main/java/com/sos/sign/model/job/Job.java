@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "taskLimit",
     "timeout",
     "graceTimeout",
+    "failOnErrWritten",
     "jobClass",
     "defaultArguments",
     "jobResourcePaths"
@@ -84,6 +85,8 @@ public class Job {
      */
     @JsonProperty("graceTimeout")
     private Integer graceTimeout;
+    @JsonProperty("failOnErrWritten")
+    private Boolean failOnErrWritten = false;
     /**
      * path
      * <p>
@@ -106,7 +109,7 @@ public class Job {
     @JsonAlias({
         "jobResourceNames"
     })
-    private List<Object> jobResourcePaths = null;
+    private List<String> jobResourcePaths = null;
 
     /**
      * No args constructor for use in serialization
@@ -124,10 +127,11 @@ public class Job {
      * @param defaultArguments
      * @param jobResourcePaths
      * @param jobClass
+     * @param failOnErrWritten
      * @param executable
      * @param timeout
      */
-    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, String jobClass, Variables defaultArguments, List<Object> jobResourcePaths) {
+    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.executable = executable;
@@ -135,6 +139,7 @@ public class Job {
         this.taskLimit = taskLimit;
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
+        this.failOnErrWritten = failOnErrWritten;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
         this.jobResourcePaths = jobResourcePaths;
@@ -266,6 +271,16 @@ public class Job {
         this.graceTimeout = graceTimeout;
     }
 
+    @JsonProperty("failOnErrWritten")
+    public Boolean getFailOnErrWritten() {
+        return failOnErrWritten;
+    }
+
+    @JsonProperty("failOnErrWritten")
+    public void setFailOnErrWritten(Boolean failOnErrWritten) {
+        this.failOnErrWritten = failOnErrWritten;
+    }
+
     /**
      * path
      * <p>
@@ -311,23 +326,23 @@ public class Job {
     }
 
     @JsonProperty("jobResourcePaths")
-    public List<Object> getJobResourcePaths() {
+    public List<String> getJobResourcePaths() {
         return jobResourcePaths;
     }
 
     @JsonProperty("jobResourcePaths")
-    public void setJobResourcePaths(List<Object> jobResourcePaths) {
+    public void setJobResourcePaths(List<String> jobResourcePaths) {
         this.jobResourcePaths = jobResourcePaths;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(taskLimit).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(executable).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(taskLimit).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(failOnErrWritten).append(executable).append(timeout).toHashCode();
     }
 
     @Override
@@ -339,7 +354,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
     }
 
 }

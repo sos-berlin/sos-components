@@ -1,7 +1,7 @@
 
 package com.sos.inventory.model.job;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Environment {
 
     @JsonIgnore
-    private Map<String, String> additionalProperties = new HashMap<String, String>();
+    private Map<String, String> additionalProperties = new LinkedHashMap<String, String>();
 
     @JsonAnyGetter
     public Map<String, String> getAdditionalProperties() {
