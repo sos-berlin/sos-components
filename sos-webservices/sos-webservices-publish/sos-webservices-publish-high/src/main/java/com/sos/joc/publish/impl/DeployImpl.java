@@ -3,11 +3,13 @@ package com.sos.joc.publish.impl;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +32,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -67,6 +70,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             checkRequiredComment(deployFilter.getAuditLog());
             
+            Set<String> allowedControllerIds = Collections.emptySet();
+            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
+            		.filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
@@ -154,21 +161,28 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
 
             DeployAudit audit = null;
-            // call ControllerApi for all provided Controllers
+            // call ControllerApi for all provided and allowed Controllers
             for (String controllerId : controllerIds) {
+            	if (!allowedControllerIds.contains(controllerId)) {
+            		continue;
+            	}
+            	// filter for folder permissions
+            	folderPermissions.setSchedulerId(controllerId);
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                Map<DBItemInventoryConfiguration, DBItemDepSignatures> filteredConfigurations = verifiedConfigurations.entrySet().stream()
+                		.filter(entry -> canAdd(entry.getKey().getPath(), permittedFolders)).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+                Map<DBItemDeploymentHistory, DBItemDepSignatures> filteredDeployments = verifiedReDeployables.entrySet().stream()
+                		.filter(entry -> canAdd(entry.getKey().getPath(), permittedFolders)).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
                 // store new history entries and update inventory for update operation optimistically
-                SignedItemsSpec spec = new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, null, null);
-                StoreDeployments.storeNewDepHistoryEntries(spec, account, commitId, controllerId,
-                        getAccessToken(), getJocError(), dbLayer);
+                SignedItemsSpec spec = new SignedItemsSpec(keyPair, filteredConfigurations, filteredDeployments, null, null);
+                StoreDeployments.storeNewDepHistoryEntries(spec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
-                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(verifiedConfigurations.keySet(),
-                        controllerId, dbLayer, keyPair.getKeyAlgorithm());
+                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(filteredConfigurations.keySet(), controllerId, dbLayer, 
+                		keyPair.getKeyAlgorithm());
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
-                    toDeleteForRename.addAll(PublishUtils.checkRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
-                            keyPair.getKeyAlgorithm()));
+                    toDeleteForRename.addAll(PublishUtils.checkRenamingForUpdate(filteredDeployments.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm()));
                 } else {
-                    toDeleteForRename = PublishUtils.checkRenamingForUpdate(verifiedReDeployables.keySet(), controllerId, dbLayer, 
-                            keyPair.getKeyAlgorithm());
+                    toDeleteForRename = PublishUtils.checkRenamingForUpdate(filteredDeployments.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 }
                 // and subsequently call delete for the object with the previous path before committing the update
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
@@ -189,8 +203,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId))
                             .forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
-                if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
-                        || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
+                if ((filteredConfigurations != null && !filteredConfigurations.isEmpty())
+                        || (filteredDeployments != null && !filteredDeployments.isEmpty())) {
                     audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
                     // call updateRepo command via ControllerApi for given controllers
                     boolean verified = false;
@@ -198,7 +212,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     X509Certificate cert = null;
                     switch (keyPair.getKeyAlgorithm()) {
                     case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                        PublishUtils.updateItemsAddOrUpdatePGP(commitId, verifiedConfigurations, verifiedReDeployables, controllerId, 
+                        PublishUtils.updateItemsAddOrUpdatePGP(commitId, filteredConfigurations, filteredDeployments, controllerId, 
                                 dbLayer).thenAccept(either -> {
                                     StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                 });
@@ -207,14 +221,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                         if (verified) {
-                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
+                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, filteredConfigurations, filteredDeployments, controllerId,
                                     dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
                                     StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
-                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
+                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, filteredConfigurations, filteredDeployments, controllerId,
                                   dbLayer, SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
                                   StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
@@ -225,14 +239,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                         verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                         if (verified) {
-                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
+                            PublishUtils.updateItemsAddOrUpdateWithX509Certificate(commitId, filteredConfigurations, filteredDeployments, controllerId,
                                     dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
                                 .thenAccept(either -> {
                                     StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                                     });
                         } else {
                           signerDN = cert.getSubjectDN().getName();
-                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, verifiedConfigurations, verifiedReDeployables, controllerId,
+                          PublishUtils.updateItemsAddOrUpdateWithX509SignerDN(commitId, filteredConfigurations, filteredDeployments, controllerId,
                                   dbLayer, SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
                               .thenAccept(either -> {
                                   StoreDeployments.processAfterAdd(either, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
@@ -247,18 +261,30 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             final String commitIdForDelete = UUID.randomUUID().toString();
             final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
+            List<DBItemDeploymentHistory> filteredItemsToDelete = Collections.emptyList();
+            List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
             // loop 1: store db entries optimistically
-            for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                // store history entries for delete operation optimistically
+            for (String controllerId : allowedControllerIds) {
+            	// filter for folder permissions
+            	folderPermissions.setSchedulerId(controllerId);
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+
+            	// store history entries for delete operation optimistically
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
+                	filteredItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
+                			.filter(item -> canAdd(item.getPath(), permittedFolders)).collect(Collectors.toList());
+                	
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, depHistoryDBItemsToDeployDelete, commitIdForDelete)));
+                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredItemsToDelete, commitIdForDelete)));
                 }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
                     // store history entries for delete operation optimistically
-                    final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream().filter(item -> item.getControllerId().equals(
-                            controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors.toList());
+                    final List<DBItemDeploymentHistory> itemsToDelete = itemsFromFolderToDelete.stream()
+                    		.filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+                    		.filter(item -> canAdd(item.getPath(), permittedFolders))
+                    		.collect(Collectors.toList());
+                	filteredItemsFromFolderToDelete = itemsToDelete;
                     itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
@@ -274,17 +300,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
                     getJocError(), getJocAuditLog(), deployFilter.getAuditLog(), withoutFolderDeletion);
             // loop 2: send commands to controllers
-            for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-                if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                    // set new versionId for second round (delete items)
+            for (String controllerId : allowedControllerIds) {
+                if (filteredItemsToDelete != null && !filteredItemsToDelete.isEmpty()) {
                     // call updateRepo command via Proxy of given controllers
-                    final List<DBItemDeploymentHistory> toDelete = depHistoryDBItemsToDeployDelete;
+                    final List<DBItemDeploymentHistory> toDelete = filteredItemsToDelete;
                     PublishUtils.updateItemsDelete(commitIdForDelete, toDelete, controllerId).thenAccept(either -> {
                         DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
                     });
                 }
                 // process folder to Delete
-                if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
+                if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
                     PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
                         .thenAccept(either -> {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());

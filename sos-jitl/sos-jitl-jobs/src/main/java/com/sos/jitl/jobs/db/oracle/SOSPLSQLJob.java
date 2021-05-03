@@ -92,30 +92,30 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         try {
 
             if (args.useHibernateFile()) {
-
-            } else {
-                if (args.getCredentialStoreFile() != null) {
-                    SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
-                            .getCredentialStorePassword());
-
-                    r.setEntryPath(args.getCredentialStoreEntryPath());
-
-                    args.setDbUrl(r.resolve(args.getDbUrl()));
-
-                    args.setDbUser(r.resolve(args.getDbUser()));
-                    args.setDbPassword(r.resolve(args.getDbPassword()));
-                    debug(logger, args.getCredentialStoreFile());
-                    debug(logger, args.getCredentialStoreKeyFile());
-                    debug(logger, args.getCredentialStoreEntryPath());
-                }
-
-                debug(logger, "dbUrl: " + args.getDbUrl());
-                debug(logger, "dbUser: " + args.getDbUser());
-                debug(logger, "dbPassword: " + "********");
-
-                DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
-                connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
+             //   args.setCredentionsFromHibernateFile();
             }
+            if (args.getCredentialStoreFile() != null) {
+                SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args
+                        .getCredentialStorePassword());
+
+                r.setEntryPath(args.getCredentialStoreEntryPath());
+
+                args.setDbUrl(r.resolve(args.getDbUrl()));
+
+                args.setDbUser(r.resolve(args.getDbUser()));
+                args.setDbPassword(r.resolve(args.getDbPassword()));
+                debug(logger, args.getCredentialStoreFile());
+                debug(logger, args.getCredentialStoreKeyFile());
+                debug(logger, args.getCredentialStoreEntryPath());
+            }
+
+            debug(logger, "dbUrl: " + args.getDbUrl());
+            debug(logger, "dbUser: " + args.getDbUser());
+            debug(logger, "dbPassword: " + "********");
+
+            DriverManager.registerDriver(new oracle.jdbc.OracleDriver());
+            connection = DriverManager.getConnection(args.getDbUrl(), args.getDbUser(), args.getDbPassword());
+
         } catch (Throwable e) {
             throw e;
         } finally {

@@ -45,6 +45,11 @@
 			<artifactId>sos-commons-httpclient</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-mail</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.typesafe</groupId>
