@@ -10,7 +10,7 @@ public class SOSMailJobArguments extends JobArguments {
     private JobArgument<String> from = new JobArgument<String>("from", false, "");
     private JobArgument<String> fromName = new JobArgument<String>("from_name", false, "");
     private JobArgument<String> replyTo = new JobArgument<String>("reply_to", false, "");
-    private JobArgument<String> to = new JobArgument<String>("to", false, "");
+    private JobArgument<String> to = new JobArgument<String>("to", true, "");
     private JobArgument<String> cc = new JobArgument<String>("cc", false, "");
     private JobArgument<String> bcc = new JobArgument<String>("bcc", false, "");
     private JobArgument<String> subject = new JobArgument<String>("subject", false, "");
