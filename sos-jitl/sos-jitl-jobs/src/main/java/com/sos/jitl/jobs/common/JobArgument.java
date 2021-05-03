@@ -4,7 +4,7 @@ package com.sos.jitl.jobs.common;
 public class JobArgument<T> {
 
     public enum ValueSource {
-        JAVA("Job Incoming Arguments (temp output ...)"), ORDER("Order Variables"), ORDER_OR_NODE("Order Default Variables or Node Arguments"), JOB(
+        JAVA("Resulting Arguments"), ORDER("Order Variables"), ORDER_OR_NODE("Default Order Variables or Node Arguments"), JOB(
                 "Arguments"), JOB_ARGUMENT("Job Arguments"), LAST_SUCCEEDED_OUTCOME("Last Succeeded Outcomes"), LAST_FAILED_OUTCOME(
                         "Last Failed Outcomes");
 
@@ -152,8 +152,8 @@ public class JobArgument<T> {
         StringBuilder sb = new StringBuilder(name);
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
-        sb.append(" dirty=").append(isDirty());
         sb.append(" source=").append(valueSource.name());
+        sb.append(" modified=").append(isDirty());
         sb.append("]");
         return sb.toString();
     }

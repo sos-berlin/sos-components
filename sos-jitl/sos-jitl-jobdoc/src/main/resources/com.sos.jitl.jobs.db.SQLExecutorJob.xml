@@ -86,13 +86,13 @@
         		</note>
       		</param>
       		
-      		<param name="resultset_as_parameters" required="false" default_value="'false'" DataType="java.lang.String" valuelist="'false','true','name_value'">
+      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value'">
         		<note language="de">
           		<div xmlns="http://www.w3.org/1999/xhtml">
-            	<strong>'false'</strong><br/>
+            	<strong>leer</strong><br/>
             	Es werden keine Parameter generiert.<br/><br/>
-            	<strong>'true'</strong><br/>
-            	Bei 'true' werden aus der ersten Zeile des Result Set Auftragsparameter generiert.
+            	<strong>'column_value'</strong><br/>
+            	Bei 'column_value' werden aus der ersten Zeile des Result Set Auftragsparameter generiert.
             	Die Parameternamen sind die Spaltennamen.
 
             	Beispiel:<br/>
@@ -140,10 +140,10 @@
         	
         		<note language="en">
           		<div xmlns="http://www.w3.org/1999/xhtml">
-            	<strong>'false'</strong><br/>
+            	<strong>empty</strong><br/>
             	No output parameters are generated.<br/><br/>
-            	<strong>'true'</strong><br/>
-            	If set to 'true', the first row of the resultset will be set as order parameters
+            	<strong>'column_value'</strong><br/>
+            	If set to 'column_value', the first row of the resultset will be set as order parameters
             	(using the column names as parameter names). Example:<br/>
             	The query "SELECT first_name, last_name, age FROM persons" produces the following result set:<br/>
             	<table>

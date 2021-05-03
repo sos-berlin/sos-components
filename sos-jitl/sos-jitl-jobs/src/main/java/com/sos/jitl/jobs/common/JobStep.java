@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
-import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
@@ -342,24 +341,22 @@ public class JobStep<A> {
     protected void logParameterization() {
         try {
             logger.info("Job Parameterization:");
+            List<JobArgument<?>> allArguments = getArgumentsInfo();
             Map<ValueSource, List<String>> map = argumentsInfoBySetter();
             if (map == null || map.size() == 0) {
-                logOutcomes();
-                logAllJavaJobArguments(false);
-                logAllJavaJobArguments(true);
+                infoResultingArguments(allArguments);
+
+                if (logger.isDebugEnabled()) {
+                    debugOutcomes(allArguments);
+                    debugAllResultingArguments(allArguments);
+                }
                 return;
             }
-            log(LogLevel.INFO, map, ValueSource.ORDER);
-            log(LogLevel.INFO, map, ValueSource.ORDER_OR_NODE);
-            log(LogLevel.INFO, map, ValueSource.JOB);
-            log(LogLevel.INFO, map, ValueSource.JOB_ARGUMENT);
-
-            logOutcomes();
-            logAllJavaJobArguments(false);
-            logAllJavaJobArguments(true);
+            infoResultingArguments(allArguments);
 
             if (logger.isDebugEnabled()) {
-                // logAllJavaJobArguments();
+                debugArguments(allArguments);
+                debugAllResultingArguments(allArguments);
             }
 
         } catch (Exception e) {
@@ -367,50 +364,94 @@ public class JobStep<A> {
         }
     }
 
-    private void log(LogLevel logLevel, Map<ValueSource, List<String>> map, ValueSource source) {
-        List<String> list = map.get(source);
-        if (list != null && list.size() > 0) {
-            String msg = String.format("%s: %s", source.getValue(), String.join(", ", list));
-            if (logLevel.equals(LogLevel.INFO)) {
-                logger.info(msg);
-            } else {
-                logger.debug(msg);
-            }
+    private void debugArguments(List<JobArgument<?>> allArguments) throws Exception {
+        // ORDER Variables
+        Map<String, Object> map = Job.convert(internalStep.order().arguments());
+        if (map != null && map.size() > 0) {
+            logger.debug(String.format(" %s:", ValueSource.ORDER.getValue()));
+            map.entrySet().stream().forEach(e -> {
+                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+            });
         }
-    }
-
-    private void logAllJavaJobArguments(boolean all) throws Exception {
+        // ORDER or Node arguments
         List<JobArgument<?>> arguments = getArgumentsInfo();
-        if (arguments == null || arguments.size() == 0) {
-            return;
-        }
-        if (all) {
-            logger.info(String.format("%s(all JobArguments declared in the Java Job): %s", ValueSource.JAVA.getValue(), arguments.stream().map(
-                    Object::toString).collect(Collectors.joining(", "))));
-        } else {
-            logger.info(String.format("%s: %s", ValueSource.JAVA.getValue(), arguments.stream().filter(a -> {
-                if (a.isDirty()) {
+        if (arguments != null && arguments.size() > 0) {
+            logger.debug(String.format(" %s:", ValueSource.ORDER_OR_NODE.getValue()));
+            arguments.stream().filter(a -> {
+                if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
                     return true;
-                } else {
-                    if (!a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
-                        return true;
-                    }
                 }
                 return false;
-            }).map(Object::toString).collect(Collectors.joining(", "))));
+            }).forEach(a -> {
+                logger.debug("    " + a.toString());
+            });
         }
+        // JOB Arguments
+        map = Job.convert(internalStep.arguments());
+        if (map != null && map.size() > 0) {
+            logger.debug(String.format(" %s:", ValueSource.JOB.getValue()));
+            map.entrySet().stream().forEach(e -> {
+                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+            });
+        }
+        debugOutcomes(allArguments);
     }
 
     // TODO mask password ...
-    private void logOutcomes() {
-        logInfo(JobArgument.ValueSource.LAST_SUCCEEDED_OUTCOME.getValue() + ": ", getLastSucceededOutcomes());
-        logInfo(JobArgument.ValueSource.LAST_FAILED_OUTCOME.getValue() + ": ", getLastFailedOutcomes());
-    }
-
-    private void logInfo(String title, Map<String, Object> map) {
+    private void debugOutcomes(List<JobArgument<?>> allArguments) {
+        // OUTCOME succeeded
+        Map<String, Object> map = getLastSucceededOutcomes();
         if (map != null && map.size() > 0) {
-            String v = map.toString();
-            logger.info("%s: %s", title, v.substring(1, v.length() - 1));
+            logger.debug(String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getValue()));
+            map.entrySet().stream().forEach(e -> {
+                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+            });
+        }
+        // OUTCOME failed
+        map = getLastFailedOutcomes();
+        if (map != null && map.size() > 0) {
+            logger.debug(String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getValue()));
+            map.entrySet().stream().forEach(e -> {
+                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+            });
         }
     }
+
+    private void infoResultingArguments(List<JobArgument<?>> allArguments) throws Exception {
+        if (allArguments == null || allArguments.size() == 0) {
+            return;
+        }
+        logger.info(String.format("%s:", ValueSource.JAVA.getValue()));
+        allArguments.stream().filter(a -> {
+            if (a.isDirty()) {
+                return true;
+            } else {
+                if (!a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
+                    return true;
+                }
+            }
+            return false;
+        }).forEach(a -> {
+            logger.info("    %s=%s (source=%s)", a.getName(), a.getDisplayValue(), a.getValueSource());
+        });
+    }
+
+    private void debugAllResultingArguments(List<JobArgument<?>> allArguments) throws Exception {
+        if (allArguments == null || allArguments.size() == 0) {
+            return;
+        }
+        logger.debug(String.format(" All %s:", ValueSource.JAVA.getValue()));
+        allArguments.stream().forEach(a -> {
+            logger.debug("    " + a.toString());
+        });
+    }
+
+    private Object getDisplayValue(List<JobArgument<?>> allArguments, String name, Object val) {
+        if (allArguments == null) {
+            return val;
+        }
+        JobArgument<?> ar = allArguments.stream().filter(a -> a.getName().equals(name) && a.isMasked()).findAny().orElse(null);
+        return ar == null ? val : JobArgument.DisplayMode.MASKED;
+    }
+
 }
