@@ -123,17 +123,7 @@ public class OrderInitiatorSettings {
             LOGGER.warn("Could not set setting for dayAheadPlan: " + dayAheadPlan);
         }
     }
-
-    
-    public Boolean getDailyPlanDaysCreateOnStart() {
-        return dailyPlanDaysCreateOnStart;
-    }
-
-    
-    public void setDailyPlanDaysCreateOnStart(Boolean dailyPlanDaysCreateOnStart) {
-        this.dailyPlanDaysCreateOnStart = dailyPlanDaysCreateOnStart;
-    }
-
+ 
     
     public StartupMode getStartMode() {
         return startMode;

@@ -364,8 +364,7 @@ public class OrderInitiatorRunner extends TimerTask {
         TimeZone timeZone = TimeZone.getTimeZone("UTC");
         java.util.Calendar dailyPlanCalendar = java.util.Calendar.getInstance(timeZone);
 
-        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || OrderInitiatorGlobals.orderInitiatorSettings
-                .getDailyPlanDaysCreateOnStart() || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
+        if (!createdPlans.contains(DailyPlanHelper.getDayOfYear(calendar)) && (generateFromManuelStart || (now.getTimeInMillis() - startCalendar.getTimeInMillis()) > 0)) {
 
             startCalendar = null;
             createdPlans.add(DailyPlanHelper.getDayOfYear(calendar));

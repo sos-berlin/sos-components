@@ -156,11 +156,11 @@ public class OrderInitiatorService extends AJocClusterService {
 
         LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
 
-        settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "0"));
-        settings.setDayAheadSubmit(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_submit", "0"));
+        settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "7"));
+        settings.setDayAheadSubmit(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_submit", "3"));
         settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
         settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
-        settings.setDailyPlanDaysCreateOnStart("1".equals(getProperty(Globals.sosCockpitProperties, "daily_plan_days_create_on_start", "0")));
+      //  settings.setDailyPlanDaysCreateOnStart("1".equals(getProperty(Globals.sosCockpitProperties, "daily_plan_days_create_on_start", "1")));
         settings.setDailyPlanStartTime(getProperty(Globals.sosCockpitProperties, "daily_plan_start_time", "00:00"));
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
