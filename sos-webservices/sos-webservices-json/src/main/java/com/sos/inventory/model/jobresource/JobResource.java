@@ -76,13 +76,12 @@ public class JobResource implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
-     * @param tYPE
+     * 
      * @param env
      * @param title
      */
-    public JobResource(DeployType tYPE, Environment env, String documentationPath, String title) {
+    public JobResource(Environment env, String documentationPath, String title) {
         super();
-        this.tYPE = tYPE;
         this.env = env;
         this.documentationPath = documentationPath;
         this.title = title;
@@ -97,17 +96,6 @@ public class JobResource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
-    }
-
-    /**
-     * deployType
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("TYPE")
-    public void setTYPE(DeployType tYPE) {
-        this.tYPE = tYPE;
     }
 
     /**
