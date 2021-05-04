@@ -27,6 +27,9 @@
     "path": {
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
+    "settings": {
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
+    },
     "env": {
       "$ref": "../../../inventory/schemas/job/env-schema.json"
     }

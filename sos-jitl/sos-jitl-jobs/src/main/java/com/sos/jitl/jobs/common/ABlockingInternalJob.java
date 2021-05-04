@@ -127,9 +127,9 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         if (step == null) {
             return null;
         }
-        Optional<Value> op = step.getInternalStep().namedValue(name);
-        if (op.isPresent()) {
-            return Job.getValue(op.get());
+        Either<Problem, Optional<Value>> op = step.getInternalStep().namedValue(name);
+        if (op.isRight() && op.get().isPresent()) {
+            return Job.getValue(op.get().get());
         }
         return null;
     }

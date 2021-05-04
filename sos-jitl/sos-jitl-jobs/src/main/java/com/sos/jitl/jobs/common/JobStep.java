@@ -14,6 +14,8 @@ import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -198,9 +200,9 @@ public class JobStep<A> {
         if (internalStep == null) {
             return null;
         }
-        Optional<Value> op = internalStep.namedValue(name);
-        if (op.isPresent()) {
-            return Job.getValue(op.get());
+        Either<Problem, Optional<Value>> op = internalStep.namedValue(name);
+        if (op.isRight() && op.get().isPresent()) {
+            return Job.getValue(op.get().get());
         } else {
             return Job.getValue(internalStep.arguments().get(name));
         }
