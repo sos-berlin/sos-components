@@ -19,7 +19,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -28,6 +27,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -67,7 +67,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredComment(deployFilter.getAuditLog());
+            storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
@@ -143,7 +143,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
             }
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
-            DeployAudit audit = null;
+            //DeployAudit audit = null;
             // store to selected controllers
             for (String controllerId : controllerIds) {
             	if (!allowedControllerIds.contains(controllerId)) {
@@ -246,7 +246,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
-                    audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
+                    //audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
                     SignedItemsSpec signedItemsSpec = 
                             new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources);
                     // call updateRepo command via ControllerApi for given controller
@@ -284,7 +284,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     // store history entries for delete operation optimistically
                     invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                    audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
+                    //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically
@@ -313,10 +313,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         }); 
                 } 
             }
-            if (audit != null) {
-                logAuditMessage(audit);
-                storeAuditLogEntry(audit);
-            }
+//            if (audit != null) {
+//                logAuditMessage(audit);
+//                storeAuditLogEntry(audit);
+//            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

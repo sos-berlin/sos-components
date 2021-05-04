@@ -19,7 +19,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -27,11 +26,9 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.inventory.resource.IRestoreConfigurationResource;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.restore.RequestFilter;
@@ -63,8 +60,6 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse restore(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
-            
             session = Globals.createSosHibernateStatelessConnection(TRASH_IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -109,7 +104,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 List<DBItemInventoryConfiguration> curDBFolderContent = dbLayer.getFolderContent(newPathWithoutFix, true, null);
                 Set<String> folderPaths = curDBFolderContent.stream().filter(i -> ConfigurationType.FOLDER.intValue() == i.getType()).map(
                         DBItemInventoryConfiguration::getPath).collect(Collectors.toSet());
-                Long auditLogId = createAuditLog(config, in.getAuditLog());
+                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 
                 for (ConfigurationType objType : restoreOrder) {
                     for (DBItemInventoryConfigurationTrash trashItem : trashMap.getOrDefault(objType, Collections.emptyList())) {
@@ -171,7 +166,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 
-                Long auditLogId = createAuditLog(config, in.getAuditLog());
+                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
                 if (dbLayer.getConfigurationByName(pWithoutFix.getFileName().toString(), config.getType()).isEmpty()) {
                     DBItemInventoryConfiguration dbItem = createItem(config, pWithoutFix, auditLogId, dbLayer);
                     JocInventory.insertConfiguration(dbLayer, dbItem);
@@ -217,16 +212,6 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
     
-    private Long createAuditLog(DBItemInventoryConfigurationTrash config, AuditParams auditParams) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        logAuditMessage(audit);
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            return auditItem.getId();
-        }
-        return 0L;
-    }
-
     private static DBItemInventoryConfiguration createItem(DBItemInventoryConfigurationTrash oldItem, java.nio.file.Path newItem, Long auditLogId,
             InventoryDBLayer dbLayer) {
         DBItemInventoryConfiguration item = new DBItemInventoryConfiguration();

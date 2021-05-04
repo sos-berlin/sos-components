@@ -11,10 +11,10 @@ import com.sos.joc.agents.resource.IAgentsResourceReassign;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
@@ -41,19 +41,13 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            checkRequiredComment(body.getAuditLog());
-            logAuditMessage(body.getAuditLog());
+            storeAuditLog(body.getAuditLog(), CategoryType.CONTROLLER);
             
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
                 ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChangeSimple))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
-            
-            body.setWithSwitchover(null);
-            ModifyControllerAudit reassignAudit = new ModifyControllerAudit(body);
-            storeAuditLogEntry(reassignAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

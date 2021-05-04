@@ -14,11 +14,11 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.SetVersionsAudit;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.DeploymentVersion;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -41,6 +41,7 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             updateVersions(filter, dbLayer);
@@ -61,9 +62,8 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
         depHistoryItems.stream().forEach(item -> {
             DBItemDepVersions newVersion = new DBItemDepVersions();
             newVersion.setInvConfigurationId(item.getInventoryConfigurationId());
-            DeploymentVersion version = filter.getDeployConfigurations().stream()
-                    .filter(versionItem -> versionItem.getConfiguration().getPath().equals(item.getPath()))
-                    .collect(Collectors.toList()).get(0);
+            DeploymentVersion version = filter.getDeployConfigurations().stream().filter(versionItem -> versionItem.getConfiguration().getPath()
+                    .equals(item.getPath())).collect(Collectors.toList()).get(0);
             versionWithPaths.put(version.getVersion(), version.getConfiguration().getPath());
             newVersion.setDepHistoryId(item.getId());
             newVersion.setVersion(version.getVersion());
@@ -71,12 +71,9 @@ public class SetVersionsImpl extends JOCResourceImpl implements ISetVersions {
             try {
                 dbLayer.getSession().save(newVersion);
             } catch (SOSHibernateException e) {
-                throw new JocSosHibernateException(e.getMessage(), e);
+                throw new JocSosHibernateException(e);
             }
         });
-        SetVersionsAudit audit = new SetVersionsAudit(filter, versionWithPaths, "mutliple versions updated.");
-        logAuditMessage(audit);
-        storeAuditLogEntry(audit);
     }
-    
+
 }

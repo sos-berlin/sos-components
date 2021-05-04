@@ -19,13 +19,11 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -248,12 +246,11 @@ public class DeleteDeployments {
             }
         }
         // delete and put to trash
+        Long auditLogId = JocInventory.storeAuditLog(auditLogger, auditParams); // TODO  too late here
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        if (auditLogger != null) {
-            auditLogger.logAuditMessage(auditParams); 
-        }
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
-            createAuditLog(invConfiguration, invConfiguration.getTypeAsEnum(), auditLogger, auditParams);
+            //createAuditLog(invConfiguration, invConfiguration.getTypeAsEnum(), auditLogger, auditParams);
+            invConfiguration.setAuditLogId(auditLogId);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
             if (withEvents) {
                 foldersForEvent.add(invConfiguration.getFolder());
@@ -278,19 +275,19 @@ public class DeleteDeployments {
         }
     }
     
-    private static void createAuditLog(DBItemInventoryConfiguration config, ConfigurationType objectType, JocAuditLog auditLogger,
-            AuditParams auditParams) {
-        if (auditLogger != null) {
-            InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder(), auditParams);
-            DBItemJocAuditLog auditItem = auditLogger.storeAuditLogEntry(audit);
-            if (auditItem != null) {
-                config.setAuditLogId(auditItem.getId());
-            } else {
-                config.setAuditLogId(0L);
-            }
-        } else {
-            config.setAuditLogId(0L);
-        }
-    }
+//    private static void createAuditLog(DBItemInventoryConfiguration config, ConfigurationType objectType, JocAuditLog auditLogger,
+//            AuditParams auditParams) {
+//        if (auditLogger != null) {
+//            InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder(), auditParams);
+//            DBItemJocAuditLog auditItem = auditLogger.storeAuditLogEntry(audit);
+//            if (auditItem != null) {
+//                config.setAuditLogId(auditItem.getId());
+//            } else {
+//                config.setAuditLogId(0L);
+//            }
+//        } else {
+//            config.setAuditLogId(0L);
+//        }
+//    }
         
 }

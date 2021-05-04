@@ -17,16 +17,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IRenameConfigurationResource;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseNewPath;
 import com.sos.joc.model.inventory.rename.RequestFilter;
@@ -58,8 +55,6 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse rename(RequestFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
-            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -108,11 +103,12 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     CheckJavaVariableName.test("folder", p.getName(i).toString());
                 }
             }
+            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             if (JocInventory.isFolder(type)) {
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
-                    setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))));
+                    setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), auditLogId);
                     return oldItem;
                 }).collect(Collectors.toList());
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
@@ -141,8 +137,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     JocInventory.deleteConfiguration(dbLayer, newItem);
                 }
                 
-                setItem(config, p);
-                createAuditLog(config, in.getAuditLog());
+                setItem(config, p, auditLogId);
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
@@ -185,8 +180,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 
-                setItem(config, p);
-                createAuditLog(config, in.getAuditLog());
+                setItem(config, p, auditLogId);
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 response.setPath(config.getPath());
@@ -209,21 +203,13 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
         }
     }
     
-    private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        logAuditMessage(audit);
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            config.setAuditLogId(auditItem.getId());
-        }
-    }
-
-    private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem) {
+    private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem, Long auditLogId) {
         oldItem.setPath(newItem.toString().replace('\\', '/'));
         oldItem.setFolder(newItem.getParent().toString().replace('\\', '/'));
         oldItem.setName(newItem.getFileName().toString());
         oldItem.setDeployed(false);
         oldItem.setReleased(false);
+        oldItem.setAuditLogId(auditLogId);
         oldItem.setModified(Date.from(Instant.now()));
     }
 

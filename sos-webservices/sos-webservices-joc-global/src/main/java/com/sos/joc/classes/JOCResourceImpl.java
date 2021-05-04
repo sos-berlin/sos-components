@@ -29,7 +29,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.audit.IAuditLog;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -44,6 +43,7 @@ import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.JocPermissions;
@@ -251,21 +251,27 @@ public class JOCResourceImpl {
     public JocAuditLog getJocAuditLog() {
         return jocAuditLog;
     }
-
-    public void logAuditMessage(IAuditLog body) {
-        jocAuditLog.logAuditMessage(body);
-    }
     
     public void logAuditMessage(AuditParams audit) {
         jocAuditLog.logAuditMessage(audit);
     }
-
-    public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
-        return jocAuditLog.storeAuditLogEntry(body);
+    
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit, CategoryType category) {
+        checkRequiredComment(audit);
+        jocAuditLog.logAuditMessage(audit);
+        return jocAuditLog.storeAuditLogEntry(audit, category);
     }
-
-    public DBItemJocAuditLog storeAuditLogEntry(IAuditLog body, SOSHibernateSession connection) {
-        return jocAuditLog.storeAuditLogEntry(body, connection);
+    
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category) {
+        checkRequiredComment(audit);
+        jocAuditLog.logAuditMessage(audit);
+        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category);
+    }
+    
+    public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category, SOSHibernateSession connection) {
+        checkRequiredComment(audit);
+        jocAuditLog.logAuditMessage(audit);
+        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category, connection);
     }
 
     public String getJsonString(Object body) {

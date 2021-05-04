@@ -18,7 +18,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.controller.resource.IControllerResourceModify;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -27,6 +26,7 @@ import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
@@ -127,8 +127,7 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
                 urlParameter.setUrl(URI.create(controllerInstances.get(0).getUri()));
             }
         }
-        checkRequiredComment(urlParameter.getAuditLog());
-        logAuditMessage(urlParameter.getAuditLog());
+        storeAuditLog(urlParameter.getAuditLog(), urlParameter.getControllerId(), CategoryType.CONTROLLER);
         
         JOCJsonCommand jocJsonCommand = new JOCJsonCommand(urlParameter.getUrl(), accessToken);
         jocJsonCommand.setUriBuilderForCommands();
@@ -142,9 +141,6 @@ public class ControllerResourceModifyImpl extends JOCResourceImpl implements ICo
         } else {
             jocJsonCommand.getJsonObjectFromPost(body);
         }
-        // TODO expected answer { "TYPE": "Accepted" }
-        ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(urlParameter);
-        storeAuditLogEntry(jobschedulerAudit);
         return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
     }
 

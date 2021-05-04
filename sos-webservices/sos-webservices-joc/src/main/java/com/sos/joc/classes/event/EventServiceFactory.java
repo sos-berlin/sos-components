@@ -202,7 +202,7 @@ public class EventServiceFactory {
             }
         } catch (SessionNotExistException e1) {
             throw e1;
-        } catch (Exception e1) {
+        } catch (Throwable e1) {
             Err err = new Err();
             err.setCode("JOC-410");
             err.setMessage(e1.toString());

@@ -23,8 +23,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyControllerAudit;
-import com.sos.joc.classes.audit.RegisterControllerAudit;
 import com.sos.joc.classes.jobscheduler.ControllerAnswer;
 import com.sos.joc.classes.jobscheduler.ControllerCallable;
 import com.sos.joc.classes.jobscheduler.States;
@@ -48,6 +46,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.controller.ConnectionStateText;
 import com.sos.joc.model.controller.Controller;
@@ -80,7 +79,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             JsonValidator.validateFailFast(filterBytes, RegisterParameters.class);
             RegisterParameters body = Globals.objectMapper.readValue(filterBytes, RegisterParameters.class);
             
-            checkRequiredComment(body.getAuditLog());
             String controllerId = body.getControllerId();
             if (controllerId == null) {
                 controllerId = ""; 
@@ -152,6 +150,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             List<DBItemInventoryJSInstance> instances = new ArrayList<>();
@@ -160,9 +160,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             boolean firstController = instanceDBLayer.isEmpty();
             boolean clusterUriChanged = false;
             
-            RegisterControllerAudit jobSchedulerAudit = new RegisterControllerAudit(body);
-            logAuditMessage(jobSchedulerAudit);
-
             // sorted by isPrimary first
             List<DBItemInventoryJSInstance> dbControllers = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
             
@@ -324,8 +321,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), cId));
             }
             
-            storeAuditLogEntry(jobSchedulerAudit);
-            
             if (firstController) { // GUI needs permissions directly for the first controller(s)
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSosShiroCurrentUser()
                         .getSosPermissionJocCockpitControllers()));
@@ -357,10 +352,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
 
             String controllerId = controllerObj.getControllerId();
-            checkRequiredComment(controllerObj.getAuditLog());
-            ModifyControllerAudit audit = new ModifyControllerAudit(controllerId, controllerObj.getAuditLog());
-            logAuditMessage(audit);
-            storeAuditLogEntry(audit);
+            storeAuditLog(controllerObj.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             for (ProxyUser user : ProxyUser.values()) {
                 Proxy.close(controllerId, user);

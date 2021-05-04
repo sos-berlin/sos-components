@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
@@ -51,6 +51,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             }
 
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
+            storeAuditLog(dailyPlanOrderSelector.getAuditLog(), dailyPlanOrderSelector.getControllerId(), CategoryType.DAILYPLAN);
             setSettings();
 
             if (dailyPlanOrderSelector.getSelector() == null) {
@@ -95,7 +96,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                     .getDailyPlanDate()).getTime());
             OrderInitiatorGlobals.submissionTime = new Date();
 
-            logAuditMessage(dailyPlanOrderSelector.getAuditLog());
             for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
 
                 ScheduleSource scheduleSource = null;
@@ -105,8 +105,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(),
                         dailyPlanOrderSelector.getWithSubmit());
 
-                DailyPlanAudit orderAudit = new DailyPlanAudit(controllerId, dailyPlanOrderSelector.getAuditLog());
-                storeAuditLogEntry(orderAudit);
+                //storeAuditLogEntry(orderAudit);
             }
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());

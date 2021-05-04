@@ -32,7 +32,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -45,6 +44,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
@@ -112,6 +112,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
+            
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
+            Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
+            
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
@@ -155,10 +159,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     commitId = ((Workflow) config.getContent()).getVersionId();
                 }
             }
-            DeployAudit mainAudit = new DeployAudit(filter.getAuditLog(), String.format("%1$d object(s) imported with profile %2$s",
-                    objectsWithSignature.size(), account));
-            logAuditMessage(mainAudit);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
+//            DeployAudit mainAudit = new DeployAudit(filter.getAuditLog(), String.format("%1$d object(s) imported with profile %2$s",
+//                    objectsWithSignature.size(), account));
+//            logAuditMessage(mainAudit);
+//            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(
                     Collectors.toSet());
@@ -216,7 +220,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 }
             }
-            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
+            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), auditLogId);
             // Deploy
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
@@ -259,7 +263,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
-            DeployAudit audit = new DeployAudit(filter.getAuditLog(), controllerId, commitId, "update", account);
+            //DeployAudit audit = new DeployAudit(filter.getAuditLog(), controllerId, commitId, "update", account);
             boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;
@@ -306,10 +310,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 break;
             }
-            if (audit != null) {
-                logAuditMessage(audit);
-                storeAuditLogEntry(audit);
-            }
+//            if (audit != null) {
+//                logAuditMessage(audit);
+//                storeAuditLogEntry(audit);
+//            }
             // no error occurred
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

@@ -13,11 +13,11 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.SetVersionAudit;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.ISetVersion;
@@ -41,6 +41,7 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
+            storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
             updateVersions(filter, dbLayer);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -68,9 +69,6 @@ public class SetVersionImpl extends JOCResourceImpl implements ISetVersion {
                 throw new JocSosHibernateException(e.getMessage(), e);
             }
         });
-        SetVersionAudit audit = new SetVersionAudit(filter, paths, "version updated.");
-        logAuditMessage(audit);
-        storeAuditLogEntry(audit);
     }
     
 }

@@ -50,6 +50,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JobSchedulerObject;
 import com.sos.joc.model.docu.DeployDocumentation;
 import com.sos.joc.model.docu.DeployDocumentations;
@@ -113,8 +114,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Optional<String> supportedImageType = SUPPORTED_IMAGETYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
-            ImportDocumentationAudit importAudit = new ImportDocumentationAudit(filter);
-            logAuditMessage(importAudit);
+            storeAuditLog(filter.getAuditLog(), CategoryType.DOCUMENTATIONS);
 
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
                 readZipFileContent(stream, filter);
@@ -152,7 +152,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             
             deployDocumentations(controllerId);
 
-            storeAuditLogEntry(importAudit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

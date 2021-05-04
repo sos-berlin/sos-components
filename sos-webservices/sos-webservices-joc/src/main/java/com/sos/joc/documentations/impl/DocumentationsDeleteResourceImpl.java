@@ -10,13 +10,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeleteDocumentationAudit;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
 import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.docu.DocumentationsFilter;
 
 @Path("documentations")
@@ -37,12 +37,12 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             checkRequiredParameter("controllerId", filter.getControllerId());
             checkRequiredParameter("documentations", filter.getDocumentations());
             
+            storeAuditLog(filter.getAuditLog(), filter.getControllerId(), CategoryType.DOCUMENTATIONS);
+            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             List<DBItemDocumentation> docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
-            logAuditMessage(filter.getAuditLog());
             for (DBItemDocumentation dbDoc : docs) {
-                DeleteDocumentationAudit deleteAudit = new DeleteDocumentationAudit(filter, dbDoc.getPath(), dbDoc.getDirectory());
                 List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(filter.getControllerId(), dbDoc.getId());
                 if (dbUsages != null && !dbUsages.isEmpty()) {
                     for (DBItemDocumentationUsage dbUsage : dbUsages) {
@@ -56,7 +56,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 connection.delete(dbDoc);
-                storeAuditLogEntry(deleteAudit);
+                //storeAuditLogEntry(deleteAudit);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

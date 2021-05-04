@@ -24,18 +24,18 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
@@ -177,13 +177,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
                 return jocDefaultResponse;
             }
             
-            checkRequiredComment(dailyPlanOrderFilter.getAuditLog());
-            logAuditMessage(dailyPlanOrderFilter.getAuditLog());
-
+            storeAuditLog(dailyPlanOrderFilter.getAuditLog(), dailyPlanOrderFilter.getControllerId(), CategoryType.DAILYPLAN);
             submitOrdersToController(dailyPlanOrderFilter);
-
-            DailyPlanAudit orderAudit = new DailyPlanAudit(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
-            storeAuditLogEntry(orderAudit);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {

@@ -18,9 +18,9 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -61,6 +61,8 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
@@ -146,17 +148,17 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
-            DeployAudit audit = null;
-            if (controllerId != null) {
-                audit = new DeployAudit(filter.getAuditLog(), 
-                        String.format("objects exported for controller '%1$s' to file '%2$s' with profile '%3$s'.", 
-                                controllerId, filter.getExportFile().getFilename(), account));
-            } else {
-                audit = new DeployAudit(filter.getAuditLog(), 
-                        String.format("objects exported to file '%1$s' with profile '%2$s'.", filter.getExportFile().getFilename(), account));
-            }
-            logAuditMessage(audit);
-            storeAuditLogEntry(audit);
+//            DeployAudit audit = null;
+//            if (controllerId != null) {
+//                audit = new DeployAudit(filter.getAuditLog(), 
+//                        String.format("objects exported for controller '%1$s' to file '%2$s' with profile '%3$s'.", 
+//                                controllerId, filter.getExportFile().getFilename(), account));
+//            } else {
+//                audit = new DeployAudit(filter.getAuditLog(), 
+//                        String.format("objects exported to file '%1$s' with profile '%2$s'.", filter.getExportFile().getFilename(), account));
+//            }
+//            logAuditMessage(audit);
+//            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

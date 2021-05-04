@@ -1,5 +1,11 @@
 
-package com.sos.controller.model.common;
+package com.sos.inventory.model.common;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -7,11 +13,6 @@ import java.util.Map;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
-
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 
 /**
@@ -21,6 +22,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({
+
+})
 public class Variables {
 
     @JsonIgnore
@@ -45,12 +49,12 @@ public class Variables {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(additionalProperties).toHashCode();
+        return new HashCodeBuilder().toHashCode();
     }
 
     @Override
@@ -62,7 +66,7 @@ public class Variables {
             return false;
         }
         Variables rhs = ((Variables) other);
-        return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
+        return new EqualsBuilder().isEquals();
     }
 
 }

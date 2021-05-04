@@ -4,6 +4,7 @@ package com.sos.controller.model.common;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.sos.inventory.model.common.Variables;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;

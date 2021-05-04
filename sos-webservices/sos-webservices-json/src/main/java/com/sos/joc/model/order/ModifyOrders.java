@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.sos.controller.model.common.Variables;
+import com.sos.inventory.model.common.Variables;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.model.audit.AuditParams;

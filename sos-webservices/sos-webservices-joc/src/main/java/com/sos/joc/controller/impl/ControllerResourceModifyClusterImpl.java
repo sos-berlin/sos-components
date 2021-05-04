@@ -17,7 +17,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyControllerAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
@@ -33,6 +32,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.controller.UrlParameter;
 import com.sos.schema.JsonValidator;
 
@@ -58,9 +58,8 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            checkRequiredComment(urlParameter.getAuditLog());
-            
             // ask for cluster
             List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
             if (controllerInstances != null && controllerInstances.size() < 2) { // is not cluster
@@ -77,10 +76,6 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
 
             ControllerApi.of(controllerId).executeCommandJson(Globals.objectMapper.writeValueAsString(new ClusterSwitchOver()))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
-
-            ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
-            logAuditMessage(jobschedulerAudit);
-            storeAuditLogEntry(jobschedulerAudit);
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -105,15 +100,11 @@ public class ControllerResourceModifyClusterImpl extends JOCResourceImpl impleme
                 return jocDefaultResponse;
             }
 
-            checkRequiredComment(urlParameter.getAuditLog());
-            logAuditMessage(urlParameter.getAuditLog());
+            storeAuditLog(urlParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_APPOINT_NODES);
             appointNodes(controllerId, new InventoryAgentInstancesDBLayer(connection), accessToken, getJocError());
             
-            ModifyControllerAudit jobschedulerAudit = new ModifyControllerAudit(controllerId, urlParameter.getAuditLog());
-            storeAuditLogEntry(jobschedulerAudit);
-
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
