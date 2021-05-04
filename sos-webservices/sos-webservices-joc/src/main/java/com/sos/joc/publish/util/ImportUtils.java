@@ -16,6 +16,7 @@ import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -125,7 +126,8 @@ public class ImportUtils {
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByLockId (String name, Set<ConfigurationObject> configurations) {
     	return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
     			.map(item -> {
-    				for (Instruction wfInstruction : ((WorkflowEdit)item.getConfiguration()).getConfiguration().getInstructions()) {
+    				Workflow wf = (Workflow)item.getConfiguration();
+    				for (Instruction wfInstruction : wf.getInstructions()) {
     					if (InstructionType.LOCK.equals(wfInstruction.getTYPE()) && ((Lock)wfInstruction).getLockName().equals(name)) {
 							 return item;
     					}
