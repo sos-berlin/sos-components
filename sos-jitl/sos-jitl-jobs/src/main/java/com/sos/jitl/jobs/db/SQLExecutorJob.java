@@ -15,7 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobStep;
-import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsParameters;
+import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -90,8 +90,11 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         try {
             SQLExecutorJobArguments args = step.getArguments();
 
-            boolean checkResultSet = !args.getResultSetAsParameters().equals(ResultSetAsParameters.FALSE);
-            boolean isParamValue = args.getResultSetAsParameters().equals(ResultSetAsParameters.NAME_VALUE);
+            boolean checkResultSet = args.getResultSetAsVariables() != null;
+            boolean isParamValue = false;
+            if (checkResultSet) {
+                isParamValue = args.getResultSetAsVariables().equals(ResultSetAsVariables.NAME_VALUE);
+            }
             rs = executor.getResultSet(statement);
 
             if (checkResultSet || args.getResultSetAsWarning()) {
