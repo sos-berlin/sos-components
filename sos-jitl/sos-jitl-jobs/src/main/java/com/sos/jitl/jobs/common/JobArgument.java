@@ -4,18 +4,29 @@ package com.sos.jitl.jobs.common;
 public class JobArgument<T> {
 
     public enum ValueSource {
-        JAVA("Resulting Arguments"), ORDER("Order Variables"), ORDER_OR_NODE("Default Order Variables or Node Arguments"), JOB(
-                "Arguments"), JOB_ARGUMENT("Job Arguments"), LAST_SUCCEEDED_OUTCOME("Last Succeeded Outcomes"), LAST_FAILED_OUTCOME(
-                        "Last Failed Outcomes");
+        JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
+                "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
+                        "Job Arguments", "Job Argument"), LAST_SUCCEEDED_OUTCOME("Last Succeeded Outcomes"), LAST_FAILED_OUTCOME(
+                                "Last Failed Outcomes");
 
-        private final String value;
+        private final String header;
+        private final String title;
 
-        private ValueSource(String val) {
-            value = val;
+        private ValueSource(String header) {
+            this(header, header);
         }
 
-        public String getValue() {
-            return value;
+        private ValueSource(String header, String title) {
+            this.header = header;
+            this.title = title;
+        }
+
+        public String getHeader() {
+            return header;
+        }
+
+        public String getTitle() {
+            return title;
         }
     }
 

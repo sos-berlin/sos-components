@@ -10,7 +10,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,9 +56,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     }
 
     /** to override */
-    public JOutcome.Completed onOrderProcess(JobStep<A> step) throws Exception {
-        return JOutcome.succeeded(Collections.emptyMap());
-    }
+    public abstract JOutcome.Completed onOrderProcess(JobStep<A> step) throws Exception;
 
     public JobContext getJobContext() {
         return jobContext;
@@ -98,7 +95,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     @Override
     public OrderProcess toOrderProcess(BlockingInternalJob.Step step) {
         return () -> {
-            JobStep<A> jobStep = new JobStep<A>(getClass().getName(), step);
+            JobStep<A> jobStep = new JobStep<A>(getClass().getName(), jobContext, step);
             try {
                 List<SOSJobArgumentException> exceptions = new ArrayList<SOSJobArgumentException>();
                 A args = createJobArguments(exceptions, jobStep);
