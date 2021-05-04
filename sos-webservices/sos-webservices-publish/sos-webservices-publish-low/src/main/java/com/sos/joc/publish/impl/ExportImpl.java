@@ -2,8 +2,10 @@ package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
@@ -20,6 +22,7 @@ import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
@@ -77,7 +80,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             if (forSigning != null) {
                 commitId = UUID.randomUUID().toString();
                 controllerId = forSigning.getControllerId();
+                folderPermissions.setSchedulerId(controllerId);
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 deployablesForSigning = PublishUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId);
+                deployablesForSigning = deployablesForSigning.stream()
+                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 final String controllerIdUsed = controllerId;
                 deployablesForSigning.stream()
                 .forEach(deployable -> {
@@ -96,8 +103,12 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     }
                 });
             } else { // shallow copy
+                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
+                deployablesForShallowCopy = deployablesForShallowCopy.stream()
+                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
+                releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
             }
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)

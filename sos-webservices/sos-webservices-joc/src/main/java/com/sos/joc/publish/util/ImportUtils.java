@@ -81,7 +81,6 @@ public class ImportUtils {
     	// update configurations referenced by existing configuration from DB
     	if (updateableItem.getReferencedBy() != null && !updateableItem.getReferencedBy().isEmpty()) {
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
-//                String json = Globals.objectMapper.writeValueAsString(configurationWithReference);
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
                 	for (Instruction instruction : ((WorkflowEdit)configurationWithReference).getConfiguration().getInstructions()) {
