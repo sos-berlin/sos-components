@@ -126,81 +126,97 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
 //            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-
-            if (filter.getOverwrite()) {
-                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                	// filter according to folder permissions on target folder
-                	configurations.stream().peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()))
-                			.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull)
-                			.forEach(configuration -> dbLayer.saveOrUpdateInventoryConfiguration(
-                					configuration, account, auditLogId, filter.getOverwrite(), filter.getTargetFolder(), agentNames));
-                } else {
-            		// filter according to folder permissions
-                	configurations.stream().filter(configuration -> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull)
-                	.forEach(configuration -> dbLayer.saveOrUpdateInventoryConfiguration(
-                			configuration, account, auditLogId, filter.getOverwrite(), agentNames));
-                }
-        	} else {
-                if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
-                		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
-                	// process prefix/suffix only if overwrite==false AND one of both not empty 
-            		// TargetFolder
-                	for (ConfigurationObject configuration : configurations) {
-                		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                		if (existingConfiguration != null) {
-                			if (canAdd(configuration.getPath(), permittedFolders)) {
-                            	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                            			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                            	ImportUtils.replaceReferences(updateable);
-                            	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
-                			}
-                		} else {
-                            if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                                configuration.setPath(filter.getTargetFolder() + configuration.getPath());
-                                if (canAdd(configuration.getPath(), permittedFolders)) {
-                                    dbLayer.saveOrUpdateInventoryConfiguration(
-                                    		configuration, account, auditLogId, filter.getOverwrite(), filter.getTargetFolder(), agentNames);
+            Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
+            if (!configurations.isEmpty()) {
+                if (filter.getOverwrite()) {
+                    if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                    	// filter according to folder permissions on target folder
+                    	filteredConfigurations = configurations.stream().peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()))
+                    			.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                    	if (!filteredConfigurations.isEmpty()) {
+                    		filteredConfigurations.stream().forEach(configuration 
+                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                    	}
+                    } else {
+                		// filter according to folder permissions
+                    	filteredConfigurations = configurations.stream().filter(configuration 
+                    			-> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                    	if (!filteredConfigurations.isEmpty()) {
+                    		filteredConfigurations.stream().forEach(configuration 
+                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                    	}
+                    }
+            	} else {
+                    if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
+                    		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
+                    	// process prefix/suffix only if overwrite==false AND one of both not empty 
+                		// TargetFolder
+                    	for (ConfigurationObject configuration : configurations) {
+                    		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                    		if (existingConfiguration != null) {
+                    			if (canAdd(configuration.getPath(), permittedFolders)) {
+                    				filteredConfigurations.add(configuration);
+                                	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
+                                			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                                	ImportUtils.replaceReferences(updateable);
+                                	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
+                    			}
+                    		} else {
+                                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                                	if (!configuration.getPath().startsWith(filter.getTargetFolder())) {
+                                		configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                                	}
+                                    if (canAdd(configuration.getPath(), permittedFolders)) {
+                        				filteredConfigurations.add(configuration);
+                                        dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                    }
+                                } else {
+                                	if (canAdd(configuration.getPath(), permittedFolders)) {
+                        				filteredConfigurations.add(configuration);
+                                		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                	}
                                 }
-                            } else {
-                            	if (canAdd(configuration.getPath(), permittedFolders)) {
-                            		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                            	}
-                            }
-                		}
-                	}
-                } else {
-                	// check if items to import already exist in current configuration and ignore them
-                	// import only if item does not exist yet
-                	for (ConfigurationObject configuration : configurations) {
-                		DBItemInventoryConfiguration existingConfiguration = 
-                				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                		if (existingConfiguration == null) {
-                			if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                				configuration.setPath(filter.getTargetFolder() + configuration.getPath());
-                				if (canAdd(configuration.getPath(), permittedFolders)) {
-                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                				}
-                			} else {
-                				if (canAdd(configuration.getPath(), permittedFolders)) {
-                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                				}
-                			}
-                		}
-                	}
-                	
+                    		}
+                    	}
+                    } else {
+                    	// check if items to import already exist in current configuration and ignore them
+                    	// import only if item does not exist yet
+                    	for (ConfigurationObject configuration : configurations) {
+                    		DBItemInventoryConfiguration existingConfiguration = 
+                    				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                    		if (existingConfiguration == null) {
+                    			if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                    				if(!configuration.getPath().startsWith(filter.getTargetFolder())) {
+                    					configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                    				}
+                    				if (canAdd(configuration.getPath(), permittedFolders)) {
+                        				filteredConfigurations.add(configuration);
+                    					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                    				}
+                    			} else {
+                    				if (canAdd(configuration.getPath(), permittedFolders)) {
+                        				filteredConfigurations.add(configuration);
+                    					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                    				}
+                    			}
+                    		}
+                    	}
+                    	
+                    }
+            	}
+                if (!filteredConfigurations.isEmpty()) {
+                    Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
+                    folders = filteredConfigurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
+                    InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+                    folders.stream().forEach(item -> {
+        				try {
+        					JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
+        				} catch (SOSHibernateException e) {
+        					throw new JocSosHibernateException(e);
+        				}
+        			});
                 }
-        	}
-            Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
-            folders = configurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
-            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-            folders.stream().forEach(item -> {
-				try {
-					JocInventory.makeParentDirs(invDbLayer, item);
-				} catch (SOSHibernateException e) {
-					throw new JocSosHibernateException(e);
-				}
-			});
-//            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
+            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -1008,18 +1008,11 @@ public class DBLayerDeploy {
         }
     }
 
-    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            String folder, Set<String> agentNames) {
-        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, folder, agentNames);
+    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, Set<String> agentNames) {
+        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, false, agentNames);
     }
     
-    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            boolean overwrite, Set<String> agentNames) {
-        saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, overwrite, null, agentNames);   
-    }
-    
-    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId,
-            boolean overwrite, String folder, Set<String> agentNames) {
+    public void saveOrUpdateInventoryConfiguration(ConfigurationObject configuration, String account, Long auditLogId, boolean overwrite, Set<String> agentNames) {
         try {
             DBItemInventoryConfiguration existingConfiguration = null;
             StringBuilder hql = new StringBuilder(" from ");

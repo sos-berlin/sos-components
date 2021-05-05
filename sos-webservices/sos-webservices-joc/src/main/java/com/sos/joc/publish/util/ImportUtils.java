@@ -74,10 +74,19 @@ public class ImportUtils {
     	// update existing configuration from archive
     	updateableItem.getConfigurationObject().setName(updateableItem.getNewName());
     	if (updateableItem.getTargetFolder() != null && !updateableItem.getTargetFolder().isEmpty()) {
-    		Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationDbItem().getFolder()); 
-    		updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
+    		if (!updateableItem.getConfigurationDbItem().getPath().startsWith(updateableItem.getTargetFolder())) {
+        		Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationDbItem().getFolder()); 
+        		updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
+    		} else if (!updateableItem.getConfigurationObject().getPath().startsWith(updateableItem.getTargetFolder())) {
+        		Path path = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationObject().getPath()); 
+        		updateableItem.getConfigurationObject().setPath(path.getParent().resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
+    		} else {
+        		updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName())
+        				.toString().replace('\\', '/'));
+    		}
     	} else {
-    		updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
+    		updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName())
+    				.toString().replace('\\', '/'));
     	}
     	// update configurations referenced by existing configuration from DB
     	if (updateableItem.getReferencedBy() != null && !updateableItem.getReferencedBy().isEmpty()) {
@@ -105,15 +114,19 @@ public class ImportUtils {
                     		((ScheduleEdit)configurationWithReference).getConfiguration().setWorkflowName(updateableItem.getNewName());
                     	}
                     } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.WORKINGDAYSCALENDAR)) {
-                    	if (((WorkingDaysCalendarEdit)configurationWithReference).getConfiguration().getName().equals(updateableItem.getOldName()) ||
-                    			((WorkingDaysCalendarEdit)configurationWithReference).getConfiguration().getName().equals(updateableItem.getConfigurationObject().getName())) {
-                    		((WorkingDaysCalendarEdit)configurationWithReference).getConfiguration().setName(updateableItem.getNewName());
-                    	}
+                    	List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)configurationWithReference).getConfiguration().getCalendars();
+                    	assignedCalendars.stream().forEach(item -> {
+                        	if (item.getCalendarName().equals(updateableItem.getOldName()) || item.getCalendarName().equals(updateableItem.getConfigurationObject().getName())) {
+                        		item.setCalendarName(updateableItem.getNewName());
+                        	}
+                    	});
                     } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
-                    	if (((NonWorkingDaysCalendarEdit)configurationWithReference).getConfiguration().getName().equals(updateableItem.getOldName()) ||
-                    			((NonWorkingDaysCalendarEdit)configurationWithReference).getConfiguration().getName().equals(updateableItem.getConfigurationObject().getName())) {
-                    		((NonWorkingDaysCalendarEdit)configurationWithReference).getConfiguration().setName(updateableItem.getNewName());
-                    	}
+                    	List<AssignedNonWorkingCalendars> assignedNWDCalendars = ((ScheduleEdit)configurationWithReference).getConfiguration().getNonWorkingCalendars();
+                    	assignedNWDCalendars.stream().forEach(item -> {
+                        	if (item.getCalendarName().equals(updateableItem.getOldName()) || item.getCalendarName().equals(updateableItem.getConfigurationObject().getName())) {
+                        		item.setCalendarName(updateableItem.getNewName());
+                        	}
+                    	});
                     }
                     break;
                 default:
