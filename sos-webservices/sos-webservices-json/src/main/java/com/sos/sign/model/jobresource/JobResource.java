@@ -1,6 +1,7 @@
 
 package com.sos.sign.model.jobresource;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -48,13 +49,14 @@ public class JobResource implements IDeployObject
     @JsonProperty("path")
     private String path;
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("settings")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    @JsonAlias({
+        "arguments"
+    })
     private Environment settings;
     /**
      * key-value pairs particularly to assign parameters to environment
@@ -138,8 +140,6 @@ public class JobResource implements IDeployObject
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */
@@ -149,8 +149,6 @@ public class JobResource implements IDeployObject
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */

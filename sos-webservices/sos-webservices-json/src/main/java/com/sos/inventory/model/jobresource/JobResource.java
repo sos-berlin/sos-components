@@ -1,6 +1,7 @@
 
 package com.sos.inventory.model.jobresource;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -23,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "settings",
+    "arguments",
     "env",
     "documentationPath",
     "title"
@@ -40,14 +41,15 @@ public class JobResource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.JOBRESOURCE;
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
+    @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Environment settings;
+    @JsonAlias({
+        "settings"
+    })
+    private Environment arguments;
     /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
@@ -86,14 +88,14 @@ public class JobResource implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param documentationPath
-     * @param settings
+     * @param arguments
      * 
      * @param env
      * @param title
      */
-    public JobResource(Environment settings, Environment env, String documentationPath, String title) {
+    public JobResource(Environment arguments, Environment env, String documentationPath, String title) {
         super();
-        this.settings = settings;
+        this.arguments = arguments;
         this.env = env;
         this.documentationPath = documentationPath;
         this.title = title;
@@ -111,25 +113,21 @@ public class JobResource implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
-    public Environment getSettings() {
-        return settings;
+    @JsonProperty("arguments")
+    public Environment getArguments() {
+        return arguments;
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
-     * <p>
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
-    public void setSettings(Environment settings) {
-        this.settings = settings;
+    @JsonProperty("arguments")
+    public void setArguments(Environment arguments) {
+        this.arguments = arguments;
     }
 
     /**
@@ -202,12 +200,12 @@ public class JobResource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("settings", settings).append("env", env).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("arguments", arguments).append("env", env).append("documentationPath", documentationPath).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(settings).append(tYPE).append(env).append(title).toHashCode();
+        return new HashCodeBuilder().append(documentationPath).append(arguments).append(tYPE).append(env).append(title).toHashCode();
     }
 
     @Override
@@ -219,7 +217,7 @@ public class JobResource implements IConfigurationObject, IDeployObject
             return false;
         }
         JobResource rhs = ((JobResource) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(settings, rhs.settings).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(arguments, rhs.arguments).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
     }
 
 }

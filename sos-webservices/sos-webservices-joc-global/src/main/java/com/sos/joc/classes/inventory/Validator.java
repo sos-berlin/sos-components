@@ -158,8 +158,8 @@ public class Validator {
             if (jobResource.getEnv() != null) {
                 validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
             }
-            if (jobResource.getSettings() != null) {
-                validateExpression("$.settings", jobResource.getSettings().getAdditionalProperties());
+            if (jobResource.getArguments() != null) {
+                validateExpression("$.arguments", jobResource.getArguments().getAdditionalProperties());
             }
         }
     }
