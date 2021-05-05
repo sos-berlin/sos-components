@@ -14,8 +14,6 @@ import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
-import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -196,13 +194,13 @@ public class JobStep<A> {
         return internalStep.order().workflowPosition().position().toString();
     }
 
-    public Object getCurrentValue(final String name) {
+    public Object getCurrentValue(final String name) throws SOSJobProblemException {
         if (internalStep == null) {
             return null;
         }
-        Either<Problem, Optional<Value>> op = internalStep.namedValue(name);
-        if (op.isRight() && op.get().isPresent()) {
-            return Job.getValue(op.get().get());
+        Optional<Value> op = Job.getFromEither(internalStep.namedValue(name));
+        if (op.isPresent()) {
+            return Job.getValue(op.get());
         } else {
             return Job.getValue(internalStep.arguments().get(name));
         }

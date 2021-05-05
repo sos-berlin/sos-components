@@ -23,6 +23,7 @@ import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
+import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import io.vavr.control.Either;
@@ -123,13 +124,13 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         }
     }
 
-    private Object getNamedValue(final JobStep<A> step, final String name) {
+    private Object getNamedValue(final JobStep<A> step, final String name) throws SOSJobProblemException {
         if (step == null) {
             return null;
         }
-        Either<Problem, Optional<Value>> op = step.getInternalStep().namedValue(name);
-        if (op.isRight() && op.get().isPresent()) {
-            return Job.getValue(op.get().get());
+        Optional<Value> op = Job.getFromEither(step.getInternalStep().namedValue(name));
+        if (op.isPresent()) {
+            return Job.getValue(op.get());
         }
         return null;
     }
