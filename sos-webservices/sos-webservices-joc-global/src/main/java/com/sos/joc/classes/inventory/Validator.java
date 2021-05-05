@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
@@ -157,6 +157,9 @@ public class Validator {
             JobResource jobResource = (JobResource) config;
             if (jobResource.getEnv() != null) {
                 validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
+            }
+            if (jobResource.getSettings() != null) {
+                validateExpression("$.settings", jobResource.getSettings().getAdditionalProperties());
             }
         }
     }
