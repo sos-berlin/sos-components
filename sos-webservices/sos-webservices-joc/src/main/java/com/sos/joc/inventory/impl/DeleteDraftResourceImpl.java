@@ -20,7 +20,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -30,7 +29,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
-import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.common.RequestFilters;
@@ -87,8 +86,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
     private JOCDefaultResponse delete(RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
-            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
 
@@ -102,7 +99,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Set<String> foldersForEvent = new HashSet<>();
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
-            logAuditMessage(in.getAuditLog());
+            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
@@ -112,7 +109,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                         continue;
                     }
                 }
-                deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, in.getAuditLog());
+                deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, auditLogId);
                 foldersForEvent.add(config.getFolder());
             }
             Globals.commit(session);
@@ -152,10 +149,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-            logAuditMessage(in.getAuditLog());
+            DBItemJocAuditLog auditItem = storeAuditLog(in.getAuditLog(), CategoryType.INVENTORY);
+            Long auditLogId = auditItem != null ? auditItem.getId() : 0L;
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
-                    deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, in.getAuditLog());
+                    deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, auditLogId);
                 }
             }
             if (withDeletionOfEmptyFolders) {
@@ -185,22 +183,14 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Globals.disconnect(session);
         }
     }
-
-    private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            config.setAuditLogId(auditItem.getId());
-        }
-    }
     
-    private void deleteUpdateDraft(ConfigurationType type, InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, AuditParams auditParams)
+    private void deleteUpdateDraft(ConfigurationType type, InventoryDBLayer dbLayer, DBItemInventoryConfiguration item, Long auditLogId)
             throws SOSHibernateException, JsonParseException, JsonMappingException, JsonProcessingException, IOException {
         RequestFilter r = new RequestFilter();
         r.setId(item.getId());
         r.setObjectType(item.getTypeAsEnum());
         r.setPath(item.getPath());
-        createAuditLog(item, auditParams);
+        item.setAuditLogId(auditLogId);
         if (JocInventory.isDeployable(type)) {
             InventoryDeploymentItem lastDeployment = dbLayer.getLastDeployedContent(item.getId());
             if (lastDeployment == null) {

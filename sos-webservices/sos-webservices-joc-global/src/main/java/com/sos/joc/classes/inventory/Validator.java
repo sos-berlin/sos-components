@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.controller.model.common.Variables;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
@@ -125,12 +126,16 @@ public class Validator {
                         agentDBLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
                     }
                     Workflow workflow = (Workflow) config;
-                    validateWorkflowJobs(workflow);
+                    List<String> jobResources = validateWorkflowJobs(workflow);
+                    if (workflow.getJobResourceNames() != null) {
+                        jobResources.addAll(workflow.getJobResourceNames());
+                    }
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderRequirements(workflow.getOrderRequirements());
                     validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderRequirements(), new HashMap<String, String>());
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderRequirements());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
+                    validateJobResourceRefs(jobResources, dbLayer);
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
@@ -152,6 +157,21 @@ public class Validator {
             JobResource jobResource = (JobResource) config;
             if (jobResource.getEnv() != null) {
                 validateExpression("$.env", jobResource.getEnv().getAdditionalProperties());
+            }
+        }
+    }
+
+    private static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
+        if (!jobResources.isEmpty()) {
+            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources.stream().distinct(),
+                    ConfigurationType.JOBRESOURCE.intValue());
+            if (dbJobResources == null || dbJobResources.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
+            } else {
+                jobResources.removeAll(dbJobResources.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                if (!jobResources.isEmpty()) {
+                    throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
+                }
             }
         }
     }
@@ -182,7 +202,7 @@ public class Validator {
 
     private static void validateAgentRefs(String json, InventoryAgentInstancesDBLayer dbLayer, Set<String> enabledAgentNames)
             throws SOSHibernateException, JocConfigurationException {
-        Matcher m = Pattern.compile("\"agentId\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Matcher m = Pattern.compile("\"agentName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> agents = new HashSet<>();
         while (m.find()) {
             if (m.group(1) != null && !m.group(1).isEmpty()) {
@@ -202,7 +222,7 @@ public class Validator {
     }
 
     private static void validateLockRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        Matcher m = Pattern.compile("\"lockId\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Matcher m = Pattern.compile("\"lockName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> locks = new HashSet<>();
         while (m.find()) {
             if (m.group(1) != null && !m.group(1).isEmpty()) {
@@ -222,12 +242,17 @@ public class Validator {
         }
     }
     
-    private static void validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
+    private static List<String> validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
+        List<String> jobResources = new ArrayList<>();
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
             try {
-                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(entry.getValue()), URI.create(JocInventory.SCHEMA_LOCATION
+                Job job = entry.getValue();
+                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(JocInventory.SCHEMA_LOCATION
                         .get(ConfigurationType.JOB)));
+                if (job.getJobResourceNames() != null) {
+                    jobResources.addAll(job.getJobResourceNames());
+                }
             } catch (SOSJsonSchemaException e) {
                 String msg = e.getMessage().replaceAll("(\\$\\.)", "$1jobs['" + entry.getKey() + "'].");
                 throw new SOSJsonSchemaException(msg);
@@ -247,6 +272,7 @@ public class Validator {
                 break;
             }
         }
+        return jobResources;
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames, Requirements orderRequirements,

@@ -3,7 +3,7 @@ package com.sos.joc.classes.history;
 import java.io.IOException;
 
 import com.sos.commons.util.SOSString;
-import com.sos.controller.model.common.Variables;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.db.history.DBItemHistoryOrder;

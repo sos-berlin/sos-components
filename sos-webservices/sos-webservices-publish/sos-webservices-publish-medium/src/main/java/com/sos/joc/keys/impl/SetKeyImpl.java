@@ -10,12 +10,12 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
 import com.sos.joc.keys.resource.ISetKey;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.SetKeyFilter;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -41,6 +41,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            storeAuditLog(setKeyFilter.getAuditLog(), CategoryType.CERTIFICATES);
+            
             JocKeyPair keyPair = setKeyFilter.getKeys();
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             String reason = null;
@@ -62,9 +65,9 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             } else {
               throw new JocMissingRequiredParameterException("No key was provided");
             }
-            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
-            logAuditMessage(audit);
-            storeAuditLogEntry(audit);
+//            DeployAudit audit = new DeployAudit(setKeyFilter.getAuditLog(), reason);
+//            logAuditMessage(audit);
+//            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

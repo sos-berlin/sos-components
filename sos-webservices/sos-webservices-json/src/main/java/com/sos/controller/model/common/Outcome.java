@@ -1,6 +1,7 @@
 
 package com.sos.controller.model.common;
 
+import com.sos.inventory.model.common.Variables;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;

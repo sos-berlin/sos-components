@@ -11,9 +11,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.audit.CategoryType;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_AUDIT_LOG)
@@ -38,21 +40,9 @@ public class DBItemJocAuditLog extends DBItem {
 
     @Column(name = "[PARAMETERS]", nullable = true)
     private String parameters;
-
-    @Column(name = "[JOB]", nullable = true)
-    private String job;
-
-    @Column(name = "[WORKFLOW]", nullable = true)
-    private String workflow;
-
-    @Column(name = "[ORDER_ID]", nullable = true)
-    private String orderId;
-
-    @Column(name = "[CALENDAR]", nullable = true)
-    private String calendar;
-
-    @Column(name = "[FOLDER]", nullable = true)
-    private String folder;
+    
+    @Column(name = "[CATEGORY]", nullable = false)
+    private Integer category;
 
     @Column(name = "[COMMENT]", nullable = true)
     private String comment;
@@ -66,9 +56,6 @@ public class DBItemJocAuditLog extends DBItem {
 
     @Column(name = "[TIME_SPENT]", nullable = true)
     private Integer timeSpent;
-
-    @Column(name = "[DEP_HISTORY_ID]", nullable = false)
-    private Long depHistoryId;
 
     public Long getId() {
         return id;
@@ -109,45 +96,22 @@ public class DBItemJocAuditLog extends DBItem {
     public void setParameters(String val) {
         parameters = val;
     }
-
-    public String getJob() {
-        return job;
+    
+    public Integer getCategory() {
+        return category;
     }
 
-    public void setJob(String val) {
-        job = val;
+    @Transient
+    public CategoryType getTypeAsEnum() {
+        try {
+            return CategoryType.fromValue(category);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public String getWorkflow() {
-        return workflow;
-    }
-
-    public void setWorkflow(String val) {
-        workflow = val;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String val) {
-        orderId = val;
-    }
-
-    public String getCalendar() {
-        return calendar;
-    }
-
-    public void setCalendar(String val) {
-        calendar = val;
-    }
-
-    public String getFolder() {
-        return folder;
-    }
-
-    public void setFolder(String val) {
-        folder = val;
+    public void setCategory(Integer val) {
+        category = val;
     }
 
     public String getComment() {
@@ -181,13 +145,4 @@ public class DBItemJocAuditLog extends DBItem {
     public void setTimeSpent(Integer val) {
         timeSpent = val;
     }
-
-    public Long getDepHistoryId() {
-        return depHistoryId;
-    }
-
-    public void setDepHistoryId(Long val) {
-        depHistoryId = val;
-    }
-
 }

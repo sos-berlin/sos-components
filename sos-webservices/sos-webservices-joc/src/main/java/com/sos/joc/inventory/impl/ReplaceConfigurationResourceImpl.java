@@ -17,19 +17,16 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.InventoryAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
-import com.sos.joc.model.inventory.replace.RequestFolder;
 import com.sos.joc.model.inventory.replace.RequestFilters;
+import com.sos.joc.model.inventory.replace.RequestFolder;
 import com.sos.schema.JsonValidator;
 
 @Path(JocInventory.APPLICATION_PATH)
@@ -87,14 +84,15 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
-
+            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            
             String search = in.getSearch().replaceAll("%", ".*");
             Predicate<String> regex = Pattern.compile(search, Pattern.CASE_INSENSITIVE).asPredicate();
             Predicate<DBItemInventoryConfiguration> regexFilter = item -> regex.test(item.getName());
             Predicate<DBItemInventoryConfiguration> notFolderFilter = item -> ConfigurationType.FOLDER.intValue() != item.getType();
 
             Set<String> events = new HashSet<>();
-            boolean isUpdated = false;
+            
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
@@ -106,13 +104,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
 
-                setItem(item, Paths.get(item.getFolder()).resolve(newName));
+                setItem(item, Paths.get(item.getFolder()).resolve(newName), auditLogId);
                 JocInventory.updateConfiguration(dbLayer, item);
-                isUpdated = true;
-            }
-            if (isUpdated) {
-                logAuditMessage(in.getAuditLog());
-                createAuditLog(config, in.getAuditLog());
             }
             
             session.commit();
@@ -133,7 +126,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replace(RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
@@ -144,10 +136,10 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 // throw new
             }
+            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Set<String> events = new HashSet<>();
             String search = in.getSearch().replaceAll("%", ".*");
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
-            logAuditMessage(in.getAuditLog());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
 
@@ -181,8 +173,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
 
-                setItem(config, p);
-                createAuditLog(config, in.getAuditLog());
+                setItem(config, p, auditLogId);
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());
             }
@@ -201,19 +192,12 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private void createAuditLog(DBItemInventoryConfiguration config, AuditParams auditParams) throws Exception {
-        InventoryAudit audit = new InventoryAudit(config.getTypeAsEnum(), config.getPath(), config.getFolder(), auditParams);
-        DBItemJocAuditLog auditItem = storeAuditLogEntry(audit);
-        if (auditItem != null) {
-            config.setAuditLogId(auditItem.getId());
-        }
-    }
-
-    private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem) {
+    private static void setItem(DBItemInventoryConfiguration oldItem, java.nio.file.Path newItem, Long auditLogId) {
         oldItem.setPath(newItem.toString().replace('\\', '/'));
         oldItem.setName(newItem.getFileName().toString());
         oldItem.setDeployed(false);
         oldItem.setReleased(false);
+        oldItem.setAuditLogId(auditLogId);
         oldItem.setModified(Date.from(Instant.now()));
     }
 

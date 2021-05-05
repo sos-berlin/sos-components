@@ -89,7 +89,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
         if (EventServiceFactory.isClosed.get()) {

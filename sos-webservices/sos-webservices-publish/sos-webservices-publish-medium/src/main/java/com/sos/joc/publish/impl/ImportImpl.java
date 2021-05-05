@@ -21,7 +21,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -32,6 +31,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.joc.JocMetaInfo;
@@ -93,6 +93,10 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
+            
+            DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
+            Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
+            
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
@@ -116,10 +120,10 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             Set<String> agentNames = agentDbLayer.getEnabledAgentNames();
-            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), 
-                    String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
-            logAuditMessage(importAudit);
-            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
+//            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), 
+//                    String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
+//            logAuditMessage(importAudit);
+//            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
@@ -129,12 +133,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 	configurations.stream().peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()))
                 			.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull)
                 			.forEach(configuration -> dbLayer.saveOrUpdateInventoryConfiguration(
-                					configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames));
+                					configuration, account, auditLogId, filter.getOverwrite(), filter.getTargetFolder(), agentNames));
                 } else {
             		// filter according to folder permissions
                 	configurations.stream().filter(configuration -> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull)
                 	.forEach(configuration -> dbLayer.saveOrUpdateInventoryConfiguration(
-                			configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames));
+                			configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                 }
         	} else {
                 if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
@@ -148,18 +152,18 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
                             			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
                             	ImportUtils.replaceReferences(updateable);
-                            	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                            	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
                 			}
                 		} else {
                             if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                                 configuration.setPath(filter.getTargetFolder() + configuration.getPath());
                                 if (canAdd(configuration.getPath(), permittedFolders)) {
                                     dbLayer.saveOrUpdateInventoryConfiguration(
-                                    		configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), filter.getTargetFolder(), agentNames);
+                                    		configuration, account, auditLogId, filter.getOverwrite(), filter.getTargetFolder(), agentNames);
                                 }
                             } else {
                             	if (canAdd(configuration.getPath(), permittedFolders)) {
-                            		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                            		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
                             	}
                             }
                 		}
@@ -174,11 +178,11 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 			if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
                 				configuration.setPath(filter.getTargetFolder() + configuration.getPath());
                 				if (canAdd(configuration.getPath(), permittedFolders)) {
-                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
                 				}
                 			} else {
                 				if (canAdd(configuration.getPath(), permittedFolders)) {
-                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, dbItemAuditLog.getId(), filter.getOverwrite(), agentNames);
+                					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
                 				}
                 			}
                 		}

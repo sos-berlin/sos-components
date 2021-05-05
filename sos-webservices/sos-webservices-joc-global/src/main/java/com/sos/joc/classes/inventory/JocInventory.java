@@ -41,11 +41,14 @@ import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
+import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
@@ -54,7 +57,10 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
+import com.sos.joc.exceptions.JocMissingCommentException;
 import com.sos.joc.model.SuffixPrefix;
+import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
@@ -344,6 +350,25 @@ public class JocInventory {
             }
         }
         return deletedFolders;
+    }
+    
+    public static Long storeAuditLog(JocAuditLog auditLog, AuditParams auditParams) {
+        if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
+            String comment = null;
+            if (auditParams != null) {
+                comment = auditParams.getComment();
+            }
+            if (comment == null || comment.isEmpty()) {
+                throw new JocMissingCommentException();
+            }
+        }
+        if (auditLog != null) {
+            auditLog.logAuditMessage(auditParams);
+            DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY);
+            return auditItem != null ? auditItem.getId() : 0L;
+        } else {
+            return 0L;
+        }
     }
 
     public static void postEvent(String folder) {

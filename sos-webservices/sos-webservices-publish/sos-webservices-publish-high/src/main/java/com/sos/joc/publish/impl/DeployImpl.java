@@ -23,7 +23,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DeployAudit;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -32,6 +31,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -68,7 +68,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredComment(deployFilter.getAuditLog());
+            storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
@@ -160,7 +160,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             }
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
 
-            DeployAudit audit = null;
+            //DeployAudit audit = null;
             // call ControllerApi for all provided and allowed Controllers
             for (String controllerId : controllerIds) {
             	if (!allowedControllerIds.contains(controllerId)) {
@@ -205,7 +205,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 }
                 if ((filteredConfigurations != null && !filteredConfigurations.isEmpty())
                         || (filteredDeployments != null && !filteredDeployments.isEmpty())) {
-                    audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
+                    //audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
                     // call updateRepo command via ControllerApi for given controllers
                     boolean verified = false;
                     String signerDN = null;
@@ -289,7 +289,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     invConfigurationsToDelete.addAll(
                             DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
                                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                    audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
+                    //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically
@@ -316,10 +316,10 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         }); 
                 } 
             }
-            if (audit != null) {
-                logAuditMessage(audit);
-                storeAuditLogEntry(audit);
-            }
+//            if (audit != null) {
+//                logAuditMessage(audit);
+//                storeAuditLogEntry(audit);
+//            }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

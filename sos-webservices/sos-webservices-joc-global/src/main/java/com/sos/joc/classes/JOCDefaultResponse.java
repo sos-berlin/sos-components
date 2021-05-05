@@ -182,7 +182,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
     
-    public static JOCDefaultResponse responseStatusJSError(Exception e, String mediaType) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e, String mediaType) {
         if (e instanceof JocException) {
             return responseStatusJSError((JocException) e, mediaType);
         }
@@ -192,15 +192,15 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
     }
     
-    public static JOCDefaultResponse responseStatusJSError(Exception e) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e) {
         return responseStatusJSError(e, MediaType.APPLICATION_JSON);
     }
     
-    public static JOCDefaultResponse responseHTMLStatusJSError(Exception e) {
+    public static JOCDefaultResponse responseHTMLStatusJSError(Throwable e) {
         return responseStatusJSError(e, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
     
-    public static JOCDefaultResponse responseStatusJSError(Exception e, JocError err, String mediaType) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err, String mediaType) {
         if (e instanceof JocException) {
             JocException ee = (JocException) e;
             ee.addErrorMetaInfo(err);
@@ -217,11 +217,11 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus420(getErr420(new JocError(getErrorMessage(e))), mediaType);
     }
     
-    public static JOCDefaultResponse responseStatusJSError(Exception e, JocError err) {
+    public static JOCDefaultResponse responseStatusJSError(Throwable e, JocError err) {
         return responseStatusJSError(e, err, MediaType.APPLICATION_JSON);
     }
     
-    public static JOCDefaultResponse responseHTMLStatusJSError(Exception e, JocError err) {
+    public static JOCDefaultResponse responseHTMLStatusJSError(Throwable e, JocError err) {
         return responseStatusJSError(e, err, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
     

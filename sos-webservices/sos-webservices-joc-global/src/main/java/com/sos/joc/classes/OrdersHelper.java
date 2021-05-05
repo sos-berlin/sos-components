@@ -21,11 +21,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.controller.model.common.Variables;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -480,11 +480,11 @@ public class OrdersHelper {
                 try {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
-                        jocAuditLog.logAuditMessage(modifyOrders.getAuditLog());
-                        for (JOrder o : jOrders) {
-                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders);
-                            jocAuditLog.storeAuditLogEntry(audit, connection);
-                        }
+//                        jocAuditLog.logAuditMessage(modifyOrders.getAuditLog());
+//                        for (JOrder o : jOrders) {
+//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders);
+//                            jocAuditLog.storeAuditLogEntry(audit, connection);
+//                        }
                     } finally {
                         Globals.disconnect(connection);
                     }
@@ -503,11 +503,11 @@ public class OrdersHelper {
                 try {
                     final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
                     try {
-                        jocAuditLog.logAuditMessage(auditParams);
-                        for (JFreshOrder o : jOrders) {
-                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams);
-                            jocAuditLog.storeAuditLogEntry(audit, connection);
-                        }
+//                        jocAuditLog.logAuditMessage(auditParams);
+//                        for (JFreshOrder o : jOrders) {
+//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams);
+//                            jocAuditLog.storeAuditLogEntry(audit, connection);
+//                        }
                     } finally {
                         Globals.disconnect(connection);
                     }
@@ -528,10 +528,10 @@ public class OrdersHelper {
                     AuditParams auditParams = addOrders.getAuditLog();
                     jocAuditLog.logAuditMessage(auditParams);
                     try {
-                        addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
-                            AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
-                            jocAuditLog.storeAuditLogEntry(audit, connection);
-                        });
+//                        addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
+//                            AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
+//                            jocAuditLog.storeAuditLogEntry(audit, connection);
+//                        });
                     } finally {
                         Globals.disconnect(connection);
                     }

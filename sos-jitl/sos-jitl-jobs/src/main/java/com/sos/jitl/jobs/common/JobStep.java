@@ -14,6 +14,8 @@ import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -23,19 +25,22 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 import js7.executor.forjava.internal.BlockingInternalJob;
+import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
 public class JobStep<A> {
 
     private final String jobClassName;
+    private final JobContext jobContext;
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
     private A arguments;
     private Map<String, Map<String, Object>> lastOutcomes;
     private List<JobArgument<?>> argumentsInfo;
 
-    protected JobStep(String jobClassName, BlockingInternalJob.Step step) {
+    protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
         this.jobClassName = jobClassName;
+        this.jobContext = jobContext;
         this.internalStep = step;
         this.logger = new JobLogger(internalStep, getStepInfo());
     }
@@ -195,9 +200,9 @@ public class JobStep<A> {
         if (internalStep == null) {
             return null;
         }
-        Optional<Value> op = internalStep.namedValue(name);
-        if (op.isPresent()) {
-            return Job.getValue(op.get());
+        Either<Problem, Optional<Value>> op = internalStep.namedValue(name);
+        if (op.isRight() && op.get().isPresent()) {
+            return Job.getValue(op.get().get());
         } else {
             return Job.getValue(internalStep.arguments().get(name));
         }
@@ -347,6 +352,7 @@ public class JobStep<A> {
                 infoResultingArguments(allArguments);
 
                 if (logger.isDebugEnabled()) {
+                    debugJobContextArguments(allArguments);
                     debugOutcomes(allArguments);
                     debugAllResultingArguments(allArguments);
                 }
@@ -368,7 +374,7 @@ public class JobStep<A> {
         // ORDER Variables
         Map<String, Object> map = Job.convert(internalStep.order().arguments());
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.ORDER.getValue()));
+            logger.debug(String.format(" %s:", ValueSource.ORDER.getHeader()));
             map.entrySet().stream().forEach(e -> {
                 logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
             });
@@ -376,7 +382,7 @@ public class JobStep<A> {
         // ORDER or Node arguments
         List<JobArgument<?>> arguments = getArgumentsInfo();
         if (arguments != null && arguments.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.ORDER_OR_NODE.getValue()));
+            logger.debug(String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
             arguments.stream().filter(a -> {
                 if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
                     return true;
@@ -389,20 +395,32 @@ public class JobStep<A> {
         // JOB Arguments
         map = Job.convert(internalStep.arguments());
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.JOB.getValue()));
+            logger.debug(String.format(" %s:", ValueSource.JOB.getHeader()));
             map.entrySet().stream().forEach(e -> {
                 logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
             });
         }
+        debugJobContextArguments(allArguments);
         debugOutcomes(allArguments);
     }
 
-    // TODO mask password ...
+    private void debugJobContextArguments(List<JobArgument<?>> allArguments) {
+        if (jobContext != null) {
+            Map<String, Object> map = Job.convert(jobContext.jobArguments());
+            if (map != null && map.size() > 0) {
+                logger.debug(String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
+                map.entrySet().stream().forEach(e -> {
+                    logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                });
+            }
+        }
+    }
+
     private void debugOutcomes(List<JobArgument<?>> allArguments) {
         // OUTCOME succeeded
         Map<String, Object> map = getLastSucceededOutcomes();
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getValue()));
+            logger.debug(String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
                 logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
             });
@@ -410,7 +428,7 @@ public class JobStep<A> {
         // OUTCOME failed
         map = getLastFailedOutcomes();
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getValue()));
+            logger.debug(String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
                 logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
             });
@@ -421,7 +439,7 @@ public class JobStep<A> {
         if (allArguments == null || allArguments.size() == 0) {
             return;
         }
-        logger.info(String.format("%s:", ValueSource.JAVA.getValue()));
+        logger.info(String.format("%s:", ValueSource.JAVA.getHeader()));
         allArguments.stream().filter(a -> {
             if (a.isDirty()) {
                 return true;
@@ -440,7 +458,7 @@ public class JobStep<A> {
         if (allArguments == null || allArguments.size() == 0) {
             return;
         }
-        logger.debug(String.format(" All %s:", ValueSource.JAVA.getValue()));
+        logger.debug(String.format(" All %s:", ValueSource.JAVA.getHeader()));
         allArguments.stream().forEach(a -> {
             logger.debug("    " + a.toString());
         });

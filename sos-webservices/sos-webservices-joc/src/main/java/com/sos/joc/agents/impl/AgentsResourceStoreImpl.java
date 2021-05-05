@@ -21,7 +21,6 @@ import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.ModifyAgentClusterAudit;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
@@ -30,6 +29,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.StoreAgents;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import js7.base.web.Uri;
@@ -89,8 +89,8 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             for (String agentId : agentIds.keySet()) {
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
-
-            checkRequiredComment(agentStoreParameter.getAuditLog());
+            
+            storeAuditLog(agentStoreParameter.getAuditLog(), CategoryType.CONTROLLER);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);
@@ -170,10 +170,6 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
-            
-            ModifyAgentClusterAudit jobschedulerAudit = new ModifyAgentClusterAudit(agentStoreParameter);
-            logAuditMessage(jobschedulerAudit);
-            storeAuditLogEntry(jobschedulerAudit, connection);
             
             Globals.commit(connection);
 

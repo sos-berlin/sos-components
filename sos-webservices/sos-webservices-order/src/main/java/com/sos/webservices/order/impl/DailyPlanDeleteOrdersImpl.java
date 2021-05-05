@@ -19,18 +19,18 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.DailyPlanAudit;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
@@ -64,7 +64,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             }
             this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-
+            storeAuditLog(dailyPlanOrderFilter.getAuditLog(), dailyPlanOrderFilter.getControllerId(), CategoryType.DAILYPLAN);
             setSettings();
             deleteOrdersFromPlan(dailyPlanOrderFilter);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
@@ -139,11 +139,6 @@ public class DailyPlanDeleteOrdersImpl extends JOCResourceImpl implements IDaily
             filter.addState(OrderStateText.PLANNED);
             dbLayerDailyPlannedOrders.deleteCascading(filter);
             Globals.commit(sosHibernateSession);
-
-
-            DailyPlanAudit orderAudit = new DailyPlanAudit(filter.getControllerId(), dailyPlanOrderFilter.getAuditLog());
-            logAuditMessage(orderAudit);
-            storeAuditLogEntry(orderAudit);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

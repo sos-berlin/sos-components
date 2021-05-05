@@ -15,6 +15,7 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.keys.resource.IGenerateKey;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.GenerateKeyFilter;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -38,6 +39,9 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+            storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
+            
             Date validUntil = filter.getValidUntil();
             if(filter.getKeyAlgorithm() == null) {
                 filter.setKeyAlgorithm(SOSKeyConstants.RSA_ALGORITHM_NAME);
@@ -64,10 +68,10 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
                     JocSecurityLevel.LOW);
-            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
-                    String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));
-            logAuditMessage(audit);
-            storeAuditLogEntry(audit);
+//            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
+//                    String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));
+//            logAuditMessage(audit);
+//            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatus200(keyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

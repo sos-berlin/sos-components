@@ -194,7 +194,7 @@ public class DBItemInventoryConfiguration extends DBItem {
     }
 
     public void setAuditLogId(Long val) {
-        auditLogId = val;
+        auditLogId = val == null ? 0L : val;
     }
 
     public Long getDocumentationId() {
