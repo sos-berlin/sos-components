@@ -17,12 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.DeployAudit;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
@@ -185,7 +188,16 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         	}
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = configurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
-            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
+            InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+            folders.stream().forEach(item -> {
+				try {
+					JocInventory.makeParentDirs(invDbLayer, item);
+				} catch (SOSHibernateException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			});
+//            dbLayer.createInvConfigurationsDBItemsForFoldersIfNotExists(PublishUtils.updateSetOfPathsWithParents(folders), dbItemAuditLog.getId());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
