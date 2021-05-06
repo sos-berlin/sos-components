@@ -158,7 +158,8 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
             }
             map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
-        Map<String, Object> lastSuccededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
+        Map<String, Object> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
+        Map<String, JobResourceValue> jobResources = step == null ? null : step.getJobResourcesValues();
         List<Field> fields = Job.getJobArgumentFields(a);
         for (Field field : fields) {
             try {
@@ -168,10 +169,12 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     if (arg.getName() == null) {// internal usage
                         continue;
                     }
-                    if (lastSuccededOutcomes != null && lastSuccededOutcomes.containsKey(arg.getName())) {
-                        arg.setValue(getValue(field, arg, lastSuccededOutcomes.get(arg.getName())));
+                    // preference 1 (HIGHEST) - Succeeded Outcomes
+                    if (lastSucceededOutcomes != null && lastSucceededOutcomes.containsKey(arg.getName())) {
+                        arg.setValue(getValue(field, arg, lastSucceededOutcomes.get(arg.getName())));
                         setValueSource(arg, ValueSource.LAST_SUCCEEDED_OUTCOME);
                     } else {
+                        // preference 2 - Order Variable or Node Argument
                         Object val = getNamedValue(step, arg.getName());
                         boolean isNamedValue = false;
                         if (val == null) {
@@ -179,15 +182,21 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                         } else {
                             isNamedValue = true;
                         }
+                        // preference 3 - JobArgument or Argument or Java Default
                         if (val == null || SOSString.isEmpty(val.toString())) {
                             arg.setValue(arg.getDefault());
                         } else {
                             arg.setValue(getValue(field, arg, val));
                         }
-                        if (step != null && arg.isRequired() && arg.getValue() == null) {
-                            throw new SOSJobRequiredArgumentMissingException(arg.getName(), arg.getName());
+                        if (step == null) {
+                            setValueSource(arg);
+                        } else {
+                            // preference 4 (LOWEST) - JobResources
+                            setValueSource(step, field, arg, isNamedValue, jobResources);
+                            if (arg.isRequired() && arg.getValue() == null) {
+                                throw new SOSJobRequiredArgumentMissingException(arg.getName(), arg.getName());
+                            }
                         }
-                        setValueSource(step, arg, isNamedValue);
                     }
 
                     field.set(a, arg);
@@ -227,6 +236,57 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
         return val;
     }
 
+    private void setValueSource(JobArgument<A> arg) {
+        if (arg.getName() == null) {// source Java - internal usage
+            return;
+        }
+        if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
+            setValueSource(arg, JobArgument.ValueSource.JOB_ARGUMENT);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setValueSource(final JobStep<A> step, Field field, JobArgument<A> arg, boolean isNamedValue,
+            Map<String, JobResourceValue> jobResources) {
+        if (arg.getName() == null) {// source Java - internal usage
+            return;
+        }
+        ValueSource source = null;
+        if (isNamedValue) {// order or node
+            source = step.getInternalStep().order().arguments().containsKey(arg.getName()) ? JobArgument.ValueSource.ORDER
+                    : JobArgument.ValueSource.ORDER_OR_NODE;
+        } else {
+            if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
+                source = JobArgument.ValueSource.JOB_ARGUMENT;
+            }
+            if (step.getInternalStep().arguments().containsKey(arg.getName())) {
+                source = JobArgument.ValueSource.JOB;
+            }
+            // preference 4 (LOWEST) - JobResources
+            if (source == null && arg.getValueSource().equals(ValueSource.JAVA) && jobResources.containsKey(arg.getName())) {
+                JobResourceValue v = jobResources.get(arg.getName());
+                try {
+                    arg.setValue((A) getValue(field, arg, v.getValue()));
+                    source = ValueSource.JOB_RESOURCE;
+                    source.setDetails("resource=" + v.getResourceName());
+                } catch (ClassNotFoundException e) {
+                    LOGGER.error(String.format("[%s]%s", arg.getName(), e.toString()), e);
+                }
+            }
+        }
+        if (source != null) {
+            setValueSource(arg, source);
+        }
+    }
+
+    private void setValueSource(JobArgument<A> arg, ValueSource source) {
+        if (arg.getNotAcceptedValue() != null) {
+            arg.getNotAcceptedValue().setSource(source);
+        } else {
+            arg.setValueSource(source);
+        }
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void setReference(List<Field> fields, A jobArguments, JobArgument<A> arg) throws IllegalArgumentException, IllegalAccessException {
         if (arg.getReference() != null && arg.isDirty()) {
@@ -241,37 +301,6 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     }
                 }
             }
-        }
-    }
-
-    private void setValueSource(final JobStep<A> step, JobArgument<A> arg, boolean isNamedValue) {
-        if (arg.getValue() == null || arg.getName() == null) {// source Java or internal usage
-            return;
-        }
-        ValueSource source = null;
-        if (isNamedValue) {// order or node
-            if (step != null) {
-                source = step.getInternalStep().order().arguments().containsKey(arg.getName()) ? JobArgument.ValueSource.ORDER
-                        : JobArgument.ValueSource.ORDER_OR_NODE;
-            }
-        } else {
-            if (jobContext != null && jobContext.jobArguments().containsKey(arg.getName())) {
-                source = JobArgument.ValueSource.JOB_ARGUMENT;
-            }
-            if (step != null && step.getInternalStep().arguments().containsKey(arg.getName())) {
-                source = JobArgument.ValueSource.JOB;
-            }
-        }
-        if (source != null) {
-            setValueSource(arg, source);
-        }
-    }
-
-    private void setValueSource(JobArgument<A> arg, ValueSource source) {
-        if (arg.getNotAcceptedValue() != null) {
-            arg.getNotAcceptedValue().setSource(source);
-        } else {
-            arg.setValueSource(source);
         }
     }
 

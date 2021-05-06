@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
+import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
@@ -34,6 +36,7 @@ public class JobStep<A> {
     private final JobLogger logger;
     private A arguments;
     private Map<String, Map<String, Object>> lastOutcomes;
+    private Map<String, JobResourceValue> jobResourcesValues;
     private List<JobArgument<?>> argumentsInfo;
 
     protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
@@ -72,6 +75,13 @@ public class JobStep<A> {
             lastOutcomes = historicOutcomes2map();
         }
         return lastOutcomes;
+    }
+
+    public Map<String, JobResourceValue> getJobResourcesValues() {
+        if (jobResourcesValues == null) {
+            jobResourcesValues = jobResources2map();
+        }
+        return jobResourcesValues;
     }
 
     public Map<String, Object> getLastSucceededOutcomes() {
@@ -341,6 +351,27 @@ public class JobStep<A> {
         return resultMap;
     }
 
+    private Map<String, JobResourceValue> jobResources2map() {
+        Map<String, JobResourceValue> resultMap = new LinkedHashMap<>();
+        if (internalStep == null) {
+            return resultMap;
+        }
+        Map<JobResourcePath, Map<String, Value>> jobResources = internalStep.jobResourceToNameToValue();
+        if (jobResources == null || jobResources.size() == 0) {
+            return resultMap;
+        }
+
+        jobResources.entrySet().stream().forEach(e -> {
+            String resourceName = e.getKey().string();
+            e.getValue().entrySet().stream().forEach(ee -> {
+                if (!resultMap.containsKey(ee.getKey())) {
+                    resultMap.put(ee.getKey(), new JobResourceValue(resourceName, Job.getValue(ee.getValue())));
+                }
+            });
+        });
+        return resultMap;
+    }
+
     protected void logParameterization() {
         try {
             logger.info("Job Parameterization:");
@@ -398,6 +429,15 @@ public class JobStep<A> {
                 logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
             });
         }
+        // JOB Resources
+        Map<String, JobResourceValue> resources = getJobResourcesValues();
+        if (resources != null && resources.size() > 0) {
+            logger.debug(String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
+            resources.entrySet().stream().forEach(e -> {
+                JobResourceValue v = e.getValue();
+                logger.debug("    %s=%s (resource=%s)", e.getKey(), v.getValue(), v.getResourceName());
+            });
+        }
         debugJobContextArguments(allArguments);
         debugOutcomes(allArguments);
     }
@@ -448,7 +488,11 @@ public class JobStep<A> {
             }
             return false;
         }).forEach(a -> {
-            logger.info("    %s=%s (source=%s)", a.getName(), a.getDisplayValue(), a.getValueSource());
+            if (a.getValueSource().getDetails() == null) {
+                logger.info("    %s=%s (source=%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name());
+            } else {
+                logger.info("    %s=%s (source=%s %s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), a.getValueSource().getDetails());
+            }
         });
     }
 

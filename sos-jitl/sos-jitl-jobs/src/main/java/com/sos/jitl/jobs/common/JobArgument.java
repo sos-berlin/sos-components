@@ -6,11 +6,12 @@ public class JobArgument<T> {
     public enum ValueSource {
         JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
                 "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
-                        "Job Arguments", "Job Argument"), LAST_SUCCEEDED_OUTCOME("Last Succeeded Outcomes"), LAST_FAILED_OUTCOME(
-                                "Last Failed Outcomes");
+                        "Job Arguments", "Job Argument"), JOB_RESOURCE("Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME(
+                                "Last Succeeded Outcomes"), LAST_FAILED_OUTCOME("Last Failed Outcomes");
 
         private final String header;
         private final String title;
+        private String details;
 
         private ValueSource(String header) {
             this(header, header);
@@ -27,6 +28,14 @@ public class JobArgument<T> {
 
         public String getTitle() {
             return title;
+        }
+
+        public void setDetails(String val) {
+            details = val;
+        }
+
+        public String getDetails() {
+            return details;
         }
     }
 
@@ -164,6 +173,9 @@ public class JobArgument<T> {
         sb.append("[");
         sb.append("value=").append(getDisplayValue());
         sb.append(" source=").append(valueSource.name());
+        if (valueSource.getDetails() != null) {
+            sb.append("(").append(valueSource.getDetails()).append(")");
+        }
         sb.append(" modified=").append(isDirty());
         sb.append("]");
         return sb.toString();

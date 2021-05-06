@@ -12,9 +12,12 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger;
+import com.sos.jitl.jobs.common.JobResourceValue;
 import com.sos.jitl.jobs.common.JobStep;
 
+import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
+import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 
 public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
@@ -74,6 +77,23 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[scala][step.order().arguments()]" + step.getInternalStep().order().arguments());
         step.getLogger().info("[java][step.order().arguments()]" + Job.convert(step.getInternalStep().order().arguments()));
         // step.asScala().scope().evaluator().eval(NamedValue.MODULE$.)
+
+        step.getLogger().info("----------ORDER JOB RESOURCES-----------------");
+        step.getLogger().info("-ENGINE JOB RESOURCES-----------------");
+        Map<JobResourcePath, Map<String, Value>> jobResources = step.getInternalStep().jobResourceToNameToValue();
+        jobResources.entrySet().stream().forEach(e -> {
+            step.getLogger().info(" " + e.getKey().string() + ":");
+            e.getValue().entrySet().stream().forEach(ee -> {
+                step.getLogger().info("[scala]%s=%s", ee.getKey(), ee.getValue());
+            });
+        });
+        // Either<Problem,Value> checkedValue = step.byJobResourceAndName(JobResourcePath.of("MY-JOB-RESOURCE"), "stringSetting");
+        step.getLogger().info("-CONVERTED JOB RESOURCES------------------");
+        Map<String, JobResourceValue> resources = step.getJobResourcesValues();
+        resources.entrySet().stream().forEach(e -> {
+            JobResourceValue v = e.getValue();
+            step.getLogger().info(" %s=%s (job resource=%s)", e.getKey(), v.getValue(), v.getResourceName());
+        });
 
         step.getLogger().info("----------ORDER HISTORIC OUTCOME-----------------");
         step.getLogger().info("-ENGINE HISTORIC OUTCOME-----------------");
