@@ -435,7 +435,7 @@ public class JobStep<A> {
             logger.debug(String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
             resources.entrySet().stream().forEach(e -> {
                 JobResourceValue v = e.getValue();
-                logger.debug("    %s=%s (resource=%s)", e.getKey(), v.getValue(), v.getResourceName());
+                logger.debug("    %s=%s (resource=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), v.getValue()), v.getResourceName());
             });
         }
         debugJobContextArguments(allArguments);
@@ -510,8 +510,11 @@ public class JobStep<A> {
         if (allArguments == null) {
             return val;
         }
-        JobArgument<?> ar = allArguments.stream().filter(a -> a.getName().equals(name) && a.isMasked()).findAny().orElse(null);
-        return ar == null ? val : JobArgument.DisplayMode.MASKED;
+        JobArgument<?> ar = allArguments.stream().filter(a -> a.getName().equals(name)).findAny().orElse(null);
+        if (ar == null) {
+            return "<hidden>";
+        }
+        return ar.getDisplayValue();
     }
 
 }
