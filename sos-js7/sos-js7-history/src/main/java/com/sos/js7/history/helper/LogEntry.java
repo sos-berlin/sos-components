@@ -122,7 +122,9 @@ public class LogEntry {
             } else {
                 sb.append(" [Success]");
             }
-            sb.append(" returnCode=").append((returnCode == null) ? "" : returnCode);
+            if (returnCode != null) {
+                sb.append(" returnCode=").append(returnCode);
+            }
             if (error) {
                 orderStep.setError(errorState, errorReason, errorCode, errorText);
                 List<String> errorInfo = new ArrayList<String>();
