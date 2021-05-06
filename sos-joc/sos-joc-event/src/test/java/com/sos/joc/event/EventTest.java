@@ -18,11 +18,11 @@ public class EventTest {
 
     private static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private static String jsonTestTemplate =
-            "{\"TYPE\":\"HistoryOrderStarted\",\"controllerId\":\"controllerId\",\"key\":\"HistoryOrderStarted\",\"orderId\":\"orderId\",\"historyId\":\"1\",\"historyParentId\":\"0\"}";
+            "{\"TYPE\":\"HistoryOrderStarted\",\"controllerId\":\"controllerId\",\"key\":\"HistoryOrderStarted\",\"orderId\":\"orderId\",\"workflowName\":\"myWorkflow\",\"WorkflowVersionId\":\"4711\"}";
 
     @Test
     public void testObjectToJSON() throws JsonProcessingException {
-        HistoryOrderStarted evt = new HistoryOrderStarted("controllerId", "orderId", 1L, 0L);
+        HistoryOrderStarted evt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711");
         System.out.print(objectMapper.writeValueAsString(evt));
         assertEquals("testObjectToJSON", jsonTestTemplate, objectMapper.writeValueAsString(evt));
     }
@@ -32,7 +32,7 @@ public class EventTest {
     public void testJSONToObject() throws IOException {
         HistoryEvent evt = objectMapper.readValue(jsonTestTemplate, HistoryEvent.class);
         System.out.println(evt.toString());
-        HistoryOrderStarted expectEvt = new HistoryOrderStarted("controllerId", "orderId", 1L, 0L);
+        HistoryOrderStarted expectEvt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711");
         expectEvt.setTYPE(HistoryOrderStarted.class.getSimpleName());  // only for Test necessary
         assertEquals("testJSONToObject", expectEvt, evt);
     }
