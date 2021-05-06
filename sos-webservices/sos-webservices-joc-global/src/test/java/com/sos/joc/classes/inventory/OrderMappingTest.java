@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.inventory.model.workflow.Workflow;
@@ -41,7 +40,7 @@ public class OrderMappingTest {
         o.setState(OrdersHelper.getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         o.setScheduledFor(scheduledFor);
         o.setWorkflowId(oItem.getWorkflowPosition().getWorkflowId());
-        System.out.println(Globals.objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(o));
+        System.out.println(Globals.prettyPrintObjectMapper.writeValueAsString(o));
     }
     
     @Test

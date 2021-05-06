@@ -11,7 +11,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.workflow.Workflow;
@@ -30,7 +29,6 @@ import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportShallowCopy;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IExportResource;
@@ -42,7 +40,6 @@ import com.sos.sign.model.fileordersource.FileOrderSource;
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
 
     private static final String API_CALL = "./inventory/export";
-    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     
     @Override
     public JOCDefaultResponse getExportConfiguration(String xAccessToken, String accessToken, String exportFilter)
@@ -93,13 +90,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         try {
                             Workflow workflow = (Workflow)deployable.getContent();
                             updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
-                                    om.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
+                                    Globals.prettyPrintObjectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}   
                     } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource)deployable.getContent();
                             updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource.getPath(),
-                                    om.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
+                                    Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}
                     }
                 });

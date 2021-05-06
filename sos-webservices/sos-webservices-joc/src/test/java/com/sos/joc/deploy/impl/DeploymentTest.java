@@ -49,8 +49,6 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -59,6 +57,7 @@ import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.controller.model.agent.AgentRef;
 import com.sos.sign.model.workflow.Workflow;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -68,7 +67,6 @@ import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DeploymentTest {
@@ -82,7 +80,6 @@ public class DeploymentTest {
     private static final String X509_CERTIFICATE_RESOURCE_PATH = "/sos.certificate-ec-key.pem";
     private static final String TARGET_FILENAME = "bundle_js_workflows.zip";
     private static final String TARGET_FILENAME_SINGLE = "bundle_js_single_workflow.zip";
-    private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     @BeforeClass
     public static void logTestsStarted() {
@@ -90,7 +87,6 @@ public class DeploymentTest {
         LOGGER.info("");
         LOGGER.info("**************************  Using PGP Keys  *****************************************");
         LOGGER.info("");
-        om.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     @AfterClass
@@ -551,7 +547,7 @@ public class DeploymentTest {
             String zipEntryNameWorkflowSignature = workflow.getPath().substring(1) + signatureFileExtension;
             ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
             zipOut.putNextEntry(entryWorkflow);
-            String workflowJson = om.writeValueAsString(workflow);
+            String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
             zipOut.write(workflowJson.getBytes());
             zipOut.closeEntry();
             if (signature != null) {
@@ -584,7 +580,7 @@ public class DeploymentTest {
             String zipEntryNameWorkflowSignature = jsObjectToExport.getPath().substring(1) + ".workflow.json.asc";
             ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
             zipOut.putNextEntry(entryWorkflow);
-            String workflowJson = om.writeValueAsString(workflow);
+            String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
             zipOut.write(workflowJson.getBytes());
             zipOut.closeEntry();
             if (signature != null) {
@@ -618,7 +614,7 @@ public class DeploymentTest {
                 outBuffer.write(binBuffer, 0, binRead);
             }
             if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                workflows.add(Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Workflow.class));
             }
         }
         return workflows;
@@ -642,7 +638,7 @@ public class DeploymentTest {
                 outBuffer.write(binBuffer, 0, binRead);
             }
             if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                workflows.add(Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Workflow.class));
             }
         }
         return workflows;
@@ -666,7 +662,7 @@ public class DeploymentTest {
                 outBuffer.write(binBuffer, 0, binRead);
             }
             if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                workflows.add(Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Workflow.class));
             }
         }
         return workflows;
@@ -691,7 +687,7 @@ public class DeploymentTest {
                 outBuffer.write(binBuffer, 0, binRead);
             }
             if (("/" + entryName).endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-                workflows.add(om.readValue(outBuffer.toString(), Workflow.class));
+                workflows.add(Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Workflow.class));
             }
         }
         return workflows;
@@ -733,7 +729,7 @@ public class DeploymentTest {
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         InputStream originalInputStream = null;
         String workflowJson = null;
-        workflowJson = om.writeValueAsString(workflow);
+        workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         originalInputStream = IOUtils.toInputStream(workflowJson);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
@@ -746,7 +742,7 @@ public class DeploymentTest {
         String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
         PrivateKey privateKey = KeyUtil.getPrivateECDSAKeyFromString(privateKeyString);
         String workflowJson = null;
-        workflowJson = om.writeValueAsString(workflow);
+        workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         signature.setSignatureString(SignObject.signX509("SHA512WithECDSA", privateKey, workflowJson));
         return signature;
     }
@@ -758,7 +754,7 @@ public class DeploymentTest {
         InputStream privateKeyInputStream = getClass().getResourceAsStream("/sos.private-pgp-key.asc");
         InputStream originalInputStream = null;
         String workflowJson = null;
-        workflowJson = om.writeValueAsString(workflow);
+        workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         originalInputStream = IOUtils.toInputStream(workflowJson);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
@@ -768,7 +764,7 @@ public class DeploymentTest {
             throws DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException, IOException {
         Signature signature = new Signature();
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
-        String workflowJson = om.writeValueAsString(workflow);
+        String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         signature.setSignatureString(SignObject.signX509(privateKey, workflowJson));
         return signature;
     }
@@ -777,7 +773,7 @@ public class DeploymentTest {
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         Signature signature = new Signature();
         PrivateKey privateKey = KeyUtil.getPrivateKeyFromString(new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_PKCS8_KEY_PATH))));
-        String workflowJson = om.writeValueAsString(workflow);
+        String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         signature.setSignatureString(SignObject.signX509(privateKey, workflowJson));
         return signature;
     }
@@ -789,7 +785,7 @@ public class DeploymentTest {
         InputStream privateKeyInputStream = getClass().getResourceAsStream(PRIVATEKEY_RESOURCE_PATH);
         InputStream originalInputStream = null;
         String agentJson = null;
-        agentJson = om.writeValueAsString(agent);
+        agentJson = Globals.prettyPrintObjectMapper.writeValueAsString(agent);
         originalInputStream = IOUtils.toInputStream(agentJson);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
@@ -800,7 +796,7 @@ public class DeploymentTest {
             throws IOException, DataLengthException, NoSuchAlgorithmException, InvalidKeySpecException, CryptoException  {
         Signature signature = new Signature();
         String privateKey = new String (Files.readAllBytes(Paths.get(PRIVATE_RSA_KEY_PATH)));
-        String agentJson = om.writeValueAsString(agent);
+        String agentJson = Globals.prettyPrintObjectMapper.writeValueAsString(agent);
         signature.setSignatureString(SignObject.signX509(privateKey, agentJson));
         return signature;
     }
@@ -810,7 +806,7 @@ public class DeploymentTest {
         InputStream signatureInputStream = IOUtils.toInputStream(signatureString);
         InputStream originalInputStream = null;
         String workflowJson = null;
-        workflowJson = om.writeValueAsString(workflow);
+        workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         originalInputStream = IOUtils.toInputStream(workflowJson);
         Boolean isVerified = null;
         isVerified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signatureInputStream);
@@ -819,14 +815,14 @@ public class DeploymentTest {
 
     private Boolean verifySignatureWithRSAKey(PublicKey publicKey, Workflow workflow, String signatureString)
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
-        String workflowJson = om.writeValueAsString(workflow);
+        String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         return VerifySignature.verifyX509(publicKey, workflowJson, signatureString);
     }
 
     private Boolean verifySignatureWithX509Certificate(Certificate certificate, Workflow workflow, String signatureString)
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchProviderException {
         String workflowJson = null;
-        workflowJson = om.writeValueAsString(workflow);
+        workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
         return VerifySignature.verifyX509(certificate, workflowJson, signatureString);
     }
 

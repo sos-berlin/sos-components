@@ -264,9 +264,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                 docUsageList.add(docUsage);
             }
             docUsages.setDocumentations(docUsageList);
-            ObjectMapper objMapper = new ObjectMapper();
-            objMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            return new DocumentationContent(DEPLOY_USAGE_JSON, objMapper.writeValueAsBytes(docUsages));
+            return new DocumentationContent(DEPLOY_USAGE_JSON, Globals.prettyPrintObjectMapper.writeValueAsBytes(docUsages));
         } catch (Exception e) {
             LOGGER.warn("Problem at export documentation usages", e);
             return null;
