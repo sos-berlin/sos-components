@@ -383,7 +383,7 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("where ic.id in (:configIds) ");
-            hql.append("and (dh.state = :state or ic.valid = 1)");
+            hql.append("and (dh.state = :state or dh.id is null)");
 
             Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
             query.setParameterList("configIds", configIds);
@@ -1099,7 +1099,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
         hql.append("on ic.id=sw.inventoryConfigurationId ");
         hql.append("where ic.type=:type ");
-        //hql.append("and sw.deployed=false ");
+        hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.locks.\"" + lockName + "\"")).append(" is not null");
 
@@ -1113,14 +1113,17 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
         hql.append("on ic.id=sw.inventoryConfigurationId ");
         hql.append("where ic.type=:type ");
-        //hql.append("and sw.deployed=false ");
+        hql.append("and ic.deployed=sw.deployed ");
         hql.append("and (");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "ic.content", "$.jobResourceNames.\"" + jobResourceName + "\"")).append(" is not null");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "ic.content", "$.jobResourceNames");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobResourceName"));
         hql.append(" or ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.jobs", "$.jobResources.\"" + jobResourceName + "\"")).append(" is not null");
+        String jsonFunc2 = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobResources");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc2, ":jobResourceName"));
         hql.append(")");
         
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("jobResourceName", jobResourceName);
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
