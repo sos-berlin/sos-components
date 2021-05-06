@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * deploy object with fixed property 'TYPE':'Workflow'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
     "versionId",

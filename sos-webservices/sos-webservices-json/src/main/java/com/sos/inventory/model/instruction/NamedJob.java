@@ -18,7 +18,7 @@ import com.sos.inventory.model.common.Variables;
  * instruction with fixed property 'TYPE':'Execute.Named'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "jobName",
     "label",

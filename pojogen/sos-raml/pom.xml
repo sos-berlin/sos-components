@@ -123,7 +123,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>true</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -152,7 +152,7 @@
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
 							<includeConstructors>true</includeConstructors>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -173,7 +173,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -194,7 +194,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas</sourceDirectory>
 							<targetPackage>com.sos.joc.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -218,7 +218,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/controller/schemas</sourceDirectory>
 							<targetPackage>com.sos.controller.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
@@ -244,13 +244,14 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/inventory/schemas</sourceDirectory>
 							<targetPackage>com.sos.inventory.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
 							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
+							<inclusionLevel>NON_EMPTY</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
@@ -258,7 +259,33 @@
 							</includes>
 							<excludes>
 								<exclude>**/workflowJobs-schema.json</exclude>
+								<exclude>**/instructions-schema.json</exclude>
 							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-inventory-model2</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/raml/inventory/schemas</sourceDirectory>
+							<targetPackage>com.sos.inventory.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<initializeCollections>false</initializeCollections>
+							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
+							<includeConstructors>true</includeConstructors>
+							<inclusionLevel>NON_NULL</inclusionLevel>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<includes>
+								<include>**/instructions-schema.json</include>
+							</includes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>
@@ -271,13 +298,14 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/sign/schemas</sourceDirectory>
 							<targetPackage>com.sos.sign.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>true</includeAdditionalProperties>
 							<initializeCollections>false</initializeCollections>
 							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
 							<includeConstructors>true</includeConstructors>
+							<inclusionLevel>NON_EMPTY</inclusionLevel>
 							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
 							<addCompileSourceRoot>false</addCompileSourceRoot>
 							<includes>
@@ -285,7 +313,33 @@
 							</includes>
 							<excludes>
 								<exclude>**/workflowJobs-schema.json</exclude>
+								<exclude>**/instructions-schema.json</exclude>
 							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-sign-model2</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/raml/sign/schemas</sourceDirectory>
+							<targetPackage>com.sos.sign.model</targetPackage>
+							<removeOldOutput>false</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<initializeCollections>false</initializeCollections>
+							<!-- constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly -->
+							<includeConstructors>true</includeConstructors>
+							<inclusionLevel>NON_NULL</inclusionLevel>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<includes>
+								<include>**/instructions-schema.json</include>
+							</includes>
 						</configuration>
 						<goals>
 							<goal>generate</goal>
@@ -298,7 +352,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas/history</sourceDirectory>
 							<targetPackage>com.sos.jobscheduler.history</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>
@@ -321,7 +375,7 @@
 							<sourceDirectory>${basedir}/src/main/resources/raml/api/schemas/orderManagement</sourceDirectory>
 							<targetPackage>com.sos.webservices.order.initiator.model</targetPackage>
 							<removeOldOutput>false</removeOldOutput>
-							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator >
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
 							<annotationStyle>jackson2</annotationStyle>
 							<propertyWordDelimiters>- </propertyWordDelimiters>
 							<includeAdditionalProperties>false</includeAdditionalProperties>

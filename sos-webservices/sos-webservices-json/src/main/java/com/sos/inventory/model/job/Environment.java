@@ -37,6 +37,11 @@ public class Environment {
     public void setAdditionalProperty(String name, String value) {
         this.additionalProperties.put(name, value);
     }
+    
+    @JsonIgnore
+    public void cleanAdditionalProperty() {
+        this.additionalProperties = null;
+    }
 
     @Override
     public String toString() {

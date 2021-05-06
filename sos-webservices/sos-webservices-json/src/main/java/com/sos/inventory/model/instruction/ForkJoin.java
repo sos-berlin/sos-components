@@ -17,7 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * instruction with fixed property 'TYPE':'Fork'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "branches"
 })

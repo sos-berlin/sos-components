@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * only for the validation, not used as pojo
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "instructions"
 })

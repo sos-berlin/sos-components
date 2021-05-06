@@ -8,8 +8,7 @@
   ],
   "required": [
 	"TYPE",
-    "path",
-    "env"
+    "path"
   ],
   "propertyOrder": [
     "TYPE",

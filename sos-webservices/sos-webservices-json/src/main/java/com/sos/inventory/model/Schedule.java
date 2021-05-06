@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * The order template for scheduling orders to Controller
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "path",
     "workflowPath",
