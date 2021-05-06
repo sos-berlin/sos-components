@@ -2145,7 +2145,8 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
+            		om.readValue(outBuffer.toString(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -2763,8 +2764,8 @@ public abstract class PublishUtils {
         return om.writeValueAsString(workflow);
     }
 
-    private static String getContentWithOrigAgentNameForFileOrderSource(DBItemInventoryConfiguration draft, Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames,
-            String controllerId) throws JsonParseException, JsonMappingException, IOException {
+    private static String getContentWithOrigAgentNameForFileOrderSource(DBItemInventoryConfiguration draft,
+    		Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames, String controllerId) throws JsonParseException, JsonMappingException, IOException {
         com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
                 om.readValue(draft.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
         fileOrderSource.setAgentName(updateableFileOrderSourceAgentNames.stream()
@@ -2878,17 +2879,14 @@ public abstract class PublishUtils {
             DBLayerDeploy dbLayer) {
         List<DBItemInventoryReleasedConfiguration> entries = new ArrayList<DBItemInventoryReleasedConfiguration>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getReleasedInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
-        Set<DBItemInventoryReleasedConfiguration> allReleased = entries.stream().collect(Collectors.toSet());
-        ;
-        allReleased = allReleased.stream().filter(item -> {
+        Set<DBItemInventoryReleasedConfiguration> allReleased = entries.stream().filter(item -> {
             DBItemInventoryConfiguration dbItem = dbLayer.getConfigurationByName(item.getName(), item.getType());
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
                 return true;
             } else {
                 return false;
             }
-        }).filter(Objects::nonNull).collect(Collectors.toSet());
-        allReleased.stream().filter(item -> {
+        }).filter(item -> {
             if (item.getName() == null || item.getName().isEmpty()) {
                 LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
                 String name = Paths.get(item.getPath()).getFileName().toString();
@@ -2909,8 +2907,8 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestActiveDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-        return entries.stream().collect(Collectors.toSet());
+        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+        return entries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
@@ -3023,7 +3021,7 @@ public abstract class PublishUtils {
     public static Set<ConfigurationObject> getDeployableConfigurationObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer, String commitId)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
-        Map<String, ConfigurationObject> allObjectsMap = new HashMap<String, ConfigurationObject>();
+        Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
         if (filter != null) {
             if (filter.getDeployConfigurations() != null && !filter.getDeployConfigurations().isEmpty()) {
                 List<Configuration> depFolders = filter.getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
@@ -3042,7 +3040,7 @@ public abstract class PublishUtils {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item, commitId));
+                                configurations.add(getConfigurationObjectFromDBItem(item, commitId));
                             });
                 }
             }
@@ -3058,17 +3056,23 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
-                            item -> {
-                            	if(!allObjectsMap.containsKey(item.getName())) {
-                            		allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
-                            	}
-                        	});
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
+                    	.forEach(item -> {
+                    		boolean alreadyPresent = false;
+                    		for (ConfigurationObject config : configurations) {
+                    			if(item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                    				alreadyPresent = true;
+                    				break;
+                    			}
+                    		}
+                    		if (!alreadyPresent) {
+                    			configurations.add(getConfigurationObjectFromDBItem(item));
+                    		}
+                    	});
                 }
             }
         }
-        Set<ConfigurationObject> withoutDuplicates = new HashSet<ConfigurationObject>(allObjectsMap.values());
-        return withoutDuplicates;
+        return configurations;
     }
 
     public static Set<ConfigurationObject> getReleasableObjectsFromDB(ReleasablesFilter filter, DBLayerDeploy dbLayer)
