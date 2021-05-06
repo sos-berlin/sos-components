@@ -28,6 +28,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
@@ -62,6 +63,10 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_JOC_AUDIT_LOG = DBItemJocAuditLog.class.getSimpleName();
     public static final String TABLE_JOC_AUDIT_LOG = "JOC_AUDIT_LOG";
     public static final String TABLE_JOC_AUDIT_LOG_SEQUENCE = "SEQ_JOC_AL";
+
+    public static final String DBITEM_JOC_AUDIT_DETAILS_LOG = DBItemJocAuditLogDetails.class.getSimpleName();
+    public static final String TABLE_JOC_AUDIT_LOG_DETAILS = "JOC_AUDIT_LOG_DETAILS";
+    public static final String TABLE_JOC_AUDIT_LOG_DETAILS_SEQUENCE = "SEQ_JOC_ALD";
 
     public static final String DBITEM_JOC_CONFIGURATIONS = DBItemJocConfiguration.class.getSimpleName();
     public static final String TABLE_JOC_CONFIGURATIONS = "JOC_CONFIGURATIONS";
@@ -297,6 +302,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemJocInstance.class);
         cl.add(DBItemJocCluster.class);
         cl.add(DBItemJocAuditLog.class);
+        cl.add(DBItemJocAuditLogDetails.class);
         cl.add(DBItemJocLock.class);
 
         cl.add(DBItemDeploymentHistory.class);
