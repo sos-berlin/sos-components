@@ -484,16 +484,22 @@ public class JobStep<A> {
             if (a.isDirty()) {
                 return true;
             } else {
-                if (!a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
+                if (a.getValueSource().equals(JobArgument.ValueSource.JAVA)) {
+                    if (a.getNotAcceptedValue() != null) {
+                        return true;
+                    }
+                } else {
                     return true;
                 }
             }
             return false;
         }).forEach(a -> {
-            if (a.getValueSource().getDetails() == null) {
-                logger.info("    %s=%s (source=%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name());
+            String detail = a.getValueSource().getDetails() == null ? "" : " " + a.getValueSource().getDetails();
+            if (a.getNotAcceptedValue() == null) {
+                logger.info("    %s=%s (source=%s%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), detail);
             } else {
-                logger.info("    %s=%s (source=%s %s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), a.getValueSource().getDetails());
+                logger.info("    %s=%s (source=%s value=%s[not accepted, use default from source=%s]%s)", a.getName(), a.getDisplayValue(), a
+                        .getNotAcceptedValue().getSource().name(), a.getNotAcceptedValue().getDisplayValue(), a.getValueSource().name(), detail);
             }
         });
     }
