@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -44,8 +43,6 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
-import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
@@ -234,11 +231,7 @@ public class DBLayerDeploy {
                 sql.append(" and folder = :folder");
             }
             Query<Long> query = session.createQuery(sql.toString());
-            query.setParameterList("types", Arrays.asList(new Integer[] {
-                    ConfigurationType.WORKFLOW.intValue(), 
-                    ConfigurationType.JUNCTION.intValue(),
-                    ConfigurationType.JOBCLASS.intValue(),
-                    ConfigurationType.LOCK.intValue()}));
+            query.setParameterList("types", JocInventory.DEPLOYABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             if (recursive) {
                 if (!"/".equals(folder)) {
                     query.setParameter("folder", folder);
@@ -487,7 +480,7 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemInventoryConfiguration> getReleasableInventoryConfigurationsByFolderWithoutReleased(String folder, boolean recursive) {
-        return getInventoryConfigurationsByFolder(folder, recursive, false, true, false, true, false);
+        return getInventoryConfigurationsByFolder(folder, recursive, false, true, true, true, false);
     }
 
     public List<DBItemInventoryConfiguration> getValidReleasableInventoryConfigurationsByFolderWithoutReleased(String folder, boolean recursive) {
@@ -592,17 +585,10 @@ public class DBLayerDeploy {
                 }
             }
             if (deployablesOnly) {
-                query.setParameterList("types", Arrays.asList(new Integer[] {
-                        ConfigurationType.WORKFLOW.intValue(), 
-                        ConfigurationType.JUNCTION.intValue(),
-                        ConfigurationType.JOBCLASS.intValue(),
-                        ConfigurationType.LOCK.intValue(),
-                        ConfigurationType.FILEORDERSOURCE.intValue()}));
+            	
+                query.setParameterList("types", JocInventory.DEPLOYABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             } else if (releasablesOnly) {
-                query.setParameterList("types", Arrays.asList(new Integer[] {
-                        ConfigurationType.SCHEDULE.intValue(), 
-                        ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
-                        ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()}));
+                query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -639,17 +625,9 @@ public class DBLayerDeploy {
                 query.setParameter("folder", folder);
             }
             if (onlyDeployables) {
-                query.setParameterList("types", Arrays.asList(new Integer[] {
-                        ConfigurationType.WORKFLOW.intValue(), 
-                        ConfigurationType.JUNCTION.intValue(),
-                        ConfigurationType.JOBCLASS.intValue(),
-                        ConfigurationType.LOCK.intValue(),
-                        ConfigurationType.FILEORDERSOURCE.intValue()}));
+                query.setParameterList("types", JocInventory.DEPLOYABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             } else if (onlyReleasables) {
-                query.setParameterList("types", Arrays.asList(new Integer[] {
-                        ConfigurationType.SCHEDULE.intValue(), 
-                        ConfigurationType.WORKINGDAYSCALENDAR.intValue(),
-                        ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()}));
+                query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             }
             return session.getResultList(query);
         } catch (SOSHibernateException e) {
@@ -1523,7 +1501,8 @@ public class DBLayerDeploy {
             } else {
                 hql.append(" and history.folder = :folder");
             }
-            hql.append(" and history.path = dep.path")
+            hql.append(" and history.path = dep.path");
+            hql.append(" and history.type = dep.type")
                 .append(")");
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
