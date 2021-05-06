@@ -1,6 +1,8 @@
 package com.sos.joc.classes.audit;
 
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -10,8 +12,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class JocAuditLog {
 
@@ -82,71 +86,26 @@ public class JocAuditLog {
             auditLogToDb.setTimeSpent(audit.getTimeSpent());
             auditLogToDb.setCreated(Date.from(Instant.now()));
             if (connection == null) {
-                SOSHibernateSession connection2 = null;
                 try {
-                    connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-                    connection2.save(auditLogToDb);
+                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
+                    connection.save(auditLogToDb);
                     return auditLogToDb;
                 } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
+                    LOGGER.error("", e);
                 } finally {
-                    Globals.disconnect(connection2);
+                    Globals.disconnect(connection);
                 }
             } else {
                 try {
                     connection.save(auditLogToDb);
                     return auditLogToDb;
                 } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
+                    LOGGER.error("", e);
                 }
             }
         }
         return null;
     }
-
-//    public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body, SOSHibernateSession connection) {
-//        if (body != null) {
-//            String controllerId = body.getControllerId();
-//            if (controllerId == null || controllerId.isEmpty()) {
-//                controllerId = "-";
-//            }
-//            DBItemJocAuditLog auditLogToDb = new DBItemJocAuditLog();
-//            auditLogToDb.setControllerId(controllerId);
-//            auditLogToDb.setAccount(user);
-//            auditLogToDb.setRequest(request);
-//            //auditLogToDb.setParameters(getJsonString(body));
-//            auditLogToDb.setParameters(params);
-//            auditLogToDb.setCategory(0); // TODO category
-//            auditLogToDb.setComment(body.getComment());
-//            auditLogToDb.setTicketLink(body.getTicketLink());
-//            auditLogToDb.setTimeSpent(body.getTimeSpent());
-//            auditLogToDb.setCreated(Date.from(Instant.now()));
-//            if (connection == null) {
-//                SOSHibernateSession connection2 = null;
-//                try {
-//                    connection2 = Globals.createSosHibernateStatelessConnection("storeAuditLogEntry");
-//                    connection2.save(auditLogToDb);
-//                    return auditLogToDb;
-//                } catch (Exception e) {
-//                    LOGGER.error(e.getMessage(), e);
-//                } finally {
-//                    Globals.disconnect(connection2);
-//                }
-//            } else {
-//                try {
-//                    connection.save(auditLogToDb);
-//                    return auditLogToDb;
-//                } catch (Exception e) {
-//                    LOGGER.error(e.getMessage(), e);
-//                }
-//            }
-//        }
-//        return null;
-//    }
-
-//    public synchronized DBItemJocAuditLog storeAuditLogEntry(IAuditLog body) {
-//        return storeAuditLogEntry(body, null);
-//    }
     
     public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, String controllerId, CategoryType type) {
         return storeAuditLogEntry(audit, controllerId, type, null);
@@ -155,15 +114,81 @@ public class JocAuditLog {
     public DBItemJocAuditLog storeAuditLogEntry(AuditParams audit, CategoryType type) {
         return storeAuditLogEntry(audit, null, type, null);
     }
+    
+    public void storeAuditLogDetails(Collection<DBItemJocAuditLogDetails> dbItems) {
+        storeAuditLogDetails(dbItems, null);
+    }
+    
+    public void storeAuditLogDetails(Collection<DBItemJocAuditLogDetails> dbItems, SOSHibernateSession connection) {
+        if (dbItems != null && !dbItems.isEmpty()) {
+            if (connection == null) {
+                try {
+                    connection = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
+                    for (DBItemJocAuditLogDetails dbItem : dbItems) {
+                        storeAuditLogDetail(dbItem, connection);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage(), e);
+                } finally {
+                    Globals.disconnect(connection);
+                }
+            } else {
+                for (DBItemJocAuditLogDetails dbItem : dbItems) {
+                    storeAuditLogDetail(dbItem, connection);
+                }
+            }
+        }
+    }
+    
+    public void storeAuditLogDetail(DBItemJocAuditLogDetails dbItem, SOSHibernateSession connection) {
+        try {
+            connection.save(dbItem);
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+    
+    public void storeAuditLogDetail(SOSHibernateSession connection, DBItemJocAuditLog auditlogItem, Path path, ConfigurationType type) {
+        try {
+            connection.save(createAuditLogDetail(auditlogItem, path, type));
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+    
+    public void storeAuditLogDetail(SOSHibernateSession connection, Long auditlogId, Path path, ConfigurationType type, Date now) {
+        try {
+            connection.save(createAuditLogDetail(auditlogId, path, type, now));
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+    
+    public void storeAuditLogDetail(SOSHibernateSession connection, Long auditlogId, Path path, ConfigurationType type) {
+        try {
+            connection.save(createAuditLogDetail(auditlogId, path, type));
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+    
+    public DBItemJocAuditLogDetails createAuditLogDetail(DBItemJocAuditLog auditlogItem, Path path, ConfigurationType type) {
+        return createAuditLogDetail(auditlogItem.getId(), path, type, auditlogItem.getCreated());
+    }
 
-//    private String getJsonString(IAuditLog body) {
-//        if (body == null) {
-//            return "-";
-//        }
-//        try {
-//            return new Globals.objectMapper.writeValueAsString(body);
-//        } catch (Exception e) {
-//            return body.toString();
-//        }
-//    }
+    public DBItemJocAuditLogDetails createAuditLogDetail(Long auditlogId, Path path, ConfigurationType type) {
+        return createAuditLogDetail(auditlogId, path, type, Date.from(Instant.now()));
+    }
+    
+    public DBItemJocAuditLogDetails createAuditLogDetail(Long auditlogId, Path path, ConfigurationType type, Date now) {
+        DBItemJocAuditLogDetails dbItem = new DBItemJocAuditLogDetails();
+        dbItem.setId(null);
+        dbItem.setPath(path.toString().replace('\\', '/'));
+        dbItem.setName(path.getFileName().toString());
+        dbItem.setFolder(path.getParent().toString().replace('\\', '/'));
+        dbItem.setCreated(Date.from(Instant.now()));
+        dbItem.setType(type);
+        dbItem.setAuditLogId(auditlogId);
+        return dbItem;
+    }
 }

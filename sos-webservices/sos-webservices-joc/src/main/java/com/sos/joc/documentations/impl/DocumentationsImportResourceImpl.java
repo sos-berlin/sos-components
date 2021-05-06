@@ -36,7 +36,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.audit.ImportDocumentationAudit;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
 import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
@@ -61,9 +60,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DocumentationsImportResourceImpl.class);
     private static final String API_CALL = "./documentations/import";
-    private static final List<String> SUPPORTED_SUBTYPES = new ArrayList<String>(Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "javascript",
-            "json", "css", "markdown", "gif", "jpeg", "png"));
-    private static final List<String> SUPPORTED_IMAGETYPES = new ArrayList<String>(Arrays.asList("pdf", "gif", "jpeg", "png"));
+    private static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "javascript",
+            "json", "css", "markdown", "gif", "jpeg", "png");
+    private static final List<String> SUPPORTED_IMAGETYPES = Arrays.asList("pdf", "gif", "jpeg", "png");
     private SOSHibernateSession connection = null;
     private DeployDocumentations deployDocumentations = null;
 

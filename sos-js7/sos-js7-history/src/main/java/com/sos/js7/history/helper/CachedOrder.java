@@ -12,6 +12,7 @@ public class CachedOrder {
     private final Long mainParentId;
     private final Long parentId;
     private final String workflowPath;
+    private final String workflowVersionId;
     private final String workflowPosition;
     private final Date endTime;
 
@@ -25,6 +26,7 @@ public class CachedOrder {
         mainParentId = item.getMainParentId();
         parentId = item.getParentId();
         workflowPath = item.getWorkflowPath();
+        workflowVersionId = item.getWorkflowVersionId();
         workflowPosition = item.getWorkflowPosition();
         state = item.getState();
         hasStates = item.getHasStates();
@@ -50,6 +52,10 @@ public class CachedOrder {
 
     public String getWorkflowPath() {
         return workflowPath;
+    }
+
+    public String getWorkflowVersionId() {
+        return workflowVersionId;
     }
 
     public String getWorkflowPosition() {

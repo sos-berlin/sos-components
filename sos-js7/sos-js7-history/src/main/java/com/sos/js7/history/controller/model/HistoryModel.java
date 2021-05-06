@@ -288,7 +288,7 @@ public class HistoryModel {
                     case OrderStepStarted:
                         cos = orderStepStarted(dbLayer, (FatEventOrderStepStarted) entry);
                         counter.getOrderStep().addStarted();
-                        postEventOrderTaskStarted(cos);
+                        postEventOrderTaskStarted(dbLayer, (FatEventOrderStepStarted) entry);
                         break;
                     case OrderStepStdoutWritten:
                         orderStepStd(dbLayer, (FatEventOrderStepStdWritten) entry, EventType.OrderStdoutWritten);
@@ -301,8 +301,9 @@ public class HistoryModel {
                     case OrderStepProcessed:
                         cos = orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
                         counter.getOrderStep().addProcessed();
-
-                        postEventOrderTaskTerminated(cos);
+                        clearCache(CacheType.orderStep, cos.getOrderId());
+                        
+                        postEventOrderTaskTerminated(dbLayer, (FatEventOrderStepProcessed) entry);
                         break;
                     case OrderFailed:
                         co = orderNotCompleted(dbLayer, (AFatEventOrderProcessed) entry, EventType.OrderFailed, endedOrderSteps);
@@ -388,16 +389,16 @@ public class HistoryModel {
     // OrderStarted
     private void postEventOrderStarted(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getId(), co
-                    .getParentId()));
+            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(), co
+                    .getWorkflowVersionId()));
         }
     }
 
     // OrderCancelled, OrderFinished, OrderBroken
     private void postEventOrderTerminated(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getStateAsText(),
-                    co.getId(), co.getParentId()));
+            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(),
+                    co.getWorkflowVersionId()));
 
             clearCache(CacheType.order, co.getOrderId());
         }
@@ -405,24 +406,34 @@ public class HistoryModel {
 
     private void postEventOrderUpdated(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getId(), co
-                    .getParentId()));
+            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(), co
+                    .getWorkflowVersionId()));
         }
     }
 
-    private void postEventOrderTaskStarted(CachedOrderStep cos) {
-        if (cos != null) {
-            EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos.getJobName(),
-                    cos.getId(), cos.getHistoryOrderId()));
+    private void postEventOrderTaskStarted(DBLayerHistory dbLayer, FatEventOrderStepStarted evt) {
+        CachedOrder co = null;
+        try {
+            co = getCachedOrderByCurrentEventId(dbLayer, evt.getOrderId(), evt.getEventId());
+        } catch (Exception e) {
+            //
+        }
+        if (co != null) {
+            EventBus.getInstance().post(new HistoryOrderTaskStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                    .getWorkflowPath(), co.getWorkflowVersionId()));
         }
     }
 
-    private void postEventOrderTaskTerminated(CachedOrderStep cos) {
-        if (cos != null) {
-            EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), cos.getOrderId(), cos
-                    .getJobName(), cos.getSeverityAsText(), cos.getId(), cos.getHistoryOrderId()));
-
-            clearCache(CacheType.orderStep, cos.getOrderId());
+    private void postEventOrderTaskTerminated(DBLayerHistory dbLayer, FatEventOrderStepProcessed evt) {
+        CachedOrder co = null;
+        try {
+            co = getCachedOrderByCurrentEventId(dbLayer, evt.getOrderId(), evt.getEventId());
+        } catch (Exception e) {
+            //
+        }
+        if (co != null) {
+            EventBus.getInstance().post(new HistoryOrderTaskTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                    .getWorkflowPath(), co.getWorkflowVersionId()));
         }
     }
 
