@@ -158,8 +158,8 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
             }
             map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
-        Map<String, Object> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
-        Map<String, JobResourceValue> jobResources = step == null ? null : step.getJobResourcesValues();
+        Map<String, JobDetailValue> lastSucceededOutcomes = step == null ? null : step.getLastSucceededOutcomes();
+        Map<String, JobDetailValue> jobResources = step == null ? null : step.getJobResourcesValues();
         List<Field> fields = Job.getJobArgumentFields(a);
         for (Field field : fields) {
             try {
@@ -171,8 +171,11 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     }
                     // preference 1 (HIGHEST) - Succeeded Outcomes
                     if (lastSucceededOutcomes != null && lastSucceededOutcomes.containsKey(arg.getName())) {
-                        arg.setValue(getValue(field, arg, lastSucceededOutcomes.get(arg.getName())));
-                        setValueSource(arg, ValueSource.LAST_SUCCEEDED_OUTCOME);
+                        JobDetailValue dv = lastSucceededOutcomes.get(arg.getName());
+                        arg.setValue(getValue(field, arg, dv.getValue()));
+                        ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
+                        vs.setDetails("pos=" + dv.getSource());
+                        setValueSource(arg, vs);
                     } else {
                         // preference 2 - Order Variable or Node Argument
                         Object val = getNamedValue(step, arg.getName());
@@ -247,7 +250,7 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
 
     @SuppressWarnings("unchecked")
     private void setValueSource(final JobStep<A> step, Field field, JobArgument<A> arg, boolean isNamedValue,
-            Map<String, JobResourceValue> jobResources) {
+            Map<String, JobDetailValue> jobResources) {
         if (arg.getName() == null) {// source Java - internal usage
             return;
         }
@@ -264,11 +267,11 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
             }
             // preference 4 (LOWEST) - JobResources
             if (source == null && arg.getValueSource().equals(ValueSource.JAVA) && jobResources.containsKey(arg.getName())) {
-                JobResourceValue v = jobResources.get(arg.getName());
+                JobDetailValue v = jobResources.get(arg.getName());
                 try {
                     arg.setValue((A) getValue(field, arg, v.getValue()));
                     source = ValueSource.JOB_RESOURCE;
-                    source.setDetails("resource=" + v.getResourceName());
+                    source.setDetails("resource=" + v.getSource());
                 } catch (ClassNotFoundException e) {
                     LOGGER.error(String.format("[%s]%s", arg.getName(), e.toString()), e);
                 }

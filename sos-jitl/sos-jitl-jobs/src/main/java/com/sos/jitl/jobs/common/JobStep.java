@@ -35,8 +35,8 @@ public class JobStep<A> {
     private final BlockingInternalJob.Step internalStep;
     private final JobLogger logger;
     private A arguments;
-    private Map<String, Map<String, Object>> lastOutcomes;
-    private Map<String, JobResourceValue> jobResourcesValues;
+    private Map<String, Map<String, JobDetailValue>> lastOutcomes;
+    private Map<String, JobDetailValue> jobResourcesValues;
     private List<JobArgument<?>> argumentsInfo;
 
     protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
@@ -70,25 +70,25 @@ public class JobStep<A> {
         return JavaConverters.asJava(internalStep.order().asScala().historicOutcomes());
     }
 
-    public Map<String, Map<String, Object>> getLastOutcomes() {
+    public Map<String, Map<String, JobDetailValue>> getLastOutcomes() {
         if (lastOutcomes == null) {
             lastOutcomes = historicOutcomes2map();
         }
         return lastOutcomes;
     }
 
-    public Map<String, JobResourceValue> getJobResourcesValues() {
+    public Map<String, JobDetailValue> getJobResourcesValues() {
         if (jobResourcesValues == null) {
             jobResourcesValues = jobResources2map();
         }
         return jobResourcesValues;
     }
 
-    public Map<String, Object> getLastSucceededOutcomes() {
+    public Map<String, JobDetailValue> getLastSucceededOutcomes() {
         return getLastOutcomes().get(Outcome.Succeeded.class.getSimpleName());
     }
 
-    public Map<String, Object> getLastFailedOutcomes() {
+    public Map<String, JobDetailValue> getLastFailedOutcomes() {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
@@ -317,30 +317,30 @@ public class JobStep<A> {
         return null;
     }
 
-    private Map<String, Map<String, Object>> historicOutcomes2map() {
+    private Map<String, Map<String, JobDetailValue>> historicOutcomes2map() {
         List<HistoricOutcome> l = getHistoricOutcomes();
         if (l == null || l.size() == 0) {
             return Collections.emptyMap();
         }
 
-        Map<String, Map<String, Object>> resultMap = new HashMap<String, Map<String, Object>>();
+        Map<String, Map<String, JobDetailValue>> resultMap = new HashMap<String, Map<String, JobDetailValue>>();
         for (HistoricOutcome ho : l) {
             Outcome outcome = ho.outcome();
             if (outcome instanceof Completed) {
                 Completed c = (Completed) outcome;
                 if (c.namedValues() != null) {
                     String key = outcome.getClass().getSimpleName();
-                    Map<String, Object> map = new HashMap<String, Object>();
+                    Map<String, JobDetailValue> map = new HashMap<String, JobDetailValue>();
                     if (resultMap.containsKey(key)) {
                         map = resultMap.get(key);
                     } else {
-                        map = new HashMap<String, Object>();
+                        map = new HashMap<String, JobDetailValue>();
                     }
                     Map<String, Object> m = Job.convert(JavaConverters.asJava(c.namedValues()));
                     if (m != null) {
                         for (Map.Entry<String, Object> entry : m.entrySet()) {
                             map.remove(entry.getKey());
-                            map.put(entry.getKey(), entry.getValue());
+                            map.put(entry.getKey(), new JobDetailValue(ho.position().toString(), entry.getValue()));
                         }
                     }
                     map.remove(Job.NAMED_NAME_RETURN_CODE);
@@ -351,8 +351,8 @@ public class JobStep<A> {
         return resultMap;
     }
 
-    private Map<String, JobResourceValue> jobResources2map() {
-        Map<String, JobResourceValue> resultMap = new LinkedHashMap<>();
+    private Map<String, JobDetailValue> jobResources2map() {
+        Map<String, JobDetailValue> resultMap = new LinkedHashMap<>();
         if (internalStep == null) {
             return resultMap;
         }
@@ -365,7 +365,7 @@ public class JobStep<A> {
             String resourceName = e.getKey().string();
             e.getValue().entrySet().stream().forEach(ee -> {
                 if (!resultMap.containsKey(ee.getKey())) {
-                    resultMap.put(ee.getKey(), new JobResourceValue(resourceName, Job.getValue(ee.getValue())));
+                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, Job.getValue(ee.getValue())));
                 }
             });
         });
@@ -430,12 +430,12 @@ public class JobStep<A> {
             });
         }
         // JOB Resources
-        Map<String, JobResourceValue> resources = getJobResourcesValues();
+        Map<String, JobDetailValue> resources = getJobResourcesValues();
         if (resources != null && resources.size() > 0) {
             logger.debug(String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
             resources.entrySet().stream().forEach(e -> {
-                JobResourceValue v = e.getValue();
-                logger.debug("    %s=%s (resource=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), v.getValue()), v.getResourceName());
+                JobDetailValue v = e.getValue();
+                logger.debug("    %s=%s (resource=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), v.getValue()), v.getSource());
             });
         }
         debugJobContextArguments(allArguments);
@@ -456,11 +456,12 @@ public class JobStep<A> {
 
     private void debugOutcomes(List<JobArgument<?>> allArguments) {
         // OUTCOME succeeded
-        Map<String, Object> map = getLastSucceededOutcomes();
+        Map<String, JobDetailValue> map = getLastSucceededOutcomes();
         if (map != null && map.size() > 0) {
             logger.debug(String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                logger.debug("    %s=%s (pos=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue().getValue()), e.getValue()
+                        .getSource());
             });
         }
         // OUTCOME failed
@@ -468,7 +469,8 @@ public class JobStep<A> {
         if (map != null && map.size() > 0) {
             logger.debug(String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                logger.debug("    %s=%s (pos=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue().getValue()), e.getValue()
+                        .getSource());
             });
         }
     }
