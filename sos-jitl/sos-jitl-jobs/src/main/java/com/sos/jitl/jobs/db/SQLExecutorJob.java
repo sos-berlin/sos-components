@@ -121,7 +121,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                             }
                             if (paramKey != null && paramValue != null) {
                                 if (step.getLogger().isDebugEnabled()) {
-                                    step.getLogger().debug("[order][set param]%s=%s", paramKey, paramValue);
+                                    step.getLogger().debug("[set outcome]%s=%s", paramKey, paramValue);
                                 }
                                 map.put(paramKey, paramValue);
                             }
@@ -130,7 +130,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                                 for (String key : record.keySet()) {
                                     String value = record.get(key);
                                     if (step.getLogger().isDebugEnabled()) {
-                                        step.getLogger().debug("[order][set param]%s=%s", key, value);
+                                        step.getLogger().debug("[set outcome]%s=%s", key, value);
                                     }
                                     map.put(key, value);
                                 }
