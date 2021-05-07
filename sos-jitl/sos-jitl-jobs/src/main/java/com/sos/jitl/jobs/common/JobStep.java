@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
@@ -94,7 +93,7 @@ public class JobStep<A> {
         return getLastOutcomes().get(Outcome.Failed.class.getSimpleName());
     }
 
-    public Map<JobArgument.ValueSource, List<String>> argumentsInfoBySetter() throws Exception {
+    private Map<JobArgument.ValueSource, List<String>> argumentsInfoBySetter() throws Exception {
         setKnownArguments();
         if (knownArguments == null || knownArguments.size() == 0) {
             return null;
@@ -127,16 +126,16 @@ public class JobStep<A> {
         return map;
     }
 
-    public JobArgument<A> getArgument(String argumentName) {
+    public JobArgument<A> getKnownArgument(String name) {
         setKnownArguments();
         if (knownArguments != null) {
-            return knownArguments.stream().filter(a -> a.getName().equals(argumentName)).findAny().orElse(null);
+            return knownArguments.stream().filter(a -> a.getName().equals(name)).findAny().orElse(null);
         }
         return null;
     }
 
     public Object getDisplayValue(String name) {
-        JobArgument<?> ar = getArgument(name);
+        JobArgument<?> ar = getKnownArgument(name);
         if (ar == null) {
             return DisplayMode.UNKNOWN.getValue();
         }
@@ -287,18 +286,6 @@ public class JobStep<A> {
             return null;
         }
         return internalStep.order().workflowPosition().position().toString();
-    }
-
-    public Object getCurrentValue(final String name) throws SOSJobProblemException {
-        if (internalStep == null) {
-            return null;
-        }
-        Optional<Value> op = Job.getFromEither(internalStep.namedValue(name));
-        if (op.isPresent()) {
-            return Job.getValue(op.get());
-        } else {
-            return Job.getValue(internalStep.arguments().get(name));
-        }
     }
 
     public JOutcome.Completed success() {

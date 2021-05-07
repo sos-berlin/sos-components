@@ -94,6 +94,7 @@ public class JobArgument<T> {
         this.value = value;
         this.type = Type.UNKNOWN;
         this.valueSource = valueSource;
+        this.dirty = true;
     }
 
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, JobArgument<T> reference) {

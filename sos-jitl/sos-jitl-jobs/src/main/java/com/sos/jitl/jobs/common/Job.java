@@ -158,7 +158,8 @@ public class Job {
         if (map == null || map.size() == 0) {
             return Collections.emptyMap();
         }
-        return map.entrySet().stream().collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue().getValue()));
+        return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
+                .getValue()));
     }
 
     public static String getDisplayValue(Object value, DisplayMode mode) {

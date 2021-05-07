@@ -114,10 +114,10 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
     private void checkExceptions(JobStep<A> jobStep, List<SOSJobArgumentException> exceptions) throws Exception {
         if (exceptions.size() > 0) {
             List<String> l = exceptions.stream().filter(e -> e instanceof SOSJobRequiredArgumentMissingException).map(e -> {
-                jobStep.logParameterizationOnRequiredArgumentMissingException();
                 return ((SOSJobRequiredArgumentMissingException) e).getArgumentName();
             }).collect(Collectors.toList());
             if (l.size() > 0) {
+                jobStep.logParameterizationOnRequiredArgumentMissingException();
                 throw new SOSJobRequiredArgumentMissingException(String.join(", ", l));
             } else {
                 throw exceptions.get(0);
@@ -233,7 +233,6 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     } else {
                         val = v;
                     }
-
                 }
             }
         }

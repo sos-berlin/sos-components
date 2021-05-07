@@ -11,7 +11,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobDetailValue;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
@@ -115,20 +114,8 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("[java][step.arguments()]" + Job.convert(step.getInternalStep().arguments()));
 
         step.getLogger().info("----------NODE/STEP GET ARGUMENT BY NAME-----------------");
-        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getShowEnv().getName(), step.getCurrentValue(args.getShowEnv().getName()));
-        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getRedefineShowEnv().getName(), step.getCurrentValue(args
-                .getRedefineShowEnv().getName()));
-        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getLogLevel().getName(), step.getCurrentValue(args.getLogLevel().getName()));
-        step.getLogger().info("[java][step.getCurrentValue(%s)]%s", args.getStringArgument().getName(), step.getCurrentValue(args.getStringArgument()
-                .getName()));
         step.getLogger().info("[scala][step.getInternalStep().namedValue(%s)]%s", args.getStringArgument().getName(), step.getInternalStep()
                 .namedValue(args.getStringArgument().getName()));
-
-        step.getLogger().info("----------NODE/STEP Java Job used/known argumens-----------------");
-        Map<ValueSource, List<String>> amap = step.argumentsInfoBySetter();
-        amap.entrySet().stream().forEach(e -> {
-            step.getLogger().info("[java][%s]%s", e.getKey().getHeader(), String.join(",", e.getValue()));
-        });
 
         step.getLogger().info("----------ALL CURRENT known/unknown argumens-----------------");
         Map<String, JobArgument<InfoJobArguments>> allcmap = step.getAllCurrentArguments();
