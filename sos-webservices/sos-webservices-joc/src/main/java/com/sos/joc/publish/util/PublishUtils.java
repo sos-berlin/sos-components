@@ -132,7 +132,6 @@ import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.sign.model.fileordersource.FileOrderSource;
@@ -162,7 +161,6 @@ public abstract class PublishUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
     private static final String JOC_META_INFO_FILENAME = "meta_inf";
-    private static ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;
@@ -263,15 +261,15 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
-                            draft.setContent(om.writeValueAsString(workflow));
+                            draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                         }
                     } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), JobResource.class);
                     	jobResource.setPath(draft.getName());
-                    	draft.setContent(om.writeValueAsString(jobResource));
+                    	draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
                     signedDrafts.put(draft, sig);
@@ -287,15 +285,15 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(draft.getId());
                     sig.setModified(Date.from(Instant.now()));
                     if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
-                            draft.setContent(om.writeValueAsString(workflow));
+                            draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                         }
                     } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), JobResource.class);
                     	jobResource.setPath(draft.getName());
-                    	draft.setContent(om.writeValueAsString(jobResource));
+                    	draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -307,15 +305,15 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
                         if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                             workflow.setPath(draft.getName());
-                            draft.setContent(om.writeValueAsString(workflow));
+                            draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                         }
                     } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	JobResource jobResource = om.readValue(draft.getContent(), JobResource.class);
+                    	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), JobResource.class);
                     	jobResource.setPath(draft.getName());
-                    	draft.setContent(om.writeValueAsString(jobResource));
+                    	draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
                     signedDrafts.put(draft, sig);
@@ -351,15 +349,15 @@ public abstract class PublishUtils {
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
                 if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    Workflow workflow = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
-                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                        unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     }
                 } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), JobResource.class);
                 	jobResource.setPath(unsignedDraft.getName());
-                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
+                	unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), unsignedDraftUpdated.getContent(), null));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -375,15 +373,15 @@ public abstract class PublishUtils {
                 sig.setInvConfigurationId(unsignedDraftUpdated.getId());
                 sig.setModified(Date.from(Instant.now()));
                 if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    Workflow workflow = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
-                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                        unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     }
                 } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), JobResource.class);
                 	jobResource.setPath(unsignedDraft.getName());
-                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
+                	unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signX509(kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -395,15 +393,15 @@ public abstract class PublishUtils {
                 sig.setModified(Date.from(Instant.now()));
                 // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 if (unsignedDraft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                    Workflow workflow = om.readValue(unsignedDraft.getContent(), Workflow.class);
+                    Workflow workflow = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), Workflow.class);
                     if (workflow.getPath() == null || workflow.getPath().startsWith("/")) {
                         workflow.setPath(unsignedDraft.getName());
-                        unsignedDraft.setContent(om.writeValueAsString(workflow));
+                        unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     }
                 } else if (unsignedDraft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                	JobResource jobResource = om.readValue(unsignedDraft.getContent(), JobResource.class);
+                	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(unsignedDraft.getContent(), JobResource.class);
                 	jobResource.setPath(unsignedDraft.getName());
-                	unsignedDraft.setContent(om.writeValueAsString(jobResource));
+                	unsignedDraft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                 }
                 sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), unsignedDraftUpdated.getContent()));
                 signedDrafts.put(unsignedDraftUpdated, sig);
@@ -447,10 +445,10 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
                     if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), Workflow.class);
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         // workflow.setPath(deployed.getPath());
-                        deployed.setContent(om.writeValueAsString(workflow));
+                        deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     }
                     sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
                     signedReDeployable.put(deployed, sig);
@@ -466,14 +464,14 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
                     if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), Workflow.class);
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         // workflow.setPath(deployed.getPath());
-                        deployed.setContent(om.writeValueAsString(workflow));
+                        deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	JobResource jobResource = om.readValue(deployed.getContent(), JobResource.class);
+                    	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), JobResource.class);
                     	jobResource.setPath(deployed.getName());
-                    	deployed.setContent(om.writeValueAsString(jobResource));
+                    	deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
@@ -485,14 +483,14 @@ public abstract class PublishUtils {
                     sig.setModified(Date.from(Instant.now()));
                     // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                     if (deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+                        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), Workflow.class);
                         workflow.setPath(Paths.get(deployed.getPath()).getFileName().toString());
                         // workflow.setPath(deployed.getPath());
-                        deployed.setContent(om.writeValueAsString(workflow));
+                        deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
                     } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	JobResource jobResource = om.readValue(deployed.getContent(), JobResource.class);
+                    	JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), JobResource.class);
                     	jobResource.setPath(deployed.getName());
-                    	deployed.setContent(om.writeValueAsString(jobResource));
+                    	deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jobResource));
                     }
                     sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     signedReDeployable.put(deployed, sig);
@@ -710,7 +708,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.LOCK))
             		.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -720,7 +718,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
             		.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -746,7 +744,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.LOCK.intValue())
             		.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -756,7 +754,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -779,7 +777,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
                 try {
         			LOGGER.debug("JSON send to controller: ");
-        			String json = om.writeValueAsString(item.getContent());
+        			String json = Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent());
         			LOGGER.debug(json);
                     return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                 } catch (JsonProcessingException e1) {
@@ -789,7 +787,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(item -> {
                 try {
         			LOGGER.debug("JSON send to controller: ");
-        			String json = om.writeValueAsString(item.getContent());
+        			String json = Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent());
         			LOGGER.debug(json);
                     return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                 } catch (JsonProcessingException e1) {
@@ -826,7 +824,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                 			LOGGER.debug("JSON send to controller: ");
-                			String json = om.writeValueAsString(item.getContent());
+                			String json = Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent());
                 			LOGGER.debug(json);
                             return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                         } catch (JsonProcessingException e1) {
@@ -837,7 +835,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                 			LOGGER.debug("JSON send to controller: ");
-                			String json = om.writeValueAsString(item.getContent());
+                			String json = Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent());
                 			LOGGER.debug(json);
                             return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, drafts.get(item).getSignature()));
                         } catch (JsonProcessingException e1) {
@@ -847,7 +845,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
             		.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -857,7 +855,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             if (fileOrderSource.getPath() == null) {
                                 fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -894,7 +892,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.LOCK))
                 	.map(item -> {
                         try {
-    	            		Lock lock = om.readValue(item.getContent(), Lock.class);
+    	            		Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
     	                    lock.setPath(item.getName());
     	                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -905,7 +903,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
                 	.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (Exception e) {
@@ -932,7 +930,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
             		.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -943,7 +941,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             if (fileOrderSource.getPath() == null) {
                                 fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -984,7 +982,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.LOCK))
                 	.map(item -> {
                 		try {
-                			Lock lock = om.readValue(item.getContent(), Lock.class);
+                			Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                 			lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                 			return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                 		} catch (Exception e) {
@@ -995,7 +993,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
                 	.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -1024,7 +1022,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.LOCK.intValue()).map(
                     item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -1035,7 +1033,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.FILEORDERSOURCE.intValue()).map(
                     item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -1065,7 +1063,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                             return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithCertificate(
-                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                            		Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
@@ -1075,7 +1073,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                             return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
-                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                            		Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
@@ -1126,7 +1124,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
                 	.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -1137,7 +1135,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
                 	.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -1167,7 +1165,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                             return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithSignerDN(
-                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
+                            		Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
@@ -1177,7 +1175,7 @@ public abstract class PublishUtils {
             		.map(item -> {
                         try {
                             return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
-                            		om.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
+                            		Globals.prettyPrintObjectMapper.writeValueAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
@@ -1230,7 +1228,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
             		.map(item -> {
                         try {
-                            Lock lock = om.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -1241,7 +1239,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -1274,7 +1272,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
             		.map(item -> {
                         try {
-                        	Lock lock = om.readValue(item.getContent(), Lock.class);
+                        	Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
                         } catch (Exception e) {
@@ -1284,7 +1282,7 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                        	Lock lock = om.readValue(item.getContent(), Lock.class);
+                        	Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
                         } catch (Exception e) {
@@ -1299,18 +1297,18 @@ public abstract class PublishUtils {
     private static void updateVersionIdOnDraftObject(DBItemInventoryConfiguration draft, String commitId) throws JsonParseException,
             JsonMappingException, IOException, JocNotImplementedException {
     	if (ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(draft.getType()))) {
-            Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+            Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
             workflow.setVersionId(commitId);
-            draft.setContent(om.writeValueAsString(workflow));
+            draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
     	}
     }
 
     private static void updateVersionIdOnDeployedObject(DBItemDeploymentHistory deployed, String commitId, SOSHibernateSession session)
             throws JsonParseException, JsonMappingException, IOException, SOSHibernateException, JocNotImplementedException {
     	if (DeployType.WORKFLOW.equals(DeployType.fromValue(deployed.getType()))) {
-            Workflow workflow = om.readValue(deployed.getContent(), Workflow.class);
+            Workflow workflow = Globals.prettyPrintObjectMapper.readValue(deployed.getContent(), Workflow.class);
             workflow.setVersionId(commitId);
-            deployed.setContent(om.writeValueAsString(workflow));
+            deployed.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
     	}
     }
 
@@ -1331,7 +1329,7 @@ public abstract class PublishUtils {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         try {
             if (ConfigurationType.WORKFLOW.equals(type)) {
-                com.sos.inventory.model.workflow.Workflow workflow = om.readValue(json, com.sos.inventory.model.workflow.Workflow.class);
+                com.sos.inventory.model.workflow.Workflow workflow = Globals.prettyPrintObjectMapper.readValue(json, com.sos.inventory.model.workflow.Workflow.class);
                 workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                     com.sos.inventory.model.job.Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                     String agentNameOrAlias = job.getAgentName();
@@ -1360,7 +1358,7 @@ public abstract class PublishUtils {
         UpdateableFileOrderSourceAgentName update = null;
         try {
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                    om.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    Globals.prettyPrintObjectMapper.readValue(json, com.sos.inventory.model.fileordersource.FileOrderSource.class);
             String agentNameOrAlias = fileOrderSource.getAgentName();
             String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
             update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
@@ -1751,7 +1749,7 @@ public abstract class PublishUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -1804,7 +1802,7 @@ public abstract class PublishUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -1852,7 +1850,7 @@ public abstract class PublishUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -1910,7 +1908,7 @@ public abstract class PublishUtils {
                 }
                 // process JOC meta info file
                 if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = om.readValue(outBuffer.toString(), JocMetaInfo.class);
+                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
                     if (!isJocMetaInfoNullOrEmpty(fromFile)) {
                         jocMetaInfo.setJocVersion(fromFile.getJocVersion());
                         jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
@@ -1940,7 +1938,7 @@ public abstract class PublishUtils {
             throws JsonParseException, JsonMappingException, IOException {
     	if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
             WorkflowPublish workflowPublish = new WorkflowPublish();
-            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(),
+            com.sos.inventory.model.workflow.Workflow workflow = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(),
                     com.sos.inventory.model.workflow.Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowPublish.setContent(workflow);
@@ -1953,7 +1951,7 @@ public abstract class PublishUtils {
             return workflowPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
             JobResourcePublish jobResourcePublish = new JobResourcePublish();
-            com.sos.inventory.model.jobresource.JobResource jobResource = om.readValue(outBuffer.toString(),
+            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(),
                     com.sos.inventory.model.jobresource.JobResource.class);
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourcePublish.setContent(jobResource);
@@ -1966,7 +1964,7 @@ public abstract class PublishUtils {
             return jobResourcePublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
             LockPublish lockPublish = new LockPublish();
-            com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
+            com.sos.inventory.model.lock.Lock lock = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
             if (checkObjectNotEmpty(lock)) {
                 lockPublish.setContent(lock);
             } else {
@@ -1979,7 +1977,7 @@ public abstract class PublishUtils {
             return lockPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
             JunctionPublish junctionPublish = new JunctionPublish();
-            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(),
+            com.sos.inventory.model.junction.Junction junction = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(),
                     com.sos.inventory.model.junction.Junction.class);
             if (checkObjectNotEmpty(junction)) {
                 junctionPublish.setContent(junction);
@@ -1993,7 +1991,7 @@ public abstract class PublishUtils {
             return junctionPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             JobClassPublish jobClassPublish = new JobClassPublish();
-            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(),
+            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(),
                     com.sos.inventory.model.jobclass.JobClass.class);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassPublish.setContent(jobClass);
@@ -2007,7 +2005,7 @@ public abstract class PublishUtils {
             return jobClassPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
             FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = om.readValue(outBuffer.toString(),
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(),
                     com.sos.inventory.model.fileordersource.FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourcePublish.setContent(fileOrderSource);
@@ -2060,7 +2058,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = om.readValue(outBuffer.toString(), com.sos.inventory.model.workflow.Workflow.class);
+            com.sos.inventory.model.workflow.Workflow workflow = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.workflow.Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
@@ -2077,7 +2075,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             JobResourceEdit jobResourceEdit = new JobResourceEdit();
-            com.sos.inventory.model.jobresource.JobResource jobResource = om.readValue(outBuffer.toString(), com.sos.inventory.model.jobresource.JobResource.class);
+            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.jobresource.JobResource.class);
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourceEdit.setConfiguration(jobResource);
             } else {
@@ -2094,7 +2092,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             LockEdit lockEdit = new LockEdit();
-            com.sos.inventory.model.lock.Lock lock = om.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
+            com.sos.inventory.model.lock.Lock lock = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.lock.Lock.class);
             if (checkObjectNotEmpty(lock)) {
                 lockEdit.setConfiguration(lock);
             } else {
@@ -2111,7 +2109,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             JunctionEdit junctionEdit = new JunctionEdit();
-            com.sos.inventory.model.junction.Junction junction = om.readValue(outBuffer.toString(), com.sos.inventory.model.junction.Junction.class);
+            com.sos.inventory.model.junction.Junction junction = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.junction.Junction.class);
             if (checkObjectNotEmpty(junction)) {
                 junctionEdit.setConfiguration(junction);
             } else {
@@ -2128,7 +2126,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = om.readValue(outBuffer.toString(), com.sos.inventory.model.jobclass.JobClass.class);
+            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.jobclass.JobClass.class);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
             } else {
@@ -2146,7 +2144,7 @@ public abstract class PublishUtils {
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-            		om.readValue(outBuffer.toString(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            		Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -2163,7 +2161,7 @@ public abstract class PublishUtils {
             	normalizedPath = normalizedPath.substring(1);
             }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
-            Schedule schedule = om.readValue(outBuffer.toString(), Schedule.class);
+            Schedule schedule = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Schedule.class);
             if (checkObjectNotEmpty(schedule)) {
                 scheduleEdit.setConfiguration(schedule);
             } else {
@@ -2179,7 +2177,7 @@ public abstract class PublishUtils {
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
-            Calendar cal = om.readValue(outBuffer.toString(), Calendar.class);
+            Calendar cal = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), Calendar.class);
             if (checkObjectNotEmpty(cal)) {
                 if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
                     WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
@@ -2228,30 +2226,30 @@ public abstract class PublishUtils {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = om.writeValueAsString(workflow);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = om.writeValueAsString(jobResource);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = om.writeValueAsString(lock);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = om.writeValueAsString(junction);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = om.writeValueAsString(jobClass);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -2260,7 +2258,7 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = om.writeValueAsString(fileOrderSource);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -2286,7 +2284,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
@@ -2300,7 +2298,7 @@ public abstract class PublishUtils {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
-                        zipOut.write(om.writeValueAsBytes(jocMetaInfo));
+                        zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo));
                         zipOut.closeEntry();
                     }
                     zipOut.flush();
@@ -2353,7 +2351,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(deployable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = deployable.getPath().substring(1).concat(extension);
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
@@ -2378,7 +2376,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
@@ -2392,7 +2390,7 @@ public abstract class PublishUtils {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
-                        zipOut.write(om.writeValueAsBytes(jocMetaInfo));
+                        zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo));
                         zipOut.closeEntry();
                     }
                     zipOut.flush();
@@ -2437,30 +2435,30 @@ public abstract class PublishUtils {
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 // workflow.setPath(deployable.getPath());
-                                content = om.writeValueAsString(workflow);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = om.writeValueAsString(jobResource);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = om.writeValueAsString(lock);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = om.writeValueAsString(junction);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = om.writeValueAsString(jobClass);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -2469,7 +2467,7 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = om.writeValueAsString(fileOrderSource);
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -2497,7 +2495,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
@@ -2512,7 +2510,7 @@ public abstract class PublishUtils {
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
-                        byte[] jocMetaInfoBytes = om.writeValueAsBytes(jocMetaInfo);
+                        byte[] jocMetaInfoBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
                         tarOut.putArchiveEntry(entry);
                         tarOut.write(jocMetaInfoBytes);
@@ -2589,7 +2587,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(deployable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(deployable.getConfiguration());
                                 String zipEntryName = deployable.getPath().substring(1).concat(extension);
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
@@ -2616,7 +2614,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = om.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
@@ -2631,7 +2629,7 @@ public abstract class PublishUtils {
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
-                        byte[] jocMetaInfoBytes = om.writeValueAsBytes(jocMetaInfo);
+                        byte[] jocMetaInfoBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
                         tarOut.putArchiveEntry(entry);
                         tarOut.write(jocMetaInfoBytes);
@@ -2723,7 +2721,7 @@ public abstract class PublishUtils {
 
     private static void replaceAgentNameWithAgentId(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
                 .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
@@ -2731,7 +2729,7 @@ public abstract class PublishUtils {
             job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
                     .getControllerId())).findFirst().get().getAgentId());
         });
-        draft.setContent(om.writeValueAsString(workflow));
+        draft.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(workflow));
     }
 
     private static void replaceAgentNameWithAgentId(Workflow workflow, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, String controllerId)
@@ -2754,24 +2752,24 @@ public abstract class PublishUtils {
 
     private static String getContentWithOrigAgentNameForWorkflow(DBItemInventoryConfiguration draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Workflow workflow = om.readValue(draft.getContent(), Workflow.class);
+        Workflow workflow = Globals.prettyPrintObjectMapper.readValue(draft.getContent(), Workflow.class);
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
                 .getPath()) && controllerId.equals(item.getControllerId())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
             job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname)).findFirst().get().getAgentName());
         });
-        return om.writeValueAsString(workflow);
+        return Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
     }
 
     private static String getContentWithOrigAgentNameForFileOrderSource(DBItemInventoryConfiguration draft,
     		Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames, String controllerId) throws JsonParseException, JsonMappingException, IOException {
         com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                om.readValue(draft.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                Globals.prettyPrintObjectMapper.readValue(draft.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
         fileOrderSource.setAgentName(updateableFileOrderSourceAgentNames.stream()
                 .filter(item -> item.getFileOrderSourceId().equals(draft.getName()) && controllerId.equals(item.getControllerId()))
                 .findFirst().get().getAgentName());
-        return om.writeValueAsString(fileOrderSource);
+        return Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource);
     }
 
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
@@ -3133,33 +3131,33 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = om.readValue(item.getContent().getBytes(), Workflow.class);
+                Workflow workflow = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
                 }
                 jsObject.setContent(workflow);
                 break;
             case JOBRESOURCE:
-                JobResource jobResource = om.readValue(item.getContent().getBytes(), JobResource.class);
+                JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), JobResource.class);
                 jsObject.setContent(jobResource);
                 break;
             case LOCK:
-                Lock lock = om.readValue(item.getContent().getBytes(), Lock.class);
+                Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
             case JUNCTION:
-                Junction junction = om.readValue(item.getContent().getBytes(), Junction.class);
+                Junction junction = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), Junction.class);
                 if (commitId != null) {
                     junction.setVersionId(commitId);
                 }
                 jsObject.setContent(junction);
                 break;
             case JOBCLASS:
-                JobClass jobClass = om.readValue(item.getContent().getBytes(), JobClass.class);
+                JobClass jobClass = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), JobClass.class);
                 jsObject.setContent(jobClass);
                 break;
             case FILEORDERSOURCE:
-                FileOrderSource fileOrderSource = om.readValue(item.getContent(), FileOrderSource.class);
+                FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getContent(), FileOrderSource.class);
                 jsObject.setContent(fileOrderSource);
                 break;
             }
@@ -3180,33 +3178,33 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = om.readValue(item.getInvContent().getBytes(), Workflow.class);
+                Workflow workflow = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
                 }
                 jsObject.setContent(workflow);
                 break;
             case JOBRESOURCE:
-                JobResource jobResource = om.readValue(item.getInvContent().getBytes(), JobResource.class);
+                JobResource jobResource = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), JobResource.class);
                 jsObject.setContent(jobResource);
                 break;
             case JOBCLASS:
-                JobClass jobClass = om.readValue(item.getInvContent().getBytes(), JobClass.class);
+                JobClass jobClass = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), JobClass.class);
                 jsObject.setContent(jobClass);
                 break;
             case LOCK:
-                Lock lock = om.readValue(item.getInvContent().getBytes(), Lock.class);
+                Lock lock = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
             case JUNCTION:
-                Junction junction = om.readValue(item.getInvContent().getBytes(), Junction.class);
+                Junction junction = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), Junction.class);
                 if (commitId != null) {
                     junction.setVersionId(commitId);
                 }
                 jsObject.setContent(junction);
                 break;
             case FILEORDERSOURCE:
-                FileOrderSource fileOrderSource = om.readValue(item.getInvContent().getBytes(), FileOrderSource.class);
+                FileOrderSource fileOrderSource = Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), FileOrderSource.class);
                 jsObject.setContent(fileOrderSource);
                 break;
             }
@@ -3228,32 +3226,32 @@ public abstract class PublishUtils {
             switch (configurationObject.getObjectType()) {
             case WORKFLOW:
                 com.sos.inventory.model.workflow.Workflow workflow = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
                 configurationObject.setConfiguration(workflow);
                 break;
             case JOBRESOURCE:
                 com.sos.inventory.model.jobresource.JobResource jobResource = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
                 configurationObject.setConfiguration(jobResource);
                 break;
             case JOBCLASS:
                 com.sos.inventory.model.jobclass.JobClass jobClass = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
                 configurationObject.setConfiguration(jobClass);
                 break;
             case LOCK:
                 com.sos.inventory.model.lock.Lock lock = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
                 configurationObject.setConfiguration(lock);
                 break;
             case JUNCTION:
                 com.sos.inventory.model.junction.Junction junction = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
                 configurationObject.setConfiguration(junction);
                 break;
             case FILEORDERSOURCE:
                 com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                    om.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configurationObject.setConfiguration(fileOrderSource);
                 break;
             default:
@@ -3276,41 +3274,41 @@ public abstract class PublishUtils {
             switch (configuration.getObjectType()) {
             case WORKFLOW:
                 com.sos.inventory.model.workflow.Workflow workflow = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
                 configuration.setConfiguration(workflow);
                 break;
             case JOBRESOURCE:
                 com.sos.inventory.model.jobresource.JobResource jobResource = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
                 configuration.setConfiguration(jobResource);
                 break;
             case LOCK:
                 com.sos.inventory.model.lock.Lock lock = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
                 configuration.setConfiguration(lock);
                 break;
             case FILEORDERSOURCE:
                 com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configuration.setConfiguration(fileOrderSource);
                 break;
             case SCHEDULE:
-                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
+                Schedule schedule = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
-                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
+                Calendar calendar = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), Calendar.class);
                 configuration.setConfiguration(calendar);
                 break;
             case JOBCLASS:
                 com.sos.inventory.model.jobclass.JobClass jobClass = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
                 configuration.setConfiguration(jobClass);
                 break;
             case JUNCTION:
                 com.sos.inventory.model.junction.Junction junction = 
-                    om.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
+                    Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
                 configuration.setConfiguration(junction);
                 break;
             default:
@@ -3331,11 +3329,11 @@ public abstract class PublishUtils {
             switch (configuration.getObjectType()) {
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
-                Calendar calendar = om.readValue(item.getContent().getBytes(), Calendar.class);
+                Calendar calendar = Globals.prettyPrintObjectMapper.readValue(item.getContent().getBytes(), Calendar.class);
                 configuration.setConfiguration(calendar);
                 break;
             case SCHEDULE:
-                Schedule schedule = om.readValue(item.getContent(), Schedule.class);
+                Schedule schedule = Globals.prettyPrintObjectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
             default:

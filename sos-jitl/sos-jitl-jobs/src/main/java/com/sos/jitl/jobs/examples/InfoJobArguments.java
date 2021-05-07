@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.examples;
 
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class InfoJobArguments extends JobArguments {
@@ -9,6 +10,7 @@ public class InfoJobArguments extends JobArguments {
     private JobArgument<Boolean> redefineShowEnv = new JobArgument<Boolean>("redefine_show_env", false);
     private JobArgument<String> stringArgument = new JobArgument<String>("string_argument", false);
     private JobArgument<String> returnVariables = new JobArgument<String>("return_variables", false);
+    private JobArgument<String> password = new JobArgument<String>("password", false, DisplayMode.MASKED);
 
     public JobArgument<Boolean> getShowEnv() {
         return showEnv;
@@ -24,5 +26,9 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<String> getReturnVariables() {
         return returnVariables;
+    }
+
+    public JobArgument<String> getPassword() {
+        return password;
     }
 }

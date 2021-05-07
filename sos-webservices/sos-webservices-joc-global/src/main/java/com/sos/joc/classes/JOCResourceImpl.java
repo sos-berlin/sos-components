@@ -183,15 +183,6 @@ public class JOCResourceImpl {
         return true;
     }
 
-    public boolean checkRequiredComment(String comment) throws JocMissingCommentException {
-        if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
-            if (comment == null || comment.isEmpty()) {
-                throw new JocMissingCommentException();
-            }
-        }
-        return true;
-    }
-
     public boolean checkRequiredParameter(String paramKey, String paramVal) throws JocMissingRequiredParameterException {
         if (paramVal == null || paramVal.isEmpty()) {
             throw new JocMissingRequiredParameterException(String.format("undefined '%1$s'", paramKey));
@@ -388,11 +379,17 @@ public class JOCResourceImpl {
         }
         String bodyStr = "-";
         if (body != null) {
-            bodyStr = new String(body, StandardCharsets.UTF_8);
+            try {
+                // eliminate possibly pretty print vom origin request
+                bodyStr = Globals.objectMapper.writeValueAsString(Globals.objectMapper.readValue(bodyStr, Object.class));
+            } catch (Exception e) {
+                bodyStr = new String(body, StandardCharsets.UTF_8);
+            }
             if (bodyStr.length() > 4096) {
                 bodyStr = bodyStr.substring(0, 4093) + "...";
             }
         }
+        
         jocAuditLog = new JocAuditLog(user, request, bodyStr);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);

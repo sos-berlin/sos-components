@@ -112,13 +112,16 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    boolean controllerUpdateRequired = false;
+                    boolean controllerUpdateRequired = true; //false;
                     boolean dbUpdateRequired = false;
                     if (dbAgent.getDisabled() != agent.getDisabled()) {
                         dbAgent.setDisabled(agent.getDisabled());
                         dbUpdateRequired = true;
-                        if (!agent.getDisabled()) {
-                            controllerUpdateRequired = true;
+//                        if (!agent.getDisabled()) {
+//                            controllerUpdateRequired = true;
+//                        }
+                        if (agent.getDisabled()) {
+                            controllerUpdateRequired = false;
                         }
                     }
 //                    if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
@@ -132,7 +135,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
                         dbAgent.setUri(agent.getUrl());
                         dbUpdateRequired = true;
-                        controllerUpdateRequired = true;
+                        //controllerUpdateRequired = true;
                     }
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);

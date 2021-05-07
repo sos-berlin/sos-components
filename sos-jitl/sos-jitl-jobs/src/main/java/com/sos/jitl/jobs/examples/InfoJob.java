@@ -11,8 +11,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
+import com.sos.jitl.jobs.common.JobDetailValue;
 import com.sos.jitl.jobs.common.JobLogger;
-import com.sos.jitl.jobs.common.JobResourceValue;
 import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data.job.JobResourcePath;
@@ -53,6 +53,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("                e.g.: \"%s\"= 'myvar1_xyz__myvar2_123'", args.getReturnVariables().getName());
         step.getLogger().info("                  means set 2 return variables: 1) myvar1=xyz 2)myvar2=123");
         step.getLogger().info("     \"%s\"='some value'", args.getStringArgument().getName());
+        step.getLogger().info("     \"%s\"='some password'", args.getPassword().getName());
 
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
@@ -89,10 +90,10 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         });
         // Either<Problem,Value> checkedValue = step.byJobResourceAndName(JobResourcePath.of("MY-JOB-RESOURCE"), "stringSetting");
         step.getLogger().info("-CONVERTED JOB RESOURCES------------------");
-        Map<String, JobResourceValue> resources = step.getJobResourcesValues();
+        Map<String, JobDetailValue> resources = step.getJobResourcesValues();
         resources.entrySet().stream().forEach(e -> {
-            JobResourceValue v = e.getValue();
-            step.getLogger().info(" %s=%s (job resource=%s)", e.getKey(), v.getValue(), v.getResourceName());
+            JobDetailValue v = e.getValue();
+            step.getLogger().info(" %s=%s (job resource=%s)", e.getKey(), v.getValue(), v.getSource());
         });
 
         step.getLogger().info("----------ORDER HISTORIC OUTCOME-----------------");

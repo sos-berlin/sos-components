@@ -21,7 +21,6 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -64,14 +63,12 @@ import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
 public class DBLayerDeploy {
 
     private final SOSHibernateSession session;
-    private ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
     private static final String FROM_DEP_DATE = "deploymentDate >= :fromDate"; 
     private static final String TO_DEP_DATE = "deploymentDate < :toDate"; 
 
@@ -1032,7 +1029,7 @@ public class DBLayerDeploy {
             if (overwrite) {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
-                    existingConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    existingConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
                     existingConfiguration.setAuditLogId(auditLogId);
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
@@ -1042,7 +1039,7 @@ public class DBLayerDeploy {
                     Date now = Date.from(Instant.now());
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
-                    newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                    newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
                     newConfiguration.setPath(configuration.getPath());
                     newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1059,7 +1056,7 @@ public class DBLayerDeploy {
                 Date now = Date.from(Instant.now());
                 newConfiguration.setModified(now);
                 newConfiguration.setCreated(now);
-                newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+                newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
                 newConfiguration.setPath(configuration.getPath());
                 newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                 newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1108,7 +1105,7 @@ public class DBLayerDeploy {
 			Date now = Date.from(Instant.now());
 			newConfiguration.setModified(now);
 			newConfiguration.setCreated(now);
-			newConfiguration.setContent(om.writeValueAsString(configuration.getConfiguration()));
+			newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
 			newConfiguration.setPath(configuration.getPath());
 			newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
 			newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1200,7 +1197,7 @@ public class DBLayerDeploy {
         String name = null;
         if (existingJsObject != null) {
             existingJsObject.setModified(Date.from(Instant.now()));
-            existingJsObject.setContent(om.writeValueAsString(jsObject.getContent()));
+            existingJsObject.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jsObject.getContent()));
             existingJsObject.setAuditLogId(auditLogId);
             existingJsObject.setDocumentationId(0L);
             existingJsObject.setDeployed(false);
@@ -1215,7 +1212,7 @@ public class DBLayerDeploy {
             Date now = Date.from(Instant.now());
             newJsObject.setModified(now);
             newJsObject.setCreated(now);
-            newJsObject.setContent(om.writeValueAsString(jsObject.getContent()));
+            newJsObject.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jsObject.getContent()));
             folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
             newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
             newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());

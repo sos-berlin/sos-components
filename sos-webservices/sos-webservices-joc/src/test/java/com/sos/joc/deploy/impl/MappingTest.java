@@ -4,8 +4,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,17 +21,15 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
-import com.sos.joc.publish.mapper.UpDownloadMapper;
 import com.sos.sign.model.instruction.IfElse;
 import com.sos.sign.model.instruction.NamedJob;
 import com.sos.sign.model.workflow.Workflow;
@@ -61,16 +57,14 @@ public class MappingTest {
     public void test01WorkflowToJsonString() {
         Workflow ifElseWorkflow = DeploymentTestUtils.createIfElseWorkflow();
         Workflow forkJoinWorkflow = DeploymentTestUtils.createForkJoinWorkflow();
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         String workflowJson = null;
         try {
-            om.enable(SerializationFeature.INDENT_OUTPUT);
-            workflowJson = om.writeValueAsString(ifElseWorkflow);
+            workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(ifElseWorkflow);
             assertNotNull(workflowJson);
             LOGGER.trace("IfElse Workflow JSON created successfully!");
             LOGGER.trace(workflowJson);
             workflowJson = null;
-            workflowJson = om.writeValueAsString(forkJoinWorkflow);
+            workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(forkJoinWorkflow);
             LOGGER.trace("ForkJoin Workflow JSON created successfully!");
             LOGGER.trace(workflowJson);
         } catch (JsonProcessingException e) {
@@ -97,10 +91,9 @@ public class MappingTest {
 
     @Test
     public void test04JsonStringToWorkflow() {
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
         try {
-            Workflow ifElseWorkflow = om.readValue(IF_ELSE_JSON, Workflow.class);
-            Workflow forkJoinWorkflow = om.readValue(FORK_JOIN_JSON, Workflow.class);
+            Workflow ifElseWorkflow = Globals.prettyPrintObjectMapper.readValue(IF_ELSE_JSON, Workflow.class);
+            Workflow forkJoinWorkflow = Globals.prettyPrintObjectMapper.readValue(FORK_JOIN_JSON, Workflow.class);
 
             IfElse ifElse = ifElseWorkflow.getInstructions().get(0).cast();
             NamedJob mj = ifElse.getThen().getInstructions().get(0).cast();
@@ -131,36 +124,29 @@ public class MappingTest {
     @Test
     public void test05MapDepHistoryCompactFilter () throws JsonProcessingException {
         ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryCompactFilter();
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
-        om.setDateFormat(df);
-        LOGGER.trace("ALL properties:\n" + om.writeValueAsString(filter));
+        LOGGER.trace("ALL properties:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
 
   @Test
   public void test06MapDepHistoryDetailFilter () throws JsonProcessingException {
       ShowDepHistoryFilter filter = DeploymentTestUtils.createDefaultShowDepHistoryDetailFilter();
-      ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-      DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
-      om.setDateFormat(df);
-      LOGGER.trace("ALL properties:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("ALL properties:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByFromToAndPath();
-      LOGGER.trace("EXAMPLE 1:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 1:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeploymentDateAndPath();
-      LOGGER.trace("EXAMPLE 2:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 2:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteDateAndPath();
-      LOGGER.trace("EXAMPLE 3:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 3:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByDeleteOperationAndPath();
-      LOGGER.trace("EXAMPLE 4:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 4:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
       filter = DeploymentTestUtils.createShowDepHistoryFilterByCommitIdAndFolder();
-      LOGGER.trace("EXAMPLE 5:\n" + om.writeValueAsString(filter));
+      LOGGER.trace("EXAMPLE 5:\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
   }
 
 //  @Test
     public void test07MapRedeployFilter () throws JsonProcessingException {
         RedeployFilter filter = DeploymentTestUtils.createDefaultRedeployFilter();
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(filter));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
     }
   
     /*
@@ -278,8 +264,7 @@ public class MappingTest {
 //        exclude.setDeployType(DeployType.WORKFLOW);
 //        filter.getExcludes().add(exclude);
         LOGGER.trace("RedeployFilter Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(filter));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(filter));
         
         Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter);
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -301,52 +286,43 @@ public class MappingTest {
     @Test
     public void test11MapDeployFilter () throws JsonProcessingException {
         LOGGER.trace("DeployFilter Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleDeployFilter()));
     }
 
     @Test
     public void test12MapExportFilterForSigning () throws JsonProcessingException {
         LOGGER.trace("ExportFilter forSigning=true Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(true)));
     }
 
     @Test
     public void test13MapExportForBackupFilter () throws JsonProcessingException {
         LOGGER.trace("ExportFilter forSigning=false Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleExportFilter(false)));
     }
 
     @Test
     public void test14MapSetVersionFilter () throws JsonProcessingException {
         LOGGER.trace("SetVersionFilter Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleSetVersionFilter()));
     }
 
     @Test
     public void test15MapSetVersionsFilter () throws JsonProcessingException {
         LOGGER.trace("SetVersionsFilter Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExampleSetVersionsFilter()));
     }
 
     @Test
     public void test16MapPathFilter () throws JsonProcessingException {
         LOGGER.trace("PathFilter Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePathFilter()));
     }
 
     @Test
     public void test17MapPathResponse () throws JsonProcessingException {
         LOGGER.trace("PathResponse Example");
-        ObjectMapper om = UpDownloadMapper.initiateObjectMapper();
-        DateFormat df = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSS'Z'");
-        om.setDateFormat(df);
-        LOGGER.trace("\n" + om.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
+        LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
     }
 
 }

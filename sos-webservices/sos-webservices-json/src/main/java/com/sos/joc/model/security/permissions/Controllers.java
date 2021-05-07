@@ -1,7 +1,7 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Controllers {
 
     @JsonIgnore
-    private Map<String, ControllerPermissions> additionalProperties = new HashMap<String, ControllerPermissions>();
+    private Map<String, ControllerPermissions> additionalProperties = new LinkedHashMap<String, ControllerPermissions>();
 
     @JsonAnyGetter
     public Map<String, ControllerPermissions> getAdditionalProperties() {

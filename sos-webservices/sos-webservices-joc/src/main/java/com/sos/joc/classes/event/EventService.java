@@ -187,9 +187,8 @@ public class EventService {
                 // HistoryOrderStarted, HistoryOrderTerminated, HistoryOrderUpdated
                 eventSnapshot.setEventType(evt.getKey());
             }
-            eventSnapshot.setWorkflow(orders.get(orderId.substring(0, 24)));
+            eventSnapshot.setWorkflow(new WorkflowId(evt.getWorkflowName(), evt.getWorkflowVersionId()));
             eventSnapshot.setObjectType(EventType.ORDERHISTORY);
-            //eventSnapshot.setPath(orderId);
             addEvent(eventSnapshot);
         }
     }
@@ -202,8 +201,7 @@ public class EventService {
             // HistoryTaskStarted, HistoryTaskTerminated
             eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", ""));
             eventSnapshot.setObjectType(EventType.TASKHISTORY);
-            eventSnapshot.setWorkflow(orders.get(evt.getOrderId().substring(0, 24)));
-            //eventSnapshot.setPath(evt.getJobName());
+            eventSnapshot.setWorkflow(new WorkflowId(evt.getWorkflowName(), evt.getWorkflowVersionId()));
             addEvent(eventSnapshot);
         }
     }
