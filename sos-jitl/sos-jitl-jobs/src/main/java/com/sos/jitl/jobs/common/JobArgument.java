@@ -61,6 +61,10 @@ public class JobArgument<T> {
         KNOWN, UNKNOWN;
     }
 
+    private final String DISPLAY_VALUE_TRUNCATING_SUFFIX = "<truncated>";
+    private final int DISPLAY_VALUE_MAX_LENGTH = 255;
+    private final int DISPLAY_VALUE_USED_LENGTH = DISPLAY_VALUE_MAX_LENGTH - DISPLAY_VALUE_TRUNCATING_SUFFIX.length();
+
     private final String name;
     private final boolean required;
     private final T defaultValue;
@@ -135,7 +139,18 @@ public class JobArgument<T> {
     }
 
     public String getDisplayValue() {
-        return Job.getDisplayValue(getValue(), displayMode);
+        return truncatingIfNeeded(Job.getDisplayValue(getValue(), displayMode));
+    }
+
+    private String truncatingIfNeeded(final String val) {
+        if (val == null) {
+            return val;
+        }
+        String v = val;
+        if (v.length() > DISPLAY_VALUE_MAX_LENGTH) {
+            v = v.substring(0, DISPLAY_VALUE_USED_LENGTH) + DISPLAY_VALUE_TRUNCATING_SUFFIX;
+        }
+        return v;
     }
 
     protected void setValueSource(ValueSource val) {

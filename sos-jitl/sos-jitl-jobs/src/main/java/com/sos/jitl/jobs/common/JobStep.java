@@ -492,14 +492,10 @@ public class JobStep<A> {
         }
         // ORDER or Node arguments
         setKnownArguments();
-        if (knownArguments != null && knownArguments.size() > 0) {
+        List<JobArgument<A>> orderOrNode = getOrderOrNodeArguments();
+        if (orderOrNode != null && orderOrNode.size() > 0) {
             logger.log(logLevel, String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
-            knownArguments.stream().filter(a -> {
-                if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
-                    return true;
-                }
-                return false;
-            }).forEach(a -> {
+            orderOrNode.stream().forEach(a -> {
                 logger.log(logLevel, "    " + a.toString());
             });
         }
@@ -522,6 +518,18 @@ public class JobStep<A> {
         }
         logJobContextArguments(logLevel);
         logOutcomes(logLevel);
+    }
+
+    private List<JobArgument<A>> getOrderOrNodeArguments() {
+        if (knownArguments == null) {
+            return null;
+        }
+        return knownArguments.stream().filter(a -> {
+            if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
     }
 
     private void logJobContextArguments(LogLevel logLevel) {
