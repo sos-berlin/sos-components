@@ -37,9 +37,9 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -79,13 +79,12 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         return postImportDocumentations(getAccessToken(xAccessToken, accessToken), controllerId, directory, body, auditLog);
     }
 
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String controllerId, String directory, FormDataBodyPart body,
+    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String controllerId, String directory, FormDataBodyPart body,
             AuditParams auditLog) throws Exception {
 
         InputStream stream = null;
         try {
             DocumentationImport filter = new DocumentationImport();
-            filter.setControllerId(controllerId);
             if (directory == null || directory.isEmpty()) {
                 directory = "/";
             }
@@ -101,7 +100,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", filter.getControllerId());
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
             }
@@ -149,7 +147,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         .toString());
             }
             
-            deployDocumentations(controllerId);
+            deployDocumentations();
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -168,7 +166,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private void deployDocumentations(String controllerId) throws JocException {
+    private void deployDocumentations() throws JocException {
         if (deployDocumentations != null && deployDocumentations.getDocumentations() != null && !deployDocumentations.getDocumentations().isEmpty()) {
             try {
                 if (connection == null) {
@@ -179,15 +177,14 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     if (deployDocumentation.getObjects() == null || deployDocumentation.getObjects().isEmpty()) {
                        continue; 
                     }
-                    Long documentationId = dbLayer.getDocumentationId(controllerId, deployDocumentation.getDocumentation());
+                    Long documentationId = dbLayer.getDocumentationId(deployDocumentation.getDocumentation());
                     if (documentationId != null) {
-                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(controllerId, documentationId);
+                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(documentationId);
                         for (JobSchedulerObject jsObj : deployDocumentation.getObjects()) {
                             DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
                             newUsage.setDocumentationId(documentationId);
                             newUsage.setObjectType(jsObj.getType().name());
                             newUsage.setPath(jsObj.getPath());
-                            newUsage.setSchedulerId(controllerId);
                             if (oldUsages.contains(newUsage)) {
                                continue; 
                             }
@@ -215,7 +212,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     private void saveOrUpdate(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws DBConnectionRefusedException, DBInvalidDataException,
             SOSHibernateException {
-        DBItemDocumentation docFromDB = dbLayer.getDocumentation(doc.getSchedulerId(), doc.getPath());
+        DBItemDocumentation docFromDB = dbLayer.getDocumentation(doc.getName());
         if (docFromDB != null) {
             if (doc.hasImage()) {
                 DBItemDocumentationImage imageFromDB = dbLayer.getDocumentationImage(docFromDB.getImageId());
@@ -256,7 +253,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     private Long saveImage(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws SOSHibernateException {
         DBItemDocumentationImage image = new DBItemDocumentationImage();
-        image.setSchedulerId(doc.getSchedulerId());
         image.setImage(doc.getImage());
         image.setMd5Hash(DigestUtils.md5Hex(doc.getImage()));
         dbLayer.getSession().save(image);
@@ -305,7 +301,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                     continue;
                 }
                 DBItemDocumentation documentation = new DBItemDocumentation();
-                documentation.setSchedulerId(filter.getControllerId());
                 java.nio.file.Path targetFolder = Paths.get(filter.getFolder());
                 java.nio.file.Path complete = targetFolder.resolve(entryName.replaceFirst("^/", ""));
                 documentation.setPath(complete.toString().replace('\\', '/'));
@@ -362,7 +357,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private DBItemDocumentation setDBItemDocumentation(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
-        documentation.setSchedulerId(filter.getControllerId());
         documentation.setDirectory(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));
@@ -377,7 +371,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private DBItemDocumentation setDBItemDocumentationImage(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
-        documentation.setSchedulerId(filter.getControllerId());
         documentation.setDirectory(filter.getFolder());
         documentation.setName(filter.getFile());
         documentation.setPath((filter.getFolder() + "/" + filter.getFile()).replaceAll("//+", "/"));

@@ -151,17 +151,15 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_CERTS = "INV_CERTS";
     public static final String TABLE_INV_CERTS_SEQUENCE = "SEQ_INV_CRTS";
 
-    public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class.getSimpleName();
+    public static final String DBITEM_DOCUMENTATION = com.sos.joc.db.documentation.DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION = "INV_DOCUMENTATIONS";
     public static final String TABLE_DOCUMENTATION_SEQUENCE = "SEQ_INV_D";
 
-    public static final String DBITEM_DOCUMENTATION_IMAGES = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage.class
-            .getSimpleName();
+    public static final String DBITEM_DOCUMENTATION_IMAGES = com.sos.joc.db.documentation.DBItemDocumentationImage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
 
-    public static final String DBITEM_DOCUMENTATION_USAGE = com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage.class
-            .getSimpleName();
+    public static final String DBITEM_DOCUMENTATION_USAGE = com.sos.joc.db.documentation.DBItemDocumentationUsage.class.getSimpleName();
     public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
     public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_INV_DU";
 
@@ -294,9 +292,9 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage.class);
-        cl.add(com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage.class);
+        cl.add(com.sos.joc.db.documentation.DBItemDocumentation.class);
+        cl.add(com.sos.joc.db.documentation.DBItemDocumentationImage.class);
+        cl.add(com.sos.joc.db.documentation.DBItemDocumentationUsage.class);
 
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);

@@ -10,14 +10,15 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
 import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.docu.DocumentationsFilter;
+import com.sos.schema.JsonValidator;
 
 @Path("documentations")
 public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements IDocumentationsDeleteResource {
@@ -25,38 +26,42 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
     private static final String API_CALL = "./documentations/delete";
 
     @Override
-    public JOCDefaultResponse deleteDocumentations(String xAccessToken, DocumentationsFilter filter) throws Exception {
-        
-        SOSHibernateSession connection = null;
+    public JOCDefaultResponse deleteDocumentations(String accessToken, byte[] filterBytes) throws Exception {
+
+        SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
+            DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
                     .getDocumentations().getManage());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", filter.getControllerId());
-            checkRequiredParameter("documentations", filter.getDocumentations());
-            
-            storeAuditLog(filter.getAuditLog(), filter.getControllerId(), CategoryType.DOCUMENTATIONS);
-            
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            List<DBItemDocumentation> docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
+
+            checkRequiredParameter("documentations", documentationsFilter.getDocumentations());
+
+            storeAuditLog(documentationsFilter.getAuditLog(), documentationsFilter.getControllerId(), CategoryType.DOCUMENTATIONS);
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+            List<DBItemDocumentation> docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             for (DBItemDocumentation dbDoc : docs) {
-                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(filter.getControllerId(), dbDoc.getId());
+                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(dbDoc.getId());
                 if (dbUsages != null && !dbUsages.isEmpty()) {
                     for (DBItemDocumentationUsage dbUsage : dbUsages) {
-                        connection.delete(dbUsage);
+                        sosHibernateSession.delete(dbUsage);
                     }
                 }
                 if (dbDoc.getImageId() != null) {
-                    DBItemDocumentationImage dbImage = connection.get(DBItemDocumentationImage.class, dbDoc.getImageId());
+                    DBItemDocumentationImage dbImage = sosHibernateSession.get(DBItemDocumentationImage.class, dbDoc.getImageId());
                     if (dbImage != null) {
-                        connection.delete(dbImage);
+                        sosHibernateSession.delete(dbImage);
                     }
                 }
-                connection.delete(dbDoc);
-                //storeAuditLogEntry(deleteAudit);
+                sosHibernateSession.delete(dbDoc);
+                // storeAuditLogEntry(deleteAudit);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -65,7 +70,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(sosHibernateSession);
         }
     }
 

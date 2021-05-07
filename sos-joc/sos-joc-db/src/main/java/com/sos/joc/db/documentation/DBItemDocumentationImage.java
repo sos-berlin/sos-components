@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.deprecated.documentation;
+package com.sos.joc.db.documentation;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,9 +25,6 @@ public class DBItemDocumentationImage extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String schedulerId;
-
     @Column(name = "[IMAGE]", nullable = false)
     @Type(type = "org.hibernate.type.BinaryType")
     private byte[] image;
@@ -41,14 +38,6 @@ public class DBItemDocumentationImage extends DBItem {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getSchedulerId() {
-        return schedulerId;
-    }
-
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
     }
 
     public byte[] getImage() {

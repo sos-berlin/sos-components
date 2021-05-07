@@ -19,8 +19,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.documentation.resource.IDocumentationResource;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
@@ -32,25 +32,23 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
     private static final java.nio.file.Path CSS = Paths.get("/sos/css/default-markdown.css");
 
     @Override
-    public JOCDefaultResponse postDocumentation(String accessToken, String jobschedulerId, String path) {
+    public JOCDefaultResponse postDocumentation(String accessToken, String controllerId, String name) {
         SOSHibernateSession connection = null;
         try {
-            String request = String.format("%s/%s/%s/%s", API_CALL, jobschedulerId, accessToken, path);
+            String request = String.format("%s/%s/%s/%s", API_CALL, controllerId, accessToken, name);
             initLogging(request, null, accessToken);
             boolean perm = getJocPermissions(accessToken).getDocumentations().getView();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(jobschedulerId, perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, perm);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", jobschedulerId);
-            checkRequiredParameter("path", path);
+            checkRequiredParameter("name", name);
 
-            path = normalizePath(path);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            DBItemDocumentation dbItem = dbLayer.getDocumentation(jobschedulerId, path);
-            String errMessage = "No database entry (" + path + ") as documentation resource found";
+            DBItemDocumentation dbItem = dbLayer.getDocumentation(name);
+            String errMessage = "No database entry (" + name + ") as documentation resource found";
 
             if (dbItem == null) {
                 throw new DBMissingDataException(errMessage);

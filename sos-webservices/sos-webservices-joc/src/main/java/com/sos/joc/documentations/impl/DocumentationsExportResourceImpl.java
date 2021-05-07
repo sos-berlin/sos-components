@@ -26,30 +26,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.common.DeleteTempFile;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationContent;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationImage;
 import com.sos.joc.documentations.resource.IDocumentationsExportResource;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.JobSchedulerObject;
 import com.sos.joc.model.docu.DeployDocumentation;
 import com.sos.joc.model.docu.DeployDocumentations;
+import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.DocumentationsFilter;
 import com.sos.joc.model.docu.ExportInfo;
+import com.sos.schema.JsonValidator;
 
 @Path("documentations")
 public class DocumentationsExportResourceImpl extends JOCResourceImpl implements IDocumentationsExportResource {
@@ -59,20 +59,24 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     public static final String DEPLOY_USAGE_JSON = "/sos-documentation-usages.json";
 
     @Override
-    public JOCDefaultResponse postExportDocumentations(String xAccessToken, DocumentationsFilter filter) throws Exception {
+    public JOCDefaultResponse postExportDocumentations(String accessToken, byte[] filterBytes) throws Exception {
 
-        SOSHibernateSession connection = null;
+        SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
+            DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
                     .getDocumentations().getManage());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", filter.getControllerId());
-            String targetFilename = "documentation_" + filter.getControllerId() + ".zip";
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            final List<DocumentationContent> contents = mapToDocumentationContents(filter, connection);
+            String targetFilename = "documentation_" + documentationsFilter.getControllerId() + ".zip";
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            final List<DocumentationContent> contents = mapToDocumentationContents(documentationsFilter, sosHibernateSession);
             StreamingOutput streamingOutput = new StreamingOutput() {
 
                 @Override
@@ -104,19 +108,18 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(sosHibernateSession);
         }
     }
 
     @Override
-    public JOCDefaultResponse getExportDocumentations(String xAccessToken, String accessToken, String controllerId, String filename)
-            throws Exception {
+    public JOCDefaultResponse getExportDocumentations(String accessToken, String controllerId, String filename) throws Exception {
         try {
-            xAccessToken = getAccessToken(xAccessToken, accessToken);
+
             ExportInfo file = new ExportInfo();
             file.setFilename(filename);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, xAccessToken, controllerId, getJocPermissions(xAccessToken)
-                    .getDocumentations().getManage());
+            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, accessToken, controllerId, getJocPermissions(accessToken).getDocumentations()
+                    .getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -163,7 +166,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
                 }
             };
 
-            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, "sos-documentation-" + controllerId + ".zip");
+            return JOCDefaultResponse.responseOctetStreamDownloadStatus200(fileStream, "sos-documentations" + ".zip");
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -173,19 +176,23 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse postExportInfo(String xAccessToken, DocumentationsFilter filter) throws Exception {
-        SOSHibernateSession connection = null;
+    public JOCDefaultResponse postExportInfo(String accessToken, byte[] filterBytes) throws Exception {
+
+        SOSHibernateSession sosHibernateSession = null;
         ZipOutputStream zipOut = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL + "/info", filter, xAccessToken, filter.getControllerId(),
-                    getJocPermissions(xAccessToken).getDocumentations().getManage());
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
+            DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
+                    .getDocumentations().getManage());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", filter.getControllerId());
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL + "/info");
-            List<DocumentationContent> contents = mapToDocumentationContents(filter, connection);
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/info");
+            List<DocumentationContent> contents = mapToDocumentationContents(documentationsFilter, sosHibernateSession);
 
             java.nio.file.Path path = Files.createTempFile("sos-download-", ".zip.tmp");
             zipOut = new ZipOutputStream(Files.newOutputStream(path));
@@ -211,7 +218,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(sosHibernateSession);
             if (zipOut != null) {
                 try {
                     zipOut.close();
@@ -221,14 +228,14 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private List<DocumentationContent> mapToDocumentationContents(DocumentationsFilter filter, SOSHibernateSession connection)
+    private List<DocumentationContent> mapToDocumentationContents(DocumentationsFilter filter, SOSHibernateSession sosHibernateSession)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, JsonProcessingException,
             DBMissingDataException {
-        DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
+        DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
         List<DBItemDocumentation> docs = getDocsFromDb(dbLayer, filter);
         List<DocumentationContent> contents = new ArrayList<DocumentationContent>();
-        DocumentationContent usagesJson = getDeployUsageData(filter.getControllerId(), dbLayer, docs.stream().collect(Collectors.mapping(
-                DBItemDocumentation::getPath, Collectors.toSet())));
+        DocumentationContent usagesJson = getDeployUsageData(dbLayer, docs.stream().collect(Collectors.mapping(DBItemDocumentation::getPath,
+                Collectors.toSet())));
         if (usagesJson != null) {
             contents.add(usagesJson);
         }
@@ -249,14 +256,13 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         }
         return contents;
     }
-    
-    private DocumentationContent getDeployUsageData(String jobschedulerId, DocumentationDBLayer dbLayer, Collection<String> docPaths)
-            throws DBConnectionRefusedException, DBInvalidDataException, JsonProcessingException {
+
+    private DocumentationContent getDeployUsageData(DocumentationDBLayer dbLayer, Collection<String> docPaths) throws DBConnectionRefusedException,
+            DBInvalidDataException, JsonProcessingException {
         try {
             DeployDocumentations docUsages = new DeployDocumentations();
-            docUsages.setControllerId(jobschedulerId);
             List<DeployDocumentation> docUsageList = new ArrayList<DeployDocumentation>();
-            Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(jobschedulerId, docPaths);
+            Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(docPaths);
             for (Entry<String, List<JobSchedulerObject>> entry : docUsageMap.entrySet()) {
                 DeployDocumentation docUsage = new DeployDocumentation();
                 docUsage.setDocumentation(entry.getKey());
@@ -275,10 +281,10 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             throws JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException {
         List<DBItemDocumentation> docs = new ArrayList<DBItemDocumentation>();
         if (filter.getDocumentations() != null && !filter.getDocumentations().isEmpty()) {
-            docs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
+            docs = dbLayer.getDocumentations(filter.getDocumentations());
         } else if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
             for (Folder folder : filter.getFolders()) {
-                docs.addAll(dbLayer.getDocumentations(filter.getControllerId(), null, folder.getFolder(), folder.getRecursive()));
+                docs.addAll(dbLayer.getDocumentations(null, folder.getFolder(), folder.getRecursive()));
             }
         } else {
             throw new JocMissingRequiredParameterException("Neither 'documentations' nor 'folders' are specified!");

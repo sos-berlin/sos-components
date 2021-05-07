@@ -141,8 +141,8 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             documentationFilter.setPath(normalizePath(documentationFilter.getPath()));
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            String path = dbLayer.getDocumentationPath(documentationFilter);
-            if (path == null) {
+            String name = dbLayer.getDocumentationName(documentationFilter);
+            if (name == null) {
                 throw new DBMissingDataException("The documentation couldn't determine");
             }
 

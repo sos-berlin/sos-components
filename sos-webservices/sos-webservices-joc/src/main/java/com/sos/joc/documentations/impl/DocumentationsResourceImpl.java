@@ -17,14 +17,15 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
 import com.sos.joc.documentations.resource.IDocumentationsResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.docu.Documentation;
 import com.sos.joc.model.docu.Documentations;
 import com.sos.joc.model.docu.DocumentationsFilter;
+import com.sos.schema.JsonValidator;
 
 @Path("documentations")
 public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocumentationsResource {
@@ -33,42 +34,46 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
     private static final Set<String> ASSIGN_TYPES = new HashSet<String>(Arrays.asList("html", "xml", "pdf", "markdown"));
 
     @Override
-    public JOCDefaultResponse postDocumentations(String xAccessToken, DocumentationsFilter filter) throws Exception {
-        
-        SOSHibernateSession connection = null;
+    public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) throws Exception {
+
+        SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
+            DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
                     .getDocumentations().getView());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", filter.getControllerId());
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
+
+            checkRequiredParameter("controllerId", documentationsFilter.getControllerId());
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();
             Set<String> types = null;
-            if (filter.getTypes() != null && !filter.getTypes().isEmpty()) {
-                types = filter.getTypes().stream().map(String::toLowerCase).collect(Collectors.toSet());
+            if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
+                types = documentationsFilter.getTypes().stream().map(String::toLowerCase).collect(Collectors.toSet());
                 if (types.contains("assigntypes")) {
                     types.remove("assigntypes");
                     types.addAll(ASSIGN_TYPES);
                 }
             }
-            if (filter.getDocumentations() != null && !filter.getDocumentations().isEmpty()) {
-                dbDocs = dbLayer.getDocumentations(filter.getControllerId(), filter.getDocumentations());
+            if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
+                dbDocs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             } else {
-                if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
-                    for (Folder folder : filter.getFolders()) {
-                        dbDocs.addAll(dbLayer.getDocumentations(filter.getControllerId(), types, folder.getFolder(), folder
-                                .getRecursive()));
+                if (documentationsFilter.getFolders() != null && !documentationsFilter.getFolders().isEmpty()) {
+                    for (Folder folder : documentationsFilter.getFolders()) {
+                        dbDocs.addAll(dbLayer.getDocumentations(types, folder.getFolder(), folder.getRecursive()));
                     }
-                } else if (filter.getTypes() != null && !filter.getTypes().isEmpty()) {
-                    dbDocs = dbLayer.getDocumentations(filter.getControllerId(), types, null, false);
+                } else if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
+                    dbDocs = dbLayer.getDocumentations(types, null, false);
                 } else {
-                    dbDocs = dbLayer.getDocumentations(filter.getControllerId(), (List<String>) null);
+                    dbDocs = dbLayer.getDocumentations((List<String>) null);
                 }
-                if (filter.getRegex() != null && !filter.getRegex().isEmpty()) {
-                    dbDocs = filterByRegex(dbDocs, filter.getRegex());
+                if (documentationsFilter.getRegex() != null && !documentationsFilter.getRegex().isEmpty()) {
+                    dbDocs = filterByRegex(dbDocs, documentationsFilter.getRegex());
                 }
             }
             Documentations documentations = new Documentations();
@@ -81,10 +86,10 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(sosHibernateSession);
         }
     }
-    
+
     private List<DBItemDocumentation> filterByRegex(List<DBItemDocumentation> unfilteredDocs, String regex) throws Exception {
         List<DBItemDocumentation> filteredDocs = new ArrayList<DBItemDocumentation>();
         Pattern p = Pattern.compile(regex);
@@ -99,10 +104,9 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
 
     private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs) {
         List<Documentation> docs = new ArrayList<Documentation>();
-        for(DBItemDocumentation dbDoc : dbDocs) {
+        for (DBItemDocumentation dbDoc : dbDocs) {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
-            doc.setControllerId(dbDoc.getSchedulerId());
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
             doc.setType(dbDoc.getType());

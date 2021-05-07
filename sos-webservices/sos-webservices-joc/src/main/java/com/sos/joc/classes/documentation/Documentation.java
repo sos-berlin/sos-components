@@ -7,8 +7,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentation;
-import com.sos.joc.db.inventory.deprecated.documentation.DBItemDocumentationUsage;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -18,7 +18,7 @@ import com.sos.joc.model.common.JobSchedulerObjectType;
 
 public class Documentation {
 
-	public static void assignDocu(String jobschedulerId, String jsObjectPath, String docPath,
+	public static void assignDocu(String jsObjectPath, String docPath,
 			JobSchedulerObjectType objType, String apiCall)
 			throws JocMissingRequiredParameterException, JocConfigurationException, DBConnectionRefusedException,
 			DBInvalidDataException, SOSHibernateException, DBOpenSessionException {
@@ -37,16 +37,14 @@ public class Documentation {
 //					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
 //				}
 //			}
-			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jobschedulerId,
-					jsObjectPath, type);
-			DBItemDocumentation dbDoc = dbLayer.getDocumentation(jobschedulerId, docPath);
+			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
+			DBItemDocumentation dbDoc = dbLayer.getDocumentation(docPath);
 			if (dbDocUsage != null) {
 				dbDocUsage.setDocumentationId(dbDoc.getId());
 				dbDocUsage.setModified(Date.from(Instant.now()));
 				connection.update(dbDocUsage);
 			} else {
 				DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
-				newUsage.setSchedulerId(jobschedulerId);
 				newUsage.setPath(jsObjectPath);
 				newUsage.setObjectType(type);
 				newUsage.setDocumentationId(dbDoc.getId());
@@ -59,7 +57,7 @@ public class Documentation {
 		}
 	}
 
-	public static void unassignDocu(String jobschedulerId, String jsObjectPath, JobSchedulerObjectType objType,
+	public static void unassignDocu(String jsObjectPath, JobSchedulerObjectType objType,
 			String apiCall) throws JocConfigurationException, DBConnectionRefusedException, DBInvalidDataException,
 			SOSHibernateException, DBOpenSessionException {
 		SOSHibernateSession connection = null;
@@ -74,8 +72,7 @@ public class Documentation {
 //					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
 //				}
 //			}
-			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jobschedulerId,
-					jsObjectPath, type);
+			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
 			if (dbDocUsage != null) {
 				connection.delete(dbDocUsage);
 			}

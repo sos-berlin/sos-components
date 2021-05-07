@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.deprecated.documentation;
+package com.sos.joc.db.documentation;
 
 import java.util.Date;
 
@@ -18,7 +18,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[PATH]" }) })
+@Table(name = DBLayer.TABLE_DOCUMENTATION, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentation extends DBItem {
 
@@ -28,9 +28,6 @@ public class DBItemDocumentation extends DBItem {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
-
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String schedulerId;
 
     @Column(name = "[NAME]", nullable = false)
     private String name;
@@ -70,14 +67,6 @@ public class DBItemDocumentation extends DBItem {
 
     public void setId(Long val) {
         this.id = val;
-    }
-
-    public String getSchedulerId() {
-        return schedulerId;
-    }
-
-    public void setSchedulerId(String val) {
-        this.schedulerId = val;
     }
 
     public String getName() {

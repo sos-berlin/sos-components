@@ -1,4 +1,4 @@
-package com.sos.joc.db.inventory.deprecated.documentation;
+package com.sos.joc.db.documentation;
 
 import java.util.Date;
 
@@ -17,8 +17,8 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION_USAGE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[JOBSCHEDULER_ID]", "[DOCUMENTATION_ID]",
-        "[OBJECT_TYPE]", "[PATH]" }) })
+@Table(name = DBLayer.TABLE_DOCUMENTATION_USAGE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[DOCUMENTATION_ID]", "[OBJECT_TYPE]",
+        "[NAME]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentationUsage extends DBItem {
 
@@ -29,9 +29,6 @@ public class DBItemDocumentationUsage extends DBItem {
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
-    @Column(name = "[JOBSCHEDULER_ID]", nullable = false)
-    private String schedulerId;
-
     @Column(name = "[DOCUMENTATION_ID]", nullable = false)
     private Long documentationId;
 
@@ -40,6 +37,10 @@ public class DBItemDocumentationUsage extends DBItem {
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
+    
+
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -55,14 +56,6 @@ public class DBItemDocumentationUsage extends DBItem {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getSchedulerId() {
-        return schedulerId;
-    }
-
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
     }
 
     public Long getDocumentationId() {
@@ -87,6 +80,14 @@ public class DBItemDocumentationUsage extends DBItem {
 
     public void setPath(String path) {
         this.path = path;
+    }
+    
+    public String getName() {
+        return name;
+    }
+
+    public void setNameh(String name) {
+        this.name = name;
     }
 
     public Date getCreated() {

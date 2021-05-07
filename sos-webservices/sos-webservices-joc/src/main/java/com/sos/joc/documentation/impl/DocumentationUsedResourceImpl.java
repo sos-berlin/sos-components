@@ -12,8 +12,11 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationUsedResource;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.UsedBy;
+import com.sos.schema.JsonValidator;
 
 @Path("documentation")
 public class DocumentationUsedResourceImpl extends JOCResourceImpl implements IDocumentationUsedResource {
@@ -21,20 +24,24 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
     private static final String API_CALL = "./documentation/used";
 
     @Override
-    public JOCDefaultResponse postDocumentationsUsed(String xAccessToken, DocumentationFilter filter) throws Exception {
-        SOSHibernateSession connection = null;
+    public JOCDefaultResponse postDocumentationsUsed(String accessToken, byte[] filterBytes) throws Exception {
+        SOSHibernateSession sosHibernateSession = null;
         try {
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, filter.getControllerId(), getJocPermissions(xAccessToken)
+            initLogging(API_CALL, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
+            DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationFilter.getControllerId(), getJocPermissions(accessToken)
                     .getDocumentations().getView());
+
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", filter.getControllerId());
-            checkRequiredParameter("path", filter.getDocumentation());
+
+            checkRequiredParameter("documentation", documentationFilter.getDocumentation());
             UsedBy usedBy = new UsedBy();
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            usedBy.setObjects(dbLayer.getDocumentationUsages(filter.getControllerId(), normalizePath(filter.getDocumentation())));
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
+            usedBy.setObjects(dbLayer.getDocumentationUsages(normalizePath(documentationFilter.getDocumentation())));
             usedBy.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(usedBy);
         } catch (JocException e) {
@@ -43,7 +50,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(sosHibernateSession);
         }
     }
 
