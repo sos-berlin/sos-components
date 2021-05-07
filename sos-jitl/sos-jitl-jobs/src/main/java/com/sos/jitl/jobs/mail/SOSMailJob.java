@@ -1,5 +1,6 @@
 package com.sos.jitl.jobs.mail;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,7 +59,15 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
             debug(logger, "smtpUser: " + args.getMailSmtpUser());
             debug(logger, "smtPasswort: " + args.getMailSmtpPassword().getDisplayValue());
 
-            Map<String, Object> variables = Job.asNameValueMap(step.getAllCurrentArguments());
+            Map<String, Object> variables=null;
+            if (step != null) {
+                variables = Job.asNameValueMap(step.getAllCurrentArguments());
+            }else {
+                variables = new HashMap<String, Object>();
+                variables.put("mail_smtp_user", args.getMailSmtpUser());
+                variables.put("mail_smtp_password", args.getMailSmtpPassword());
+                variables.put("mail_smtp_port", args.getMailSmtpPort());
+            }
             SOSMailHandler sosMailHandler = new SOSMailHandler(args, variables, logger);
             sosMailHandler.sendMail();
 

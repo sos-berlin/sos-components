@@ -32,9 +32,11 @@ public class SOSMailHandler {
         try {
             Properties smtpProperties = new Properties();
 
-            for (Entry<String, Object> entry : variables.entrySet()) {
-                if (entry.getKey().startsWith("mail_smtp_")) {
-                    smtpProperties.put(entry.getKey().replaceAll("_", "."), entry.getValue().toString());
+            if (variables != null) {
+                for (Entry<String, Object> entry : variables.entrySet()) {
+                    if (entry.getValue() != null && entry.getKey().startsWith("mail_smtp_")) {
+                        smtpProperties.put(entry.getKey().replaceAll("_", "."), entry.getValue().toString());
+                    }
                 }
             }
 
@@ -60,26 +62,26 @@ public class SOSMailHandler {
                 sosMail.setPort(smtpProperties.getProperty("mail.smtp.port"));
             }
 
-            if (!args.getContentType().isEmpty()) {
+            if (args.getContentType() != null) {
                 sosMail.setContentType(args.getContentType());
             }
 
-            if (!args.getEncoding().isEmpty()) {
+            if (args.getEncoding() != null) {
                 sosMail.setEncoding(args.getEncoding());
             }
-            if (!args.getCharset().isEmpty()) {
+            if (args.getCharset() != null) {
                 sosMail.setCharset(args.getCharset());
             }
-            if (!args.getAttachmentCharset().isEmpty()) {
+            if (args.getAttachmentCharset() != null) {
                 sosMail.setAttachmentCharset(args.getAttachmentCharset());
             }
-            if (!args.getAttachmentEncoding().isEmpty()) {
+            if (args.getAttachmentEncoding() != null) {
                 sosMail.setAttachmentEncoding(args.getAttachmentEncoding());
             }
-            if (!args.getAttachmentContentType().isEmpty()) {
+            if (args.getAttachmentContentType() != null) {
                 sosMail.setAttachmentContentType(args.getAttachmentContentType());
             }
-            if (!args.getFromName().isEmpty()) {
+            if (args.getFromName() != null) {
                 sosMail.setFromName(args.getFromName());
             }
             // sosMail.setQueueFailedPraefix(queueFailedPrefix);
@@ -91,13 +93,21 @@ public class SOSMailHandler {
                 }
                 sosMail.addRecipient(recipientsTo[i].trim());
             }
-            if (!args.getReplyTo().isEmpty()) {
+            if (args.getReplyTo() != null) {
                 sosMail.setReplyTo(args.getReplyTo());
             }
-            sosMail.addCC(args.getCc());
-            sosMail.addBCC(args.getBcc());
-            sosMail.setSubject(args.getSubject());
-            sosMail.setBody(args.getBody());
+            if (args.getCc() != null) {
+                sosMail.addCC(args.getCc());
+            }
+            if (args.getBcc() != null) {
+                sosMail.addBCC(args.getBcc());
+            }
+            if (args.getSubject() != null) {
+                sosMail.setSubject(args.getSubject());
+            }
+            if (args.getBody() != null) {
+                sosMail.setBody(args.getBody());
+            }
             if (args.getAttachments() != null) {
                 for (String attachment2 : args.getAttachments()) {
                     File attachmentFile = new File(attachment2);

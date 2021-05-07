@@ -6,27 +6,27 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSMailJobArguments extends JobArguments {
 
-    private JobArgument<String> host = new JobArgument<String>("host", true, "");
+    private JobArgument<String> host = new JobArgument<String>("host", true);
     private JobArgument<Integer> mailSmtpPort = new JobArgument<Integer>("mail_smtp_port", false, 25);
-    private JobArgument<String> from = new JobArgument<String>("from", false, "");
-    private JobArgument<String> fromName = new JobArgument<String>("from_name", false, "");
-    private JobArgument<String> replyTo = new JobArgument<String>("reply_to", false, "");
-    private JobArgument<String> to = new JobArgument<String>("to", true, "");
-    private JobArgument<String> cc = new JobArgument<String>("cc", false, "");
-    private JobArgument<String> bcc = new JobArgument<String>("bcc", false, "");
-    private JobArgument<String> subject = new JobArgument<String>("subject", false, "");
-    private JobArgument<String> body = new JobArgument<String>("body", false, "");
-    private JobArgument<String> contentType = new JobArgument<String>("content_type", false, "");
+    private JobArgument<String> from = new JobArgument<String>("from", false);
+    private JobArgument<String> fromName = new JobArgument<String>("from_name", false);
+    private JobArgument<String> replyTo = new JobArgument<String>("reply_to", false);
+    private JobArgument<String> to = new JobArgument<String>("to", true);
+    private JobArgument<String> cc = new JobArgument<String>("cc", false);
+    private JobArgument<String> bcc = new JobArgument<String>("bcc", false);
+    private JobArgument<String> subject = new JobArgument<String>("subject", false);
+    private JobArgument<String> body = new JobArgument<String>("body", false);
+    private JobArgument<String> contentType = new JobArgument<String>("content_type", false);
 
     private JobArgument<String> charset = new JobArgument<String>("charset", false, "utf-8");
-    private JobArgument<String> encoding = new JobArgument<String>("encoding", false, "");
-    private JobArgument<String> attachmentCharset = new JobArgument<String>("attachment_charset", false, "");
-    private JobArgument<String> attachmentContentType = new JobArgument<String>("attachment_content_type", false, "");
-    private JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false, "");
-    private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
-    private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail_smtp_user", false, "");
+    private JobArgument<String> encoding = new JobArgument<String>("encoding", false);
+    private JobArgument<String> attachmentCharset = new JobArgument<String>("attachment_charset", false);
+    private JobArgument<String> attachmentContentType = new JobArgument<String>("attachment_content_type", false);
+    private JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false);
+    private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false);
+    private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail_smtp_user", false);
     private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail_smtp_password", false, DisplayMode.MASKED);
-    private JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false, "");
+    private JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
     private JobArgument<String[]> attachments = new JobArgument<String[]>("attachments", false);
 
     private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);

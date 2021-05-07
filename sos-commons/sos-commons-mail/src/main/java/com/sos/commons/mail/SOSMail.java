@@ -49,12 +49,12 @@ public class SOSMail {
     protected String user;
     protected String password;
     protected int timeout = 30000;
-    protected String subject;
+    protected String subject = "";
     protected String from;
     protected String fromName;
     protected String replyTo;
     protected String queueDir;
-    protected String body;
+    protected String body = "";
     protected String alternativeBody;
     protected String language = "de";
     protected String dateFormat = "dd.MM.yyyy";
