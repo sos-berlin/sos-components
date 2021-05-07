@@ -225,4 +225,15 @@ public class SOSSQLPlusJobArguments extends JobArguments {
 
     }
 
+    public boolean exist(String key) {
+        return ("db_url".equalsIgnoreCase(key)) || ("db_user".equalsIgnoreCase(key)) || ("db_password".equalsIgnoreCase(key)) || ("os_name"
+                .equalsIgnoreCase(key)) || ("ignore_ora_messages".equalsIgnoreCase(key)) || ("ignore_sp2_messages".equalsIgnoreCase(key))
+                || ("command_script_file".equalsIgnoreCase(key)) || ("command".equalsIgnoreCase(key)) || ("command_line_options".equalsIgnoreCase(
+                        key)) || ("include_files".equalsIgnoreCase(key)) || ("sqlError".equalsIgnoreCase(key)) || ("variable_parser_reg_expr"
+                                .equalsIgnoreCase(key)) || ("credential_store_file".equalsIgnoreCase(key)) || ("credential_store_key_file"
+                                        .equalsIgnoreCase(key)) || ("credential_store_password".equalsIgnoreCase(key))
+                || ("credential_store_entry_path".equalsIgnoreCase(key));
+
+    }
+
 }

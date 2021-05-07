@@ -43,7 +43,7 @@ public class SOSSQLPLUSCommandHandler {
 
         Path sqlScript = Paths.get(tempFileName);
         for (Entry<String, Object> entry : Job.convert(variables).entrySet()) {
-            if ((entry.getKey() != "db_url") && (entry.getKey() != "db_user") && (entry.getKey() != "db_password")) {
+            if (!args.exist(entry.getKey())) {
                 String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
                 writeln(sqlScript, writeLine);
             }
