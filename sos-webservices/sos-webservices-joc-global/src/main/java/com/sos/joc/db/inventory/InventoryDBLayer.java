@@ -1115,7 +1115,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and (");
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "ic.content", "$.jobResourceNames");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "ic.jsonContent", "$.jobResourceNames");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobResourceName"));
         hql.append(" or ");
         String jsonFunc2 = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobResources");
@@ -1132,7 +1132,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -1144,7 +1144,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowName")).append("=:workflowName");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -1156,7 +1156,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowName")).append("=:workflowName");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
@@ -1168,7 +1168,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and ");
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
@@ -1181,7 +1181,7 @@ public class InventoryDBLayer extends DBLayer {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and ");
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());

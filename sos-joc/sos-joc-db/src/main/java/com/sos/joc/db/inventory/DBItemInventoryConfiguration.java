@@ -53,9 +53,12 @@ public class DBItemInventoryConfiguration extends DBItem {
     private String title;
 
     @Column(name = "[CONTENT]", nullable = true)
+    private String content;
+    
+    @Column(name = "[JSON_CONTENT]", nullable = true)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
-    private String content;
+    private String jsonContent;
 
     @Column(name = "[VALID]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -155,7 +158,16 @@ public class DBItemInventoryConfiguration extends DBItem {
 
     public void setContent(String val) {
         content = val;
+        jsonContent = val;
     }
+    
+    public String getJsonContent() {
+        return jsonContent;
+    }
+
+//    public void setJsonContent(String val) {
+//        jsonContent = val;
+//    }
 
     public boolean getValid() {
         return valid;

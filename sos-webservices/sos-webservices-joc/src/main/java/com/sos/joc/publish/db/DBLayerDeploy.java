@@ -2538,7 +2538,7 @@ public class DBLayerDeploy {
         hql.append("where type=:type ");
 //        hql.append("and ");
         hql.append(" and content like :workflowPath");
-//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -2551,7 +2551,7 @@ public class DBLayerDeploy {
         hql.append("where type=:type ");
         hql.append(" and content like :workflowName");
 //        hql.append("and ");
-//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowName")).append("=:workflowName");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
@@ -2564,7 +2564,7 @@ public class DBLayerDeploy {
         hql.append("where type=:type ");
         hql.append(" and content like :workflowName");
 //        hql.append("and ");
-//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowName");
+//        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowName");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.FILEORDERSOURCE.intValue());
@@ -2577,7 +2577,7 @@ public class DBLayerDeploy {
         hql.append("where type=:type ");
         hql.append(" and content like :calendarPath");
 //        hql.append("and ");
-//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
 //        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
@@ -2591,7 +2591,7 @@ public class DBLayerDeploy {
         hql.append("where type=:type ");
         hql.append(" and content like :calendarName");
 //        hql.append("and ");
-//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.calendars");
+//        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.calendars");
 //        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarName"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());

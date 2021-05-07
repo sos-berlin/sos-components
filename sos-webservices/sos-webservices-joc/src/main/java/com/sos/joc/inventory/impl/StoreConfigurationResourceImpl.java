@@ -153,20 +153,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setTitle(in.getConfiguration().getTitle());
 
                 switch (in.getObjectType()) {
-                // case WORKFLOW:
-                // ((Workflow) in.getConfiguration()).setPath(item.getPath());
-                // break;
-                // case SCHEDULE:
-                // ((Schedule) in.getConfiguration()).setPath(item.getPath());
-                // break;
                 case WORKINGDAYSCALENDAR:
                 case NONWORKINGDAYSCALENDAR:
-                    // Calendar calendar = (Calendar) in.getConfiguration();
-                    // calendar.setPath(item.getPath());
-                    // calendar.setType(CalendarType.fromValue(in.getObjectType().value()));
                     ((ICalendarObject) in.getConfiguration()).setType(CalendarType.fromValue(in.getObjectType().value()));
                     break;
-                case LOCK: // without Path
+                case LOCK:
                     // TODO tmp solution - should be removed when validation works
                     Lock lock = (Lock) in.getConfiguration();
                     if (lock.getLimit() == null) {

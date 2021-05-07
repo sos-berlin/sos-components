@@ -116,7 +116,7 @@ public class EventService {
                 evtBus = Proxy.of(controllerId).controllerEventBus();
                 if (evtBus != null) {
                     evtBus.subscribe(eventsOfController, callbackOfController);
-                    setOrders();
+                    //setOrders();
                 }
             }
         } catch (Exception e) {
@@ -240,9 +240,9 @@ public class EventService {
     @Subscribe({ ProxyCoupled.class })
     public void createEvent(ProxyCoupled evt) {
         if (controllerId.equals(evt.getControllerId())) {
-            if (evt.isCoupled()) {
-                setOrders();
-            }
+//            if (evt.isCoupled()) {
+//                setOrders();
+//            }
             addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
         } else {
             // to update Controller Status widget for other controllers

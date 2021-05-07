@@ -380,8 +380,8 @@ public class JOCResourceImpl {
         String bodyStr = "-";
         if (body != null) {
             try {
-                // eliminate possibly pretty print vom origin request
-                bodyStr = Globals.objectMapper.writeValueAsString(Globals.objectMapper.readValue(bodyStr, Object.class));
+                // eliminate possibly pretty print from origin request
+                bodyStr = Globals.objectMapper.writeValueAsString(Globals.objectMapper.readValue(body, Object.class));
             } catch (Exception e) {
                 bodyStr = new String(body, StandardCharsets.UTF_8);
             }

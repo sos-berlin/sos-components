@@ -554,7 +554,7 @@ public class JocInventory {
     }
 
     public static String toString(IConfigurationObject config) throws JsonProcessingException {
-        return config == null ? "null" : Globals.objectMapper.writeValueAsString(config);
+        return config == null ? "null" : JsonSerializer.serializeAsString(config);
     }
 
     public static String hash(IConfigurationObject config) throws JsonProcessingException {
@@ -600,7 +600,7 @@ public class JocInventory {
             if (config == null && !SOSString.isEmpty(item.getContent())) {
                 config = Globals.objectMapper.readValue(item.getContent(), Workflow.class);
             }
-            JocInventory.handleWorkflowSearch(dbLayer, (Workflow) config, item.getId());
+            handleWorkflowSearch(dbLayer, (Workflow) config, item.getId());
         }
     }
 

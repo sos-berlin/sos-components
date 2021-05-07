@@ -41,7 +41,7 @@ public class SOSHibernateJsonTest {
             StringBuilder hql = new StringBuilder("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath");
 
             Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
             query.setParameter("type", SEARCH_CONFIG_TYPE);
@@ -77,7 +77,7 @@ public class SOSHibernateJsonTest {
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "josnContent", "$.workflowPath")).append("=:workflowPath");
 
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", SEARCH_CONFIG_TYPE);
@@ -116,7 +116,7 @@ public class SOSHibernateJsonTest {
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath");
 
             Query<String> query = session.createQuery(hql.toString());
             query.setParameter("type", SEARCH_CONFIG_TYPE);
@@ -155,11 +155,11 @@ public class SOSHibernateJsonTest {
             hql.append("from " + DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
             hql.append("where type=:type ");
             hql.append("and ");
-            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "content", "$.workflowPath")).append("=:workflowPath").append(" ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowPath")).append("=:workflowPath").append(" ");
             hql.append("and ");
-            // hql.append(SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.workingCalendars"),
+            // hql.append(SOSHibernateRegexp.getFunction(SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workingCalendars"),
             // ":calendarPath"));
-            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "content", "$.workingCalendars");
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.workingCalendars");
             hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":calendarPath"));
 
             Query<String> query = session.createQuery(hql.toString());

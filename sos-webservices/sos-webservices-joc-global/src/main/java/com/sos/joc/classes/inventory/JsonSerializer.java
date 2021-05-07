@@ -21,18 +21,25 @@ public class JsonSerializer {
     // TODO Job: default for graceTimeout?
     
     
-    public static <T> String writeValueAsString(T config) throws JsonProcessingException {
+    public static <T> String serializeAsString(T config) throws JsonProcessingException {
         if (config == null) {
             return null;
         }
         return Globals.objectMapper.writeValueAsString(emptyValuesToNull(config));
     }
     
-    public static <T> byte[] writeValueAsBytes(T config) throws JsonProcessingException {
+    public static <T> byte[] serializeAsBytes(T config) throws JsonProcessingException {
         if (config == null) {
             return null;
         }
         return Globals.objectMapper.writeValueAsBytes(emptyValuesToNull(config));
+    }
+    
+    public static <T> String serializeAsPrettyPrintString(T config) throws JsonProcessingException {
+        if (config == null) {
+            return null;
+        }
+        return Globals.prettyPrintObjectMapper.writeValueAsString(emptyValuesToNull(config));
     }
     
     @SuppressWarnings("unchecked")
@@ -52,7 +59,7 @@ public class JsonSerializer {
         return config;
     }
     
-    public static com.sos.sign.model.workflow.Workflow emptyWorkflowValuesToNull(com.sos.sign.model.workflow.Workflow w)
+    private static com.sos.sign.model.workflow.Workflow emptyWorkflowValuesToNull(com.sos.sign.model.workflow.Workflow w)
             throws JsonProcessingException {
         if (w == null) {
             return null;
@@ -63,7 +70,7 @@ public class JsonSerializer {
         return w;
     }
 
-    public static com.sos.inventory.model.workflow.Workflow emptyWorkflowValuesToNull(com.sos.inventory.model.workflow.Workflow w)
+    private static com.sos.inventory.model.workflow.Workflow emptyWorkflowValuesToNull(com.sos.inventory.model.workflow.Workflow w)
             throws JsonProcessingException {
         if (w == null) {
             return null;
@@ -74,7 +81,7 @@ public class JsonSerializer {
         return w;
     }
     
-    public static com.sos.inventory.model.jobresource.JobResource emptyJobResourceValuesToNull(com.sos.inventory.model.jobresource.JobResource jr)
+    private static com.sos.inventory.model.jobresource.JobResource emptyJobResourceValuesToNull(com.sos.inventory.model.jobresource.JobResource jr)
             throws JsonProcessingException {
         if (jr == null) {
             return null;
@@ -84,7 +91,7 @@ public class JsonSerializer {
         return jr;
     }
 
-    public static com.sos.sign.model.jobresource.JobResource emptyJobResourceValuesToNull(com.sos.sign.model.jobresource.JobResource jr)
+    private static com.sos.sign.model.jobresource.JobResource emptyJobResourceValuesToNull(com.sos.sign.model.jobresource.JobResource jr)
             throws JsonProcessingException {
         if (jr == null) {
             return null;
