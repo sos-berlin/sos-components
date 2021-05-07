@@ -40,7 +40,7 @@ public class JobArgument<T> {
     }
 
     public enum DisplayMode {
-        MASKED("********"), UNMASKED;
+        MASKED("********"), UNMASKED, UNKNOWN("<hidden>");
 
         private final String value;
 
@@ -57,18 +57,21 @@ public class JobArgument<T> {
         }
     }
 
-    private static final String MASKED = JobArgument.DisplayMode.MASKED.getValue();
+    public enum Type {
+        KNOWN, UNKNOWN;
+    }
 
     private final String name;
     private final boolean required;
     private final T defaultValue;
     private final JobArgument<T> reference;
-    private T value;
 
     private DisplayMode displayMode;
     private ValueSource valueSource;
     private NotAcceptedValue notAcceptedValue;
     private Boolean dirty;
+    private T value;
+    private Type type;
 
     public JobArgument(String name, boolean required) {
         this(name, required, null, DisplayMode.UNMASKED, null);
@@ -86,6 +89,13 @@ public class JobArgument<T> {
         this(name, required, null, displayMode, null);
     }
 
+    protected JobArgument(String name, T value, ValueSource valueSource) {
+        this(name, false, null, DisplayMode.UNKNOWN, null);
+        this.value = value;
+        this.type = Type.UNKNOWN;
+        this.valueSource = valueSource;
+    }
+
     public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, JobArgument<T> reference) {
         this.name = name;
         this.required = required;
@@ -93,6 +103,7 @@ public class JobArgument<T> {
         this.displayMode = displayMode;
         this.valueSource = ValueSource.JAVA;
         this.reference = reference;
+        this.type = Type.KNOWN;
     }
 
     public String getName() {
@@ -122,16 +133,8 @@ public class JobArgument<T> {
         return displayMode;
     }
 
-    public boolean isMasked() {
-        return displayMode.equals(DisplayMode.MASKED);
-    }
-
     public String getDisplayValue() {
-        T val = getValue();
-        if (val == null) {
-            return null;
-        }
-        return isMasked() ? MASKED : val.toString();
+        return Job.getDisplayValue(getValue(), displayMode);
     }
 
     protected void setValueSource(ValueSource val) {
@@ -140,6 +143,10 @@ public class JobArgument<T> {
 
     public ValueSource getValueSource() {
         return valueSource;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     protected JobArgument<T> getReference() {
@@ -207,10 +214,7 @@ public class JobArgument<T> {
         }
 
         protected String getDisplayValue() {
-            if (value == null) {
-                return null;
-            }
-            return isMasked() ? MASKED : value.toString();
+            return Job.getDisplayValue(this.value, displayMode);
         }
     }
 }

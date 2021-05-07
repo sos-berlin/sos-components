@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobDetailValue;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -127,6 +128,13 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         Map<ValueSource, List<String>> amap = step.argumentsInfoBySetter();
         amap.entrySet().stream().forEach(e -> {
             step.getLogger().info("[java][%s]%s", e.getKey().getHeader(), String.join(",", e.getValue()));
+        });
+
+        step.getLogger().info("----------ALL CURRENT known/unknown argumens-----------------");
+        Map<String, JobArgument<InfoJobArguments>> allcmap = step.getAllCurrentArguments();
+        allcmap.entrySet().stream().forEach(e -> {
+            step.getLogger().info("[java][%s][%s=%s]%s", e.getValue().getType(), e.getKey(), e.getValue().getDisplayValue(), SOSString.toString(e
+                    .getValue()));
         });
 
         if (step.getArguments().getShowEnv().getValue()) {

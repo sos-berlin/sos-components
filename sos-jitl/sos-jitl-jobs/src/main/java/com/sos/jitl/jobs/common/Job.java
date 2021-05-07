@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import io.vavr.control.Either;
@@ -151,6 +152,27 @@ public class Job {
             return Boolean.parseBoolean(o.convertToString());
         }
         return o;
+    }
+
+    public static <A> Map<String, Object> asNameValueMap(Map<String, JobArgument<A>> map) {
+        if (map == null || map.size() == 0) {
+            return Collections.emptyMap();
+        }
+        return map.entrySet().stream().collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue().getValue()));
+    }
+
+    public static String getDisplayValue(Object value, DisplayMode mode) {
+        if (value == null) {
+            return null;
+        }
+        switch (mode) {
+        case UNMASKED:
+            return value.toString();
+        case MASKED:
+            return DisplayMode.MASKED.getValue();
+        default:
+            return DisplayMode.UNKNOWN.getValue();
+        }
     }
 
     @Deprecated

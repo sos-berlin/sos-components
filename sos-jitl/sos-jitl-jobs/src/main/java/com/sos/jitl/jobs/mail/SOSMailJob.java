@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
@@ -46,7 +47,7 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
                 r.setEntryPath(args.getCredentialStoreEntryPath());
 
                 args.setMailSmtpUser(r.resolve(args.getMailSmtpUser()));
-                args.setMailSmtpPassword(r.resolve(args.getMailSmtpPassword()));
+                args.setMailSmtpPassword(r.resolve(args.getMailSmtpPassword().getValue()));
                 args.setHost(r.resolve(args.getHost()));
                 debug(logger, args.getCredentialStoreFile());
                 debug(logger, args.getCredentialStoreKeyFile());
@@ -55,15 +56,9 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
 
             debug(logger, "host: " + args.getHost());
             debug(logger, "smtpUser: " + args.getMailSmtpUser());
-            debug(logger, "smtPasswort: " + "********");
+            debug(logger, "smtPasswort: " + args.getMailSmtpPassword().getDisplayValue());
 
-            Map<String, Value> variables = new HashMap<String, Value>();
-            if (step != null) {
-                variables.putAll(getJobContext().jobArguments());
-                variables.putAll(step.getInternalStep().arguments());
-                variables.putAll(step.getInternalStep().order().arguments());
-            }
-
+            Map<String, Object> variables = Job.asNameValueMap(step.getAllCurrentArguments());
             SOSMailHandler sosMailHandler = new SOSMailHandler(args, variables, logger);
             sosMailHandler.sendMail();
 

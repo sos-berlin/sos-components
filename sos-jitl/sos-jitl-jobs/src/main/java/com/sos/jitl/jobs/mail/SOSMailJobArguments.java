@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.mail;
 
 import com.sos.jitl.jobs.common.JobArgument;
+import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSMailJobArguments extends JobArguments {
@@ -24,7 +25,7 @@ public class SOSMailJobArguments extends JobArguments {
     private JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false, "");
     private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false, false);
     private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail_smtp_user", false, "");
-    private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail_smtp_password", false, "");
+    private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail_smtp_password", false, DisplayMode.MASKED);
     private JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false, "");
     private JobArgument<String[]> attachments = new JobArgument<String[]>("attachments", false);
 
@@ -177,8 +178,8 @@ public class SOSMailJobArguments extends JobArguments {
         this.mailSmtpUser.setValue(mailSmtpUser);
     }
 
-    public String getMailSmtpPassword() {
-        return mailSmtpPassword.getValue();
+    public JobArgument<String> getMailSmtpPassword() {
+        return mailSmtpPassword;
     }
 
     public void setMailSmtpPassword(String mailSmtpPassword) {

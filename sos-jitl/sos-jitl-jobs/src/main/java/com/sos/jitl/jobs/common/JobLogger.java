@@ -37,6 +37,11 @@ public class JobLogger {
         }
     }
 
+    protected void init(LogLevel logLevel) {
+        isTraceEnabled = logLevel.equals(LogLevel.TRACE);
+        isDebugEnabled = logLevel.equals(LogLevel.DEBUG) || isTraceEnabled;
+    }
+
     public void info(final Object msg) {
         step.out().println(msg);
     }
@@ -65,6 +70,32 @@ public class JobLogger {
             return;
         }
         step.out().println(String.format("[TRACE]%s", msg));
+    }
+
+    public void log(LogLevel logLevel, final Object msg) {
+        switch (logLevel) {
+        case INFO:
+            info(msg);
+            break;
+        case DEBUG:
+            debug(msg);
+            break;
+        case TRACE:
+            trace(msg);
+        }
+    }
+
+    public void log(LogLevel logLevel, final String format, final Object... msg) {
+        switch (logLevel) {
+        case INFO:
+            info(format, msg);
+            break;
+        case DEBUG:
+            debug(format, msg);
+            break;
+        case TRACE:
+            trace(format, msg);
+        }
     }
 
     public void warn(final String msg, Throwable e) {

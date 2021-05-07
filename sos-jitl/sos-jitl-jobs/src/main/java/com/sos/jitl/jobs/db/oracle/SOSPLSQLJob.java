@@ -7,7 +7,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +21,6 @@ import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
-import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 
 public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
@@ -39,28 +37,6 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
     public JOutcome.Completed onOrderProcess(JobStep<SOSPLSQLJobArguments> step) throws Exception {
 
         try {
-
-            Map<String, Value> variables = new HashMap<String, Value>();
-            if (step != null) {
-                variables.putAll(getJobContext().jobArguments());
-                variables.putAll(step.getInternalStep().arguments());
-                variables.putAll(step.getInternalStep().order().arguments());
-            }
-
-            for (Entry<String, Object> entry : Job.convert(variables).entrySet()) {
-                String value = "";
-                if (entry.getKey().equalsIgnoreCase("db_password")) {
-                    value = "********";
-                } else {
-                    value = entry.getValue().toString();
-                }
-                String log = String.format("%1$s = %2$s", entry.getKey(), value);
-                LOGGER.debug(log);
-                if (step != null) {
-                    step.getLogger().debug(log);
-                }
-            }
-
             Connection connection = getConnection(step.getLogger(), step.getArguments());
             return step.success(process(step.getLogger(), connection, step.getArguments()));
         } catch (Throwable e) {
@@ -92,7 +68,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         try {
 
             if (args.useHibernateFile()) {
-             //   args.setCredentionsFromHibernateFile();
+                // args.setCredentionsFromHibernateFile();
             }
             if (args.getCredentialStoreFile() != null) {
                 SOSKeePassResolver r = new SOSKeePassResolver(args.getCredentialStoreFile(), args.getCredentialStoreKeyFile(), args

@@ -36,8 +36,8 @@ public class SOSSQLPlusJobArguments extends JobArguments {
         this.variableParserRegExpr.setValue(variableParserRegExpr);
     }
 
-    public String getDbPassword() {
-        return dbPassword.getValue();
+    public JobArgument<String> getDbPassword() {
+        return dbPassword;
     }
 
     public void setDbPassword(String dbPassword) {
@@ -167,7 +167,7 @@ public class SOSSQLPlusJobArguments extends JobArguments {
     public String getConnectionString() {
         String connectionString = "";
         if (getDbUser() != null) {
-            connectionString = getDbUser() + "/" + getDbPassword() + "@" + getDbUrl();
+            connectionString = getDbUser() + "/" + getDbPassword().getValue() + "@" + getDbUrl();
         }
         return connectionString;
     }
@@ -200,8 +200,8 @@ public class SOSSQLPlusJobArguments extends JobArguments {
     }
 
     public String getCommandLineForLog(String tempFileName) {
-        String savPassword = this.getDbPassword();
-        this.setDbPassword("************");
+        String savPassword = this.getDbPassword().getValue();
+        this.setDbPassword(this.getDbPassword().getDisplayValue());
         String commandLine = this.getCommandLine(tempFileName);
         this.setDbPassword(savPassword);
         return commandLine;

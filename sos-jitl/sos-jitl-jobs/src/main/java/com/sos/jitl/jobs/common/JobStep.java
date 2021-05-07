@@ -11,8 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
-import com.sos.jitl.jobs.exception.SOSJobArgumentException;
+import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import js7.data.job.JobResourcePath;
@@ -37,7 +38,8 @@ public class JobStep<A> {
     private A arguments;
     private Map<String, Map<String, JobDetailValue>> lastOutcomes;
     private Map<String, JobDetailValue> jobResourcesValues;
-    private List<JobArgument<?>> argumentsInfo;
+    private List<JobArgument<A>> knownArguments;
+    private Map<String, JobArgument<A>> allCurrentArguments;
 
     protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
         this.jobClassName = jobClassName;
@@ -93,12 +95,12 @@ public class JobStep<A> {
     }
 
     public Map<JobArgument.ValueSource, List<String>> argumentsInfoBySetter() throws Exception {
-        List<JobArgument<?>> arguments = getArgumentsInfo();
-        if (arguments == null || arguments.size() == 0) {
+        setKnownArguments();
+        if (knownArguments == null || knownArguments.size() == 0) {
             return null;
         }
         Map<JobArgument.ValueSource, List<String>> map = new HashMap<JobArgument.ValueSource, List<String>>();
-        for (JobArgument<?> arg : arguments) {
+        for (JobArgument<?> arg : knownArguments) {
             List<String> l;
             ValueSource key = arg.getValueSource();
             if (map.containsKey(key)) {
@@ -125,17 +127,102 @@ public class JobStep<A> {
         return map;
     }
 
-    public List<JobArgument<?>> getArgumentsInfo() throws Exception {
-        if (internalStep == null || arguments == null) {
-            return null;
+    public JobArgument<A> getArgument(String argumentName) {
+        setKnownArguments();
+        if (knownArguments != null) {
+            return knownArguments.stream().filter(a -> a.getName().equals(argumentName)).findAny().orElse(null);
         }
-        if (argumentsInfo == null) {
+        return null;
+    }
+
+    public Object getDisplayValue(String name) {
+        JobArgument<?> ar = getArgument(name);
+        if (ar == null) {
+            return DisplayMode.UNKNOWN.getValue();
+        }
+        return ar.getDisplayValue();
+    }
+
+    public Map<String, JobArgument<A>> getAllCurrentArguments(JobArgument.Type type) {
+        getAllCurrentArguments();
+        return allCurrentArguments.entrySet().stream().filter(a -> a.getValue().getType().equals(type)).collect(Collectors.toMap(Map.Entry::getKey,
+                Map.Entry::getValue));
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public Map<String, JobArgument<A>> getAllCurrentArguments() {
+        if (allCurrentArguments != null) {
+            return allCurrentArguments;
+        }
+
+        allCurrentArguments = new HashMap<>();
+        // KNOWN Arguments
+        setKnownArguments();
+        if (knownArguments != null && knownArguments.size() > 0) {
+            knownArguments.stream().forEach(a -> {
+                if (!allCurrentArguments.containsKey(a.getName())) {
+                    allCurrentArguments.put(a.getName(), a);
+                }
+            });
+        }
+        // UNKNOWN Arguments
+        // for preference see ABlockingJob.createJobArguments
+        // preference 1 (HIGHEST) - Succeeded Outcomes
+        Map<String, JobDetailValue> lso = getLastSucceededOutcomes();
+        if (lso != null && lso.size() > 0) {
+            lso.entrySet().stream().forEach(e -> {
+                if (!allCurrentArguments.containsKey(e.getKey())) {
+                    ValueSource vs = ValueSource.LAST_SUCCEEDED_OUTCOME;
+                    vs.setDetails(e.getValue().getSource());
+                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                }
+            });
+        }
+        // preference 2 - Order Variables (Node Arguments are unknown)
+        Map<String, Object> o = Job.convert(internalStep.order().arguments());
+        if (o != null && o.size() > 0) {
+            o.entrySet().stream().forEach(e -> {
+                if (!allCurrentArguments.containsKey(e.getKey())) {
+                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.ORDER));
+                }
+            });
+        }
+        // preference 3 - JobArgument
+        Map<String, Object> j = Job.convert(internalStep.arguments());
+        if (j != null && j.size() > 0) {
+            j.entrySet().stream().forEach(e -> {
+                if (!allCurrentArguments.containsKey(e.getKey())) {
+                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue(), ValueSource.JOB));
+                }
+            });
+        }
+        // preference 4 (LOWEST) - JobResources
+        Map<String, JobDetailValue> resources = getJobResourcesValues();
+        if (resources != null && resources.size() > 0) {
+            resources.entrySet().stream().forEach(e -> {
+                if (!allCurrentArguments.containsKey(e.getKey())) {
+                    ValueSource vs = ValueSource.JOB_RESOURCE;
+                    vs.setDetails(e.getValue().getSource());
+                    allCurrentArguments.put(e.getKey(), new JobArgument(e.getKey(), e.getValue().getValue(), vs));
+                }
+            });
+        }
+        return allCurrentArguments;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setKnownArguments() {
+        if (internalStep == null || arguments == null) {
+            knownArguments = null;
+            return;
+        }
+        if (knownArguments == null) {
             List<Field> fields = Job.getJobArgumentFields(arguments);
-            List<JobArgument<?>> l = new ArrayList<JobArgument<?>>();
+            List<JobArgument<A>> l = new ArrayList<JobArgument<A>>();
             for (Field field : fields) {
                 try {
                     field.setAccessible(true);
-                    JobArgument<?> arg = (JobArgument<?>) field.get(arguments);
+                    JobArgument<A> arg = (JobArgument<A>) field.get(arguments);
                     if (arg != null) {
                         if (arg.getName() == null) {// internal usage
                             continue;
@@ -143,13 +230,11 @@ public class JobStep<A> {
                         l.add(arg);
                     }
                 } catch (Throwable e) {
-                    throw new SOSJobArgumentException(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e
-                            .toString()), e);
+                    logger.warn(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
                 }
             }
-            argumentsInfo = l;
+            knownArguments = l;
         }
-        return argumentsInfo;
     }
 
     private String getStepInfo() {
@@ -375,23 +460,23 @@ public class JobStep<A> {
     protected void logParameterization() {
         try {
             logger.info("Job Parameterization:");
-            List<JobArgument<?>> allArguments = getArgumentsInfo();
+            setKnownArguments();
             Map<ValueSource, List<String>> map = argumentsInfoBySetter();
             if (map == null || map.size() == 0) {
-                infoResultingArguments(allArguments);
+                infoResultingArguments();
 
                 if (logger.isDebugEnabled()) {
-                    debugJobContextArguments(allArguments);
-                    debugOutcomes(allArguments);
-                    debugAllResultingArguments(allArguments);
+                    logJobContextArguments(LogLevel.DEBUG);
+                    logOutcomes(LogLevel.DEBUG);
+                    logAllResultingArguments(LogLevel.DEBUG);
                 }
                 return;
             }
-            infoResultingArguments(allArguments);
+            infoResultingArguments();
 
             if (logger.isDebugEnabled()) {
-                debugArguments(allArguments);
-                debugAllResultingArguments(allArguments);
+                logArguments(LogLevel.DEBUG);
+                logAllResultingArguments(LogLevel.DEBUG);
             }
 
         } catch (Exception e) {
@@ -399,88 +484,96 @@ public class JobStep<A> {
         }
     }
 
-    private void debugArguments(List<JobArgument<?>> allArguments) throws Exception {
+    protected void logParameterizationOnRequiredArgumentMissingException() {
+        try {
+            setKnownArguments();
+            logArguments(LogLevel.INFO);
+            logAllResultingArguments(LogLevel.INFO);
+        } catch (Exception e) {
+            logger.error(e.toString(), e);
+        }
+    }
+
+    private void logArguments(LogLevel logLevel) throws Exception {
         // ORDER Variables
         Map<String, Object> map = Job.convert(internalStep.order().arguments());
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.ORDER.getHeader()));
+            logger.log(logLevel, String.format(" %s:", ValueSource.ORDER.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
             });
         }
         // ORDER or Node arguments
-        List<JobArgument<?>> arguments = getArgumentsInfo();
-        if (arguments != null && arguments.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
-            arguments.stream().filter(a -> {
+        setKnownArguments();
+        if (knownArguments != null && knownArguments.size() > 0) {
+            logger.log(logLevel, String.format(" %s:", ValueSource.ORDER_OR_NODE.getHeader()));
+            knownArguments.stream().filter(a -> {
                 if (a.getValueSource().equals(ValueSource.ORDER_OR_NODE)) {
                     return true;
                 }
                 return false;
             }).forEach(a -> {
-                logger.debug("    " + a.toString());
+                logger.log(logLevel, "    " + a.toString());
             });
         }
         // JOB Arguments
         map = Job.convert(internalStep.arguments());
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.JOB.getHeader()));
+            logger.log(logLevel, String.format(" %s:", ValueSource.JOB.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
             });
         }
         // JOB Resources
         Map<String, JobDetailValue> resources = getJobResourcesValues();
         if (resources != null && resources.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
+            logger.log(logLevel, String.format(" %s:", ValueSource.JOB_RESOURCE.getHeader()));
             resources.entrySet().stream().forEach(e -> {
                 JobDetailValue v = e.getValue();
-                logger.debug("    %s=%s (resource=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), v.getValue()), v.getSource());
+                logger.log(logLevel, "    %s=%s (resource=%s)", e.getKey(), getDisplayValue(e.getKey()), v.getSource());
             });
         }
-        debugJobContextArguments(allArguments);
-        debugOutcomes(allArguments);
+        logJobContextArguments(logLevel);
+        logOutcomes(logLevel);
     }
 
-    private void debugJobContextArguments(List<JobArgument<?>> allArguments) {
+    private void logJobContextArguments(LogLevel logLevel) {
         if (jobContext != null) {
             Map<String, Object> map = Job.convert(jobContext.jobArguments());
             if (map != null && map.size() > 0) {
-                logger.debug(String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
+                logger.log(logLevel, String.format(" %s:", ValueSource.JOB_ARGUMENT.getHeader()));
                 map.entrySet().stream().forEach(e -> {
-                    logger.debug("    %s=%s", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue()));
+                    logger.log(logLevel, "    %s=%s", e.getKey(), getDisplayValue(e.getKey()));
                 });
             }
         }
     }
 
-    private void debugOutcomes(List<JobArgument<?>> allArguments) {
+    private void logOutcomes(LogLevel logLevel) {
         // OUTCOME succeeded
         Map<String, JobDetailValue> map = getLastSucceededOutcomes();
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getHeader()));
+            logger.log(logLevel, String.format(" %s:", ValueSource.LAST_SUCCEEDED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s (pos=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue().getValue()), e.getValue()
-                        .getSource());
+                logger.log(logLevel, "    %s=%s (pos=%s)", e.getKey(), getDisplayValue(e.getKey()), e.getValue().getSource());
             });
         }
         // OUTCOME failed
         map = getLastFailedOutcomes();
         if (map != null && map.size() > 0) {
-            logger.debug(String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getHeader()));
+            logger.log(logLevel, String.format(" %s:", ValueSource.LAST_FAILED_OUTCOME.getHeader()));
             map.entrySet().stream().forEach(e -> {
-                logger.debug("    %s=%s (pos=%s)", e.getKey(), getDisplayValue(allArguments, e.getKey(), e.getValue().getValue()), e.getValue()
-                        .getSource());
+                logger.log(logLevel, "    %s=%s (pos=%s)", e.getKey(), getDisplayValue(e.getKey()), e.getValue().getSource());
             });
         }
     }
 
-    private void infoResultingArguments(List<JobArgument<?>> allArguments) throws Exception {
-        if (allArguments == null || allArguments.size() == 0) {
+    private void infoResultingArguments() throws Exception {
+        if (knownArguments == null || knownArguments.size() == 0) {
             return;
         }
         logger.info(String.format("%s:", ValueSource.JAVA.getHeader()));
-        allArguments.stream().filter(a -> {
+        knownArguments.stream().filter(a -> {
             if (a.isDirty()) {
                 return true;
             } else {
@@ -504,25 +597,13 @@ public class JobStep<A> {
         });
     }
 
-    private void debugAllResultingArguments(List<JobArgument<?>> allArguments) throws Exception {
-        if (allArguments == null || allArguments.size() == 0) {
+    private void logAllResultingArguments(LogLevel logLevel) throws Exception {
+        if (knownArguments == null || knownArguments.size() == 0) {
             return;
         }
-        logger.debug(String.format(" All %s:", ValueSource.JAVA.getHeader()));
-        allArguments.stream().forEach(a -> {
-            logger.debug("    " + a.toString());
+        logger.log(logLevel, String.format(" All %s:", ValueSource.JAVA.getHeader()));
+        knownArguments.stream().forEach(a -> {
+            logger.log(logLevel, "    " + a.toString());
         });
     }
-
-    private Object getDisplayValue(List<JobArgument<?>> allArguments, String name, Object val) {
-        if (allArguments == null) {
-            return val;
-        }
-        JobArgument<?> ar = allArguments.stream().filter(a -> a.getName().equals(name)).findAny().orElse(null);
-        if (ar == null) {
-            return "<hidden>";
-        }
-        return ar.getDisplayValue();
-    }
-
 }

@@ -16,20 +16,17 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSCommandResult;
 import com.sos.commons.util.SOSPath;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
-
-import js7.data.value.Value;
 
 public class SOSSQLPLUSCommandHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSSQLPLUSCommandHandler.class);
     private static final String EXIT_CODE = "exitCode";
     private static final String SQL_ERROR = "sql_error";
-    private Map<String, Value> variables = new HashMap<String, Value>();
+    private Map<String, Object> variables = new HashMap<>();
     private JobLogger logger = null;
 
-    public SOSSQLPLUSCommandHandler(Map<String, Value> variables, JobLogger logger) {
+    public SOSSQLPLUSCommandHandler(Map<String, Object> variables, JobLogger logger) {
         this.variables.putAll(variables);
         this.logger = logger;
     }
@@ -42,11 +39,9 @@ public class SOSSQLPLUSCommandHandler {
     public void createSqlFile(SOSSQLPlusJobArguments args, String tempFileName) throws IOException {
 
         Path sqlScript = Paths.get(tempFileName);
-        for (Entry<String, Object> entry : Job.convert(variables).entrySet()) {
-            if (!args.exist(entry.getKey())) {
-                String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
-                writeln(sqlScript, writeLine);
-            }
+        for (Entry<String, Object> entry : variables.entrySet()) {
+            String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
+            writeln(sqlScript, writeLine);
         }
 
         if (!args.getIncludeFiles().isEmpty()) {

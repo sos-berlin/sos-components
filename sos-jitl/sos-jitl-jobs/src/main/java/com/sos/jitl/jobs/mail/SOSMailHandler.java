@@ -13,16 +13,14 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.jitl.jobs.common.JobLogger;
 
-import js7.data.value.Value;
-
 public class SOSMailHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMailHandler.class);
-    private Map<String, Value> variables = new HashMap<String, Value>();
+    private Map<String, Object> variables = new HashMap<>();
     private JobLogger logger = null;
     private SOSMailJobArguments args;
 
-    public SOSMailHandler(SOSMailJobArguments args, Map<String, Value> variables, JobLogger logger) {
+    public SOSMailHandler(SOSMailJobArguments args, Map<String, Object> variables, JobLogger logger) {
         this.logger = logger;
         this.variables = variables;
         this.args = args;
@@ -34,9 +32,9 @@ public class SOSMailHandler {
         try {
             Properties smtpProperties = new Properties();
 
-            for (Entry<String, Value> entry : variables.entrySet()) {
+            for (Entry<String, Object> entry : variables.entrySet()) {
                 if (entry.getKey().startsWith("mail_smtp_")) {
-                    smtpProperties.put(entry.getKey().replaceAll("_", "."), entry.getValue().convertToString());
+                    smtpProperties.put(entry.getKey().replaceAll("_", "."), entry.getValue().toString());
                 }
             }
 

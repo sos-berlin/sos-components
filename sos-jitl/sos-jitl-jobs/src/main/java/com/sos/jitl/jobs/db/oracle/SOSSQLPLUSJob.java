@@ -15,10 +15,12 @@ import com.sos.commons.util.SOSCommandResult;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Job;
+import com.sos.jitl.jobs.common.JobArgument.Type;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
-import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
 
 public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> {
@@ -34,7 +36,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
 
         try {
             if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
-                throw new Exception("command is empty. please check the   \"command_script_file\" parameter.");
+                throw new SOSJobRequiredArgumentMissingException("command is empty. please check the   \"command_script_file\" parameter.");
             }
             return step.success(process(step, step.getArguments()));
         } catch (Throwable e) {
@@ -59,7 +61,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
 
                 args.setDbUrl(r.resolve(args.getDbUrl()));
                 args.setDbUser(r.resolve(args.getDbUser()));
-                args.setDbPassword(r.resolve(args.getDbPassword()));
+                args.setDbPassword(r.resolve(args.getDbPassword().getValue()));
                 debug(logger, args.getCredentialStoreFile());
                 debug(logger, args.getCredentialStoreKeyFile());
                 debug(logger, args.getCredentialStoreEntryPath());
@@ -67,16 +69,14 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
 
             debug(logger, "dbUrl: " + args.getDbUrl());
             debug(logger, "dbUser: " + args.getDbUser());
-            debug(logger, "dbPassword: " + "********");
+            debug(logger, "dbPassword: " + args.getDbPassword().getDisplayValue());
 
-            Map<String, Value> variables = new HashMap<String, Value>();
+            Map<String, Object> variables = new HashMap<>();
             if (step != null) {
-                variables.putAll(getJobContext().jobArguments());
-                variables.putAll(step.getInternalStep().arguments());
-                variables.putAll(step.getInternalStep().order().arguments());
+                variables = Job.asNameValueMap(step.getAllCurrentArguments(Type.UNKNOWN));
             }
 
-            SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables,logger);
+            SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables, logger);
             File tempFile = File.createTempFile("sos", ".sql");
             String tempFileName = tempFile.getAbsolutePath();
             sqlPlusCommandHandler.createSqlFile(args, tempFileName);
