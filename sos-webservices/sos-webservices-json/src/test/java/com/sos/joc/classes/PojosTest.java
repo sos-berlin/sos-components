@@ -13,9 +13,12 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.controller.model.command.CancelOrder;
 import com.sos.controller.model.command.JSBatchCommands;
 import com.sos.controller.model.order.FreshOrder;
@@ -38,7 +41,8 @@ import com.sos.schema.JsonValidator;
 
 public class PojosTest {
 	
-	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
+            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
     @Test
     public void freshOrderTest() throws Exception {
@@ -159,6 +163,13 @@ public class PojosTest {
         System.out.println(vars.getAdditionalProperties().get("myNumber2").toString());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").toString());
 
+    }
+    
+    @Test
+    public void retainOrderTest() throws JsonParseException, JsonMappingException, IOException {
+        String json = "{\"configuration\":{\"env\":{\"value\":\"'b'\",\"name\":\"'a'\"}},\"valid\":false,\"id\":5,\"objectType\":\"JOBRESOURCE\"}";
+        ConfigurationObject conf = objectMapper.readValue(json, ConfigurationObject.class);
+        System.out.println(objectMapper.writeValueAsString(conf.getConfiguration()));
     }
 
 }

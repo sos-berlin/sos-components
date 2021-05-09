@@ -13,6 +13,6 @@ public interface IDocumentationUsedResource {
     @Path("used")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postDocumentationsUsed(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) throws Exception;
+    public JOCDefaultResponse postDocumentationsUsed(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
     
 }

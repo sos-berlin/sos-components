@@ -34,21 +34,20 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
     private static final Set<String> ASSIGN_TYPES = new HashSet<String>(Arrays.asList("html", "xml", "pdf", "markdown"));
 
     @Override
-    public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) throws Exception {
+    public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
                     .getDocumentations().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("controllerId", documentationsFilter.getControllerId());
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();

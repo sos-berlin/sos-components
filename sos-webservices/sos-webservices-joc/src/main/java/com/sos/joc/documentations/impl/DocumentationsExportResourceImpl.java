@@ -59,21 +59,19 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     public static final String DEPLOY_USAGE_JSON = "/sos-documentation-usages.json";
 
     @Override
-    public JOCDefaultResponse postExportDocumentations(String accessToken, byte[] filterBytes) throws Exception {
+    public JOCDefaultResponse postExportDocumentations(String accessToken, byte[] filterBytes) {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
-                    .getDocumentations().getManage());
-
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            String targetFilename = "documentation_" + documentationsFilter.getControllerId() + ".zip";
+            String targetFilename = "documentation.zip";
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             final List<DocumentationContent> contents = mapToDocumentationContents(documentationsFilter, sosHibernateSession);
@@ -113,19 +111,16 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse getExportDocumentations(String accessToken, String controllerId, String filename) throws Exception {
+    public JOCDefaultResponse getExportDocumentations(String accessToken, String filename) {
         try {
-
-            ExportInfo file = new ExportInfo();
-            file.setFilename(filename);
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, file, accessToken, controllerId, getJocPermissions(accessToken).getDocumentations()
-                    .getManage());
+            String request = String.format("%s?filename=%s", API_CALL, accessToken, filename);
+            initLogging(request, null, accessToken);
+            checkRequiredParameter("filename", filename);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("controllerId", controllerId);
-            checkRequiredParameter("filename", filename);
-
+            
             java.nio.file.Path path = Paths.get(System.getProperty("java.io.tmpdir"), filename);
             if (!Files.isReadable(path)) {
                 throw new ControllerObjectNotExistException("Temp. file '" + filename + "' not found.");
@@ -176,7 +171,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
     }
 
     @Override
-    public JOCDefaultResponse postExportInfo(String accessToken, byte[] filterBytes) throws Exception {
+    public JOCDefaultResponse postExportInfo(String accessToken, byte[] filterBytes) {
 
         SOSHibernateSession sosHibernateSession = null;
         ZipOutputStream zipOut = null;
@@ -184,7 +179,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
                     .getDocumentations().getManage());
 
             if (jocDefaultResponse != null) {

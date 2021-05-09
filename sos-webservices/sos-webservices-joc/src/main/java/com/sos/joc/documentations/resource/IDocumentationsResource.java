@@ -11,5 +11,5 @@ public interface IDocumentationsResource {
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) throws Exception;
+    public JOCDefaultResponse postDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

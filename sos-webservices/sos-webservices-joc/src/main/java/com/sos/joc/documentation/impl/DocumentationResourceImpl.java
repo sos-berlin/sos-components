@@ -18,6 +18,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
@@ -32,19 +33,19 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
     private static final java.nio.file.Path CSS = Paths.get("/sos/css/default-markdown.css");
 
     @Override
-    public JOCDefaultResponse postDocumentation(String accessToken, String controllerId, String name) {
+    public JOCDefaultResponse postDocumentation(String accessToken, String name) {
         SOSHibernateSession connection = null;
         try {
-            String request = String.format("%s/%s/%s/%s", API_CALL, controllerId, accessToken, name);
+            if (name == null) {
+                name = "";
+            }
+            String request = String.format("%s/%s/%s", API_CALL, accessToken, name);
             initLogging(request, null, accessToken);
-            boolean perm = getJocPermissions(accessToken).getDocumentations().getView();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, perm);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
             checkRequiredParameter("name", name);
-
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             DBItemDocumentation dbItem = dbLayer.getDocumentation(name);

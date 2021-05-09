@@ -41,7 +41,7 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(body.getAuditLog(), CategoryType.CONTROLLER);
+            storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {

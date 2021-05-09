@@ -12,7 +12,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,10 +35,10 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DBItemDocumentationUsage;
+import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -68,7 +67,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     @Override
     public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String controllerId, String directory,
-            FormDataBodyPart body, String timeSpent, String ticketLink, String comment) throws Exception {
+            FormDataBodyPart body, String timeSpent, String ticketLink, String comment) {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
         auditLog.setTicketLink(ticketLink);
@@ -80,7 +79,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     }
 
     private JOCDefaultResponse postImportDocumentations(String xAccessToken, String controllerId, String directory, FormDataBodyPart body,
-            AuditParams auditLog) throws Exception {
+            AuditParams auditLog) {
 
         InputStream stream = null;
         try {

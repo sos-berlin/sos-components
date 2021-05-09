@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "file",
     "folder",
     "auditLog"
@@ -27,18 +26,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DocumentationImport {
 
     /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
-    /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("file")
@@ -62,33 +53,10 @@ public class DocumentationImport {
     private AuditParams auditLog;
 
     /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("file")
@@ -100,6 +68,7 @@ public class DocumentationImport {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("file")
@@ -153,12 +122,12 @@ public class DocumentationImport {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("file", file).append("folder", folder).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("file", file).append("folder", folder).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(file).append(folder).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(file).append(folder).append(auditLog).toHashCode();
     }
 
     @Override
@@ -170,7 +139,7 @@ public class DocumentationImport {
             return false;
         }
         DocumentationImport rhs = ((DocumentationImport) other);
-        return new EqualsBuilder().append(file, rhs.file).append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(file, rhs.file).append(folder, rhs.folder).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

@@ -13,5 +13,5 @@ public interface IDocumentationsDeleteResource {
     @POST
     @Path("delete")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse deleteDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) throws Exception;
+    public JOCDefaultResponse deleteDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

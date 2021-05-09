@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "documentations",
     "compact",
     "regex",
@@ -32,15 +31,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DocumentationsFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     @JsonProperty("documentations")
     private List<String> documentations = new ArrayList<String>();
     /**
@@ -55,11 +45,11 @@ public class DocumentationsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
+    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
     /**
      * folders
@@ -79,30 +69,6 @@ public class DocumentationsFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     @JsonProperty("documentations")
     public List<String> getDocumentations() {
@@ -139,7 +105,7 @@ public class DocumentationsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -150,7 +116,7 @@ public class DocumentationsFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -214,12 +180,12 @@ public class DocumentationsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(types).append(folders).append(controllerId).append(compact).append(auditLog).append(documentations).toHashCode();
+        return new HashCodeBuilder().append(regex).append(types).append(folders).append(compact).append(auditLog).append(documentations).toHashCode();
     }
 
     @Override
@@ -231,7 +197,7 @@ public class DocumentationsFilter {
             return false;
         }
         DocumentationsFilter rhs = ((DocumentationsFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).isEquals();
     }
 
 }

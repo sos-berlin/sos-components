@@ -26,23 +26,24 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
     private static final String API_CALL = "./documentations/delete";
 
     @Override
-    public JOCDefaultResponse deleteDocumentations(String accessToken, byte[] filterBytes) throws Exception {
+    public JOCDefaultResponse deleteDocumentations(String accessToken, byte[] filterBytes) {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationsFilter.getControllerId(), getJocPermissions(accessToken)
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
                     .getDocumentations().getManage());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
+            // TODO declare "documentations" as required in Json schema
             checkRequiredParameter("documentations", documentationsFilter.getDocumentations());
 
-            storeAuditLog(documentationsFilter.getAuditLog(), documentationsFilter.getControllerId(), CategoryType.DOCUMENTATIONS);
+            storeAuditLog(documentationsFilter.getAuditLog(), CategoryType.DOCUMENTATIONS);
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
@@ -61,7 +62,6 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 sosHibernateSession.delete(dbDoc);
-                // storeAuditLogEntry(deleteAudit);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

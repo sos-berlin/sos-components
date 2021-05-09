@@ -19,21 +19,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "type",
     "path"
 })
 public class DocumentationShowFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * configuration types
      * <p>
@@ -53,30 +43,6 @@ public class DocumentationShowFilter {
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * configuration types
@@ -128,12 +94,12 @@ public class DocumentationShowFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("type", type).append("path", path).toString();
+        return new ToStringBuilder(this).append("type", type).append("path", path).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(controllerId).append(type).toHashCode();
+        return new HashCodeBuilder().append(type).append(path).toHashCode();
     }
 
     @Override
@@ -145,7 +111,7 @@ public class DocumentationShowFilter {
             return false;
         }
         DocumentationShowFilter rhs = ((DocumentationShowFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(type, rhs.type).append(path, rhs.path).isEquals();
     }
 
 }

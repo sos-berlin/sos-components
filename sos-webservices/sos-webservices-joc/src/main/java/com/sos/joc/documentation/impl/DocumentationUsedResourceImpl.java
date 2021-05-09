@@ -12,8 +12,6 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationUsedResource;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.UsedBy;
 import com.sos.schema.JsonValidator;
@@ -24,22 +22,21 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
     private static final String API_CALL = "./documentation/used";
 
     @Override
-    public JOCDefaultResponse postDocumentationsUsed(String accessToken, byte[] filterBytes) throws Exception {
+    public JOCDefaultResponse postDocumentationsUsed(String accessToken, byte[] filterBytes) {
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(documentationFilter.getControllerId(), getJocPermissions(accessToken)
-                    .getDocumentations().getView());
-
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("documentation", documentationFilter.getDocumentation());
+            // TODO folder permissions?
             UsedBy usedBy = new UsedBy();
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            // TODO Look into INV_CONFIGURATION with JSON-SQL
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             usedBy.setObjects(dbLayer.getDocumentationUsages(normalizePath(documentationFilter.getDocumentation())));
             usedBy.setDeliveryDate(Date.from(Instant.now()));

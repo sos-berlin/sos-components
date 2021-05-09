@@ -90,7 +90,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
             
-            storeAuditLog(agentStoreParameter.getAuditLog(), CategoryType.CONTROLLER);
+            storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             connection.setAutoCommit(false);

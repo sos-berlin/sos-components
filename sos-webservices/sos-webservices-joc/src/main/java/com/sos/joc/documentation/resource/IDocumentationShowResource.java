@@ -8,34 +8,33 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.model.docu.DocumentationShowFilter;
 
 public interface IDocumentationShowResource {
 
     @GET
     @Path("show")
     public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("controllerId") String jobschedulerId, @QueryParam("path") String path, @QueryParam("type") String type) throws Exception;
+            @QueryParam("path") String path, @QueryParam("type") String type);
 
     @POST
     @Path("show")
     @Consumes("application/json")
-    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, DocumentationShowFilter documentationFilter) throws Exception;
+    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 
     @GET
     @Path("preview")
     public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("controllerId") String jobschedulerId, @QueryParam("documentation") String path) throws Exception;
+            @QueryParam("documentation") String path);
     
     @POST
     @Path("preview")
     @Consumes("application/json")
-    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, DocumentationShowFilter documentationFilter)
+    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter)
             throws Exception;
 
     @POST
     @Path("url")
     @Consumes("application/json")
-    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, DocumentationShowFilter documentationFilter)
+    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter)
             throws Exception;
 }

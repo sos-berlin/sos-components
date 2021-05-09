@@ -16,17 +16,15 @@ public interface IDocumentationsExportResource {
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     public JOCDefaultResponse getExportDocumentations(@HeaderParam("X-Access-Token") String accessToken,
-            @QueryParam("controllerId") String jobschedulerId,
-            @QueryParam("filename") String filename) throws Exception;
+            @QueryParam("filename") String filename);
 
     @Path("export")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postExportDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)
-            throws Exception;
+    public JOCDefaultResponse postExportDocumentations(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 
     @Path("export/info")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postExportInfo(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes) throws Exception;
+    public JOCDefaultResponse postExportInfo(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

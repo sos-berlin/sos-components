@@ -10,7 +10,6 @@ public interface IDocumentationResource {
 
     @GET
     // @Produces({ MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN })
-    @Path("{controllerId}/{accessToken}/{name : .+}")
-    public JOCDefaultResponse postDocumentation(@PathParam("accessToken") String accessToken,
-            @PathParam("controllerId") String jobschedulerId, @PathParam("name") String name) throws Exception;
+    @Path("{accessToken}/{path : .+}")
+    public JOCDefaultResponse postDocumentation(@PathParam("accessToken") String accessToken, @PathParam("path") String path);
 }

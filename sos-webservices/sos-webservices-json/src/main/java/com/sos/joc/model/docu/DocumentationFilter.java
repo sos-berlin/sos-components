@@ -18,20 +18,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "documentation"
 })
 public class DocumentationFilter {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * path
      * <p>
@@ -42,30 +32,6 @@ public class DocumentationFilter {
     @JsonProperty("documentation")
     @JsonPropertyDescription("absolute path of an object.")
     private String documentation;
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
 
     /**
      * path
@@ -93,12 +59,12 @@ public class DocumentationFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("documentation", documentation).toString();
+        return new ToStringBuilder(this).append("documentation", documentation).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(documentation).toHashCode();
+        return new HashCodeBuilder().append(documentation).toHashCode();
     }
 
     @Override
@@ -110,7 +76,7 @@ public class DocumentationFilter {
             return false;
         }
         DocumentationFilter rhs = ((DocumentationFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(documentation, rhs.documentation).isEquals();
+        return new EqualsBuilder().append(documentation, rhs.documentation).isEquals();
     }
 
 }

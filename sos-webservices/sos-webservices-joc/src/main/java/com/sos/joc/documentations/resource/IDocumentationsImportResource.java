@@ -26,5 +26,5 @@ public interface IDocumentationsImportResource {
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("comment") String comment) throws Exception;
+            @FormDataParam("comment") String comment);
 }
