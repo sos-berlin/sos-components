@@ -42,8 +42,16 @@ public class SOSReflection {
         return fields;
     }
 
+    public static boolean isList(String className) throws ClassNotFoundException {
+        return isList(Class.forName(normalizeClassForName(className)));
+    }
+
+    public static boolean isList(Class<?> cls) {
+        return List.class.isAssignableFrom(cls);
+    }
+
     public static boolean isEnum(String className) throws ClassNotFoundException {
-        return isEnum(Class.forName(className));
+        return isEnum(Class.forName(normalizeClassForName(className)));
     }
 
     public static boolean isEnum(Class<?> cls) {
@@ -64,4 +72,8 @@ public class SOSReflection {
         return Stream.of(enumeration.getEnumConstants()).filter(e -> e.name().equalsIgnoreCase(val)).findAny().orElse(null);
     }
 
+    private static String normalizeClassForName(final String className) {
+        int indx = className.indexOf('<');
+        return indx > -1 ? className.substring(0, indx) : className;
+    }
 }
