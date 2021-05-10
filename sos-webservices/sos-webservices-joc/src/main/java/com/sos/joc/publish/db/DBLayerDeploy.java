@@ -1029,7 +1029,7 @@ public class DBLayerDeploy {
             if (overwrite) {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
-                    existingConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
+                    existingConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
                     existingConfiguration.setAuditLogId(auditLogId);
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
@@ -1039,7 +1039,7 @@ public class DBLayerDeploy {
                     Date now = Date.from(Instant.now());
                     newConfiguration.setModified(now);
                     newConfiguration.setCreated(now);
-                    newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
+                    newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
                     newConfiguration.setPath(configuration.getPath());
                     newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1056,7 +1056,7 @@ public class DBLayerDeploy {
                 Date now = Date.from(Instant.now());
                 newConfiguration.setModified(now);
                 newConfiguration.setCreated(now);
-                newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
+                newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
                 newConfiguration.setPath(configuration.getPath());
                 newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
                 newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1105,7 +1105,7 @@ public class DBLayerDeploy {
 			Date now = Date.from(Instant.now());
 			newConfiguration.setModified(now);
 			newConfiguration.setCreated(now);
-			newConfiguration.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(configuration.getConfiguration()));
+			newConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
 			newConfiguration.setPath(configuration.getPath());
 			newConfiguration.setFolder(Paths.get(configuration.getPath()).getParent().toString().replace('\\', '/'));
 			newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
@@ -1197,7 +1197,7 @@ public class DBLayerDeploy {
         String name = null;
         if (existingJsObject != null) {
             existingJsObject.setModified(Date.from(Instant.now()));
-            existingJsObject.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jsObject.getContent()));
+            existingJsObject.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
             existingJsObject.setAuditLogId(auditLogId);
             existingJsObject.setDocumentationId(0L);
             existingJsObject.setDeployed(false);
@@ -1212,7 +1212,7 @@ public class DBLayerDeploy {
             Date now = Date.from(Instant.now());
             newJsObject.setModified(now);
             newJsObject.setCreated(now);
-            newJsObject.setContent(Globals.prettyPrintObjectMapper.writeValueAsString(jsObject.getContent()));
+            newJsObject.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
             folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION).getParent();
             newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
             newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());

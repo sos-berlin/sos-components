@@ -2226,30 +2226,30 @@ public abstract class PublishUtils {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
+                                content = Globals.objectMapper.writeValueAsString(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobResource);
+                                content = Globals.objectMapper.writeValueAsString(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(lock);
+                                content = Globals.objectMapper.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(junction);
+                                content = Globals.objectMapper.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobClass);
+                                content = Globals.objectMapper.writeValueAsString(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -2258,7 +2258,7 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource);
+                                content = Globals.objectMapper.writeValueAsString(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -2284,7 +2284,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.objectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
@@ -2298,7 +2298,7 @@ public abstract class PublishUtils {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
-                        zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo));
+                        zipOut.write(Globals.objectMapper.writeValueAsBytes(jocMetaInfo));
                         zipOut.closeEntry();
                     }
                     zipOut.flush();
@@ -2435,30 +2435,30 @@ public abstract class PublishUtils {
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 // workflow.setPath(deployable.getPath());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
+                                content = Globals.objectMapper.writeValueAsString(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobResource);
+                                content = Globals.objectMapper.writeValueAsString(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(lock);
+                                content = Globals.objectMapper.writeValueAsString(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(junction);
+                                content = Globals.objectMapper.writeValueAsString(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(jobClass);
+                                content = Globals.objectMapper.writeValueAsString(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -2467,7 +2467,7 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource);
+                                content = Globals.objectMapper.writeValueAsString(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
@@ -2495,7 +2495,7 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = Globals.prettyPrintObjectMapper.writeValueAsString(releasable.getConfiguration());
+                                content = Globals.objectMapper.writeValueAsString(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                                 byte[] contentBytes = content.getBytes();
@@ -2510,7 +2510,7 @@ public abstract class PublishUtils {
                     if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                         String zipEntryName = JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
-                        byte[] jocMetaInfoBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo);
+                        byte[] jocMetaInfoBytes = Globals.objectMapper.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
                         tarOut.putArchiveEntry(entry);
                         tarOut.write(jocMetaInfoBytes);
