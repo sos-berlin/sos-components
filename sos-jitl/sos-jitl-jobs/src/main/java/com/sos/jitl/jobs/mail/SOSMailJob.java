@@ -66,7 +66,7 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
 
     public static void main(String[] args) {
         SOSMailJob sosMailJob = new SOSMailJob(null);
-        SOSMailJobArguments arguments = new SOSMailJobArguments();
+        SOSMailJobArgumentsTest arguments = new SOSMailJobArgumentsTest();
         arguments.setMailSmtpHost("mail.sos-berlin.com");
         arguments.setMailSmtpPort(25);
         arguments.setSubject("My Mail Subject");
