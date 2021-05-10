@@ -62,7 +62,7 @@
           <div xmlns="http://www.w3.org/1999/xhtml">Mail Subject</div>
         </note>
       </param>
-      <param name="host" required="false">
+      <param name="mail.smtp.host" required="false">
         <note language="en">
           <div xmlns="http://www.w3.org/1999/xhtml">mail server host</div>
         </note>
@@ -191,7 +191,17 @@
   </configuration>
   <documentation language="en">
     <div xmlns="http://www.w3.org/1999/xhtml">
-      This job is used to send emails.  
+      This job is used to send emails.
+      All mail. parameters for Java mail can be used. See <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>
+      
+      "mail.transport.protocol" is set to "smtp"
+      "mail.smtp.class" is set to "com.sun.mail.SMTPTransport
+      When "mail.smtp.user" is specified then "mail.smtp.auth" is set to "true". Otherwise "mail.smtp.auth" is set to "false"
+        
+      When the securityProtocol is specified as "ssl"  then "mail.smtp.ssl.enable" is set to "true") and "mail.transport.protocol" is set to "smtps".
+      When the securityProtocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".
+        
+        
     </div>
   </documentation>
 </description>

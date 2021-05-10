@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -44,11 +45,6 @@ import com.sos.commons.util.SOSString;
 public class SOSMail {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSMail.class);
-    protected String host;
-    protected String port = "25";
-    protected String user;
-    protected String password;
-    protected int timeout = 30000;
     protected String subject = "";
     protected String from;
     protected String fromName;
@@ -91,6 +87,7 @@ public class SOSMail {
     private int priority = -1;
     private String securityProtocol = "";
     private Session session = null;
+    private Properties smtpProperties = null;
     public static final int PRIORITY_HIGHEST = 1;
     public static final int PRIORITY_HIGH = 2;
     public static final int PRIORITY_NORMAL = 3;
@@ -140,23 +137,30 @@ public class SOSMail {
         }
     }
 
+    public SOSMail(Properties smtpProperties) throws Exception {
+        this.smtpProperties = smtpProperties;
+    }
+
     public SOSMail(final String smtpHost) throws Exception {
-        host = smtpHost;
+        this.smtpProperties = new Properties();
+        setHost(smtpHost);
         init();
     }
 
     public SOSMail(final String smtpHost, final String smtpUser, final String smtpUserPassword) throws Exception {
-        host = smtpHost;
-        user = smtpUser;
-        password = smtpUserPassword;
+        this.smtpProperties = new Properties();
+        setHost(smtpHost);
+        setUser(smtpUser);
+        setPassword(smtpUserPassword);
         init();
     }
 
     public SOSMail(final String smtpHost, final String smtpPort, final String smtpUser, final String smtpUserPassword) throws Exception {
-        host = smtpHost;
-        port = smtpPort;
-        user = smtpUser;
-        password = smtpUserPassword;
+        this.smtpProperties = new Properties();
+        setHost(smtpHost);
+        setPort(smtpPort);
+        setUser(smtpUser);
+        setPassword(smtpUserPassword);
         init();
     }
 
@@ -191,31 +195,36 @@ public class SOSMail {
     }
 
     public void setProperties(Properties smtpProperties) {
-        Properties props = System.getProperties();
+        this.smtpProperties = new Properties();
         for (Map.Entry<Object, Object> e : smtpProperties.entrySet()) {
             String key = (String) e.getKey();
             String value = (String) e.getValue();
-            props.put(key, value);
+            this.smtpProperties.put(key, value);
         }
     }
 
-    public void initMessage() throws Exception {
+    private void initMessage() throws Exception {
         createMessage(createSession());
         initPriority();
     }
 
-    public Session createSession() throws Exception {
-        Properties props = System.getProperties();
-        props.put("mail.host", host);
-        props.put("mail.port", port);
-        props.put("mail.smtp.timeout", String.valueOf(timeout));
+    private Session createSession() throws Exception {
+        Properties props = null;
+        if (smtpProperties == null) {
+            props = System.getProperties();
+        } else {
+            props = smtpProperties;
+        }
+
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.class", "com.sun.mail.SMTPTransport");
-        if (!SOSString.isEmpty(user)) {
+
+        if (getUser() != null) {
             props.put("mail.smtp.auth", "true");
         } else {
             props.put("mail.smtp.auth", "false");
         }
+
         if ("ssl".equalsIgnoreCase(securityProtocol)) {
             props.put("mail.smtp.ssl.enable", "true");
             props.put("mail.transport.protocol", "smtps");
@@ -223,9 +232,31 @@ public class SOSMail {
             props.put("mail.smtp.starttls.enable", "true");
             props.put("mail.transport.protocol", "smtps");
         }
-        authenticator = new SOSMailAuthenticator(user, password);
+        authenticator = new SOSMailAuthenticator(getUser(), getPassword());
         session = Session.getInstance(props, authenticator);
         return session;
+    }
+
+    private String getMailPropertyValue(String key) {
+        Properties p;
+        if (smtpProperties == null) {
+            p = System.getProperties();
+        } else {
+            p = smtpProperties;
+        }
+        if (p.get(key) == null) {
+            return null;
+        } else {
+            return p.get(key).toString();
+        }
+    }
+
+    private String getUser() {
+        return getMailPropertyValue("mail.smtp.user");
+    }
+
+    private String getPassword() {
+        return getMailPropertyValue("mail.smtp.password");
     }
 
     public String getSecurityProtocol() {
@@ -237,11 +268,11 @@ public class SOSMail {
         this.initMessage();
     }
 
-    public void createMessage(final Session session) throws Exception {
+    private void createMessage(final Session session) throws Exception {
         message = new MimeMessage(session);
     }
 
-    public void initLanguage() throws Exception {
+    private void initLanguage() throws Exception {
         if (dateFormats.containsKey(this.getLanguage()) && datetimeFormats.containsKey(this.getLanguage())) {
             this.setDateFormat(dateFormats.get(this.getLanguage()).toString());
             this.setDatetimeFormat(datetimeFormats.get(this.getLanguage()).toString());
@@ -329,10 +360,6 @@ public class SOSMail {
         warn("addAttachment", att.getFile().getAbsolutePath());
         attachmentList.put(att.getFile().getAbsolutePath(), att);
         changed = true;
-    }
-
-    public void setQueueMailOnError(boolean queueMailOnError) {
-        this.queueMailOnError = queueMailOnError;
     }
 
     public void addAttachment(final String filename) throws Exception {
@@ -445,10 +472,10 @@ public class SOSMail {
     }
 
     public boolean send(final boolean send) throws Exception {
-        if (SOSString.isEmpty(host)) {
+        if (SOSString.isEmpty(getHost())) {
             throw new Exception("host is empty");
         }
-        if (SOSString.isEmpty(port)) {
+        if (SOSString.isEmpty(getPort())) {
             throw new Exception("port is empty");
         }
         if (send) {
@@ -462,7 +489,7 @@ public class SOSMail {
         try {
             prepareJavaMail();
             String sTO = getRecipientsAsString();
-            String logMessage = "sending email:" + "   host:port=" + host + ":" + port + "   to=" + sTO;
+            String logMessage = "sending email:" + "   host:port=" + getHost() + ":" + getPort() + "   to=" + sTO;
             String sCC = getCCsAsString();
             if (!"".equals(sCC)) {
                 logMessage += "   sCC=" + sCC;
@@ -476,22 +503,27 @@ public class SOSMail {
             LOGGER.debug(dumpHeaders());
             LOGGER.debug(dumpMessageAsString(false));
             if (!sendToOutputStream) {
-                Transport t;
+                Transport transport;
                 if ("ssl".equalsIgnoreCase(securityProtocol) || "starttls".equalsIgnoreCase(securityProtocol)) {
-                    t = session.getTransport("smtps");
+                    transport = session.getTransport("smtps");
                 } else {
-                    t = session.getTransport("smtp");
+                    transport = session.getTransport("smtp");
                 }
                 message.setSentDate(new Date());
-                System.setProperty("mail.smtp.port", port);
-                System.setProperty("mail.smtp.host", host);
-                if (SOSString.isEmpty(user)) {
-                    t.connect();
+                if (smtpProperties == null) {
+                    System.setProperty("mail.smtp.port", getPort());
+                    System.setProperty("mail.smtp.host", getHost());
                 } else {
-                    t.connect(host, user, password);
+                    smtpProperties.setProperty("mail.smtp.port", getPort());
+                    smtpProperties.setProperty("mail.smtp.host", getHost());
                 }
-                t.sendMessage(message, message.getAllRecipients());
-                t.close();
+                if (SOSString.isEmpty(getUser())) {
+                    transport.connect();
+                } else {
+                    transport.connect(getHost(), getUser(), getPassword());
+                }
+                transport.sendMessage(message, message.getAllRecipients());
+                transport.close();
                 rawEmailByteStream = new ByteArrayOutputStream();
                 message.writeTo(rawEmailByteStream);
                 messageBytes = rawEmailByteStream.toByteArray();
@@ -499,7 +531,8 @@ public class SOSMail {
             }
             return true;
         } catch (javax.mail.AuthenticationFailedException ee) {
-            lastError = "AuthenticationFailedException while connecting to " + host + ":" + port + " " + user + "/******** -->" + ee.getMessage();
+            lastError = "AuthenticationFailedException while connecting to " + getHost() + ":" + getPort() + " " + getUser() + "/******** -->" + ee
+                    .getMessage();
             if (queueMailOnError) {
                 try {
                     dumpMessageToFile(true);
@@ -515,7 +548,7 @@ public class SOSMail {
                 if (!SOSString.isEmpty(queueDir) && e.getMessage().startsWith("Could not connect to SMTP host") || e.getMessage().startsWith(
                         "Unknown SMTP host") || e.getMessage().startsWith("Read timed out") || e.getMessage().startsWith(
                                 "Exception reading response")) {
-                    lastError = e.getMessage() + " ==> " + host + ":" + port + " " + user + "/********";
+                    lastError = e.getMessage() + " ==> " + getHost() + ":" + getPort() + " " + getUser() + "/********";
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
@@ -532,7 +565,7 @@ public class SOSMail {
         } catch (SocketTimeoutException e) {
             if (queueMailOnError) {
                 if (!SOSString.isEmpty(queueDir)) {
-                    lastError = e.getMessage() + " ==> " + host + ":" + port + " " + user + "/********";
+                    lastError = e.getMessage() + " ==> " + getHost() + ":" + getPort() + " " + getUser() + "/********";
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
@@ -865,13 +898,17 @@ public class SOSMail {
     }
 
     public void setTimeout(final int timeout) throws Exception {
-        this.timeout = timeout;
+        addMailProperty("mail.smtp.timeout", timeout);
         initMessage();
 
     }
 
-    public int getTimeout() {
-        return timeout;
+    public Integer getTimeout() {
+        if (getMailPropertyValue("mail.smtp.timeout") == null) {
+            return 30000;
+        } else {
+            return Integer.parseInt(getMailPropertyValue("mail.smtp.timeout"));
+        }
     }
 
     public String getLanguage() {
@@ -940,11 +977,11 @@ public class SOSMail {
     }
 
     public String getHost() {
-        return host;
+        return getMailPropertyValue("mail.smtp.host");
     }
 
     public String getPort() {
-        return port;
+        return getMailPropertyValue("mail.smtp.port");
     }
 
     public void setQueueDir(final String queueDir) {
@@ -1048,22 +1085,22 @@ public class SOSMail {
     }
 
     public void setHost(final String host) throws Exception {
-        this.host = host;
+        addMailProperty("mail.smtp.host", host);
         this.initMessage();
     }
 
     public void setPassword(final String password) throws Exception {
-        this.password = password;
+        addMailProperty("mail.smtp.password", password);
         this.initMessage();
     }
 
     public void setUser(final String user) throws Exception {
-        this.user = user;
+        addMailProperty("mail.smtp.user", user);
         this.initMessage();
     }
 
     public void setPort(final String port) throws Exception {
-        this.port = port;
+        addMailProperty("mail.smtp.port", port);
         this.initMessage();
     }
 
@@ -1138,6 +1175,15 @@ public class SOSMail {
                 LOGGER.error(e.getMessage(), e);
             }
         }
+    }
+
+    private void addMailProperty(String key, Object value) {
+        if (this.smtpProperties == null) {
+            System.getProperties().put(key, value);
+        } else {
+            this.smtpProperties.put(key, value);
+        }
+
     }
 
     public static void main(final String[] args) throws Exception {

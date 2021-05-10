@@ -34,33 +34,20 @@ public class SOSMailHandler {
 
             if (variables != null) {
                 for (Entry<String, Object> entry : variables.entrySet()) {
-                    if (entry.getValue() != null && entry.getKey().startsWith("mail_smtp_")) {
-                        smtpProperties.put(entry.getKey().replaceAll("_", "."), entry.getValue().toString());
+                    if (entry.getValue() != null && entry.getKey().startsWith("mail.")) {
+                        smtpProperties.put(entry.getKey(), entry.getValue().toString());
                     }
                 }
             }
 
-            sosMail = new SOSMail(args.getHost());
+            putSmtpProperties(smtpProperties, "mail.smtp.host", args.getMailSmtpHost());
+            putSmtpProperties(smtpProperties, "mail.smtp.port", String.valueOf(args.getMailSmtpPort()));
+            putSmtpProperties(smtpProperties, "mail.smtp.user", args.getMailSmtpUser());
+            putSmtpProperties(smtpProperties, "mail.smtp.password", args.getMailSmtpPassword());
+            sosMail = new SOSMail(smtpProperties);
+
             sosMail.setProperties(smtpProperties);
-            // sosMail.setQueueDir(queueDir);
             sosMail.setFrom(args.getFrom());
-
-            if (smtpProperties.get("mail.smtp.timeout") != null) {
-                try {
-                    sosMail.setTimeout(Integer.parseInt(smtpProperties.get("mail.smtp.timeout").toString()));
-                } catch (NumberFormatException e) {
-                }
-            }
-
-            if (smtpProperties.getProperty("mail.smtp.user") != null && !smtpProperties.getProperty("mail.smtp.user").isEmpty()) {
-                sosMail.setUser(smtpProperties.getProperty("mail.smtp.user"));
-            }
-            if (smtpProperties.getProperty("mail.smtp.password") != null && !smtpProperties.getProperty("mail.smtp.password").isEmpty()) {
-                sosMail.setPassword(smtpProperties.getProperty("mail.smtp.password"));
-            }
-            if (smtpProperties.getProperty("mail.smtp.port") != null && !smtpProperties.getProperty("mail.smtp.port").isEmpty()) {
-                sosMail.setPort(smtpProperties.getProperty("mail.smtp.port"));
-            }
 
             if (args.getContentType() != null) {
                 sosMail.setContentType(args.getContentType());
@@ -84,7 +71,7 @@ public class SOSMailHandler {
             if (args.getFromName() != null) {
                 sosMail.setFromName(args.getFromName());
             }
-            // sosMail.setQueueFailedPraefix(queueFailedPrefix);
+
             sosMail.setSecurityProtocol(args.getSecurityProtocol());
             String[] recipientsTo = args.getTo().split(";|,");
             for (int i = 0; i < recipientsTo.length; i++) {
@@ -119,7 +106,7 @@ public class SOSMailHandler {
                 }
             }
             log(logger, "sending mail: \n" + sosMail.dumpMessageAsString());
-            // sosMail.setQueueMailOnError(queueMailOnError);
+
             if (!sosMail.send()) {
                 log(logger, "mail server is unavailable, mail for recipient [" + args.getTo() + "]" + sosMail.getLastError());
             }
@@ -142,6 +129,13 @@ public class SOSMailHandler {
                 log(logger, sosMail.getLastError() + ":" + e.getMessage());
             }
             throw new Exception(e.getMessage());
+        }
+
+    }
+
+    private void putSmtpProperties(Properties smtpProperties, String key, String value) {
+        if (value != null) {
+            smtpProperties.put(key, value);
         }
 
     }

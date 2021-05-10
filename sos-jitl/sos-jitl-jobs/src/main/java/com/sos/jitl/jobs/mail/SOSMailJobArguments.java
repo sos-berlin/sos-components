@@ -6,8 +6,8 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class SOSMailJobArguments extends JobArguments {
 
-    private JobArgument<String> host = new JobArgument<String>("host", true);
-    private JobArgument<Integer> mailSmtpPort = new JobArgument<Integer>("mail_smtp_port", false, 25);
+    private JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
+    private JobArgument<Integer> mailSmtpPort = new JobArgument<Integer>("mail.smtp.port", false, 25);
     private JobArgument<String> from = new JobArgument<String>("from", false);
     private JobArgument<String> fromName = new JobArgument<String>("from_name", false);
     private JobArgument<String> replyTo = new JobArgument<String>("reply_to", false);
@@ -23,9 +23,9 @@ public class SOSMailJobArguments extends JobArguments {
     private JobArgument<String> attachmentCharset = new JobArgument<String>("attachment_charset", false);
     private JobArgument<String> attachmentContentType = new JobArgument<String>("attachment_content_type", false);
     private JobArgument<String> attachmentEncoding = new JobArgument<String>("attachment_encoding", false);
-    private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false);
-    private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail_smtp_user", false);
-    private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail_smtp_password", false, DisplayMode.MASKED);
+    private JobArgument<Boolean> cleanupAttachment = new JobArgument<Boolean>("cleanup_attachment", false,false);
+    private JobArgument<String> mailSmtpUser = new JobArgument<String>("mail.smtp.user", false);
+    private JobArgument<String> mailSmtpPassword = new JobArgument<String>("mail.smtp.password", false, DisplayMode.MASKED);
     private JobArgument<String> securityProtocol = new JobArgument<String>("security_protocol", false);
     private JobArgument<String[]> attachments = new JobArgument<String[]>("attachments", false);
 
@@ -34,12 +34,12 @@ public class SOSMailJobArguments extends JobArguments {
     private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
     private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
 
-    public String getHost() {
-        return host.getValue();
+    public String getMailSmtpHost() {
+        return mailSmtpHost.getValue();
     }
 
-    public void setHost(String host) {
-        this.host.setValue(host);
+    public void setMailSmtpHost(String mailSmtpHost) {
+        this.mailSmtpHost.setValue(mailSmtpHost);
     }
 
     public Integer getMailSmtpPort() {
@@ -178,8 +178,8 @@ public class SOSMailJobArguments extends JobArguments {
         this.mailSmtpUser.setValue(mailSmtpUser);
     }
 
-    public JobArgument<String> getMailSmtpPassword() {
-        return mailSmtpPassword;
+    public String getMailSmtpPassword() {
+        return mailSmtpPassword.getValue();
     }
 
     public void setMailSmtpPassword(String mailSmtpPassword) {
