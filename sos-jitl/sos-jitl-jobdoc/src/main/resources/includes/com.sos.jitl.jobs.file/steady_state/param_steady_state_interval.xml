@@ -5,17 +5,20 @@
     required="false" 
     default_value="1" 
     DataType="java.lang.String" 
-    usewith="check_steady_state_of_files, steady_state_count">
+    usewith="steady_state_count">
     <note language="de">
         <title>zeitlicher Abstand zwischen Checkpoints</title>
             <p>
 Der Abstand in Sekunden zwischen zwei Prüfungen auf Vollständigkeit bzw. Veränderungen wird mit dem Wert dieses Parameters festgelegt.
             </p>
     </note>
+     <xi:include href="../note_file_age_values_de.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
+    
     <note language="en">
         <title>Temporal distance between checkpoints</title>
             <p>
             The value of this option defines the temporal distance in seconds between two checkpoints.
             </p>
     </note>
+     <xi:include href="../note_file_age_values_en.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
 </param>

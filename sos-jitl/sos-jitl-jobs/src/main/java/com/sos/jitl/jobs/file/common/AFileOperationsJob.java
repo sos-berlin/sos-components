@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
@@ -32,8 +33,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
 
     public void checkArguments(FileOperationsJobArguments args) throws Exception {
         if (SOSString.isEmpty(args.getReplacing().getValue()) && !SOSString.isEmpty(args.getReplacement().getValue())) {
-            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(), args
-                    .getReplacement().getName()));
+            throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
+                    args.getReplacement().getName()));
         }
         setFlags(args);
     }
@@ -59,10 +60,14 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
     }
 
     public boolean checkSteadyStateOfFiles(JobLogger logger, FileOperationsJobArguments args, List<File> files) throws Exception {
-        if (files == null || files.size() == 0 || !args.getCheckSteadyStateOfFiles().getValue()) {
+        if (files == null || files.size() == 0 || args.getSteadyStateCount().getValue() <= 0) {
             return true;
         }
         long interval = Job.getTimeAsSeconds(args.getSteadyStateInterval());
+        if (interval <= 0) {
+            logger.debug("skip checking file(s) for steady state, interval=%ss", interval);
+            return true;
+        }
 
         logger.debug("checking file(s) for steady state, interval=%ss", interval);
         List<FileDescriptor> list = new ArrayList<FileDescriptor>();
@@ -80,8 +85,11 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             result = true;
             for (FileDescriptor fd : list) {
                 File file = new File(fd.getFileName());
-                logger.debug("result is : " + file.lastModified() + ", " + fd.getLastModificationDate() + ", " + file.length() + ", " + fd
-                        .getLastFileLength());
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[steady state][%s][modified last=%s current=%s][file length last=%sb current=%sb]", file.getCanonicalPath(), SOSDate
+                            .getDateTimeAsISO(fd.getLastModificationDate()), SOSDate.getDateTimeAsISO(file.lastModified()), fd.getLastFileLength(),
+                            file.length());
+                }
                 if (args.getUseFileLock().getValue()) {
                     try {
                         RandomAccessFile raf = new RandomAccessFile(file, "rw");
@@ -93,11 +101,11 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                             break;
                         } catch (OverlappingFileLockException e) {
                             result = false;
-                            logger.info(String.format("File '%1$s' is open by someone else", file.getAbsolutePath()));
+                            logger.info(String.format("File '%s' is open by someone else", file.getAbsolutePath()));
                             break;
                         } finally {
                             lock.release();
-                            logger.debug(String.format("release lock for '%1$s'", file.getAbsolutePath()));
+                            logger.debug(String.format("release lock for '%s'", file.getAbsolutePath()));
                             if (raf != null) {
                                 channel.close();
                                 raf.close();
@@ -114,7 +122,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                     result = false;
                     fd.update(file);
                     fd.setSteady(false);
-                    logger.info(String.format("File '%1$s' changed during checking steady state", file.getAbsolutePath()));
+                    logger.info(String.format("File '%s' changed during checking steady state", file.getAbsolutePath()));
                     break;
                 } else {
                     fd.setSteady(true);
@@ -134,7 +142,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             logger.error("not all files are steady");
             for (FileDescriptor fd : list) {
                 if (!fd.isSteady()) {
-                    logger.info(String.format("File '%1$s' is not steady", fd.getFileName()));
+                    logger.info(String.format("File '%s' is not steady", fd.getFileName()));
                 }
             }
             throw new SOSFileOperationsException("not all files are steady");

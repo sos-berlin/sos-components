@@ -3,18 +3,18 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="steady_state_count" 
     required="false" 
-    default_value="30" 
-    DataType="java.lang.Integer">
+    default_value="0" 
+    DataType="java.lang.Integer"
+    usewith="steady_state_interval">
     <note language="de">
-        <title>Anzahl Checkpoints</title>
-            <p>
-Mit dieser Option wird festgelegt, wie oft die Prüfung, ob die Datei sich verändert hat, wiederholt wird.
-            </p>
     </note>
     <note language="en">
-        <title>Maximum Number of Checkpoints</title>
+        <title>Check the completeness of a file (steady state).Maximum Number of Checkpoints</title>
             <p>
             The value of this option specifies the number of retries for to check the steady state of a file.
+            </p>
+            <p>
+            Setting this parameter to greater than 0 the receiver will check the file for completeness before he starts the transfer.
             </p>
     </note>
 </param> 

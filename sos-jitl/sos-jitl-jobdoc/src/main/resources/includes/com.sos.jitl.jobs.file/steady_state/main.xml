@@ -7,7 +7,6 @@
 	<title language="de">Prüfung auf Vollständigkeit aller Dateien</title>
 	<title language="en">Check the completeness of a file (steady state)</title>
 	
-	<xi:include href="./param_check_steady_state_of_files.xml" parse="xml" />
 	<xi:include href="./param_steady_state_count.xml" parse="xml" />
 	<xi:include href="./param_steady_state_interval.xml" parse="xml" />
 </params>

@@ -111,7 +111,11 @@ public class Job {
     }
 
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
-        String val = SOSString.isEmpty(arg.getValue()) ? arg.getDefault() : arg.getValue();
+        return getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefault() : arg.getValue());
+    }
+
+    // s, hh:mm:ss, hh:mm
+    public static long getTimeAsSeconds(String val) {
         if (SOSString.isEmpty(val)) {
             return 0L;
         }
@@ -121,7 +125,7 @@ public class Job {
         long seconds = 0L;
         String[] arr = val.split(":");
         for (int i = arr.length - 1; i >= 0; i--) {
-            seconds += new Integer(arr[i]) * num[j++];
+            seconds += new Integer(arr[i].trim()) * num[j++];
         }
         return seconds;
     }

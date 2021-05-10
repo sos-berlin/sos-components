@@ -1,7 +1,6 @@
 package com.sos.jitl.jobs.file.common;
 
 import java.nio.file.Path;
-import java.util.Collections;
 
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -18,7 +17,8 @@ public class FileOperationsJobArguments extends JobArguments {
 
     /* Input arguments */
     // argument "source_file" with possible alias "file"
-    private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true, Collections.singletonList("file"));
+    // private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true, Collections.singletonList("file"));
+    private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true);
 
     private JobArgument<String> targetFile = new JobArgument<String>("target_file", false);
     private JobArgument<String> sortCriteria = new JobArgument<String>("sort_criteria", false, "name");
@@ -45,9 +45,8 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<Boolean> removeDir = new JobArgument<Boolean>("remove_dir", false, false);
 
     // steady state
-    private JobArgument<Boolean> checkSteadyStateOfFiles = new JobArgument<Boolean>("check_steady_state_of_files", false, false);
+    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", false, 0);
     private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", false, "1");
-    private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", false, 30);
 
     // result set
     private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", false, 0);
@@ -164,10 +163,6 @@ public class FileOperationsJobArguments extends JobArguments {
 
     public JobArgument<Boolean> getRemoveDir() {
         return removeDir;
-    }
-
-    public JobArgument<Boolean> getCheckSteadyStateOfFiles() {
-        return checkSteadyStateOfFiles;
     }
 
     public Integer getFlags() {

@@ -286,6 +286,16 @@ public class SOSDate {
         return formatter.format(date);
     }
 
+    public static String getDateTimeAsISO(Date date) throws Exception {
+        DateFormat formatter = new SimpleDateFormat(dateTimeFormat);
+        formatter.setLenient(lenient);
+        return formatter.format(date);
+    }
+
+    public static String getDateTimeAsISO(long datetime) throws Exception {
+        return getDateTimeAsISO(new Date(datetime));
+    }
+
     public static Date getDate(String text, int dateStyle, Locale locale) throws ParseException {
         DateFormat formatter = DateFormat.getDateInstance(dateStyle, locale);
         return formatter.parse(text);

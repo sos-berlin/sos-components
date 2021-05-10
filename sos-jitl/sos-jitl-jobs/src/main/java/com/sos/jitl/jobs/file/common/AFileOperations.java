@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.sos.commons.util.SOSDate;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
@@ -759,37 +760,7 @@ public abstract class AFileOperations {
     }
 
     private long calculateFileAge(final String fileage) throws Exception {
-        long age = 0;
-        if (fileage == null || fileage.trim().isEmpty()) {
-            return 0;
-        }
-        if (fileage.indexOf(":") == -1) {
-            if (!fileage.matches("[\\d]+")) {
-                throw new SOSFileOperationsException("[" + fileage + "] is no valid file age");
-            } else {
-                return Long.parseLong(fileage) * 1000;
-            }
-        }
-        if (!fileage.matches("^[\\d].*[\\d]$")) {
-            throw new SOSFileOperationsException("[" + fileage + "] is no valid file age");
-        }
-        String[] timeArray = fileage.split(":");
-        if (timeArray.length > 3) {
-            throw new SOSFileOperationsException("[" + fileage + "] is no valid file age");
-        }
-        for (int i = 0; i < timeArray.length; i++) {
-            if (!timeArray[i].matches("[\\d]+")) {
-                throw new SOSFileOperationsException("[" + fileage + "] is no valid file age");
-            }
-        }
-        long hours = Long.parseLong(timeArray[0]);
-        long minutes = Long.parseLong(timeArray[1]);
-        long seconds = 0;
-        if (timeArray.length > 2) {
-            seconds = Long.parseLong(timeArray[2]);
-        }
-        age = hours * 3600000 + minutes * 60000 + seconds * 1000;
-        return age;
+        return Job.getTimeAsSeconds(fileage);
     }
 
     private long calculateFileSize(final String filesize) throws Exception {
