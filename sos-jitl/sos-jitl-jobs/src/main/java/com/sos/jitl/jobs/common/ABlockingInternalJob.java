@@ -6,6 +6,7 @@ import static io.vavr.control.Either.right;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -257,6 +258,13 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                         val = v;
                     }
                 }
+            }
+        } else if (val instanceof BigDecimal) {
+            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            if (type.equals(Integer.class)) {
+                val = Integer.valueOf(((BigDecimal) val).intValue());
+            } else if (type.equals(Long.class)) {
+                val = Long.valueOf(((BigDecimal) val).longValue());
             }
         }
         return val;
