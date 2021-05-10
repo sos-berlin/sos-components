@@ -3,6 +3,16 @@ package com.sos.jitl.jobs.common;
 import java.util.List;
 
 /** TODO name ignoreCase?(js7 supports different spelling) */
+/** Supported types:<br/>
+ * - java.lang.String<br/>
+ * - java.lang.Boolean<br/>
+ * - java.lang.Integer<br/>
+ * - java.lang.Long<br/>
+ * - java.math.BigDecimal<br/>
+ * - java.nio.file.Path<br/>
+ * - java.net.URI<br/>
+ * - enum<br/>
+ */
 public class JobArgument<T> {
 
     public enum ValueSource {
