@@ -3,6 +3,7 @@ package com.sos.commons.util;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,16 +43,16 @@ public class SOSReflection {
         return fields;
     }
 
-    public static boolean isList(String className) throws ClassNotFoundException {
-        return isList(Class.forName(normalizeClassForName(className)));
+    public static boolean isList(Type type) throws ClassNotFoundException {
+        return isList(Class.forName(normalizeClassForName(type.getTypeName())));
     }
 
     public static boolean isList(Class<?> cls) {
         return List.class.isAssignableFrom(cls);
     }
 
-    public static boolean isEnum(String className) throws ClassNotFoundException {
-        return isEnum(Class.forName(normalizeClassForName(className)));
+    public static boolean isEnum(Type type) throws ClassNotFoundException {
+        return isEnum(Class.forName(normalizeClassForName(type.getTypeName())));
     }
 
     public static boolean isEnum(Class<?> cls) {

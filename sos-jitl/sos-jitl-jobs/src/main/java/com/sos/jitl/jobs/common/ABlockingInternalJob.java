@@ -249,9 +249,9 @@ public abstract class ABlockingInternalJob<A> implements BlockingInternalJob {
                     val = Paths.get(val.toString());
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
-                } else if (SOSReflection.isList(type.getTypeName())) {
+                } else if (SOSReflection.isList(type)) {
                     val = Stream.of(val.toString().split(Job.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
-                } else if (SOSReflection.isEnum(type.getTypeName())) {
+                } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
                         arg.setNotAcceptedValue(val);
