@@ -54,6 +54,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("                  means set 2 return variables: 1) myvar1=xyz 2)myvar2=123");
         step.getLogger().info("     \"%s\"='some value'", args.getStringArgument().getName());
         step.getLogger().info("     \"%s\"='some password'", args.getPassword().getName());
+        step.getLogger().info("     \"%s\"='entry1;entry2;entry3'", args.getList().getName());
 
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");

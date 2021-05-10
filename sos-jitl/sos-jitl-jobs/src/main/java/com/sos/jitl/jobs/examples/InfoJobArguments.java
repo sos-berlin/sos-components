@@ -1,16 +1,19 @@
 package com.sos.jitl.jobs.examples;
 
+import java.util.List;
+
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class InfoJobArguments extends JobArguments {
 
-    private JobArgument<Boolean> showEnv = new JobArgument<Boolean>("show_env", false);
-    private JobArgument<Boolean> redefineShowEnv = new JobArgument<Boolean>("redefine_show_env", false);
-    private JobArgument<String> stringArgument = new JobArgument<String>("string_argument", false);
-    private JobArgument<String> returnVariables = new JobArgument<String>("return_variables", false);
-    private JobArgument<String> password = new JobArgument<String>("password", false, DisplayMode.MASKED);
+    private JobArgument<Boolean> showEnv = new JobArgument<>("show_env", false);
+    private JobArgument<Boolean> redefineShowEnv = new JobArgument<>("redefine_show_env", false);
+    private JobArgument<String> stringArgument = new JobArgument<>("string_argument", false);
+    private JobArgument<String> returnVariables = new JobArgument<>("return_variables", false);
+    private JobArgument<String> password = new JobArgument<>("password", false, DisplayMode.MASKED);
+    private JobArgument<List<String>> list = new JobArgument<>("list", false);
 
     public JobArgument<Boolean> getShowEnv() {
         return showEnv;
@@ -30,5 +33,9 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<String> getPassword() {
         return password;
+    }
+
+    public JobArgument<List<String>> getList() {
+        return list;
     }
 }

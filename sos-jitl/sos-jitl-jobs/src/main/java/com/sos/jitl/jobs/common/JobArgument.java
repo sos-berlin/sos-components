@@ -11,7 +11,9 @@ import java.util.List;
  * - java.math.BigDecimal<br/>
  * - java.nio.file.Path<br/>
  * - java.net.URI<br/>
- * - enum<br/>
+ * - java.util.List&lt;String&gt;<br/>
+ * - java.util.LinkedList&lt;String&gt;<br/>
+ * - java.lang.Enum<br/>
  */
 public class JobArgument<T> {
 

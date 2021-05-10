@@ -27,6 +27,7 @@ import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 public class Job {
 
     public static final String NAMED_NAME_RETURN_CODE = "returnCode";
+    public static final String LIST_VALUE_DELIMITER = ";";
 
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
@@ -166,12 +167,16 @@ public class Job {
                 .getValue()));
     }
 
+    @SuppressWarnings("unchecked")
     public static String getDisplayValue(Object value, DisplayMode mode) {
         if (value == null) {
             return null;
         }
         switch (mode) {
         case UNMASKED:
+            if (value instanceof List) {
+                return String.join(LIST_VALUE_DELIMITER, (List<String>) value);
+            }
             return value.toString();
         case MASKED:
             return DisplayMode.MASKED.getValue();

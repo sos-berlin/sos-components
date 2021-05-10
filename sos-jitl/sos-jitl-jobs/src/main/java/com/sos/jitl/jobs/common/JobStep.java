@@ -163,6 +163,13 @@ public class JobStep<A> {
                 if (!allCurrentArguments.containsKey(a.getName())) {
                     allCurrentArguments.put(a.getName(), a);
                 }
+                if (a.getNameAliases() != null) {
+                    for (String n : a.getNameAliases()) {
+                        if (!allCurrentArguments.containsKey(n)) {
+                            allCurrentArguments.put(n, a);
+                        }
+                    }
+                }
             });
         }
         // UNKNOWN Arguments

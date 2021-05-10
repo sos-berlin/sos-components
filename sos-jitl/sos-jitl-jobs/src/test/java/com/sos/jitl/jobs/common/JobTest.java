@@ -3,12 +3,15 @@ package com.sos.jitl.jobs.common;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -85,6 +88,8 @@ public class JobTest {
         map.put(o1.getHibernateFile().getName(), "C://myfile");
         map.put(o2.getJocUri().getName(), "http://localhost");
         map.put(o3.getLogLevel().getName(), "xxx");
+        map.put(o3.getList().getName(), "xxx ; yyyy ;");
+        map.put(o3.getLinkedList().getName(), "lxxx ; lyyyy ;");
 
         LOGGER.info(o1.getClass().getSimpleName() + "---");
         setArguments(map, o1);
@@ -93,10 +98,11 @@ public class JobTest {
         LOGGER.info(o2.getClass().getSimpleName() + "---");
         setArguments(map, o2);
         LOGGER.info("jocUri=" + o2.getJocUri().getValue().getScheme());
-
         LOGGER.info(o3.getClass().getSimpleName() + "---");
         setArguments(map, o3);
         LOGGER.info("logLevel=" + o3.getLogLevel().getValue().name());
+        LOGGER.info("list=" + o3.getList().getDisplayValue());
+        LOGGER.info("linkedList=" + o3.getLinkedList().getDisplayValue());
     }
 
     private static Class<?> getJobArgumensClass(Object instance) throws SOSJobArgumentException {
@@ -133,21 +139,7 @@ public class JobTest {
                     if (val == null || SOSString.isEmpty(val.toString())) {
                         arg.setValue(arg.getDefault());
                     } else {
-                        if (val instanceof String) {
-                            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-                            LOGGER.debug("    field parameter type=" + type.getTypeName());
-                            val = val.toString().trim();
-                            if (!type.equals(String.class)) {
-                                if (type.equals(Path.class)) {
-                                    val = Paths.get(val.toString());
-                                } else if (type.equals(URI.class)) {
-                                    val = URI.create(val.toString());
-                                } else if (SOSReflection.isEnum(type.getTypeName())) {
-                                    val = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
-                                }
-                            }
-                        }
-                        arg.setValue(val);
+                        arg.setValue(getValue(field, arg, val));
                     }
                     field.set(o, arg);
                 }
@@ -156,4 +148,38 @@ public class JobTest {
             }
         }
     }
+
+    private Object getValue(Field field, JobArgument<?> arg, Object val) throws ClassNotFoundException {
+        if (val instanceof String) {
+            val = val.toString().trim();
+            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            if (!type.equals(String.class)) {
+                LOGGER.debug("       [" + field.getName() + "]type=" + type.getTypeName());
+                if (type.equals(Path.class)) {
+                    val = Paths.get(val.toString());
+                } else if (type.equals(URI.class)) {
+                    val = URI.create(val.toString());
+                } else if (SOSReflection.isList(type.getTypeName())) {
+                    val = Stream.of(val.toString().split(Job.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                } else if (SOSReflection.isEnum(type.getTypeName())) {
+                    Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
+                    if (v == null) {
+                        arg.setNotAcceptedValue(val);
+                        val = arg.getDefault();
+                    } else {
+                        val = v;
+                    }
+                }
+            }
+        } else if (val instanceof BigDecimal) {
+            Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+            if (type.equals(Integer.class)) {
+                val = Integer.valueOf(((BigDecimal) val).intValue());
+            } else if (type.equals(Long.class)) {
+                val = Long.valueOf(((BigDecimal) val).longValue());
+            }
+        }
+        return val;
+    }
+
 }
