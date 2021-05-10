@@ -1,5 +1,7 @@
 package com.sos.jitl.jobs.common;
 
+import java.util.List;
+
 /** TODO name ignoreCase?(js7 supports different spelling) */
 public class JobArgument<T> {
 
@@ -66,9 +68,9 @@ public class JobArgument<T> {
     private final int DISPLAY_VALUE_USED_LENGTH = DISPLAY_VALUE_MAX_LENGTH - DISPLAY_VALUE_TRUNCATING_SUFFIX.length();
 
     private final String name;
+    private final List<String> nameAliases;
     private final boolean required;
     private final T defaultValue;
-    private final JobArgument<T> reference;
 
     private DisplayMode displayMode;
     private ValueSource valueSource;
@@ -81,34 +83,43 @@ public class JobArgument<T> {
         this(name, required, null, DisplayMode.UNMASKED, null);
     }
 
+    public JobArgument(String name, boolean required, List<String> nameAliases) {
+        this(name, required, null, DisplayMode.UNMASKED, nameAliases);
+    }
+
     public JobArgument(String name, boolean required, T defaultValue) {
         this(name, required, defaultValue, DisplayMode.UNMASKED, null);
     }
 
-    public JobArgument(String name, JobArgument<T> reference) {
-        this(name, reference.isRequired(), reference.getDefault(), reference.getDisplayMode(), reference);
+    public JobArgument(String name, boolean required, T defaultValue, List<String> nameAliases) {
+        this(name, required, defaultValue, DisplayMode.UNMASKED, nameAliases);
     }
 
     public JobArgument(String name, boolean required, DisplayMode displayMode) {
         this(name, required, null, displayMode, null);
     }
 
+    public JobArgument(String name, boolean required, DisplayMode displayMode, List<String> nameAliases) {
+        this(name, required, null, displayMode, nameAliases);
+    }
+
+    public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, List<String> nameAliases) {
+        this.name = name;
+        this.required = required;
+        this.defaultValue = defaultValue;
+        this.displayMode = displayMode;
+        this.valueSource = ValueSource.JAVA;
+        this.nameAliases = nameAliases;
+        this.type = Type.KNOWN;
+    }
+
+    /* internal usage - unknown Arguments */
     protected JobArgument(String name, T value, ValueSource valueSource) {
         this(name, false, null, DisplayMode.UNKNOWN, null);
         this.value = value;
         this.type = Type.UNKNOWN;
         this.valueSource = valueSource;
         this.dirty = true;
-    }
-
-    public JobArgument(String name, boolean required, T defaultValue, DisplayMode displayMode, JobArgument<T> reference) {
-        this.name = name;
-        this.required = required;
-        this.defaultValue = defaultValue;
-        this.displayMode = displayMode;
-        this.valueSource = ValueSource.JAVA;
-        this.reference = reference;
-        this.type = Type.KNOWN;
     }
 
     public String getName() {
@@ -132,10 +143,6 @@ public class JobArgument<T> {
             return defaultValue;
         }
         return value;
-    }
-
-    private DisplayMode getDisplayMode() {
-        return displayMode;
     }
 
     public String getDisplayValue() {
@@ -165,8 +172,8 @@ public class JobArgument<T> {
         return type;
     }
 
-    protected JobArgument<T> getReference() {
-        return reference;
+    protected List<String> getNameAliases() {
+        return nameAliases;
     }
 
     public boolean isDirty() {

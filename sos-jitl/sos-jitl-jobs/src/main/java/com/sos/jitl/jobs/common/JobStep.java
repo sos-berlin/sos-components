@@ -129,7 +129,8 @@ public class JobStep<A> {
     public JobArgument<A> getKnownArgument(String name) {
         setKnownArguments();
         if (knownArguments != null) {
-            return knownArguments.stream().filter(a -> a.getName().equals(name)).findAny().orElse(null);
+            return knownArguments.stream().filter(a -> a.getName().equals(name) || (a.getNameAliases() != null && a.getNameAliases().contains(name)))
+                    .findAny().orElse(null);
         }
         return null;
     }

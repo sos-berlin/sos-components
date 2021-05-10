@@ -1,6 +1,7 @@
 package com.sos.jitl.jobs.file.common;
 
 import java.nio.file.Path;
+import java.util.Collections;
 
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
@@ -16,9 +17,8 @@ public class FileOperationsJobArguments extends JobArguments {
     private JobArgument<Integer> flags = new JobArgument<Integer>(null, false, 0); // internal usage
 
     /* Input arguments */
-    private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true);
-    @SuppressWarnings("unused")
-    private JobArgument<String> file = new JobArgument<String>("file", sourceFile);// alias for source file
+    // argument "source_file" with possible alias "file"
+    private JobArgument<String> sourceFile = new JobArgument<String>("source_file", true, Collections.singletonList("file"));
 
     private JobArgument<String> targetFile = new JobArgument<String>("target_file", false);
     private JobArgument<String> sortCriteria = new JobArgument<String>("sort_criteria", false, "name");
