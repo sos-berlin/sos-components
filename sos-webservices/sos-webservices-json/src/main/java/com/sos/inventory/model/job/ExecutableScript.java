@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "script",
     "env",
-    "v1Compatible"
+    "v1Compatible",
+    "login"
 })
 public class ExecutableScript
     extends Executable
@@ -44,6 +45,8 @@ public class ExecutableScript
     private Environment env;
     @JsonProperty("v1Compatible")
     private Boolean v1Compatible = false;
+    @JsonProperty("login")
+    private ExecutableScriptLogin login;
 
     /**
      * No args constructor for use in serialization
@@ -55,14 +58,16 @@ public class ExecutableScript
     /**
      * 
      * @param env
+     * @param login
      * @param script
      * @param v1Compatible
      */
-    public ExecutableScript(String script, Environment env, Boolean v1Compatible) {
+    public ExecutableScript(String script, Environment env, Boolean v1Compatible, ExecutableScriptLogin login) {
         super();
         this.script = script;
         this.env = env;
         this.v1Compatible = v1Compatible;
+        this.login = login;
     }
 
     /**
@@ -117,14 +122,24 @@ public class ExecutableScript
         this.v1Compatible = v1Compatible;
     }
 
+    @JsonProperty("login")
+    public ExecutableScriptLogin getLogin() {
+        return login;
+    }
+
+    @JsonProperty("login")
+    public void setLogin(ExecutableScriptLogin login) {
+        this.login = login;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("script", script).append("env", env).append("v1Compatible", v1Compatible).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("script", script).append("env", env).append("v1Compatible", v1Compatible).append("login", login).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(env).append(script).append(v1Compatible).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(env).append(login).append(script).append(v1Compatible).toHashCode();
     }
 
     @Override
@@ -136,7 +151,7 @@ public class ExecutableScript
             return false;
         }
         ExecutableScript rhs = ((ExecutableScript) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(env, rhs.env).append(script, rhs.script).append(v1Compatible, rhs.v1Compatible).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(env, rhs.env).append(login, rhs.login).append(script, rhs.script).append(v1Compatible, rhs.v1Compatible).isEquals();
     }
 
 }
