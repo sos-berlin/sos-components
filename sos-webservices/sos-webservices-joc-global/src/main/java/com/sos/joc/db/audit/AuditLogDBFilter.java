@@ -9,7 +9,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.order.OrderPath;
 
 public class AuditLogDBFilter {
@@ -35,7 +34,7 @@ public class AuditLogDBFilter {
 //		for (JobPath j: auditLogFilter.getJobs()) {
 //			addJob(j.getJob());
 //		}
-		listOfOrders = auditLogFilter.getOrders();
+//		listOfOrders = auditLogFilter.getOrders();
 		ticketLink = auditLogFilter.getTicketLink();
 		account = auditLogFilter.getAccount();
 //		listOfCalendars = auditLogFilter.getCalendars();

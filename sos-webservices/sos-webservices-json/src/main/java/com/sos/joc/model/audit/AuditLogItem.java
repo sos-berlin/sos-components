@@ -23,12 +23,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "request",
     "created",
     "controllerId",
+    "category",
     "comment",
     "parameters",
-    "job",
-    "workflow",
-    "orderId",
-    "calendar",
     "timeSpent",
     "ticketLink"
 })
@@ -70,6 +67,15 @@ public class AuditLogItem {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    /**
+     * Tree object type
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    private CategoryType category;
     @JsonProperty("comment")
     private String comment;
     /**
@@ -79,14 +85,6 @@ public class AuditLogItem {
     @JsonProperty("parameters")
     @JsonPropertyDescription("JSON object as string, parameter of request")
     private String parameters;
-    @JsonProperty("job")
-    private String job;
-    @JsonProperty("workflow")
-    private String workflow;
-    @JsonProperty("orderId")
-    private String orderId;
-    @JsonProperty("calendar")
-    private String calendar;
     /**
      * non negative integer
      * <p>
@@ -192,6 +190,30 @@ public class AuditLogItem {
         this.controllerId = controllerId;
     }
 
+    /**
+     * Tree object type
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public CategoryType getCategory() {
+        return category;
+    }
+
+    /**
+     * Tree object type
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("category")
+    public void setCategory(CategoryType category) {
+        this.category = category;
+    }
+
     @JsonProperty("comment")
     public String getComment() {
         return comment;
@@ -218,46 +240,6 @@ public class AuditLogItem {
     @JsonProperty("parameters")
     public void setParameters(String parameters) {
         this.parameters = parameters;
-    }
-
-    @JsonProperty("job")
-    public String getJob() {
-        return job;
-    }
-
-    @JsonProperty("job")
-    public void setJob(String job) {
-        this.job = job;
-    }
-
-    @JsonProperty("workflow")
-    public String getWorkflow() {
-        return workflow;
-    }
-
-    @JsonProperty("workflow")
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
-    }
-
-    @JsonProperty("orderId")
-    public String getOrderId() {
-        return orderId;
-    }
-
-    @JsonProperty("orderId")
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    @JsonProperty("calendar")
-    public String getCalendar() {
-        return calendar;
-    }
-
-    @JsonProperty("calendar")
-    public void setCalendar(String calendar) {
-        this.calendar = calendar;
     }
 
     /**
@@ -294,12 +276,12 @@ public class AuditLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("comment", comment).append("parameters", parameters).append("job", job).append("workflow", workflow).append("orderId", orderId).append("calendar", calendar).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("category", category).append("comment", comment).append("parameters", parameters).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendar).append(request).append(controllerId).append(workflow).append(orderId).append(timeSpent).append(created).append(ticketLink).append(comment).append(job).append(parameters).append(account).toHashCode();
+        return new HashCodeBuilder().append(request).append(controllerId).append(timeSpent).append(created).append(comment).append(category).append(parameters).append(account).append(ticketLink).toHashCode();
     }
 
     @Override
@@ -311,7 +293,7 @@ public class AuditLogItem {
             return false;
         }
         AuditLogItem rhs = ((AuditLogItem) other);
-        return new EqualsBuilder().append(calendar, rhs.calendar).append(request, rhs.request).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(ticketLink, rhs.ticketLink).append(comment, rhs.comment).append(job, rhs.job).append(parameters, rhs.parameters).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(request, rhs.request).append(controllerId, rhs.controllerId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(comment, rhs.comment).append(category, rhs.category).append(parameters, rhs.parameters).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
     }
 
 }

@@ -1,10 +1,8 @@
 package com.sos.joc.publish.util;
 
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,8 +19,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.AuditLogDetail;
-import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -249,9 +245,9 @@ public class DeleteDeployments {
         }
         // delete and put to trash
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        Date now = Date.from(Instant.now());
+        //Date now = Date.from(Instant.now());
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
-            JocAuditLog.storeAuditLogDetail(new AuditLogDetail(invConfiguration.getPath(), invConfiguration.getType()), dbLayer.getSession(), auditlogId, now);
+            //JocAuditLog.storeAuditLogDetail(new AuditLogDetail(invConfiguration.getPath(), invConfiguration.getType()), dbLayer.getSession(), auditlogId, now);
             invConfiguration.setAuditLogId(auditlogId);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
             if (withEvents) {

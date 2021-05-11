@@ -29,21 +29,20 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.OrdersHelper;
-import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
+import com.sos.joc.exceptions.DBConnectionRefusedException;
+import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -94,30 +93,35 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     .getVariables() == null) {
                 throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(dailyplanModifyOrder.getAuditLog(), dailyplanModifyOrder.getControllerId(), CategoryType.DAILYPLAN);
-
-            setSettings();
+            
             List<String> orderIds = dailyplanModifyOrder.getOrderIds();
             Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
+            orderIds.removeAll(temporaryOrderIds);
+            
+            CategoryType category = CategoryType.DAILYPLAN;
+            if (orderIds.isEmpty()) {
+                category = CategoryType.CONTROLLER;
+            }
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(dailyplanModifyOrder.getAuditLog(), dailyplanModifyOrder.getControllerId(), category);
+
             List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
                     dbAuditlog.getId(), folderPermissions);
-            orderIds.removeAll(temporaryOrderIds);
-            if (orderIds.isEmpty()) {
-                dbAuditlog.setCategory(CategoryType.CONTROLLER.intValue());
-                JocAuditLog.updateAuditLogEntry(dbAuditlog); 
-            }
+            
+            if (!orderIds.isEmpty()) {
+                setSettings();
 
-            List<String> listOfOrderIds = new ArrayList<String>();
-            for (String orderId : orderIds) {
-                listOfOrderIds.add(orderId);
-            }
+                List<String> listOfOrderIds = new ArrayList<String>();
+                for (String orderId : orderIds) {
+                    listOfOrderIds.add(orderId);
+                }
 
-            for (String orderId : orderIds) {
-                addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder);
-            }
+                for (String orderId : orderIds) {
+                    addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder);
+                }
 
-            for (String orderId : listOfOrderIds) {
-                modifyOrder(orderId, dailyplanModifyOrder);
+                for (String orderId : listOfOrderIds) {
+                    modifyOrder(orderId, dailyplanModifyOrder);
+                }
             }
 
             if (!errors.isEmpty()) {

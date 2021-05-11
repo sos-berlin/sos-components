@@ -2,10 +2,14 @@ package com.sos.joc.audit.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -19,6 +23,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.audit.resource.IAuditLogResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.audit.AuditLogDBFilter;
 import com.sos.joc.db.audit.AuditLogDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -26,6 +31,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLog;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.AuditLogItem;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
@@ -40,14 +46,35 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             initLogging(API_CALL, bytes, accessToken);
             JsonValidator.validateFailFast(bytes, AuditLogFilter.class);
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
-            String controllerId = auditLogFilter.getControllerId() == null ? "" : auditLogFilter.getControllerId();
-            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getJocPermissions(accessToken).getAuditLog().getView());
+            
+            String controllerId = auditLogFilter.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+//            Set<String> allowedControllers = Collections.emptySet();
+//            if (controllerId == null || controllerId.isEmpty()) {
+//                controllerId = "";
+//                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+//                        availableController, accessToken).getView()).collect(Collectors.toSet());
+//                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+//                    allowedControllers = Collections.emptySet();
+//                }
+//            } else {
+//                if (getControllerPermissions(controllerId, accessToken).getView()) {
+//                    allowedControllers = Collections.singleton(controllerId);
+//                }
+//            }
+//            EnumSet.allOf(CategoryType.class).stream().filter(i -> true);
+//            Set<CategoryType> allowedCategories = Collections.emptySet();
+//            if (auditLogFilter.getCategories()) {
+//                
+//            }
 
             // controllerId == "-" for requests ./inventory, ./profile
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter);
+            //auditLogDBFilter.
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
@@ -104,6 +131,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 auditLogItem.setAccount(auditLogFromDb.getAccount());
                 auditLogItem.setRequest(auditLogFromDb.getRequest());
                 auditLogItem.setParameters(auditLogFromDb.getParameters());
+                auditLogItem.setCategory(auditLogFromDb.getTypeAsEnum());
                 auditLogItem.setComment(auditLogFromDb.getComment());
                 auditLogItem.setCreated(auditLogFromDb.getCreated());
                 auditLogItem.setTicketLink(auditLogFromDb.getTicketLink());

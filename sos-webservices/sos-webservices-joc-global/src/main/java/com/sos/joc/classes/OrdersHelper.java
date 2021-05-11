@@ -325,6 +325,9 @@ public class OrdersHelper {
             JocError jocError, Long auditlogId, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
+        if (temporaryOrderIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         String controllerId = dailyplanModifyOrder.getControllerId();
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
