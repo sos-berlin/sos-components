@@ -28,7 +28,6 @@ public class DocumentationShowFilter {
      * configuration types
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
@@ -48,7 +47,6 @@ public class DocumentationShowFilter {
      * configuration types
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
@@ -60,7 +58,6 @@ public class DocumentationShowFilter {
      * configuration types
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("type")
