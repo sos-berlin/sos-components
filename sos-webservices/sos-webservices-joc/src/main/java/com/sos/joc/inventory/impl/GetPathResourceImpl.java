@@ -65,7 +65,9 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                             break;
                         case FOLDER:
                         case JOB:
-                            throw new JocNotImplementedException();                
+                            throw new JocNotImplementedException();
+                    default:
+                        break;                
                     }
                 }
             } catch (Exception e) {

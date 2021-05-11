@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -13,6 +14,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.Validator;
@@ -62,7 +65,12 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions, true);
                 item = setProperties(in, item, dbLayer, false);
+                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(item
+                        .getPath(), item.getType())));
+                item.setAuditLogId(auditLogId);
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
+                JocInventory.postEvent(item.getFolder());
+                
             } catch (DBMissingDataException e) {
                 checkRequiredParameter("path", in.getPath());
                 checkRequiredParameter("objectType", in.getObjectType());
@@ -99,6 +107,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setAuditLogId(auditLogId);
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
                 JocInventory.postEvent(item.getFolder());
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, item.getCreated());
             }
             session.commit();
 

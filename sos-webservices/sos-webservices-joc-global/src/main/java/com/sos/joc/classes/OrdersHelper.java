@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +21,6 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
@@ -29,6 +29,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
@@ -46,12 +47,11 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.AddOrder;
-import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
@@ -322,26 +322,28 @@ public class OrdersHelper {
     }
 
     public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
-            JocError jocError, JocAuditLog jocAuditLog, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            JocError jocError, Long auditlogId, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
 
         String controllerId = dailyplanModifyOrder.getControllerId();
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
         Instant now = Instant.now();
+        List<AuditLogDetail> auditLogDetails = new ArrayList<>();
         
         Function<JOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
                 Map<String, Value> args = order.arguments();
+                Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
+                ProblemHelper.throwProblemIfExist(e);
+                String workflowPath = WorkflowPaths.getPath(e.get().id());
+                
                 // modify parameters if necessary
                 if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
                         || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
                                 .isEmpty())) {
                     Variables vars = scalaValuedArgumentsToVariables(args);
-                    Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
-                    ProblemHelper.throwProblemIfExist(e);
-                    String workflowPath = WorkflowPaths.getPath(e.get().id());
                     if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
                         throw new JocFolderPermissionsException(workflowPath);
                     }
@@ -367,6 +369,7 @@ public class OrdersHelper {
                 }
 
                 JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
+                auditLogDetails.add(new AuditLogDetail(workflowPath, o.id().string()));
                 either = Either.right(o);
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.workflowId().path().string() + "/" + order.id().string()));
@@ -396,9 +399,8 @@ public class OrdersHelper {
                                     proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
                                             .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
                                     // auditlog is written even removeOrdersWhenTerminated has a problem
-                                    createAuditLogFromJFreshOrders(jocAuditLog, freshOrders.values(), controllerId, dailyplanModifyOrder
-                                            .getAuditLog()).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(either5, accessToken,
-                                                    jocError, controllerId));
+                                    storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper
+                                            .postExceptionEventIfExist(either5, accessToken, jocError, controllerId));
                                 }
                             });
                         }
@@ -470,75 +472,21 @@ public class OrdersHelper {
         }
         return variables;
     }
+
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetails(Collection<AuditLogDetail> auditLogDetails, Long auditlogId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                JocAuditLog.storeAuditLogDetails(auditLogDetails, auditlogId);
+                return Either.right(null);
+            } catch (Exception e) {
+                return Either.left(e);
+            }
+        });
+    }
     
-    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJOrders(JocAuditLog jocAuditLog, Collection<JOrder> jOrders,
-            String controllerId, ModifyOrders modifyOrders) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (jOrders != null && !jOrders.isEmpty()) {
-                try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
-                    try {
-//                        jocAuditLog.logAuditMessage(modifyOrders.getAuditLog());
-//                        for (JOrder o : jOrders) {
-//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, modifyOrders);
-//                            jocAuditLog.storeAuditLogEntry(audit, connection);
-//                        }
-                    } finally {
-                        Globals.disconnect(connection);
-                    }
-                } catch (Exception e) {
-                    return Either.left(e);
-                }
-            }
-            return Either.right(null);
-        });
-    }
-
-    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, Collection<JFreshOrder> jOrders,
-            String controllerId, AuditParams auditParams) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (jOrders != null) {
-                try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
-                    try {
-//                        jocAuditLog.logAuditMessage(auditParams);
-//                        for (JFreshOrder o : jOrders) {
-//                            ModifyOrderAudit audit = new ModifyOrderAudit(o, controllerId, auditParams);
-//                            jocAuditLog.storeAuditLogEntry(audit, connection);
-//                        }
-                    } finally {
-                        Globals.disconnect(connection);
-                    }
-                } catch (Exception e) {
-                    return Either.left(e);
-                }
-            }
-            return Either.right(null);
-        });
-    }
-
-    public static CompletableFuture<Either<Exception, Void>> createAuditLogFromJFreshOrders(JocAuditLog jocAuditLog, AddOrders addOrders) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (addOrders != null) {
-                try {
-                    final SOSHibernateSession connection = Globals.createSosHibernateStatelessConnection("storeAuditLogEntryForOrders");
-                    String controllerId = addOrders.getControllerId();
-                    AuditParams auditParams = addOrders.getAuditLog();
-                    jocAuditLog.logAuditMessage(auditParams);
-                    try {
-//                        addOrders.getOrders().stream().filter(o -> o.getOrderName().contains("#T")).forEach(o -> {
-//                            AddOrderAudit audit = new AddOrderAudit(o, controllerId, auditParams);
-//                            jocAuditLog.storeAuditLogEntry(audit, connection);
-//                        });
-                    } finally {
-                        Globals.disconnect(connection);
-                    }
-                } catch (Exception e) {
-                    return Either.left(e);
-                }
-            }
-            return Either.right(null);
-        });
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId) {
+        return storeAuditLogDetails(jOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
+                .string())).collect(Collectors.toList()), auditlogId);
     }
     
     private static boolean canAdd(String path, Set<Folder> listOfFolders) {

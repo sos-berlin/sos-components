@@ -1,8 +1,10 @@
 package com.sos.joc.publish.util;
 
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,13 +21,13 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
-import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.DeploymentState;
@@ -42,7 +44,7 @@ public class DeleteDeployments {
     // account: LOW -> Globals.defaultProfileAccount, MEDIUM, HIGH -> jobschedulerUser.getSosShiroCurrentUser().getUsername()
 
     public static boolean delete(Collection<DBItemDeploymentHistory> dbItems, DBLayerDeploy dbLayer, String account, String accessToken,
-            JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion) throws SOSHibernateException {
+            JocError jocError, Long auditlogId, boolean withoutFolderDeletion) throws SOSHibernateException {
         if (dbItems == null || dbItems.isEmpty()) {
             return true;
         }
@@ -57,7 +59,7 @@ public class DeleteDeployments {
             invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
         }
         // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditLogger, auditParams, withoutFolderDeletion);
+        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
         // send commands to controllers
         for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
             PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry.getKey(), 
@@ -67,18 +69,18 @@ public class DeleteDeployments {
     }
     
     public static boolean deleteFolder(String folder, boolean recursive, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion,
+            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
             boolean withEvents) throws SOSHibernateException {
         Configuration conf = new Configuration();
         conf.setObjectType(ConfigurationType.FOLDER);
         conf.setPath(folder);
         conf.setRecursive(recursive);
-        return deleteFolder(conf, controllerIds, dbLayer, account, accessToken, jocError, auditLogger, auditParams, withoutFolderDeletion,
+        return deleteFolder(conf, controllerIds, dbLayer, account, accessToken, jocError, auditlogId, withoutFolderDeletion,
                 withEvents);
     }
     
     public static boolean deleteFolder(Configuration conf, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion,
+            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
             boolean withEvents) throws SOSHibernateException {
         if (conf == null || conf.getPath() == null || conf.getPath().isEmpty()) {
             return true;
@@ -101,7 +103,7 @@ public class DeleteDeployments {
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                auditLogger, auditParams, withoutFolderDeletion, withEvents);
+                auditlogId, withoutFolderDeletion, withEvents);
 
         // send commands to controllers
         for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : itemsToDeletePerController.entrySet()) {
@@ -114,7 +116,7 @@ public class DeleteDeployments {
     }
     
     public static boolean delete(Collection<Configuration> confs, Collection<String> controllerIds, DBLayerDeploy dbLayer, String account,
-            String accessToken, JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion)
+            String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion)
             throws SOSHibernateException {
         if (confs == null || confs.isEmpty()) {
             return true;
@@ -160,7 +162,7 @@ public class DeleteDeployments {
         }
         // delete configurations optimistically
         deleteConfigurations(dbLayer, foldersToDelete, invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                auditLogger, auditParams, withoutFolderDeletion);
+                auditlogId, withoutFolderDeletion);
 
         // send commands to controllers
         for (String controllerId : controllerIds) {
@@ -224,12 +226,12 @@ public class DeleteDeployments {
     }
     
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, Set<DBItemInventoryConfiguration> itemsToDelete, 
-            String commitId, String accessToken, JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion) {
-        deleteConfigurations(dbLayer, folders, itemsToDelete, commitId, accessToken, jocError, auditLogger, auditParams, withoutFolderDeletion, true);
+            String commitId, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion) {
+        deleteConfigurations(dbLayer, folders, itemsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion, true);
     }
     
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, Set<DBItemInventoryConfiguration> itemsToDelete,
-            String commitId, String accessToken, JocError jocError, JocAuditLog auditLogger, AuditParams auditParams, boolean withoutFolderDeletion,
+            String commitId, String accessToken, JocError jocError, Long auditlogId, boolean withoutFolderDeletion,
             boolean withEvents) {
         // add all elements from the folder(s)
         Set<String> foldersForEvent = new HashSet<>();
@@ -246,11 +248,11 @@ public class DeleteDeployments {
             }
         }
         // delete and put to trash
-        Long auditLogId = JocInventory.storeAuditLog(auditLogger, auditParams); // TODO  too late here
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
+        Date now = Date.from(Instant.now());
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
-            //createAuditLog(invConfiguration, invConfiguration.getTypeAsEnum(), auditLogger, auditParams);
-            invConfiguration.setAuditLogId(auditLogId);
+            JocAuditLog.storeAuditLogDetail(new AuditLogDetail(invConfiguration.getPath(), invConfiguration.getType()), dbLayer.getSession(), auditlogId, now);
+            invConfiguration.setAuditLogId(auditlogId);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
             if (withEvents) {
                 foldersForEvent.add(invConfiguration.getFolder());
@@ -274,20 +276,5 @@ public class DeleteDeployments {
             JocInventory.postTrashEvent(folder);
         }
     }
-    
-//    private static void createAuditLog(DBItemInventoryConfiguration config, ConfigurationType objectType, JocAuditLog auditLogger,
-//            AuditParams auditParams) {
-//        if (auditLogger != null) {
-//            InventoryAudit audit = new InventoryAudit(objectType, config.getPath(), config.getFolder(), auditParams);
-//            DBItemJocAuditLog auditItem = auditLogger.storeAuditLogEntry(audit);
-//            if (auditItem != null) {
-//                config.setAuditLogId(auditItem.getId());
-//            } else {
-//                config.setAuditLogId(0L);
-//            }
-//        } else {
-//            config.setAuditLogId(0L);
-//        }
-//    }
         
 }

@@ -34,9 +34,11 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
@@ -82,11 +84,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            // for AuditLog
-            modifyOrders.setArguments(null);
-            modifyOrders.setKill(null);
-            modifyOrders.setOrderType(null);
-            modifyOrders.setPosition(null);
             postOrdersModify(Action.SUSPEND, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -106,8 +103,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            // for AuditLog
-            modifyOrders.setKill(null);
             postOrdersModify(Action.RESUME, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -127,9 +122,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            // for AuditLog
-            modifyOrders.setArguments(null);
-            modifyOrders.setPosition(null);
             postOrdersModify(Action.CANCEL, modifyOrders);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -205,7 +197,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
-        checkRequiredComment(modifyOrders.getAuditLog());
+        CategoryType category = CategoryType.CONTROLLER;
+        if (Action.CANCEL_DAILYPLAN.equals(action)) {
+            category = CategoryType.DAILYPLAN;
+        }
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), category);
 
         Set<String> orders = modifyOrders.getOrderIds();
 
@@ -242,7 +238,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
-                    OrdersHelper.createAuditLogFromJOrders(getJocAuditLog(), jOrders, controllerId, modifyOrders).thenAccept(either2 -> ProblemHelper
+                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                             .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
             });

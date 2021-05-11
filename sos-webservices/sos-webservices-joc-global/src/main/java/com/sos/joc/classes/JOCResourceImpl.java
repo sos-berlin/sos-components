@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
@@ -250,19 +251,29 @@ public class JOCResourceImpl {
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, CategoryType category) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, category);
+        return jocAuditLog.storeAuditLogEntry(audit, category.intValue());
     }
     
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category);
+        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue());
     }
     
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category, SOSHibernateSession connection) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
-        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category, connection);
+        return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue(), connection);
+    }
+    
+    public void storeAuditLogDetails(Collection<AuditLogDetail> details, DBItemJocAuditLog dbAuditLog) {
+        storeAuditLogDetails(details, null, dbAuditLog);
+    }
+    
+    public void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, DBItemJocAuditLog dbAuditLog) {
+        if (dbAuditLog != null) {
+            JocAuditLog.storeAuditLogDetails(details, connection, dbAuditLog.getId(), dbAuditLog.getCreated());
+        }
     }
 
     public String getJsonString(Object body) {

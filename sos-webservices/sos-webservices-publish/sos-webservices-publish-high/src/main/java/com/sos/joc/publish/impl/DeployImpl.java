@@ -28,6 +28,7 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
@@ -68,7 +69,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
             
             Set<String> allowedControllerIds = Collections.emptySet();
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
@@ -298,7 +299,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
             }
             DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
-                    getJocError(), getJocAuditLog(), deployFilter.getAuditLog(), withoutFolderDeletion);
+                    getJocError(), dbAuditlog.getId(), withoutFolderDeletion);
             // loop 2: send commands to controllers
             for (String controllerId : allowedControllerIds) {
                 if (filteredItemsToDelete != null && !filteredItemsToDelete.isEmpty()) {

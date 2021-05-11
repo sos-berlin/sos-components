@@ -16,6 +16,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -139,6 +141,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             Set<DBItemDeploymentHistory> allDeployments = new HashSet<>();
             DBLayerDeploy deployDbLayer = new DBLayerDeploy(session);
             Set<String> foldersForEvent = new HashSet<>();
+            Date now = Date.from(Instant.now());
             for (RequestFilter r : in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet())) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 final ConfigurationType type = config.getTypeAsEnum();
@@ -146,8 +149,10 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 if (JocInventory.isReleasable(type)) {
                     ReleaseResourceImpl.delete(config, dbLayer, auditLogId, false, false);
                     foldersForEvent.add(config.getFolder());
+                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), auditLogId, now);
 
                 } else if (JocInventory.isDeployable(type)) {
+                    // TODO restrict to allowed Controllers
                     List<DBItemDeploymentHistory> allDeploymentsPerObject = deployDbLayer.getDeployedConfigurations(config.getId());
                     Set<DBItemDeploymentHistory> deployments = null;
                     if (allDeploymentsPerObject != null) {
@@ -158,6 +163,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                     }
                     if (deployments == null || deployments.isEmpty()) {
                         JocInventory.deleteInventoryConfigurationAndPutToTrash(config, dbLayer);
+                        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), dbLayer.getSession(), auditLogId, now);
                         foldersForEvent.add(config.getFolder());
                     } else {
                         allDeployments.addAll(deployments);
@@ -167,8 +173,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             if (allDeployments != null && !allDeployments.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
-                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(),
-                        true);
+                DeleteDeployments.delete(allDeployments, deployDbLayer, account, accessToken, getJocError(), auditLogId, true);
             }
             Globals.commit(session);
             // post events
@@ -200,12 +205,13 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                     folderPermissions);
             ReleaseResourceImpl.delete(folder, dbLayer, auditLogId, false, false);
 
+            // TODO restrict to allowed Controllers
             List<DBItemInventoryConfiguration> deployables = dbLayer.getFolderContent(folder.getPath(), true, JocInventory.getDeployableTypes());
             if (deployables != null && !deployables.isEmpty()) {
                 String account = JocSecurityLevel.LOW.equals(Globals.getJocSecurityLevel()) ? ClusterSettings.getDefaultProfileAccount(Globals
                         .getConfigurationGlobalsJoc()) : getAccount();
                 DeleteDeployments.deleteFolder(folder.getPath(), true, Proxies.getControllerDbInstances().keySet(), new DBLayerDeploy(session),
-                        account, accessToken, getJocError(), getJocAuditLog(), in.getAuditLog(), true, false);
+                        account, accessToken, getJocError(), auditLogId, true, false);
             }
             
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());
@@ -224,14 +230,12 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse delete(String accessToken, RequestFilters in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
+            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRASH_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
-            
-            // TODO auditLog
             
             Predicate<RequestFilter> isFolder = r -> ConfigurationType.FOLDER.equals(r.getObjectType());
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
@@ -242,6 +246,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
                 DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, r, folderPermissions);
                 session.delete(config);
                 foldersForEvent.add(config.getFolder());
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, auditLogId, null);
             }
             
             Globals.commit(session);
@@ -262,14 +267,14 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
     private JOCDefaultResponse deleteFolder(String accessToken, RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
+            JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_TRASH_FOLDER_DELETE);
             session.setAutoCommit(false);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            // TODO auditLog
+            // TODO auditLogDetails
 
             DBItemInventoryConfigurationTrash config = JocInventory.getTrashConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);

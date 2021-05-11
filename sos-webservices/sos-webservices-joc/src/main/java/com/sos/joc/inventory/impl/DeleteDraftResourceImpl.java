@@ -20,6 +20,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -98,6 +100,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            Date now = Date.from(Instant.now());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
@@ -109,6 +112,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                 }
                 deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, auditLogId);
                 foldersForEvent.add(config.getFolder());
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, auditLogId, now);
             }
             Globals.commit(session);
 
@@ -146,10 +150,11 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
             Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            
+            Date now = Date.from(Instant.now());
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, auditLogId);
+                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, now);
                 }
             }
             if (withDeletionOfEmptyFolders) {

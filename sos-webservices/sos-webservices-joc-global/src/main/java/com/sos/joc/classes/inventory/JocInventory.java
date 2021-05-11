@@ -41,6 +41,7 @@ import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.search.WorkflowConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -353,6 +354,10 @@ public class JocInventory {
     }
     
     public static Long storeAuditLog(JocAuditLog auditLog, AuditParams auditParams) {
+        return storeAuditLog(auditLog, auditParams, null);
+    }
+    
+    public static Long storeAuditLog(JocAuditLog auditLog, AuditParams auditParams, Collection<AuditLogDetail> details) {
         if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             String comment = null;
             if (auditParams != null) {
@@ -364,8 +369,14 @@ public class JocInventory {
         }
         if (auditLog != null) {
             auditLog.logAuditMessage(auditParams);
-            DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY);
-            return auditItem != null ? auditItem.getId() : 0L;
+            DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY.intValue());
+            if (auditItem != null) {
+                if (details != null) {
+                    JocAuditLog.storeAuditLogDetails(details, auditItem.getId(), auditItem.getCreated());
+                }
+                return auditItem.getId();
+            }
+            return 0L;
         } else {
             return 0L;
         }
