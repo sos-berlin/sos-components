@@ -3,7 +3,9 @@ package com.sos.joc.orders.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -18,13 +20,17 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.AddOrders;
 import com.sos.joc.model.order.OrderIds;
@@ -54,27 +60,28 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, AddOrders.class);
             AddOrders addOrders = Globals.objectMapper.readValue(filterBytes, AddOrders.class);
-
-            JOCDefaultResponse jocDefaultResponse = initPermissions(addOrders.getControllerId(), getControllerPermissions(addOrders
-                    .getControllerId(), accessToken).getOrders().getCreate());
+            String controllerId = addOrders.getControllerId();
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders()
+                    .getCreate());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredComment(addOrders.getAuditLog());
             if (addOrders.getOrders().size() == 0) {
                 throw new JocMissingRequiredParameterException("undefined 'orders'");
             }
+            DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Predicate<AddOrder> permissions = order -> canAdd(order.getWorkflowPath(), permittedFolders);
 
-            final JControllerProxy proxy = Proxy.of(addOrders.getControllerId());
+            final JControllerProxy proxy = Proxy.of(controllerId);
             final JControllerState currentState = proxy.currentState();
             
             final String yyyymmdd = formatter.format(Instant.now());
             
             final String defaultOrderName = CheckJavaVariableName.makeStringRuleConform(getAccount());
+            List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
             Function<AddOrder, Either<Err419, JFreshOrder>> mapper = order -> {
                 Either<Err419, JFreshOrder> either = null;
@@ -89,7 +96,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements()));
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd);
-                    order.setOrderName(o.id().string()); // this setting for later auditLog
+                    auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string()));
                     either = Either.right(o);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));
@@ -110,7 +117,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                                 accessToken, getJocError(), addOrders.getControllerId()));
                         // auditlog is written even "removeOrdersWhenTerminated" has a problem
-                        OrdersHelper.createAuditLogFromJFreshOrders(getJocAuditLog(), addOrders).thenAccept(either2 -> ProblemHelper
+                        OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {
                         ProblemHelper.postProblemEventIfExist(either, accessToken, getJocError(), addOrders.getControllerId());

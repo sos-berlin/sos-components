@@ -29,8 +29,10 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
@@ -45,6 +47,7 @@ import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
@@ -91,14 +94,18 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                     .getVariables() == null) {
                 throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
             }
-            checkRequiredComment(dailyplanModifyOrder.getAuditLog());
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(dailyplanModifyOrder.getAuditLog(), dailyplanModifyOrder.getControllerId(), CategoryType.DAILYPLAN);
 
             setSettings();
             List<String> orderIds = dailyplanModifyOrder.getOrderIds();
             Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
             List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
-                    getJocAuditLog(), folderPermissions);
+                    dbAuditlog.getId(), folderPermissions);
             orderIds.removeAll(temporaryOrderIds);
+            if (orderIds.isEmpty()) {
+                dbAuditlog.setCategory(CategoryType.CONTROLLER.intValue());
+                JocAuditLog.updateAuditLogEntry(dbAuditlog); 
+            }
 
             List<String> listOfOrderIds = new ArrayList<String>();
             for (String orderId : orderIds) {

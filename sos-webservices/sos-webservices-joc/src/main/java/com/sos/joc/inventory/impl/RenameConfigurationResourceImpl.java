@@ -2,6 +2,7 @@ package com.sos.joc.inventory.impl;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -17,6 +18,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -106,11 +109,15 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             if (JocInventory.isFolder(type)) {
+                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
+                    auditLogDetails.add(new AuditLogDetail(oldItem.getPath(), oldItem.getType()));
                     setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), auditLogId);
                     return oldItem;
                 }).collect(Collectors.toList());
+                
+                JocAuditLog.storeAuditLogDetails(auditLogDetails, session, auditLogId);
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null);
                 Set<Long> deletedIds = new HashSet<>();

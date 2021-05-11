@@ -17,6 +17,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -75,8 +77,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
     private JOCDefaultResponse replaceFolder(RequestFolder in) throws Exception {
         SOSHibernateSession session = null;
         try {
-            checkRequiredComment(in.getAuditLog());
-            
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.setAutoCommit(false);
             final InventoryDBLayer dbLayer = new InventoryDBLayer(session);
@@ -95,6 +95,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
+            Date now = Date.from(Instant.now());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, in.getReplace());
                 CheckJavaVariableName.test("name", newName);
@@ -104,6 +105,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
 
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, now);
                 setItem(item, Paths.get(item.getFolder()).resolve(newName), auditLogId);
                 JocInventory.updateConfiguration(dbLayer, item);
             }
@@ -113,7 +115,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 JocInventory.postEvent(event);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatusJSOk(now);
 
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -172,7 +174,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
-
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, auditLogId, null);
                 setItem(config, p, auditLogId);
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());

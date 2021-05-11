@@ -15,7 +15,7 @@ import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.audit.ObjectType;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS)
@@ -40,6 +40,9 @@ public class DBItemJocAuditLogDetails extends DBItem {
 
     @Column(name = "[NAME]", nullable = false)
     private String name;
+
+    @Column(name = "[ORDER_ID]", nullable = true)
+    private String orderId;
 
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
@@ -69,9 +72,9 @@ public class DBItemJocAuditLogDetails extends DBItem {
     }
     
     @Transient
-    public ConfigurationType getTypeAsEnum() {
+    public ObjectType getTypeAsEnum() {
         try {
-            return ConfigurationType.fromValue(type);
+            return ObjectType.fromValue(type);
         } catch (Exception e) {
             return null;
         }
@@ -82,7 +85,7 @@ public class DBItemJocAuditLogDetails extends DBItem {
     }
 
     @Transient
-    public void setType(ConfigurationType val) {
+    public void setType(ObjectType val) {
         setType(val == null ? null : val.intValue());
     }
 
@@ -108,6 +111,14 @@ public class DBItemJocAuditLogDetails extends DBItem {
 
     public void setFolder(String val) {
         folder = val;
+    }
+    
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String val) {
+        orderId = val;
     }
     
     public Date getCreated() {

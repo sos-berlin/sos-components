@@ -2,6 +2,7 @@ package com.sos.joc.inventory.impl;
 
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -19,6 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
@@ -119,16 +121,20 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 Map<ConfigurationType, Map<String, String>> oldToNewName = Collections.emptyMap();
                 if (!in.getShallowCopy()) {
                     List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
-                            .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue());
+                            .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
+                            ConfigurationType.JOBRESOURCE.intValue());
                     oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
                             .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
                                     item -> item.getName().replaceFirst(replace.get(0), replace.get(1)))));
                 }
+                
+                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
                     java.nio.file.Path oldItemPath = Paths.get(oldItem.getPath());
                     if (ConfigurationType.FOLDER.intValue() == oldItem.getType()) {
                         return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath)));
                     }
+                    auditLogDetails.add(new AuditLogDetail(oldItemPath, oldItem.getType()));
                     return createItem(oldItem, pWithoutFix.resolve(oldPath.relativize(oldItemPath.getParent().resolve(oldItem.getName()
                             .replaceFirst(replace.get(0), replace.get(1))))));
                 }).collect(Collectors.toList());
@@ -153,7 +159,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         oldDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
                     }
                 }
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), auditLogDetails);
                 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
@@ -277,7 +283,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     }
                 }
                 
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(oldPath,
+                        config.getType())));
                 DBItemInventoryConfiguration newDbItem = createItem(config, p);
                 //createAuditLog(newDbItem, in.getAuditLog());
                 newDbItem.setAuditLogId(auditLogId);
