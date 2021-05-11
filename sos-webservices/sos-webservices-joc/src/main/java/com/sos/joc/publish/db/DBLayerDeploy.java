@@ -1030,6 +1030,10 @@ public class DBLayerDeploy {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
                     existingConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+                    if(configuration.getPath() != null) {
+                    	existingConfiguration.setPath(configuration.getPath());
+                    	existingConfiguration.setFolder(Paths.get(existingConfiguration.getPath()).getParent().toString().replace('\\', '/'));
+                    }
                     existingConfiguration.setAuditLogId(auditLogId);
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
