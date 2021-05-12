@@ -2,11 +2,14 @@
 package com.sos.joc.model.audit;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -27,7 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "categories",
     "folders",
     "account",
-    "regex",
+    "comment",
     "dateFrom",
     "dateTo",
     "timeZone",
@@ -45,11 +48,14 @@ public class AuditLogFilter {
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("objectNames")
-    private List<String> objectNames = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> objectNames = new LinkedHashSet<String>();
     @JsonProperty("objectTypes")
-    private List<ObjectType> objectTypes = new ArrayList<ObjectType>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<ObjectType> objectTypes = new LinkedHashSet<ObjectType>();
     @JsonProperty("categories")
-    private List<CategoryType> categories = new ArrayList<CategoryType>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<CategoryType> categories = new LinkedHashSet<CategoryType>();
     /**
      * folders
      * <p>
@@ -67,14 +73,13 @@ public class AuditLogFilter {
     @JsonProperty("account")
     private String account;
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
-    private String regex;
+    @JsonProperty("comment")
+    private String comment;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -140,32 +145,32 @@ public class AuditLogFilter {
     }
 
     @JsonProperty("objectNames")
-    public List<String> getObjectNames() {
+    public Set<String> getObjectNames() {
         return objectNames;
     }
 
     @JsonProperty("objectNames")
-    public void setObjectNames(List<String> objectNames) {
+    public void setObjectNames(Set<String> objectNames) {
         this.objectNames = objectNames;
     }
 
     @JsonProperty("objectTypes")
-    public List<ObjectType> getObjectTypes() {
+    public Set<ObjectType> getObjectTypes() {
         return objectTypes;
     }
 
     @JsonProperty("objectTypes")
-    public void setObjectTypes(List<ObjectType> objectTypes) {
+    public void setObjectTypes(Set<ObjectType> objectTypes) {
         this.objectTypes = objectTypes;
     }
 
     @JsonProperty("categories")
-    public List<CategoryType> getCategories() {
+    public Set<CategoryType> getCategories() {
         return categories;
     }
 
     @JsonProperty("categories")
-    public void setCategories(List<CategoryType> categories) {
+    public void setCategories(Set<CategoryType> categories) {
         this.categories = categories;
     }
 
@@ -214,25 +219,25 @@ public class AuditLogFilter {
     }
 
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
+    @JsonProperty("comment")
+    public String getComment() {
+        return comment;
     }
 
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
+    @JsonProperty("comment")
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     /**
@@ -343,12 +348,12 @@ public class AuditLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectNames", objectNames).append("objectTypes", objectTypes).append("categories", categories).append("folders", folders).append("account", account).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectNames", objectNames).append("objectTypes", objectTypes).append("categories", categories).append("folders", folders).append("account", account).append("comment", comment).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(timeZone).append(dateFrom).append(objectNames).append(ticketLink).append(regex).append(dateTo).append(limit).append(categories).append(objectTypes).append(account).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(timeZone).append(dateFrom).append(objectNames).append(ticketLink).append(dateTo).append(limit).append(comment).append(categories).append(objectTypes).append(account).toHashCode();
     }
 
     @Override
@@ -360,7 +365,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(objectNames, rhs.objectNames).append(ticketLink, rhs.ticketLink).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(categories, rhs.categories).append(objectTypes, rhs.objectTypes).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(objectNames, rhs.objectNames).append(ticketLink, rhs.ticketLink).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(comment, rhs.comment).append(categories, rhs.categories).append(objectTypes, rhs.objectTypes).append(account, rhs.account).isEquals();
     }
 
 }

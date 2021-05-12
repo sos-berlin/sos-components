@@ -22,11 +22,12 @@ public class JocAuditLog {
     private String request;
     private String params;
     private boolean isLogged = false;
+    public static final String EMPTY_STRING = "-";
     
     public JocAuditLog(String user, String request) {
         this.user = setProperty(user);
         this.request = setProperty(request);
-        this.params = "-";
+        this.params = EMPTY_STRING;
     }
     
     public JocAuditLog(String user, String request, String params) {
@@ -37,7 +38,7 @@ public class JocAuditLog {
 
     private String setProperty(String prop) {
         if (prop == null || prop.isEmpty()) {
-            prop = "-";
+            prop = EMPTY_STRING;
         }
         return prop;
     }
@@ -46,9 +47,9 @@ public class JocAuditLog {
         if (!isLogged) {
             isLogged = true;
             try {
-                String comment = "-";
-                String timeSpent = "-";
-                String ticketLink = "-";
+                String comment = EMPTY_STRING;
+                String timeSpent = EMPTY_STRING;
+                String ticketLink = EMPTY_STRING;
                 if (audit != null) {
                     if (audit.getComment() != null) {
                         comment = audit.getComment();

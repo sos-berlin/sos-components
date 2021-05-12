@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "id",
     "account",
     "request",
     "created",
@@ -31,6 +32,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AuditLogItem {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    private Long id;
     /**
      * string without < and >
      * <p>
@@ -95,6 +105,30 @@ public class AuditLogItem {
     private Integer timeSpent;
     @JsonProperty("ticketLink")
     private String ticketLink;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("id")
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /**
      * string without < and >
@@ -276,12 +310,12 @@ public class AuditLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("category", category).append("comment", comment).append("parameters", parameters).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("id", id).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("category", category).append("comment", comment).append("parameters", parameters).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(request).append(controllerId).append(timeSpent).append(created).append(comment).append(category).append(parameters).append(account).append(ticketLink).toHashCode();
+        return new HashCodeBuilder().append(request).append(controllerId).append(timeSpent).append(created).append(comment).append(id).append(category).append(parameters).append(account).append(ticketLink).toHashCode();
     }
 
     @Override
@@ -293,7 +327,7 @@ public class AuditLogItem {
             return false;
         }
         AuditLogItem rhs = ((AuditLogItem) other);
-        return new EqualsBuilder().append(request, rhs.request).append(controllerId, rhs.controllerId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(comment, rhs.comment).append(category, rhs.category).append(parameters, rhs.parameters).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
+        return new EqualsBuilder().append(request, rhs.request).append(controllerId, rhs.controllerId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(comment, rhs.comment).append(id, rhs.id).append(category, rhs.category).append(parameters, rhs.parameters).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
     }
 
 }
