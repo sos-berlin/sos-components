@@ -91,7 +91,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                                 try {
                                     Workflow workflow = (Workflow) deployable.getContent();
                                     updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
-                                            Globals.prettyPrintObjectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW,
+                                            Globals.objectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW,
                                             controllerIdUsed, dbLayer));
                                 } catch (JsonProcessingException e) {
                                 }
@@ -99,7 +99,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                                 try {
                                     FileOrderSource fileOrderSource = (FileOrderSource) deployable.getContent();
                                     updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource
-                                            .getPath(), Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource), controllerIdUsed,
+                                            .getPath(), Globals.objectMapper.writeValueAsString(fileOrderSource), controllerIdUsed,
                                             dbLayer));
                                 } catch (JsonProcessingException e) {}
                     }

@@ -90,13 +90,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         try {
                             Workflow workflow = (Workflow)deployable.getContent();
                             updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
-                                    Globals.prettyPrintObjectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
+                                    Globals.objectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW, controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}   
                     } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource)deployable.getContent();
                             updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource.getPath(),
-                                    Globals.prettyPrintObjectMapper.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
+                                    Globals.objectMapper.writeValueAsString(fileOrderSource), controllerIdUsed, dbLayer));
                         } catch (JsonProcessingException e) {}
                     }
                 });
