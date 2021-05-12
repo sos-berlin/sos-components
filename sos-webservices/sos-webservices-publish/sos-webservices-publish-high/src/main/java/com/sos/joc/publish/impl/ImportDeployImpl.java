@@ -47,6 +47,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.junction.JunctionPublish;
@@ -64,6 +65,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.jobresource.JobResource;
 
 import io.vavr.control.Either;
@@ -195,26 +197,33 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case LOCK:
                     LockPublish lockPublish = new LockPublish();
                     lockPublish.setContent((Lock) config.getContent());
-                    // DBItemInventoryConfiguration lockDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
-                    // objectsToCheckPathRenaming.add(lockDbItem);
-                    // lockPublish.setObjectType(DeployType.LOCK);
-                    // importedObjects.put(lockPublish, null);
+                    DBItemInventoryConfiguration lockDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.LOCK);
+                    objectsToCheckPathRenaming.add(lockDbItem);
+                    lockPublish.setObjectType(DeployType.LOCK);
+                    importedObjects.put(lockPublish, null);
                     break;
+                case FILEORDERSOURCE:
+                	FileOrderSourcePublish fosPublish = new FileOrderSourcePublish();
+                	fosPublish.setContent((FileOrderSource)config.getContent());
+                	DBItemInventoryConfiguration fosDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.FILEORDERSOURCE);
+                	objectsToCheckPathRenaming.add(fosDbItem);
+                	fosPublish.setObjectType(DeployType.FILEORDERSOURCE);
+                	importedObjects.put(fosPublish, null);
                 case JUNCTION:
                     JunctionPublish junctionPublish = new JunctionPublish();
                     junctionPublish.setContent((Junction) config.getContent());
-                    // DBItemInventoryConfiguration junctionDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
-                    // objectsToCheckPathRenaming.add(junctionDbItem);
-                    // junctionPublish.setObjectType(DeployType.JUNCTION);
-                    // importedObjects.put(junctionPublish, null);
+                    DBItemInventoryConfiguration junctionDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JUNCTION);
+                    objectsToCheckPathRenaming.add(junctionDbItem);
+                    junctionPublish.setObjectType(DeployType.JUNCTION);
+                    importedObjects.put(junctionPublish, null);
                     break;
                 case JOBCLASS:
                     JobClassPublish jobClassPublish = new JobClassPublish();
                     jobClassPublish.setContent((JobClass) config.getContent());
-                    // DBItemInventoryConfiguration jobClassDbItem = dbLayer.getConfiguration(config.getPath(), ConfigurationType.LOCK);
-                    // objectsToCheckPathRenaming.add(jobClassDbItem);
-                    // jobClassPublish.setObjectType(DeployType.JOBCLASS);
-                    // importedObjects.put(jobClassPublish, null);
+                    DBItemInventoryConfiguration jobClassDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBCLASS);
+                    objectsToCheckPathRenaming.add(jobClassDbItem);
+                    jobClassPublish.setObjectType(DeployType.JOBCLASS);
+                    importedObjects.put(jobClassPublish, null);
                     break;
                 default:
                     break;

@@ -10,22 +10,25 @@ import com.sos.joc.model.sign.JocKeyPair;
 
 public class SignedItemsSpec {
     
-    JocKeyPair keyPair;
-    Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations; 
-    Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables;
-    Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobAgentNames;
-    Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames;
+    private JocKeyPair keyPair;
+    private Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations; 
+    private Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables;
+    private Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobAgentNames;
+    private Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames;
+    private Long auditlogId;
     
     public SignedItemsSpec (JocKeyPair keyPair,
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations, 
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables,
             Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobAgentNames, 
-            Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames) {
+            Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames,
+            Long auditlogId) {
         this.keyPair = keyPair;
         this.verifiedConfigurations = verifiedConfigurations;
         this.verifiedDeployables = verifiedDeployables;
         this.updateableWorkflowJobAgentNames = updateableWorkflowJobAgentNames;
         this.updateableFileOrderSourceAgentNames = updateableFileOrderSourceAgentNames;
+        this.auditlogId = auditlogId;
     }
 
     
@@ -49,4 +52,8 @@ public class SignedItemsSpec {
         return updateableFileOrderSourceAgentNames;
     }
 
+	public Long getAuditlogId() {
+		return auditlogId;
+	}
+    
 }

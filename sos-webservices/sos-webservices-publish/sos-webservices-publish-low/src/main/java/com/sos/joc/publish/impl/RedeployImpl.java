@@ -18,8 +18,10 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -51,6 +53,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            DBItemJocAuditLog dbAuditlog = storeAuditLog(redeployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
+
             String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
@@ -86,7 +90,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 //                SignedItemsSpec spec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
 //                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(spec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null, dbAuditlog.getId());
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

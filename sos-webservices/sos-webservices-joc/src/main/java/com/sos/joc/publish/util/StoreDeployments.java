@@ -57,7 +57,7 @@ public class StoreDeployments {
             }
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
                 Set<DBItemDeploymentHistory> cloned = PublishUtils.cloneDepHistoryItemsToNewEntries(signedItemsSpec.getVerifiedDeployables(), account, dbLayer,
-                        commitId, controllerId, deploymentDate);
+                        commitId, controllerId, deploymentDate, signedItemsSpec.getAuditlogId());
                 deployedObjects.addAll(cloned);
             }
             if (!deployedObjects.isEmpty()) {

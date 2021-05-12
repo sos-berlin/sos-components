@@ -1408,6 +1408,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setInventoryConfigurationId(draft.getId());
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
+                newDeployedObject.setAuditlogId(signedItemsSpec.getAuditlogId());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 postDeployHistoryWorkflowEvent(newDeployedObject);
                 DBItemDepSignatures signature = signedItemsSpec.getVerifiedConfigurations().get(draft);
@@ -1570,7 +1571,7 @@ public abstract class PublishUtils {
 
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
             Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-            String controllerId, Date deploymentDate) {
+            String controllerId, Date deploymentDate, Long auditlogId) {
         Set<DBItemDeploymentHistory> deployedObjects = null;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1594,6 +1595,7 @@ public abstract class PublishUtils {
                 deployed.setDeploymentDate(deploymentDate);
                 deployed.setOperation(OperationType.UPDATE.value());
                 deployed.setState(DeploymentState.DEPLOYED.value());
+                deployed.setAuditlogId(auditlogId);
                 dbLayerDeploy.getSession().save(deployed);
                 postDeployHistoryWorkflowEvent(deployed);
                 if (signature != null) {

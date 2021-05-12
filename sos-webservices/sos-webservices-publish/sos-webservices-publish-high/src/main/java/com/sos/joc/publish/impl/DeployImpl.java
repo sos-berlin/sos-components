@@ -175,7 +175,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Map<DBItemDeploymentHistory, DBItemDepSignatures> filteredDeployments = verifiedReDeployables.entrySet().stream()
                 		.filter(entry -> canAdd(entry.getKey().getPath(), permittedFolders)).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
                 // store new history entries and update inventory for update operation optimistically
-                SignedItemsSpec spec = new SignedItemsSpec(keyPair, filteredConfigurations, filteredDeployments, null, null);
+                SignedItemsSpec spec = new SignedItemsSpec(keyPair, filteredConfigurations, filteredDeployments, null, null, dbAuditlog.getId());
                 StoreDeployments.storeNewDepHistoryEntries(spec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(filteredConfigurations.keySet(), controllerId, dbLayer, 

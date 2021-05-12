@@ -1128,19 +1128,7 @@ public class DBLayerDeploy {
     }
 
     public DBItemInventoryConfiguration getConfigurationByPath(String path, ConfigurationType type) {
-        try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where path = :path");
-            hql.append(" and type = :type");
-            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameter("path", path);
-            query.setParameter("type", type.intValue());
-            return query.getSingleResult();
-        } catch(NoResultException e) {
-            return null;
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
-        } 
+    	return getConfigurationByPath(path, type.intValue());
     }
     
     public DBItemInventoryConfiguration getConfigurationByPath(String path, Integer type) {
@@ -1151,6 +1139,7 @@ public class DBLayerDeploy {
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameter("path", path);
             query.setParameter("type", type);
+            query.setMaxResults(1);
             return query.getSingleResult();
         } catch(NoResultException e) {
             return null;
@@ -1743,7 +1732,6 @@ public class DBLayerDeploy {
     
     public void updateFailedDeploymentForRedeploy(List<DBItemDeploymentHistory> itemsToUpdate, 
             String controllerId, String account, String versionId, String errorMessage) {
-        List<DBItemDeploymentHistory> depHistoryFailed = new ArrayList<DBItemDeploymentHistory>();
         if (itemsToUpdate != null) {
             itemsToUpdate.stream().forEach(item -> {
                     item.setState(DeploymentState.NOT_DEPLOYED.value());

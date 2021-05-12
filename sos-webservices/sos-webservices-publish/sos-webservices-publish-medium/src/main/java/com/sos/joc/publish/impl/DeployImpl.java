@@ -247,8 +247,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
                         || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
                     //audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
-                    SignedItemsSpec signedItemsSpec = 
-                            new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources);
+                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames,
+                    		updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
                     StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                 }

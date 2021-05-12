@@ -86,6 +86,9 @@ public class DBItemDeploymentHistory extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     private Date deleteDate;
 
+    @Column(name = "[AUDITLOG_ID]", nullable = false)
+    private Long auditlogId;
+
     public Long getId() {
         return id;
     }
@@ -224,5 +227,12 @@ public class DBItemDeploymentHistory extends DBItem {
     public void setInvContent(String invContent) {
         this.invContent = invContent;
     }
-
+    
+	public Long getAuditlogId() {
+		return auditlogId;
+	}
+	public void setAuditlogId(Long auditlogId) {
+		this.auditlogId = auditlogId;
+	}
+    
 }
