@@ -1425,7 +1425,7 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<ControllerObject, DBItemDepSignatures> draftsWithSignature,
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate) throws JsonParseException,
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) throws JsonParseException,
             JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
@@ -1438,6 +1438,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setVersion(null);
                 newDeployedObject.setType(draft.getObjectType().intValue());
                 newDeployedObject.setCommitId(commitId);
+                newDeployedObject.setAuditlogId(auditlogId);
                 DBItemInventoryConfiguration original = null;
                 switch (draft.getObjectType()) {
                 case WORKFLOW:

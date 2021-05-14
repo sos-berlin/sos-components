@@ -259,7 +259,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
             if (importedObjects != null && !importedObjects.isEmpty()) {
                 deployedObjects.addAll(PublishUtils.cloneInvConfigurationsToDepHistoryItems(importedObjects, account, dbLayer, commitIdForUpdate,
-                        controllerId, deploymentDate));
+                        controllerId, deploymentDate, auditLogId));
                 PublishUtils.prepareNextInvConfigGeneration(importedObjects.keySet(), controllerId, dbLayer);
             }
             if (!deployedObjects.isEmpty()) {
