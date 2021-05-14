@@ -6,12 +6,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-  <job name  = "SOSPLSQLJob"
+  <job name  = "PLSQLJob"
        title = "Execute PL/SQL procedure"
        category="PLSQL;SQL;Database;JITL;Oracle"
        >
     <script language   = "java"
-            java_class = "com.sos.jitl.jobs.db.oracle.SOSPLSQLJob"
+            java_class = "com.sos.jitl.jobs.db.oracle.PLSQLJob"
             resource   = "1">
     </script>
   </job>

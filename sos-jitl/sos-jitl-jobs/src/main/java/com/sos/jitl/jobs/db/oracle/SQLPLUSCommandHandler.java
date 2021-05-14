@@ -18,15 +18,15 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.SOSPath;
 import com.sos.jitl.jobs.common.JobLogger;
 
-public class SOSSQLPLUSCommandHandler {
+public class SQLPLUSCommandHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSQLPLUSCommandHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLPLUSCommandHandler.class);
     private static final String EXIT_CODE = "exitCode";
     private static final String SQL_ERROR = "sql_error";
     private Map<String, Object> variables = new HashMap<>();
     private JobLogger logger = null;
 
-    public SOSSQLPLUSCommandHandler(Map<String, Object> variables, JobLogger logger) {
+    public SQLPLUSCommandHandler(Map<String, Object> variables, JobLogger logger) {
         this.variables.putAll(variables);
         this.logger = logger;
     }
@@ -36,7 +36,7 @@ public class SOSSQLPLUSCommandHandler {
         Files.write(file, line.getBytes(), StandardOpenOption.APPEND);
     }
 
-    public void createSqlFile(SOSSQLPlusJobArguments args, String tempFileName) throws IOException {
+    public void createSqlFile(SQLPlusJobArguments args, String tempFileName) throws IOException {
 
         Path sqlScript = Paths.get(tempFileName);
         for (Entry<String, Object> entry : variables.entrySet()) {
@@ -78,7 +78,7 @@ public class SOSSQLPLUSCommandHandler {
         return "\"" + quotes2DoubleQuotes(inString) + "\"";
     }
 
-    public String[] getVariables(SOSSQLPlusJobArguments args, SOSCommandResult sosCommandResult, Map<String, Object> resultMap,
+    public String[] getVariables(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, Map<String, Object> resultMap,
             String[] stdOutStringArray) {
 
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
@@ -102,7 +102,7 @@ public class SOSSQLPLUSCommandHandler {
         return stdOutStringArray;
     }
 
-    public void handleMessages(SOSSQLPlusJobArguments args, SOSCommandResult sosCommandResult, Map<String, Object> resultMap,
+    public void handleMessages(SQLPlusJobArguments args, SOSCommandResult sosCommandResult, Map<String, Object> resultMap,
             String[] stdOutStringArray) throws Exception {
         int intRegExpFlags = Pattern.CASE_INSENSITIVE + Pattern.MULTILINE + Pattern.DOTALL;
 

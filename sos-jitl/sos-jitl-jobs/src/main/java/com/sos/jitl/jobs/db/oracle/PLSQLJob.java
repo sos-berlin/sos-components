@@ -23,18 +23,18 @@ import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data_for_java.order.JOutcome;
 
-public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
+public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
 
     private static final String STD_OUT_OUTPUT = "std_out_output";
     private static final String DBMS_OUTPUT = "dbms_output";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSPLSQLJob.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PLSQLJob.class);
 
-    public SOSPLSQLJob(JobContext jobContext) {
+    public PLSQLJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SOSPLSQLJobArguments> step) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<PLSQLJobArguments> step) throws Exception {
 
         try {
             Connection connection = getConnection(step.getLogger(), step.getArguments());
@@ -58,7 +58,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         }
     }
 
-    private Connection getConnection(JobLogger logger, SOSPLSQLJobArguments args) throws Exception {
+    private Connection getConnection(JobLogger logger, PLSQLJobArguments args) throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         Connection connection = null;
@@ -126,7 +126,7 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
         return newValue;
     }
 
-    private Map<String, Object> process(JobLogger logger, final Connection connection, SOSPLSQLJobArguments args) throws Exception {
+    private Map<String, Object> process(JobLogger logger, final Connection connection, PLSQLJobArguments args) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
         resultMap.put(DBMS_OUTPUT, "");
@@ -213,8 +213,8 @@ public class SOSPLSQLJob extends ABlockingInternalJob<SOSPLSQLJobArguments> {
     }
 
     public static void main(String[] args) {
-        SOSPLSQLJob sosPLSQLJob = new SOSPLSQLJob(null);
-        SOSPLSQLJobArguments arguments = new SOSPLSQLJobArguments();
+        PLSQLJob sosPLSQLJob = new PLSQLJob(null);
+        PLSQLJobArguments arguments = new PLSQLJobArguments();
         arguments.setCommandScripFile("c:/temp/2.sql");
         arguments.setDbPassword("scheduler");
         arguments.setDbUser("scheduler");

@@ -23,16 +23,16 @@ import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data_for_java.order.JOutcome;
 
-public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> {
+public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSSQLPLUSJob.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLPLUSJob.class);
 
-    public SOSSQLPLUSJob(JobContext jobContext) {
+    public SQLPLUSJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SOSSQLPlusJobArguments> step) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<SQLPlusJobArguments> step) throws Exception {
 
         try {
             if (SOSString.isEmpty(step.getArguments().getCommandScriptFile())) {
@@ -44,7 +44,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
         }
     }
 
-    public Map<String, Object> process(JobStep<SOSSQLPlusJobArguments> step, SOSSQLPlusJobArguments args) throws Exception {
+    public Map<String, Object> process(JobStep<SQLPlusJobArguments> step, SQLPlusJobArguments args) throws Exception {
 
         args.checkRequired();
         JobLogger logger = null;
@@ -76,7 +76,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
                 variables = Job.asNameValueMap(step.getAllCurrentArguments(Type.UNKNOWN));
             }
 
-            SOSSQLPLUSCommandHandler sqlPlusCommandHandler = new SOSSQLPLUSCommandHandler(variables, logger);
+            SQLPLUSCommandHandler sqlPlusCommandHandler = new SQLPLUSCommandHandler(variables, logger);
             File tempFile = File.createTempFile("sos", ".sql");
             String tempFileName = tempFile.getAbsolutePath();
             sqlPlusCommandHandler.createSqlFile(args, tempFileName);
@@ -115,8 +115,8 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
     }
 
     public static void main(String[] args) {
-        SOSSQLPLUSJob sosSQLPlusJob = new SOSSQLPLUSJob(null);
-        SOSSQLPlusJobArguments arguments = new SOSSQLPlusJobArguments();
+        SQLPLUSJob sosSQLPlusJob = new SQLPLUSJob(null);
+        SQLPlusJobArguments arguments = new SQLPlusJobArguments();
         arguments.setShellCommand("sqlplus");
         arguments.setCommandScriptFile("c:/temp/1.sql");
         arguments.setDbPassword("scheduler");

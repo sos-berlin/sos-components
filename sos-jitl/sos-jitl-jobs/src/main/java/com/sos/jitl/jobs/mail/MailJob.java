@@ -3,9 +3,6 @@ package com.sos.jitl.jobs.mail;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
@@ -14,16 +11,14 @@ import com.sos.jitl.jobs.common.JobStep;
 
 import js7.data_for_java.order.JOutcome;
 
-public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSMailJob.class);
-
-    public SOSMailJob(JobContext jobContext) {
+public class MailJob extends ABlockingInternalJob<MailJobArguments> {
+  
+    public MailJob(JobContext jobContext) {
         super(jobContext);
     }
 
     @Override
-    public JOutcome.Completed onOrderProcess(JobStep<SOSMailJobArguments> step) throws Exception {
+    public JOutcome.Completed onOrderProcess(JobStep<MailJobArguments> step) throws Exception {
         try {
             return step.success(process(step, step.getArguments()));
         } catch (Throwable e) {
@@ -32,7 +27,7 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
 
     }
 
-    public Map<String, Object> process(JobStep<SOSMailJobArguments> step, SOSMailJobArguments args) throws Exception {
+    public Map<String, Object> process(JobStep<MailJobArguments> step, MailJobArguments args) throws Exception {
         JobLogger logger = null;
         if (step != null) {
             logger = step.getLogger();
@@ -55,7 +50,7 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
             } else {
                 variables = new HashMap<String, Object>();
             }
-            SOSMailHandler sosMailHandler = new SOSMailHandler(args, variables, logger);
+            MailHandler sosMailHandler = new MailHandler(args, variables, logger);
             sosMailHandler.sendMail();
 
         } catch (Exception e) {
@@ -63,24 +58,5 @@ public class SOSMailJob extends ABlockingInternalJob<SOSMailJobArguments> {
         }
         return resultMap;
     }
-
-    public static void main(String[] args) {
-        SOSMailJob sosMailJob = new SOSMailJob(null);
-        SOSMailJobArgumentsTest arguments = new SOSMailJobArgumentsTest();
-        arguments.setMailSmtpHost("mail.sos-berlin.com");
-        arguments.setMailSmtpPort(25);
-        arguments.setSubject("My Mail Subject");
-        arguments.setBody("My Mail body");
-
-        arguments.setTo("uwe.risse@sos-berlin.com");
-        arguments.setFrom("scheduler@LAPTOP-7RSACSCV");
-
-        try {
-            sosMailJob.process(null, arguments);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.exit(0);
-        }
-    }
+    
 }

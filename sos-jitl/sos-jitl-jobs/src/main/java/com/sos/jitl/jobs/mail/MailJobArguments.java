@@ -6,7 +6,7 @@ import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
-public class SOSMailJobArguments extends JobArguments {
+public class MailJobArguments extends JobArguments {
 
     protected JobArgument<String> mailSmtpHost = new JobArgument<String>("mail.smtp.host", true);
     protected JobArgument<Integer> mailSmtpPort = new JobArgument<Integer>("mail.smtp.port", false, 25);

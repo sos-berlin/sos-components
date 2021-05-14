@@ -12,7 +12,7 @@ import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
-public class SOSPLSQLJobArguments extends JobArguments {
+public class PLSQLJobArguments extends JobArguments {
 
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", false, Job.getAgentHibernateFile());
     private JobArgument<String> command = new JobArgument<String>("command", false);

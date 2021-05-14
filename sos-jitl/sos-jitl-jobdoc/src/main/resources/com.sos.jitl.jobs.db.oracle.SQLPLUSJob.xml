@@ -7,8 +7,8 @@
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1 http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1.xsd">
 
-    <job name="SOSSQLPlusJob" title="Start SQL*Plus client and execute a sql*plus script"  tasks="unbounded">
-        <script language="java" java_class="com.sos.jitl.jobs.db.oracle.SOSSQLPLUSJob" resource="1">
+    <job name="SQLPlusJob" title="Start SQL*Plus client and execute a sql*plus script"  tasks="unbounded">
+        <script language="java" java_class="com.sos.jitl.jobs.db.oracle.SQLPLUSJob" resource="1">
         </script>
     </job>
 

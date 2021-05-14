@@ -6,7 +6,7 @@ import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.common.JobArguments;
 
-public class SOSSQLPlusJobArguments extends JobArguments {
+public class SQLPlusJobArguments extends JobArguments {
 
     private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false, "sqlplus");
     private JobArgument<String> osName = new JobArgument<String>("os_name", false);

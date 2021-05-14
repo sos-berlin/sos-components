@@ -6,8 +6,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-  <job name="SOSMailJob" title="Send Mails" tasks="unbounded">
-    <script language="java" java_class="com.sos.jitl.jobs.mail.SOSMailJob" resource="1" />
+  <job name="MailJob" title="Send Mails" tasks="unbounded">
+    <script language="java" java_class="com.sos.jitl.jobs.mail.MailJob" resource="1" />
   </job>
   <releases>
     <release id="1.0" created="2021-05-01" modified="2021-05-01">

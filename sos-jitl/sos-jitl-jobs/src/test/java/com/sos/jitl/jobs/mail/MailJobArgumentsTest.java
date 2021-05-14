@@ -2,7 +2,7 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.ArrayList;
 
-public class SOSMailJobArgumentsTest extends SOSMailJobArguments {
+public class MailJobArgumentsTest extends MailJobArguments {
 
     public void setMailSmtpHost(String mailSmtpHost) {
         this.mailSmtpHost.setValue(mailSmtpHost);

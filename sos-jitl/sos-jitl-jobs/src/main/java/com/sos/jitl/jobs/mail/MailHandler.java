@@ -13,14 +13,14 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.mail.SOSMailAttachment;
 import com.sos.jitl.jobs.common.JobLogger;
 
-public class SOSMailHandler {
+public class MailHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSMailHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailHandler.class);
     private Map<String, Object> variables = new HashMap<>();
     private JobLogger logger = null;
-    private SOSMailJobArguments args;
+    private MailJobArguments args;
 
-    public SOSMailHandler(SOSMailJobArguments args, Map<String, Object> variables, JobLogger logger) {
+    public MailHandler(MailJobArguments args, Map<String, Object> variables, JobLogger logger) {
         this.logger = logger;
         this.variables = variables;
         this.args = args;
