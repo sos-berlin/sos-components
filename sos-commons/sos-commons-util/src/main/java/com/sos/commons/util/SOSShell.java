@@ -1,17 +1,16 @@
 package com.sos.commons.util;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DecimalFormat;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -21,143 +20,59 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.common.SOSCommandResult;
+import com.sos.commons.util.common.SOSEnv;
+
 public class SOSShell {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSShell.class);
-
-    private static final String CHARACTER_ENCODING = "Cp1252";
 
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String OS_VERSION = System.getProperty("os.version");
     public static final String OS_ARCHITECTURE = System.getProperty("os.arch");
     public static final boolean IS_WINDOWS = OS_NAME.startsWith("Windows");
+    public static final String CODEPAGE = IS_WINDOWS ? "CP850" : "UTF-8";
 
     private static String hostname;
 
-    public static SOSCommandResult executeCommand(String script, Boolean showCommand) {
-        if (showCommand == null) {
-            showCommand = false;
-        }
-        return executeCommand(script, LOGGER, showCommand);
-    }
-
     public static SOSCommandResult executeCommand(String script) {
-        return executeCommand(script, LOGGER, false);
+        return executeCommand(script, null);
     }
 
-    public static SOSCommandResult executeCommand(String script, Logger logger, Boolean showCommand) {
-        SOSCommandResult sosCommandResult = new SOSCommandResult(script);
-        BufferedReader br = null;
-
+    public static SOSCommandResult executeCommand(String script, SOSEnv env) {
+        SOSCommandResult result = new SOSCommandResult(script);
         try {
-
-            ByteArrayOutputStream bytStdOut = new ByteArrayOutputStream();
-            ByteArrayOutputStream bytStdErr = new ByteArrayOutputStream();
-            PrintStream psStdOut = new PrintStream(bytStdOut, true, CHARACTER_ENCODING);
-            PrintStream psStdErr = new PrintStream(bytStdErr, true, CHARACTER_ENCODING);
-
-            ProcessBuilder pb = null;
-
-            String[] command = new String[2 + 1];
-            if (IS_WINDOWS) {
-                command[0] = System.getenv("comspec");
-                command[1] = "/C";
-                command[2] = script;
-            } else {
-                String shell = System.getenv("SHELL");
-                if (shell == null) {
-                    shell = "/bin/sh";
-                }
-                command[0] = shell;
-                command[1] = "-c";
-                command[2] = script;
+            ProcessBuilder pb = new ProcessBuilder(getCommand(script));
+            if (env != null && env.getEnvVars().size() > 0) {
+                pb.environment().putAll(env.getEnvVars());
             }
+            final Process p = pb.start();
 
-            pb = new ProcessBuilder(command);
+            CompletableFuture<Boolean> out = redirect(p.getInputStream(), result::setStdOut);
+            CompletableFuture<Boolean> err = redirect(p.getErrorStream(), result::setStdErr);
 
-            final Process proc = pb.start();
-            createOutputPipe(proc.getInputStream(), psStdOut);
-            createOutputPipe(proc.getErrorStream(), psStdErr);
-            pipein(System.in, proc.getOutputStream());
-            sosCommandResult.setExitCode(proc.waitFor());
-            sosCommandResult.setStdOut(bytStdOut.toString(CHARACTER_ENCODING));
-            sosCommandResult.setStdErr(bytStdErr.toString(CHARACTER_ENCODING));
-            String cmd = pb.command().get(pb.command().size() - 1);
-            String stdOut = sosCommandResult.getStdOut().toString();
-            if (!SOSString.isEmpty(stdOut)) {
-                if (showCommand) {
-                    LOGGER.info(String.format("[%s][stdout]%s", cmd, stdOut.trim()));
-                } else {
-                    LOGGER.info(String.format("[%s][stdout]%s", "***", stdOut.trim()));
-                }
-            }
-            String line = "";
-            br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            while ((line = br.readLine()) != null) {
-                logger.info(String.format("[out]%s", line));
-            }
-            br.close();
-            br = null;
-
+            result.setExitCode(p.waitFor());
+            result.setCommand(pb.command().get(pb.command().size() - 1));
+            out.join();
+            err.join();
         } catch (Throwable e) {
-            logger.error(String.format("[executeCommand]%s", e.toString()), e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Exception e) {
-                }
-            }
+            result.setException(e);
         }
-        return sosCommandResult;
+        return result;
     }
 
-    private static void createOutputPipe(final InputStream in, final PrintStream out) {
-        new Thread(new OutputPipe(in, out)).start();
-    }
-
-    public static SOSCommandResult executeCommand_(String script, Logger logger) {
-        BufferedReader br = null;
-        SOSCommandResult sosCommandResult = new SOSCommandResult(script);
-        try {
-            String[] command = new String[2 + 1];
-            if (IS_WINDOWS) {
-                command[0] = System.getenv("comspec");
-                command[1] = "/C";
-                command[2] = script;
-            } else {
-                String shell = System.getenv("SHELL");
-                if (shell == null) {
-                    shell = "/bin/sh";
+    private static CompletableFuture<Boolean> redirect(final InputStream is, final Consumer<String> consumer) {
+        return CompletableFuture.supplyAsync(() -> {
+            try (InputStreamReader isr = new InputStreamReader(is, CODEPAGE); BufferedReader br = new BufferedReader(isr);) {
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    consumer.accept(line + System.lineSeparator());
                 }
-                command[0] = shell;
-                command[1] = "-c";
-                command[2] = script;
+                return true;
+            } catch (IOException e) {
+                return false;
             }
-
-            Runtime rt = Runtime.getRuntime();
-            Process proc = rt.exec(command);
-            sosCommandResult.setExitCode(proc.waitFor());
-
-            String line = "";
-            br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            while ((line = br.readLine()) != null) {
-                logger.info(String.format("[out]%s", line));
-            }
-            br.close();
-            br = null;
-
-        } catch (Throwable e) {
-            logger.error(String.format("[executeCommand]%s", e.toString()), e);
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Exception e) {
-                }
-            }
-        }
-        return sosCommandResult;
+        });
     }
 
     public static String getHostname() throws UnknownHostException {
@@ -206,6 +121,24 @@ public class SOSShell {
         }
     }
 
+    private static String[] getCommand(String script) {
+        String[] command = new String[2 + 1];
+        if (IS_WINDOWS) {
+            command[0] = System.getenv("comspec");
+            command[1] = "/C";
+            command[2] = script;
+        } else {
+            String shell = System.getenv("SHELL");
+            if (shell == null) {
+                shell = "/bin/sh";
+            }
+            command[0] = shell;
+            command[1] = "-c";
+            command[2] = script;
+        }
+        return command;
+    }
+
     private static String getJVMMemory(long memory) {
         String msg = "no limit";
         if (memory != Long.MAX_VALUE) {
@@ -244,23 +177,5 @@ public class SOSShell {
         } catch (Throwable e) {
             logger.error(String.format("[%s]%s", SOSClassUtil.getMethodName(), e.toString()), e);
         }
-    }
-
-    private static void pipein(final InputStream is, final OutputStream os) {
-        new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    int ret = -1;
-                    while ((ret = is.read()) != -1) {
-                        os.write(ret);
-                        os.flush();
-                    }
-                } catch (IOException e) {
-                    //
-                }
-            }
-        }).start();
     }
 }

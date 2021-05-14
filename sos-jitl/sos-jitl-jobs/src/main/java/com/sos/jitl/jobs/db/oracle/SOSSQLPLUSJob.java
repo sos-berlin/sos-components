@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.credentialstore.keepass.SOSKeePassResolver;
-import com.sos.commons.util.SOSCommandResult;
+import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
@@ -84,6 +84,7 @@ public class SOSSQLPLUSJob extends ABlockingInternalJob<SOSSQLPlusJobArguments> 
             SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
             final String conNL = System.getProperty("line.separator");
             String stdOut = sosCommandResult.getStdOut().toString();
+            log(logger,String.format("[stdout]%s", stdOut));
             String[] stdOutStringArray = stdOut.split(conNL);
 
             sqlPlusCommandHandler.getVariables(args, sosCommandResult, resultMap, stdOutStringArray);

@@ -1,11 +1,13 @@
-package com.sos.commons.util;
+package com.sos.commons.util.common;
 
 public class SOSCommandResult {
 
+    private final StringBuilder stdOut;
+    private final StringBuilder stdErr;
+
     private String command;
-    private int exitCode;
-    private StringBuilder stdOut;
-    private StringBuilder stdErr;
+    private Integer exitCode;
+    private Throwable exception;
 
     public SOSCommandResult(String cmd) {
         command = cmd;
@@ -13,11 +15,19 @@ public class SOSCommandResult {
         stdErr = new StringBuilder();
     }
 
-    public int getExitCode() {
+    public void setCommand(String val) {
+        command = val;
+    }
+
+    public String getCommand() {
+        return command;
+    }
+
+    public Integer getExitCode() {
         return exitCode;
     }
 
-    public void setExitCode(int val) {
+    public void setExitCode(Integer val) {
         exitCode = val;
     }
 
@@ -25,16 +35,24 @@ public class SOSCommandResult {
         return stdOut;
     }
 
+    public void setStdOut(String val) {
+        stdOut.append(val);
+    }
+
     public StringBuilder getStdErr() {
         return stdErr;
     }
 
-    public void setStdErr(String stdErr) {
-        this.stdErr.append(stdErr);
+    public void setStdErr(String val) {
+        stdErr.append(val);
     }
 
-    public void setStdOut(String stdOut) {
-        this.stdOut.append(stdOut);
+    public Throwable getException() {
+        return exception;
+    }
+
+    public void setException(Throwable val) {
+        exception = val;
     }
 
     @Override
@@ -43,6 +61,9 @@ public class SOSCommandResult {
         sb.append("[exitCode=").append(exitCode).append("]");
         sb.append("[std:out=").append(stdOut.toString().trim()).append("]");
         sb.append("[std:err=").append(stdErr.toString().trim()).append("]");
+        if (exception != null) {
+            sb.append("[exception=").append(exception.toString()).append("]");
+        }
         return sb.toString();
     }
 }

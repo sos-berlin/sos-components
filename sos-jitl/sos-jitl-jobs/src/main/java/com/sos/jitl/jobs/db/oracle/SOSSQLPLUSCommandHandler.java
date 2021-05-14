@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.SOSCommandResult;
+import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.SOSPath;
 import com.sos.jitl.jobs.common.JobLogger;
 

@@ -14,6 +14,7 @@ public class InfoJobArguments extends JobArguments {
     private JobArgument<String> returnVariables = new JobArgument<>("return_variables", false);
     private JobArgument<String> password = new JobArgument<>("password", false, DisplayMode.MASKED);
     private JobArgument<List<String>> list = new JobArgument<>("list", false);
+    private JobArgument<String> shellCommand = new JobArgument<>("shell_command", false);
 
     public JobArgument<Boolean> getShowEnv() {
         return showEnv;
@@ -37,5 +38,9 @@ public class InfoJobArguments extends JobArguments {
 
     public JobArgument<List<String>> getList() {
         return list;
+    }
+
+    public JobArgument<String> getShellCommand() {
+        return shellCommand;
     }
 }

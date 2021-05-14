@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.Job;
@@ -55,6 +56,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
         step.getLogger().info("     \"%s\"='some value'", args.getStringArgument().getName());
         step.getLogger().info("     \"%s\"='some password'", args.getPassword().getName());
         step.getLogger().info("     \"%s\"='entry1;entry2;entry3'", args.getList().getName());
+        step.getLogger().info("     \"%s\"='...' any shell command, e.g. dir, ls ...", args.getShellCommand().getName());
 
         if (step.getLogger().isDebugEnabled()) {
             step.getLogger().debug("-----------------------------------");
@@ -127,6 +129,12 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         if (step.getArguments().getShowEnv().getValue()) {
             printEnvs(step.getLogger());
+        }
+
+        if (args.getShellCommand().getValue() != null) {
+            step.getLogger().info("----------EXECUTE SHELL COMMAND-----------------");
+            step.getLogger().info("  " + args.getShellCommand().getDisplayValue());
+            step.getLogger().info("  " + SOSString.toString(SOSShell.executeCommand(args.getShellCommand().getValue())));
         }
 
         step.getLogger().info("----------RETURN-----------------");
