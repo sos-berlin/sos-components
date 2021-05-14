@@ -26,6 +26,7 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -159,14 +160,14 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         oldDBFolderContent.removeAll(map.getOrDefault(true, Collections.emptyList()));
                     }
                 }
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), auditLogDetails);
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), auditLogDetails);
                 
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
                         //auditLogId = createAuditLog(newDbItem, in.getAuditLog());
-                        newDbItem.setAuditLogId(auditLogId);
+                        newDbItem.setAuditLogId(dbAuditLog.getId());
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                         JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
                         response.setId(newDbItem.getId());
@@ -182,12 +183,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 }
                 if (in.getShallowCopy()) {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                        item.setAuditLogId(auditLogId);
+                        item.setAuditLogId(dbAuditLog.getId());
                         JocInventory.insertConfiguration(dbLayer, item);
                     }
                 } else {
                     for (DBItemInventoryConfiguration item : oldDBFolderContent) {
-                        item.setAuditLogId(auditLogId);
+                        item.setAuditLogId(dbAuditLog.getId());
                         String json = item.getContent();
                         switch (item.getTypeAsEnum()) {
                         case WORKFLOW:
@@ -283,11 +284,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     }
                 }
                 
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(oldPath,
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(oldPath,
                         config.getType())));
                 DBItemInventoryConfiguration newDbItem = createItem(config, p);
                 //createAuditLog(newDbItem, in.getAuditLog());
-                newDbItem.setAuditLogId(auditLogId);
+                newDbItem.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, newDbItem);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
                 response.setId(newDbItem.getId());

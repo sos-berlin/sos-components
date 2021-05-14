@@ -21,6 +21,7 @@ import com.sos.joc.classes.inventory.JocInventory.InventoryPath;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -65,9 +66,9 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             try {
                 item = JocInventory.getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions, true);
                 item = setProperties(in, item, dbLayer, false);
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(item
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog(), Collections.singleton(new AuditLogDetail(item
                         .getPath(), item.getType())));
-                item.setAuditLogId(auditLogId);
+                item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
                 JocInventory.postEvent(item.getFolder());
                 
@@ -95,7 +96,7 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                     }
                 }
                 
-                Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+                DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
                 // mkdirs if necessary
                 JocInventory.makeParentDirs(dbLayer, path.getParent());
@@ -104,10 +105,10 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setType(in.getObjectType());
                 item = setProperties(in, item, dbLayer, true);
                 item.setCreated(Date.from(Instant.now()));
-                item.setAuditLogId(auditLogId);
+                item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
                 JocInventory.postEvent(item.getFolder());
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, item.getCreated());
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
             }
             session.commit();
 

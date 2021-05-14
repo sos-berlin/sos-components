@@ -17,6 +17,9 @@ import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
 import com.sos.joc.model.audit.CategoryType;
@@ -59,7 +62,7 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
+            DBItemJocAuditLog dbAudit = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
@@ -100,6 +103,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                         } catch (JsonProcessingException e) {}
                     }
                 });
+                
+                JocAuditLog.storeAuditLogDetails(deployablesForSigning.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
+                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
             } else { // shallow copy
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
@@ -107,6 +113,11 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
                 releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
+                
+                JocAuditLog.storeAuditLogDetails(deployablesForShallowCopy.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
+                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
+                JocAuditLog.storeAuditLogDetails(releasables.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
+                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
             }
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)

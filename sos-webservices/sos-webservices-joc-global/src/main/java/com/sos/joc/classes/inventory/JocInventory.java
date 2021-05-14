@@ -353,11 +353,11 @@ public class JocInventory {
         return deletedFolders;
     }
     
-    public static Long storeAuditLog(JocAuditLog auditLog, AuditParams auditParams) {
+    public static DBItemJocAuditLog storeAuditLog(JocAuditLog auditLog, AuditParams auditParams) {
         return storeAuditLog(auditLog, auditParams, null);
     }
     
-    public static Long storeAuditLog(JocAuditLog auditLog, AuditParams auditParams, Collection<AuditLogDetail> details) {
+    public static DBItemJocAuditLog storeAuditLog(JocAuditLog auditLog, AuditParams auditParams, Collection<AuditLogDetail> details) {
         if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             String comment = null;
             if (auditParams != null) {
@@ -370,15 +370,15 @@ public class JocInventory {
         if (auditLog != null) {
             auditLog.logAuditMessage(auditParams);
             DBItemJocAuditLog auditItem = auditLog.storeAuditLogEntry(auditParams, CategoryType.INVENTORY.intValue());
-            if (auditItem != null) {
-                if (details != null) {
-                    JocAuditLog.storeAuditLogDetails(details, auditItem.getId(), auditItem.getCreated());
-                }
-                return auditItem.getId();
+            if (details != null) {
+                JocAuditLog.storeAuditLogDetails(details, auditItem.getId(), auditItem.getCreated());
             }
-            return 0L;
+            return auditItem;
         } else {
-            return 0L;
+            DBItemJocAuditLog auditItem = new DBItemJocAuditLog();
+            auditItem.setId(0L);
+            auditItem.setCreated(Date.from(Instant.now()));
+            return auditItem;
         }
     }
 

@@ -1,6 +1,9 @@
 package com.sos.joc.db.audit;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +19,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.audit.AuditLogDetailItem;
 import com.sos.joc.model.audit.CategoryType;
 
 public class AuditLogDBLayer {
@@ -26,9 +30,12 @@ public class AuditLogDBLayer {
 		this.session = connection;
 	}
 	
-    public DBItemJocAuditLog getDBItemJocAuditLog(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemJocAuditLog getAuditLog(Long id) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            return session.get(DBItemJocAuditLog.class, id);
+            if (id != null && id > 0L) {
+                return session.get(DBItemJocAuditLog.class, id);
+            }
+            return null;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -39,7 +46,6 @@ public class AuditLogDBLayer {
     public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-
             Query<DBItemJocAuditLog> query = session.createQuery(" from " + DBLayer.DBITEM_JOC_AUDIT_LOG + getWhere(auditLogDBFilter)
                     + " order by created desc");
 
@@ -58,6 +64,52 @@ public class AuditLogDBLayer {
 
     public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter) throws DBConnectionRefusedException, DBInvalidDataException {
         return getAuditLogs(auditLogDBFilter, null);
+    }
+    
+    public List<AuditLogDetailItem> getDetails(Long auditLogId) {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBDetailItem.class.getName());
+            hql.append("(path, type, orderId) from ");
+            hql.append(DBLayer.DBITEM_JOC_AUDIT_DETAILS_LOG);
+            hql.append(" where auditLogId = :auditLogId");
+            Query<AuditLogDBDetailItem> query = session.createQuery(hql.toString());
+            query.setParameter("auditLogId", auditLogId);
+            List<AuditLogDBDetailItem> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(AuditLogDetailItem.class::cast).collect(Collectors.toList());
+            }
+            return Collections.emptyList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<AuditLogDetailItem> getDeploymentDetails(Long auditLogId, Collection<String> controllerIds) {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBDetailItem.class.getName());
+            hql.append("(path, type) from ");
+            hql.append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where auditLogId = :auditLogId");
+            if (!controllerIds.isEmpty()) {
+                hql.append(" and controller in (:controllerIds)"); 
+            }
+            Query<AuditLogDBDetailItem> query = session.createQuery(hql.toString());
+            query.setParameter("auditLogId", auditLogId);
+            if (!controllerIds.isEmpty()) {
+                query.setParameterList("controllerIds", controllerIds);
+            }
+            List<AuditLogDBDetailItem> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(AuditLogDetailItem.class::cast).collect(Collectors.toList());
+            }
+            return Collections.emptyList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
 	private String getWhere(AuditLogDBFilter filter) {

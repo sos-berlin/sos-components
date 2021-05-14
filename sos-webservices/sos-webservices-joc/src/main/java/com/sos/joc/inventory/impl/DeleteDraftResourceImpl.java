@@ -27,6 +27,7 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IDeleteDraftResource;
@@ -99,7 +100,7 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             Set<String> foldersForEvent = new HashSet<>();
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
-            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Date now = Date.from(Instant.now());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
@@ -110,9 +111,9 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
                         continue;
                     }
                 }
-                deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, auditLogId);
+                deleteUpdateDraft(config.getTypeAsEnum(), dbLayer, config, dbAuditLog.getId());
                 foldersForEvent.add(config.getFolder());
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, auditLogId, now);
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
             }
             Globals.commit(session);
 
@@ -149,12 +150,12 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
-            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Date now = Date.from(Instant.now());
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
-                    deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, auditLogId);
-                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, now);
+                    deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, dbAuditLog.getId());
+                    JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
                 }
             }
             if (withDeletionOfEmptyFolders) {

@@ -22,6 +22,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.inventory.resource.IReplaceConfigurationResource;
@@ -84,7 +85,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
 
             DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, null, in.getPath(), ConfigurationType.FOLDER,
                     folderPermissions);
-            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             
             String search = in.getSearch().replaceAll("%", ".*");
             Predicate<String> regex = Pattern.compile(search, Pattern.CASE_INSENSITIVE).asPredicate();
@@ -95,7 +96,6 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             
             List<DBItemInventoryConfiguration> dBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null).stream().filter(
                     notFolderFilter).filter(regexFilter).collect(Collectors.toList());
-            Date now = Date.from(Instant.now());
             for (DBItemInventoryConfiguration item : dBFolderContent) {
                 String newName = item.getName().replaceAll(search, in.getReplace());
                 CheckJavaVariableName.test("name", newName);
@@ -105,8 +105,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 events.addAll(JocInventory.deepCopy(item, newName, dBFolderContent, dbLayer));
 
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, auditLogId, now);
-                setItem(item, Paths.get(item.getFolder()).resolve(newName), auditLogId);
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
+                setItem(item, Paths.get(item.getFolder()).resolve(newName), dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, item);
             }
             
@@ -115,7 +115,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 JocInventory.postEvent(event);
             }
 
-            return JOCDefaultResponse.responseStatusJSOk(now);
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -138,7 +138,7 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             if (in.getObjects().stream().parallel().anyMatch(isFolder)) {
                 // throw new
             }
-            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
             Set<String> events = new HashSet<>();
             String search = in.getSearch().replaceAll("%", ".*");
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
@@ -174,8 +174,8 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
                 }
 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
-                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, auditLogId, null);
-                setItem(config, p, auditLogId);
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
                 events.add(config.getFolder());
             }

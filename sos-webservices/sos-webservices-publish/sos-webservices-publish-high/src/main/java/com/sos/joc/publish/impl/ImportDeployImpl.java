@@ -319,10 +319,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 }
                 break;
             }
-//            if (audit != null) {
-//                logAuditMessage(audit);
-//                storeAuditLogEntry(audit);
-//            }
             // no error occurred
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

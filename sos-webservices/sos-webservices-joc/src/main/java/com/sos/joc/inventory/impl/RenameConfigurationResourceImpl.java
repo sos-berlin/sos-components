@@ -23,6 +23,7 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
@@ -106,18 +107,18 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     CheckJavaVariableName.test("folder", p.getName(i).toString());
                 }
             }
-            Long auditLogId = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
+            DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
 
             if (JocInventory.isFolder(type)) {
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 List<DBItemInventoryConfiguration> oldDBFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
                     auditLogDetails.add(new AuditLogDetail(oldItem.getPath(), oldItem.getType()));
-                    setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), auditLogId);
+                    setItem(oldItem, p.resolve(oldPath.relativize(Paths.get(oldItem.getPath()))), dbAuditLog.getId());
                     return oldItem;
                 }).collect(Collectors.toList());
                 
-                JocAuditLog.storeAuditLogDetails(auditLogDetails, session, auditLogId);
+                JocAuditLog.storeAuditLogDetails(auditLogDetails, session, dbAuditLog);
                 DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPath, ConfigurationType.FOLDER.intValue());
                 List<DBItemInventoryConfiguration> newDBFolderContent = dbLayer.getFolderContent(newPath, true, null);
                 Set<Long> deletedIds = new HashSet<>();
@@ -144,7 +145,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                     JocInventory.deleteConfiguration(dbLayer, newItem);
                 }
                 
-                setItem(config, p, auditLogId);
+                setItem(config, p, dbAuditLog.getId());
                 if (deletedIds.remove(config.getId())) {
                     config.setId(null);
                     JocInventory.insertConfiguration(dbLayer, config);
@@ -187,7 +188,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 
                 events.addAll(JocInventory.deepCopy(config, p.getFileName().toString(), dbLayer));
                 
-                setItem(config, p, auditLogId);
+                JocAuditLog.storeAuditLogDetail(new AuditLogDetail(config.getPath(), config.getType()), session, dbAuditLog);
+                setItem(config, p, dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, config);
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 response.setPath(config.getPath());

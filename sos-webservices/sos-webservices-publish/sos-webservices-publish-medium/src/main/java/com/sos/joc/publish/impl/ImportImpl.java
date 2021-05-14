@@ -21,6 +21,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -95,7 +97,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             }
             
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
-            Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
+            Long auditLogId = dbAuditItem.getId();
             
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
@@ -205,16 +207,16 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     }
             	}
                 if (!filteredConfigurations.isEmpty()) {
-                    Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
-                    folders = filteredConfigurations.stream().map(cfg -> cfg.getPath()).map(path -> Paths.get(path).getParent()).collect(Collectors.toSet());
+                    JocAuditLog.storeAuditLogDetails(filteredConfigurations.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
+                            .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-                    folders.stream().forEach(item -> {
-        				try {
-        					JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
-        				} catch (SOSHibernateException e) {
-        					throw new JocSosHibernateException(e);
-        				}
-        			});
+                    filteredConfigurations.stream().map(ConfigurationObject::getPath).distinct().map(path -> Paths.get(path).getParent()).forEach(item -> {
+                        try {
+                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        }
+                    });
                 }
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
