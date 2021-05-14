@@ -144,8 +144,7 @@ public class PLSQLJob extends ABlockingInternalJob<PLSQLJobArguments> {
         }
 
         plsql = unescapeXML(plsql).replace("\r\n", "\n");
-        plsql = Job.replaceVars(Job.getSubstitutor(args), plsql);
-
+ 
         log(logger, String.format("substituted Statement: %s will be executed.", plsql));
 
         dbmsOutput = new DbmsOutput(connection);

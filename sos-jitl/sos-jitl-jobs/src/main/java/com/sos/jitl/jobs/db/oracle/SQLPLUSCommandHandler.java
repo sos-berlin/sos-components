@@ -39,11 +39,7 @@ public class SQLPLUSCommandHandler {
     public void createSqlFile(SQLPlusJobArguments args, String tempFileName) throws IOException {
 
         Path sqlScript = Paths.get(tempFileName);
-        for (Entry<String, Object> entry : variables.entrySet()) {
-            String writeLine = String.format("DEFINE %1$s = %2$s (char)", entry.getKey(), addQuotes(entry.getValue().toString()));
-            writeln(sqlScript, writeLine);
-        }
-
+       
         if (!args.getIncludeFiles().isEmpty()) {
             String[] includeFileNames = args.getIncludeFiles().split(";");
             for (String includeFileName : includeFileNames) {
