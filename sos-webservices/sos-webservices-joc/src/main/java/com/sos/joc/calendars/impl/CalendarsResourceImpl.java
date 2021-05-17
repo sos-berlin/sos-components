@@ -24,6 +24,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.calendars.resource.ICalendarsResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.JocError;
@@ -74,8 +75,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
 
             } else if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
                 calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getConfigurations(calendarsFilter.getCalendarPaths().stream(), Arrays.asList(CalendarType.WORKINGDAYSCALENDAR
-                        .intValue(), CalendarType.NONWORKINGDAYSCALENDAR.intValue()));
+                dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(p -> JocInventory.pathToName(p)));
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permission

@@ -306,6 +306,9 @@ public class JocInventory {
     }
 
     public static String pathToName(String path) {
+        if (!path.contains("/")) {
+            return path;
+        }
         return Paths.get(path).getFileName().toString();
     }
 

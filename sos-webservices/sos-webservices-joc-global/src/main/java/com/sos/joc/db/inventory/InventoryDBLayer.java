@@ -681,11 +681,11 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<DBItemInventoryReleasedConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types)
             throws SOSHibernateException {
-        Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
+        Set<String> paths = pathsStream.map(p -> JocInventory.pathToName(p).toLowerCase()).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
         List<String> clause = new ArrayList<>();
         if (!paths.isEmpty()) {
-            clause.add("lower(path) in (:paths)");
+            clause.add("lower(name) in (:paths)");
         }
         if (types != null && !types.isEmpty()) {
             clause.add("type in (:types)");
