@@ -297,6 +297,14 @@ public class DeployedConfigurationDBLayer {
                 clauses.add("path in (:paths)");
             }
         }
+        
+        if (filter.getNames() != null && !filter.getNames().isEmpty()) {
+            if (filter.getNames().size() == 1) {
+                clauses.add("name = :name");
+            } else {
+                clauses.add("name in (:names)");
+            }
+        }
 
         if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
             if (filter.getWorkflowIds().size() == 1) {
@@ -349,6 +357,13 @@ public class DeployedConfigurationDBLayer {
                 query.setParameter("path", filter.getPaths().iterator().next());
             } else {
                 query.setParameterList("paths", filter.getPaths());
+            }
+        }
+        if (filter.getNames() != null && !filter.getNames().isEmpty()) {
+            if (filter.getNames().size() == 1) {
+                query.setParameter("name", filter.getNames().iterator().next());
+            } else {
+                query.setParameterList("names", filter.getNames());
             }
         }
         if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {

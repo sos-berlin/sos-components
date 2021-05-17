@@ -3,7 +3,6 @@ package com.sos.joc.locks.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -19,6 +18,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
@@ -80,7 +80,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
             List<DeployedContent> contents = null;
             if (paths != null && !paths.isEmpty()) {
-                dbFilter.setPaths(new HashSet<String>(paths));
+                dbFilter.setNames(paths.stream().map(p -> JocInventory.pathToName(p)).collect(Collectors.toSet()));
                 contents = dbLayer.getDeployedInventory(dbFilter);
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {

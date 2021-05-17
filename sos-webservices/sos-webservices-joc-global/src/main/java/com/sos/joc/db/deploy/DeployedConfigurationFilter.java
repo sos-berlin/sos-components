@@ -14,6 +14,7 @@ public class DeployedConfigurationFilter {
     private Set<Integer> objectTypes;
     private Set<Folder> folders;
     private Set<String> paths;
+    private Set<String> names;
     private Set<WorkflowId> workflowIds;
 
     
@@ -50,6 +51,20 @@ public class DeployedConfigurationFilter {
     public void setPaths(Collection<String> paths) {
         if (paths != null && !paths.isEmpty()) {
             this.paths = paths.stream().collect(Collectors.toSet());
+        }
+    }
+    
+    public void setNames(Set<String> names) {
+        this.names = names;
+    }
+
+    public Set<String> getNames() {
+        return names;
+    }
+    
+    public void setNames(Collection<String> names) {
+        if (names != null && !names.isEmpty()) {
+            this.names = names.stream().collect(Collectors.toSet());
         }
     }
     
