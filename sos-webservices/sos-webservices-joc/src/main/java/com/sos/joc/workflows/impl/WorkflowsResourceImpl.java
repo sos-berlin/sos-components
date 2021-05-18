@@ -91,7 +91,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
             if (withoutFilter) {
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
+                contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
             }
             if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
@@ -114,7 +114,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setIsCurrentVersion(w.isCurrentVersion());
                     workflow.setVersionDate(w.getCreated());
                     workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
-                    workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
+                    if (workflow.getIsCurrentVersion()) {
+                        workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
+                    }
                     return WorkflowsHelper.addWorkflowPositions(workflow);
                 } catch (Exception e) {
                     if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
