@@ -27,7 +27,7 @@ public class SOSParameterSubstitutor {
 
     public void setOpenTag(String openTag) {
         this.openTag = openTag;
-     }
+    }
 
     public void setCloseTag(String closeTag) {
         this.closeTag = closeTag;
@@ -102,19 +102,23 @@ public class SOSParameterSubstitutor {
         Files.write(outPath, content.getBytes(charset));
     }
 
+    public String replaceFromFile(Path path) throws IOException {
+        return replace(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
+    }
+
     public void setCaseSensitive(boolean caseSensitive) {
         this.caseSensitive = caseSensitive;
     }
-    
-    public List<String> getParameterNameFromString(String s){
-    	List<String> l = new ArrayList<String>();
+
+    public List<String> getParameterNameFromString(String s) {
+        List<String> l = new ArrayList<String>();
         String ot = Pattern.quote(openTag);
         String ct = Pattern.quote(closeTag);
         String regEx = ot + "([^" + ct + "]+)" + ct;
         Matcher m = Pattern.compile(regEx).matcher(s);
         while (m.find()) {
             l.add(m.group(1));
-        } 
+        }
         return l;
     }
 

@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
