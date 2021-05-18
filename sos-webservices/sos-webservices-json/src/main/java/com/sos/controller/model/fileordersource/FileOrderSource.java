@@ -1,24 +1,19 @@
 
-package com.sos.controller.model.workflow;
+package com.sos.controller.model.fileordersource;
 
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
-import com.sos.controller.model.fileordersource.FileOrderSource;
-import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.workflow.Jobs;
-import com.sos.inventory.model.workflow.Requirements;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * workflow
+ * FileOrderSource
  * <p>
  * 
  * 
@@ -26,13 +21,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "path",
-    "isCurrentVersion",
     "versionDate",
-    "state",
-    "fileOrderSources"
+    "state"
 })
-public class Workflow
-    extends com.sos.inventory.model.workflow.Workflow
+public class FileOrderSource
+    extends com.sos.inventory.model.fileordersource.FileOrderSource
 {
 
     /**
@@ -44,8 +37,6 @@ public class Workflow
     @JsonProperty("path")
     @JsonPropertyDescription("absolute path of an object.")
     private String path;
-    @JsonProperty("isCurrentVersion")
-    private Boolean isCurrentVersion = true;
     /**
      * timestamp
      * <p>
@@ -63,38 +54,33 @@ public class Workflow
      */
     @JsonProperty("state")
     private SyncState state;
-    @JsonProperty("fileOrderSources")
-    private List<FileOrderSource> fileOrderSources = null;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public Workflow() {
+    public FileOrderSource() {
     }
 
     /**
      * 
      * @param documentationPath
-     * @param instructions
-     * @param jobResourceNames
-     * @param jobs
+     * @param path
+     * @param delay
+     * @param pattern
+     * @param agentName
+     * @param timeZone
+     * @param workflowName
+     * @param state
      * @param title
      * @param versionDate
-     * @param path
-     * @param fileOrderSources
-     * @param versionId
-     * @param isCurrentVersion
-     * @param orderRequirements
-     * @param state
+     * @param directory
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
-        super(versionId, orderRequirements, jobResourceNames, instructions, title, documentationPath, jobs);
+    public FileOrderSource(String path, Date versionDate, SyncState state, String workflowName, String agentName, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
+        super(workflowName, agentName, directory, pattern, timeZone, delay, title, documentationPath);
         this.path = path;
-        this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;
         this.state = state;
-        this.fileOrderSources = fileOrderSources;
     }
 
     /**
@@ -117,16 +103,6 @@ public class Workflow
     @JsonProperty("path")
     public void setPath(String path) {
         this.path = path;
-    }
-
-    @JsonProperty("isCurrentVersion")
-    public Boolean getIsCurrentVersion() {
-        return isCurrentVersion;
-    }
-
-    @JsonProperty("isCurrentVersion")
-    public void setIsCurrentVersion(Boolean isCurrentVersion) {
-        this.isCurrentVersion = isCurrentVersion;
     }
 
     /**
@@ -173,24 +149,14 @@ public class Workflow
         this.state = state;
     }
 
-    @JsonProperty("fileOrderSources")
-    public List<FileOrderSource> getFileOrderSources() {
-        return fileOrderSources;
-    }
-
-    @JsonProperty("fileOrderSources")
-    public void setFileOrderSources(List<FileOrderSource> fileOrderSources) {
-        this.fileOrderSources = fileOrderSources;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(fileOrderSources).append(state).append(isCurrentVersion).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -198,11 +164,11 @@ public class Workflow
         if (other == this) {
             return true;
         }
-        if ((other instanceof Workflow) == false) {
+        if ((other instanceof FileOrderSource) == false) {
             return false;
         }
-        Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(state, rhs.state).append(isCurrentVersion, rhs.isCurrentVersion).append(versionDate, rhs.versionDate).isEquals();
+        FileOrderSource rhs = ((FileOrderSource) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

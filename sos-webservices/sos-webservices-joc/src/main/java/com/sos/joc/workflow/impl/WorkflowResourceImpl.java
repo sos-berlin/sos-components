@@ -47,7 +47,6 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             }
 
             String workflowPath = workflowFilter.getWorkflowId().getPath();
-            checkFolderPermissions(workflowPath, folderPermissions.getListOfFolders());
             String versionId = workflowFilter.getWorkflowId().getVersionId();
             
             Workflow entity = new Workflow();
@@ -64,6 +63,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
                 com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
                         com.sos.controller.model.workflow.Workflow.class);
+                checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
                 workflow.setPath(content.getPath());
                 workflow.setVersionDate(content.getCreated());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
@@ -75,6 +75,9 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     if (lastContent != null && lastContent.getCommitId() != null) {
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
+                }
+                if (workflow.getIsCurrentVersion()) {
+                    workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
                 entity.setWorkflow(WorkflowsHelper.addWorkflowPositions(workflow));
             } else {

@@ -1,13 +1,21 @@
 package com.sos.joc.classes.workflow;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
+import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.ImplicitEnd;
@@ -16,8 +24,12 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
+import com.sos.joc.db.deploy.items.DeployedContent;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -163,4 +175,66 @@ public class WorkflowsHelper {
         }
         return exists;
     }
+    
+    public static Map<String, List<FileOrderSource>> workflowToFileOrderSources(JControllerState controllerState, String controllerId,
+            Set<String> workflowNames, DeployedConfigurationDBLayer dbLayer) {
+        Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.fileWatches().stream().map(f -> f
+                .workflowPath().string()).collect(Collectors.toSet());
+        DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
+        filter.setControllerId(controllerId);
+        filter.setNames(workflowNames);
+        filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
+        List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
+        if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
+            return fileOrderSources.stream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
+                try {
+                    FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
+                    f.setPath(dbItem.getPath());
+                    f.setVersionDate(dbItem.getCreated());
+                    if (syncFileOrderSources.contains(f.getWorkflowName())) {
+                        f.setState(SyncStateHelper.getState(SyncStateText.IN_SYNC));
+                    } else {
+                        f.setState(SyncStateHelper.getState(SyncStateText.NOT_IN_SYNC));
+                    }
+                    return f;
+                } catch (Exception e) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.groupingBy(FileOrderSource::getWorkflowName));
+        }
+        return Collections.emptyMap();
+    }
+    
+    public static List<FileOrderSource> workflowToFileOrderSources(JControllerState controllerState, String controllerId, String WorkflowPath,
+            DeployedConfigurationDBLayer dbLayer) {
+        Set<String> fileWatchNames = WorkflowsHelper.workflowToFileWatchNames(controllerState, WorkflowPath);
+        if (!fileWatchNames.isEmpty()) {
+            DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
+            filter.setControllerId(controllerId);
+            filter.setNames(fileWatchNames);
+            filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
+            List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
+            if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
+                return fileOrderSources.stream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
+                    try {
+                        FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
+                        f.setPath(dbItem.getPath());
+                        f.setVersionDate(dbItem.getCreated());
+                        f.setState(SyncStateHelper.getState(SyncStateText.IN_SYNC));
+                        return f;
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.toList());
+            }
+        }
+        return null;
+    }
+    
+    private static Set<String> workflowToFileWatchNames(JControllerState controllerState, String workflowPath) {
+        String workflowName = JocInventory.pathToName(workflowPath);
+        return controllerState.fileWatches().stream().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path().string()).collect(
+                Collectors.toSet());
+    }
+    
 }

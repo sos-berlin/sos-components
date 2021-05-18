@@ -20,12 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
@@ -95,6 +97,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
                 contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
             }
+            
+            Map<String, List<FileOrderSource>> fileOrderSources = WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, contents
+                    .stream().filter(DeployedContent::isCurrentVersion).map(w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()),
+                    dbLayer);
+
             JocError jocError = getJocError();
             workflows.setWorkflows(contentsStream.map(w -> {
                 try {
@@ -107,6 +114,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setIsCurrentVersion(w.isCurrentVersion());
                     workflow.setVersionDate(w.getCreated());
                     workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                    workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                     return WorkflowsHelper.addWorkflowPositions(workflow);
                 } catch (Exception e) {
                     if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
