@@ -41,7 +41,7 @@ public class SSHShellInfo {
 
         switch (commandResult.getExitCode()) {
         case 0:
-            String stdOut = commandResult.getStdOut().toString().trim();
+            String stdOut = commandResult.getStdOut().trim();
             if (stdOut.matches("(?i).*(linux|darwin|aix|hp-ux|solaris|sunos|freebsd).*")) {
                 os = stdOut;
                 shell = Shell.UNIX;

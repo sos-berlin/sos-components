@@ -144,7 +144,7 @@ public class SQLPLUSCommandHandler {
                 }
             }
         }
-        String stdErr = sosCommandResult.getStdErr().toString();
+        String stdErr = sosCommandResult.getStdErr();
         resultMap.put(SQL_ERROR, sqlError.trim());
         if (sosCommandResult.getExitCode() == 0) {
             if (!stdErr.trim().isEmpty()) {

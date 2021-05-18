@@ -31,16 +31,16 @@ public class SOSCommandResult {
         exitCode = val;
     }
 
-    public StringBuilder getStdOut() {
-        return stdOut;
+    public String getStdOut() {
+        return stdOut.toString();
     }
 
     public void setStdOut(String val) {
         stdOut.append(val);
     }
 
-    public StringBuilder getStdErr() {
-        return stdErr;
+    public String getStdErr() {
+        return stdErr.toString();
     }
 
     public void setStdErr(String val) {

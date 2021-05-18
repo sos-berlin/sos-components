@@ -83,7 +83,7 @@ public class SQLPLUSJob extends ABlockingInternalJob<SQLPlusJobArguments> {
 
             SOSCommandResult sosCommandResult = SOSShell.executeCommand(args.getCommandLine(tempFileName));
             final String conNL = System.getProperty("line.separator");
-            String stdOut = sosCommandResult.getStdOut().toString();
+            String stdOut = sosCommandResult.getStdOut();
             log(logger,String.format("[stdout]%s", stdOut));
             String[] stdOutStringArray = stdOut.split(conNL);
 

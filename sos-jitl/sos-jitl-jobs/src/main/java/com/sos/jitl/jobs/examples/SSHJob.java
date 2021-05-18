@@ -41,10 +41,10 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
         SOSCommandResult r = provider.executeCommand(step.getArguments().getCommand().getValue());
 
         step.getLogger().info("[exitCode]%s", r.getExitCode());
-        if (!SOSString.isEmpty(r.getStdOut().toString())) {
+        if (!SOSString.isEmpty(r.getStdOut())) {
             step.getLogger().info("[stdOut]%s", r.getStdOut());
         }
-        if (!SOSString.isEmpty(r.getStdErr().toString())) {
+        if (!SOSString.isEmpty(r.getStdErr())) {
             step.getLogger().info("[stdErr]%s", r.getStdErr());
         }
         if (r.getException() != null) {
