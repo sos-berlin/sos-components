@@ -418,7 +418,7 @@ public class JobStep<A extends JobArguments> {
         vars.put("js7Label", "not implemented yet");// TODO
         vars.put("js7JobName", getJobName());
 
-        SOSParameterSubstitutor ps = new SOSParameterSubstitutor();
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true);
         ps.setOpenTag("${");
         ps.setCloseTag("}");
         vars.entrySet().forEach(e -> {
