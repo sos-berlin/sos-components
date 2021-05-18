@@ -2,8 +2,8 @@ package com.sos.jitl.jobs.mail;
 
 import java.util.List;
 
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.common.JobArguments;
 
 public class MailJobArguments extends JobArguments {

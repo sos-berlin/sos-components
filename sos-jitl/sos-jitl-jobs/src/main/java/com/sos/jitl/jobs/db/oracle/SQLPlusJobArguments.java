@@ -1,10 +1,10 @@
 package com.sos.jitl.jobs.db.oracle;
 
 import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument;
-import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 import com.sos.jitl.jobs.common.JobArguments;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 public class SQLPlusJobArguments extends JobArguments {
 

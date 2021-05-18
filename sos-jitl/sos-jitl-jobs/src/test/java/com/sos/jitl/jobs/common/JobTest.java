@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgumentHelper;
+import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.helper.TestJob;
 import com.sos.jitl.jobs.common.helper.TestJobArguments;
 import com.sos.jitl.jobs.common.helper.TestJobArgumentsSuperClass;
@@ -105,6 +107,25 @@ public class JobTest {
         LOGGER.info("linkedList=" + o3.getLinkedList().getDisplayValue());
     }
 
+    @Ignore
+    @Test
+    public void testApp2JobArguments() throws Exception {
+        SSHProviderArguments sftpArgs = new SSHProviderArguments();
+        JobArguments a = new JobArguments(sftpArgs);
+
+        if (a.getAppArguments() != null && a.getAppArguments().size() > 0) {
+            a.getAppArguments().entrySet().stream().forEach(e -> {
+                for (JobArgument<?> arg : e.getValue()) {
+                    // LOGGER.info(arg.getName());
+                    if (arg.getName().equals("protocol")) {
+                        LOGGER.info(SOSString.toString(arg));
+                    }
+                }
+            });
+        }
+
+    }
+
     private static Class<?> getJobArgumensClass(Object instance) throws SOSJobArgumentException {
         Class<?> clazz = instance.getClass();
         while (clazz.getSuperclass() != ABlockingInternalJob.class) {
@@ -124,7 +145,7 @@ public class JobTest {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void setArguments(Map<String, Object> map, Object o) {
+    private void setArguments(Map<String, Object> map, JobArguments o) {
         List<Field> fields = Job.getJobArgumentFields(o);
         for (Field field : fields) {
             try {
@@ -137,7 +158,7 @@ public class JobTest {
                     }
                     Object val = map.get(arg.getName());
                     if (val == null || SOSString.isEmpty(val.toString())) {
-                        arg.setValue(arg.getDefault());
+                        arg.setValue(arg.getDefaultValue());
                     } else {
                         arg.setValue(getValue(field, arg, val));
                     }
@@ -160,12 +181,12 @@ public class JobTest {
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
-                    val = Stream.of(val.toString().split(Job.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                    val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
                         arg.setNotAcceptedValue(val);
-                        val = arg.getDefault();
+                        val = arg.getDefaultValue();
                     } else {
                         val = v;
                     }

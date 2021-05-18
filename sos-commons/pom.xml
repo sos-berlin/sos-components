@@ -22,5 +22,6 @@
 		<module>sos-commons-sign</module>
 		<module>sos-commons-tools</module>
 		<module>sos-commons-credentialstore</module>
+		<module>sos-commons-vfs</module>
 	</modules>
 </project>

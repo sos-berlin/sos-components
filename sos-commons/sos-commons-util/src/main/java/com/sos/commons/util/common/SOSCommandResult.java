@@ -55,6 +55,23 @@ public class SOSCommandResult {
         exception = val;
     }
 
+    public boolean hasError() {
+        return hasError(false);
+    }
+
+    public boolean hasError(boolean checkStdError) {
+        if (exception != null) {
+            return true;
+        }
+        if (exitCode != null && exitCode > 0) {
+            return true;
+        }
+        if (checkStdError && stdErr.length() > 0) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("[").append(command).append("]");

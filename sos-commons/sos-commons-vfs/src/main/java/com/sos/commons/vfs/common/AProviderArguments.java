@@ -1,0 +1,83 @@
+package com.sos.commons.vfs.common;
+
+import com.sos.commons.credentialstore.keepass.SOSKeePassDatabase;
+import com.sos.commons.util.common.ASOSArguments;
+import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+import com.sos.commons.vfs.common.proxy.Proxy;
+
+public abstract class AProviderArguments extends ASOSArguments {
+
+    // TODO see sos.yade.commons.Yade.TransferProtocol
+    public enum Protocol {
+        UNKNOWN(0), LOCAL(10), FTP(20), FTPS(21), SFTP(30), SSH(31), HTTP(40), HTTPS(41), WEBDAV(50), WEBDAVS(51), SMB(60);
+
+        private final Integer value;
+
+        private Protocol(Integer val) {
+            value = val;
+        }
+
+        public Integer getValue() {
+            return value;
+        }
+    }
+
+    public enum KeyStoreType {
+        JKS, JCEKS, PKCS12, PKCS11, DKS
+    }
+
+    // Basic
+    private SOSArgument<Protocol> protocol = new SOSArgument<Protocol>("protocol", true);
+    private SOSArgument<String> host = new SOSArgument<String>("host", true);
+    private SOSArgument<String> user = new SOSArgument<String>("user", false);
+    private SOSArgument<String> password = new SOSArgument<String>("password", false, DisplayMode.MASKED);
+
+    // Proxy
+    private SOSArgument<java.net.Proxy.Type> proxyType = new SOSArgument<java.net.Proxy.Type>("proxy_type", false);
+    private SOSArgument<String> proxyHost = new SOSArgument<String>("proxy_host", false);
+    private SOSArgument<Integer> proxyPort = new SOSArgument<Integer>("proxy_port", false, -1);
+    private SOSArgument<String> proxyUser = new SOSArgument<String>("proxy_user", false);
+    private SOSArgument<String> proxyPassword = new SOSArgument<String>("proxy_password", false, DisplayMode.MASKED);
+
+    // Keepass
+    private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<SOSKeePassDatabase>("keepass_database", false);
+    private SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>> keepassDatabaseEntry = new SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>>(
+            "keepass_database_entry", false);
+    private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>("keepass_attachment_property_name", false);
+
+    public SOSArgument<Protocol> getProtocol() {
+        return protocol;
+    }
+
+    public SOSArgument<String> getHost() {
+        return host;
+    }
+
+    public SOSArgument<String> getUser() {
+        return user;
+    }
+
+    public SOSArgument<String> getPassword() {
+        return password;
+    }
+
+    public Proxy getProxy() {
+        if (proxyType.getValue() != null && proxyHost.getValue() != null) {
+            return new Proxy(proxyType.getValue(), proxyHost.getValue(), proxyPort.getValue(), proxyUser.getValue(), proxyPassword.getValue());
+        }
+        return null;
+    }
+
+    public SOSKeePassDatabase getKeepassDatabase() {
+        return keepassDatabase.getValue();
+    }
+
+    public org.linguafranca.pwdb.Entry<?, ?, ?, ?> getKeepassDatabaseEntry() {
+        return keepassDatabaseEntry.getValue();
+    }
+
+    public String getKeepassAttachmentPropertyName() {
+        return keepassAttachmentPropertyName.getValue();
+    }
+}

@@ -50,14 +50,20 @@
 			<artifactId>sos-commons-mail</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-vfs</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
+
+		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>jsr305</artifactId>

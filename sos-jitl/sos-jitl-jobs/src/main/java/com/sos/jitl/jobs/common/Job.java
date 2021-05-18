@@ -7,12 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
-import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
 import io.vavr.control.Either;
@@ -21,13 +19,10 @@ import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
-import js7.executor.forjava.internal.BlockingInternalJob;
-import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 
 public class Job {
 
     public static final String NAMED_NAME_RETURN_CODE = "returnCode";
-    public static final String LIST_VALUE_DELIMITER = ";";
 
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
@@ -65,7 +60,7 @@ public class Job {
     }
 
     @SuppressWarnings("rawtypes")
-    public static <T> SOSParameterSubstitutor getSubstitutor(final T args) {
+    public static SOSParameterSubstitutor getSubstitutor(final JobArguments args) {
         if (args == null) {
             return null;
         }
@@ -87,7 +82,7 @@ public class Job {
         return s;
     }
 
-    public static List<Field> getJobArgumentFields(Object o) {
+    public static List<Field> getJobArgumentFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
                 .toList());
     }
@@ -112,7 +107,7 @@ public class Job {
     }
 
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
-        return getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefault() : arg.getValue());
+        return getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefaultValue() : arg.getValue());
     }
 
     // s, hh:mm:ss, hh:mm
@@ -165,57 +160,6 @@ public class Job {
         }
         return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                 .getValue()));
-    }
-
-    @SuppressWarnings("unchecked")
-    public static String getDisplayValue(Object value, DisplayMode mode) {
-        if (value == null) {
-            return null;
-        }
-        switch (mode) {
-        case UNMASKED:
-            if (value instanceof List) {
-                return String.join(LIST_VALUE_DELIMITER, (List<String>) value);
-            }
-            return value.toString();
-        case MASKED:
-            return DisplayMode.MASKED.getValue();
-        default:
-            return DisplayMode.UNKNOWN.getValue();
-        }
-    }
-
-    @Deprecated
-    public static Map<String, Object> mergeArguments(final JobContext jobContext, final BlockingInternalJob.Step step) {
-        if (step == null) {
-            return convert(jobContext.jobArguments());
-        }
-        Stream<Map<String, Value>> stream = null;
-        if (jobContext == null) {
-            stream = Stream.of(step.order().arguments(), step.arguments());
-        } else {
-            stream = Stream.of(jobContext.jobArguments(), step.order().arguments(), step.arguments());
-        }
-        return convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-    }
-
-    @Deprecated
-    @SuppressWarnings("unchecked")
-    public static <T> T getArgument(Map<String, Object> args, String name) {
-        T val = (T) args.get(name);
-        if (val != null && val instanceof String) {
-            val = (T) val.toString().trim();
-        }
-        return val;
-    }
-
-    @Deprecated
-    public static <T> T getArgument(Map<String, Object> args, String name, T defaultValue) {
-        T val = getArgument(args, name);
-        if (val == null || val.toString().length() == 0) {
-            val = defaultValue;
-        }
-        return val;
     }
 
     private static Path getPath(String val) {

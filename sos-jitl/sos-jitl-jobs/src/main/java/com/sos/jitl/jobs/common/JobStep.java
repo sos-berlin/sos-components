@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.jitl.jobs.common.JobArgument.DisplayMode;
+import com.sos.commons.util.common.ASOSArguments;
+import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -28,7 +30,7 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
-public class JobStep<A> {
+public class JobStep<A extends JobArguments> {
 
     private final String jobClassName;
     private final JobContext jobContext;
@@ -217,7 +219,7 @@ public class JobStep<A> {
         return allCurrentArguments;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void setKnownArguments() {
         if (internalStep == null || arguments == null) {
             knownArguments = null;
@@ -240,8 +242,31 @@ public class JobStep<A> {
                     logger.warn(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
                 }
             }
+            if (arguments.getAppArguments() != null && arguments.getAppArguments().size() > 0) {
+                for (Map.Entry<String, List<JobArgument>> e : arguments.getAppArguments().entrySet()) {
+                    for (JobArgument arg : e.getValue()) {
+                        l.add(arg);
+                    }
+                }
+            }
             knownArguments = l;
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public <T extends ASOSArguments> T getAppArguments(Class<T> clazz) throws InstantiationException, IllegalAccessException {
+        setKnownArguments();
+        T instance = clazz.newInstance();
+        if (arguments.getAppArguments() == null) {
+            return instance;
+        }
+        List<SOSArgument> args = knownArguments.stream().filter(a -> a.getPayload() != null && a.getPayload().equals(clazz.getName())).map(
+                a -> (SOSArgument) a).collect(Collectors.toList());
+
+        if (args != null) {
+            instance.setArguments(args);
+        }
+        return instance;
     }
 
     private String getStepInfo() {
@@ -591,6 +616,13 @@ public class JobStep<A> {
             return false;
         }).forEach(a -> {
             String detail = a.getValueSource().getDetails() == null ? "" : " " + a.getValueSource().getDetails();
+            if (a.getPayload() != null) {
+                if (detail.equals("")) {
+                    detail = " " + a.getPayload();
+                } else {
+                    detail = detail + " " + a.getPayload();
+                }
+            }
             if (a.getNotAcceptedValue() == null) {
                 logger.info("    %s=%s (source=%s%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), detail);
             } else {
