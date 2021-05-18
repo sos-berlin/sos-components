@@ -63,8 +63,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
         if (files == null || files.size() == 0 || args.getSteadyStateCount().getValue() <= 0) {
             return true;
         }
-        long interval = Job.getTimeAsSeconds(args.getSteadyStateInterval());
-        if (interval <= 0) {
+        Integer interval = args.getSteadyStateInterval().getValue();
+        if (interval == null || interval <= 0) {
             logger.debug("skip checking file(s) for steady state, interval=%ss", interval);
             return true;
         }
@@ -75,7 +75,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
             list.add(new FileDescriptor(file));
         }
         try {
-            TimeUnit.SECONDS.sleep(interval);
+            TimeUnit.SECONDS.sleep(interval.longValue());
         } catch (InterruptedException e) {
             logger.error(e.toString(), e);
         }

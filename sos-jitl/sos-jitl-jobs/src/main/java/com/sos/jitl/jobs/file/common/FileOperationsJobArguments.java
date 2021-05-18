@@ -46,7 +46,8 @@ public class FileOperationsJobArguments extends JobArguments {
 
     // steady state
     private JobArgument<Integer> steadyStateCount = new JobArgument<Integer>("steady_state_count", false, 0);
-    private JobArgument<String> steadyStateInterval = new JobArgument<String>("steady_state_interval", false, "1");
+    // seconds
+    private JobArgument<Integer> steadyStateInterval = new JobArgument<Integer>("steady_state_interval", false, 1);
 
     // result set
     private JobArgument<Integer> expectedSizeOfResultSet = new JobArgument<Integer>("expected_size_of_result_set", false, 0);
@@ -121,7 +122,7 @@ public class FileOperationsJobArguments extends JobArguments {
         return steadyStateCount;
     }
 
-    public JobArgument<String> getSteadyStateInterval() {
+    public JobArgument<Integer> getSteadyStateInterval() {
         return steadyStateInterval;
     }
 
