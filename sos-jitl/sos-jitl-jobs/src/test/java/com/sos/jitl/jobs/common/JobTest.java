@@ -92,6 +92,7 @@ public class JobTest {
         map.put(o3.getLogLevel().getName(), "xxx");
         map.put(o3.getList().getName(), "xxx ; yyyy ;");
         map.put(o3.getLinkedList().getName(), "lxxx ; lyyyy ;");
+        map.put(o3.getAuthMethods().getName(), "password;publickey");
 
         LOGGER.info(o1.getClass().getSimpleName() + "---");
         setArguments(map, o1);
@@ -105,6 +106,7 @@ public class JobTest {
         LOGGER.info("logLevel=" + o3.getLogLevel().getValue().name());
         LOGGER.info("list=" + o3.getList().getDisplayValue());
         LOGGER.info("linkedList=" + o3.getLinkedList().getDisplayValue());
+        LOGGER.info("authMethods=" + o3.getAuthMethods().getDisplayValue());
     }
 
     @Ignore
@@ -181,7 +183,29 @@ public class JobTest {
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
-                    val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                    LOGGER.info(arg.getName() + " = " + type);
+                    boolean asStringList = true;
+                    try {
+                        Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
+                        if (subType.equals(String.class)) {
+                        } else if (SOSReflection.isEnum(subType)) {
+                            val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
+                                Object e = null;
+                                try {
+                                    e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
+                                } catch (ClassNotFoundException ex) {
+                                    e = v.trim();
+                                }
+                                return e;
+                            }).collect(Collectors.toList());
+                            asStringList = false;
+                        }
+                    } catch (Throwable e) {
+                    }
+                    if (asStringList) {
+                        val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                    }
+
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {

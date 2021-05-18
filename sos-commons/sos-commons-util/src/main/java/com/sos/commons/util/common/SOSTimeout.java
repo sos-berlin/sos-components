@@ -4,19 +4,19 @@ import java.util.concurrent.TimeUnit;
 
 public class SOSTimeout {
 
-    private final long timeout;
-    private final TimeUnit unit;
+    private final long interval;
+    private final TimeUnit timeUnit;
 
-    public SOSTimeout(long timeout, TimeUnit unit) {
-        this.timeout = timeout;
-        this.unit = unit;
+    public SOSTimeout(long interval, TimeUnit timeUnit) {
+        this.interval = interval;
+        this.timeUnit = timeUnit;
     }
 
-    public long getTimeout() {
-        return timeout;
+    public long getInterval() {
+        return interval;
     }
 
-    public TimeUnit getUnit() {
-        return unit;
+    public TimeUnit getTimeUnit() {
+        return timeUnit;
     }
 }

@@ -22,11 +22,14 @@ import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.common.SSHShellInfo;
+import com.sos.commons.vfs.ssh.exception.SOSSFTPClientNotInitializedException;
 import com.sos.commons.vfs.ssh.exception.SOSSSHCommandExitViolentlyException;
 
+import net.schmizz.keepalive.KeepAliveProvider;
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.Service;
 import net.schmizz.sshj.common.Factory;
 import net.schmizz.sshj.common.IOUtils;
 import net.schmizz.sshj.common.SSHException;
@@ -55,24 +58,14 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SSHProvider.class);
 
     private Config config;
-    private SSHProviderArguments arguments;
-
     private SSHClient sshClient;
     private SFTPClient sftpClient;
 
     private SSHShellInfo shellInfo;
     private String serverVersion;
 
-    private static final int DEFAULT_CONNECT_TIMEOUT = 0;
-    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
-
-    private int timeout = 0;
-
     public SSHProvider(SSHProviderArguments args) {
         super(args);
-        if (args.getProtocol().getValue() == null) {
-            args.getProtocol().setValue(Protocol.SFTP);
-        }
     }
 
     @Override
@@ -80,6 +73,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         createSSHClient();
         sshClient.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
         authenticate();
+        setKeepAlive();
         serverVersion = sshClient.getTransport().getServerVersion();// "OpenSSH_$version" OpenSSH_for_Windows_8.1. can be null
         createSFTPClient();
     }
@@ -98,14 +92,12 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             try {
                 sftpClient.close();
             } catch (IOException e) {
-                LOGGER.warn("[sftpClient]" + e.toString(), e);
             }
         }
         if (sshClient != null) {
             try {
                 sshClient.close();
             } catch (IOException e) {
-                LOGGER.warn("[sshClient]" + e.toString(), e);
             }
         }
     }
@@ -113,7 +105,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     @Override
     public void mkdir(String path) throws Exception {
         if (sftpClient == null) {
-            return;
+            throw new SOSSFTPClientNotInitializedException();
         }
         sftpClient.mkdirs(path);
     }
@@ -121,7 +113,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     @Override
     public void rmdir(String path) throws Exception {// remove directory - all files and sub folders
         if (sftpClient == null) {
-            return;
+            throw new SOSSFTPClientNotInitializedException();
         }
         path = sftpClient.canonicalize(path);
 
@@ -136,6 +128,22 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             }
         }
         sftpClient.rmdir(path);
+    }
+
+    @Override
+    public void rm(String path) throws Exception {// remove file
+        if (sftpClient == null) {
+            throw new SOSSFTPClientNotInitializedException();
+        }
+        sftpClient.rm(sftpClient.canonicalize(path));
+    }
+
+    @Override
+    public void rename(String oldpath, String newpath) throws Exception {
+        if (sftpClient == null) {
+            throw new SOSSFTPClientNotInitializedException();
+        }
+        sftpClient.rename(sftpClient.canonicalize(oldpath), sftpClient.canonicalize(newpath));
     }
 
     @Override
@@ -188,9 +196,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             return result;
         }
 
-        Session session = null;
-        try {
-            session = sshClient.startSession();
+        try (Session session = sshClient.startSession()) {
             if (getArguments().getSimulateShell().getValue()) {
                 session.allocateDefaultPTY();
             }
@@ -203,7 +209,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             if (timeout == null) {
                 cmd.join();
             } else {
-                cmd.join(timeout.getTimeout(), timeout.getUnit());
+                cmd.join(timeout.getInterval(), timeout.getTimeUnit());
             }
             result.setExitCode(cmd.getExitStatus());
             if (result.getExitCode() == null) {
@@ -212,16 +218,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
             result.setException(e);
-        } finally {
-            if (session != null) {
-                try {
-                    session.close();
-                } catch (Throwable e) {
-                    LOGGER.warn(e.toString(), e);
-                }
-            }
         }
         return result;
     }
@@ -239,9 +236,6 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         }
         // only global env vars
         if (env.getEnvVars() != null && env.getEnvVars().size() > 0) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[set env vars]%s", env.getEnvVars()));
-            }
             env.getEnvVars().forEach((k, v) -> {
                 try {
                     session.setEnvVar(k, v);
@@ -273,15 +267,16 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return false;
     }
 
-    private FileAttributes getFileAttributes(String path) throws IOException {
+    private FileAttributes getFileAttributes(String path) throws Exception {
         if (sftpClient == null) {
-            return null;
+            throw new SOSSFTPClientNotInitializedException();
         }
         return sftpClient.stat(sftpClient.canonicalize(path));
     }
 
     private void createSSHClient() throws Exception {
         setConfig();
+        setKeepAliveProvider();
         sshClient = new SSHClient(config);
         setHostKeyVerifier();
         setCompression();
@@ -289,15 +284,20 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         setProxy();
     }
 
-    private void createSFTPClient() throws Exception {
-        if (sshClient == null || !getArguments().getProtocol().getValue().equals(Protocol.SFTP)) {
-            return;
-        }
-        sftpClient = sshClient.newSFTPClient();
-    }
-
     private void setConfig() {
         config = new DefaultConfig();
+    }
+
+    private void setKeepAliveProvider() {
+        if (getArguments().getServerAliveInterval().getValue() != null) {
+            config.setKeepAliveProvider(KeepAliveProvider.KEEP_ALIVE);
+        }
+    }
+
+    private void setKeepAlive() {
+        if (getArguments().getServerAliveInterval().getValue() != null) {
+            sshClient.getConnection().getKeepAlive().setKeepAliveInterval(getArguments().getServerAliveInterval().getValue());
+        }
     }
 
     private void setHostKeyVerifier() throws IOException {
@@ -318,9 +318,8 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     private void setTimeout() {
-        // TODO
-        sshClient.setTimeout(timeout); // socket.setSoTimeout
-        sshClient.setConnectTimeout(connectTimeout);// socket.connect
+        sshClient.setTimeout(getArguments().getSocketTimeoutAsMs());
+        sshClient.setConnectTimeout(getArguments().getConnectTimeoutAsMs());
     }
 
     public void setProxy() {
@@ -330,12 +329,23 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         }
     }
 
+    private void createSFTPClient() throws Exception {
+        if (sshClient == null || !getArguments().getProtocol().getValue().equals(Protocol.SFTP)) {
+            return;
+        }
+        sftpClient = sshClient.newSFTPClient();
+    }
+
     private void authenticate() throws Exception {
-        if (getArguments().getPreferredAuthentications().getValue() != null) {
+        if (getArguments().getPreferredAuthentications().getValue() != null && getArguments().getPreferredAuthentications().getValue().size() > 0) {
             usePreferredAuthentications();
-        } else if (getArguments().getRequiredAuthentications().getValue() != null) {
-            throw new Exception("not implemented yet");
+        } else if (getArguments().getRequiredAuthentications().getValue() != null && getArguments().getRequiredAuthentications().getValue()
+                .size() > 0) {
+            useRequiredAuthentications();
         } else {
+            if (getArguments().getAuthMethod().getValue() == null) {
+                throw new SOSRequiredArgumentMissingException(getArguments().getAuthMethod().getName());
+            }
             net.schmizz.sshj.userauth.method.AuthMethod method = null;
             switch (getArguments().getAuthMethod().getValue()) {
             case PUBLICKEY:
@@ -353,9 +363,6 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     private void usePreferredAuthentications() throws Exception {
-        if (getArguments().getPreferredAuthentications().getValue() == null) {
-            return;
-        }
         List<net.schmizz.sshj.userauth.method.AuthMethod> methods = new LinkedList<>();
         for (AuthMethod am : getArguments().getPreferredAuthentications().getValue()) {
             switch (am) {
@@ -370,14 +377,43 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
                 break;
             }
         }
-        sshClient.auth(arguments.getUser().getValue(), methods);
+        sshClient.auth(getArguments().getUser().getValue(), methods);
     }
 
-    private AuthPassword getAuthPassword() throws UserAuthException, TransportException {
+    private void useRequiredAuthentications() throws Exception {
+        for (AuthMethod am : getArguments().getRequiredAuthentications().getValue()) {
+            switch (am) {
+            case PUBLICKEY:
+                doRequiredAuthentication(getAuthPublickey());
+                break;
+            case PASSWORD:
+                doRequiredAuthentication(getAuthPassword());
+                break;
+            case KEYBOARD_INTERACTIVE:
+                doRequiredAuthentication(getAuthKeyboardInteractive());
+                break;
+            }
+        }
+    }
+
+    private void doRequiredAuthentication(net.schmizz.sshj.userauth.method.AuthMethod method) throws UserAuthException, TransportException {
+        if (!sshClient.getUserAuth().authenticate(getArguments().getUser().getValue(), (Service) sshClient.getConnection(), method, sshClient
+                .getTransport().getTimeoutMs())) {
+            throw new UserAuthException("Authentication failed");
+        }
+    }
+
+    private AuthPassword getAuthPassword() throws SOSRequiredArgumentMissingException, UserAuthException, TransportException {
+        if (getArguments().getPassword().getValue() == null) {
+            throw new SOSRequiredArgumentMissingException(getArguments().getPassword().getName());
+        }
         return new AuthPassword(getPasswordFinder(getArguments().getPassword().getValue()));
     }
 
-    private AuthKeyboardInteractive getAuthKeyboardInteractive() throws UserAuthException, TransportException {
+    private AuthKeyboardInteractive getAuthKeyboardInteractive() throws SOSRequiredArgumentMissingException, UserAuthException, TransportException {
+        if (getArguments().getPassword().getValue() == null) {
+            throw new SOSRequiredArgumentMissingException(getArguments().getPassword().getName());
+        }
         return new AuthKeyboardInteractive(new PasswordResponseProvider(getPasswordFinder(getArguments().getPassword().getValue())));
     }
 
@@ -417,8 +453,6 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         Reader r = null;
         try {
             KeyFormat kf = KeyProviderUtil.detectKeyFileFormat(new StringReader(new String(privateKey, "UTF-8")), false);
-            LOGGER.debug("KeyFormat=" + kf);
-
             r = new StringReader(new String(privateKey, "UTF-8"));
             FileKeyProvider kp = Factory.Named.Util.create(config.getFileKeyProviderFactories(), kf.toString());
             if (kp == null) {

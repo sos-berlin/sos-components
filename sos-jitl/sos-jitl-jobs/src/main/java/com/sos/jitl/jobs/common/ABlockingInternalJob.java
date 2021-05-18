@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
@@ -116,8 +117,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
 
     private void checkExceptions(JobStep<A> jobStep, List<SOSJobArgumentException> exceptions) throws Exception {
         if (exceptions.size() > 0) {
-            List<String> l = exceptions.stream().filter(e -> e instanceof SOSJobRequiredArgumentMissingException).map(e -> {
-                return ((SOSJobRequiredArgumentMissingException) e).getArgumentName();
+            List<String> l = exceptions.stream().filter(e -> e instanceof ISOSRequiredArgumentMissingException).map(e -> {
+                return ((ISOSRequiredArgumentMissingException) e).getArgumentName();
             }).collect(Collectors.toList());
             if (l.size() > 0) {
                 jobStep.logParameterizationOnRequiredArgumentMissingException();
@@ -283,7 +284,27 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                 } else if (type.equals(URI.class)) {
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
-                    val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                    boolean asStringList = true;
+                    try {
+                        Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
+                        if (subType.equals(String.class)) {
+                        } else if (SOSReflection.isEnum(subType)) {
+                            val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
+                                Object e = null;
+                                try {
+                                    e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
+                                } catch (ClassNotFoundException ex) {
+                                    e = v.trim();
+                                }
+                                return e;
+                            }).collect(Collectors.toList());
+                            asStringList = false;
+                        }
+                    } catch (Throwable e) {
+                    }
+                    if (asStringList) {
+                        val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                    }
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {

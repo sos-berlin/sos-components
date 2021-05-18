@@ -6,17 +6,14 @@ import com.sos.commons.util.common.SOSArgument;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
-/** Supported types:<br/>
+/** JobArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
  * - java.lang.String<br/>
  * - java.lang.Boolean<br/>
- * - java.lang.Integer<br/>
- * - java.lang.Long<br/>
- * - java.math.BigDecimal<br/>
+ * - java.lang.Integer, java.lang.Long, java.math.BigDecimal<br/>
  * - java.nio.file.Path<br/>
  * - java.net.URI<br/>
- * - java.util.List&lt;String&gt;<br/>
- * - java.util.LinkedList&lt;String&gt;<br/>
  * - java.lang.Enum<br/>
+ * - java.util.List | LinkedList&lt;java.lang.String | java.lang.Enum&gt;<br/>
  */
 public class JobArgument<T> extends SOSArgument<T> {
 

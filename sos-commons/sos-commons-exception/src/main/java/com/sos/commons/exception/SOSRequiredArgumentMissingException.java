@@ -1,6 +1,6 @@
 package com.sos.commons.exception;
 
-public class SOSRequiredArgumentMissingException extends SOSException {
+public class SOSRequiredArgumentMissingException extends SOSException implements ISOSRequiredArgumentMissingException {
 
     private static final long serialVersionUID = 1L;
 
@@ -15,6 +15,7 @@ public class SOSRequiredArgumentMissingException extends SOSException {
         this.argumentName = argumentName;
     }
 
+    @Override
     public String getArgumentName() {
         return argumentName;
     }

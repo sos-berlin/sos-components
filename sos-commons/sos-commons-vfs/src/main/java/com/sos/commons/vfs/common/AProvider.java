@@ -23,6 +23,10 @@ public abstract class AProvider<A extends AProviderArguments> {
 
     public abstract void rmdir(String path) throws Exception;
 
+    public abstract void rm(String path) throws Exception;
+
+    public abstract void rename(String oldpath, String newpath) throws Exception;
+
     public abstract boolean fileExists(String path);
 
     public abstract boolean directoryExists(String path);
