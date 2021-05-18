@@ -16,6 +16,12 @@ public interface IAuditLogDetailResource {
     @Path("detail")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postAuditLogDetail(@HeaderParam("X-Access-Token") String xAccessToken, byte[] bytes);
+    
+    @POST
+    @Path("details")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAuditLogDetails(@HeaderParam("X-Access-Token") String xAccessToken, byte[] bytes);
 
 }

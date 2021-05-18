@@ -125,9 +125,8 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
-            ScrollableResults auditLogs = dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit());
             AuditLog entity = new AuditLog();
-            entity.setAuditLog(getAuditLogItems(auditLogs));
+            entity.setAuditLog(dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit()));
             entity.setDeliveryDate(new Date());
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -146,28 +145,6 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             return true;
         }
         return categories.stream().anyMatch(c -> !CategoryType.CONTROLLER.equals(c));
-    }
-
-    private List<AuditLogItem> getAuditLogItems(ScrollableResults auditLogsFromDb) {
-        List<AuditLogItem> auditLogItems = new ArrayList<>();
-        if (auditLogsFromDb != null) {
-            while (auditLogsFromDb.next()) {
-                DBItemJocAuditLog dbItem = (DBItemJocAuditLog) auditLogsFromDb.get(0);
-                AuditLogItem auditLogItem = new AuditLogItem();
-                auditLogItem.setId(dbItem.getId());
-                auditLogItem.setControllerId(dbItem.getControllerId());
-                auditLogItem.setAccount(dbItem.getAccount());
-                auditLogItem.setRequest(dbItem.getRequest());
-                auditLogItem.setParameters(dbItem.getParameters());
-                auditLogItem.setCategory(dbItem.getTypeAsEnum());
-                auditLogItem.setComment(dbItem.getComment());
-                auditLogItem.setCreated(dbItem.getCreated());
-                auditLogItem.setTicketLink(dbItem.getTicketLink());
-                auditLogItem.setTimeSpent(dbItem.getTimeSpent());
-                auditLogItems.add(auditLogItem);
-            }
-        }
-        return auditLogItems;
     }
 
 }

@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -20,6 +19,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.audit.AuditLogDetailItem;
+import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.audit.CategoryType;
 
 public class AuditLogDBLayer {
@@ -43,27 +43,32 @@ public class AuditLogDBLayer {
         }
     }
 
-    public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit) throws DBConnectionRefusedException,
+    public List<AuditLogItem> getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
-            Query<DBItemJocAuditLog> query = session.createQuery(" from " + DBLayer.DBITEM_JOC_AUDIT_LOG + getWhere(auditLogDBFilter)
-                    + " order by created desc");
+            StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBItem.class.getName());
+            hql.append("(al, dh.commitId) from ");
+            hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al left join ");
+            hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" dh on al.id=dh.auditlogId ");
+            hql.append(getWhere(auditLogDBFilter, "al."));
+            hql.append(" order by al.created desc");
+            Query<AuditLogDBItem> query = session.createQuery(hql.toString());
 
             bindParameters(query, auditLogDBFilter);
 
             if (limit != null) {
                 query.setMaxResults(limit);
             }
-            return session.scroll(query);
+            List<AuditLogDBItem> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(AuditLogItem.class::cast).collect(Collectors.toList());
+            }
+            return Collections.emptyList();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
-    }
-
-    public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter) throws DBConnectionRefusedException, DBInvalidDataException {
-        return getAuditLogs(auditLogDBFilter, null);
     }
     
     public List<AuditLogDetailItem> getDetails(Long auditLogId) {
@@ -112,37 +117,40 @@ public class AuditLogDBLayer {
         }
     }
 
-	private String getWhere(AuditLogDBFilter filter) {
+	private String getWhere(AuditLogDBFilter filter, String tableAlias) {
+	    if (tableAlias == null) {
+	        tableAlias = "";
+	    }
 		Set<String> clause = new LinkedHashSet<>();
 
 		if (!filter.getControllerIds().isEmpty()) {
 		    if (filter.getControllerIds().size() == 1) {
-		        clause.add("controllerId = :controllerId");
+		        clause.add(tableAlias + "controllerId = :controllerId");
 		    } else {
-		        clause.add("controllerId in (:controllerIds)");
+		        clause.add(tableAlias + "controllerId in (:controllerIds)");
 		    }
 		}
 		if (!filter.getCategories().isEmpty()) {
             if (filter.getCategories().size() == 1) {
-                clause.add("category = :category");
+                clause.add(tableAlias + "category = :category");
             } else {
-                clause.add("category in (:categories)");
+                clause.add(tableAlias + "category in (:categories)");
             }
         }
 		if (filter.getCreatedFrom() != null) {
-		    clause.add("created >= :from");
+		    clause.add(tableAlias + "created >= :from");
 		}
 		if (filter.getCreatedTo() != null) {
-		    clause.add("created < :to");
+		    clause.add(tableAlias + "created < :to");
 		}
 		if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-		    clause.add(String.format("ticketLink %s :ticketLink", SearchStringHelper.getSearchOperator(filter.getTicketLink())));
+		    clause.add(String.format("%sticketLink %s :ticketLink", tableAlias, SearchStringHelper.getSearchOperator(filter.getTicketLink())));
 		}
 		if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-		    clause.add(String.format("account %s :account", SearchStringHelper.getSearchOperator(filter.getAccount())));
+		    clause.add(String.format("%saccount %s :account", tableAlias, SearchStringHelper.getSearchOperator(filter.getAccount())));
 		}
 		if (filter.getReason() != null && !filter.getReason().isEmpty()) {
-		    clause.add(String.format("comment %s :comment", SearchStringHelper.getSearchOperator(filter.getReason())));
+		    clause.add(String.format("%scomment %s :comment", tableAlias, SearchStringHelper.getSearchOperator(filter.getReason())));
 		}
 //        if (!filter.getFolders().isEmpty()) {
 //            String folderClause = filter.getFolders().stream().map(folder -> {
@@ -161,7 +169,7 @@ public class AuditLogDBLayer {
 		return clause.stream().collect(Collectors.joining(" and ", " where ", ""));
 	}
 
-	private void bindParameters(Query<DBItemJocAuditLog> query, AuditLogDBFilter filter) {
+	private void bindParameters(Query<AuditLogDBItem> query, AuditLogDBFilter filter) {
 		if (!filter.getControllerIds().isEmpty()) {
 		    if (filter.getControllerIds().size() == 1) {
 		        query.setParameter("controllerId", filter.getControllerIds().iterator().next());

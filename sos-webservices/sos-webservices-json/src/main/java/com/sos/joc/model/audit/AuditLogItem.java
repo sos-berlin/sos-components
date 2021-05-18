@@ -28,7 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "comment",
     "parameters",
     "timeSpent",
-    "ticketLink"
+    "ticketLink",
+    "commitId"
 })
 public class AuditLogItem {
 
@@ -105,6 +106,13 @@ public class AuditLogItem {
     private Integer timeSpent;
     @JsonProperty("ticketLink")
     private String ticketLink;
+    /**
+     * it is only relevant for category 'DEPLOYMENT' and useful to create a link to the deployment history
+     * 
+     */
+    @JsonProperty("commitId")
+    @JsonPropertyDescription("it is only relevant for category 'DEPLOYMENT' and useful to create a link to the deployment history")
+    private String commitId;
 
     /**
      * non negative long
@@ -308,14 +316,32 @@ public class AuditLogItem {
         this.ticketLink = ticketLink;
     }
 
+    /**
+     * it is only relevant for category 'DEPLOYMENT' and useful to create a link to the deployment history
+     * 
+     */
+    @JsonProperty("commitId")
+    public String getCommitId() {
+        return commitId;
+    }
+
+    /**
+     * it is only relevant for category 'DEPLOYMENT' and useful to create a link to the deployment history
+     * 
+     */
+    @JsonProperty("commitId")
+    public void setCommitId(String commitId) {
+        this.commitId = commitId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("category", category).append("comment", comment).append("parameters", parameters).append("timeSpent", timeSpent).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("id", id).append("account", account).append("request", request).append("created", created).append("controllerId", controllerId).append("category", category).append("comment", comment).append("parameters", parameters).append("timeSpent", timeSpent).append("ticketLink", ticketLink).append("commitId", commitId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(request).append(controllerId).append(timeSpent).append(created).append(comment).append(id).append(category).append(parameters).append(account).append(ticketLink).toHashCode();
+        return new HashCodeBuilder().append(request).append(controllerId).append(timeSpent).append(created).append(comment).append(id).append(commitId).append(category).append(parameters).append(account).append(ticketLink).toHashCode();
     }
 
     @Override
@@ -327,7 +353,7 @@ public class AuditLogItem {
             return false;
         }
         AuditLogItem rhs = ((AuditLogItem) other);
-        return new EqualsBuilder().append(request, rhs.request).append(controllerId, rhs.controllerId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(comment, rhs.comment).append(id, rhs.id).append(category, rhs.category).append(parameters, rhs.parameters).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
+        return new EqualsBuilder().append(request, rhs.request).append(controllerId, rhs.controllerId).append(timeSpent, rhs.timeSpent).append(created, rhs.created).append(comment, rhs.comment).append(id, rhs.id).append(commitId, rhs.commitId).append(category, rhs.category).append(parameters, rhs.parameters).append(account, rhs.account).append(ticketLink, rhs.ticketLink).isEquals();
     }
 
 }

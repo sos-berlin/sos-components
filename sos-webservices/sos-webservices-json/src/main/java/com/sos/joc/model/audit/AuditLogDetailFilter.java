@@ -17,8 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "auditLogId",
-    "category"
+    "auditLogId"
 })
 public class AuditLogDetailFilter {
 
@@ -26,23 +25,17 @@ public class AuditLogDetailFilter {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("auditLogId")
     private Long auditLogId;
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    private CategoryType category;
 
     /**
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("auditLogId")
@@ -54,6 +47,7 @@ public class AuditLogDetailFilter {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("auditLogId")
@@ -61,36 +55,14 @@ public class AuditLogDetailFilter {
         this.auditLogId = auditLogId;
     }
 
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    public CategoryType getCategory() {
-        return category;
-    }
-
-    /**
-     * Tree object type
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("category")
-    public void setCategory(CategoryType category) {
-        this.category = category;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("auditLogId", auditLogId).append("category", category).toString();
+        return new ToStringBuilder(this).append("auditLogId", auditLogId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(category).append(auditLogId).toHashCode();
+        return new HashCodeBuilder().append(auditLogId).toHashCode();
     }
 
     @Override
@@ -102,7 +74,7 @@ public class AuditLogDetailFilter {
             return false;
         }
         AuditLogDetailFilter rhs = ((AuditLogDetailFilter) other);
-        return new EqualsBuilder().append(category, rhs.category).append(auditLogId, rhs.auditLogId).isEquals();
+        return new EqualsBuilder().append(auditLogId, rhs.auditLogId).isEquals();
     }
 
 }

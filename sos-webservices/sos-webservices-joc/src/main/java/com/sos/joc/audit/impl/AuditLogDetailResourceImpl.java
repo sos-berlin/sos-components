@@ -28,6 +28,12 @@ import com.sos.schema.JsonValidator;
 public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAuditLogDetailResource {
 
     private static final String API_CALL = "./audit_log/detail";
+    
+    @Override
+    public JOCDefaultResponse postAuditLogDetail(String accessToken, byte[] bytes) {
+        // only an alias
+        return postAuditLogDetails(accessToken, bytes);
+    }
 
     @Override
     public JOCDefaultResponse postAuditLogDetails(String accessToken, byte[] bytes) {
