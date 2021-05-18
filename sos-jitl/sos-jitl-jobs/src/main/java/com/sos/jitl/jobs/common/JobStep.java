@@ -424,7 +424,7 @@ public class JobStep<A extends JobArguments> {
         vars.entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue().toString());
         });
-        return ps.replaceFromFile(path);
+        return ps.replace(path);
     }
 
     private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> returnValues) {

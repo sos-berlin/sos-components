@@ -92,6 +92,10 @@ public class SOSParameterSubstitutor {
         return strSubstitutor.replace(source);
     }
 
+    public String replace(Path path) throws IOException {
+        return replace(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
+    }
+
     public void replaceInFile(File in, File out) throws IOException {
         Path inPath = Paths.get(in.getAbsolutePath());
         Path outPath = Paths.get(out.getAbsolutePath());
@@ -100,10 +104,6 @@ public class SOSParameterSubstitutor {
         String content = new String(Files.readAllBytes(inPath), charset);
         content = replace(content);
         Files.write(outPath, content.getBytes(charset));
-    }
-
-    public String replaceFromFile(Path path) throws IOException {
-        return replace(new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
     }
 
     public void setCaseSensitive(boolean caseSensitive) {
