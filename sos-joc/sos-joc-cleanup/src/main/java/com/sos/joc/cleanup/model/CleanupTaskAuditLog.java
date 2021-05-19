@@ -89,11 +89,26 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
-        hql.append("where id in (:ids)");
+        hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS).append(" ");
+        hql.append("where auditLogId in (:ids)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
+        getDbLayer().getSession().commit();
+        log.append("[").append(DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS).append("=").append(r).append("]");
+
+        if (isStopped()) {
+            LOGGER.info(log.toString());
+            return;
+        }
+
+        getDbLayer().getSession().beginTransaction();
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
+        hql.append("where id in (:ids)");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("ids", ids);
+        r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
         log.append("[").append(DBLayer.TABLE_JOC_AUDIT_LOG).append("=").append(r).append("]");
 
