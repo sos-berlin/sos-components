@@ -237,7 +237,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                if (either.isRight()) {
+                if (either.isRight() && !Action.CANCEL_DAILYPLAN.equals(action)) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                             .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }

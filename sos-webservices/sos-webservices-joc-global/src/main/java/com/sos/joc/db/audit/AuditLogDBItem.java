@@ -18,5 +18,19 @@ public class AuditLogDBItem extends AuditLogItem {
         setTimeSpent(dbItem.getTimeSpent());
         setCommitId(commitId);
     }
+    
+    public AuditLogDBItem(DBItemJocAuditLog dbItem) {
+        setId(dbItem.getId());
+        setControllerId(dbItem.getControllerId());
+        setAccount(dbItem.getAccount());
+        setRequest(dbItem.getRequest());
+        setParameters(dbItem.getParameters());
+        setCategory(dbItem.getTypeAsEnum());
+        setComment(dbItem.getComment());
+        setCreated(dbItem.getCreated());
+        setTicketLink(dbItem.getTicketLink());
+        setTimeSpent(dbItem.getTimeSpent());
+        setCommitId(null);
+    }
 
 }

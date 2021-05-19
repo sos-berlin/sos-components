@@ -55,7 +55,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -2795,7 +2794,6 @@ public abstract class PublishUtils {
         unsignedDraftUpdated.setCreated(unsignedDraft.getCreated());
         unsignedDraftUpdated.setDeleted(unsignedDraft.getDeleted());
         unsignedDraftUpdated.setDeployed(unsignedDraft.getDeployed());
-        unsignedDraftUpdated.setDocumentationId(unsignedDraft.getDocumentationId());
         unsignedDraftUpdated.setFolder(unsignedDraft.getFolder());
         unsignedDraftUpdated.setId(unsignedDraft.getId());
         unsignedDraftUpdated.setModified(unsignedDraft.getModified());

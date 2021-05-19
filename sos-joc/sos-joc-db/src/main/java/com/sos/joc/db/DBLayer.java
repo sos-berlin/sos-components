@@ -64,7 +64,7 @@ public class DBLayer implements Serializable {
     public static final String TABLE_JOC_AUDIT_LOG = "JOC_AUDIT_LOG";
     public static final String TABLE_JOC_AUDIT_LOG_SEQUENCE = "SEQ_JOC_AL";
 
-    public static final String DBITEM_JOC_AUDIT_DETAILS_LOG = DBItemJocAuditLogDetails.class.getSimpleName();
+    public static final String DBITEM_JOC_AUDIT_LOG_DETAILS = DBItemJocAuditLogDetails.class.getSimpleName();
     public static final String TABLE_JOC_AUDIT_LOG_DETAILS = "JOC_AUDIT_LOG_DETAILS";
     public static final String TABLE_JOC_AUDIT_LOG_DETAILS_SEQUENCE = "SEQ_JOC_ALD";
 

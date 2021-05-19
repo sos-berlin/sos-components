@@ -1,5 +1,6 @@
 package com.sos.joc.audit.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,6 +9,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -22,12 +24,12 @@ import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.audit.AuditLogDBFilter;
 import com.sos.joc.db.audit.AuditLogDBLayer;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLog;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.audit.ObjectType;
 import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
@@ -50,6 +52,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             }
             
             Set<String> allowedControllers = Collections.emptySet();
+            boolean allControllerAllowed = false;
             boolean controllerCategoryIsPermitted = false;
             boolean deployCategoryIsPermitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
@@ -60,7 +63,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 deployCategoryIsPermitted = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
                         availableController, accessToken).getDeployments().getView()).count() > 0L;
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
+                    allControllerAllowed = true;
                 }
             } else {
                 controllerCategoryIsPermitted = getControllerPermissions(controllerId, accessToken).getView();
@@ -99,21 +102,56 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 allowedCategories.retainAll(auditLogFilter.getCategories());
             }
             
+            boolean withDeployment = allowedCategories.contains(CategoryType.DEPLOYMENT);
+            
+            // advanced search with objects or folders
+            boolean withFolders = auditLogFilter.getFolders() != null && !auditLogFilter.getFolders().isEmpty();
+            boolean withObjectName = auditLogFilter.getObjectName() != null && !auditLogFilter.getObjectName().isEmpty();
+            boolean withObjectTypes = auditLogFilter.getObjectTypes() != null && !auditLogFilter.getObjectTypes().isEmpty();
+            boolean withAdvancedSearch = withFolders || withObjectName || withObjectTypes;
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
+            
+            Stream<Long> auditLogIds = Stream.empty();
+            if (withAdvancedSearch) {
+                boolean searchInDepHistory = withDeployment;
+                if (withDeployment && withObjectTypes && !auditLogFilter.getObjectTypes().stream().anyMatch(t -> !ObjectType.ORDER.equals(t))) {
+                    searchInDepHistory = false; 
+                }
+                
+                auditLogIds = dbLayer.getAuditlogIds(auditLogFilter.getFolders(), auditLogFilter.getObjectTypes(), auditLogFilter.getObjectName());
+                if (searchInDepHistory) {
+                    auditLogIds = Stream.concat(auditLogIds, dbLayer.getAuditlogIdsFromDepHistory(auditLogFilter.getFolders(), auditLogFilter
+                            .getObjectTypes(), auditLogFilter.getObjectName()));
+                }
+            }
+            
+            
+            
             if (categoriesWithEmptyControllerIds(allowedCategories)) {
-                if (allowedControllers.isEmpty()) {
-                    allowedControllers = Collections.singleton(JocAuditLog.EMPTY_STRING);
+                if (allControllerAllowed) {
+                    allowedControllers = Collections.emptySet(); 
                 } else {
-                    if (controllerId.isEmpty()) {
-                        if (!allowedControllers.isEmpty()) {
-                            allowedControllers.add(JocAuditLog.EMPTY_STRING);
-                        }
+                    if (allowedControllers.isEmpty()) {
+                        allowedControllers = Collections.singleton(JocAuditLog.EMPTY_STRING);
                     } else {
-                        if (!allowedControllers.isEmpty()) {
-                            allowedControllers = Arrays.asList(controllerId, JocAuditLog.EMPTY_STRING).stream().collect(Collectors.toSet());
+                        if (controllerId.isEmpty()) {
+                            if (!allowedControllers.isEmpty()) {
+                                allowedControllers.add(JocAuditLog.EMPTY_STRING);
+                            }
                         } else {
-                            allowedControllers = Collections.singleton(JocAuditLog.EMPTY_STRING);
+                            if (!allowedControllers.isEmpty()) {
+                                allowedControllers = Arrays.asList(controllerId, JocAuditLog.EMPTY_STRING).stream().collect(Collectors.toSet());
+                            } else {
+                                allowedControllers = Collections.singleton(JocAuditLog.EMPTY_STRING);
+                            }
                         }
                     }
+                }
+            } else {
+                if (allControllerAllowed) {
+                    allowedControllers = Collections.emptySet(); 
                 }
             }
             
@@ -121,13 +159,11 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 allowedCategories = Collections.emptySet(); 
             }
             
-            AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories);
-
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
+            AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories, auditLogIds.collect(
+                    Collectors.toSet()));
             AuditLog entity = new AuditLog();
-            entity.setAuditLog(dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit()));
-            entity.setDeliveryDate(new Date());
+            entity.setAuditLog(getAuditLogItems(dbLayer.getAuditLogs(auditLogDBFilter, withDeployment, auditLogFilter.getLimit())));
+            entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
@@ -145,6 +181,25 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             return true;
         }
         return categories.stream().anyMatch(c -> !CategoryType.CONTROLLER.equals(c));
+    }
+    
+    private List<AuditLogItem> getAuditLogItems(ScrollableResults sr) throws Exception {
+        try {
+            if (sr != null) {
+                List<AuditLogItem> result = new ArrayList<>();
+                while (sr.next()) {
+                    result.add((AuditLogItem) sr.get(0));
+                }
+                return result;
+            }
+            return Collections.emptyList();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (sr != null) {
+                sr.close();
+            }
+        }
     }
 
 }

@@ -5,6 +5,14 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SearchStringHelper {
+    
+    public static boolean isGlobPattern(String s) {
+        return s.contains("*") || s.contains("?");
+    }
+
+    public static String globToSqlPattern(String s) {
+        return s.replace('*', '%').replace('?', '_');
+    }
 
     public static String getSearchOperator(String s) {
         if (s.contains("%")) {

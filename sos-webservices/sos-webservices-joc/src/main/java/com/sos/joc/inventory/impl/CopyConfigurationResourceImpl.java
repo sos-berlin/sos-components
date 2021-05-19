@@ -323,7 +323,6 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
         item.setCreated(item.getModified());
         item.setDeleted(false);
         item.setAuditLogId(0L);
-        item.setDocumentationId(oldItem.getDocumentationId());
         item.setTitle(oldItem.getTitle());
         item.setType(oldItem.getType());
         item.setValid(oldItem.getValid());

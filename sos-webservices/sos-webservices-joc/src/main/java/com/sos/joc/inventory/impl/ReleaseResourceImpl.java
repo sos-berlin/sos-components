@@ -236,7 +236,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         r.setPath(conf.getPath());
         release.setContent(Globals.objectMapper.writeValueAsString(r));
         release.setCreated(now);
-        release.setDocumentationId(conf.getDocumentationId());
         release.setFolder(conf.getFolder());
         release.setModified(now);
         release.setName(conf.getName());

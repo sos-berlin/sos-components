@@ -142,7 +142,6 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
             item.setName(path.getName());
             item.setFolder(path.getFolder());
             item.setValid(false);
-            item.setDocumentationId(0L);
             item.setTitle(null);
         }
 

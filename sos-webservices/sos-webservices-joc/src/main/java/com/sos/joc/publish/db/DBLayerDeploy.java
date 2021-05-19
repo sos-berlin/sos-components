@@ -1049,7 +1049,6 @@ public class DBLayerDeploy {
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);
-                    newConfiguration.setDocumentationId(0L);
                     newConfiguration.setDeployed(false);
                     newConfiguration.setReleased(false);
                     newConfiguration.setValid(valid);
@@ -1066,7 +1065,6 @@ public class DBLayerDeploy {
                 newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                 newConfiguration.setType(configuration.getObjectType());
                 newConfiguration.setAuditLogId(auditLogId);
-                newConfiguration.setDocumentationId(0L);
                 newConfiguration.setDeployed(false);
                 newConfiguration.setReleased(false);
                 newConfiguration.setValid(valid);
@@ -1115,7 +1113,6 @@ public class DBLayerDeploy {
 			newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
 			newConfiguration.setType(configuration.getObjectType());
 			newConfiguration.setAuditLogId(auditLogId);
-			newConfiguration.setDocumentationId(0L);
 			newConfiguration.setDeployed(false);
 			newConfiguration.setReleased(false);
 			newConfiguration.setValid(valid);
@@ -1192,7 +1189,6 @@ public class DBLayerDeploy {
             existingJsObject.setModified(Date.from(Instant.now()));
             existingJsObject.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
             existingJsObject.setAuditLogId(auditLogId);
-            existingJsObject.setDocumentationId(0L);
             existingJsObject.setDeployed(false);
             // save or update signature in different Table
             if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
@@ -1213,7 +1209,6 @@ public class DBLayerDeploy {
             newJsObject.setName(name);
             newJsObject.setType(ConfigurationType.WORKFLOW);
             newJsObject.setAuditLogId(auditLogId);
-            newJsObject.setDocumentationId(0L);
             newJsObject.setDeployed(false);
             newJsObject.setReleased(false);
             session.save(newJsObject);
@@ -2147,7 +2142,6 @@ public class DBLayerDeploy {
         folder.setDeleted(false);
         folder.setReleased(false);
         folder.setAuditLogId(auditLogId);
-        folder.setDocumentationId(0L);
         Instant now = Instant.now();
         folder.setCreated(Date.from(now));
         folder.setModified(Date.from(now));

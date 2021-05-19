@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "objectNames",
+    "objectName",
     "objectTypes",
     "categories",
     "folders",
@@ -47,9 +47,14 @@ public class AuditLogFilter {
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("objectNames")
-    @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<String> objectNames = new LinkedHashSet<String>();
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("objectName")
+    private String objectName;
     @JsonProperty("objectTypes")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ObjectType> objectTypes = new LinkedHashSet<ObjectType>();
@@ -144,14 +149,26 @@ public class AuditLogFilter {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("objectNames")
-    public Set<String> getObjectNames() {
-        return objectNames;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("objectName")
+    public String getObjectName() {
+        return objectName;
     }
 
-    @JsonProperty("objectNames")
-    public void setObjectNames(Set<String> objectNames) {
-        this.objectNames = objectNames;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("objectName")
+    public void setObjectName(String objectName) {
+        this.objectName = objectName;
     }
 
     @JsonProperty("objectTypes")
@@ -348,12 +365,12 @@ public class AuditLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectNames", objectNames).append("objectTypes", objectTypes).append("categories", categories).append("folders", folders).append("account", account).append("comment", comment).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectName", objectName).append("objectTypes", objectTypes).append("categories", categories).append("folders", folders).append("account", account).append("comment", comment).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("ticketLink", ticketLink).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(timeZone).append(dateFrom).append(objectNames).append(ticketLink).append(dateTo).append(limit).append(comment).append(categories).append(objectTypes).append(account).toHashCode();
+        return new HashCodeBuilder().append(folders).append(controllerId).append(timeZone).append(dateFrom).append(ticketLink).append(dateTo).append(limit).append(objectName).append(comment).append(categories).append(objectTypes).append(account).toHashCode();
     }
 
     @Override
@@ -365,7 +382,7 @@ public class AuditLogFilter {
             return false;
         }
         AuditLogFilter rhs = ((AuditLogFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(objectNames, rhs.objectNames).append(ticketLink, rhs.ticketLink).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(comment, rhs.comment).append(categories, rhs.categories).append(objectTypes, rhs.objectTypes).append(account, rhs.account).isEquals();
+        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(ticketLink, rhs.ticketLink).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(objectName, rhs.objectName).append(comment, rhs.comment).append(categories, rhs.categories).append(objectTypes, rhs.objectTypes).append(account, rhs.account).isEquals();
     }
 
 }

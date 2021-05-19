@@ -55,9 +55,6 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
 
-    @Column(name = "[DOCUMENTATION_ID]", nullable = true)
-    private Long documentationId;
-
     @Column(name = "[CREATED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date created;
@@ -148,14 +145,6 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     public void setAuditLogId(Long val) {
         auditLogId = val;
-    }
-
-    public Long getDocumentationId() {
-        return documentationId;
-    }
-
-    public void setDocumentationId(Long val) {
-        documentationId = val;
     }
 
     public Date getCreated() {

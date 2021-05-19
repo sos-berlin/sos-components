@@ -259,7 +259,6 @@ public class JocInventory {
                     newDbFolder.setContent(null);
                     newDbFolder.setCreated(newDbFolder.getModified());
                     newDbFolder.setDeleted(false);
-                    newDbFolder.setDocumentationId(0L);
                     newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
                     newDbFolder.setType(ConfigurationType.FOLDER);
@@ -293,7 +292,6 @@ public class JocInventory {
                     newDbFolder.setAuditLogId(auditLogId == null ? 0L : auditLogId);
                     newDbFolder.setContent(null);
                     newDbFolder.setCreated(newDbFolder.getModified());
-                    newDbFolder.setDocumentationId(0L);
                     newDbFolder.setId(null);
                     newDbFolder.setTitle(null);
                     newDbFolder.setType(ConfigurationType.FOLDER);
@@ -772,7 +770,6 @@ public class JocInventory {
                 }
                 trashItem.setAuditLogId(item.getAuditLogId());
                 trashItem.setContent(item.getContent());
-                trashItem.setDocumentationId(item.getDocumentationId());
                 trashItem.setTitle(item.getTitle());
                 trashItem.setValid(item.getValid());
                 trashItem.setModified(now);

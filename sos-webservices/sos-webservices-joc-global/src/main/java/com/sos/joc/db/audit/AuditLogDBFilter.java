@@ -13,70 +13,77 @@ import com.sos.joc.model.common.Folder;
 
 public class AuditLogDBFilter {
 
-	private Date createdFrom;
-	private Date createdTo;
-	private Collection<String> controllerIds;
-	private Collection<CategoryType> categories;
-	private Collection<Folder> folders;
-	private String ticketLink;
-	private String account;
-	private String reason;
+    private Date createdFrom;
+    private Date createdTo;
+    private Collection<String> controllerIds;
+    private Collection<CategoryType> categories;
+    private Collection<Folder> folders;
+    private String ticketLink;
+    private String account;
+    private String reason;
+    private Collection<Long> auditLogIds;
 
-	public AuditLogDBFilter() {
-		super();
-	}
+    public AuditLogDBFilter() {
+        super();
+    }
 
-	public AuditLogDBFilter(AuditLogFilter auditLogFilter, Collection<String> controllerIds, Collection<CategoryType> categories) throws ControllerInvalidResponseDataException {
-	    this.controllerIds = controllerIds;
-	    this.categories = categories;
-	    this.folders = auditLogFilter.getFolders();
-		this.ticketLink = auditLogFilter.getTicketLink();
-		this.account = auditLogFilter.getAccount();
+    public AuditLogDBFilter(AuditLogFilter auditLogFilter, Collection<String> controllerIds, Collection<CategoryType> categories,
+            Collection<Long> auditLogIds) throws ControllerInvalidResponseDataException {
+        this.controllerIds = controllerIds;
+        this.categories = categories;
+        this.folders = auditLogFilter.getFolders();
+        this.ticketLink = auditLogFilter.getTicketLink();
+        this.account = auditLogFilter.getAccount();
 
-		this.createdFrom = JobSchedulerDate.getDateFrom(auditLogFilter.getDateFrom(), auditLogFilter.getTimeZone());
-		this.createdTo = JobSchedulerDate.getDateTo(auditLogFilter.getDateTo(), auditLogFilter.getTimeZone());
-		this.reason = auditLogFilter.getComment();
-	}
+        this.createdFrom = JobSchedulerDate.getDateFrom(auditLogFilter.getDateFrom(), auditLogFilter.getTimeZone());
+        this.createdTo = JobSchedulerDate.getDateTo(auditLogFilter.getDateTo(), auditLogFilter.getTimeZone());
+        this.reason = auditLogFilter.getComment();
 
-	public String getTicketLink() {
-		return ticketLink != null ? ticketLink.replace('*', '%') : null;
-	}
+        this.auditLogIds = auditLogIds;
+    }
 
-	public String getAccount() {
-		return account != null ? account.replace('*', '%') : null;
-	}
+    public String getTicketLink() {
+        return ticketLink;
+    }
 
-	public String getReason() {
-		return reason != null ? reason.replace('*', '%') : null;
-	}
+    public String getAccount() {
+        return account;
+    }
 
-	public Collection<String> getControllerIds() {
-		return controllerIds == null ? Collections.emptySet() : controllerIds;
-	}
-	
-	public Collection<CategoryType> getCategories() {
+    public String getReason() {
+        return reason;
+    }
+
+    public Collection<Long> getAuditLogIds() {
+        return auditLogIds == null ? Collections.emptySet() : auditLogIds;
+    }
+
+    public Collection<String> getControllerIds() {
+        return controllerIds == null ? Collections.emptySet() : controllerIds;
+    }
+
+    public Collection<CategoryType> getCategories() {
         return categories == null ? Collections.emptySet() : categories;
     }
-	
-	public Collection<Integer> getCategoryIntValues() {
+
+    public Collection<Integer> getCategoryIntValues() {
         return categories == null ? Collections.emptySet() : categories.stream().map(CategoryType::intValue).collect(Collectors.toSet());
     }
 
-	public Date getCreatedFrom() {
-		return createdFrom;
-	}
+    public Date getCreatedFrom() {
+        return createdFrom;
+    }
 
-	public Date getCreatedTo() {
-		return createdTo;
-	}
- 
-	public Collection<Folder> getFolders() {
-		return folders == null ? Collections.emptySet() : folders;
-	}
+    public Date getCreatedTo() {
+        return createdTo;
+    }
 
-	public Collection<String> getFolderPaths() {
-	    return getFolders().stream().map(Folder::getFolder).collect(Collectors.toSet());
-	}
+    public Collection<Folder> getFolders() {
+        return folders == null ? Collections.emptySet() : folders;
+    }
 
-	 
+    public Collection<String> getFolderPaths() {
+        return getFolders().stream().map(Folder::getFolder).collect(Collectors.toSet());
+    }
+
 }

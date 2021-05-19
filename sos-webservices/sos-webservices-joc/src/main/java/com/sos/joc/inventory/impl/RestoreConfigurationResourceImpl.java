@@ -226,7 +226,6 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
         item.setCreated(item.getModified());
         item.setDeleted(false);
         item.setAuditLogId(auditLogId);
-        item.setDocumentationId(oldItem.getDocumentationId());
         item.setTitle(oldItem.getTitle());
         item.setType(oldItem.getType());
         item.setContent(oldItem.getContent());

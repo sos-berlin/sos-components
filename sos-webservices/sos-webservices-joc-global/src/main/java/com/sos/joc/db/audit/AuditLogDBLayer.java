@@ -6,9 +6,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -19,8 +21,9 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.audit.AuditLogDetailItem;
-import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.audit.ObjectType;
+import com.sos.joc.model.common.Folder;
 
 public class AuditLogDBLayer {
 
@@ -43,13 +46,18 @@ public class AuditLogDBLayer {
         }
     }
 
-    public List<AuditLogItem> getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit) throws DBConnectionRefusedException,
+    public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter, boolean withDeploymentJoin, Integer limit) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBItem.class.getName());
-            hql.append("(al, dh.commitId) from ");
-            hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al left join ");
-            hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" dh on al.id=dh.auditlogId ");
+            if (withDeploymentJoin) {
+                hql.append("(al, dh.commitId) from ");
+                hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al left join ");
+                hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" dh on al.id=dh.auditlogId ");
+            } else {
+                hql.append("(al) from ");
+                hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al ");
+            }
             hql.append(getWhere(auditLogDBFilter, "al."));
             hql.append(" order by al.created desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString());
@@ -59,11 +67,7 @@ public class AuditLogDBLayer {
             if (limit != null) {
                 query.setMaxResults(limit);
             }
-            List<AuditLogDBItem> result = session.getResultList(query);
-            if (result != null) {
-                return result.stream().map(AuditLogItem.class::cast).collect(Collectors.toList());
-            }
-            return Collections.emptyList();
+            return query.scroll();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -75,7 +79,7 @@ public class AuditLogDBLayer {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBDetailItem.class.getName());
             hql.append("(path, type, orderId) from ");
-            hql.append(DBLayer.DBITEM_JOC_AUDIT_DETAILS_LOG);
+            hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS);
             hql.append(" where auditLogId = :auditLogId");
             Query<AuditLogDBDetailItem> query = session.createQuery(hql.toString());
             query.setParameter("auditLogId", auditLogId);
@@ -91,12 +95,46 @@ public class AuditLogDBLayer {
         }
     }
     
+    public Stream<Long> getAuditlogIds(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
+        boolean hasOrderType = objectTypes == null || objectTypes.isEmpty() || objectTypes.contains(ObjectType.ORDER);
+        try {
+            StringBuilder hql = new StringBuilder("select auditLogId from ");
+            hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS);
+            hql.append(getWhere(folders, objectTypes, objectName, hasOrderType));
+            hql.append(" group by auditLogId");
+            Query<Long> query = session.createQuery(hql.toString());
+            if (objectTypes != null && !objectTypes.isEmpty()) {
+                if (objectTypes.size() == 1) {
+                    query.setParameter("type", objectTypes.iterator().next().intValue());
+                } else {
+                    query.setParameterList("types", objectTypes.stream().map(ObjectType::intValue).collect(Collectors.toSet()));
+                }
+            }
+            if (objectName != null && !objectName.isEmpty()) {
+                if (SearchStringHelper.isGlobPattern(objectName)) {
+                    query.setParameter("name", SearchStringHelper.globToSqlPattern(objectName));
+                } else {
+                    query.setParameter("name", objectName);
+                }
+            }
+            List<Long> result = session.getResultList(query);
+            if (result == null) {
+                return Stream.empty();
+            }
+            return result.stream().distinct();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public List<AuditLogDetailItem> getDeploymentDetails(Long auditLogId, Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBDetailItem.class.getName());
             hql.append("(path, type) from ");
             hql.append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where auditLogId = :auditLogId");
+            hql.append(" where auditlogId = :auditLogId");
             if (!controllerIds.isEmpty()) {
                 hql.append(" and controller in (:controllerIds)"); 
             }
@@ -116,6 +154,39 @@ public class AuditLogDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Stream<Long> getAuditlogIdsFromDepHistory(List<Folder> folders, Set<ObjectType> objectTypes, String objectName) {
+        try {
+            StringBuilder hql = new StringBuilder("select auditlogId from ");
+            hql.append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(getWhere(folders, objectTypes, objectName, false));
+            hql.append(" group by auditlogId");
+            Query<Long> query = session.createQuery(hql.toString());
+            if (objectTypes != null && !objectTypes.isEmpty()) {
+                if (objectTypes.size() == 1) {
+                    query.setParameter("type", objectTypes.iterator().next().intValue());
+                } else {
+                    query.setParameterList("types", objectTypes.stream().map(ObjectType::intValue).collect(Collectors.toSet()));
+                }
+            }
+            if (objectName != null && !objectName.isEmpty()) {
+                if (SearchStringHelper.isGlobPattern(objectName)) {
+                    query.setParameter("name", SearchStringHelper.globToSqlPattern(objectName));
+                } else {
+                    query.setParameter("name", objectName);
+                }
+            }
+            List<Long> result = session.getResultList(query);
+            if (result == null) {
+                return Stream.empty();
+            }
+            return result.stream().distinct();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
 	private String getWhere(AuditLogDBFilter filter, String tableAlias) {
 	    if (tableAlias == null) {
@@ -123,6 +194,13 @@ public class AuditLogDBLayer {
 	    }
 		Set<String> clause = new LinkedHashSet<>();
 
+		if (!filter.getAuditLogIds().isEmpty()) {
+            if (filter.getAuditLogIds().size() == 1) {
+                clause.add(tableAlias + "id = :auditLogId");
+            } else {
+                clause.add(tableAlias + "id in (:auditLogIds)");
+            }
+        }
 		if (!filter.getControllerIds().isEmpty()) {
 		    if (filter.getControllerIds().size() == 1) {
 		        clause.add(tableAlias + "controllerId = :controllerId");
@@ -144,32 +222,88 @@ public class AuditLogDBLayer {
 		    clause.add(tableAlias + "created < :to");
 		}
 		if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-		    clause.add(String.format("%sticketLink %s :ticketLink", tableAlias, SearchStringHelper.getSearchOperator(filter.getTicketLink())));
+		    if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
+		        clause.add(tableAlias + "ticketLink like :ticketLink");
+		    } else {
+		        clause.add(tableAlias + "ticketLink = :ticketLink");
+		    }
 		}
 		if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-		    clause.add(String.format("%saccount %s :account", tableAlias, SearchStringHelper.getSearchOperator(filter.getAccount())));
+		    if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
+                clause.add(tableAlias + "account like :account");
+            } else {
+                clause.add(tableAlias + "account = :account");
+            }
 		}
 		if (filter.getReason() != null && !filter.getReason().isEmpty()) {
-		    clause.add(String.format("%scomment %s :comment", tableAlias, SearchStringHelper.getSearchOperator(filter.getReason())));
+		    if (SearchStringHelper.isGlobPattern(filter.getReason())) {
+                clause.add(tableAlias + "comment like :comment");
+            } else {
+                clause.add(tableAlias + "comment = :comment");
+            }
 		}
-//        if (!filter.getFolders().isEmpty()) {
-//            String folderClause = filter.getFolders().stream().map(folder -> {
-//                if (folder.getRecursive()) {
-//                    return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
-//                } else {
-//                    return "folder = '" + folder.getFolder() + "'";
-//                }
-//            }).collect(Collectors.joining(" or "));
-//            if (filter.getFolders().size() > 1) {
-//                folderClause = "(" + folderClause + ")";
-//            }
-//            clause.add(folderClause);
-//        }
 		
-		return clause.stream().collect(Collectors.joining(" and ", " where ", ""));
+		if (!clause.isEmpty()) {
+		    return clause.stream().collect(Collectors.joining(" and ", " where ", ""));
+		}
+		return "";
 	}
+	
+	private String getWhere(List<Folder> folders, Set<ObjectType> objectTypes, String objectName, boolean hasOrderType) {
+        Set<String> clause = new LinkedHashSet<>();
+
+        if (folders != null && !folders.isEmpty()) {
+            String folderClause = folders.stream().map(folder -> {
+                if (folder.getRecursive()) {
+                    return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                } else {
+                    return "folder = '" + folder.getFolder() + "'";
+                }
+            }).collect(Collectors.joining(" or "));
+            if (folders.size() > 1) {
+                folderClause = "(" + folderClause + ")";
+            }
+            clause.add(folderClause);
+        }
+        
+        if (objectTypes != null && !objectTypes.isEmpty()) {
+            if (objectTypes.size() == 1) {
+                clause.add("type = :type"); 
+            } else {
+                clause.add("type in (:types)");
+            }
+        }
+        
+        if (objectName != null && !objectName.isEmpty()) {
+            if (hasOrderType) {
+                if (SearchStringHelper.isGlobPattern(objectName)) {
+                    clause.add("(name like :name or orderId like :name)");
+                } else {
+                    clause.add("(name = :name or orderId = :name)");
+                }
+            } else {
+                if (SearchStringHelper.isGlobPattern(objectName)) {
+                    clause.add("name like :name");
+                } else {
+                    clause.add("name = :name");
+                }
+            }
+        }
+        
+        if (!clause.isEmpty()) {
+            return clause.stream().collect(Collectors.joining(" and ", " where ", ""));
+        }
+        return "";
+    }
 
 	private void bindParameters(Query<AuditLogDBItem> query, AuditLogDBFilter filter) {
+	    if (!filter.getAuditLogIds().isEmpty()) {
+            if (filter.getAuditLogIds().size() == 1) {
+                query.setParameter("auditLogId", filter.getAuditLogIds().iterator().next());
+            } else {
+                query.setParameterList("auditLogIds", filter.getAuditLogIds());
+            }
+        }
 		if (!filter.getControllerIds().isEmpty()) {
 		    if (filter.getControllerIds().size() == 1) {
 		        query.setParameter("controllerId", filter.getControllerIds().iterator().next());
@@ -191,13 +325,25 @@ public class AuditLogDBLayer {
 			query.setParameter("to", filter.getCreatedTo(), TemporalType.TIMESTAMP);
 		}
 		if (filter.getTicketLink() != null && !filter.getTicketLink().isEmpty()) {
-			query.setParameter("ticketLink", filter.getTicketLink());
+			if (SearchStringHelper.isGlobPattern(filter.getTicketLink())) {
+                query.setParameter("ticketLink", SearchStringHelper.globToSqlPattern(filter.getTicketLink()));
+            } else {
+                query.setParameter("ticketLink", filter.getTicketLink());
+            }
 		}
 		if (filter.getAccount() != null && !filter.getAccount().isEmpty()) {
-			query.setParameter("account", filter.getAccount());
+			if (SearchStringHelper.isGlobPattern(filter.getAccount())) {
+                query.setParameter("account", SearchStringHelper.globToSqlPattern(filter.getAccount()));
+            } else {
+                query.setParameter("account", filter.getAccount());
+            }
 		}
 		if (filter.getReason() != null && !filter.getReason().isEmpty()) {
-			query.setParameter("comment", filter.getReason());
+			if (SearchStringHelper.isGlobPattern(filter.getReason())) {
+			    query.setParameter("comment", SearchStringHelper.globToSqlPattern(filter.getReason()));
+            } else {
+                query.setParameter("comment", filter.getReason());
+            }
 		}
 	}
 
