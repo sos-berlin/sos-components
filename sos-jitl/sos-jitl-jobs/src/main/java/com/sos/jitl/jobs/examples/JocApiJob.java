@@ -1,6 +1,9 @@
 package com.sos.jitl.jobs.examples;
 
+import java.util.Map;
+
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
+import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobApiExecutor;
 import com.sos.jitl.jobs.common.JobStep;
 
@@ -14,7 +17,8 @@ public class JocApiJob extends ABlockingInternalJob<JocApiJobArguments> {
 
     @Override
     public JOutcome.Completed onOrderProcess(JobStep<JocApiJobArguments> step) throws Exception {
-        JobApiExecutor ex = new JobApiExecutor(step.getArguments().getJocUri().getValue(), step.getArguments().getTrustoreFileName());
+//        JobApiExecutor ex = new JobApiExecutor(step.getArguments().getJocUri().getValue(), step.getArguments().getTrustoreFileName());
+        JobApiExecutor ex = new JobApiExecutor(step.getLogger());
         try {
             String token = ex.login();
 
