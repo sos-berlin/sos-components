@@ -179,15 +179,18 @@ public class WorkflowsHelper {
             Set<String> workflowNames, DeployedConfigurationDBLayer dbLayer) {
         Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.fileWatches().stream().map(f -> f
                 .workflowPath().string()).collect(Collectors.toSet());
+        
         DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
         filter.setControllerId(controllerId);
-        filter.setNames(workflowNames);
         filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
         List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
         if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
             return fileOrderSources.stream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
                 try {
                     FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
+                    if (!workflowNames.contains(f.getWorkflowName())) {
+                        return null;
+                    }
                     f.setPath(dbItem.getPath());
                     f.setVersionDate(dbItem.getCreated());
                     if (syncFileOrderSources.contains(f.getWorkflowName())) {
