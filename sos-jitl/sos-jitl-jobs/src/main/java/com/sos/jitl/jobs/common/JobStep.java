@@ -2,6 +2,7 @@ package com.sos.jitl.jobs.common;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,8 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.common.ASOSArguments;
 import com.sos.commons.util.common.SOSArgument;
+import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger.LogLevel;
@@ -41,6 +45,13 @@ public class JobStep<A extends JobArguments> {
     private Map<String, JobDetailValue> jobResourcesValues;
     private List<JobArgument<A>> knownArguments;
     private Map<String, JobArgument<A>> allCurrentArguments;
+
+    private String orderId;
+    private String agentId;
+    private String jobName;
+    private String workflowName;
+    private String workflowVersionId;
+    private String workflowPosition;
 
     protected JobStep(String jobClassName, JobContext jobContext, BlockingInternalJob.Step step) {
         this.jobClassName = jobClassName;
@@ -280,45 +291,66 @@ public class JobStep<A extends JobArguments> {
     }
 
     public String getOrderId() throws SOSJobProblemException {
-        if (internalStep == null) {
-            return null;
+        if (orderId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            orderId = internalStep.order().id().string();
         }
-        return internalStep.order().id().string();
+        return orderId;
     }
 
     public String getAgentId() throws SOSJobProblemException {
-        if (internalStep == null) {
-            return null;
+        if (agentId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            agentId = Job.getFromEither(internalStep.order().attached()).string();
         }
-        return Job.getFromEither(internalStep.order().attached()).string();
+        return agentId;
     }
 
     public String getJobName() throws SOSJobProblemException {
-        if (internalStep == null) {
-            return null;
+        if (jobName == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            // TODO check
+            // internalStep.jobName()
+            // jobContext.jobKey();
+            jobName = Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
         }
-        return Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
+        return jobName;
     }
 
     public String getWorkflowName() {
-        if (internalStep == null) {
-            return null;
+        if (workflowName == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowName = internalStep.order().workflowId().path().name();
         }
-        return internalStep.order().workflowId().path().name();
+        return workflowName;
     }
 
     public String getWorkflowVersionId() {
-        if (internalStep == null) {
-            return null;
+        if (workflowVersionId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowVersionId = internalStep.order().workflowId().versionId().toString();
         }
-        return internalStep.order().workflowId().versionId().toString();
+        return workflowVersionId;
     }
 
     public String getWorkflowPosition() {
-        if (internalStep == null) {
-            return null;
+        if (workflowPosition == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            workflowPosition = internalStep.order().workflowPosition().position().toString();
         }
-        return internalStep.order().workflowPosition().position().toString();
+        return workflowPosition;
     }
 
     public JOutcome.Completed success() {
@@ -377,6 +409,24 @@ public class JobStep<A extends JobArguments> {
         return JOutcome.failed(logger.err2String(msg, ex));
     }
 
+    public String replaceVars(Path path) throws Exception {
+        Map<String, Object> vars = Job.asNameValueMap(getAllCurrentArguments());
+        vars.put("js7ControllerId", "not implemented yet");// TODO
+        vars.put("js7OrderId", getOrderId());
+        vars.put("js7WorkflowPath", getWorkflowName());
+        vars.put("js7WorkflowPosition", getWorkflowPosition());
+        vars.put("js7Label", "not implemented yet");// TODO
+        vars.put("js7JobName", getJobName());
+
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true);
+        ps.setOpenTag("${");
+        ps.setCloseTag("}");
+        vars.entrySet().forEach(e -> {
+            ps.addKey(e.getKey(), e.getValue().toString());
+        });
+        return ps.replace(path);
+    }
+
     private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> returnValues) {
         logger.failed2slf4j(msg, returnValues);
         return JOutcome.failed(msg, returnValues);
@@ -411,13 +461,21 @@ public class JobStep<A extends JobArguments> {
         } else if (o instanceof Boolean) {
             return BooleanValue.of((Boolean) o);
         } else if (o instanceof Integer) {
-            return NumberValue.of((Integer) o); // TODO instanceof Number instead of Integer, Long etc
+            return NumberValue.of((Integer) o);
         } else if (o instanceof Long) {
             return NumberValue.of((Long) o);
         } else if (o instanceof Double) {
             return NumberValue.of(BigDecimal.valueOf((Double) o));
         } else if (o instanceof BigDecimal) {
             return NumberValue.of((BigDecimal) o);
+        } else if (SOSReflection.isEnum(o.getClass())) {
+            return StringValue.of(o.toString());
+        } else if (SOSReflection.isList(o.getClass())) {
+            List<?> l = (List<?>) o;
+            String s = (String) l.stream().map(e -> {
+                return e.toString();
+            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
+            return StringValue.of(s);
         }
         return null;
     }

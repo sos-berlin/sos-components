@@ -47,7 +47,7 @@ public class SOSArgument<T> {
         return required;
     }
 
-    public void isRequired(boolean val) {
+    public void setRequired(boolean val) {
         required = val;
     }
 

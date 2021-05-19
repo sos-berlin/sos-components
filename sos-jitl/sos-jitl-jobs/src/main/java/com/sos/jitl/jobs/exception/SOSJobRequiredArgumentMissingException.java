@@ -1,6 +1,8 @@
 package com.sos.jitl.jobs.exception;
 
-public class SOSJobRequiredArgumentMissingException extends SOSJobArgumentException {
+import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+
+public class SOSJobRequiredArgumentMissingException extends SOSJobArgumentException implements ISOSRequiredArgumentMissingException {
 
     private static final long serialVersionUID = 1L;
 
@@ -15,6 +17,7 @@ public class SOSJobRequiredArgumentMissingException extends SOSJobArgumentExcept
         this.argumentName = argumentName;
     }
 
+    @Override
     public String getArgumentName() {
         return argumentName;
     }

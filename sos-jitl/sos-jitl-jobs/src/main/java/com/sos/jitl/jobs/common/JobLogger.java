@@ -5,8 +5,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
-import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data.value.Value;
 import js7.executor.forjava.internal.BlockingInternalJob;
@@ -131,7 +131,7 @@ public class JobLogger {
     }
 
     protected Throwable handleException(Throwable e) {
-        if (e == null || e instanceof SOSJobRequiredArgumentMissingException) {
+        if (e == null || e instanceof ISOSRequiredArgumentMissingException) {
             return null;
         }
         return e;

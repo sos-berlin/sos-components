@@ -7,13 +7,11 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSQLExecutor;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
 
@@ -52,16 +50,13 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
 
     private Map<String, Object> process(JobStep<SQLExecutorJobArguments> step, final SOSHibernateSession session) throws Exception {
         SQLExecutorJobArguments args = step.getArguments();
-        args.setCommand(args.getCommand().replaceAll(Pattern.quote("\\${"), "\\${")); // replace \${ to ${ TODO - is needed?
-        args.setCommand(Job.replaceVars(Job.getSubstitutor(args), args.getCommand()));
-
         SOSHibernateSQLExecutor executor = session.getSQLExecutor();
         List<String> statements = null;
         try {
             Path path = Paths.get(args.getCommand());
             if (Files.exists(path)) {
                 step.getLogger().debug("[load from file]%s", path);
-                statements = executor.getStatements(path);
+                statements = executor.getStatements(step.replaceVars(path));
             }
         } catch (Throwable e) {
         }

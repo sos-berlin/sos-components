@@ -1,6 +1,7 @@
 package com.sos.commons.util.common;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SOSArgumentHelper {
 
@@ -28,7 +29,6 @@ public class SOSArgumentHelper {
     private static final int DISPLAY_VALUE_MAX_LENGTH = 255;
     private static final int DISPLAY_VALUE_USED_LENGTH = DISPLAY_VALUE_MAX_LENGTH - DISPLAY_VALUE_TRUNCATING_SUFFIX.length();
 
-    @SuppressWarnings("unchecked")
     public static String getDisplayValue(Object value, DisplayMode mode) {
         if (value == null) {
             return null;
@@ -36,7 +36,11 @@ public class SOSArgumentHelper {
         switch (mode) {
         case UNMASKED:
             if (value instanceof List) {
-                return truncatingIfNeeded(String.join(LIST_VALUE_DELIMITER, (List<String>) value));
+                List<?> l = (List<?>) value;
+                String s = (String) l.stream().map(e -> {
+                    return e.toString();
+                }).collect(Collectors.joining(LIST_VALUE_DELIMITER));
+                return truncatingIfNeeded(s);
             }
             return truncatingIfNeeded(value.toString());
         case MASKED:

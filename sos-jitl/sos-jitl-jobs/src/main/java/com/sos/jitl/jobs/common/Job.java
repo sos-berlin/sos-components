@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -48,62 +47,9 @@ public class Job {
         return Job.getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
     }
 
-    public static SOSParameterSubstitutor getSubstitutor(final Map<String, Object> args) {
-        if (args == null) {
-            return null;
-        }
-        SOSParameterSubstitutor s = new SOSParameterSubstitutor();
-        args.entrySet().stream().filter(e -> !SOSString.isEmpty(e.getValue().toString())).forEach(e -> {
-            s.addKey(e.getKey(), e.getValue().toString());
-        });
-        return s;
-    }
-
-    @SuppressWarnings("rawtypes")
-    public static SOSParameterSubstitutor getSubstitutor(final JobArguments args) {
-        if (args == null) {
-            return null;
-        }
-        SOSParameterSubstitutor s = new SOSParameterSubstitutor();
-        List<Field> fields = getJobArgumentFields(args);
-        for (Field field : fields) {
-            try {
-                field.setAccessible(true);
-                JobArgument arg = (JobArgument<?>) field.get(args);
-                if (arg != null) {
-                    if (arg.getName() == null) {
-                        continue;// internal usage
-                    }
-                    s.addKey(arg.getName(), arg.getValue().toString());
-                }
-            } catch (Throwable e) {
-            }
-        }
-        return s;
-    }
-
     public static List<Field> getJobArgumentFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
                 .toList());
-    }
-
-    public static String replaceVars(SOSParameterSubstitutor substitutor, final String val) {
-        if (substitutor == null || val == null) {
-            return val;
-        }
-        String result = val;
-        if (val.matches("(?s).*\\$\\{[^{]+\\}.*")) {
-            substitutor.setOpenTag("${");
-            substitutor.setCloseTag("}");
-            result = substitutor.replace(val);
-        }
-
-        if (result.contains("%")) {
-            substitutor.setOpenTag("%");
-            substitutor.setCloseTag("%");
-            result = substitutor.replace(result);
-        }
-        return result;
     }
 
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
@@ -147,7 +93,7 @@ public class Job {
         if (o instanceof StringValue) {
             return o.convertToString();
         } else if (o instanceof NumberValue) {
-            return ((NumberValue) o).toJava();// TODO Integer etc
+            return ((NumberValue) o).toJava();
         } else if (o instanceof BooleanValue) {
             return Boolean.parseBoolean(o.convertToString());
         }

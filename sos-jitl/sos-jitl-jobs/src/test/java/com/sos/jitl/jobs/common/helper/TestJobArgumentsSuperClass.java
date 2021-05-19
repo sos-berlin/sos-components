@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.common.helper;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.jitl.jobs.common.JobArgument;
 import com.sos.jitl.jobs.common.JobArguments;
 
@@ -12,6 +13,7 @@ public class TestJobArgumentsSuperClass extends JobArguments {
 
     private JobArgument<List<String>> list = new JobArgument<>("list", false);
     private JobArgument<LinkedList<String>> linkedList = new JobArgument<>("linked_list", false);
+    private JobArgument<List<AuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
 
     public JobArgument<String> getTestSuperClass() {
         return testSuperClass;
@@ -23,5 +25,9 @@ public class TestJobArgumentsSuperClass extends JobArguments {
 
     public JobArgument<LinkedList<String>> getLinkedList() {
         return linkedList;
+    }
+
+    public JobArgument<List<AuthMethod>> getAuthMethods() {
+        return authMethods;
     }
 }
