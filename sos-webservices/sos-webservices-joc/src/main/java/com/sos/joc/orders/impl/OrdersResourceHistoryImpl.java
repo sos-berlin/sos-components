@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -24,6 +25,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -93,9 +95,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
 
                 if (in.getOrders() != null && !in.getOrders().isEmpty()) {
                     // TODO consider workflowId in groupingby???
-                    dbFilter.setOrders(in.getOrders().stream().filter(order -> order != null && canAdd(order.getWorkflowPath(), permittedFolders))
-                            .collect(Collectors.groupingBy(order -> order.getWorkflowPath(), Collectors.mapping(OrderPath::getOrderId, Collectors
-                                    .toSet()))));
+                    dbFilter.setOrders(in.getOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(WorkflowPaths.getPath(
+                            order.getWorkflowPath()))).filter(order -> canAdd(order.getWorkflowPath(), permittedFolders)).collect(Collectors
+                                    .groupingBy(OrderPath::getWorkflowPath, Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     in.setRegex("");
                     folderPermissionsAreChecked = true;
                 } else {
@@ -106,8 +108,9 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     }
 
                     if (in.getExcludeOrders() != null && !in.getExcludeOrders().isEmpty()) {
-                        dbFilter.setExcludedOrders(in.getExcludeOrders().stream().collect(Collectors.groupingBy(order -> order.getWorkflowPath(),
-                                Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
+                        dbFilter.setExcludedOrders(in.getExcludeOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(
+                                WorkflowPaths.getPath(order.getWorkflowPath()))).collect(Collectors.groupingBy(OrderPath::getWorkflowPath, Collectors
+                                        .mapping(OrderPath::getOrderId, Collectors.toSet()))));
                     }
 
                     if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {

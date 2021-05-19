@@ -26,6 +26,7 @@ import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.history.HistoryMapper;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
@@ -109,8 +110,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
 
                     if (in.getJobs() != null && !in.getJobs().isEmpty()) {
-                        dbFilter.setJobs(in.getJobs().stream().filter(job -> job != null && canAdd(job.getWorkflowPath(), permittedFolders)).collect(
-                                Collectors.groupingBy(job -> job.getWorkflowPath(), Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
+                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(WorkflowPaths.getPath(
+                                job.getWorkflowPath()))).filter(job -> canAdd(job.getWorkflowPath(), permittedFolders)).collect(
+                                Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         in.setRegex("");
                         folderPermissionsAreChecked = true;
                     } else {
@@ -121,8 +123,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         }
 
                         if (!in.getExcludeJobs().isEmpty()) {
-                            dbFilter.setExcludedJobs(in.getExcludeJobs().stream().collect(Collectors.groupingBy(job -> job.getWorkflowPath(),
-                                    Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
+                            dbFilter.setExcludedJobs(in.getExcludeJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(
+                                    WorkflowPaths.getPath(job.getWorkflowPath()))).collect(Collectors.groupingBy(JobPath::getWorkflowPath, Collectors
+                                            .mapping(JobPath::getJob, Collectors.toSet()))));
                         }
 
                         if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
@@ -157,10 +160,11 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
                                         TaskIdOfOrder::getPosition, Collectors.toSet()))));
                     } else if (getTaskFromOrderHistory) {
-                        sr = dbLayer.getJobsFromOrder(in.getOrders().stream().filter(Objects::nonNull).filter(order -> canAdd(order.getWorkflowPath(),
-                                permittedFolders)).collect(Collectors.groupingBy(order -> normalizePath(order.getWorkflowPath()), Collectors
-                                        .groupingBy(o -> o.getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition,
-                                                Collectors.toSet())))));
+                        sr = dbLayer.getJobsFromOrder(in.getOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(
+                                WorkflowPaths.getPath(order.getWorkflowPath()))).filter(order -> canAdd(order.getWorkflowPath(), permittedFolders))
+                                .collect(Collectors.groupingBy(OrderPath::getWorkflowPath, Collectors.groupingBy(o -> o
+                                        .getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition, Collectors
+                                                .toSet())))));
                         folderPermissionsAreChecked = true;
                     } else {
                         sr = dbLayer.getJobs();
