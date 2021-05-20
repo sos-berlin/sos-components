@@ -22,9 +22,11 @@ public class JocClusterConfiguration {
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";
     private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
     private static final String CLASS_NAME_CLEANUP = "com.sos.joc.cleanup.CleanupService";
+    private static final String CLASS_NAME_CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
 
     private List<Class<?>> services;
     private final ThreadGroup threadGroup;
+    private final boolean clusterMode;
 
     private int heartBeatExceededInterval = 60;// seconds
 
@@ -46,6 +48,7 @@ public class JocClusterConfiguration {
             setConfiguration(properties);
         }
         threadGroup = new ThreadGroup(JocClusterConfiguration.IDENTIFIER);
+        clusterMode = clusterMode();
         register();
     }
 
@@ -128,4 +131,16 @@ public class JocClusterConfiguration {
         return threadGroup;
     }
 
+    public boolean getClusterMode() {
+        return clusterMode;
+    }
+
+    private boolean clusterMode() {
+        try {
+            Object o = ((Class<?>) Class.forName(CLASS_NAME_CLUSTER_MODE)).newInstance();
+            return (boolean) o.getClass().getDeclaredMethods()[0].invoke(o);
+        } catch (Throwable e) {
+        }
+        return false;
+    }
 }

@@ -92,7 +92,6 @@ public class JocCluster {
         while (!closed) {
             try {
                 process(mode, configurations);
-
                 waitFor(config.getPollingInterval());
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
@@ -380,6 +379,10 @@ public class JocCluster {
     private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
             ConfigurationGlobals configurations) throws Exception {
         if (item == null) {
+            boolean fs = isFirstRun(new Date());
+            if (!config.getClusterMode() && !fs) {
+                return null;
+            }
             item = new DBItemJocCluster();
             item.setId(JocClusterConfiguration.IDENTIFIER);
             item.setMemberId(currentMemberId);
@@ -388,7 +391,7 @@ public class JocCluster {
             dbLayer.getSession().save(item);
             dbLayer.commit();
 
-            if (!isAutomaticStartup(item.getHeartBeat())) {
+            if (!fs) {
                 mode = StartupMode.automatic_switchover;
                 item.setStartupMode(mode.name());
             }
@@ -397,11 +400,16 @@ public class JocCluster {
                 item = trySwitchActiveMemberOnProcess(mode, dbLayer, item, configurations);
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
+                    if (!config.getClusterMode()) {
+                        if (!isFirstRun(new Date())) {// extra check when active JOC was killed/not removed from database
+                            return null;
+                        }
+                    }
                     LOGGER.info(String.format("[%s][heartBeat exceeded][%s]%s", mode, item.getHeartBeat(), item.getMemberId()));
 
                     boolean update = true;
                     // to avoid start of the current instance if a switchMember defined
-                    if (item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(currentMemberId)) {
+                    if (config.getClusterMode() && item.getSwitchMemberId() != null && !item.getSwitchMemberId().equals(currentMemberId)) {
                         DBItemJocInstance switchInstance = getInstance(item.getSwitchMemberId());
                         if (switchInstance != null) {
                             if (!isHeartBeatExceeded(switchInstance.getHeartBeat())) {
@@ -420,7 +428,7 @@ public class JocCluster {
                         dbLayer.getSession().update(activeMemberHandleNotification(item));
                         dbLayer.commit();
 
-                        mode = StartupMode.automatic_switchover;
+                        mode = config.getClusterMode() ? StartupMode.automatic_switchover : StartupMode.automatic;
                         item.setStartupMode(mode.name());
                         LOGGER.info(String.format("[%s][active changed]%s", mode, SOSHibernate.toString(item)));
                     }
@@ -436,6 +444,9 @@ public class JocCluster {
     }
 
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
+        if (!config.getClusterMode()) {
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.SWITCH);
+        }
         LOGGER.info(String.format("[%s][switch][start][new]%s", mode, newMemberId));
 
         JocClusterAnswer answer = checkSwitchMember(newMemberId);
@@ -591,7 +602,7 @@ public class JocCluster {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
-        if (item.getSwitchMemberId() != null) {
+        if (item.getSwitchMemberId() != null && config.getClusterMode()) {
             mode = StartupMode.manual_switchover;
             item.setStartupMode(mode.name());
 
@@ -704,7 +715,7 @@ public class JocCluster {
         return false;
     }
 
-    private boolean isAutomaticStartup(Date heartBeat) {
+    private boolean isFirstRun(Date heartBeat) {
         if (((heartBeat.getTime() / 1_000) - (jocStartTime.getTime() / 1_000)) < config.getPollingInterval()) {
             return true;
         }
