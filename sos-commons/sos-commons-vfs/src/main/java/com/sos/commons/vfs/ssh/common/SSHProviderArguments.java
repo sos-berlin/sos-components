@@ -33,6 +33,7 @@ public class SSHProviderArguments extends AProviderArguments {
 
     private SOSArgument<Boolean> useKeyAgent = new SOSArgument<Boolean>("use_keyagent", false, false);
     private SOSArgument<Boolean> strictHostkeyChecking = new SOSArgument<Boolean>("strict_hostkey_checking", false, false);
+    private SOSArgument<Path> hostkeyLocation = new SOSArgument<Path>("hostkey_location", false);
     private SOSArgument<Boolean> useZlibCompression = new SOSArgument<Boolean>("use_zlib_compression", false, false);
     private SOSArgument<Boolean> simulateShell = new SOSArgument<Boolean>("simulate_shell", false, false);
 
@@ -70,7 +71,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public Integer getConnectTimeoutAsMs() {
-        return connectTimeout.getValue() == null ? 0 : connectTimeout.getValue() * 1_000;
+        return asMs(connectTimeout);
     }
 
     public SOSArgument<Integer> getSocketTimeout() {
@@ -78,7 +79,7 @@ public class SSHProviderArguments extends AProviderArguments {
     }
 
     public Integer getSocketTimeoutAsMs() {
-        return socketTimeout.getValue() == null ? 0 : socketTimeout.getValue() * 1_000;
+        return asMs(socketTimeout);
     }
 
     public SOSArgument<Integer> getServerAliveInterval() {
@@ -91,6 +92,10 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Boolean> getStrictHostkeyChecking() {
         return strictHostkeyChecking;
+    }
+
+    public SOSArgument<Path> getHostkeyLocation() {
+        return hostkeyLocation;
     }
 
     public SOSArgument<Boolean> getUseZlibCompression() {

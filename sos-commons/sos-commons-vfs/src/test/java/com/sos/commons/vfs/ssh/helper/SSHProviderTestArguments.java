@@ -42,7 +42,7 @@ public class SSHProviderTestArguments extends SSHProviderArguments {
     public void setRequiredAuthentications(AuthMethod... val) {
         getRequiredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
     }
-
+    
     public void setSimulateShell(Boolean val) {
         getSimulateShell().setValue(val);
     }

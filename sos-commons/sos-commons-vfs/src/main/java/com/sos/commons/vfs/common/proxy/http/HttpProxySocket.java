@@ -22,14 +22,13 @@ public class HttpProxySocket extends Socket {
     private final Proxy proxy;
 
     public HttpProxySocket(final Proxy proxy) throws UnknownHostException, IOException {
-        // super(Proxy.NO_PROXY);
         super();
         this.proxy = proxy;
     }
 
     @Override
     public void connect(final SocketAddress endpoint, final int timeout) throws IOException {
-        super.connect(proxy.getProxy().address(), timeout);
+        super.connect(proxy.getProxy().address(), proxy.getConnectTimeout());
 
         String basicAuth = null;
         if (!SOSString.isEmpty(proxy.getUser())) {

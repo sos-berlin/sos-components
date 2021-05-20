@@ -50,7 +50,7 @@ public class SSHJTest {
             client.setConnectTimeout(connectTimeout);// socket.connect
 
             if (useProxy) {
-                Proxy proxy = new Proxy(java.net.Proxy.Type.HTTP, proxyHost, proxyPort, proxyUser, proxyPassword);
+                Proxy proxy = new Proxy(java.net.Proxy.Type.HTTP, proxyHost, proxyPort, proxyUser, proxyPassword, 30);
                 client.setSocketFactory(new ProxySocketFactory(proxy));
             }
 

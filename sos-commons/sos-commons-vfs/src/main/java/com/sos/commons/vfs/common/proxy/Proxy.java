@@ -8,12 +8,14 @@ public class Proxy {
     private final String host;
     private final String user;
     private final String password;
+    private final int connectTimeout;// milliseconds
     private int port;
 
-    public Proxy(java.net.Proxy.Type type, String host, int port, String user, String password) {
+    public Proxy(java.net.Proxy.Type type, String host, int port, String user, String password, int connectTimeout) {
         this.host = host;
         this.user = user;
         this.password = password;
+        this.connectTimeout = connectTimeout;
         setPort(type, port);
         proxy = new java.net.Proxy(type, new InetSocketAddress(this.host, this.port));
     }
@@ -36,6 +38,10 @@ public class Proxy {
 
     public String getPassword() {
         return password;
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
     }
 
     private void setPort(java.net.Proxy.Type type, int port) {

@@ -19,6 +19,7 @@ import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.proxy.Proxy;
+import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.common.SSHShellInfo;
@@ -303,7 +304,11 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
 
     private void setHostKeyVerifier() throws IOException {
         if (getArguments().getStrictHostkeyChecking().getValue()) {
-            sshClient.loadKnownHosts();
+            if (getArguments().getHostkeyLocation().getValue() == null) {
+                sshClient.loadKnownHosts();
+            } else {
+                sshClient.loadKnownHosts(getArguments().getHostkeyLocation().getValue().toFile());
+            }
         } else {
             // default OpenSSHKnownHosts
             sshClient.addHostKeyVerifier(new PromiscuousVerifier());
@@ -326,7 +331,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     public void setProxy() {
         Proxy proxy = getArguments().getProxy();
         if (proxy != null) {
-            // client.setSocketFactory(new ProxySocketFactory(proxy));
+            sshClient.setSocketFactory(new ProxySocketFactory(proxy));
         }
     }
 
