@@ -25,7 +25,8 @@ import com.sos.inventory.model.common.ClassHelper;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "position"
+    "position",
+    "positionString"
 })
 @JsonTypeInfo(
 		use = JsonTypeInfo.Id.NAME, 
@@ -61,6 +62,9 @@ public abstract class Instruction
     
     @JsonProperty("position")
     private List<Object> position;
+    
+    @JsonProperty("positionString")
+    private String positionString;
 
     /**
      * No args constructor for use in serialization
@@ -111,6 +115,16 @@ public abstract class Instruction
     @JsonProperty("position")
     public void setPosition(List<Object> position) {
         this.position = position;
+    }
+    
+    @JsonProperty("positionString")
+    public String getPositionString() {
+        return positionString;
+    }
+    
+    @JsonProperty("positionString")
+    public void setPositionString(String positionString) {
+        this.positionString = positionString;
     }
     
     @JsonIgnore

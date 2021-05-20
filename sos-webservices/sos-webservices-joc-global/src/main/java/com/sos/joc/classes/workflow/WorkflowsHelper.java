@@ -38,6 +38,7 @@ import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
+import js7.data_for_java.workflow.position.JPosition;
 
 public class WorkflowsHelper {
 
@@ -97,7 +98,7 @@ public class WorkflowsHelper {
         if (instructions != null) {
             instructions.add(createImplicitEndInstruction());
         } else {
-            w.setInstructions(Arrays.asList(createImplicitEndInstruction()));
+            w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
         }
         Object[] o = {};
         setWorkflowPositions(o, w.getInstructions());
@@ -111,6 +112,7 @@ public class WorkflowsHelper {
                 pos[parentPosition.length] = i;
                 Instruction inst = insts.get(i);
                 inst.setPosition(Arrays.asList(pos));
+                inst.setPositionString(getJPositionString(inst.getPosition()));
                 switch (inst.getTYPE()) {
                 case FORK:
                     ForkJoin f = inst.cast();
@@ -141,6 +143,14 @@ public class WorkflowsHelper {
                 }
             }
         }
+    }
+    
+    private static String getJPositionString(List<Object> positionList) {
+        Either<Problem, JPosition> jPosEither = JPosition.fromList(positionList);
+        if (jPosEither.isRight()) {
+            return jPosEither.get().toString();
+        }
+        return null;
     }
 
     private static Object[] extendArray(Object[] position, Object extValue) {
