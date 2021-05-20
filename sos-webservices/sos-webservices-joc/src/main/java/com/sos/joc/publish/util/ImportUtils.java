@@ -76,16 +76,6 @@ public class ImportUtils {
     	if (updateableItem.getTargetFolder() != null && !updateableItem.getTargetFolder().isEmpty()) {
     		Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationObject().getPath()).getParent();
     		updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
-//    		if (!updateableItem.getConfigurationDbItem().getPath().startsWith(updateableItem.getTargetFolder())) {
-//        		Path folder = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationDbItem().getFolder()); 
-//        		updateableItem.getConfigurationObject().setPath(folder.resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
-//    		} else if (!updateableItem.getConfigurationObject().getPath().startsWith(updateableItem.getTargetFolder())) {
-//        		Path path = Paths.get(updateableItem.getTargetFolder() + updateableItem.getConfigurationObject().getPath()); 
-//        		updateableItem.getConfigurationObject().setPath(path.getParent().resolve(updateableItem.getNewName()).toString().replace('\\', '/'));
-//    		} else {
-//        		updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName())
-//        				.toString().replace('\\', '/'));
-//    		}
     	} else {
     		updateableItem.getConfigurationObject().setPath(Paths.get(updateableItem.getConfigurationObject().getPath()).getParent().resolve(updateableItem.getNewName())
     				.toString().replace('\\', '/'));
