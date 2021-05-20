@@ -17,7 +17,6 @@ import org.hibernate.query.Query;
 
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
@@ -113,11 +112,6 @@ public class JobHistoryDBLayer {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
-    }
-
-    public ScrollableResults getJobsFromOrder(Map<String, Map<String, Set<String>>> mapOfWorkflowAndOrderIdAndPosition) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     public long getCountJobs(HistoryStateText state, Collection<Folder> permittedFolders) throws DBConnectionRefusedException,
@@ -310,10 +304,6 @@ public class JobHistoryDBLayer {
                 }
 
             } else {
-                if (filter.getWorkflows() != null && !filter.getWorkflows().isEmpty()) {
-                    where += and + " " + SearchStringHelper.getStringListPathSql(filter.getWorkflows(), "workflowPath");
-                    and = " and";
-                }
                 if (filter.getExcludedJobs() != null && !filter.getExcludedJobs().isEmpty()) {
                     List<String> l = new ArrayList<String>();
                     for (Entry<String, Set<String>> entry : filter.getExcludedJobs().entrySet()) {
@@ -333,24 +323,28 @@ public class JobHistoryDBLayer {
                         and = " and";
                     }
                 }
-                if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
-                    List<String> l = new ArrayList<String>();
-                    for (Entry<String, Set<String>> entry : filter.getExcludedOrders().entrySet()) {
-                        String s = "workflowPath != '" + entry.getKey() + "'";
-                        if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
-                            if (entry.getValue().size() == 1) {
-                                s += " or orderId != '" + entry.getValue().iterator().next() + "'";
-                            } else {
-                                s += " or orderId not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
-                                        + ")";
-                            }
-                        }
-                        l.add("(" + s + ")");
-                    }
-                    if (!l.isEmpty()) {
-                        where += and + " (" + String.join(" and ", l) + ")";
-                        and = " and";
-                    }
+//                if (filter.getExcludedOrders() != null && !filter.getExcludedOrders().isEmpty()) {
+//                    List<String> l = new ArrayList<String>();
+//                    for (Entry<String, Set<String>> entry : filter.getExcludedOrders().entrySet()) {
+//                        String s = "workflowPath != '" + entry.getKey() + "'";
+//                        if (!entry.getValue().isEmpty() && !entry.getValue().contains(null)) {
+//                            if (entry.getValue().size() == 1) {
+//                                s += " or orderId != '" + entry.getValue().iterator().next() + "'";
+//                            } else {
+//                                s += " or orderId not in (" + entry.getValue().stream().map(val -> "'" + val + "'").collect(Collectors.joining(","))
+//                                        + ")";
+//                            }
+//                        }
+//                        l.add("(" + s + ")");
+//                    }
+//                    if (!l.isEmpty()) {
+//                        where += and + " (" + String.join(" and ", l) + ")";
+//                        and = " and";
+//                    }
+//                }
+                if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
+                    where += and + " workflowPath not in (:excludedWorkflows)";
+                    and = " and";
                 }
                 if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
                     clause = filter.getFolders().stream().map(folder -> {
@@ -392,6 +386,9 @@ public class JobHistoryDBLayer {
         }
         if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
             query.setParameterList("criticalities", filter.getCriticalities());
+        }
+        if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
+            query.setParameterList("excludedWorkflows", filter.getExcludedWorkflows());
         }
         return query;
     }

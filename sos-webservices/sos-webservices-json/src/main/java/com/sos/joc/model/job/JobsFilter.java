@@ -26,8 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "jobs",
     "excludeJobs",
-    "orders",
-    "regex",
+    "jobName",
+    "workflowPath",
     "dateFrom",
     "dateTo",
     "timeZone",
@@ -52,17 +52,22 @@ public class JobsFilter {
     private List<JobPath> jobs = new ArrayList<JobPath>();
     @JsonProperty("excludeJobs")
     private List<JobPath> excludeJobs = new ArrayList<JobPath>();
-    @JsonProperty("orders")
-    private List<OrderPath> orders = new ArrayList<OrderPath>();
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
-    private String regex;
+    @JsonProperty("jobName")
+    private String jobName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowPath")
+    private String workflowPath;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -154,36 +159,48 @@ public class JobsFilter {
         this.excludeJobs = excludeJobs;
     }
 
-    @JsonProperty("orders")
-    public List<OrderPath> getOrders() {
-        return orders;
-    }
-
-    @JsonProperty("orders")
-    public void setOrders(List<OrderPath> orders) {
-        this.orders = orders;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public String getJobName() {
+        return jobName;
     }
 
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
+    @JsonProperty("jobName")
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
     }
 
     /**
-     * filter with regex
+     * string without < and >
      * <p>
-     * regular expression to filter Controller objects by matching the path
+     * 
      * 
      */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
+    @JsonProperty("workflowPath")
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowPath")
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
     /**
@@ -330,12 +347,12 @@ public class JobsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("orders", orders).append("regex", regex).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("jobs", jobs).append("excludeJobs", excludeJobs).append("jobName", jobName).append("workflowPath", workflowPath).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("folders", folders).append("limit", limit).append("historyStates", historyStates).append("criticalities", criticalities).append("taskIds", taskIds).append("historyIds", historyIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(controllerId).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(regex).append(dateTo).append(limit).append(orders).append(excludeJobs).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(folders).append(controllerId).append(workflowPath).append(jobs).append(historyStates).append(timeZone).append(criticalities).append(dateFrom).append(taskIds).append(historyIds).append(dateTo).append(limit).append(excludeJobs).toHashCode();
     }
 
     @Override
@@ -347,7 +364,7 @@ public class JobsFilter {
             return false;
         }
         JobsFilter rhs = ((JobsFilter) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(regex, rhs.regex).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(orders, rhs.orders).append(excludeJobs, rhs.excludeJobs).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(jobs, rhs.jobs).append(historyStates, rhs.historyStates).append(timeZone, rhs.timeZone).append(criticalities, rhs.criticalities).append(dateFrom, rhs.dateFrom).append(taskIds, rhs.taskIds).append(historyIds, rhs.historyIds).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(excludeJobs, rhs.excludeJobs).isEquals();
     }
 
 }

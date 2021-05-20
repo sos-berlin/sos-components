@@ -3,17 +3,13 @@ package com.sos.js7.order.initiator.db;
 import java.util.List;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
-import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 
 public class DBLayerOrderVariables {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerOrderVariables.class);
     private static final String DBItemDailyPlanVariables = com.sos.joc.db.orders.DBItemDailyPlanVariables.class.getSimpleName();
     private static final String DBItemDailyPlan = com.sos.joc.db.orders.DBItemDailyPlanOrders.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;

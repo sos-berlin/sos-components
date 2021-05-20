@@ -1,14 +1,11 @@
 package com.sos.joc.orders.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -16,7 +13,6 @@ import javax.ws.rs.Path;
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -98,20 +94,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     dbFilter.setOrders(in.getOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(WorkflowPaths.getPath(
                             order.getWorkflowPath()))).filter(order -> canAdd(order.getWorkflowPath(), permittedFolders)).collect(Collectors
                                     .groupingBy(OrderPath::getWorkflowPath, Collectors.mapping(OrderPath::getOrderId, Collectors.toSet()))));
-                    in.setRegex("");
                     folderPermissionsAreChecked = true;
                 } else {
 
-                    if (SearchStringHelper.isDBWildcardSearch(in.getRegex())) {
-                        dbFilter.setWorkflows(Arrays.asList(in.getRegex().split(",")));
-                        in.setRegex("");
-                    }
-
-                    if (in.getExcludeOrders() != null && !in.getExcludeOrders().isEmpty()) {
-                        dbFilter.setExcludedOrders(in.getExcludeOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(
-                                WorkflowPaths.getPath(order.getWorkflowPath()))).collect(Collectors.groupingBy(OrderPath::getWorkflowPath, Collectors
-                                        .mapping(OrderPath::getOrderId, Collectors.toSet()))));
-                    }
+                    dbFilter.setExcludedWorkflows(in.getExcludeWorkflows());
 
                     if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
                         hasPermission = false;
@@ -120,6 +106,10 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                                 .collect(Collectors.toSet()));
                         folderPermissionsAreChecked = true;
                     }
+                    
+                    // TODO consider these parameter in DB
+                    dbFilter.setOrderId(in.getOrderId());
+                    dbFilter.setWorkflowPath(in.getWorkflowPath());
                 }
             }
 
@@ -137,10 +127,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                 ScrollableResults sr = null;
                 try {
-                    Predicate<String> predicate = null;
-                    if (in.getRegex() != null && !in.getRegex().isEmpty()) {
-                        predicate = Pattern.compile(in.getRegex()).asPredicate();
-                    }
                     sr = dbLayer.getMainOrders();
 
                     // tmp outputs to check performance ...
@@ -156,9 +142,6 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
                         // }
 
-                        if (predicate != null && !predicate.test(item.getWorkflowPath() + "," + item.getOrderId())) {
-                            continue;
-                        }
                         if (!folderPermissionsAreChecked && !canAdd(item.getWorkflowPath(), permittedFolders)) {
                             continue;
                         }

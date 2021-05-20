@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IOrderVariablesResource {
 
     @POST
-    @Path("variables")
+    @Path("order/variables")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)  ;
+    public JOCDefaultResponse postOrderVariables(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

@@ -64,11 +64,11 @@ public class OrdersFilterV {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
+    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
     @JsonProperty("states")
     private List<OrderStateText> states = new ArrayList<OrderStateText>();
@@ -166,7 +166,7 @@ public class OrdersFilterV {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -177,7 +177,7 @@ public class OrdersFilterV {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")

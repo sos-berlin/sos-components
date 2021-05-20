@@ -2,14 +2,11 @@ package com.sos.joc.tasks.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -17,7 +14,6 @@ import javax.ws.rs.Path;
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -34,7 +30,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.job.JobPath;
 import com.sos.joc.model.job.JobsFilter;
-import com.sos.joc.model.job.OrderPath;
 import com.sos.joc.model.job.TaskHistory;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.job.TaskIdOfOrder;
@@ -78,7 +73,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             boolean withFolderFilter = in.getFolders() != null && !in.getFolders().isEmpty();
             boolean hasPermission = true;
             boolean getTaskFromHistoryIdAndNode = false;
-            boolean getTaskFromOrderHistory = false;
             Set<Folder> permittedFolders = addPermittedFolder(in.getFolders());
             boolean folderPermissionsAreChecked = false;
 
@@ -90,8 +84,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             } else {
                 if (in.getHistoryIds() != null && !in.getHistoryIds().isEmpty()) {
                     getTaskFromHistoryIdAndNode = true;
-                } else if (in.getOrders() != null && !in.getOrders().isEmpty()) {
-                    getTaskFromOrderHistory = true;
                 } else {
 
                     if (in.getDateFrom() != null) {
@@ -113,14 +105,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(WorkflowPaths.getPath(
                                 job.getWorkflowPath()))).filter(job -> canAdd(job.getWorkflowPath(), permittedFolders)).collect(
                                 Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
-                        in.setRegex("");
                         folderPermissionsAreChecked = true;
                     } else {
-
-                        if (SearchStringHelper.isDBWildcardSearch(in.getRegex())) {
-                            dbFilter.setWorkflows(Arrays.asList(in.getRegex().split(",")));
-                            in.setRegex("");
-                        }
 
                         if (!in.getExcludeJobs().isEmpty()) {
                             dbFilter.setExcludedJobs(in.getExcludeJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(
@@ -135,6 +121,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                     .collect(Collectors.toSet()));
                             folderPermissionsAreChecked = true;
                         }
+                        
+                        // TODO consider these parameter in DB
+                        dbFilter.setJobName(in.getJobName());
+                        dbFilter.setWorkflowPath(in.getWorkflowPath());
                     }
                 }
             }
@@ -159,22 +149,10 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                         sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
                                 .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
                                         TaskIdOfOrder::getPosition, Collectors.toSet()))));
-                    } else if (getTaskFromOrderHistory) {
-                        sr = dbLayer.getJobsFromOrder(in.getOrders().stream().filter(Objects::nonNull).peek(order -> order.setWorkflowPath(
-                                WorkflowPaths.getPath(order.getWorkflowPath()))).filter(order -> canAdd(order.getWorkflowPath(), permittedFolders))
-                                .collect(Collectors.groupingBy(OrderPath::getWorkflowPath, Collectors.groupingBy(o -> o
-                                        .getOrderId() == null ? "" : o.getOrderId(), Collectors.mapping(OrderPath::getPosition, Collectors
-                                                .toSet())))));
-                        folderPermissionsAreChecked = true;
                     } else {
                         sr = dbLayer.getJobs();
                     }
                     
-                    Predicate<String> predicate = null;
-                    if (in.getRegex() != null && !in.getRegex().isEmpty()) {
-                        predicate = Pattern.compile(in.getRegex()).asPredicate();
-                    }
-
                     if (sr != null) {
                         // tmp outputs to check performance...
                         // int i = 0;
@@ -191,9 +169,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                             if (in.getControllerId().isEmpty() && !getControllerPermissions(step.getControllerId(), accessToken).getOrders()
                                     .getView()) {
-                                continue;
-                            }
-                            if (predicate != null && !predicate.test(step.getWorkflowPath() + "," + step.getJobName())) {
                                 continue;
                             }
                             if (!folderPermissionsAreChecked && !canAdd(step.getWorkflowPath(), permittedFolders)) {

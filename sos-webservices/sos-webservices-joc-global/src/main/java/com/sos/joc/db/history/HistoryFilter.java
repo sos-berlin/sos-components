@@ -15,7 +15,6 @@ import com.sos.joc.model.common.HistoryStateText;
 public class HistoryFilter {
     
     private Set<Long> historyIds;
-    private Set<String> workflows;
     private Date executedFrom;
     private Date executedTo;
     private Date startTime;
@@ -25,11 +24,15 @@ public class HistoryFilter {
     private Set<HistoryStateText> states;
     private Set<String> criticalities;
     private Map<String, Set<String>> orders;
-    private Map<String, Set<String>> excludedOrders;
+//    private Map<String, Set<String>> excludedOrders;
     private Map<String, Set<String>> jobs;
     private Map<String, Set<String>> excludedJobs;
+    private Set<String> excludedWorkflows;
     private boolean mainOrder = false;
     private Integer limit;
+    private String jobName;
+    private String orderId;
+    private String workflowPath;
 
     public void setLimit(Integer limit) {
         this.limit = limit;
@@ -183,40 +186,21 @@ public class HistoryFilter {
         return historyIds;
     }
     
-    public void setWorkflows(Collection<String> workflows) {
-        if (workflows != null) {
-            this.workflows = workflows.stream().filter(Objects::nonNull).collect(Collectors.toSet()); 
-        } else {
-            this.workflows = null;
-        }
-    }
-    
-    public Set<String> getWorkflows() {
-        return workflows;
-    }
-    
-    public void addWorkflow(String workflow) {
-        if (workflows == null) {
-            workflows = new HashSet<String>();
-        }
-        workflows.add(workflow);
-    }
-    
     public Map<String, Set<String>> getOrders() {
         return orders;
     }
 
-    public Map<String, Set<String>> getExcludedOrders() {
-        return excludedOrders;
-    }
+//    public Map<String, Set<String>> getExcludedOrders() {
+//        return excludedOrders;
+//    }
     
     public void setOrders(Map<String, Set<String>> orders) {
         this.orders = orders;
     }
 
-    public void setExcludedOrders(Map<String, Set<String>> orders) {
-        this.excludedOrders = orders;
-    }
+//    public void setExcludedOrders(Map<String, Set<String>> orders) {
+//        this.excludedOrders = orders;
+//    }
     
     public Map<String, Set<String>> getJobs() {
         return jobs;
@@ -232,6 +216,38 @@ public class HistoryFilter {
 
     public void setExcludedJobs(Map<String, Set<String>> jobs) {
         excludedJobs = jobs;
+    }
+    
+    public void setExcludedWorkflows(Set<String> workflows) {
+        this.excludedWorkflows = workflows;
+    }
+
+    public Set<String> getExcludedWorkflows() {
+        return excludedWorkflows;
+    }
+    
+    public String getJobName() {
+        return jobName;
+    }
+
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+    
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+    
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
 }
