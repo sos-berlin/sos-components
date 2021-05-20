@@ -280,6 +280,10 @@ public class SOSHibernateSession implements Serializable {
     }
 
     /** @throws SOSHibernateException : SOSHibernateInvalidSessionException, SOSHibernateLockAcquisitionException, SOSHibernateQueryException */
+    public <T> Query<T> createQuery(StringBuilder hql) throws SOSHibernateException {
+        return createQuery(hql.toString(), null);
+    }
+
     public <T> Query<T> createQuery(String hql) throws SOSHibernateException {
         return createQuery(hql, null);
     }

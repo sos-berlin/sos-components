@@ -15,7 +15,9 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -96,11 +98,11 @@ public class DeployedConfigurationDBLayer {
     public Map<ConfigurationType, Long> getNumOfDeployedObjects(String controllerId) {
         return getNumOfObjects(DBLayer.DBITEM_DEP_CONFIGURATIONS, controllerId);
     }
-    
+
     public Map<ConfigurationType, Long> getNumOfReleasedObjects() {
         return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, null);
     }
-    
+
     private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId) {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
@@ -128,14 +130,21 @@ public class DeployedConfigurationDBLayer {
 
     public Long getNumOfDeployedJobs(String controllerId) {
         try {
-            StringBuilder hql = new StringBuilder("select sum(sw.jobsCount) as numofjobs from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
-            hql.append(" sw inner join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" swdh");
-            hql.append(" on sw.id = swdh.searchWorkflowId");
-            hql.append(" where sw.deployed = 1");
-            if (controllerId != null && !controllerId.isEmpty()) {
-                hql.append(" and swdh.controllerId = :controllerId");
+            StringBuilder hql = new StringBuilder("select sum(sw.jobsCount) as numofjobs from ");
+            hql.append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("inner join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" swdh ");
+            hql.append("on sw.id=swdh.searchWorkflowId ");
+            hql.append("where sw.deployed=1 ");
+            hql.append("and swdh.deploymentHistoryId in ");
+            hql.append("(");
+            hql.append(" select id from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append(" where type=:workflowType");
+            if (!SOSString.isEmpty(controllerId)) {
+                hql.append(" and controllerId=:controllerId");
             }
-            Query<Long> query = session.createQuery(hql.toString());
+            hql.append(")");
+            Query<Long> query = session.createQuery(hql);
+            query.setParameter("workflowType", DeployType.WORKFLOW.intValue());
             if (controllerId != null && !controllerId.isEmpty()) {
                 query.setParameter("controllerId", controllerId);
             }
@@ -297,7 +306,7 @@ public class DeployedConfigurationDBLayer {
                 clauses.add("path in (:paths)");
             }
         }
-        
+
         if (filter.getNames() != null && !filter.getNames().isEmpty()) {
             if (filter.getNames().size() == 1) {
                 clauses.add("name = :name");
