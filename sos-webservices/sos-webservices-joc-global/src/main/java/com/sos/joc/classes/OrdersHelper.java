@@ -50,7 +50,6 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderState;
@@ -73,6 +72,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
@@ -230,6 +230,7 @@ public class OrdersHelper {
             o.setAgentId(opt.get().string());
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
+        o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis) {
             o.setState(getState("Blocked", oItem.getIsSuspended()));
