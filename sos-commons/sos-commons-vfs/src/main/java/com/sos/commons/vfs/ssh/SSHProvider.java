@@ -22,6 +22,7 @@ import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.common.SSHShellInfo;
+import com.sos.commons.vfs.ssh.exception.SOSAuthenticationFailedException;
 import com.sos.commons.vfs.ssh.exception.SOSSFTPClientNotInitializedException;
 import com.sos.commons.vfs.ssh.exception.SOSSSHCommandExitViolentlyException;
 
@@ -384,22 +385,25 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         for (AuthMethod am : getArguments().getRequiredAuthentications().getValue()) {
             switch (am) {
             case PUBLICKEY:
-                doRequiredAuthentication(getAuthPublickey());
+                partialAuthentication(getAuthPublickey());
                 break;
             case PASSWORD:
-                doRequiredAuthentication(getAuthPassword());
+                partialAuthentication(getAuthPassword());
                 break;
             case KEYBOARD_INTERACTIVE:
-                doRequiredAuthentication(getAuthKeyboardInteractive());
+                partialAuthentication(getAuthKeyboardInteractive());
                 break;
             }
         }
     }
 
-    private void doRequiredAuthentication(net.schmizz.sshj.userauth.method.AuthMethod method) throws UserAuthException, TransportException {
+    private void partialAuthentication(net.schmizz.sshj.userauth.method.AuthMethod method) throws SOSAuthenticationFailedException, UserAuthException,
+            TransportException {
         if (!sshClient.getUserAuth().authenticate(getArguments().getUser().getValue(), (Service) sshClient.getConnection(), method, sshClient
                 .getTransport().getTimeoutMs())) {
-            throw new UserAuthException("Authentication failed");
+            if (!sshClient.getUserAuth().hadPartialSuccess()) {
+                throw new SOSAuthenticationFailedException();
+            }
         }
     }
 
@@ -486,5 +490,9 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             }
 
         };
+    }
+
+    public SSHClient getClient() {
+        return sshClient;
     }
 }

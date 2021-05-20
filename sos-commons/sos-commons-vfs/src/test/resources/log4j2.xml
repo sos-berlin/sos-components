@@ -8,9 +8,8 @@
 	</Appenders>
 
 	<Loggers>
-		<!-- General Loggers - set the following loggers to 'debug' to debug the JOC Cockpit -->
-    <Logger name="js7.base.io.https.Https" level="warn"/>
 		<Logger name="com.sos" level="trace"/>
+		<Logger name="net" level="trace"/>
 
 		<!-- root logger with console appender. All other loggers inherit from this logger. -->
 		<Root level="info">

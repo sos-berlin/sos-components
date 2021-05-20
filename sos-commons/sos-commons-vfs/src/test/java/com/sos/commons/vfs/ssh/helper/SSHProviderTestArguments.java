@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.ssh.helper;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 
@@ -22,12 +23,24 @@ public class SSHProviderTestArguments extends SSHProviderArguments {
         getUser().setValue(val);
     }
 
+    public void setPassword(String val) {
+        getPassword().setValue(val);
+    }
+
     public void setAuthMethod(AuthMethod val) {
         getAuthMethod().setValue(val);
     }
 
     public void setAuthFile(Path val) {
         getAuthFile().setValue(val);
+    }
+
+    public void setPreferredAuthentications(AuthMethod... val) {
+        getPreferredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
+    }
+
+    public void setRequiredAuthentications(AuthMethod... val) {
+        getRequiredAuthentications().setValue(Arrays.<AuthMethod> asList(val));
     }
 
     public void setSimulateShell(Boolean val) {
