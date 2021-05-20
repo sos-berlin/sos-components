@@ -3,7 +3,6 @@ package com.sos.inventory.model.jobclass;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -19,12 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * deploy object with fixed property 'TYPE':'jobClass'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
     "maxProcesses",
     "priority",
-    "documentationPath",
+    "documentationName",
     "title"
 })
 public class JobClass implements IConfigurationObject, IDeployObject
@@ -49,14 +48,13 @@ public class JobClass implements IConfigurationObject, IDeployObject
     @JsonProperty("priority")
     private String priority;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * string without < and >
      * <p>
@@ -76,16 +74,16 @@ public class JobClass implements IConfigurationObject, IDeployObject
     /**
      * 
      * @param maxProcesses
-     * @param documentationPath
+     * @param documentationName
      * 
      * @param priority
      * @param title
      */
-    public JobClass(Integer maxProcesses, String priority, String documentationPath, String title) {
+    public JobClass(Integer maxProcesses, String priority, String documentationName, String title) {
         super();
         this.maxProcesses = maxProcesses;
         this.priority = priority;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.title = title;
     }
 
@@ -133,25 +131,25 @@ public class JobClass implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -178,12 +176,12 @@ public class JobClass implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("maxProcesses", maxProcesses).append("priority", priority).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(documentationPath).append(tYPE).append(priority).append(title).toHashCode();
+        return new HashCodeBuilder().append(maxProcesses).append(documentationName).append(tYPE).append(priority).append(title).toHashCode();
     }
 
     @Override
@@ -195,7 +193,7 @@ public class JobClass implements IConfigurationObject, IDeployObject
             return false;
         }
         JobClass rhs = ((JobClass) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationPath, rhs.documentationPath).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(priority, rhs.priority).append(title, rhs.title).isEquals();
     }
 
 }

@@ -37,7 +37,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
+//import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -146,7 +146,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         .toString());
             }
             
-            deployDocumentations();
+//            deployDocumentations();
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
@@ -165,41 +165,41 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private void deployDocumentations() throws JocException {
-        if (deployDocumentations != null && deployDocumentations.getDocumentations() != null && !deployDocumentations.getDocumentations().isEmpty()) {
-            try {
-                if (connection == null) {
-                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-                }
-                DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-                for (DeployDocumentation deployDocumentation : deployDocumentations.getDocumentations()) {
-                    if (deployDocumentation.getObjects() == null || deployDocumentation.getObjects().isEmpty()) {
-                       continue; 
-                    }
-                    Long documentationId = dbLayer.getDocumentationId(deployDocumentation.getDocumentation());
-                    if (documentationId != null) {
-                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(documentationId);
-                        for (JobSchedulerObject jsObj : deployDocumentation.getObjects()) {
-                            DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
-                            newUsage.setDocumentationId(documentationId);
-                            newUsage.setObjectType(jsObj.getType().name());
-                            newUsage.setPath(jsObj.getPath());
-                            if (oldUsages.contains(newUsage)) {
-                               continue; 
-                            }
-                            newUsage.setCreated(Date.from(Instant.now()));
-                            newUsage.setModified(newUsage.getCreated());
-                            dbLayer.getSession().save(newUsage);
-                        }
-                    }
-                }
-            } catch (JocConfigurationException | DBOpenSessionException | DBConnectionRefusedException e) {
-                throw e;
-            } catch (Exception e) {
-                LOGGER.warn("Problem at import documentation usages", e);
-            }
-        }
-    }
+//    private void deployDocumentations() throws JocException {
+//        if (deployDocumentations != null && deployDocumentations.getDocumentations() != null && !deployDocumentations.getDocumentations().isEmpty()) {
+//            try {
+//                if (connection == null) {
+//                    connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+//                }
+//                DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
+//                for (DeployDocumentation deployDocumentation : deployDocumentations.getDocumentations()) {
+//                    if (deployDocumentation.getObjects() == null || deployDocumentation.getObjects().isEmpty()) {
+//                       continue; 
+//                    }
+//                    Long documentationId = dbLayer.getDocumentationId(deployDocumentation.getDocumentation());
+//                    if (documentationId != null) {
+//                        List<DBItemDocumentationUsage> oldUsages = dbLayer.getDocumentationUsages(documentationId);
+//                        for (JobSchedulerObject jsObj : deployDocumentation.getObjects()) {
+//                            DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
+//                            newUsage.setDocumentationId(documentationId);
+//                            newUsage.setObjectType(jsObj.getType().name());
+//                            newUsage.setPath(jsObj.getPath());
+//                            if (oldUsages.contains(newUsage)) {
+//                               continue; 
+//                            }
+//                            newUsage.setCreated(Date.from(Instant.now()));
+//                            newUsage.setModified(newUsage.getCreated());
+//                            dbLayer.getSession().save(newUsage);
+//                        }
+//                    }
+//                }
+//            } catch (JocConfigurationException | DBOpenSessionException | DBConnectionRefusedException e) {
+//                throw e;
+//            } catch (Exception e) {
+//                LOGGER.warn("Problem at import documentation usages", e);
+//            }
+//        }
+//    }
     
     private void setDeployDocumentations(byte[] b) {
         try {
@@ -444,7 +444,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
 
     private boolean isPlainText(byte[] b) {
         try {
-            Charset.availableCharsets().get("UTF-8").newDecoder().decode(ByteBuffer.wrap(b));
+            StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(b));
             return true;
         } catch (CharacterCodingException e) {
             return false;

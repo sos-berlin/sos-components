@@ -8,7 +8,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
+//import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -37,21 +37,21 @@ public class Documentation {
 //					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
 //				}
 //			}
-			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
-			DBItemDocumentation dbDoc = dbLayer.getDocumentation(docPath);
-			if (dbDocUsage != null) {
-				dbDocUsage.setDocumentationId(dbDoc.getId());
-				dbDocUsage.setModified(Date.from(Instant.now()));
-				connection.update(dbDocUsage);
-			} else {
-				DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
-				newUsage.setPath(jsObjectPath);
-				newUsage.setObjectType(type);
-				newUsage.setDocumentationId(dbDoc.getId());
-				newUsage.setCreated(Date.from(Instant.now()));
-				newUsage.setModified(newUsage.getCreated());
-				connection.save(newUsage);
-			}
+//			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
+//			DBItemDocumentation dbDoc = dbLayer.getDocumentation(docPath);
+//			if (dbDocUsage != null) {
+//				dbDocUsage.setDocumentationId(dbDoc.getId());
+//				dbDocUsage.setModified(Date.from(Instant.now()));
+//				connection.update(dbDocUsage);
+//			} else {
+//				DBItemDocumentationUsage newUsage = new DBItemDocumentationUsage();
+//				newUsage.setPath(jsObjectPath);
+//				newUsage.setObjectType(type);
+//				newUsage.setDocumentationId(dbDoc.getId());
+//				newUsage.setCreated(Date.from(Instant.now()));
+//				newUsage.setModified(newUsage.getCreated());
+//				connection.save(newUsage);
+//			}
 		} finally {
 			Globals.disconnect(connection);
 		}
@@ -72,10 +72,10 @@ public class Documentation {
 //					type = JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name();
 //				}
 //			}
-			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
-			if (dbDocUsage != null) {
-				connection.delete(dbDocUsage);
-			}
+//			DBItemDocumentationUsage dbDocUsage = dbLayer.getDocumentationUsageForAssignment(jsObjectPath, type);
+//			if (dbDocUsage != null) {
+//				connection.delete(dbDocUsage);
+//			}
 		} finally {
 			Globals.disconnect(connection);
 		}

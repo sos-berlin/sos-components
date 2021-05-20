@@ -3,7 +3,6 @@ package com.sos.inventory.model.lock;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -23,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "limit",
-    "documentationPath",
+    "documentationName",
     "title"
 })
 public class Lock implements IConfigurationObject, IDeployObject
@@ -45,14 +44,13 @@ public class Lock implements IConfigurationObject, IDeployObject
     @JsonProperty("limit")
     private Integer limit = 1;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * string without < and >
      * <p>
@@ -71,15 +69,15 @@ public class Lock implements IConfigurationObject, IDeployObject
 
     /**
      * 
-     * @param documentationPath
      * @param limit
+     * @param documentationName
      * 
      * @param title
      */
-    public Lock(Integer limit, String documentationPath, String title) {
+    public Lock(Integer limit, String documentationName, String title) {
         super();
         this.limit = limit;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.title = title;
     }
 
@@ -115,25 +113,25 @@ public class Lock implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -160,12 +158,12 @@ public class Lock implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("limit", limit).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("limit", limit).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(limit).append(documentationPath).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(limit).append(documentationName).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -177,7 +175,7 @@ public class Lock implements IConfigurationObject, IDeployObject
             return false;
         }
         Lock rhs = ((Lock) other);
-        return new EqualsBuilder().append(limit, rhs.limit).append(documentationPath, rhs.documentationPath).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(limit, rhs.limit).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

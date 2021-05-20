@@ -24,12 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
     "path",
     "name",
-    "documentationPath",
+    "documentationName",
     "type",
     "title",
     "from",
@@ -66,14 +66,13 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     @JsonProperty("name")
     private String name;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * calendar type
      * <p>
@@ -137,23 +136,23 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
 
     /**
      * 
-     * @param documentationPath
      * @param path
      * @param excludes
      * @param name
      * @param from
      * @param includes
      * @param id
+     * @param documentationName
      * @param to
      * @param type
      * @param title
      */
-    public Calendar(Long id, String path, String name, String documentationPath, CalendarType type, String title, String from, String to, Frequencies includes, Frequencies excludes) {
+    public Calendar(Long id, String path, String name, String documentationName, CalendarType type, String title, String from, String to, Frequencies includes, Frequencies excludes) {
         super();
         this.id = id;
         this.path = path;
         this.name = name;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.type = type;
         this.title = title;
         this.from = from;
@@ -229,25 +228,25 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -396,12 +395,12 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationPath", documentationPath).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationName", documentationName).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(path).append(excludes).append(name).append(from).append(includes).append(id).append(to).append(additionalProperties).append(type).append(title).toHashCode();
+        return new HashCodeBuilder().append(path).append(excludes).append(name).append(from).append(includes).append(id).append(documentationName).append(to).append(additionalProperties).append(type).append(title).toHashCode();
     }
 
     @Override
@@ -413,7 +412,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(type, rhs.type).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(documentationName, rhs.documentationName).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(type, rhs.type).append(title, rhs.title).isEquals();
     }
 
 }

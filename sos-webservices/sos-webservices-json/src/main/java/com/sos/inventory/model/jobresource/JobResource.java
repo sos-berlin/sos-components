@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "arguments",
     "env",
-    "documentationPath",
+    "documentationName",
     "title"
 })
 public class JobResource implements IConfigurationObject, IDeployObject
@@ -54,21 +54,19 @@ public class JobResource implements IConfigurationObject, IDeployObject
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
-     * (Required)
      * 
      */
     @JsonProperty("env")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Environment env;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * string without < and >
      * <p>
@@ -87,17 +85,17 @@ public class JobResource implements IConfigurationObject, IDeployObject
 
     /**
      * 
-     * @param documentationPath
      * @param arguments
+     * @param documentationName
      * 
      * @param env
      * @param title
      */
-    public JobResource(Environment arguments, Environment env, String documentationPath, String title) {
+    public JobResource(Environment arguments, Environment env, String documentationName, String title) {
         super();
         this.arguments = arguments;
         this.env = env;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.title = title;
     }
 
@@ -134,7 +132,6 @@ public class JobResource implements IConfigurationObject, IDeployObject
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
-     * (Required)
      * 
      */
     @JsonProperty("env")
@@ -146,7 +143,6 @@ public class JobResource implements IConfigurationObject, IDeployObject
      * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
-     * (Required)
      * 
      */
     @JsonProperty("env")
@@ -155,25 +151,25 @@ public class JobResource implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -200,12 +196,12 @@ public class JobResource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("arguments", arguments).append("env", env).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("arguments", arguments).append("env", env).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(arguments).append(tYPE).append(env).append(title).toHashCode();
+        return new HashCodeBuilder().append(arguments).append(documentationName).append(tYPE).append(env).append(title).toHashCode();
     }
 
     @Override
@@ -217,7 +213,7 @@ public class JobResource implements IConfigurationObject, IDeployObject
             return false;
         }
         JobResource rhs = ((JobResource) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(arguments, rhs.arguments).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
     }
 
 }

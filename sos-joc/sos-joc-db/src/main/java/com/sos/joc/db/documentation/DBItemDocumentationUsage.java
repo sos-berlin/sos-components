@@ -16,93 +16,93 @@ import javax.persistence.UniqueConstraint;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
-@Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION_USAGE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[DOCUMENTATION_ID]", "[OBJECT_TYPE]",
-        "[NAME]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, allocationSize = 1)
+//@Entity
+//@Table(name = DBLayer.TABLE_DOCUMENTATION_USAGE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[DOCUMENTATION_ID]", "[OBJECT_TYPE]",
+//        "[NAME]" }) })
+//@SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentationUsage extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE)
-    @Column(name = "[ID]", nullable = false)
-    private Long id;
-
-    @Column(name = "[DOCUMENTATION_ID]", nullable = false)
-    private Long documentationId;
-
-    @Column(name = "[OBJECT_TYPE]", nullable = false)
-    private String objectType;
-
-    @Column(name = "[PATH]", nullable = false)
-    private String path;
-    
-
-    @Column(name = "[NAME]", nullable = false)
-    private String name;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[CREATED]", nullable = false)
-    private Date created;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "[MODIFIED]", nullable = false)
-    private Date modified;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getDocumentationId() {
-        return documentationId;
-    }
-
-    public void setDocumentationId(Long documentationId) {
-        this.documentationId = documentationId;
-    }
-
-    public String getObjectType() {
-        return objectType;
-    }
-
-    public void setObjectType(String objectType) {
-        this.objectType = objectType;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
-    
-    public String getName() {
-        return name;
-    }
-
-    public void setNameh(String name) {
-        this.name = name;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    public Date getModified() {
-        return modified;
-    }
-
-    public void setModified(Date modified) {
-        this.modified = modified;
-    }
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_USAGE_SEQUENCE)
+//    @Column(name = "[ID]", nullable = false)
+//    private Long id;
+//
+//    @Column(name = "[DOCUMENTATION_ID]", nullable = false)
+//    private Long documentationId;
+//
+//    @Column(name = "[OBJECT_TYPE]", nullable = false)
+//    private String objectType;
+//
+//    @Column(name = "[PATH]", nullable = false)
+//    private String path;
+//    
+//
+//    @Column(name = "[NAME]", nullable = false)
+//    private String name;
+//
+//    @Temporal(TemporalType.TIMESTAMP)
+//    @Column(name = "[CREATED]", nullable = false)
+//    private Date created;
+//
+//    @Temporal(TemporalType.TIMESTAMP)
+//    @Column(name = "[MODIFIED]", nullable = false)
+//    private Date modified;
+//
+//    public Long getId() {
+//        return id;
+//    }
+//
+//    public void setId(Long id) {
+//        this.id = id;
+//    }
+//
+//    public Long getDocumentationId() {
+//        return documentationId;
+//    }
+//
+//    public void setDocumentationId(Long documentationId) {
+//        this.documentationId = documentationId;
+//    }
+//
+//    public String getObjectType() {
+//        return objectType;
+//    }
+//
+//    public void setObjectType(String objectType) {
+//        this.objectType = objectType;
+//    }
+//
+//    public String getPath() {
+//        return path;
+//    }
+//
+//    public void setPath(String path) {
+//        this.path = path;
+//    }
+//    
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setNameh(String name) {
+//        this.name = name;
+//    }
+//
+//    public Date getCreated() {
+//        return created;
+//    }
+//
+//    public void setCreated(Date created) {
+//        this.created = created;
+//    }
+//
+//    public Date getModified() {
+//        return modified;
+//    }
+//
+//    public void setModified(Date modified) {
+//        this.modified = modified;
+//    }
 }

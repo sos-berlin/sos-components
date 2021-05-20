@@ -27,7 +27,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
-            DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
+//            DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -38,7 +38,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             // TODO Look into INV_CONFIGURATION with JSON-SQL
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-            usedBy.setObjects(dbLayer.getDocumentationUsages(normalizePath(documentationFilter.getDocumentation())));
+//            usedBy.setObjects(dbLayer.getDocumentationUsages(normalizePath(documentationFilter.getDocumentation())));
             usedBy.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(usedBy);
         } catch (JocException e) {

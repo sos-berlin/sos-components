@@ -3352,7 +3352,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
-        if (workflow != null && workflow.getDocumentationPath() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
+        if (workflow != null && workflow.getDocumentationName() == null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3361,7 +3361,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource!= null && jobResource.getDocumentationPath() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
+        if (jobResource!= null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3369,7 +3369,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.junction.Junction junction) {
-        if (junction != null && junction.getDocumentationPath() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction
+        if (junction != null && junction.getDocumentationName() == null && junction.getLifetime() == null && junction.getOrderId() == null && junction
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3378,7 +3378,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass != null && jobClass.getDocumentationPath() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
+        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass
                 .getTYPE() == null) {
             return false;
         } else {
@@ -3387,7 +3387,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getDocumentationPath() == null && fileOrderSource.getAgentName() == null && fileOrderSource.getDelay() == null 
+        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource.getDelay() == null 
                 && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowName() == null
                 && fileOrderSource.getDirectory() == null) {
             return false;
@@ -3397,7 +3397,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
-        if (lock != null && lock.getDocumentationPath() == null && lock.getLimit() == null && lock.getTYPE() == null) {
+        if (lock != null && lock.getDocumentationName() == null && lock.getLimit() == null && lock.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3405,7 +3405,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule != null && schedule.getDocumentationPath() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
+        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
                 .getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null && schedule
                         .getNonWorkingCalendars() == null && schedule.getVariables() == null) {
             return false;
@@ -3415,7 +3415,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar != null && calendar.getDocumentationPath() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
+        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
                 && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar.getType() == null) {
             return false;
         } else {

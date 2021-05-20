@@ -47,7 +47,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             checkRequiredParameter("type", type);
             DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
             documentationFilter.setPath(path);
-            documentationFilter.setType(ConfigurationType.fromValue(type));
+            documentationFilter.setObjectType(ConfigurationType.fromValue(type));
             
             String entity = String.format(
                     "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
@@ -158,7 +158,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             
             // TODO look into object's JSON to get the documentation's path
-            String path = dbLayer.getDocumentationName(documentationFilter);
+            String path = null; //dbLayer.getDocumentationName(documentationFilter);
             if (path == null) {
                 throw new DBMissingDataException("The documentation couldn't determine");
             }

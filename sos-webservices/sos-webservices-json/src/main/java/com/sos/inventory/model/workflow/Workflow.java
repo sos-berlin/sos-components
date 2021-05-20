@@ -5,7 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
@@ -30,7 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobResourceNames",
     "instructions",
     "title",
-    "documentationPath",
+    "documentationName",
     "jobs"
 })
 public class Workflow implements IConfigurationObject, IDeployObject
@@ -81,14 +80,13 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("title")
     private String title;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * workflow jobs
      * <p>
@@ -108,23 +106,23 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     /**
      * 
-     * @param documentationPath
      * @param instructions
      * @param versionId
      * @param orderRequirements
      * @param jobResourceNames
      * @param jobs
+     * @param documentationName
      * 
      * @param title
      */
-    public Workflow(String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
+    public Workflow(String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
         super();
         this.versionId = versionId;
         this.orderRequirements = orderRequirements;
         this.jobResourceNames = jobResourceNames;
         this.instructions = instructions;
         this.title = title;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.jobs = jobs;
     }
 
@@ -236,25 +234,25 @@ public class Workflow implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -283,12 +281,12 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationPath", documentationPath).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationPath).append(instructions).append(versionId).append(orderRequirements).append(jobResourceNames).append(jobs).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(versionId).append(orderRequirements).append(jobResourceNames).append(jobs).append(documentationName).append(tYPE).append(title).toHashCode();
     }
 
     @Override
@@ -300,7 +298,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(documentationPath, rhs.documentationPath).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
     }
 
 }

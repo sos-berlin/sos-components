@@ -3,7 +3,6 @@ package com.sos.joc.model.docu;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -19,8 +18,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "type",
-    "path"
+    "objectType",
+    "path",
+    "jobName"
 })
 public class DocumentationShowFilter {
 
@@ -30,18 +30,25 @@ public class DocumentationShowFilter {
      * 
      * 
      */
-    @JsonProperty("type")
-    private ConfigurationType type;
+    @JsonProperty("objectType")
+    private ConfigurationType objectType;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
     @JsonProperty("path")
-    @JsonPropertyDescription("absolute path of an object.")
     private String path;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    private String jobName;
 
     /**
      * configuration types
@@ -49,9 +56,9 @@ public class DocumentationShowFilter {
      * 
      * 
      */
-    @JsonProperty("type")
-    public ConfigurationType getType() {
-        return type;
+    @JsonProperty("objectType")
+    public ConfigurationType getObjectType() {
+        return objectType;
     }
 
     /**
@@ -60,15 +67,15 @@ public class DocumentationShowFilter {
      * 
      * 
      */
-    @JsonProperty("type")
-    public void setType(ConfigurationType type) {
-        this.type = type;
+    @JsonProperty("objectType")
+    public void setObjectType(ConfigurationType objectType) {
+        this.objectType = objectType;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -78,9 +85,9 @@ public class DocumentationShowFilter {
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * (Required)
      * 
      */
@@ -89,14 +96,36 @@ public class DocumentationShowFilter {
         this.path = path;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public String getJobName() {
+        return jobName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobName")
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("path", path).toString();
+        return new ToStringBuilder(this).append("objectType", objectType).append("path", path).append("jobName", jobName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(type).append(path).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(path).append(objectType).toHashCode();
     }
 
     @Override
@@ -108,7 +137,7 @@ public class DocumentationShowFilter {
             return false;
         }
         DocumentationShowFilter rhs = ((DocumentationShowFilter) other);
-        return new EqualsBuilder().append(type, rhs.type).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(path, rhs.path).append(objectType, rhs.objectType).isEquals();
     }
 
 }

@@ -20,7 +20,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
+//import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.JobSchedulerObject;
@@ -167,107 +167,107 @@ public class DocumentationDBLayer {
         }
     }
 
-    public String getDocumentationName(DocumentationShowFilter documentationFilter) throws DBConnectionRefusedException, DBInvalidDataException {
-        return getDocumentationPath(documentationFilter.getType(), documentationFilter.getPath());
-    }
+//    public String getDocumentationName(DocumentationShowFilter documentationFilter) throws DBConnectionRefusedException, DBInvalidDataException {
+//        return getDocumentationPath(documentationFilter.getType(), documentationFilter.getPath());
+//    }
 
-    private String getDocumentationPath(ConfigurationType objectType, String name) throws DBConnectionRefusedException, DBInvalidDataException {
-        //TODO: Remove when names instead of paths are in the schema.
-        name = Paths.get(name).getFileName().toString();
-        if (ConfigurationType.WORKINGDAYSCALENDAR == objectType || ConfigurationType.NONWORKINGDAYSCALENDAR == objectType) {
-            return getDocumentationPathOfCalendar(name);
-        } else {
-            try {
-                StringBuilder sql = new StringBuilder();
-                sql.append("select d.path from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE)
-                        .append(" du");
-                sql.append(" where d.id = du.documentationId");
-                sql.append(" and du.objectType = :objectType");
-                sql.append(" and du.name = :name");
-                Query<String> query = session.createQuery(sql.toString());
-                query.setParameter("objectType", objectType.name());
-                query.setParameter("name", name);
-                return session.getSingleResult(query);
-            } catch (SOSHibernateInvalidSessionException ex) {
-                throw new DBConnectionRefusedException(ex);
-            } catch (Exception ex) {
-                throw new DBInvalidDataException(ex);
-            }
-        }
-    }
+//    private String getDocumentationPath(ConfigurationType objectType, String name) throws DBConnectionRefusedException, DBInvalidDataException {
+//        //TODO: Remove when names instead of paths are in the schema.
+//        name = Paths.get(name).getFileName().toString();
+//        if (ConfigurationType.WORKINGDAYSCALENDAR == objectType || ConfigurationType.NONWORKINGDAYSCALENDAR == objectType) {
+//            return getDocumentationPathOfCalendar(name);
+//        } else {
+//            try {
+//                StringBuilder sql = new StringBuilder();
+//                sql.append("select d.path from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE)
+//                        .append(" du");
+//                sql.append(" where d.id = du.documentationId");
+//                sql.append(" and du.objectType = :objectType");
+//                sql.append(" and du.name = :name");
+//                Query<String> query = session.createQuery(sql.toString());
+//                query.setParameter("objectType", objectType.name());
+//                query.setParameter("name", name);
+//                return session.getSingleResult(query);
+//            } catch (SOSHibernateInvalidSessionException ex) {
+//                throw new DBConnectionRefusedException(ex);
+//            } catch (Exception ex) {
+//                throw new DBInvalidDataException(ex);
+//            }
+//        }
+//    }
 
-    public String getDocumentationPathOfCalendar(String name) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            Set<String> types = new HashSet<String>();
-            types.add(JobSchedulerObjectType.WORKINGDAYSCALENDAR.name());
-            types.add(JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name());
+//    public String getDocumentationPathOfCalendar(String name) throws DBConnectionRefusedException, DBInvalidDataException {
+//        try {
+//            Set<String> types = new HashSet<String>();
+//            types.add(JobSchedulerObjectType.WORKINGDAYSCALENDAR.name());
+//            types.add(JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name());
+//
+//            StringBuilder sql = new StringBuilder();
+//
+//            sql.append("select d.name from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(
+//                    " du");
+//            sql.append(" where d.id = du.documentationId");
+//            sql.append(" and du.objectType in (:objectType)");
+//            sql.append(" and du.name = :name");
+//            Query<String> query = session.createQuery(sql.toString());
+//            query.setParameterList("objectType", types);
+//            query.setParameter("name", name);
+//            return session.getSingleResult(query);
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-            StringBuilder sql = new StringBuilder();
+//    public Map<String, String> getDocumentationPaths(JobSchedulerObjectType objectType) throws DBConnectionRefusedException, DBInvalidDataException {
+//        if (JobSchedulerObjectType.WORKINGDAYSCALENDAR == objectType || JobSchedulerObjectType.NONWORKINGDAYSCALENDAR == objectType) {
+//            return getDocumentationPathsOfCalendar();
+//        } else {
+//            try {
+//                StringBuilder sql = new StringBuilder();
+//                sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.name, du.name) from ");
+//                sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
+//                sql.append(" where d.id = du.documentationId");
+//                sql.append(" and du.objectType = :objectType");
+//                Query<DocumentationOfObject> query = session.createQuery(sql.toString());
+//                query.setParameter("objectType", objectType.name());
+//                List<DocumentationOfObject> result = session.getResultList(query);
+//                if (result == null) {
+//                    return new HashMap<String, String>();
+//                }
+//                return result.stream().collect(Collectors.toMap(DocumentationOfObject::getObjPath, DocumentationOfObject::getDocPath));
+//            } catch (SOSHibernateInvalidSessionException ex) {
+//                throw new DBConnectionRefusedException(ex);
+//            } catch (Exception ex) {
+//                throw new DBInvalidDataException(ex);
+//            }
+//        }
+//    }
 
-            sql.append("select d.name from ").append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(
-                    " du");
-            sql.append(" where d.id = du.documentationId");
-            sql.append(" and du.objectType in (:objectType)");
-            sql.append(" and du.name = :name");
-            Query<String> query = session.createQuery(sql.toString());
-            query.setParameterList("objectType", types);
-            query.setParameter("name", name);
-            return session.getSingleResult(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public Map<String, String> getDocumentationPaths(JobSchedulerObjectType objectType) throws DBConnectionRefusedException, DBInvalidDataException {
-        if (JobSchedulerObjectType.WORKINGDAYSCALENDAR == objectType || JobSchedulerObjectType.NONWORKINGDAYSCALENDAR == objectType) {
-            return getDocumentationPathsOfCalendar();
-        } else {
-            try {
-                StringBuilder sql = new StringBuilder();
-                sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.name, du.name) from ");
-                sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
-                sql.append(" where d.id = du.documentationId");
-                sql.append(" and du.objectType = :objectType");
-                Query<DocumentationOfObject> query = session.createQuery(sql.toString());
-                query.setParameter("objectType", objectType.name());
-                List<DocumentationOfObject> result = session.getResultList(query);
-                if (result == null) {
-                    return new HashMap<String, String>();
-                }
-                return result.stream().collect(Collectors.toMap(DocumentationOfObject::getObjPath, DocumentationOfObject::getDocPath));
-            } catch (SOSHibernateInvalidSessionException ex) {
-                throw new DBConnectionRefusedException(ex);
-            } catch (Exception ex) {
-                throw new DBInvalidDataException(ex);
-            }
-        }
-    }
-
-    public Map<String, String> getDocumentationPathsOfCalendar() throws DBConnectionRefusedException, DBInvalidDataException {
-        Set<String> types = new HashSet<String>();
-        types.add(JobSchedulerObjectType.WORKINGDAYSCALENDAR.name());
-        types.add(JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name());
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.name, du.name) from ");
-            sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
-            sql.append(" where d.id = du.documentationId");
-            sql.append(" and du.objectType in (:objectType)");
-            Query<DocumentationOfObject> query = session.createQuery(sql.toString());
-            query.setParameterList("objectType", types);
-            List<DocumentationOfObject> result = session.getResultList(query);
-            if (result == null) {
-                return new HashMap<String, String>();
-            }
-            return result.stream().collect(Collectors.toMap(DocumentationOfObject::getObjPath, DocumentationOfObject::getDocPath));
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+//    public Map<String, String> getDocumentationPathsOfCalendar() throws DBConnectionRefusedException, DBInvalidDataException {
+//        Set<String> types = new HashSet<String>();
+//        types.add(JobSchedulerObjectType.WORKINGDAYSCALENDAR.name());
+//        types.add(JobSchedulerObjectType.NONWORKINGDAYSCALENDAR.name());
+//        try {
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.name, du.name) from ");
+//            sql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d, ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du");
+//            sql.append(" where d.id = du.documentationId");
+//            sql.append(" and du.objectType in (:objectType)");
+//            Query<DocumentationOfObject> query = session.createQuery(sql.toString());
+//            query.setParameterList("objectType", types);
+//            List<DocumentationOfObject> result = session.getResultList(query);
+//            if (result == null) {
+//                return new HashMap<String, String>();
+//            }
+//            return result.stream().collect(Collectors.toMap(DocumentationOfObject::getObjPath, DocumentationOfObject::getDocPath));
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
     public Set<Tree> getFoldersByFolder(String folderName) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -302,144 +302,144 @@ public class DocumentationDBLayer {
         }
     }
 
-    public List<DBItemDocumentationUsage> getDocumentationUsages(Long documentationId) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
-            sql.append(" where documentationId = :documentationId");
-            Query<DBItemDocumentationUsage> query = session.createQuery(sql.toString());
-            query.setParameter("documentationId", documentationId);
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+//    public List<DBItemDocumentationUsage> getDocumentationUsages(Long documentationId) throws DBConnectionRefusedException, DBInvalidDataException {
+//        try {
+//            StringBuilder sql = new StringBuilder();
+//            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
+//            sql.append(" where documentationId = :documentationId");
+//            Query<DBItemDocumentationUsage> query = session.createQuery(sql.toString());
+//            query.setParameter("documentationId", documentationId);
+//            return session.getResultList(query);
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-    public List<JobSchedulerObject> getDocumentationUsages(String docName) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("select new ").append(ObjectOfDocumentation.class.getName()).append("(du.name, du.objectType) from ");
-            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
-            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
-            hql.append(" where du.documentationId = d.id");
-            hql.append(" and d.name = :name");
+//    public List<JobSchedulerObject> getDocumentationUsages(String docName) throws DBConnectionRefusedException,
+//            DBInvalidDataException {
+//        try {
+//            StringBuilder hql = new StringBuilder();
+//            hql.append("select new ").append(ObjectOfDocumentation.class.getName()).append("(du.name, du.objectType) from ");
+//            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
+//            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
+//            hql.append(" where du.documentationId = d.id");
+//            hql.append(" and d.name = :name");
+//
+//            Query<ObjectOfDocumentation> query = session.createQuery(hql.toString());
+//            query.setParameter("name", docName);
+//            List<ObjectOfDocumentation> result = session.getResultList(query);
+//            if (result == null || result.isEmpty()) {
+//                return null;
+//            }
+//            // Map<JobSchedulerObjectType, List<String>> dbUsages = result.stream().collect(Collectors.groupingBy(ObjectOfDocumentation::getType,
+//            // Collectors.mapping(ObjectOfDocumentation::getPath, Collectors.toList())));
+//            // String hqlStr = "select name from %s where instanceId = :instanceId and name in (:paths)";
+//            List<JobSchedulerObject> jsObjs = new ArrayList<JobSchedulerObject>();
+//            // for (Entry<JobSchedulerObjectType, List<String>> entry : dbUsages.entrySet()) {
+//            // String sql = null;
+//            // switch (entry.getKey()) {
+//            // case JOB:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_JOBS);
+//            // break;
+//            // case JOBCHAIN:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_JOB_CHAINS);
+//            // break;
+//            // case ORDER:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_ORDERS);
+//            // break;
+//            // case NONWORKINGDAYSCALENDAR:
+//            // case WORKINGDAYSCALENDAR:
+//            // sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS_DEPRECATED);
+//            // break;
+//            // case PROCESSCLASS:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_PROCESS_CLASSES);
+//            // break;
+//            // case LOCK:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_LOCKS);
+//            // break;
+//            // case SCHEDULE:
+//            // sql = String.format(hqlStr, DBITEM_INVENTORY_SCHEDULES);
+//            // break;
+//            // default:
+//            // break;
+//            // }
+//            // if (sql != null) {
+//            // Query<String> query2 = session.createQuery(sql);
+//            // if (entry.getKey() == JobSchedulerObjectType.NONWORKINGDAYSCALENDAR || entry.getKey() == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
+//            // query2.setParameter("schedulerId", schedulerId);
+//            //// } else {
+//            //// query2.setParameter("instanceId", instanceId);
+//            // }
+//            // query2.setParameterList("paths", entry.getValue());
+//            // List<String> paths = session.getResultList(query2);
+//            // if (paths != null && !paths.isEmpty()) {
+//            // for (String path : paths) {
+//            // JobSchedulerObject jsObj = new JobSchedulerObject();
+//            // jsObj.setPath(path);
+//            // jsObj.setType(entry.getKey());
+//            // jsObjs.add(jsObj);
+//            // }
+//            // }
+//            // }
+//            // }
+//            return jsObjs;
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-            Query<ObjectOfDocumentation> query = session.createQuery(hql.toString());
-            query.setParameter("name", docName);
-            List<ObjectOfDocumentation> result = session.getResultList(query);
-            if (result == null || result.isEmpty()) {
-                return null;
-            }
-            // Map<JobSchedulerObjectType, List<String>> dbUsages = result.stream().collect(Collectors.groupingBy(ObjectOfDocumentation::getType,
-            // Collectors.mapping(ObjectOfDocumentation::getPath, Collectors.toList())));
-            // String hqlStr = "select name from %s where instanceId = :instanceId and name in (:paths)";
-            List<JobSchedulerObject> jsObjs = new ArrayList<JobSchedulerObject>();
-            // for (Entry<JobSchedulerObjectType, List<String>> entry : dbUsages.entrySet()) {
-            // String sql = null;
-            // switch (entry.getKey()) {
-            // case JOB:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_JOBS);
-            // break;
-            // case JOBCHAIN:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_JOB_CHAINS);
-            // break;
-            // case ORDER:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_ORDERS);
-            // break;
-            // case NONWORKINGDAYSCALENDAR:
-            // case WORKINGDAYSCALENDAR:
-            // sql = String.format("select name from %s where schedulerId = :schedulerId and name in (:paths)", DBLayer.DBITEM_CALENDARS_DEPRECATED);
-            // break;
-            // case PROCESSCLASS:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_PROCESS_CLASSES);
-            // break;
-            // case LOCK:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_LOCKS);
-            // break;
-            // case SCHEDULE:
-            // sql = String.format(hqlStr, DBITEM_INVENTORY_SCHEDULES);
-            // break;
-            // default:
-            // break;
-            // }
-            // if (sql != null) {
-            // Query<String> query2 = session.createQuery(sql);
-            // if (entry.getKey() == JobSchedulerObjectType.NONWORKINGDAYSCALENDAR || entry.getKey() == JobSchedulerObjectType.WORKINGDAYSCALENDAR) {
-            // query2.setParameter("schedulerId", schedulerId);
-            //// } else {
-            //// query2.setParameter("instanceId", instanceId);
-            // }
-            // query2.setParameterList("paths", entry.getValue());
-            // List<String> paths = session.getResultList(query2);
-            // if (paths != null && !paths.isEmpty()) {
-            // for (String path : paths) {
-            // JobSchedulerObject jsObj = new JobSchedulerObject();
-            // jsObj.setPath(path);
-            // jsObj.setType(entry.getKey());
-            // jsObjs.add(jsObj);
-            // }
-            // }
-            // }
-            // }
-            return jsObjs;
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+//    public DBItemDocumentationUsage getDocumentationUsageForAssignment(String name, String objectType) throws DBConnectionRefusedException,
+//            DBInvalidDataException {
+//        try {
+//            StringBuilder hql = new StringBuilder();
+//            hql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
+//            hql.append(" where schedulerId = :schedulerId");
+//            hql.append(" and name = :name");
+//            hql.append(" and objectType = :objectType");
+//            Query<DBItemDocumentationUsage> query = session.createQuery(hql.toString());
+//            query.setParameter("name", name);
+//            query.setParameter("objectType", objectType);
+//            return session.getSingleResult(query);
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
-    public DBItemDocumentationUsage getDocumentationUsageForAssignment(String name, String objectType) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION_USAGE);
-            hql.append(" where schedulerId = :schedulerId");
-            hql.append(" and name = :name");
-            hql.append(" and objectType = :objectType");
-            Query<DBItemDocumentationUsage> query = session.createQuery(hql.toString());
-            query.setParameter("name", name);
-            query.setParameter("objectType", objectType);
-            return session.getSingleResult(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public Map<String, List<JobSchedulerObject>> getDocumentationUsages(Collection<String> paths) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.path, du.path, du.objectType) from ");
-            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
-            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
-            hql.append(" where du.documentationId = d.id");
-
-            if (paths != null && !paths.isEmpty()) {
-                hql.append(" and d.path in (:paths)");
-            }
-
-            Query<DocumentationOfObject> query = session.createQuery(hql.toString());
-
-            if (paths != null && !paths.isEmpty()) {
-                query.setParameterList("paths", paths);
-            }
-            List<DocumentationOfObject> result = session.getResultList(query);
-            if (result == null || result.isEmpty()) {
-                return new HashMap<String, List<JobSchedulerObject>>();
-            }
-            return result.stream().collect(Collectors.groupingBy(DocumentationOfObject::getDocPath, Collectors.mapping(
-                    DocumentationOfObject::getDocUsage, Collectors.toList())));
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+//    public Map<String, List<JobSchedulerObject>> getDocumentationUsages(Collection<String> paths) throws DBConnectionRefusedException,
+//            DBInvalidDataException {
+//        try {
+//            StringBuilder hql = new StringBuilder();
+//            hql.append("select new ").append(DocumentationOfObject.class.getName()).append("(d.path, du.path, du.objectType) from ");
+//            hql.append(DBLayer.DBITEM_DOCUMENTATION_USAGE).append(" du, ");
+//            hql.append(DBLayer.DBITEM_DOCUMENTATION).append(" d");
+//            hql.append(" where du.documentationId = d.id");
+//
+//            if (paths != null && !paths.isEmpty()) {
+//                hql.append(" and d.path in (:paths)");
+//            }
+//
+//            Query<DocumentationOfObject> query = session.createQuery(hql.toString());
+//
+//            if (paths != null && !paths.isEmpty()) {
+//                query.setParameterList("paths", paths);
+//            }
+//            List<DocumentationOfObject> result = session.getResultList(query);
+//            if (result == null || result.isEmpty()) {
+//                return new HashMap<String, List<JobSchedulerObject>>();
+//            }
+//            return result.stream().collect(Collectors.groupingBy(DocumentationOfObject::getDocPath, Collectors.mapping(
+//                    DocumentationOfObject::getDocUsage, Collectors.toList())));
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
 
 }

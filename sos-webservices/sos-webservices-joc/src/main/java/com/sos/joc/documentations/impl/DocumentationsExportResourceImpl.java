@@ -229,11 +229,11 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
         List<DBItemDocumentation> docs = getDocsFromDb(dbLayer, filter);
         List<DocumentationContent> contents = new ArrayList<DocumentationContent>();
-        DocumentationContent usagesJson = getDeployUsageData(dbLayer, docs.stream().collect(Collectors.mapping(DBItemDocumentation::getPath,
-                Collectors.toSet())));
-        if (usagesJson != null) {
-            contents.add(usagesJson);
-        }
+//        DocumentationContent usagesJson = getDeployUsageData(dbLayer, docs.stream().collect(Collectors.mapping(DBItemDocumentation::getPath,
+//                Collectors.toSet())));
+//        if (usagesJson != null) {
+//            contents.add(usagesJson);
+//        }
 
         for (DBItemDocumentation doc : docs) {
             DocumentationContent content = null;
@@ -252,25 +252,25 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         return contents;
     }
 
-    private DocumentationContent getDeployUsageData(DocumentationDBLayer dbLayer, Collection<String> docPaths) throws DBConnectionRefusedException,
-            DBInvalidDataException, JsonProcessingException {
-        try {
-            DeployDocumentations docUsages = new DeployDocumentations();
-            List<DeployDocumentation> docUsageList = new ArrayList<DeployDocumentation>();
-            Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(docPaths);
-            for (Entry<String, List<JobSchedulerObject>> entry : docUsageMap.entrySet()) {
-                DeployDocumentation docUsage = new DeployDocumentation();
-                docUsage.setDocumentation(entry.getKey());
-                docUsage.setObjects(entry.getValue());
-                docUsageList.add(docUsage);
-            }
-            docUsages.setDocumentations(docUsageList);
-            return new DocumentationContent(DEPLOY_USAGE_JSON, Globals.prettyPrintObjectMapper.writeValueAsBytes(docUsages));
-        } catch (Exception e) {
-            LOGGER.warn("Problem at export documentation usages", e);
-            return null;
-        }
-    }
+//    private DocumentationContent getDeployUsageData(DocumentationDBLayer dbLayer, Collection<String> docPaths) throws DBConnectionRefusedException,
+//            DBInvalidDataException, JsonProcessingException {
+//        try {
+//            DeployDocumentations docUsages = new DeployDocumentations();
+//            List<DeployDocumentation> docUsageList = new ArrayList<DeployDocumentation>();
+//            Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(docPaths);
+//            for (Entry<String, List<JobSchedulerObject>> entry : docUsageMap.entrySet()) {
+//                DeployDocumentation docUsage = new DeployDocumentation();
+//                docUsage.setDocumentation(entry.getKey());
+//                docUsage.setObjects(entry.getValue());
+//                docUsageList.add(docUsage);
+//            }
+//            docUsages.setDocumentations(docUsageList);
+//            return new DocumentationContent(DEPLOY_USAGE_JSON, Globals.prettyPrintObjectMapper.writeValueAsBytes(docUsages));
+//        } catch (Exception e) {
+//            LOGGER.warn("Problem at export documentation usages", e);
+//            return null;
+//        }
+//    }
 
     private List<DBItemDocumentation> getDocsFromDb(DocumentationDBLayer dbLayer, DocumentationsFilter filter)
             throws JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException {

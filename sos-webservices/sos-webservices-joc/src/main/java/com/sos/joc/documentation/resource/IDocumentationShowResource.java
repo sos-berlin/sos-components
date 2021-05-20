@@ -14,7 +14,7 @@ public interface IDocumentationShowResource {
     @GET
     @Path("show")
     public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("path") String path, @QueryParam("type") String type);
+            @QueryParam("path") String path, @QueryParam("objectType") String type);
 
     @POST
     @Path("show")

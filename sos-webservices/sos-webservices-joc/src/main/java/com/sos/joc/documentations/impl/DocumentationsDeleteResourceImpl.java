@@ -12,7 +12,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
-import com.sos.joc.db.documentation.DBItemDocumentationUsage;
+//import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
 import com.sos.joc.exceptions.JocException;
@@ -49,12 +49,12 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             for (DBItemDocumentation dbDoc : docs) {
-                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(dbDoc.getId());
-                if (dbUsages != null && !dbUsages.isEmpty()) {
-                    for (DBItemDocumentationUsage dbUsage : dbUsages) {
-                        sosHibernateSession.delete(dbUsage);
-                    }
-                }
+//                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(dbDoc.getId());
+//                if (dbUsages != null && !dbUsages.isEmpty()) {
+//                    for (DBItemDocumentationUsage dbUsage : dbUsages) {
+//                        sosHibernateSession.delete(dbUsage);
+//                    }
+//                }
                 if (dbDoc.getImageId() != null) {
                     DBItemDocumentationImage dbImage = sosHibernateSession.get(DBItemDocumentationImage.class, dbDoc.getImageId());
                     if (dbImage != null) {

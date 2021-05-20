@@ -3,7 +3,6 @@ package com.sos.inventory.model.junction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -19,12 +18,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  * deploy object with fixed property 'TYPE':'Junction'
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
     "lifetime",
     "orderId",
-    "documentationPath",
+    "documentationName",
     "title"
 })
 public class Junction implements IConfigurationObject, IDeployObject
@@ -55,14 +54,13 @@ public class Junction implements IConfigurationObject, IDeployObject
     @JsonProperty("orderId")
     private String orderId;
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String documentationPath;
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * string without < and >
      * <p>
@@ -81,17 +79,17 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     /**
      * 
-     * @param documentationPath
      * @param orderId
      * @param lifetime
+     * @param documentationName
      * 
      * @param title
      */
-    public Junction(Integer lifetime, String orderId, String documentationPath, String title) {
+    public Junction(Integer lifetime, String orderId, String documentationName, String title) {
         super();
         this.lifetime = lifetime;
         this.orderId = orderId;
-        this.documentationPath = documentationPath;
+        this.documentationName = documentationName;
         this.title = title;
     }
 
@@ -151,25 +149,25 @@ public class Junction implements IConfigurationObject, IDeployObject
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public String getDocumentationPath() {
-        return documentationPath;
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
     }
 
     /**
-     * path
+     * string without < and >
      * <p>
-     * absolute path of an object.
+     * 
      * 
      */
-    @JsonProperty("documentationPath")
-    public void setDocumentationPath(String documentationPath) {
-        this.documentationPath = documentationPath;
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
     }
 
     /**
@@ -196,12 +194,12 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("lifetime", lifetime).append("orderId", orderId).append("documentationPath", documentationPath).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("lifetime", lifetime).append("orderId", orderId).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lifetime).append(documentationPath).append(tYPE).append(title).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(lifetime).append(documentationName).append(tYPE).append(title).append(orderId).toHashCode();
     }
 
     @Override
@@ -213,7 +211,7 @@ public class Junction implements IConfigurationObject, IDeployObject
             return false;
         }
         Junction rhs = ((Junction) other);
-        return new EqualsBuilder().append(lifetime, rhs.lifetime).append(documentationPath, rhs.documentationPath).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(lifetime, rhs.lifetime).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderId, rhs.orderId).isEquals();
     }
 
 }
