@@ -1,9 +1,5 @@
 package com.sos.joc.documentation.impl;
 
-import java.io.UnsupportedEncodingException;
-import java.sql.Date;
-import java.time.Instant;
-
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -13,22 +9,13 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationShowResource;
-import com.sos.joc.exceptions.DBConnectionRefusedException;
-import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
-import com.sos.joc.model.docu.DocumentationShowFilter;
-import com.sos.joc.model.docu.DocumentationUrl;
-import com.sos.schema.JsonValidator;
 
 @Path("documentation")
 public class DocumentationShowResourceImpl extends JOCResourceImpl implements IDocumentationShowResource {
 
     private static final String API_CALL_SHOW = "./documentation/show";
-    private static final String API_CALL_URL = "./documentation/url";
+//    private static final String API_CALL_URL = "./documentation/url";
 //    private static final String API_CALL_PREVIEW = "./documentation/preview";
 
 //    @Override

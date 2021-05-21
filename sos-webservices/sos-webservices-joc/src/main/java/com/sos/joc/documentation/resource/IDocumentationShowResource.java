@@ -1,9 +1,7 @@
 package com.sos.joc.documentation.resource;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
@@ -31,8 +29,8 @@ public interface IDocumentationShowResource {
 //    @Consumes("application/json")
 //    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 
-    @POST
-    @Path("url")
-    @Consumes("application/json")
-    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
+//    @POST
+//    @Path("url")
+//    @Consumes("application/json")
+//    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 }
