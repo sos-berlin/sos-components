@@ -70,6 +70,11 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 //            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
 //        }
 //    }
+    
+    @Override
+    public JOCDefaultResponse show(String xAccessToken, String accessToken, String path) {
+        return preview(getAccessToken(xAccessToken, accessToken), path);
+    }
 
     @Override
     public JOCDefaultResponse preview(String xAccessToken, String accessToken, String path) {
@@ -78,7 +83,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 
     private JOCDefaultResponse preview(String accessToken, String path) {
         try {
-            String request = String.format("%s/%s/%s", API_CALL_SHOW, accessToken, path);
+            String request = String.format("%s/%s/%s", API_CALL_SHOW, accessToken, path.replaceFirst("^/", ""));
             initLogging(request, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
@@ -88,6 +93,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             if (!path.contains("/")) {
                 path = getPathFromRef(path);
             }
+            checkFolderPermissions(path);
             String entity = String.format(
                     "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s%s'\" />%n</head>%n<body>%n</body>%n</html>",
                     accessToken, JOCJsonCommand.urlEncodedPath(path));

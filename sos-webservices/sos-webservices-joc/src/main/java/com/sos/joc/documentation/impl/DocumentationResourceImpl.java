@@ -38,7 +38,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
             if (path == null) {
                 path = "";
             }
-            String request = String.format("%s/%s/%s", API_CALL, accessToken, path);
+            String request = String.format("%s/-accessToken-/%s", API_CALL, path);
             initLogging(request, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
@@ -47,8 +47,8 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
             checkRequiredParameter("path", path);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            DBItemDocumentation dbItem = dbLayer.getDocumentation(path);
-            String errMessage = "No database entry (" + path + ") as documentation resource found";
+            DBItemDocumentation dbItem = dbLayer.getDocumentation("/" + path);
+            String errMessage = "No database entry (/" + path + ") as documentation resource found";
 
             if (dbItem == null) {
                 throw new DBMissingDataException(errMessage);

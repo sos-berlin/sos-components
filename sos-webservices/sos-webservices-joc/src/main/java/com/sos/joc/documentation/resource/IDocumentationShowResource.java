@@ -19,9 +19,15 @@ public interface IDocumentationShowResource {
 //    @Consumes("application/json")
 //    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 
+    // only an alias for show
+    @GET
+    @Path("preview")
+    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
+            @QueryParam("documentation") String path);
+    
     @GET
     @Path("show")
-    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
+    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
             @QueryParam("documentation") String path);
     
 //    @POST
