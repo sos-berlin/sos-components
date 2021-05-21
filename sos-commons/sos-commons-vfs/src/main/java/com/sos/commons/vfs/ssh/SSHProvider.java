@@ -59,6 +59,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private SFTPClient sftpClient;
 
     private SSHShellInfo shellInfo;
+    /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private String serverVersion;
 
     public SSHProvider(SSHProviderArguments args) {
@@ -71,7 +72,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         sshClient.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
         authenticate();
         setKeepAlive();
-        serverVersion = sshClient.getTransport().getServerVersion();// "OpenSSH_$version" OpenSSH_for_Windows_8.1. can be null
+        serverVersion = sshClient.getTransport().getServerVersion();
         createSFTPClient();
     }
 
@@ -157,7 +158,8 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         }
     }
 
-    private void deleteDirectories(String path) throws Exception {// remove directory - all files and sub folders
+    /** Deletes all files and sub folders. */
+    private void deleteDirectories(String path) throws Exception {
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
@@ -358,20 +360,23 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     private void setHostKeyVerifier() throws IOException {
+        // default HostKeyVerifier -> OpenSSHKnownHosts
         if (getArguments().getStrictHostkeyChecking().getValue()) {
             if (getArguments().getHostkeyLocation().isEmpty()) {
-                sshClient.loadKnownHosts();
+                sshClient.loadKnownHosts();// default search in <user.home>/.ssh/known_hosts|known_hosts2
             } else {
                 sshClient.loadKnownHosts(getArguments().getHostkeyLocation().getValue().toFile());
             }
         } else {
-            // default OpenSSHKnownHosts
             sshClient.addHostKeyVerifier(new PromiscuousVerifier());
         }
     }
 
     private void setCompression() throws TransportException {
         if (getArguments().getUseZlibCompression().getValue()) {
+            // JCRAFT compression com.jcraft.jzlib-1.1.3.jar
+            // uses default compression_level=6 (1-best speed, 9-best compression)
+            // see JZlib.Z_DEFAULT_COMPRESSION(-1) and com.jcraft.jzlib.Deplate.deflateInit(with Z_DEFAULT_COMPRESSION))
             sshClient.useCompression();
         }
     }

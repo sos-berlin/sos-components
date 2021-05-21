@@ -16,6 +16,7 @@ public class SSHShellInfo {
         UNKNOWN, UNIX, WINDOWS, CYGWIN
     };
 
+    /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private final String serverVersion;
     private final SOSCommandResult commandResult;
     private String os = OS.UNKNOWN.name();

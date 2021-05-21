@@ -25,7 +25,7 @@ public abstract class AProvider<A extends AProviderArguments> {
     /** Deletes a file/directory.
      *
      * <p>
-     * If the file is a directory then the directory must not be empty.
+     * If the file is a directory - deletes empty and not empty directories.
      *
      * <p>
      * throws SOSNoSuchFileException
@@ -38,7 +38,7 @@ public abstract class AProvider<A extends AProviderArguments> {
     /** Deletes a file/directory if it exists.
      *
      * <p>
-     * If the file is a directory then the directory must not be empty.
+     * If the file is a directory - deletes empty and not empty directories.
      *
      * @param path the path to the file to delete
      *
