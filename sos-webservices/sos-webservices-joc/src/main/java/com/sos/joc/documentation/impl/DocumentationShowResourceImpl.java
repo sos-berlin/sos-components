@@ -9,79 +9,26 @@ import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationShowResource;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 
 @Path("documentation")
 public class DocumentationShowResourceImpl extends JOCResourceImpl implements IDocumentationShowResource {
 
     private static final String API_CALL_SHOW = "./documentation/show";
-//    private static final String API_CALL_URL = "./documentation/url";
-//    private static final String API_CALL_PREVIEW = "./documentation/preview";
-
-//    @Override
-//    public JOCDefaultResponse show(String xAccessToken, String accessToken, String path, String type) {
-//        try {
-//            accessToken = getAccessToken(xAccessToken, accessToken);
-//            String request = String.format("%s?path=%s&type=%s", API_CALL_SHOW, path, type);
-//            initLogging(request, null, accessToken);
-//            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//            
-//            checkRequiredParameter("path", path);
-//            checkRequiredParameter("type", type);
-//            DocumentationShowFilter documentationFilter = new DocumentationShowFilter();
-//            documentationFilter.setPath(path);
-//            documentationFilter.setObjectType(ConfigurationType.fromValue(type));
-//            
-//            String entity = String.format(
-//                    "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
-//                    getUrl(API_CALL_SHOW, accessToken, documentationFilter));
-//            
-//            return JOCDefaultResponse.responseHtmlStatus200(entity);
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseHTMLStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
-//        }
-//    }
-
-//    @Override
-//    public JOCDefaultResponse show(String accessToken, byte[] inBytes) {
-//        try {
-//            initLogging(API_CALL_SHOW, inBytes, accessToken);
-//            JsonValidator.validate(inBytes, DocumentationShowFilter.class);
-//            DocumentationShowFilter documentationFilter = Globals.objectMapper.readValue(inBytes, DocumentationShowFilter.class);
-//            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
-//            if (jocDefaultResponse != null) {
-//                return jocDefaultResponse;
-//            }
-//            String entity = String.format(
-//                    "<!DOCTYPE html>%n<html>\n<head>%n  <meta http-equiv=\"refresh\" content=\"0;URL='%s'\" />%n</head>%n<body>%n</body>%n</html>",
-//                    getUrl(API_CALL_SHOW, accessToken, documentationFilter));
-//
-//            return JOCDefaultResponse.responseHtmlStatus200(entity);
-//        } catch (JocException e) {
-//            e.addErrorMetaInfo(getJocError());
-//            return JOCDefaultResponse.responseHTMLStatusJSError(e);
-//        } catch (Exception e) {
-//            return JOCDefaultResponse.responseHTMLStatusJSError(e, getJocError());
-//        }
-//    }
     
     @Override
     public JOCDefaultResponse show(String xAccessToken, String accessToken, String path) {
-        return preview(getAccessToken(xAccessToken, accessToken), path);
+        return show(getAccessToken(xAccessToken, accessToken), path);
     }
 
+    // ./documentation/preview as alias for show
     @Override
     public JOCDefaultResponse preview(String xAccessToken, String accessToken, String path) {
-        return preview(getAccessToken(xAccessToken, accessToken), path);
+        return show(getAccessToken(xAccessToken, accessToken), path);
     }
 
-    private JOCDefaultResponse preview(String accessToken, String path) {
+    private JOCDefaultResponse show(String accessToken, String path) {
         try {
             String request = String.format("%s/%s/%s", API_CALL_SHOW, accessToken, path.replaceFirst("^/", ""));
             initLogging(request, null, accessToken);
@@ -112,7 +59,11 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
         try {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_SHOW);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            return dbLayer.getPath(docRef);
+            String path = dbLayer.getPath(docRef);
+            if (path == null) {
+                throw new DBMissingDataException("A documentation with reference (" + docRef + ") could be determine");
+            }
+            return path;
         } finally {
             Globals.disconnect(connection);
         }

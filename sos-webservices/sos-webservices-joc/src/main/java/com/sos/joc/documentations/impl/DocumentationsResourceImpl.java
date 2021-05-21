@@ -31,7 +31,7 @@ import com.sos.schema.JsonValidator;
 public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocumentationsResource {
 
     private static final String API_CALL = "./documentations";
-    private static final Set<String> ASSIGN_TYPES = new HashSet<String>(Arrays.asList("html", "xml", "pdf", "markdown"));
+    public static final Set<String> ASSIGN_TYPES = new HashSet<String>(Arrays.asList("html", "xml", "pdf", "markdown"));
 
     @Override
     public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) {
@@ -41,8 +41,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
-                    .getDocumentations().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -52,6 +51,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();
             Set<String> types = null;
+            // TODO introduce parameter for ASSIGN_TYPES
             if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
                 types = documentationsFilter.getTypes().stream().map(String::toLowerCase).collect(Collectors.toSet());
                 if (types.contains("assigntypes")) {
@@ -76,7 +76,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 }
             }
             Documentations documentations = new Documentations();
-            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs));
+            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, folderPermissions.getListOfFolders()));
             documentations.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(documentations);
         } catch (JocException e) {
@@ -101,18 +101,17 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         return filteredDocs;
     }
 
-    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs) {
-        List<Documentation> docs = new ArrayList<Documentation>();
-        for (DBItemDocumentation dbDoc : dbDocs) {
+    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Set<Folder> permittedFolders) {
+        return dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
             doc.setType(dbDoc.getType());
             doc.setModified(dbDoc.getModified());
-            docs.add(doc);
-        }
-        return docs;
+            doc.setAssignReference(dbDoc.getDocRef());
+            return doc;
+        }).collect(Collectors.toList());
     }
 
 }

@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "regex",
     "folders",
     "types",
+    "onlyWithAssignReference",
     "auditLog"
 })
 public class DocumentationsFilter {
@@ -61,6 +62,8 @@ public class DocumentationsFilter {
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("types")
     private List<String> types = new ArrayList<String>();
+    @JsonProperty("onlyWithAssignReference")
+    private Boolean onlyWithAssignReference = false;
     /**
      * auditParams
      * <p>
@@ -156,6 +159,16 @@ public class DocumentationsFilter {
         this.types = types;
     }
 
+    @JsonProperty("onlyWithAssignReference")
+    public Boolean getOnlyWithAssignReference() {
+        return onlyWithAssignReference;
+    }
+
+    @JsonProperty("onlyWithAssignReference")
+    public void setOnlyWithAssignReference(Boolean onlyWithAssignReference) {
+        this.onlyWithAssignReference = onlyWithAssignReference;
+    }
+
     /**
      * auditParams
      * <p>
@@ -180,12 +193,12 @@ public class DocumentationsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("documentations", documentations).append("compact", compact).append("regex", regex).append("folders", folders).append("types", types).append("onlyWithAssignReference", onlyWithAssignReference).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(types).append(folders).append(compact).append(auditLog).append(documentations).toHashCode();
+        return new HashCodeBuilder().append(regex).append(types).append(folders).append(compact).append(auditLog).append(documentations).append(onlyWithAssignReference).toHashCode();
     }
 
     @Override
@@ -197,7 +210,7 @@ public class DocumentationsFilter {
             return false;
         }
         DocumentationsFilter rhs = ((DocumentationsFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).isEquals();
+        return new EqualsBuilder().append(regex, rhs.regex).append(types, rhs.types).append(folders, rhs.folders).append(compact, rhs.compact).append(auditLog, rhs.auditLog).append(documentations, rhs.documentations).append(onlyWithAssignReference, rhs.onlyWithAssignReference).isEquals();
     }
 
 }

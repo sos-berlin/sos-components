@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "types",
     "folders",
     "onlyValidObjects",
+    "onlyWithAssignReference",
     "forInventory",
     "forInventoryTrash"
 })
@@ -49,6 +50,8 @@ public class TreeFilter {
     private List<Folder> folders = new ArrayList<Folder>();
     @JsonProperty("onlyValidObjects")
     private Boolean onlyValidObjects = false;
+    @JsonProperty("onlyWithAssignReference")
+    private Boolean onlyWithAssignReference = false;
     @JsonProperty("forInventory")
     private Boolean forInventory = false;
     @JsonProperty("forInventoryTrash")
@@ -118,6 +121,16 @@ public class TreeFilter {
         this.onlyValidObjects = onlyValidObjects;
     }
 
+    @JsonProperty("onlyWithAssignReference")
+    public Boolean getOnlyWithAssignReference() {
+        return onlyWithAssignReference;
+    }
+
+    @JsonProperty("onlyWithAssignReference")
+    public void setOnlyWithAssignReference(Boolean onlyWithAssignReference) {
+        this.onlyWithAssignReference = onlyWithAssignReference;
+    }
+
     @JsonProperty("forInventory")
     public Boolean getForInventory() {
         return forInventory;
@@ -140,12 +153,12 @@ public class TreeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("forInventory", forInventory).append("forInventoryTrash", forInventoryTrash).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("types", types).append("folders", folders).append("onlyValidObjects", onlyValidObjects).append("onlyWithAssignReference", onlyWithAssignReference).append("forInventory", forInventory).append("forInventoryTrash", forInventoryTrash).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(forInventoryTrash).append(types).append(folders).append(controllerId).append(forInventory).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(forInventoryTrash).append(types).append(folders).append(controllerId).append(forInventory).append(onlyValidObjects).append(onlyWithAssignReference).toHashCode();
     }
 
     @Override
@@ -157,7 +170,7 @@ public class TreeFilter {
             return false;
         }
         TreeFilter rhs = ((TreeFilter) other);
-        return new EqualsBuilder().append(forInventoryTrash, rhs.forInventoryTrash).append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(forInventoryTrash, rhs.forInventoryTrash).append(types, rhs.types).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(forInventory, rhs.forInventory).append(onlyValidObjects, rhs.onlyValidObjects).append(onlyWithAssignReference, rhs.onlyWithAssignReference).isEquals();
     }
 
 }

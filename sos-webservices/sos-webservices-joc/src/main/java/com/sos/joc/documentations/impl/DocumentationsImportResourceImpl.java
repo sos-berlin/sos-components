@@ -53,7 +53,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private static final String API_CALL = "./documentations/import";
     private static final List<String> SUPPORTED_SUBTYPES = Arrays.asList("html", "xml", "pdf", "xsl", "xsd", "javascript",
             "json", "css", "markdown", "gif", "jpeg", "png");
-    private static final List<String> DOC_TYPES = Arrays.asList("html", "xml", "pdf", "markdown");
     private static final List<String> SUPPORTED_IMAGETYPES = Arrays.asList("pdf", "gif", "jpeg", "png");
     private SOSHibernateSession connection = null;
 
@@ -298,7 +297,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         documentation.setType(mediaSubType);
         documentation.setContent(new String(b, StandardCharsets.UTF_8));
         documentation.setHasImage(false);
-        documentation.setIsRef(DOC_TYPES.contains(mediaSubType));
+        documentation.setIsRef(DocumentationsResourceImpl.ASSIGN_TYPES.contains(mediaSubType));
         if (documentation.getIsRef()) {
             documentation.setDocRef(filter.getFile().replaceFirst("^(.*)\\.[^\\.]+$", "$1")); // without extension
         }

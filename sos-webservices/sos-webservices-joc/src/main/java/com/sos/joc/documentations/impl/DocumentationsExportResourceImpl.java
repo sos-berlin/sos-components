@@ -167,8 +167,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
             DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
-                    .getDocumentations().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;

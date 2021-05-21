@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "name",
     "type",
+    "assignReference",
     "modified"
 })
 public class Documentation {
@@ -60,6 +61,14 @@ public class Documentation {
      */
     @JsonProperty("type")
     private String type;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("assignReference")
+    private String assignReference;
     /**
      * timestamp
      * <p>
@@ -159,6 +168,28 @@ public class Documentation {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("assignReference")
+    public String getAssignReference() {
+        return assignReference;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("assignReference")
+    public void setAssignReference(String assignReference) {
+        this.assignReference = assignReference;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -182,12 +213,12 @@ public class Documentation {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("type", type).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("type", type).append("assignReference", assignReference).append("modified", modified).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(name).append(path).append(modified).append(id).append(type).toHashCode();
+        return new HashCodeBuilder().append(path).append(assignReference).append(name).append(modified).append(id).append(type).toHashCode();
     }
 
     @Override
@@ -199,7 +230,7 @@ public class Documentation {
             return false;
         }
         Documentation rhs = ((Documentation) other);
-        return new EqualsBuilder().append(name, rhs.name).append(path, rhs.path).append(modified, rhs.modified).append(id, rhs.id).append(type, rhs.type).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(assignReference, rhs.assignReference).append(name, rhs.name).append(modified, rhs.modified).append(id, rhs.id).append(type, rhs.type).isEquals();
     }
 
 }
