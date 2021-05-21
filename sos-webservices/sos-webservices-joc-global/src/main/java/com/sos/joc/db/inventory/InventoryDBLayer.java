@@ -1208,8 +1208,8 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryConfiguration> getUsedObjectsByDocName(String docName) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append("where type != :type and ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type != :type and ");
 
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.documentationName");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
