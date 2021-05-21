@@ -43,11 +43,11 @@ public abstract class AProviderArguments extends ASOSArguments {
     // Socket connect timeout in seconds based on socket.connect
     private SOSArgument<Integer> proxyConnectTimeout = new SOSArgument<Integer>("proxy_connect_timeout", false, 30);
 
-    // Keepass
-    private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<SOSKeePassDatabase>("keepass_database", false);
-    private SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>> keepassDatabaseEntry = new SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>>(
-            "keepass_database_entry", false);
-    private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>("keepass_attachment_property_name", false);
+    // Internal/Keepass
+    private SOSArgument<SOSKeePassDatabase> keepassDatabase = new SOSArgument<SOSKeePassDatabase>(null, false);
+    private SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>> keepassDatabaseEntry = new SOSArgument<org.linguafranca.pwdb.Entry<?, ?, ?, ?>>(null,
+            false);
+    private SOSArgument<String> keepassAttachmentPropertyName = new SOSArgument<String>(null, false);
 
     public SOSArgument<Protocol> getProtocol() {
         return protocol;

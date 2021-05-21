@@ -3,6 +3,7 @@ package com.sos.commons.vfs.ssh.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 
 public class SSHShellInfo {
@@ -27,14 +28,15 @@ public class SSHShellInfo {
     }
 
     private void analyze() {
-        if (commandResult == null || commandResult.getException() != null) {
+        if (commandResult == null) {
             return;
         }
-        // TODO analyze this.serverVersion and commandResult.getException()
+
         if (commandResult.getExitCode() == null) {
             if (commandResult.getStdErr().length() > 0) {
                 os = OS.WINDOWS.name();
-                // shell = ?
+            } else {
+                analyzeServerVersion();
             }
             return;
         }
@@ -51,7 +53,7 @@ public class SSHShellInfo {
                 os = OS.WINDOWS.name();
                 shell = Shell.CYGWIN;
             } else {
-                os = OS.UNKNOWN.name();
+                analyzeServerVersion();
                 shell = Shell.UNIX;
             }
             break;
@@ -69,9 +71,17 @@ public class SSHShellInfo {
             shell = Shell.CYGWIN;
             break;
         default:
-            os = OS.UNKNOWN.name();
+            analyzeServerVersion();
             shell = Shell.UNKNOWN;
             break;
+        }
+    }
+
+    private void analyzeServerVersion() {
+        if (!SOSString.isEmpty(serverVersion)) {
+            if (serverVersion.toUpperCase().contains(OS.WINDOWS.name())) {
+                os = OS.WINDOWS.name();
+            }
         }
     }
 

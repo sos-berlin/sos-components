@@ -22,7 +22,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             step.getLogger().info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
                     .getShellInfo().toString());
 
-            if (!SOSString.isEmpty(step.getArguments().getCommand().getValue())) {
+            if (!step.getArguments().getCommand().isEmpty()) {
                 executeCommand(provider, step);
             }
         } catch (Throwable e) {

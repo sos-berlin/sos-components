@@ -28,7 +28,7 @@ public abstract class ASOSArguments {
         for (Field f : argumentFields) {
             f.setAccessible(true);
             SOSArgument current = (SOSArgument) f.get(this);
-            if (current.getName() == null) {
+            if (current.getName() == null) {// internal usage
                 continue;
             }
             SOSArgument extern = find(args, current.getName());

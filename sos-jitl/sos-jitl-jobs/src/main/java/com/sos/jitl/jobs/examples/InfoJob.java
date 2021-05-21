@@ -131,19 +131,19 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             printEnvs(step.getLogger());
         }
 
-        if (args.getShellCommand().getValue() != null) {
+        if (!args.getShellCommand().isEmpty()) {
             step.getLogger().info("----------EXECUTE SHELL COMMAND-----------------");
             step.getLogger().info("  " + args.getShellCommand().getDisplayValue());
             step.getLogger().info("  " + SOSString.toString(SOSShell.executeCommand(args.getShellCommand().getValue())));
         }
 
         step.getLogger().info("----------RETURN-----------------");
-        if (args.getRedefineShowEnv().getValue() || args.getReturnVariables().getValue() != null) {
+        if (args.getRedefineShowEnv().getValue() || !args.getReturnVariables().isEmpty()) {
             Map<String, Object> map = new HashMap<String, Object>();
             if (args.getRedefineShowEnv().getValue()) {
                 map.put(args.getShowEnv().getName(), !args.getShowEnv().getValue());
             }
-            if (args.getReturnVariables().getValue() != null) {
+            if (!args.getReturnVariables().getValue().isEmpty()) {
                 String[] arr = args.getReturnVariables().getValue().split("__");
                 for (String val : arr) {
                     String[] valArr = val.trim().split("_");

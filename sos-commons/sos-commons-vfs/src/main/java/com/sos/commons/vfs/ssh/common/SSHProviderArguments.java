@@ -1,5 +1,6 @@
 package com.sos.commons.vfs.ssh.common;
 
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -31,11 +32,12 @@ public class SSHProviderArguments extends AProviderArguments {
     // ?TODO server_alive_count_max
     private SOSArgument<Integer> serverAliveInterval = new SOSArgument<Integer>("server_alive_interval", false);
 
-    private SOSArgument<Boolean> useKeyAgent = new SOSArgument<Boolean>("use_keyagent", false, false);
     private SOSArgument<Boolean> strictHostkeyChecking = new SOSArgument<Boolean>("strict_hostkey_checking", false, false);
     private SOSArgument<Path> hostkeyLocation = new SOSArgument<Path>("hostkey_location", false);
     private SOSArgument<Boolean> useZlibCompression = new SOSArgument<Boolean>("use_zlib_compression", false, false);
     private SOSArgument<Boolean> simulateShell = new SOSArgument<Boolean>("simulate_shell", false, false);
+
+    private SOSArgument<Charset> remoteCharset = new SOSArgument<Charset>("remote_charset", false, Charset.forName("UTF-8"));
 
     public SSHProviderArguments() {
         getProtocol().setDefaultValue(Protocol.SFTP);
@@ -86,10 +88,6 @@ public class SSHProviderArguments extends AProviderArguments {
         return serverAliveInterval;
     }
 
-    public SOSArgument<Boolean> getUseKeyAgent() {
-        return useKeyAgent;
-    }
-
     public SOSArgument<Boolean> getStrictHostkeyChecking() {
         return strictHostkeyChecking;
     }
@@ -104,5 +102,9 @@ public class SSHProviderArguments extends AProviderArguments {
 
     public SOSArgument<Boolean> getSimulateShell() {
         return simulateShell;
+    }
+
+    public SOSArgument<Charset> getRemoteCharset() {
+        return remoteCharset;
     }
 }

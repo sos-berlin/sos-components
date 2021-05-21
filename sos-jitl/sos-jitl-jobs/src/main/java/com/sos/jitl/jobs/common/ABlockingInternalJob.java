@@ -8,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -277,7 +278,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private Object getValue(Object val, JobArgument<A> arg, Field field) throws ClassNotFoundException {
         if (val instanceof String) {
             val = val.toString().trim();
-            Type type = getValueType(arg, field);
+            setValueType(arg, field);
+            Type type = arg.getClazzType();
             if (!type.equals(String.class)) {
                 if (type.equals(Path.class)) {
                     val = Paths.get(val.toString());
@@ -313,10 +315,18 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     } else {
                         val = v;
                     }
+                } else if (type.equals(Charset.class)) {
+                    try {
+                        val = Charset.forName(val.toString());
+                    } catch (Throwable e) {
+                        arg.setNotAcceptedValue(val);
+                        val = arg.getDefaultValue();
+                    }
                 }
             }
         } else if (val instanceof BigDecimal) {
-            Type type = getValueType(arg, field);
+            setValueType(arg, field);
+            Type type = arg.getClazzType();
             if (type.equals(Integer.class)) {
                 val = Integer.valueOf(((BigDecimal) val).intValue());
             } else if (type.equals(Long.class)) {
@@ -326,11 +336,14 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         return val;
     }
 
-    private Type getValueType(JobArgument<A> arg, Field field) {
+    private void setValueType(JobArgument<A> arg, Field field) {
         if (field == null) {
-            return arg.getClazzType() == null ? Object.class : arg.getClazzType();
+            if (arg.getClazzType() == null) {
+                arg.setClazzType(Object.class);
+            }
+            return;
         }
-        return ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+        arg.setClazzType(((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
     }
 
     private void setValueSource(JobArgument<A> arg, List<String> allNames) {

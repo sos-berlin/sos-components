@@ -1,8 +1,10 @@
 package com.sos.commons.vfs.ssh.exception;
 
+import com.sos.commons.vfs.exception.SOSProviderException;
+
 import net.schmizz.sshj.connection.channel.direct.Signal;
 
-public class SOSSSHCommandExitViolentlyException extends SOSSSHException {
+public class SOSSSHCommandExitViolentlyException extends SOSProviderException {
 
     private static final long serialVersionUID = 1L;
     private final Signal signal;

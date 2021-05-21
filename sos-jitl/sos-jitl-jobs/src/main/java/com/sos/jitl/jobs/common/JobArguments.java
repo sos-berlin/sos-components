@@ -43,8 +43,11 @@ public class JobArguments {
                 try {
                     f.setAccessible(true);
                     try {
-                        Type type = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
                         SOSArgument sa = (SOSArgument) f.get(arg);
+                        if (sa.getName() == null) {// internal usage
+                            return null;
+                        }
+                        Type type = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
                         return new JobArgument(sa, type);
                     } catch (Throwable e) {
                         return null;

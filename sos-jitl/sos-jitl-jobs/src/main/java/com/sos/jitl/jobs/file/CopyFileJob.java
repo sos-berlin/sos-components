@@ -2,7 +2,6 @@ package com.sos.jitl.jobs.file;
 
 import java.util.regex.Pattern;
 
-import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
 import com.sos.jitl.jobs.file.common.FileOperationsCopyImpl;
@@ -25,7 +24,7 @@ public class CopyFileJob extends AFileOperationsJob {
 
         String[] sourceArr = step.getArguments().getSourceFile().getValue().split(";");
         String[] targetArr = null;
-        if (!SOSString.isEmpty(step.getArguments().getTargetFile().getValue())) {
+        if (!step.getArguments().getTargetFile().isEmpty()) {
             targetArr = step.getArguments().getTargetFile().getValue().split(";");
             if (sourceArr.length != targetArr.length) {
                 throw new SOSFileOperationsException(String.format("length mismatch: %s=%s, %s=%s", step.getArguments().getSourceFile().getName(),
@@ -39,10 +38,10 @@ public class CopyFileJob extends AFileOperationsJob {
         for (int i = 0; i < sourceArr.length; i++) {
             String source = sourceArr[i];
             String target = null;
-            if (!SOSString.isEmpty(step.getArguments().getTargetFile().getValue())) {
+            if (!step.getArguments().getTargetFile().isEmpty()) {
                 target = targetArr[i];
             }
-            if (!SOSString.isEmpty(step.getArguments().getFileSpec().getValue()) && checkLen) {
+            if (!step.getArguments().getFileSpec().isEmpty() && checkLen) {
                 step.getArguments().setFileSpec(fileSpecsArr[i]);
             }
             files += doFileOperation(step.getArguments(), fo, source, target);

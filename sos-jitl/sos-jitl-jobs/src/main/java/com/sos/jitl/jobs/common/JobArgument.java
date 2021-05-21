@@ -10,10 +10,11 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
  * - java.lang.String<br/>
  * - java.lang.Boolean<br/>
  * - java.lang.Integer, java.lang.Long, java.math.BigDecimal<br/>
- * - java.nio.file.Path<br/>
- * - java.net.URI<br/>
  * - java.lang.Enum<br/>
- * - java.util.List | LinkedList&lt;java.lang.String | java.lang.Enum&gt;<br/>
+ * - java.net.URI<br/>
+ * - java.nio.charset.Charset<br/>
+ * - java.nio.file.Path<br/>
+ * - java.util.List&lt;java.lang.String | java.lang.Enum&gt;<br/>
  */
 public class JobArgument<T> extends SOSArgument<T> {
 
@@ -138,8 +139,11 @@ public class JobArgument<T> extends SOSArgument<T> {
             sb.append("(").append(valueSource.getDetails()).append(")");
         }
         sb.append(" modified=").append(isDirty());
+        if (clazzType != null) {
+            sb.append(" type=").append(clazzType.getTypeName());
+        }
         if (getPayload() != null) {
-            sb.append(" payload=").append(getPayload());
+            sb.append(" class=").append(SOSArgumentHelper.getClassName(getPayload().toString()));
         }
         sb.append("]");
         return sb.toString();
@@ -151,6 +155,10 @@ public class JobArgument<T> extends SOSArgument<T> {
 
     protected NotAcceptedValue getNotAcceptedValue() {
         return notAcceptedValue;
+    }
+
+    protected void setClazzType(java.lang.reflect.Type val) {
+        clazzType = val;
     }
 
     protected java.lang.reflect.Type getClazzType() {

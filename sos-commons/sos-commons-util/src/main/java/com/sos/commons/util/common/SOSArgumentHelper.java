@@ -50,6 +50,14 @@ public class SOSArgumentHelper {
         }
     }
 
+    public static String getClassName(String fullyQualifiedName) {
+        if (fullyQualifiedName == null) {
+            return null;
+        }
+        int indx = fullyQualifiedName.lastIndexOf('.');
+        return indx > -1 ? fullyQualifiedName.substring(indx + 1) : fullyQualifiedName;
+    }
+
     private static String truncatingIfNeeded(final String val) {
         if (val == null) {
             return val;

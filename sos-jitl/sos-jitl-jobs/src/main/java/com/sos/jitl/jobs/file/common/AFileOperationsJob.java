@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
@@ -31,7 +30,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
     }
 
     public void checkArguments(FileOperationsJobArguments args) throws Exception {
-        if (SOSString.isEmpty(args.getReplacing().getValue()) && !SOSString.isEmpty(args.getReplacement().getValue())) {
+        if (args.getReplacing().isEmpty() && !args.getReplacement().isEmpty()) {
             throw new SOSJobRequiredArgumentMissingException(String.format("'%s' is missing but required for '%s'", args.getReplacing().getName(),
                     args.getReplacement().getName()));
         }
@@ -171,7 +170,7 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                         .getResultSetFile().getName()));
             }
         }
-        if (!SOSString.isEmpty(args.getRaiseErrorIfResultSetIs().getValue())) {
+        if (!args.getRaiseErrorIfResultSetIs().isEmpty()) {
             if (compareIntValues(args.getRaiseErrorIfResultSetIs().getValue(), size, args.getExpectedSizeOfResultSet().getValue())) {
                 String msg = String.format("no of hits in result set '%s'  is '%s' expected '%s'", size, args.getRaiseErrorIfResultSetIs().getValue(),
                         args.getExpectedSizeOfResultSet().getValue());

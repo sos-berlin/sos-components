@@ -675,10 +675,11 @@ public class JobStep<A extends JobArguments> {
         }).forEach(a -> {
             String detail = a.getValueSource().getDetails() == null ? "" : " " + a.getValueSource().getDetails();
             if (a.getPayload() != null) {
+                String pd = SOSArgumentHelper.getClassName(a.getPayload().toString());
                 if (detail.equals("")) {
-                    detail = " " + a.getPayload();
+                    detail = " " + pd;
                 } else {
-                    detail = detail + " " + a.getPayload();
+                    detail = detail + " " + pd;
                 }
             }
             if (a.getNotAcceptedValue() == null) {

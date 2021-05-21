@@ -1,7 +1,14 @@
 package com.sos.commons.util.common;
 
+import java.util.List;
+import java.util.Map;
+
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 
+/** SOSArgument&lt;T&gt; supported types(&lt;T&gt;):<br/>
+ * - generally: all data types are supported <br/>
+ * - usage in JITL: see com.sos.jitl.jobs.common.JobArgument supported types <br/>
+ */
 public class SOSArgument<T> {
 
     private String name;
@@ -100,6 +107,26 @@ public class SOSArgument<T> {
 
     public void setPayload(String val) {
         payload = val;
+    }
+
+    public boolean isEmpty() {
+        if (value == null) {
+            return true;
+        }
+        if (value instanceof String) {
+            return value.toString().length() == 0;
+        }
+        if (value instanceof List) {
+            return ((List<?>) value).size() == 0;
+        }
+        if (value instanceof Map) {
+            return ((Map<?, ?>) value).size() == 0;
+        }
+        if (value.getClass().isArray()) {
+            return ((Object[]) value).length == 0;
+        }
+        // Boolean,Number,Path,URI,ENUM ...
+        return false;
     }
 
     private void setIsDirty() {

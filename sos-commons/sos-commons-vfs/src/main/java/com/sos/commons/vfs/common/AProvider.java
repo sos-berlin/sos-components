@@ -3,7 +3,6 @@ package com.sos.commons.vfs.common;
 import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
-import com.sos.commons.vfs.common.AProviderArguments;
 
 public abstract class AProvider<A extends AProviderArguments> {
 
@@ -19,17 +18,43 @@ public abstract class AProvider<A extends AProviderArguments> {
 
     public abstract void disconnect();
 
-    public abstract void mkdir(String path) throws Exception;
+    public abstract void createDirectory(String path) throws Exception;
 
-    public abstract void rmdir(String path) throws Exception;
+    public abstract void createDirectories(String path) throws Exception;
 
-    public abstract void rm(String path) throws Exception;
+    /** Deletes a file/directory.
+     *
+     * <p>
+     * If the file is a directory then the directory must not be empty.
+     *
+     * <p>
+     * throws SOSNoSuchFileException
+     * 
+     * if the file does not exist <i>(optional specific exception)</i>
+     * 
+     * @param path the path to the file to delete */
+    public abstract void delete(String path) throws Exception;
 
+    /** Deletes a file/directory if it exists.
+     *
+     * <p>
+     * If the file is a directory then the directory must not be empty.
+     *
+     * @param path the path to the file to delete
+     *
+     * @return {@code true} if the file was deleted by this method; {@code
+     *          false} if the file could not be deleted because it did not exist */
+    public abstract boolean deleteIfExists(String path) throws Exception;
+
+    /** Renames a file/directory. */
     public abstract void rename(String oldpath, String newpath) throws Exception;
 
-    public abstract boolean fileExists(String path);
+    /** Tests whether a file/directory exists. **/
+    public abstract boolean exists(String path);
 
-    public abstract boolean directoryExists(String path);
+    public abstract boolean isFile(String path);
+
+    public abstract boolean isDirectory(String path);
 
     public abstract long getSize(String path) throws Exception;
 

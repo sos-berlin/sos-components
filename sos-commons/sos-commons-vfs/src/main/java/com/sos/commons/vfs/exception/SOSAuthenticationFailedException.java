@@ -1,6 +1,6 @@
-package com.sos.commons.vfs.ssh.exception;
+package com.sos.commons.vfs.exception;
 
-public class SOSAuthenticationFailedException extends SOSSSHException {
+public class SOSAuthenticationFailedException extends SOSProviderException {
 
     private static final long serialVersionUID = 1L;
 
