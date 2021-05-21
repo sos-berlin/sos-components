@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObject;
+import com.sos.joc.model.common.InventoryObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -27,7 +27,7 @@ public class DeployDocumentation {
     @JsonProperty("documentation")
     private String documentation;
     @JsonProperty("objects")
-    private List<JobSchedulerObject> objects = new ArrayList<JobSchedulerObject>();
+    private List<InventoryObject> objects = new ArrayList<InventoryObject>();
 
     /**
      * string without < and >
@@ -52,12 +52,12 @@ public class DeployDocumentation {
     }
 
     @JsonProperty("objects")
-    public List<JobSchedulerObject> getObjects() {
+    public List<InventoryObject> getObjects() {
         return objects;
     }
 
     @JsonProperty("objects")
-    public void setObjects(List<JobSchedulerObject> objects) {
+    public void setObjects(List<InventoryObject> objects) {
         this.objects = objects;
     }
 

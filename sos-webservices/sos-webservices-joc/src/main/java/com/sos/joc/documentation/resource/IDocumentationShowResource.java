@@ -11,30 +11,28 @@ import com.sos.joc.classes.JOCDefaultResponse;
 
 public interface IDocumentationShowResource {
 
+//    @GET
+//    @Path("show")
+//    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
+//            @QueryParam("path") String path, @QueryParam("objectType") String type);
+//
+//    @POST
+//    @Path("show")
+//    @Consumes("application/json")
+//    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
+
     @GET
     @Path("show")
-    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
-            @QueryParam("path") String path, @QueryParam("objectType") String type);
-
-    @POST
-    @Path("show")
-    @Consumes("application/json")
-    public JOCDefaultResponse show(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
-
-    @GET
-    @Path("preview")
     public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, @QueryParam("accessToken") String accessToken,
             @QueryParam("documentation") String path);
     
-    @POST
-    @Path("preview")
-    @Consumes("application/json")
-    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter)
-            throws Exception;
+//    @POST
+//    @Path("show")
+//    @Consumes("application/json")
+//    public JOCDefaultResponse preview(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 
     @POST
     @Path("url")
     @Consumes("application/json")
-    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter)
-            throws Exception;
+    public JOCDefaultResponse postUrl(@HeaderParam("X-Access-Token") String xAccessToken, byte[] inFilter);
 }

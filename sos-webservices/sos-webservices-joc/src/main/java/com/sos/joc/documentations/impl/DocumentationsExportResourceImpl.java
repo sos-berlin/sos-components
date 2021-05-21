@@ -10,20 +10,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -43,9 +36,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.JobSchedulerObject;
-import com.sos.joc.model.docu.DeployDocumentation;
-import com.sos.joc.model.docu.DeployDocumentations;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.DocumentationsFilter;
 import com.sos.joc.model.docu.ExportInfo;
@@ -54,9 +44,7 @@ import com.sos.schema.JsonValidator;
 @Path("documentations")
 public class DocumentationsExportResourceImpl extends JOCResourceImpl implements IDocumentationsExportResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentationsExportResourceImpl.class);
     private static final String API_CALL = "./documentations/export";
-    public static final String DEPLOY_USAGE_JSON = "/sos-documentation-usages.json";
 
     @Override
     public JOCDefaultResponse postExportDocumentations(String accessToken, byte[] filterBytes) {
@@ -229,12 +217,6 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
         List<DBItemDocumentation> docs = getDocsFromDb(dbLayer, filter);
         List<DocumentationContent> contents = new ArrayList<DocumentationContent>();
-//        DocumentationContent usagesJson = getDeployUsageData(dbLayer, docs.stream().collect(Collectors.mapping(DBItemDocumentation::getPath,
-//                Collectors.toSet())));
-//        if (usagesJson != null) {
-//            contents.add(usagesJson);
-//        }
-
         for (DBItemDocumentation doc : docs) {
             DocumentationContent content = null;
             if (doc.getContent() != null) {
@@ -251,26 +233,6 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
         }
         return contents;
     }
-
-//    private DocumentationContent getDeployUsageData(DocumentationDBLayer dbLayer, Collection<String> docPaths) throws DBConnectionRefusedException,
-//            DBInvalidDataException, JsonProcessingException {
-//        try {
-//            DeployDocumentations docUsages = new DeployDocumentations();
-//            List<DeployDocumentation> docUsageList = new ArrayList<DeployDocumentation>();
-//            Map<String, List<JobSchedulerObject>> docUsageMap = dbLayer.getDocumentationUsages(docPaths);
-//            for (Entry<String, List<JobSchedulerObject>> entry : docUsageMap.entrySet()) {
-//                DeployDocumentation docUsage = new DeployDocumentation();
-//                docUsage.setDocumentation(entry.getKey());
-//                docUsage.setObjects(entry.getValue());
-//                docUsageList.add(docUsage);
-//            }
-//            docUsages.setDocumentations(docUsageList);
-//            return new DocumentationContent(DEPLOY_USAGE_JSON, Globals.prettyPrintObjectMapper.writeValueAsBytes(docUsages));
-//        } catch (Exception e) {
-//            LOGGER.warn("Problem at export documentation usages", e);
-//            return null;
-//        }
-//    }
 
     private List<DBItemDocumentation> getDocsFromDb(DocumentationDBLayer dbLayer, DocumentationsFilter filter)
             throws JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException {

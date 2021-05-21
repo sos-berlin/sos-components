@@ -663,7 +663,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameterList("types", JocInventory.getCalendarTypes());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryReleasedConfiguration> getReleasedCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
         Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
@@ -1062,7 +1062,7 @@ public class InventoryDBLayer extends DBLayer {
                 root.setPath(JocInventory.ROOT_FOLDER);
                 root.setDeleted(false);
                 tree.add(root);
-                
+
                 return tree;
             }
             return new HashSet<>();
@@ -1107,7 +1107,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobResource(String jobResourceName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
@@ -1121,7 +1121,7 @@ public class InventoryDBLayer extends DBLayer {
         String jsonFunc2 = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.jobResources");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc2, ":jobResourceName"));
         hql.append(")");
-        
+
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("jobResourceName", jobResourceName);
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
@@ -1187,6 +1187,36 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameter("calendarName", "\"" + calendarName + "\"");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedJobsByDocName(String docName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        hql.append("and ic.deployed=sw.deployed ");
+        hql.append("and ");
+        
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.documentationName");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameter("docName", "\"" + docName + "\"");
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryConfiguration> getUsedObjectsByDocName(String docName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append("where type != :type and ");
+
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.documentationName");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.FOLDER.intValue());
+        query.setParameter("docName", "\"" + docName + "\"");
         return getSession().getResultList(query);
     }
 

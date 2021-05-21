@@ -40,7 +40,6 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                 return jocDefaultResponse;
             }
 
-            // TODO declare "documentations" as required in Json schema
             checkRequiredParameter("documentations", documentationsFilter.getDocumentations());
 
             storeAuditLog(documentationsFilter.getAuditLog(), CategoryType.DOCUMENTATIONS);
@@ -49,12 +48,6 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             for (DBItemDocumentation dbDoc : docs) {
-//                List<DBItemDocumentationUsage> dbUsages = dbLayer.getDocumentationUsages(dbDoc.getId());
-//                if (dbUsages != null && !dbUsages.isEmpty()) {
-//                    for (DBItemDocumentationUsage dbUsage : dbUsages) {
-//                        sosHibernateSession.delete(dbUsage);
-//                    }
-//                }
                 if (dbDoc.getImageId() != null) {
                     DBItemDocumentationImage dbImage = sosHibernateSession.get(DBItemDocumentationImage.class, dbDoc.getImageId());
                     if (dbImage != null) {

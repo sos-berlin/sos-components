@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.JobSchedulerObject;
+import com.sos.joc.model.common.InventoryObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -38,7 +38,7 @@ public class UsedBy {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     @JsonProperty("objects")
-    private List<JobSchedulerObject> objects = new ArrayList<JobSchedulerObject>();
+    private List<InventoryObject> objects = new ArrayList<InventoryObject>();
 
     /**
      * timestamp
@@ -65,12 +65,12 @@ public class UsedBy {
     }
 
     @JsonProperty("objects")
-    public List<JobSchedulerObject> getObjects() {
+    public List<InventoryObject> getObjects() {
         return objects;
     }
 
     @JsonProperty("objects")
-    public void setObjects(List<JobSchedulerObject> objects) {
+    public void setObjects(List<InventoryObject> objects) {
         this.objects = objects;
     }
 

@@ -2,6 +2,9 @@ package com.sos.joc.documentation.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -10,8 +13,11 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationUsedResource;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.InventoryObject;
 import com.sos.joc.model.docu.DocumentationFilter;
 import com.sos.joc.model.docu.UsedBy;
 import com.sos.schema.JsonValidator;
@@ -23,22 +29,40 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
 
     @Override
     public JOCDefaultResponse postDocumentationsUsed(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DocumentationFilter.class);
-//            DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
+            DocumentationFilter documentationFilter = Globals.objectMapper.readValue(filterBytes, DocumentationFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
-            // TODO folder permissions?
             UsedBy usedBy = new UsedBy();
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            // TODO Look into INV_CONFIGURATION with JSON-SQL
-            DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
-//            usedBy.setObjects(dbLayer.getDocumentationUsages(normalizePath(documentationFilter.getDocumentation())));
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
+            String docRef = dbLayer.getDocRef(documentationFilter.getDocumentation());
+            if (docRef == null) {
+                usedBy.setObjects(null);
+            } else {
+                InventoryDBLayer invDbLayer = new InventoryDBLayer(connection);
+                List<DBItemInventoryConfiguration> usedObjects = invDbLayer.getUsedObjectsByDocName(docRef);
+                List<DBItemInventoryConfiguration> usedJobs = invDbLayer.getUsedJobsByDocName(docRef);
+                Stream<DBItemInventoryConfiguration> usedByStream = Stream.empty();
+                if (usedObjects != null) {
+                    usedByStream = usedObjects.stream();
+                }
+                if (usedJobs != null) {
+                    usedByStream = Stream.concat(usedByStream, usedJobs.stream());
+                }
+                usedBy.setObjects(usedByStream.map(item -> {
+                    InventoryObject js = new InventoryObject();
+                    js.setPath(item.getPath());
+                    js.setType(item.getTypeAsEnum());
+                    return js;
+                }).distinct().collect(Collectors.toList()));
+                
+            }
             usedBy.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(usedBy);
         } catch (JocException e) {
@@ -47,7 +71,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(connection);
         }
     }
 

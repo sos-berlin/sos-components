@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "type",
     "path"
 })
-public class JobSchedulerObject {
+public class InventoryObject {
 
     /**
      * configuration types
@@ -101,10 +101,10 @@ public class JobSchedulerObject {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobSchedulerObject) == false) {
+        if ((other instanceof InventoryObject) == false) {
             return false;
         }
-        JobSchedulerObject rhs = ((JobSchedulerObject) other);
+        InventoryObject rhs = ((InventoryObject) other);
         return new EqualsBuilder().append(type, rhs.type).append(path, rhs.path).isEquals();
     }
 

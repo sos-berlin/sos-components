@@ -14,11 +14,13 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
+@Table(name = DBLayer.TABLE_DOCUMENTATION, uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentation extends DBItem {
 
@@ -32,14 +34,21 @@ public class DBItemDocumentation extends DBItem {
     @Column(name = "[NAME]", nullable = false)
     private String name;
 
-    @Column(name = "[DIRECTORY]", nullable = false)
-    private String directory;
+    @Column(name = "[FOLDER]", nullable = false)
+    private String folder;
 
     @Column(name = "[PATH]", nullable = false)
     private String path;
 
     @Column(name = "[TYPE]", nullable = false)
     private String type;
+
+    @Column(name = "[DOC_REF]", nullable = true)
+    private String docRef;
+
+    @Column(name = "[IS_REF]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean isRef;
 
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
@@ -77,12 +86,12 @@ public class DBItemDocumentation extends DBItem {
         this.name = val;
     }
 
-    public String getDirectory() {
-        return directory;
+    public String getFolder() {
+        return folder;
     }
 
-    public void setDirectory(String val) {
-        this.directory = val;
+    public void setFolder(String val) {
+        this.folder = val;
     }
 
     public String getPath() {
@@ -99,6 +108,22 @@ public class DBItemDocumentation extends DBItem {
 
     public void setType(String val) {
         this.type = val;
+    }
+    
+    public String getDocRef() {
+        return docRef;
+    }
+
+    public void setDocRef(String val) {
+        this.docRef = val;
+    }
+    
+    public boolean getIsRef() {
+        return isRef;
+    }
+
+    public void setIsRef(boolean val) {
+        isRef = val;
     }
 
     public String getContent() {

@@ -18,10 +18,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
+import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationResource;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
@@ -33,23 +32,23 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
     private static final java.nio.file.Path CSS = Paths.get("/sos/css/default-markdown.css");
 
     @Override
-    public JOCDefaultResponse postDocumentation(String accessToken, String name) {
+    public JOCDefaultResponse postDocumentation(String accessToken, String path) {
         SOSHibernateSession connection = null;
         try {
-            if (name == null) {
-                name = "";
+            if (path == null) {
+                path = "";
             }
-            String request = String.format("%s/%s/%s", API_CALL, accessToken, name);
+            String request = String.format("%s/%s/%s", API_CALL, accessToken, path);
             initLogging(request, null, accessToken);
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            checkRequiredParameter("name", name);
+            checkRequiredParameter("path", path);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            DBItemDocumentation dbItem = dbLayer.getDocumentation(name);
-            String errMessage = "No database entry (" + name + ") as documentation resource found";
+            DBItemDocumentation dbItem = dbLayer.getDocumentation(path);
+            String errMessage = "No database entry (" + path + ") as documentation resource found";
 
             if (dbItem == null) {
                 throw new DBMissingDataException(errMessage);
@@ -128,7 +127,7 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
     }
 
     private String createHTMLfromMarkdown(DBItemDocumentation dbItem) {
-        java.nio.file.Path path = Paths.get(dbItem.getDirectory());
+        java.nio.file.Path path = Paths.get(dbItem.getFolder());
         String title = dbItem.getName().replaceFirst("\\.[^\\.]*$", ""); //filename without extension
         String cssFile = path.relativize(CSS).toString().replace('\\', '/');
         

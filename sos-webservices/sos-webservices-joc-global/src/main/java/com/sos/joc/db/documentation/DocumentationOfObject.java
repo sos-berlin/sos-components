@@ -1,12 +1,12 @@
 package com.sos.joc.db.documentation;
 
-import com.sos.joc.model.common.JobSchedulerObject;
+import com.sos.joc.model.common.InventoryObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 public class DocumentationOfObject {
     private String docPath;
     private String objPath;
-    private JobSchedulerObject docUsage;
+    private InventoryObject docUsage;
     
     public DocumentationOfObject(String docPath, String objPath) {
         this.docPath = docPath;
@@ -15,7 +15,7 @@ public class DocumentationOfObject {
     
     public DocumentationOfObject(String docPath, String objPath, String objType) {
         this.docPath = docPath;
-        this.docUsage = new JobSchedulerObject();
+        this.docUsage = new InventoryObject();
         try {
             this.docUsage.setType(ConfigurationType.fromValue(objType));
         } catch (IllegalArgumentException e) {
@@ -32,7 +32,7 @@ public class DocumentationOfObject {
         return objPath;
     }
     
-    public JobSchedulerObject getDocUsage() {
+    public InventoryObject getDocUsage() {
         return docUsage;
     }
 

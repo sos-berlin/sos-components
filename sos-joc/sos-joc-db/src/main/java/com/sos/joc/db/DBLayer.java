@@ -159,10 +159,6 @@ public class DBLayer implements Serializable {
     public static final String TABLE_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
 
-//    public static final String DBITEM_DOCUMENTATION_USAGE = com.sos.joc.db.documentation.DBItemDocumentationUsage.class.getSimpleName();
-//    public static final String TABLE_DOCUMENTATION_USAGE = "INV_DOCUMENTATION_USAGES";
-//    public static final String TABLE_DOCUMENTATION_USAGE_SEQUENCE = "SEQ_INV_DU";
-
     /** Search (helper) tables */
     public static final String DBITEM_SEARCH_WORKFLOWS = DBItemSearchWorkflow.class.getSimpleName();
     public static final String TABLE_SEARCH_WORKFLOWS = "SEARCH_WORKFLOWS";
@@ -294,7 +290,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
         cl.add(com.sos.joc.db.documentation.DBItemDocumentation.class);
         cl.add(com.sos.joc.db.documentation.DBItemDocumentationImage.class);
-        //cl.add(com.sos.joc.db.documentation.DBItemDocumentationUsage.class);
 
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);
