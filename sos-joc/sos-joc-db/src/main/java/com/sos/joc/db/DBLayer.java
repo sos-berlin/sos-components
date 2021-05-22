@@ -108,15 +108,15 @@ public class DBLayer implements Serializable {
     public static final String DAILY_PLAN_ORDERS_DBITEM = DBItemDailyPlanOrders.class.getSimpleName();
 
     public static final String DAILY_PLAN_SUBMISSIONS_TABLE = "DPL_SUBMISSIONS";
-    public static final String DAILY_PLAN_SUBMISSIONS_SEQUENCE = "DPL_SUBHISTORY_SEQ";
+    public static final String DAILY_PLAN_SUBMISSIONS_SEQUENCE = "SEQ_DPL_SUBMISSIONS";
     public static final String DAILY_PLAN_SUBMISSIONS_DBITEM = DBItemDailyPlanSubmissions.class.getSimpleName();
 
     public static final String DAILY_PLAN_HISTORY_TABLE = "DPL_HISTORY";
-    public static final String DAILY_PLAN_HISTORY_SEQUENCE = "DPL_HISTORY_SEQ";
+    public static final String DAILY_PLAN_HISTORY_SEQUENCE = "SEQ_DPL_HISTORY";
     public static final String DAILY_PLAN_HISTORY_DBITEM = DBItemDailyPlanHistory.class.getSimpleName();
 
     public static final String DAILY_PLAN_VARIABLES_TABLE = "DPL_ORDER_VARIABLES";
-    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "DPL_ORDER_VARIABLES_SEQ";
+    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SEQ_DPL_ORDER_VARS";
     public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
 
     /** Inventory tables */
