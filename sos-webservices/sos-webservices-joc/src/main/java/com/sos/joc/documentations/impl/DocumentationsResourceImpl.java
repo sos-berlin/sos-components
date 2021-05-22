@@ -3,13 +3,12 @@ package com.sos.joc.documentations.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -31,7 +30,7 @@ import com.sos.schema.JsonValidator;
 public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocumentationsResource {
 
     private static final String API_CALL = "./documentations";
-    public static final Set<String> ASSIGN_TYPES = new HashSet<String>(Arrays.asList("html", "xml", "pdf", "markdown"));
+    protected static final List<String> ASSIGN_TYPES = Arrays.asList("html", "xml", "pdf", "markdown");
 
     @Override
     public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) {
@@ -50,29 +49,27 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(sosHibernateSession);
             List<DBItemDocumentation> dbDocs = new ArrayList<DBItemDocumentation>();
-            Set<String> types = null;
-            // TODO introduce parameter for ASSIGN_TYPES
+            Stream<String> types = null;
             if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
-                types = documentationsFilter.getTypes().stream().map(String::toLowerCase).collect(Collectors.toSet());
-                if (types.contains("assigntypes")) {
-                    types.remove("assigntypes");
-                    types.addAll(ASSIGN_TYPES);
+                if (documentationsFilter.getTypes().contains("assigntypes")) {
+                    documentationsFilter.getTypes().remove("assigntypes");
+                    types = Stream.concat(documentationsFilter.getTypes().stream(), ASSIGN_TYPES.stream());
+                } else {
+                    types = documentationsFilter.getTypes().stream();
                 }
             }
+            boolean onlyWithAssignReference = documentationsFilter.getOnlyWithAssignReference() == Boolean.TRUE;
             if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
                 dbDocs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             } else {
                 if (documentationsFilter.getFolders() != null && !documentationsFilter.getFolders().isEmpty()) {
                     for (Folder folder : documentationsFilter.getFolders()) {
-                        dbDocs.addAll(dbLayer.getDocumentations(types, folder.getFolder(), folder.getRecursive()));
+                        dbDocs.addAll(dbLayer.getDocumentations(types, folder.getFolder(), folder.getRecursive(), onlyWithAssignReference));
                     }
                 } else if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
-                    dbDocs = dbLayer.getDocumentations(types, null, false);
+                    dbDocs = dbLayer.getDocumentations(types, null, false, onlyWithAssignReference);
                 } else {
-                    dbDocs = dbLayer.getDocumentations((List<String>) null);
-                }
-                if (documentationsFilter.getRegex() != null && !documentationsFilter.getRegex().isEmpty()) {
-                    dbDocs = filterByRegex(dbDocs, documentationsFilter.getRegex());
+                    dbDocs = dbLayer.getDocumentations((Collection<String>) null, onlyWithAssignReference);
                 }
             }
             Documentations documentations = new Documentations();
@@ -89,25 +86,13 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         }
     }
 
-    private List<DBItemDocumentation> filterByRegex(List<DBItemDocumentation> unfilteredDocs, String regex) throws Exception {
-        List<DBItemDocumentation> filteredDocs = new ArrayList<DBItemDocumentation>();
-        Pattern p = Pattern.compile(regex);
-        for (DBItemDocumentation unfilteredDoc : unfilteredDocs) {
-            Matcher regExMatcher = p.matcher(unfilteredDoc.getPath());
-            if (regExMatcher.find()) {
-                filteredDocs.add(unfilteredDoc);
-            }
-        }
-        return filteredDocs;
-    }
-
     private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Set<Folder> permittedFolders) {
         return dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
             doc.setName(dbDoc.getName());
             doc.setPath(dbDoc.getPath());
-            doc.setType(dbDoc.getType());
+            doc.setType(dbDoc.getType().toLowerCase());
             doc.setModified(dbDoc.getModified());
             doc.setAssignReference(dbDoc.getDocRef());
             return doc;

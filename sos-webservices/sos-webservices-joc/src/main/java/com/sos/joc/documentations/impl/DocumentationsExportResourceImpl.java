@@ -240,7 +240,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             docs = dbLayer.getDocumentations(filter.getDocumentations());
         } else if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
             for (Folder folder : filter.getFolders()) {
-                docs.addAll(dbLayer.getDocumentations(null, folder.getFolder(), folder.getRecursive()));
+                docs.addAll(dbLayer.getDocumentations(null, folder.getFolder(), folder.getRecursive(), false));
             }
         } else {
             throw new JocMissingRequiredParameterException("Neither 'documentations' nor 'folders' are specified!");

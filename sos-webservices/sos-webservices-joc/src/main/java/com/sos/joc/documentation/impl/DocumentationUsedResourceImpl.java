@@ -28,7 +28,7 @@ public class DocumentationUsedResourceImpl extends JOCResourceImpl implements ID
     private static final String API_CALL = "./documentation/used";
 
     @Override
-    public JOCDefaultResponse postDocumentationsUsed(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postDocumentationUsed(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);

@@ -8,11 +8,11 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IDocumentationUsedResource {
+public interface IDocumentationEditResource {
 
-    @Path("used")
+    @Path("edit")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public JOCDefaultResponse postDocumentationUsed(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+    public JOCDefaultResponse postDocumentationEdit(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
     
 }

@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,20 +32,25 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.audit.AuditLogDetail;
+import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 //import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.audit.ObjectType;
 import com.sos.joc.model.docu.DocumentationImport;
 
 @Path("documentations")
@@ -57,7 +63,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
     private SOSHibernateSession connection = null;
 
     @Override
-    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String controllerId, String directory,
+    public JOCDefaultResponse postImportDocumentations(String xAccessToken, String accessToken, String folder,
             FormDataBodyPart body, String timeSpent, String ticketLink, String comment) {
         AuditParams auditLog = new AuditParams();
         auditLog.setComment(comment);
@@ -66,34 +72,37 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             auditLog.setTimeSpent(Integer.valueOf(timeSpent));
         } catch (Exception e) {
         }
-        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), controllerId, directory, body, auditLog);
+        return postImportDocumentations(getAccessToken(xAccessToken, accessToken), folder, body, auditLog);
     }
 
-    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String controllerId, String directory, FormDataBodyPart body,
+    private JOCDefaultResponse postImportDocumentations(String xAccessToken, String folder, FormDataBodyPart body,
             AuditParams auditLog) {
 
         InputStream stream = null;
         try {
-            DocumentationImport filter = new DocumentationImport();
-            if (directory == null || directory.isEmpty()) {
-                directory = "/";
-            }
-            filter.setFolder(normalizeFolder(directory.replace('\\', '/')));
-            if (body != null) {
-                filter.setFile(URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8"));
-            }
-            filter.setAuditLog(auditLog);
-
-            JOCDefaultResponse jocDefaultResponse = init(API_CALL, filter, xAccessToken, controllerId, getJocPermissions(xAccessToken)
-                    .getDocumentations().getManage());
+            initLogging(API_CALL, null, xAccessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-
+            
+            DocumentationImport filter = new DocumentationImport();
             if (body == null) {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
+            } else {
+                filter.setFile(URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8"));
             }
-
+            DBItemJocAuditLog dbAudit = storeAuditLog(auditLog, CategoryType.DOCUMENTATIONS);
+            
+            if (folder == null || folder.isEmpty()) {
+                folder = "/";
+            }
+            if (!folderPermissions.isPermittedForFolder(folder)) {
+                throw new JocFolderPermissionsException(folder);
+            }
+            
+            filter.setFolder(normalizeFolder(folder.replace('\\', '/')));
+            
             stream = body.getEntityAs(InputStream.class);
             String extention = getExtensionFromFilename(filter.getFile());
 
@@ -101,12 +110,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Optional<String> supportedImageType = SUPPORTED_IMAGETYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
 
-            storeAuditLog(filter.getAuditLog(), CategoryType.DOCUMENTATIONS);
-
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                readZipFileContent(stream, filter);
+                readZipFileContent(stream, filter, dbAudit);
             } else if (supportedImageType.isPresent()) {
-                saveOrUpdate(setDBItemDocumentationImage(IOUtils.toByteArray(stream), filter, supportedImageType.get()));
+                saveOrUpdate(setDBItemDocumentationImage(IOUtils.toByteArray(stream), filter, supportedImageType.get()), dbAudit);
             } else if (supportedSubType.isPresent()) {
                 if ("xml".equals(supportedSubType.get())) {
                     switch (extention) {
@@ -119,11 +126,11 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                         break;
                     }
                 }
-                saveOrUpdate(setDBItemDocumentation(IOUtils.toByteArray(stream), filter, supportedSubType.get()));
+                saveOrUpdate(setDBItemDocumentation(IOUtils.toByteArray(stream), filter, supportedSubType.get()), dbAudit);
             } else if ("md".equals(extention) || "markdown".equals(extention)) {
                 byte[] b = IOUtils.toByteArray(stream);
                 if (isPlainText(b)) {
-                    saveOrUpdate(setDBItemDocumentation(b, filter, "markdown"));
+                    saveOrUpdate(setDBItemDocumentation(b, filter, "markdown"), dbAudit);
                 } else {
                     throw new JocUnsupportedFileTypeException("Unsupported file type (" + mediaSubType + "), supported types are "
                             + SUPPORTED_SUBTYPES.toString());
@@ -177,21 +184,22 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 // insert image
                 doc.setImageId(saveImage(dbLayer, doc));
             }
-            // TODO check doc.getDocRef() is unique -> maybe suffix
+            doc.setDocRef(checkUniqueReference(doc.getDocRef(), doc.getPath(), dbLayer));
             dbLayer.getSession().save(doc);
         }
     }
 
-    private void saveOrUpdate(DBItemDocumentation doc) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
+    private void saveOrUpdate(DBItemDocumentation doc, DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
             JocConfigurationException, DBOpenSessionException {
         if (connection == null) {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
         }
+        JocAuditLog.storeAuditLogDetail(new AuditLogDetail(doc.getPath(), ObjectType.DOCUMENTATION.intValue()), connection, dbAudit);
         DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
         saveOrUpdate(dbLayer, doc);
     }
 
-    private Long saveImage(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws SOSHibernateException {
+    private static Long saveImage(DocumentationDBLayer dbLayer, DBItemDocumentation doc) throws SOSHibernateException {
         DBItemDocumentationImage image = new DBItemDocumentationImage();
         image.setImage(doc.getImage());
         image.setMd5Hash(DigestUtils.md5Hex(doc.getImage()));
@@ -199,7 +207,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         return image.getId();
     }
 
-    private String getExtensionFromFilename(String filename) {
+    private static String getExtensionFromFilename(String filename) {
         String extension = filename;
         if (filename == null) {
             return "";
@@ -212,8 +220,9 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         return extension.toLowerCase();
     }
 
-    private void readZipFileContent(InputStream inputStream, DocumentationImport filter) throws DBConnectionRefusedException, DBInvalidDataException,
-            SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException, DBOpenSessionException {
+    private void readZipFileContent(InputStream inputStream, DocumentationImport filter, DBItemJocAuditLog dbAudit)
+            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
+            JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
         Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
         try {
@@ -268,6 +277,8 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 if (connection == null) {
                     connection = Globals.createSosHibernateStatelessConnection(API_CALL);
                 }
+                JocAuditLog.storeAuditLogDetails(documentations.stream().map(doc -> new AuditLogDetail(doc.getPath(), ObjectType.DOCUMENTATION
+                        .intValue())).collect(Collectors.toSet()), connection, dbAudit);
                 DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
                 for (DBItemDocumentation itemDocumentation : documentations) {
                     saveOrUpdate(dbLayer, itemDocumentation);
@@ -286,7 +297,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private DBItemDocumentation setDBItemDocumentation(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
+    private static DBItemDocumentation setDBItemDocumentation(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
         documentation.setFolder(filter.getFolder());
@@ -304,7 +315,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         return documentation;
     }
 
-    private DBItemDocumentation setDBItemDocumentationImage(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
+    private static DBItemDocumentation setDBItemDocumentationImage(byte[] b, DocumentationImport filter, String mediaSubType) throws IOException,
             JocUnsupportedFileTypeException {
         DBItemDocumentation documentation = new DBItemDocumentation();
         documentation.setFolder(filter.getFolder());
@@ -315,10 +326,14 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         documentation.setType(mediaSubType);
         documentation.setImage(b);
         documentation.setHasImage(true);
+        documentation.setIsRef(DocumentationsResourceImpl.ASSIGN_TYPES.contains(mediaSubType));
+        if (documentation.getIsRef()) {
+            documentation.setDocRef(filter.getFile().replaceFirst("^(.*)\\.[^\\.]+$", "$1")); // without extension
+        }
         return documentation;
     }
 
-    private String guessContentTypeFromBytes(byte[] b, String extension, boolean isPlainText) throws IOException {
+    private static String guessContentTypeFromBytes(byte[] b, String extension, boolean isPlainText) throws IOException {
         InputStream is = null;
         String media = null;
         try {
@@ -379,13 +394,26 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         }
     }
 
-    private boolean isPlainText(byte[] b) {
+    private static boolean isPlainText(byte[] b) {
         try {
             StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(b));
             return true;
         } catch (CharacterCodingException e) {
             return false;
         }
+    }
+    
+    private static String checkUniqueReference(String reference, String path, DocumentationDBLayer dbLayer) {
+        String otherPath = dbLayer.getDocumentationByRef(reference, path);
+        if (otherPath != null) {
+            return getUniqueReference(reference, otherPath, dbLayer);
+        }
+        return reference;
+    }
+    
+    private static String getUniqueReference(String reference, String path, DocumentationDBLayer dbLayer) {
+        // TODO check doc.getDocRef() is unique -> maybe suffix
+        return reference;
     }
 
 }

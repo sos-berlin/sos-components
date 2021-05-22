@@ -1,12 +1,14 @@
 package com.sos.joc.db.documentation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -63,6 +65,24 @@ public class DocumentationDBLayer {
         }
     }
 
+    public String getDocumentationByRef(String reference, String path) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("select path from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append(" where docRef = :reference");
+            sql.append(" and path != :path");
+            Query<String> query = session.createQuery(sql.toString());
+            query.setParameter("path", path);
+            query.setParameter("reference", reference);
+            query.setMaxResults(1);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
     public DBItemDocumentation getDocumentation(String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
@@ -90,17 +110,33 @@ public class DocumentationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<DBItemDocumentation> getDocumentations(Collection<String> paths) throws DBConnectionRefusedException,
+    DBInvalidDataException {
+        return getDocumentations(paths, false);
+    }
 
-    public List<DBItemDocumentation> getDocumentations(List<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemDocumentation> getDocumentations(Collection<String> paths, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            List<String> clauses = new ArrayList<>();
             if (paths != null && !paths.isEmpty()) {
-                sql.append(" where path in (:paths)");
+                clauses.add("path in (:paths)");
+            }
+            if (onlyWithAssignReference) {
+                clauses.add("isRef = :isRef");
+            }
+            if (!clauses.isEmpty()) {
+                sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             Query<DBItemDocumentation> query = session.createQuery(sql.toString());
             if (paths != null && !paths.isEmpty()) {
                 query.setParameterList("paths", paths);
+            }
+            if (onlyWithAssignReference) {
+                query.setParameter("isRef", true);
             }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -110,52 +146,52 @@ public class DocumentationDBLayer {
         }
     }
 
-    public List<DBItemDocumentation> getDocumentations(String folder) throws DBConnectionRefusedException,
+    public List<DBItemDocumentation> getDocumentations(String folder, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        return getDocumentations(null, folder, false);
+        return getDocumentations(null, folder, false, onlyWithAssignReference);
     }
 
-    public List<DBItemDocumentation> getDocumentations(Set<String> types, String folder, boolean recursive) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        String and = "";
+    public List<DBItemDocumentation> getDocumentations(Stream<String> types, String folder, boolean recursive, boolean onlyWithAssignReference)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
-            sql.append(" where ");
+            List<String> clauses = new ArrayList<>();
             if (folder != null && !folder.isEmpty()) {
-                and = " and ";
                 if (recursive) {
                     if (!"/".equals(folder)) {
-                        sql.append(" (folder = :folder");
-                        sql.append(" or folder like :folder2)");
+                        clauses.add("(folder = :folder or folder like :likefolder)");
                     }
                 } else {
-                    sql.append(" folder = :folder");
+                    clauses.add("folder = :folder");
                 }
             }
-            if (types != null && !types.isEmpty()) {
-                sql.append(and);
-                sql.append("type in (:types)");
+            if (types != null) {
+                clauses.add("type in (:types)");
+            }
+            if (onlyWithAssignReference) {
+                clauses.add("isRef = :isRef");
+            }
+            if (!clauses.isEmpty()) {
+                sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
 
-            String sqlString = sql.toString();
-            if (sqlString.endsWith(" where ")) {
-                sqlString = sqlString.substring(0, sqlString.length() - " where ".length());
-            }
-
-            Query<DBItemDocumentation> query = session.createQuery(sqlString);
+            Query<DBItemDocumentation> query = session.createQuery(sql.toString());
             if (folder != null && !folder.isEmpty()) {
                 if (recursive) {
                     if (!"/".equals(folder)) {
                         query.setParameter("folder", folder);
-                        query.setParameter("folder2", MatchMode.START.toMatchString(folder + "/"));
+                        query.setParameter("likefolder", folder + "/%");
                     }
                 } else {
                     query.setParameter("folder", folder);
                 }
             }
-            if (types != null && !types.isEmpty()) {
-                query.setParameterList("types", types);
+            if (types != null) {
+                query.setParameterList("types", types.map(String::toLowerCase).collect(Collectors.toSet()));
+            }
+            if (onlyWithAssignReference) {
+                query.setParameter("isRef", true);
             }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -165,18 +201,29 @@ public class DocumentationDBLayer {
         }
     }
   
-    public Set<Tree> getFoldersByFolder(String folderName) throws DBConnectionRefusedException, DBInvalidDataException {
+    public Set<Tree> getFoldersByFolder(String folderName, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
             sql.append("select folder from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            List<String> clauses = new ArrayList<>();
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
-                sql.append(" where ( folder = :folderName or folder like :likeFolderName )");
+                clauses.add("( folder = :folderName or folder like :likeFolderName )");
+            }
+            if (onlyWithAssignReference) {
+                clauses.add("isRef = :isRef");
+            }
+            if (!clauses.isEmpty()) {
+                sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             sql.append(" group by folder");
             Query<String> query = session.createQuery(sql.toString());
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 query.setParameter("folderName", folderName);
-                query.setParameter("likeFolderName", MatchMode.START.toMatchString(folderName + "/"));
+                query.setParameter("likeFolderName", folderName + "/%");
+            }
+            if (onlyWithAssignReference) {
+                query.setParameter("isRef", true);
             }
             List<String> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {

@@ -21,8 +21,7 @@ public interface IDocumentationsImportResource {
     public JOCDefaultResponse postImportDocumentations(
             @HeaderParam("X-Access-Token") String xAccessToken,
             @FormDataParam("accessToken") String accessToken, 
-            @FormDataParam("controllerId") String controllerId, 
-            @FormDataParam("folder") String directory, 
+            @FormDataParam("folder") String folder, 
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,

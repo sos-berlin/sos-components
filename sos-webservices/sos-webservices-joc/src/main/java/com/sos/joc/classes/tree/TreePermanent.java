@@ -154,14 +154,8 @@ public class TreePermanent {
                 }
                 break;
             case DOCUMENTATION:
-                if (treeForInventory || treeForInventoryTrash) {
-                    if (inventoryPermission) {
-                        types.add(type);
-                    }
-                } else {
-                    if (jocPermissions.getDocumentations().getView()) {
-                        types.add(type);
-                    }
+                if (jocPermissions.getDocumentations().getView()) {
+                    types.add(type);
                 }
                 break;
             }
@@ -174,7 +168,8 @@ public class TreePermanent {
         Set<Integer> inventoryTypes = new HashSet<Integer>();
         inventoryTypes = treeBody.getTypes().stream().map(TreeType::intValue).collect(Collectors.toSet());
         // DOCUMENTATION is not part of INV_CONFIGURATIONS
-        boolean withDocus = inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        // boolean withDocus = inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
+        inventoryTypes.removeIf(i -> i == TreeType.DOCUMENTATION.intValue());
         
 
         SOSHibernateSession session = null;
@@ -192,12 +187,12 @@ public class TreePermanent {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
                     results = dbLayer.getFoldersByFolderAndTypeForInventory(normalizedFolder, inventoryTypes, treeBody.getOnlyValidObjects());
-                    if (withDocus) {
-                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
-                        if (docResults != null && !docResults.isEmpty()) {
-                            results.addAll(docResults);
-                        }
-                    }
+//                    if (withDocus) {
+//                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
+//                        if (docResults != null && !docResults.isEmpty()) {
+//                            results.addAll(docResults);
+//                        }
+//                    }
                     if (results != null && !results.isEmpty()) {
                         if (folder.getRecursive() == null || folder.getRecursive()) {
                             folders.addAll(results);
@@ -210,12 +205,12 @@ public class TreePermanent {
                 }
             } else {
                 results = dbLayer.getFoldersByFolderAndTypeForInventory("/", inventoryTypes, treeBody.getOnlyValidObjects());
-                if (withDocus) {
-                    docResults = dbDocLayer.getFoldersByFolder("/");
-                    if (docResults != null && !docResults.isEmpty()) {
-                        results.addAll(docResults);
-                    }
-                }
+//                if (withDocus) {
+//                    docResults = dbDocLayer.getFoldersByFolder("/");
+//                    if (docResults != null && !docResults.isEmpty()) {
+//                        results.addAll(docResults);
+//                    }
+//                }
                 if (results != null && !results.isEmpty()) {
                     folders.addAll(results);
                 }
@@ -293,6 +288,7 @@ public class TreePermanent {
             throws JocException {
         
         boolean withDocus = false;
+        boolean onlyWithAssignReference = treeBody.getOnlyWithAssignReference() == Boolean.TRUE;
         List<TreeType> possibleInventoryTypes = Arrays.asList(TreeType.SCHEDULE, TreeType.WORKINGDAYSCALENDAR, TreeType.NONWORKINGDAYSCALENDAR);
         Set<Integer> possibleDeployIntTypes = Arrays.asList(DeployType.values()).stream().map(DeployType::intValue).collect(Collectors.toSet());
         Set<Integer> deployTypes = new HashSet<>();
@@ -335,7 +331,7 @@ public class TreePermanent {
                         }
                     }
                     if (withDocus) {
-                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder);
+                        docResults = dbDocLayer.getFoldersByFolder(normalizedFolder, onlyWithAssignReference);
                         if (docResults != null && !docResults.isEmpty()) {
                             results.addAll(docResults);
                         }
@@ -365,7 +361,7 @@ public class TreePermanent {
                     }
                 }
                 if (withDocus) {
-                    docResults = dbDocLayer.getFoldersByFolder("/");
+                    docResults = dbDocLayer.getFoldersByFolder("/", onlyWithAssignReference);
                     if (docResults != null && !docResults.isEmpty()) {
                         results.addAll(docResults);
                     }
