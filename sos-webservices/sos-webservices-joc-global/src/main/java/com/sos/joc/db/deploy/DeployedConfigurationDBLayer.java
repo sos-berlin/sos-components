@@ -145,7 +145,7 @@ public class DeployedConfigurationDBLayer {
             hql.append(")");
             Query<Long> query = session.createQuery(hql);
             query.setParameter("workflowType", DeployType.WORKFLOW.intValue());
-            if (controllerId != null && !controllerId.isEmpty()) {
+            if (!SOSString.isEmpty(controllerId)) {
                 query.setParameter("controllerId", controllerId);
             }
             Long result = session.getSingleResult(query);
