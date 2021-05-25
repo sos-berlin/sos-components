@@ -81,7 +81,6 @@ public class SSHProviderTest {
     @Test
     public void testPreferredAuthentications() throws Exception {
         SSHProviderTestArguments args = new SSHProviderTestArguments();
-        args.setProtocol(Protocol.SFTP);// not necessary - default
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
@@ -135,6 +134,7 @@ public class SSHProviderTest {
         args.setHost(SSH_HOST);
         args.setPort(SSH_PORT);
 
+        args.setAuthMethod(AuthMethod.PASSWORD);
         args.setUser(SSH_USER);
         args.setPassword(SSH_PASSWORD);
 
