@@ -152,7 +152,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
                     		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
                     	// process prefix/suffix only if overwrite==false AND one of both not empty 
-                		// TargetFolder
                         final List<ConfigurationType> importOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.JOBRESOURCE,
                                 ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW,
                                 ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
@@ -164,30 +163,13 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     		if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                         		for (ConfigurationObject configuration : configurationsByType.get(type)) {
                             		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                            		if (existingConfiguration != null) {
-                            			if (canAdd(configuration.getPath(), permittedFolders)) {
-                            				filteredConfigurations.add(configuration);
-                                        	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                                        			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                                        	ImportUtils.replaceReferences(updateable);
-                                        	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
-                            			}
-                            		} else {
-                                        if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                                        	if (!configuration.getPath().startsWith(filter.getTargetFolder())) {
-                                        		configuration.setPath(filter.getTargetFolder() + configuration.getPath());
-                                        	}
-                                            if (canAdd(configuration.getPath(), permittedFolders)) {
-                                				filteredConfigurations.add(configuration);
-                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                                            }
-                                        } else {
-                                        	if (canAdd(configuration.getPath(), permittedFolders)) {
-                                				filteredConfigurations.add(configuration);
-                                        		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                                        	}
-                                        }
-                            		}
+                        			if (canAdd(configuration.getPath(), permittedFolders)) {
+                        				filteredConfigurations.add(configuration);
+                                    	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
+                                    			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                                    	ImportUtils.replaceReferences(updateable);
+                                    	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
+                        			}
                         		}
                     		}
                     	}
