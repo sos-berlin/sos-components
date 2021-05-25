@@ -96,20 +96,22 @@ public class DocumentationDBLayer {
         }
         StringBuilder hql = new StringBuilder("select docRef from ").append(DBLayer.DBITEM_DOCUMENTATION);
         hql.append(" where lower(docRef) like :likeDocRef");
+        hql.append(" group by docRef");
         Query<String> query = getSession().createQuery(hql.toString());
-        query.setParameter("likeDocRef", reference.toLowerCase() + "-%");
+        query.setParameter("likeDocRef", reference.toLowerCase() + "%");
         List<String> result = getSession().getResultList(query);
         if (result == null || result.isEmpty()) {
             return reference;
         }
-        Predicate<String> predicate = Pattern.compile(".+-[0-9]*$", Pattern.CASE_INSENSITIVE).asPredicate();
-        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-([0-9]*)$", "0$1"));
+        String ref = Pattern.quote(reference);
+        Predicate<String> predicate = Pattern.compile(ref+"-[0-9]*$", Pattern.CASE_INSENSITIVE).asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(ref+"-([0-9]*)$", "0$1"));
         SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
                 .toCollection(TreeSet::new));
         if (numbers.isEmpty()) {
-            return reference;
+            return reference + "-1";
         }
-        Integer num = 0;
+        Integer num = 1;
         for (Integer number : numbers) {
             if (num < number) {
                 break;
