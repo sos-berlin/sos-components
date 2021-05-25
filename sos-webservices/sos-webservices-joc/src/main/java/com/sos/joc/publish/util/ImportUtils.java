@@ -17,10 +17,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
-import com.sos.inventory.model.instruction.ForkJoin;
-import com.sos.inventory.model.instruction.Instruction;
-import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -29,9 +25,6 @@ import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.SuffixPrefix;
-import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
-import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
-import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
@@ -48,9 +41,17 @@ public class ImportUtils {
     				throws SOSHibernateException {
 
     	ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
-        SuffixPrefix suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
-                clusterSettings.getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(),
-                new InventoryDBLayer(dbLayer.getSession()));
+    	SuffixPrefix suffixPrefix = null;
+    	// prefix/suffix will always be added to the configurations name if not empty, even if no previous configuration exist
+    	if (existingConfiguration != null) {
+    		suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
+                    clusterSettings.getImportSuffix().getDefault(), existingConfiguration.getName(), configuration.getObjectType(),
+                    new InventoryDBLayer(dbLayer.getSession()));
+    	} else {
+    		suffixPrefix = JocInventory.getSuffixPrefix(suffix, prefix, ClusterSettings.getImportSuffixPrefix(clusterSettings),
+                    clusterSettings.getImportSuffix().getDefault(), configuration.getName(), configuration.getObjectType(),
+                    new InventoryDBLayer(dbLayer.getSession()));
+    	}
         final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
         final String oldName = configuration.getName();
         final String newName = configuration.getName().replaceFirst(replace.get(0), replace.get(1));
