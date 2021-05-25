@@ -714,7 +714,7 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
+            updateItemOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
             		.map(item -> {
                         try {
                             FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
