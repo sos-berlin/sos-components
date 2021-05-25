@@ -4,8 +4,11 @@ import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,6 +39,7 @@ import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ImportFilter;
@@ -122,10 +126,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
             Set<String> agentNames = agentDbLayer.getEnabledAgentNames();
-//            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), 
-//                    String.format("%1$d configuration object(s) imported with profile %2$s", configurations.size(), account));
-//            logAuditMessage(importAudit);
-//            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(importAudit);
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
@@ -153,31 +153,42 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
                     	// process prefix/suffix only if overwrite==false AND one of both not empty 
                 		// TargetFolder
-                    	for (ConfigurationObject configuration : configurations) {
-                    		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                    		if (existingConfiguration != null) {
-                    			if (canAdd(configuration.getPath(), permittedFolders)) {
-                    				filteredConfigurations.add(configuration);
-                                	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
-                                			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
-                                	ImportUtils.replaceReferences(updateable);
-                                	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
-                    			}
-                    		} else {
-                                if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                                	if (!configuration.getPath().startsWith(filter.getTargetFolder())) {
-                                		configuration.setPath(filter.getTargetFolder() + configuration.getPath());
-                                	}
-                                    if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                                        dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                                    }
-                                } else {
-                                	if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                                		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                                	}
-                                }
+                        final List<ConfigurationType> importOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.JOBRESOURCE,
+                                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW,
+                                ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+                        
+                    	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
+                    			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                    	for (ConfigurationType type : importOrder) {
+                    		List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                    		if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                        		for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                            		DBItemInventoryConfiguration existingConfiguration = dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                            		if (existingConfiguration != null) {
+                            			if (canAdd(configuration.getPath(), permittedFolders)) {
+                            				filteredConfigurations.add(configuration);
+                                        	UpdateableConfigurationObject updateable =  ImportUtils.createUpdateableConfiguration(
+                                        			existingConfiguration, configuration, configurations, filter.getPrefix(), filter.getSuffix(), filter.getTargetFolder(), dbLayer);
+                                        	ImportUtils.replaceReferences(updateable);
+                                        	dbLayer.saveNewInventoryConfiguration(updateable.getConfigurationObject(), account, auditLogId, filter.getOverwrite(), agentNames);
+                            			}
+                            		} else {
+                                        if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                                        	if (!configuration.getPath().startsWith(filter.getTargetFolder())) {
+                                        		configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                                        	}
+                                            if (canAdd(configuration.getPath(), permittedFolders)) {
+                                				filteredConfigurations.add(configuration);
+                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                            }
+                                        } else {
+                                        	if (canAdd(configuration.getPath(), permittedFolders)) {
+                                				filteredConfigurations.add(configuration);
+                                        		dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                        	}
+                                        }
+                            		}
+                        		}
                     		}
                     	}
                     } else {
@@ -211,12 +222,12 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                             .intValue())), hibernateSession, auditLogId, dbAuditItem.getCreated());
                     InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
                     filteredConfigurations.stream().map(ConfigurationObject::getPath).distinct().map(path -> Paths.get(path).getParent()).forEach(item -> {
-        				try {
-        					JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
-        				} catch (SOSHibernateException e) {
-        					throw new JocSosHibernateException(e);
-        				}
-        			});
+                        try {
+                            JocInventory.makeParentDirs(invDbLayer, item, auditLogId);
+                        } catch (SOSHibernateException e) {
+                            throw new JocSosHibernateException(e);
+                        }
+                    });
                 }
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

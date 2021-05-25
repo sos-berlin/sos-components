@@ -1,5 +1,6 @@
 package com.sos.joc.publish.util;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -8,11 +9,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
@@ -26,6 +31,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.SuffixPrefix;
 import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
 import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
+import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
@@ -85,13 +91,14 @@ public class ImportUtils {
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
-                	for (Instruction instruction : ((WorkflowEdit)configurationWithReference).getConfiguration().getInstructions()) {
-                		if (InstructionType.LOCK.equals(instruction.getTYPE()) && (
-                				((Lock)instruction).getLockName().equals(updateableItem.getOldName())
-                				|| ((Lock)instruction).getLockName().equals(updateableItem.getConfigurationObject().getName()))) {
-                			((Lock)instruction).setLockName(updateableItem.getNewName());
-                		}
-                	}
+					try {
+						String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+	                	json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+	                	((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
                     break;
                 case FILEORDERSOURCE:
                 	if (((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName())
@@ -132,11 +139,15 @@ public class ImportUtils {
     	return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
     			.map(item -> {
     				Workflow wf = (Workflow)item.getConfiguration();
-    				for (Instruction wfInstruction : wf.getInstructions()) {
-    					if (InstructionType.LOCK.equals(wfInstruction.getTYPE()) && ((Lock)wfInstruction).getLockName().equals(name)) {
-							 return item;
-    					}
-    				}
+					try {
+						String wfJson = Globals.objectMapper.writeValueAsString(wf);
+	    				Matcher matcher = Pattern.compile("(\"lockName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+	    				if (matcher.find()) {
+	    					return item;
+	    				}
+					} catch (JsonProcessingException e) {
+						e.printStackTrace();
+					}
     				return null;
     			}).filter(Objects::nonNull).collect(Collectors.toSet());
     }
