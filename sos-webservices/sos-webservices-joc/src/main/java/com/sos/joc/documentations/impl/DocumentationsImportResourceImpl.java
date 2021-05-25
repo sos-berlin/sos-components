@@ -184,13 +184,13 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 // insert image
                 doc.setImageId(saveImage(dbLayer, doc));
             }
-            doc.setDocRef(checkUniqueReference(doc.getDocRef(), doc.getPath(), dbLayer));
+            doc.setDocRef(dbLayer.getUniqueDocRef(doc.getDocRef()));
             dbLayer.getSession().save(doc);
         }
     }
 
-    private void saveOrUpdate(DBItemDocumentation doc, DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException,
-            JocConfigurationException, DBOpenSessionException {
+    private void saveOrUpdate(DBItemDocumentation doc, DBItemJocAuditLog dbAudit) throws DBConnectionRefusedException, DBInvalidDataException,
+            SOSHibernateException, JocConfigurationException, DBOpenSessionException {
         if (connection == null) {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
         }
@@ -401,19 +401,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         } catch (CharacterCodingException e) {
             return false;
         }
-    }
-    
-    private static String checkUniqueReference(String reference, String path, DocumentationDBLayer dbLayer) {
-        String otherPath = dbLayer.getDocumentationByRef(reference, path);
-        if (otherPath != null) {
-            return getUniqueReference(reference, otherPath, dbLayer);
-        }
-        return reference;
-    }
-    
-    private static String getUniqueReference(String reference, String path, DocumentationDBLayer dbLayer) {
-        // TODO check doc.getDocRef() is unique -> maybe suffix
-        return reference;
     }
 
 }

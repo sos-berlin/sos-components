@@ -6,17 +6,24 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 
 public class DocumentationDBLayer {
@@ -81,6 +88,35 @@ public class DocumentationDBLayer {
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+    
+    public String getUniqueDocRef(String reference) throws SOSHibernateException {
+        if (reference == null) {
+            reference = "";
+        }
+        StringBuilder hql = new StringBuilder("select docRef from ").append(DBLayer.DBITEM_DOCUMENTATION);
+        hql.append(" where lower(docRef) like :likeDocRef");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("likeDocRef", reference.toLowerCase() + "-%");
+        List<String> result = getSession().getResultList(query);
+        if (result == null || result.isEmpty()) {
+            return reference;
+        }
+        Predicate<String> predicate = Pattern.compile(".+-[0-9]*$", Pattern.CASE_INSENSITIVE).asPredicate();
+        Function<String, Integer> mapper = n -> Integer.parseInt(n.replaceFirst(".+-([0-9]*)$", "0$1"));
+        SortedSet<Integer> numbers = result.stream().map(String::toLowerCase).distinct().filter(predicate).map(mapper).sorted().collect(Collectors
+                .toCollection(TreeSet::new));
+        if (numbers.isEmpty()) {
+            return reference;
+        }
+        Integer num = 0;
+        for (Integer number : numbers) {
+            if (num < number) {
+                break;
+            }
+            num = number + 1;
+        }
+        return reference + "-" + num;
     }
 
     public DBItemDocumentation getDocumentation(String path) throws DBConnectionRefusedException, DBInvalidDataException {
