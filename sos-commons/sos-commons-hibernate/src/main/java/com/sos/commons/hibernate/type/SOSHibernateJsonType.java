@@ -24,12 +24,16 @@ public class SOSHibernateJsonType implements UserType {
     @Override
     public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException,
             SQLException {
-        if (value == null) {
-            st.setNull(index, Types.OTHER);
-            return;
-        }
         if (dbms == null) {
             dbms = SOSHibernateFactory.getDbms(session.getFactory().getJdbcServices().getDialect());
+        }
+        if (value == null) {
+            if (dbms.equals(SOSHibernateFactory.Dbms.ORACLE)) {
+                st.setNull(index, Types.CLOB);
+            } else {
+                st.setNull(index, Types.OTHER);
+            }
+            return;
         }
         if (dbms.equals(SOSHibernateFactory.Dbms.PGSQL)) {
             st.setObject(index, value, Types.OTHER);
