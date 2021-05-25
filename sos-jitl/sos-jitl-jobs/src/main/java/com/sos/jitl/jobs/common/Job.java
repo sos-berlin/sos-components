@@ -23,6 +23,13 @@ public class Job {
 
     public static final String NAMED_NAME_RETURN_CODE = "returnCode";
 
+    public static final String VAR_NAME_CONTROLLER_ID = "js7ControllerId";
+    public static final String VAR_NAME_ORDER_ID = "js7OrderId";
+    public static final String VAR_NAME_WORKFLOW_PATH = "js7WorkflowPath";
+    public static final String VAR_NAME_WORKFLOW_POSITION = "js7WorkflowPosition";
+    public static final String VAR_NAME_JOB_INSTRUCTION_LABEL = "js7Label";
+    public static final String VAR_NAME_JOB_NAME = "js7JobName";
+
     private static final String ENV_NAME_AGENT_HOME = "JS7_AGENT_HOME";
     private static final String ENV_NAME_AGENT_CONFIG_DIR = "JS7_AGENT_CONFIG_DIR";
     private static final String ENV_NAME_AGENT_WORK_DIR = "JS7_AGENT_WORK_DIR";

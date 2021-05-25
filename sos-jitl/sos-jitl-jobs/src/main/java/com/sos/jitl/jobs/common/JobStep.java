@@ -46,8 +46,10 @@ public class JobStep<A extends JobArguments> {
     private List<JobArgument<A>> knownArguments;
     private Map<String, JobArgument<A>> allCurrentArguments;
 
+    private String controllerId;
     private String orderId;
     private String agentId;
+    private String jobInstructionLabel;
     private String jobName;
     private String workflowName;
     private String workflowVersionId;
@@ -290,6 +292,16 @@ public class JobStep<A extends JobArguments> {
         }
     }
 
+    public String getControllerId() {
+        if (controllerId == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            controllerId = internalStep.controllerId().toString();
+        }
+        return controllerId;
+    }
+
     public String getOrderId() throws SOSJobProblemException {
         if (orderId == null) {
             if (internalStep == null) {
@@ -315,12 +327,22 @@ public class JobStep<A extends JobArguments> {
             if (internalStep == null) {
                 return null;
             }
-            // TODO check
-            // internalStep.jobName()
-            // jobContext.jobKey();
             jobName = Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
         }
         return jobName;
+    }
+
+    public String getJobInstructionLabel() throws SOSJobProblemException {
+        if (jobInstructionLabel == null) {
+            if (internalStep == null) {
+                return null;
+            }
+            try {
+                jobInstructionLabel = internalStep.instructionLabel().get().toString();
+            } catch (Throwable e) {
+            }
+        }
+        return jobInstructionLabel;
     }
 
     public String getWorkflowName() {
@@ -411,20 +433,24 @@ public class JobStep<A extends JobArguments> {
 
     public String replaceVars(Path path) throws Exception {
         Map<String, Object> vars = Job.asNameValueMap(getAllCurrentArguments());
-        vars.put("js7ControllerId", "not implemented yet");// TODO
-        vars.put("js7OrderId", getOrderId());
-        vars.put("js7WorkflowPath", getWorkflowName());
-        vars.put("js7WorkflowPosition", getWorkflowPosition());
-        vars.put("js7Label", "not implemented yet");// TODO
-        vars.put("js7JobName", getJobName());
+        put(vars, Job.VAR_NAME_CONTROLLER_ID, getControllerId());
+        put(vars, Job.VAR_NAME_ORDER_ID, getOrderId());
+        put(vars, Job.VAR_NAME_WORKFLOW_PATH, getWorkflowName());
+        put(vars, Job.VAR_NAME_WORKFLOW_POSITION, getWorkflowPosition());
+        put(vars, Job.VAR_NAME_JOB_INSTRUCTION_LABEL, getJobInstructionLabel());
+        put(vars, Job.VAR_NAME_JOB_NAME, getJobName());
 
-        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true);
-        ps.setOpenTag("${");
-        ps.setCloseTag("}");
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
         vars.entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue().toString());
         });
         return ps.replace(path);
+    }
+
+    private void put(Map<String, Object> map, String name, Object value) {
+        if (value != null) {
+            map.put(name, value);
+        }
     }
 
     private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> returnValues) {
