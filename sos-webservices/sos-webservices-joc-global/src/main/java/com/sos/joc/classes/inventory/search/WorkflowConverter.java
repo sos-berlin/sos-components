@@ -58,11 +58,12 @@ public class WorkflowConverter {
     public class Jobs {
 
         private List<String> names;
-        private List<String> titels;
+        private List<String> titles;
         private List<String> agentIds;
         private List<String> jobClasses;
         private List<String> jobResources;
         private List<String> criticalities;
+        private List<String> documentationNames;
         private List<String> scripts;
         private List<String> argNames;
         private List<Object> argValues;
@@ -73,11 +74,12 @@ public class WorkflowConverter {
 
         public Jobs() {
             names = new ArrayList<String>();
-            titels = new ArrayList<String>();
+            titles = new ArrayList<String>();
             agentIds = new ArrayList<String>();
             jobClasses = new ArrayList<String>();
             jobResources = new ArrayList<String>();
             criticalities = new ArrayList<String>();
+            documentationNames = new ArrayList<String>();
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
             argValues = new ArrayList<Object>();
@@ -98,11 +100,12 @@ public class WorkflowConverter {
         private void jsonMainInfo() {
             JsonObjectBuilder builder = Json.createObjectBuilder();
             jsonAddStringValues(builder, "names", names);
-            jsonAddStringValues(builder, "titels", titels);
+            jsonAddStringValues(builder, "titles", titles);
             jsonAddStringValues(builder, "agentIds", agentIds);
             jsonAddStringValues(builder, "jobClasses", jobClasses);
             jsonAddStringValues(builder, "jobResources", jobResources);
             jsonAddStringValues(builder, "criticalities", criticalities);
+            jsonAddStringValues(builder, "documentationNames", documentationNames);
             mainInfo = builder.build();
         }
 
@@ -135,8 +138,8 @@ public class WorkflowConverter {
             return names;
         }
 
-        public List<String> getTitels() {
-            return titels;
+        public List<String> getTitles() {
+            return titles;
         }
 
         public List<String> getAgentIds() {
@@ -153,6 +156,10 @@ public class WorkflowConverter {
 
         public List<String> getCriticalities() {
             return criticalities;
+        }
+        
+        public List<String> getDocumentationNames() {
+            return documentationNames;
         }
 
         public List<String> getScripts() {
@@ -175,7 +182,7 @@ public class WorkflowConverter {
             jobs.getAdditionalProperties().forEach((jobName, job) -> {
                 names.add(jobName);
                 if (!SOSString.isEmpty(job.getTitle())) {
-                    titels.add(job.getTitle());
+                    titles.add(job.getTitle());
                 }
                 if (!SOSString.isEmpty(job.getAgentName())) {
                     agentIds.add(job.getAgentName());
@@ -185,6 +192,9 @@ public class WorkflowConverter {
                 }
                 if (job.getJobResourceNames() != null && !job.getJobResourceNames().isEmpty()) {
                     jobResources.addAll(job.getJobResourceNames());
+                }
+                if (!SOSString.isEmpty(job.getDocumentationName())) {
+                    documentationNames.add(job.getDocumentationName());
                 }
                 if (job.getCriticality() != null) {
                     if (SOSString.isEmpty(job.getCriticality().value())) {
@@ -217,11 +227,12 @@ public class WorkflowConverter {
 
         private void removeDuplicates() {
             names = WorkflowConverter.removeDuplicates(names);
-            titels = WorkflowConverter.removeDuplicates(titels);
+            titles = WorkflowConverter.removeDuplicates(titles);
             agentIds = WorkflowConverter.removeDuplicates(agentIds);
             jobClasses = WorkflowConverter.removeDuplicates(jobClasses);
             jobResources = WorkflowConverter.removeDuplicates(jobResources);
             criticalities = WorkflowConverter.removeDuplicates(criticalities);
+            documentationNames = WorkflowConverter.removeDuplicates(documentationNames);
             scripts = WorkflowConverter.removeDuplicates(scripts);
             argNames = WorkflowConverter.removeDuplicates(argNames);
             argValues = WorkflowConverter.removeDuplicates(argValues);
