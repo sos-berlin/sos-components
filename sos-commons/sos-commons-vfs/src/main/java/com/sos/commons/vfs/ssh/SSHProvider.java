@@ -24,7 +24,7 @@ import com.sos.commons.vfs.exception.SOSNoSuchFileException;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.common.SSHProviderUtil;
-import com.sos.commons.vfs.ssh.common.SSHShellInfo;
+import com.sos.commons.vfs.ssh.common.SSHServerInfo;
 import com.sos.commons.vfs.ssh.exception.SOSSFTPClientNotInitializedException;
 import com.sos.commons.vfs.ssh.exception.SOSSSHCommandExitViolentlyException;
 
@@ -58,7 +58,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     private SSHClient sshClient;
     private SFTPClient sftpClient;
 
-    private SSHShellInfo shellInfo;
+    private SSHServerInfo serverInfo;
     /** e.g. "OpenSSH_$version" -> OpenSSH_for_Windows_8.1. Can be null. */
     private String serverVersion;
 
@@ -304,11 +304,11 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return result;
     }
 
-    public SSHShellInfo getShellInfo() {
-        if (shellInfo == null) {
-            shellInfo = new SSHShellInfo(serverVersion, executeCommand("uname"));
+    public SSHServerInfo getServerInfo() {
+        if (serverInfo == null) {
+            serverInfo = new SSHServerInfo(serverVersion, executeCommand("uname"));
         }
-        return shellInfo;
+        return serverInfo;
     }
 
     public FileAttributes getFileAttributes(String path) throws Exception {
@@ -321,7 +321,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return sftpClient.stat(sftpClient.canonicalize(path));
     }
 
-    public SSHClient getClient() {
+    public SSHClient getSSHClient() {
         return sshClient;
     }
 

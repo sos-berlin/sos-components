@@ -54,11 +54,6 @@ public class Job {
         return Job.getAgentConfigDir().resolve("hibernate.cfg.xml").normalize();
     }
 
-    public static List<Field> getJobArgumentFields(JobArguments o) {
-        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
-                .toList());
-    }
-
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
         return getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefaultValue() : arg.getValue());
     }
@@ -113,6 +108,11 @@ public class Job {
         }
         return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                 .getValue()));
+    }
+
+    protected static List<Field> getJobArgumentFields(JobArguments o) {
+        return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
+                .toList());
     }
 
     private static Path getPath(String val) {

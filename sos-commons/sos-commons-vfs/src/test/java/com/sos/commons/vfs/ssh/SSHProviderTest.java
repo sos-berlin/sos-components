@@ -41,7 +41,7 @@ public class SSHProviderTest {
         SSHProvider p = new SSHProvider(args);
         try {
             p.connect();
-            LOGGER.info(p.getShellInfo().toString());
+            LOGGER.info(p.getServerInfo().toString());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -66,7 +66,7 @@ public class SSHProviderTest {
         try {
             p.connect();
             LOGGER.info(p.executeCommand("ping -n 2 google.com").toString());
-            LOGGER.info(p.getShellInfo().toString());
+            LOGGER.info(p.getServerInfo().toString());
 
         } catch (Throwable e) {
             throw e;
@@ -93,7 +93,7 @@ public class SSHProviderTest {
         SSHProvider p = new SSHProvider(args);
         try {
             p.connect();
-            LOGGER.info(p.getShellInfo().toString());
+            LOGGER.info(p.getServerInfo().toString());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -118,7 +118,7 @@ public class SSHProviderTest {
         SSHProvider p = new SSHProvider(args);
         try {
             p.connect();
-            LOGGER.info(p.getShellInfo().toString());
+            LOGGER.info(p.getServerInfo().toString());
         } catch (Throwable e) {
             throw e;
         } finally {
@@ -143,7 +143,7 @@ public class SSHProviderTest {
         SSHProvider p = new SSHProvider(args);
         try {
             p.connect();
-            LOGGER.info(p.getShellInfo().toString());
+            LOGGER.info(p.getServerInfo().toString());
         } catch (Throwable e) {
             throw e;
         } finally {

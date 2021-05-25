@@ -20,7 +20,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             step.getLogger().info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
             step.getLogger().info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
-                    .getShellInfo().toString());
+                    .getServerInfo().toString());
 
             if (!step.getArguments().getCommand().isEmpty()) {
                 executeCommand(provider, step);

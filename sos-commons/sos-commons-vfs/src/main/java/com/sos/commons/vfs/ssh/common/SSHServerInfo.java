@@ -6,7 +6,7 @@ import java.util.List;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
 
-public class SSHShellInfo {
+public class SSHServerInfo {
 
     public enum OS {
         UNKNOWN, UNIX, WINDOWS
@@ -22,7 +22,7 @@ public class SSHShellInfo {
     private String os = OS.UNKNOWN.name();
     private Shell shell = Shell.UNKNOWN;
 
-    public SSHShellInfo(String serverVersion, SOSCommandResult commandResult) {
+    public SSHServerInfo(String serverVersion, SOSCommandResult commandResult) {
         this.serverVersion = serverVersion;
         this.commandResult = commandResult;
         analyze();
