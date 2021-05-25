@@ -1,5 +1,6 @@
 package com.sos.js7.history.helper;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
@@ -8,7 +9,6 @@ import javax.json.JsonObjectBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.util.SOSParameterSubstitutor;
-import com.sos.js7.event.controller.EventMeta;
 
 public class HistoryUtil {
 
@@ -42,7 +42,15 @@ public class HistoryUtil {
     }
 
     public static Date getEventIdAsDate(Long eventId) {
-        return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
+        return eventId == null ? null : Date.from(eventId2Instant(eventId));
+    }
+
+    public static Instant eventId2Instant(Long eventId) {
+        return Instant.ofEpochMilli(eventId / 1000);
+    }
+
+    public static Instant timestamp2Instant(Long timestamp) {
+        return Instant.ofEpochMilli(timestamp);
     }
 
     public static Long getDateAsEventId(Date date) {

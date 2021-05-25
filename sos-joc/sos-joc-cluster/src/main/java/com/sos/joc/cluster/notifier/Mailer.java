@@ -1,4 +1,4 @@
-package com.sos.js7.event.notifier;
+package com.sos.joc.cluster.notifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
-import com.sos.js7.event.controller.configuration.handler.MailerConfiguration;
 
 public class Mailer extends DefaultNotifier {
 

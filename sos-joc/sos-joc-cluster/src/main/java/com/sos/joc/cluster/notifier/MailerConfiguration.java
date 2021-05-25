@@ -1,4 +1,4 @@
-package com.sos.js7.event.controller.configuration.handler;
+package com.sos.joc.cluster.notifier;
 
 import java.util.Properties;
 

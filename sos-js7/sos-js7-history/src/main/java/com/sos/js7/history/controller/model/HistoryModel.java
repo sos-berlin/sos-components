@@ -47,7 +47,6 @@ import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderUpdated;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.history.controller.HistoryService;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.controller.exception.FatEventOrderNotFoundException;
@@ -302,7 +301,7 @@ public class HistoryModel {
                         cos = orderStepProcessed(dbLayer, (FatEventOrderStepProcessed) entry, endedOrderSteps);
                         counter.getOrderStep().addProcessed();
                         clearCache(CacheType.orderStep, cos.getOrderId());
-                        
+
                         postEventOrderTaskTerminated(dbLayer, (FatEventOrderStepProcessed) entry);
                         break;
                     case OrderFailed:
@@ -389,16 +388,16 @@ public class HistoryModel {
     // OrderStarted
     private void postEventOrderStarted(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(), co
-                    .getWorkflowVersionId()));
+            EventBus.getInstance().post(new HistoryOrderStarted(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(),
+                    co.getWorkflowVersionId()));
         }
     }
 
     // OrderCancelled, OrderFinished, OrderBroken
     private void postEventOrderTerminated(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(),
-                    co.getWorkflowVersionId()));
+            EventBus.getInstance().post(new HistoryOrderTerminated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co
+                    .getWorkflowPath(), co.getWorkflowVersionId()));
 
             clearCache(CacheType.order, co.getOrderId());
         }
@@ -406,8 +405,8 @@ public class HistoryModel {
 
     private void postEventOrderUpdated(CachedOrder co) {
         if (co != null) {
-            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(), co
-                    .getWorkflowVersionId()));
+            EventBus.getInstance().post(new HistoryOrderUpdated(controllerConfiguration.getCurrent().getId(), co.getOrderId(), co.getWorkflowPath(),
+                    co.getWorkflowVersionId()));
         }
     }
 
@@ -438,9 +437,9 @@ public class HistoryModel {
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
-        String startEventIdAsTime = startEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(startEventId));
-        String endEventIdAsTime = storedEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(storedEventId));
-        String firstEventIdAsTime = firstEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(EventMeta.eventId2Instant(firstEventId));
+        String startEventIdAsTime = startEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(startEventId));
+        String endEventIdAsTime = storedEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(storedEventId));
+        String firstEventIdAsTime = firstEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(firstEventId));
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
 
@@ -878,7 +877,7 @@ public class HistoryModel {
     }
 
     private LogEntry createOrderLogEntry(Long eventId, FatOutcome outcome, CachedOrderStep cos, EventType eventType) {
-        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, Date.from(EventMeta.eventId2Instant(eventId)), null);
+        LogEntry le = new LogEntry(LogEntry.LogLevel.DETAIL, eventType, HistoryUtil.getEventIdAsDate(eventId), null);
         boolean stepHasError = (cos != null && cos.getError() != null);
         if (outcome != null) {
             le.setReturnCode(outcome.getReturnCode());
@@ -1351,8 +1350,8 @@ public class HistoryModel {
     private CachedOrder getCachedOrderByCurrentEventId(DBLayerHistory dbLayer, String orderId, Long eventId) throws Exception {
         CachedOrder co = getCachedOrder(orderId);
         if (co == null) {
-            DBItemHistoryOrder item = dbLayer.getOrderByCurrentEventId(controllerConfiguration.getCurrent().getId(), orderId, Date.from(EventMeta
-                    .eventId2Instant(eventId)));
+            DBItemHistoryOrder item = dbLayer.getOrderByCurrentEventId(controllerConfiguration.getCurrent().getId(), orderId, HistoryUtil
+                    .getEventIdAsDate(eventId));
             if (item == null) {
                 throw new FatEventOrderNotFoundException(String.format("[%s][%s][%s]order not found", identifier, orderId, eventId));
             } else {
@@ -1817,8 +1816,8 @@ public class HistoryModel {
     }
 
     private String hashOrderStepConstraint(Long eventId, String orderId, String workflowPosition) {
-        return SOSString.hash256(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).append(workflowPosition)
-                .toString());
+        return SOSString.hash256(new StringBuilder(controllerConfiguration.getCurrent().getId()).append(eventId).append(orderId).append(
+                workflowPosition).toString());
     }
 
     public void setStoredEventId(Long eventId) {

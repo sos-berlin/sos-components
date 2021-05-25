@@ -1,4 +1,4 @@
-package com.sos.js7.event.notifier;
+package com.sos.joc.cluster.notifier;
 
 public interface INotifier {
 

@@ -1,4 +1,4 @@
-package com.sos.js7.event.notifier;
+package com.sos.joc.cluster.notifier;
 
 import java.util.Date;
 

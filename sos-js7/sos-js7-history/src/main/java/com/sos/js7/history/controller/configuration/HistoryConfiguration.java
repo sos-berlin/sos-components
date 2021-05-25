@@ -27,6 +27,9 @@ public class HistoryConfiguration {
     // minutes, JS7 Proxy ControllerApi
     private int releaseEventsInterval = 15;
 
+    // seconds
+    private int waitIntervalOnError = 5;
+
     public void load(final Properties conf) throws Exception {
         if (conf.getProperty("history_log_dir") != null) {
             logDir = HistoryUtil.resolveVars(conf.getProperty("history_log_dir").trim());
@@ -61,6 +64,10 @@ public class HistoryConfiguration {
         LOGGER.info(String.format(
                 "[history]max_transactions=%s, buffer_timeout_max_size=%s, buffer_timeout_max_time=%ss, release_events_interval=%sm", maxTransactions,
                 bufferTimeoutMaxSize, bufferTimeoutMaxTime, releaseEventsInterval));
+
+        if (conf.getProperty("history_wait_interval_on_error") != null) {
+            waitIntervalOnError = Integer.parseInt(conf.getProperty("history_wait_interval_on_error").trim());
+        }
     }
 
     public String getLogDir() {
@@ -81,6 +88,10 @@ public class HistoryConfiguration {
 
     public int getBufferTimeoutMaxTime() {
         return bufferTimeoutMaxTime;
+    }
+
+    public int getWaitIntervalOnError() {
+        return waitIntervalOnError;
     }
 
 }

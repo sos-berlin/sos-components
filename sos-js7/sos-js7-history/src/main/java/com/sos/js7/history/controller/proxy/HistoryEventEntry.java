@@ -13,12 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.util.SOSString;
-import com.sos.js7.event.controller.EventMeta;
 import com.sos.js7.history.controller.exception.FatEventProblemException;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.base.time.Timestamp;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
@@ -28,7 +26,6 @@ import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.lock.Lock;
 import js7.data.lock.LockPath;
-import js7.data.order.Order.Fresh$;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockQueued;
@@ -89,10 +86,6 @@ public class HistoryEventEntry {
 
     public Long getEventId() {
         return eventId;
-    }
-
-    public Date getEventIdAsDate() {
-        return eventId == null ? null : Date.from(EventMeta.eventId2Instant(eventId));
     }
 
     public Date getEventDate() {

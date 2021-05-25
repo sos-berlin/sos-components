@@ -13,7 +13,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>sos-js7-event</module>
 		<module>sos-js7-history</module>
 		<module>sos-js7-order</module>
 	</modules>

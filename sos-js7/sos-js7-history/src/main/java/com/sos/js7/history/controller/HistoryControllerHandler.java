@@ -19,10 +19,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
-import com.sos.js7.event.controller.configuration.Configuration;
-import com.sos.js7.event.notifier.DefaultNotifier;
-import com.sos.js7.event.notifier.INotifier;
-import com.sos.js7.event.notifier.Mailer;
+import com.sos.joc.cluster.notifier.DefaultNotifier;
+import com.sos.joc.cluster.notifier.INotifier;
+import com.sos.joc.cluster.notifier.Mailer;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
 import com.sos.js7.history.controller.model.HistoryModel;
 import com.sos.js7.history.controller.proxy.EventFluxStopper;
@@ -94,8 +93,7 @@ public class HistoryControllerHandler {
     private static final String TORN_PROBLEM_CODE = "SnapshotForUnknownEventId";
 
     private final SOSHibernateFactory factory;
-    private final Configuration config;
-    private final HistoryConfiguration historyConfig;
+    private final HistoryConfiguration config;
     private final ControllerConfiguration controllerConfig;
     private final INotifier notifier;
     private final String controllerId;
@@ -115,10 +113,10 @@ public class HistoryControllerHandler {
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
 
-    public HistoryControllerHandler(SOSHibernateFactory factory, Configuration config, ControllerConfiguration controllerConfig, Mailer notifier) {
+    public HistoryControllerHandler(SOSHibernateFactory factory, HistoryConfiguration config, ControllerConfiguration controllerConfig,
+            Mailer notifier) {
         this.factory = factory;
         this.config = config;
-        this.historyConfig = (HistoryConfiguration) config.getApp();
         this.controllerConfig = controllerConfig;
         this.notifier = notifier == null ? new DefaultNotifier() : notifier;
         this.controllerId = controllerConfig.getCurrent().getId();
@@ -130,7 +128,7 @@ public class HistoryControllerHandler {
 
         String method = "start";
         try {
-            model = new HistoryModel(factory, historyConfig, controllerConfig);
+            model = new HistoryModel(factory, config, controllerConfig);
             setIdentifier(controllerConfig.getCurrent().getType());
             lastActivityStart.set(new Date().getTime());
             executeGetEventId();
@@ -141,7 +139,7 @@ public class HistoryControllerHandler {
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s", identifier, method, e.toString()), e);
             notifier.notifyOnError(method, e);
-            wait(config.getHandler().getWaitIntervalOnError());
+            wait(config.getWaitIntervalOnError());
         }
     }
 
@@ -177,7 +175,7 @@ public class HistoryControllerHandler {
                     // notifier.notifyOnError(method, ex); //TODO avoid flooding
                 }
                 errorCounter++;
-                int interval = config.getHandler().getWaitIntervalOnError();
+                int interval = config.getWaitIntervalOnError();
                 if (errorCounter > 10) {
                     interval = interval * 2;
                 }
@@ -205,7 +203,7 @@ public class HistoryControllerHandler {
                     return id;
                 } catch (Throwable e) {
                     LOGGER.error(String.format("%s[end]%s", method, e.toString()), e);
-                    wait(config.getHandler().getWaitIntervalOnError());
+                    wait(config.getWaitIntervalOnError());
                 }
             }
         }
@@ -224,8 +222,8 @@ public class HistoryControllerHandler {
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
 
-            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(historyConfig.getBufferTimeoutMaxSize(), Duration.ofSeconds(
-                    historyConfig.getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
+            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(config.getBufferTimeoutMaxSize(), Duration.ofSeconds(config
+                    .getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
                         boolean run = true;
                         while (run) {
                             if (closed.get()) {
@@ -239,7 +237,7 @@ public class HistoryControllerHandler {
                                     lastActivityEnd.set(new Date().getTime());
                                 } catch (Throwable e) {
                                     LOGGER.error(e.toString(), e);
-                                    wait(config.getHandler().getWaitIntervalOnError());
+                                    wait(config.getWaitIntervalOnError());
                                 }
                             }
                         }
@@ -637,7 +635,7 @@ public class HistoryControllerHandler {
             } catch (Throwable e) {
                 LOGGER.error(String.format("[%s][%s][%s]%s", identifier, method, count, e.toString()), e);
                 notifier.notifyOnError(String.format("[%s][%s]", method, count), e);
-                wait(config.getHandler().getWaitIntervalOnError());
+                wait(config.getWaitIntervalOnError());
             }
         }
     }

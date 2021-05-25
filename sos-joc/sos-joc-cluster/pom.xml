@@ -30,12 +30,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-joc-db</artifactId>
+			<artifactId>sos-commons-mail</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-js7-event</artifactId>
+			<artifactId>sos-joc-db</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
