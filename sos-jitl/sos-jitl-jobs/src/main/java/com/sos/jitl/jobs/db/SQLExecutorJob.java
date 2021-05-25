@@ -34,7 +34,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             session = factory.openStatelessSession();
 
             Map<String, Object> map = process(step, session);
-            step.getLogger().info("map=" + map);
+            step.getLogger().info("result: " + map);
             return step.success(map);
         } catch (Throwable e) {
             throw e;
