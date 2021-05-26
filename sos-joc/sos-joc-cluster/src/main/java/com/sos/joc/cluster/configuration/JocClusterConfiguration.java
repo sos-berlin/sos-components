@@ -22,6 +22,7 @@ public class JocClusterConfiguration {
     private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";
     private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
     private static final String CLASS_NAME_CLEANUP = "com.sos.joc.cleanup.CleanupService";
+    private static final String CLASS_NAME_MONITORING = "com.sos.joc.monitoring.MonitoringService";
     private static final String CLASS_NAME_NOTIFICATION = "com.sos.joc.notification.NotificationService";
     private static final String CLASS_NAME_CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
 
@@ -58,6 +59,7 @@ public class JocClusterConfiguration {
         addServiceClass(CLASS_NAME_HISTORY);
         addServiceClass(CLASS_NAME_DAILYPLAN);
         addServiceClass(CLASS_NAME_CLEANUP);
+        addServiceClass(CLASS_NAME_MONITORING);
         addServiceClass(CLASS_NAME_NOTIFICATION);
     }
 
