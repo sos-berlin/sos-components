@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum AgentStateText {
 
     COUPLED("COUPLED"),
-    DECOUPLED("DECOUPLED"),
+    RESETTING("RESETTING"),
+    RESET("RESET"),
     COUPLINGFAILED("COUPLINGFAILED"),
     UNKNOWN("UNKNOWN");
     private final String value;
