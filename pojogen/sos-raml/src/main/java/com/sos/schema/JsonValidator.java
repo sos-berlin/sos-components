@@ -73,6 +73,7 @@ public class JsonValidator {
             put("UrlParameter", "controller/urlParam-schema.json");
             put("TestConnect", "controller/testParam-schema.json");
             put("RegisterParameters", "controller/registerParam-schema.json");
+            put("AgentCommand", "agent/agentCommand-schema.json");
             put("StoreAgents", "agent/storeParam-schema.json");
             put("ReadAgents", "agent/readAgents-schema.json");
             put("ReadAgentsV", "agent/readAgents_v-schema.json");
