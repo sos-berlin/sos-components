@@ -47,7 +47,7 @@ public class WorkflowConverterTest {
         c.process(w);
 
         LOGGER.info("JOB NAMES:" + c.getJobs().getNames().size());
-        LOGGER.info("JOB TITELS:" + c.getJobs().getTitels().size());
+        LOGGER.info("JOB TITLES:" + c.getJobs().getTitles().size());
         LOGGER.info("JOB AGENT_IDS:" + c.getJobs().getAgentIds().size());
         LOGGER.info("JOB JOB_CLASSES:" + c.getJobs().getJobClasses().size());
         LOGGER.info("JOB CRITICALITIES:" + c.getJobs().getCriticalities().size());
