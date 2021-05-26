@@ -126,7 +126,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
                                 } else if (couplingState instanceof AgentRefState.Coupled$) {
                                     stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof AgentRefState.Decoupled$) {
+                                } else if (couplingState instanceof AgentRefState.Resetting$ || couplingState instanceof AgentRefState.Reset$) {
                                     stateText = AgentStateText.DECOUPLED;
                                 }
                             } else {
