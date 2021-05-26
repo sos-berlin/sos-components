@@ -241,7 +241,7 @@ public class JocClusterService {
                     if (sections != null && sections.size() > 0) {
                         sections = sections.stream().distinct().collect(Collectors.toList());
 
-                        cluster.setNotification(new AtomicReference<List<String>>(sections));
+                        cluster.setConfigurationGlobalsChanged(new AtomicReference<List<String>>(sections));
 
                         AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
                         LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
@@ -322,6 +322,9 @@ public class JocClusterService {
         case cleanup:
             answer = cluster.getHandler().restartService(ClusterServices.cleanup.name(), mode, Globals.configurationGlobals.getConfigurationSection(
                     DefaultSections.cleanup));
+            break;
+        case notification:
+            answer = cluster.getHandler().restartService(ClusterServices.notification.name(), mode, null);
             break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));

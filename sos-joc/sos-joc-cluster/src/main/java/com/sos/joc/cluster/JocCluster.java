@@ -381,6 +381,7 @@ public class JocCluster {
         if (item == null) {
             boolean fs = isFirstRun(new Date());
             if (!config.getClusterMode() && !fs) {
+                inactiveMemberTryStopServices(configurations);
                 return null;
             }
             item = new DBItemJocCluster();
@@ -425,7 +426,7 @@ public class JocCluster {
                         item.setSwitchHeartBeat(null);
 
                         dbLayer.beginTransaction();
-                        dbLayer.getSession().update(activeMemberHandleNotification(item));
+                        dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
                         dbLayer.commit();
 
                         mode = config.getClusterMode() ? StartupMode.automatic_switchover : StartupMode.automatic;
@@ -434,18 +435,27 @@ public class JocCluster {
                     }
                 } else {
                     if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("[" + mode + "]not active");
+                        LOGGER.debug("[" + mode + "]inactive");
                     }
-                    nonActiveMemberHandleNotification(item);
+                    inactiveMemberTryStopServices(configurations);
+                    inactiveMemberHandleConfigurationGlobalsChanged(item);
                 }
             }
         }
         return item;
     }
 
+    private void inactiveMemberTryStopServices(ConfigurationGlobals configurations) {
+        if (handler.isActive()) {
+            StartupMode mode = StartupMode.automatic;
+            LOGGER.info("[" + mode + "][start][stop services because current is inactive]" + currentMemberId);
+            handler.perform(mode, PerformType.STOP, configurations);
+        }
+    }
+
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
         if (!config.getClusterMode()) {
-            return JocCluster.getErrorAnswer(JocClusterAnswerState.SWITCH);
+            return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
         }
         LOGGER.info(String.format("[%s][switch][start][new]%s", mode, newMemberId));
 
@@ -602,7 +612,7 @@ public class JocCluster {
         skipPerform = false;
         item.setMemberId(currentMemberId);
 
-        if (item.getSwitchMemberId() != null && config.getClusterMode()) {
+        if (item.getSwitchMemberId() != null) {// && config.getClusterMode()
             mode = StartupMode.manual_switchover;
             item.setStartupMode(mode.name());
 
@@ -651,14 +661,20 @@ public class JocCluster {
                 }
             }
         } else {
+            if (!config.getClusterMode()) {
+                if (!handler.isActive() && !isFirstRun(new Date())) { // changed in the database directly
+                    return null;
+                }
+            }
+
             dbLayer.beginTransaction();
-            dbLayer.getSession().update(activeMemberHandleNotification(item));
+            dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
             dbLayer.commit();
         }
         return item;
     }
 
-    private void nonActiveMemberHandleNotification(DBItemJocCluster item) {
+    private void inactiveMemberHandleConfigurationGlobalsChanged(DBItemJocCluster item) {
         if (!SOSString.isEmpty(item.getNotification()) && !currentMemberId.equals(item.getNotificationMemberId())) {
             JocClusterNotification n = new JocClusterNotification(config.getPollingInterval());
             n.parse(item.getNotification());
@@ -668,7 +684,7 @@ public class JocCluster {
         }
     }
 
-    private DBItemJocCluster activeMemberHandleNotification(DBItemJocCluster item) {
+    private DBItemJocCluster activeMemberHandleConfigurationGlobalsChanged(DBItemJocCluster item) {
         // current is an active handler, write/read notification if exists
         JocClusterNotification n = new JocClusterNotification(config.getPollingInterval());
         if (item.getNotification() != null) {
@@ -892,7 +908,7 @@ public class JocCluster {
         return controllers;
     }
 
-    public void setNotification(AtomicReference<List<String>> val) {
+    public void setConfigurationGlobalsChanged(AtomicReference<List<String>> val) {
         notification = val;
     }
 
