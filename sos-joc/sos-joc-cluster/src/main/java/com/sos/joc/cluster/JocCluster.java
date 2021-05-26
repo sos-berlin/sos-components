@@ -379,7 +379,7 @@ public class JocCluster {
     private DBItemJocCluster handleCurrentMemberOnProcess(StartupMode mode, DBLayerJocCluster dbLayer, DBItemJocCluster item,
             ConfigurationGlobals configurations) throws Exception {
         if (item == null) {
-            boolean fs = isFirstRun(new Date());
+            boolean fs = isFirstRun();
             if (!config.getClusterMode() && !fs) {
                 inactiveMemberTryStopServices(configurations);
                 return null;
@@ -402,7 +402,7 @@ public class JocCluster {
             } else {
                 if (isHeartBeatExceeded(item.getHeartBeat())) {
                     if (!config.getClusterMode()) {
-                        if (!isFirstRun(new Date())) {// extra check when active JOC was killed/not removed from database
+                        if (!isFirstRun()) {// extra check when active JOC was killed/not removed from database
                             return null;
                         }
                     }
@@ -662,7 +662,7 @@ public class JocCluster {
             }
         } else {
             if (!config.getClusterMode()) {
-                if (!handler.isActive() && !isFirstRun(new Date())) { // changed in the database directly
+                if (!handler.isActive() && !isFirstRun()) { // changed in the database directly
                     return null;
                 }
             }
@@ -731,8 +731,9 @@ public class JocCluster {
         return false;
     }
 
-    private boolean isFirstRun(Date heartBeat) {
-        if (((heartBeat.getTime() / 1_000) - (jocStartTime.getTime() / 1_000)) < config.getPollingInterval()) {
+    private boolean isFirstRun() {
+        Date now = new Date();
+        if (((now.getTime() / 1_000) - (jocStartTime.getTime() / 1_000)) < config.getPollingInterval()) {
             return true;
         }
         return false;
