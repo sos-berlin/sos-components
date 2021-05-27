@@ -1,12 +1,18 @@
 package com.sos.joc.cluster.configuration;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.model.cluster.common.ClusterServices;
 
 public class JocClusterConfiguration {
@@ -140,10 +146,42 @@ public class JocClusterConfiguration {
     }
 
     private boolean clusterMode() {
+        final ClassLoader webAppCL = this.getClass().getClassLoader();
+        URL lj = null;
         try {
-            Object o = ((Class<?>) Class.forName(CLASS_NAME_CLUSTER_MODE)).newInstance();
-            return (boolean) o.getClass().getDeclaredMethods()[0].invoke(o);
+            lj = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
+        } catch (Throwable e1) {
+            return false;
+        }
+
+        URLClassLoader ucl = null;
+        try {
+            List<URL> jars = new ArrayList<>();
+            jars.add(lj.toURI().toURL());
+
+            URL slf4j = webAppCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
+            List<Path> logJars = SOSPath.getFileList(Paths.get(slf4j.toURI()).getParent(), "^slf4j|^log4j", java.util.regex.Pattern.CASE_INSENSITIVE);
+            for (Path jar : logJars) {
+                jars.add(jar.toUri().toURL());
+            }
+            ucl = new URLClassLoader(jars.stream().toArray(URL[]::new));
+
+            Object o = ucl.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
+            boolean result = (boolean) o.getClass().getDeclaredMethods()[0].invoke(o);
+            try {
+                TimeUnit.SECONDS.sleep(1);// wait for logging ..
+            } catch (Throwable e) {
+            }
+            return result;
         } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        } finally {
+            if (ucl != null) {
+                try {
+                    ucl.close();
+                } catch (Throwable e) {
+                }
+            }
         }
         return false;
     }
