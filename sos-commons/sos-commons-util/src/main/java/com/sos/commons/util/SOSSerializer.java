@@ -11,7 +11,13 @@ import java.util.zip.GZIPOutputStream;
 
 public class SOSSerializer<T extends Serializable> {
 
+    /** Serialize compressed */
     public String serialize(final T t) throws Exception {
+        return Base64.getEncoder().encodeToString(serialize2bytes(t));
+    }
+
+    /** Serialize compressed */
+    public byte[] serialize2bytes(final T t) throws Exception {
         if (t == null) {
             return null;
         }
@@ -20,31 +26,39 @@ public class SOSSerializer<T extends Serializable> {
             oos.writeObject(t);
             oos.flush();
             gos.finish();
-            return Base64.getEncoder().encodeToString(baos.toByteArray());
+            return baos.toByteArray();
         }
     }
 
-    @SuppressWarnings("unchecked")
+    /** Deserialize compressed object */
     public T deserialize(String t) throws Exception {
+        return deserialize(Base64.getDecoder().decode(t));
+    }
+
+    /** Deserialize compressed object */
+    @SuppressWarnings("unchecked")
+    public T deserialize(byte[] t) throws Exception {
         if (t == null) {
             return null;
         }
-        try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(t))))) {
+        try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(t)))) {
             return (T) ois.readObject();
         }
     }
 
+    /** Serialize string compressed */
     public static String serializeString(final String content) throws Exception {
         SOSSerializer<String> ser = new SOSSerializer<String>();
         return ser.serialize(content);
     }
 
+    /** Deserialize compressed string */
     public static String deserializeString(final String content) throws Exception {
         SOSSerializer<String> ser = new SOSSerializer<String>();
         return ser.deserialize(content);
     }
 
-    public String serializeBase64(final T t) throws Exception {
+    public String serializeNonCompressed(final T t) throws Exception {
         if (t == null) {
             return null;
         }
@@ -55,7 +69,7 @@ public class SOSSerializer<T extends Serializable> {
     }
 
     @SuppressWarnings("unchecked")
-    public T deserializeBase64(final String t) throws Exception {
+    public T deserializeNonCompressed(final String t) throws Exception {
         if (t == null) {
             return null;
         }

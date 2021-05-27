@@ -19,7 +19,8 @@ public enum CommandType {
     UPDATE_REPO("UpdateRepo"),
     CLUSTER_SWITCH_OVER("ClusterSwitchOver"),
     CLUSTER_APPOINT_NODES("ClusterAppointNodes"),
-    RELEASE_EVENTS("ReleaseEvents");
+    RELEASE_EVENTS("ReleaseEvents"),
+    RESET_AGENT("ResetAgent");
     private final String value;
     private final static Map<String, CommandType> CONSTANTS = new HashMap<String, CommandType>();
 

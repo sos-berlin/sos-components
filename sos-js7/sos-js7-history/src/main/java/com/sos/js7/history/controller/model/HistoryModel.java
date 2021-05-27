@@ -826,7 +826,7 @@ public class HistoryModel {
                     dbLayer.setOrderLogId(co.getId(), logItem.getId());
                     if (cleanupLogFiles) {
                         if (co.getParentId().longValue() == 0L) {
-                            SOSPath.deleteDirectory(log.getParent());
+                            SOSPath.deleteIfExists(log.getParent());
                         } else {
                             Files.delete(log);
                         }

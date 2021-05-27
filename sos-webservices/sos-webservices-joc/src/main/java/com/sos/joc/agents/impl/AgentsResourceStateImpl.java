@@ -57,7 +57,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
         {
             put(AgentStateText.COUPLED, 0);
-            put(AgentStateText.DECOUPLED, 1);
+            put(AgentStateText.RESETTING, 1);
+            put(AgentStateText.RESET, 1);
             put(AgentStateText.COUPLINGFAILED, 2);
             put(AgentStateText.UNKNOWN, 2);
         }
@@ -126,8 +127,10 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
                                 } else if (couplingState instanceof AgentRefState.Coupled$) {
                                     stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof AgentRefState.Decoupled$) {
-                                    stateText = AgentStateText.DECOUPLED;
+                                } else if (couplingState instanceof AgentRefState.Resetting$) {
+                                    stateText = AgentStateText.RESETTING;
+                                } else if (couplingState instanceof AgentRefState.Reset$) {
+                                    stateText = AgentStateText.RESET;
                                 }
                             } else {
                                 agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));

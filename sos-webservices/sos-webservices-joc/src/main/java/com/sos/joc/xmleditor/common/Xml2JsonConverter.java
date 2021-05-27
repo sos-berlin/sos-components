@@ -57,7 +57,7 @@ public class Xml2JsonConverter {
     private List<String> elements;
     private String rootElementNameXml;
     private long uuid;
-    private boolean generateGlobalDocs = false;
+    private boolean generateGlobalDocs = true;
 
     public String convert(ObjectType type, Path schema, String xml) throws Exception {
         if (Files.exists(schema) && Files.isReadable(schema)) {
@@ -98,7 +98,7 @@ public class Xml2JsonConverter {
             baos = new ByteArrayOutputStream();
             gen = new JsonFactory().createGenerator(baos, JsonEncoding.UTF8);
             writeElements(gen, null, rootXml, 0, 0);
-            writeDocs(gen);
+            // writeDocs(gen);
             gen.writeNumberField("lastUuid", uuid);
             gen.writeEndObject();
             gen.close();

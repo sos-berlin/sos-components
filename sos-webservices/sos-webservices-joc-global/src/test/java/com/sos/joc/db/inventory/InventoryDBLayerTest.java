@@ -2,9 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Ignore;
 import org.junit.Test;

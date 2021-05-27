@@ -15,6 +15,13 @@
 
 	<dependencies>
 
+		<!-- SOS Dependencies -->
+		<dependency>
+			<groupId>com.sos-berlin</groupId>
+			<artifactId>sos-commons-exception</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>

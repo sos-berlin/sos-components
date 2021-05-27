@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSMissingDataException;
+import com.sos.commons.exception.SOSNoSuchFileException;
 import com.sos.commons.exception.SOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSCommandResult;
@@ -20,7 +21,6 @@ import com.sos.commons.vfs.common.AProviderArguments.Protocol;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
-import com.sos.commons.vfs.exception.SOSNoSuchFileException;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments.AuthMethod;
 import com.sos.commons.vfs.ssh.common.SSHProviderUtil;
