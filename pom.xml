@@ -70,6 +70,7 @@
 		<shiro.tools.version>1.7.1</shiro.tools.version>
 		<apache.shiro.version>1.7.1</apache.shiro.version>
 		<oracle.ojdbc.version>11.1.0.7.0-Production</oracle.ojdbc.version>
+        <sos.ojdbc8.version>18.3.0.0</sos.ojdbc8.version>
 		<javax.mail.version>1.4.7</javax.mail.version>
 		<jersey.glassfish.version>2.22.2</jersey.glassfish.version>
 		<io.vavr.version>0.10.3</io.vavr.version>
@@ -588,6 +589,11 @@
 				<groupId>com.oracle</groupId>
 				<artifactId>ojdbc6</artifactId>
 				<version>${oracle.ojdbc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.oracle.database.jdbc</groupId>
+				<artifactId>ojdbc8</artifactId>
+				<version>${sos.ojdbc8.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.postgresql</groupId>
