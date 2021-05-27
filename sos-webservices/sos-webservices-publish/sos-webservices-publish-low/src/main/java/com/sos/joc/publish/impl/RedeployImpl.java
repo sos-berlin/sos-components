@@ -1,5 +1,6 @@
 package com.sos.joc.publish.impl;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -22,6 +24,7 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -69,7 +72,14 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
             Set<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
-                unsignedRedeployables = new HashSet<DBItemDeploymentHistory>(latest);
+                unsignedRedeployables = latest.stream().peek(item -> {
+    				try {
+						item.writeUpdateableContent(
+								(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+					} catch (IOException e) {
+						throw new JocException(e);
+					}
+				}).collect(Collectors.toSet());
             }
             // preparations
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
@@ -77,7 +87,8 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedRedeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
 
             if (unsignedRedeployables != null && !unsignedRedeployables.isEmpty()) {
-                PublishUtils.updatePathWithNameInContent(unsignedRedeployables);
+//                PublishUtils.updatePathWithNameInContent(unsignedRedeployables);
+            	
                 unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
                         item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                 unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
@@ -87,10 +98,10 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                         JocSecurityLevel.LOW));
             }
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
-//                SignedItemsSpec spec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null);
-//                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(spec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
+                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedRedeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
+                		dbAuditlog.getId());
+                StoreDeployments.storeNewDepHistoryEntriesForRedeploy(signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), dbLayer);
                 // call updateItems command via ControllerApi for given controllers
-                SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, null, verifiedRedeployables, null, null, dbAuditlog.getId());
                 StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

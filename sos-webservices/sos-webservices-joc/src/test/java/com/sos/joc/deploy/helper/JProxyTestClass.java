@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 
-import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.JProxyContext;
 import js7.data_for_java.auth.JAdmission;
 import js7.data_for_java.auth.JCredentials;
 import js7.data_for_java.auth.JHttpsConfig;
+import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JProxyContext;
 
 public class JProxyTestClass {
 

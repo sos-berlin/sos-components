@@ -8,9 +8,9 @@ import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.commons.util.SOSString;
 
 public class SchemaHandler {
 

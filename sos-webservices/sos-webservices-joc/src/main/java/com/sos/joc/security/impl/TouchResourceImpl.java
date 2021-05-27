@@ -2,13 +2,14 @@ package com.sos.joc.security.impl;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.security.resource.ITouchResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Path("touch")
 public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource {

@@ -1,5 +1,6 @@
 package com.sos.joc.publish.impl;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -45,6 +47,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.fileordersource.FileOrderSource;
 
 @Path("inventory/deployment")
 public class DeployImpl extends JOCResourceImpl implements IDeploy {
@@ -153,9 +156,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
                 // sign deployed configurations with new versionId
-                Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
-                        new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
-                Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
+//                Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
+//                        new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+                Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
                 // determine agent names to be replaced
                 Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
                 Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
@@ -167,29 +170,30 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive()))
                         .forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
-
                 if (unsignedDrafts != null) {
-                    Set<DBItemInventoryConfiguration> filteredUnsignedDrafts = 
-                    		unsignedDrafts.stream().filter(draft -> canAdd(draft.getPath(), permittedFolders)).collect(Collectors.toSet());
+                    Set<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
+                    		.filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(item -> {
+                    			return PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId());
+                    }).collect(Collectors.toSet());
                     if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
-                        // WORKAROUND: old items with leading slash
-                        PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
+//                        // WORKAROUND: old items with leading slash
+//                        PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
                         filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.WORKFLOW))
+                        	.filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
                         	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                         filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getTypeAsEnum().equals(ConfigurationType.FILEORDERSOURCE))
+                        	.filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
                         	.forEach(item -> {
                         		UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
 	                            try {
-	                                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-	                                        Globals.objectMapper.readValue(item.getContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-	                                fileOrderSource.setAgentName(update.getAgentId());
-	                                item.setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
+	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+//	                                        Globals.objectMapper.readValue(item.readUpdateableContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+//	                                fileOrderSource.setAgentPath(update.getAgentId());
+//	                                item.writeUpdateableContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
 	                                updateableAgentNamesFileOrderSources.add(update);
 	                            } catch (Exception e) {}
 	                        });
-                        verifiedConfigurations.putAll(PublishUtils.getDraftsWithSignature(
+                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
                                 commitId, account, filteredUnsignedDrafts, updateableAgentNames, keyPair, controllerId, hibernateSession));
                     	
                     }
@@ -199,10 +203,18 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 	// filter regarding folder permissions
                 	Set<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                			.filter(draft -> canAdd(draft.getPath(), permittedFolders)).collect(Collectors.toSet());
-                	if (filteredUnsignedReDeployables != null && !filteredUnsignedReDeployables.isEmpty()) {
-                        // WORKAROUND: old items with leading slash
-                        PublishUtils.updatePathWithNameInContent(filteredUnsignedReDeployables);
+                			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                			.peek(item -> {
+                				try {
+									item.writeUpdateableContent(
+											(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+								} catch (IOException e) {
+									throw new JocException(e);
+								}
+            				}).collect(Collectors.toSet());
+                	if (!filteredUnsignedReDeployables.isEmpty()) {
+//                        // WORKAROUND: old items with leading slash
+//                        PublishUtils.updatePathWithNameInContent(filteredUnsignedReDeployables);
                         filteredUnsignedReDeployables.stream()
                         	.filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
                         	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
@@ -211,27 +223,17 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 	                        .forEach(item -> {
 	                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
 	                            try {
-	                                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-	                                        Globals.objectMapper.readValue(item.getInvContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-	                                fileOrderSource.setAgentName(update.getAgentId());
-	                                item.setContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
+	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
 	                                updateableAgentNamesFileOrderSources.add(update);
 	                            } catch (Exception e) {}
 	                        });
-                        verifiedReDeployables.putAll(
+                        verifiedDeployables.putAll(
                                 PublishUtils.getDeploymentsWithSignature(commitId, account, filteredUnsignedReDeployables, hibernateSession, JocSecurityLevel.MEDIUM));
                 	}
                 }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
                 List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(
-                        verifiedConfigurations.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
-                    toDeleteForRename.addAll(PublishUtils.checkRenamingForUpdate(
-                            verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm()));
-                } else {
-                    toDeleteForRename = PublishUtils.checkRenamingForUpdate(
-                            verifiedReDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                }
+                            verifiedDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
                 // and subsequently call delete for the object with the previous path before committing the update 
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
                     // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
@@ -244,11 +246,9 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
                         });
                 }
-                if ((verifiedConfigurations != null && !verifiedConfigurations.isEmpty())
-                        || (verifiedReDeployables != null && !verifiedReDeployables.isEmpty())) {
-                    //audit = new DeployAudit(deployFilter.getAuditLog(), controllerId, commitId, "update", account);
-                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedConfigurations, verifiedReDeployables, updateableAgentNames,
-                    		updateableAgentNamesFileOrderSources, dbAuditlog.getId());
+                if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
+                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
+                    		dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
                     StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
                 }

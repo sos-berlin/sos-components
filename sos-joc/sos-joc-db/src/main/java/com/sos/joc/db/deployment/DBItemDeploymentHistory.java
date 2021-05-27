@@ -12,9 +12,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.common.IDeployObject;
 
 @Entity
 @Table(name = DBLayer.TABLE_DEP_HISTORY)
@@ -57,6 +59,9 @@ public class DBItemDeploymentHistory extends DBItem {
 
     @Column(name = "[INV_CONTENT]", nullable = false)
     private String invContent;
+
+    @Transient
+    private IDeployObject updateableContent;
 
     @Column(name = "[SIGNATURE]", nullable = false)
     private String signedContent;
@@ -234,5 +239,15 @@ public class DBItemDeploymentHistory extends DBItem {
 	public void setAuditlogId(Long auditlogId) {
 		this.auditlogId = auditlogId;
 	}
+
+	@Transient
+	public IDeployObject readUpdateableContent() {
+		return updateableContent;
+	}
+	@Transient
+	public void writeUpdateableContent(IDeployObject updateableContent) {
+		this.updateableContent = updateableContent;
+	}
     
+	
 }

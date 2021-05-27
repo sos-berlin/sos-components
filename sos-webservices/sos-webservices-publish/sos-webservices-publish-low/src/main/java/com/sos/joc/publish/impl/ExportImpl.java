@@ -1,7 +1,6 @@
 package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -11,10 +10,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -27,7 +24,6 @@ import com.sos.joc.model.Version;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ControllerObject;
 import com.sos.joc.model.publish.ExportFilter;
@@ -39,7 +35,6 @@ import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
 import com.sos.joc.publish.resource.IExportResource;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
-import com.sos.sign.model.fileordersource.FileOrderSource;
 
 @Path("inventory")
 public class ExportImpl extends JOCResourceImpl implements IExportResource {
@@ -72,9 +67,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             ExportForSigning forSigning = filter.getForSigning();
             ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
-            Set<ControllerObject> deployablesForSigning = Collections.emptySet();
-            Set<ConfigurationObject> deployablesForShallowCopy = Collections.emptySet();
-            Set<ConfigurationObject> releasables = Collections.emptySet();
+            Set<ControllerObject> deployablesForSigning = null;
+            Set<ConfigurationObject> deployablesForShallowCopy = null;
+            Set<ConfigurationObject> releasables = null;
             final Set<UpdateableWorkflowJobAgentName> updateableWorkflowJobsAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
             final Set<UpdateableFileOrderSourceAgentName> updateableFileOrderSourceAgentNames = new HashSet<UpdateableFileOrderSourceAgentName>();
             
@@ -92,23 +87,13 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 deployablesForSigning.stream()
                 .forEach(deployable -> {
                     if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
-                                try {
-                                    Workflow workflow = (Workflow) deployable.getContent();
-                                    updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
-                                            Globals.objectMapper.writeValueAsString(workflow), ConfigurationType.WORKFLOW,
-                                            controllerIdUsed, dbLayer));
-                                } catch (JsonProcessingException e) {
-                                }
-                            } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
-                                try {
-                                    FileOrderSource fileOrderSource = (FileOrderSource) deployable.getContent();
-                                    updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(fileOrderSource
-                                            .getPath(), Globals.objectMapper.writeValueAsString(fileOrderSource), controllerIdUsed,
-                                            dbLayer));
-                                } catch (JsonProcessingException e) {}
+                        updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
+                        		deployable.getContent(), DeployType.WORKFLOW.intValue(), controllerIdUsed, dbLayer));
+                    } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
+                        updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(deployable.getPath(),
+                                deployable.getContent(), controllerIdUsed, dbLayer));
                     }
                 });
-                
                 JocAuditLog.storeAuditLogDetails(deployablesForSigning.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                         .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
             } else { // shallow copy
@@ -121,10 +106,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 
                 JocAuditLog.storeAuditLogDetails(deployablesForShallowCopy.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
                         .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
-                JocAuditLog.storeAuditLogDetails(releasables.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
-                        hibernateSession, dbAudit.getId(), dbAudit.getCreated());
+                JocAuditLog.storeAuditLogDetails(releasables.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
+                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
             }
-            
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)
             InputStream jocVersionStream = null;
@@ -162,17 +146,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                     stream = PublishUtils.writeZipFileShallow(deployablesForShallowCopy, releasables, dbLayer, jocVersion, apiVersion, inventoryVersion);
                 }
             }
-//            DeployAudit audit = null;
-//            if (controllerId != null) {
-//                audit = new DeployAudit(filter.getAuditLog(), 
-//                        String.format("objects exported for controller '%1$s' to file '%2$s' with profile '%3$s'.", 
-//                                controllerId, filter.getExportFile().getFilename(), account));
-//            } else {
-//                audit = new DeployAudit(filter.getAuditLog(), 
-//                        String.format("objects exported to file '%1$s' with profile '%2$s'.", filter.getExportFile().getFilename(), account));
-//            }
-//            logAuditMessage(audit);
-//            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseOctetStreamDownloadStatus200(stream, filter.getExportFile().getFilename());
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

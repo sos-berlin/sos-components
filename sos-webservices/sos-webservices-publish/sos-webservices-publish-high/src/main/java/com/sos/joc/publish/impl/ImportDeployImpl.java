@@ -278,7 +278,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             X509Certificate cert = null;
             switch (keyPair.getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
-                PublishUtils.updateItemsAddOrUpdatePGPFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer).thenAccept(either -> {
+                PublishUtils.updateItemsAddOrUpdatePGPFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer).thenAccept(either -> {
                     StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                 });
                 break;
@@ -286,14 +286,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                 if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                                 StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
                                         API_CALL);
                             });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
                             SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
                                         API_CALL);
@@ -304,14 +304,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
                 verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                 if (verified) {
-                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
                                 StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
                                         API_CALL);
                             });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
-                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, null, controllerId, dbLayer,
+                    PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
                             SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
                                 StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
                                         API_CALL);

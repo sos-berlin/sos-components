@@ -56,7 +56,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.controller.model.agent.AgentRef;
-import com.sos.sign.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
@@ -67,6 +66,7 @@ import com.sos.joc.model.sign.Signature;
 import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.sign.model.workflow.Workflow;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DeploymentTest {

@@ -1037,7 +1037,7 @@ public class DBLayerDeploy {
                     existingConfiguration.setAuditLogId(auditLogId);
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
-                    session.update(existingConfiguration);
+                    JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
                 } else {
                     DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
                     Date now = Date.from(Instant.now());
@@ -1052,7 +1052,7 @@ public class DBLayerDeploy {
                     newConfiguration.setDeployed(false);
                     newConfiguration.setReleased(false);
                     newConfiguration.setValid(valid);
-                    session.save(newConfiguration);
+                    JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
                 }
             } else {
                 DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
@@ -1068,11 +1068,11 @@ public class DBLayerDeploy {
                 newConfiguration.setDeployed(false);
                 newConfiguration.setReleased(false);
                 newConfiguration.setValid(valid);
-                session.save(newConfiguration);
+                JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
-        } catch (JsonProcessingException e) {
+        } catch (IOException e) {
             throw new JocException(e);
         }
     }
@@ -1116,10 +1116,10 @@ public class DBLayerDeploy {
 			newConfiguration.setDeployed(false);
 			newConfiguration.setReleased(false);
 			newConfiguration.setValid(valid);
-			session.save(newConfiguration);
-		} catch (JsonProcessingException e) {
-            throw new JocSosHibernateException(e);
+			JocInventory.insertConfiguration(new InventoryDBLayer(session), newConfiguration);
 		} catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+		} catch (IOException e) {
             throw new JocException(e);
 		}
     }
