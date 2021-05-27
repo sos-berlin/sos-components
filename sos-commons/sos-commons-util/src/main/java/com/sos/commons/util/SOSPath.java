@@ -40,6 +40,8 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSNoSuchFileException;
+
 public class SOSPath {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSPath.class);
@@ -118,30 +120,27 @@ public class SOSPath {
         copyFile(Paths.get(source), Paths.get(dest), append);
     }
 
-    public static int delete(final Path file) throws IOException {
-        if (Files.exists(file)) {
-            if (Files.isDirectory(file)) {
-                List<Path> s = Files.walk(file).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-                for (Path p : s) {
-                    Files.delete(p);
-                }
-                return s.size();
-            } else {
-                Files.delete(file);
-                return 1;
-            }
-        } else {
-            return 0;
+    public static void delete(final Path path) throws IOException, SOSNoSuchFileException {
+        if (path == null || !Files.exists(path)) {
+            throw new SOSNoSuchFileException(path);
         }
-    }
-
-    public static void deleteDirectory(final Path dir) throws IOException {
-        if (Files.exists(dir)) {
-            try (Stream<Path> stream = Files.walk(dir)) {
+        if (Files.isDirectory(path)) {
+            try (Stream<Path> stream = Files.walk(path)) {
                 for (Path p : stream.sorted(Comparator.reverseOrder()).collect(Collectors.toList())) {
                     Files.delete(p);
                 }
             }
+        } else {
+            Files.delete(path);
+        }
+    }
+
+    public static boolean deleteIfExists(final Path path) throws Exception {
+        try {
+            delete(path);
+            return true;
+        } catch (SOSNoSuchFileException e) {
+            return false;
         }
     }
 
