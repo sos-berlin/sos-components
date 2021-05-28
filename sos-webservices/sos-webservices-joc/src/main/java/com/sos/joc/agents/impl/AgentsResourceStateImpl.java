@@ -97,7 +97,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 try {
                     currentState = Proxy.of(controllerId).currentState();
                     Long surveyDateMillis = currentState.eventId() / 1000;
-                    agents.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+                    Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
+                    boolean olderThan20sec = currentStateMoment.isBefore(Instant.now().minusSeconds(20));
+                    agents.setSurveyDate(Date.from(currentStateMoment));
                     Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
                             .attached() != null && o.attached().isRight());
                     if (agentsParam.getCompact() == Boolean.TRUE) {
@@ -119,7 +121,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Either<Problem, JAgentRefState> either = currentState.pathToAgentRefState(AgentPath.of(dbAgent.getAgentId()));
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
-                        if (Proxies.isCoupled(controllerId)) {
+                        if (!olderThan20sec || Proxies.isCoupled(controllerId)) {
                             if (either.isRight()) {
                                 AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
                                 if (couplingState instanceof AgentRefState.CouplingFailed) {

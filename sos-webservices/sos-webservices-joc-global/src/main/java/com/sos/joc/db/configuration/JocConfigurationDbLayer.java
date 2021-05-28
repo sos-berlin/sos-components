@@ -110,7 +110,7 @@ public class JocConfigurationDbLayer {
             query.setParameter("account", filter.getAccount());
         }
         if (filter.isShared() != null) {
-            query.setParameter("shared", filter.isShared(), BooleanType.INSTANCE);
+            query.setParameter("shared", filter.isShared());
         }
     }
     
