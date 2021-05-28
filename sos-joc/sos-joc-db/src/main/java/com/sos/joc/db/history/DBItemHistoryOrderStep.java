@@ -12,6 +12,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -107,6 +109,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     private Integer severity;
 
     @Column(name = "[ERROR]", nullable = false)
+    @Type(type = "numeric_boolean")
     private boolean error;
 
     @Column(name = "[ERROR_STATE]", nullable = true)
