@@ -1198,7 +1198,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
         
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.documentationName");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.documentationNames");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
@@ -1210,13 +1210,11 @@ public class InventoryDBLayer extends DBLayer {
     public List<DBItemInventoryConfiguration> getUsedObjectsByDocName(String docName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where type != :type and ");
-
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "jsonContent", "$.documentationName");
-        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.documentationName")).append("=:docName");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.FOLDER.intValue());
-        query.setParameter("docName", "\"" + docName + "\"");
+        query.setParameter("docName", docName);
         return getSession().getResultList(query);
     }
 
