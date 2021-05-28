@@ -2,7 +2,9 @@ package com.sos.joc.documentations.impl;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -17,6 +19,7 @@ import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -52,6 +55,8 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             List<DBItemDocumentation> docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             JocAuditLog.storeAuditLogDetails(docs.stream().map(dbDoc -> new AuditLogDetail(dbDoc.getPath(), ObjectType.DOCUMENTATION.intValue()))
                     .collect(Collectors.toList()), connection, dbAuditItem);
+            
+            Set<String> folders = new HashSet<>();
             for (DBItemDocumentation dbDoc : docs) {
                 if (dbDoc.getImageId() != null) {
                     DBItemDocumentationImage dbImage = connection.get(DBItemDocumentationImage.class, dbDoc.getImageId());
@@ -60,7 +65,10 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                     }
                 }
                 connection.delete(dbDoc);
+                folders.add(dbDoc.getFolder());
             }
+            
+            folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.sos.joc.event.bean.cluster.ClusterEvent;
+import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.event.EventServiceEvent;
 import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
@@ -30,7 +31,8 @@ import com.sos.joc.event.bean.problem.ProblemEvent;
     @JsonSubTypes.Type(ProblemEvent.class),
     @JsonSubTypes.Type(EventServiceEvent.class),
     @JsonSubTypes.Type(InventoryEvent.class),
-    @JsonSubTypes.Type(InventoryTrashEvent.class)
+    @JsonSubTypes.Type(InventoryTrashEvent.class),
+    @JsonSubTypes.Type(DocumentationEvent.class)
 })
 
 

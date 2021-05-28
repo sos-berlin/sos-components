@@ -22,6 +22,9 @@ import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentation.resource.IDocumentationResource;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.documentation.DocumentationEvent;
+import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 
@@ -191,6 +194,10 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
             s.append("  </article>\n</body>\n</html>");
             return s.toString();
         }
+    }
+    
+    public static void postEvent(String folder) {
+        EventBus.getInstance().post(new DocumentationEvent(folder));
     }
 
 }

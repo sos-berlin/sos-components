@@ -39,6 +39,7 @@ import com.sos.joc.db.documentation.DBItemDocumentationImage;
 //import com.sos.joc.db.documentation.DBItemDocumentationUsage;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.documentation.impl.DocumentationResourceImpl;
 import com.sos.joc.documentations.resource.IDocumentationsImportResource;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -109,9 +110,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
             final String mediaSubType = body.getMediaType().getSubtype().replaceFirst("^x-", "");
             Optional<String> supportedSubType = SUPPORTED_SUBTYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
             Optional<String> supportedImageType = SUPPORTED_IMAGETYPES.stream().filter(s -> mediaSubType.contains(s)).findFirst();
-
+            Set<String> folders = new HashSet<>();
+            
             if (mediaSubType.contains("zip") && !mediaSubType.contains("gzip")) {
-                readZipFileContent(stream, filter, dbAudit);
+                folders = readZipFileContent(stream, filter, dbAudit);
             } else if (supportedImageType.isPresent()) {
                 saveOrUpdate(setDBItemDocumentationImage(IOUtils.toByteArray(stream), filter, supportedImageType.get()), dbAudit);
             } else if (supportedSubType.isPresent()) {
@@ -139,6 +141,10 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 throw new JocUnsupportedFileTypeException("Unsupported file type (" + mediaSubType + "), supported types are " + SUPPORTED_SUBTYPES
                         .toString());
             }
+            
+            folders.add(filter.getFolder());
+            folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -220,11 +226,12 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         return extension.toLowerCase();
     }
 
-    private void readZipFileContent(InputStream inputStream, DocumentationImport filter, DBItemJocAuditLog dbAudit)
+    private Set<String> readZipFileContent(InputStream inputStream, DocumentationImport filter, DBItemJocAuditLog dbAudit)
             throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
             JocConfigurationException, DBOpenSessionException {
         ZipInputStream zipStream = null;
         Set<DBItemDocumentation> documentations = new HashSet<DBItemDocumentation>();
+        Set<String> folders = new HashSet<>();
         try {
             zipStream = new ZipInputStream(inputStream);
             ZipEntry entry = null;
@@ -282,11 +289,14 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
                 for (DBItemDocumentation itemDocumentation : documentations) {
                     saveOrUpdate(dbLayer, itemDocumentation);
+                    folders.add(itemDocumentation.getFolder());
                 }
+                
             } else {
                 throw new JocUnsupportedFileTypeException("The zip file to upload doesn't contain any supported file, supported types are "
                         + SUPPORTED_SUBTYPES.toString());
             }
+            return folders;
         } finally {
             if (zipStream != null) {
                 try {

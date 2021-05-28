@@ -21,6 +21,7 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
@@ -223,6 +224,16 @@ public class EventService {
         EventSnapshot eventSnapshot = new EventSnapshot();
         eventSnapshot.setEventId(evt.getEventId());
         eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated, InventoryTrashUpdated
+        eventSnapshot.setObjectType(EventType.FOLDER);
+        eventSnapshot.setPath(evt.getFolder());
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ DocumentationEvent.class })
+    public void createDocumentationEvent(DocumentationEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventType(evt.getKey()); // DocumentationUpdated
         eventSnapshot.setObjectType(EventType.FOLDER);
         eventSnapshot.setPath(evt.getFolder());
         addEvent(eventSnapshot);

@@ -58,6 +58,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
                     dbItem.setDocRef(checkUniqueReference(documentationFilter.getAssignReference(), path, dbLayer));
                     dbItem.setIsRef(true);
                     connection.update(dbItem);
+                    DocumentationResourceImpl.postEvent(dbItem.getFolder());
                 }
             } else {
                 if (documentationFilter.getAssignReference() == null) {
@@ -66,6 +67,7 @@ public class DocumentationEditResourceImpl extends JOCResourceImpl implements ID
                     dbItem.setDocRef(null);
                     dbItem.setIsRef(false);
                     connection.update(dbItem);
+                    DocumentationResourceImpl.postEvent(dbItem.getFolder());
                 }
             }
             
