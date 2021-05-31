@@ -229,7 +229,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 	                            } catch (Exception e) {}
 	                        });
                         verifiedDeployables.putAll(
-                                PublishUtils.getDeploymentsWithSignature(commitId, account, filteredUnsignedReDeployables, hibernateSession, JocSecurityLevel.MEDIUM));
+                                PublishUtils.getDeploymentsWithSignature(commitId, account, filteredUnsignedReDeployables, hibernateSession, JocSecurityLevel.LOW));
                 	}
                 }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
