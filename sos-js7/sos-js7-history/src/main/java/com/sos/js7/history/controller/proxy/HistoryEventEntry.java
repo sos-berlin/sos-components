@@ -488,8 +488,10 @@ public class HistoryEventEntry {
 
             private final WorkflowInfo workflowInfo;
             private final JOrder order;
+            private JWorkflow workflow;
             private String agentId;
             private String jobName;
+            private String jobLabel;
 
             public StepInfo(WorkflowInfo workflowInfo, JOrder order) {
                 this.workflowInfo = workflowInfo;
@@ -511,20 +513,36 @@ public class HistoryEventEntry {
 
             public String getJobName() throws Exception {
                 if (jobName == null) {
+                    Either<Problem, Name> pn = getWorkflow().checkedJobName(workflowInfo.getPosition().getUnderlying());
+                    jobName = getFromEither(pn).toString();
+                }
+                return jobName;
+            }
+
+            public String getJobLabel() throws Exception {
+                if (jobLabel == null) {
+                    JWorkflow workflow = getWorkflow();
+                    try {
+                        jobLabel = workflow.asScala().labeledInstruction(workflowInfo.getPosition().getUnderlying().asScala()).toOption().get()
+                                .maybeLabel().get().string();
+                    } catch (Throwable e) {
+                        LOGGER.warn(e.toString(), e);
+                    }
+                }
+                return jobLabel;
+            }
+
+            private JWorkflow getWorkflow() throws Exception {
+                if (workflow == null) {
                     if (state == null) {
                         throw new Exception(String.format("[%s][%s]missing JControllerState", eventId, orderId));
                     }
                     if (workflowInfo == null) {
                         throw new Exception(String.format("[%s][%s]missing WorkflowInfo", eventId, orderId));
                     }
-
-                    Either<Problem, JWorkflow> pw = state.repo().idToWorkflow(workflowInfo.getWorkflowId());
-                    JWorkflow workflow = getFromEither(pw);
-
-                    Either<Problem, Name> pn = workflow.checkedJobName(workflowInfo.getPosition().getUnderlying());
-                    jobName = getFromEither(pn).toString();
+                    return getFromEither(state.repo().idToWorkflow(workflowInfo.getWorkflowId()));
                 }
-                return jobName;
+                return workflow;
             }
         }
 

@@ -53,7 +53,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[WORKFLOW_NAME]", nullable = false)
     private String workflowName;// extracted from workflowPath
 
-    /** Foreign key - TABLE_SCHEDULER_ORDER_HISTORY.ID */
+    /** Foreign key - TABLE_HISTORY_ORDERS.ID */
     @Column(name = "[HO_MAIN_PARENT_ID]", nullable = false)
     private Long historyOrderMainParentId;// db
 
@@ -68,6 +68,9 @@ public class DBItemHistoryOrderStep extends DBItem {
 
     @Column(name = "[JOB_NAME]", nullable = false)
     private String jobName;// event
+
+    @Column(name = "[JOB_LABEL]", nullable = false)
+    private String jobLabel;
 
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;// event
@@ -245,6 +248,17 @@ public class DBItemHistoryOrderStep extends DBItem {
             val = DBLayer.DEFAULT_KEY;
         }
         jobName = val;
+    }
+
+    public String getJobLabel() {
+        return jobLabel;
+    }
+
+    public void setJobLabel(String val) {
+        if (val == null) {
+            val = DBLayer.DEFAULT_KEY;
+        }
+        jobLabel = val;
     }
 
     public String getJobTitle() {

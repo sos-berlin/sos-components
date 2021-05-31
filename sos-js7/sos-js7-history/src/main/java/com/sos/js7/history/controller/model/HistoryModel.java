@@ -1150,6 +1150,7 @@ public class HistoryModel {
             item.setRetryCounter(HistoryPosition.getRetry(entry.getPosition()));
 
             item.setJobName(entry.getJobName());
+            item.setJobLabel(entry.getJobLabel());
             item.setJobTitle(null);// TODO
             item.setCriticality(JobCriticality.NORMAL);// TODO
 

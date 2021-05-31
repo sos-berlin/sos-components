@@ -266,7 +266,8 @@ public class HistoryEventsTest {
 
                 event = new FatEventOrderStepStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName());
+                        .getPosition(), order.getArguments(), order.getStepInfo().getAgentId(), order.getStepInfo().getJobName(), order.getStepInfo()
+                                .getJobLabel());
                 break;
 
             case OrderStepProcessed:

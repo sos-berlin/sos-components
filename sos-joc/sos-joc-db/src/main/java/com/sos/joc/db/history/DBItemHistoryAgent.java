@@ -21,7 +21,7 @@ public class DBItemHistoryAgent extends DBItem {
     private Long readyEventId;
 
     @Column(name = "[CONTROLLER_ID]", nullable = false)
-    private String controllerId; // HISTORY_TABLE_CONTROLLERS.CONTROLLER_ID
+    private String controllerId; // TABLE_HISTORY_CONTROLLERS.CONTROLLER_ID
 
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;

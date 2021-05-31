@@ -35,7 +35,7 @@ public class DBItemHistoryOrderState extends DBItem {
     private Long historyOrderParentId;// db
 
     @Column(name = "[HO_ID]", nullable = false)
-    private Long historyOrderId;// HISTORY_ORDERS.ID
+    private Long historyOrderId;// TABLE_HISTORY_ORDERS.ID
 
     @Column(name = "[STATE]", nullable = false)
     private Integer state;

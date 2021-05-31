@@ -8,6 +8,7 @@ public final class FatEventOrderStepStarted extends AFatEventOrder {
 
     private String agentId;
     private String jobName;
+    private String jobLabel;
 
     public FatEventOrderStepStarted(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
@@ -16,9 +17,9 @@ public final class FatEventOrderStepStarted extends AFatEventOrder {
     @Override
     public void set(Object... objects) {
         super.set(objects);
-        this.agentId = (String) objects[objects.length - 2];
-        this.jobName = (String) objects[objects.length - 1];
-
+        this.agentId = (String) objects[objects.length - 3];
+        this.jobName = (String) objects[objects.length - 2];
+        this.jobLabel = (String) objects[objects.length - 1];
     }
 
     @Override
@@ -34,4 +35,7 @@ public final class FatEventOrderStepStarted extends AFatEventOrder {
         return jobName;
     }
 
+    public String getJobLabel() {
+        return jobLabel;
+    }
 }
