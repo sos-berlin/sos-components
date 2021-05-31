@@ -12,6 +12,13 @@ import org.hibernate.usertype.UserType;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 
+/** Column type:<br />
+ * H2 (MySQL Mode) - JSON<br />
+ * MSSQL (from 2016)- NVARCHAR(n)<br />
+ * MYSQL (from 5.7.8) - JSON<br />
+ * ORACLE (from 12.1.0.2)- CLOB<br />
+ * PGSQL (from 9.4.2) -JSONB<br />
+ */
 public class SOSHibernateJsonType implements UserType {
 
     public static final String COLUMN_TRANSFORMER_WRITE_DEFAULT = "?";

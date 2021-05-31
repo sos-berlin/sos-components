@@ -22,16 +22,13 @@ public class JocClusterHibernateFactory extends SOSHibernateFactory {
 
     @Override
     public void adjustConfiguration(Configuration config) {
-        // config.setProperty("hibernate.connection.username", getIdentifier());
-        // config.setProperty("hibernate.connection.password", getIdentifier());
-
+        if (config.getProperties().getProperty("hibernate.hikari.maximumPoolSize") != null) {
+            config.setProperty("hibernate.hikari.maximumPoolSize", String.valueOf(maxPool));
+        }
         if (config.getProperties().getProperty("hibernate.c3p0.maxPoolSize") != null) {
             config.setProperty("hibernate.c3p0.minPoolSize", String.valueOf(minPool));
             config.setProperty("hibernate.c3p0.maxPoolSize", String.valueOf(maxPool));
             config.setProperty("hibernate.c3p0.initialPoolSize", "1");
-        } else if (config.getProperties().getProperty("hibernate.hikari.maximumPoolSize") != null) {
-            config.setProperty("hibernate.hikari.maximumPoolSize", String.valueOf(maxPool));
         }
     }
-
 }

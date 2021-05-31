@@ -15,11 +15,6 @@ public class AuditLogCleanup {
         System.out.println("      hibernateFile 0");
     }
 
-    public static Enum<SOSHibernateFactory.Dbms> getDbms(String hibernateFile) throws Exception {
-        SOSHibernateFactory factory = new SOSHibernateFactory(hibernateFile);
-        return factory.getDbmsBeforeBuild();
-    }
-
     public static void main(String[] args) {
         if (args.length < 2) {
             AuditLogCleanup.showUsage();
@@ -51,7 +46,7 @@ public class AuditLogCleanup {
             connection = factory.openStatelessSession("AuditLogCleanup");
             connection.beginTransaction();
 
-            Enum<SOSHibernateFactory.Dbms> dbms = getDbms(hibernateFile);
+            Enum<SOSHibernateFactory.Dbms> dbms = factory.getDbms();
             String stmt = null;
             if (dbms.equals(SOSHibernateFactory.Dbms.MSSQL)) {
                 stmt = "EXEC JOC_AUDIT_LOG_CLEANUP " + age;

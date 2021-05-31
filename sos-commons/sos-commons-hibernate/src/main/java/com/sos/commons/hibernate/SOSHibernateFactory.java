@@ -194,24 +194,6 @@ public class SOSHibernateFactory implements Serializable {
         return dbms;
     }
 
-    public Enum<SOSHibernateFactory.Dbms> getDbmsBeforeBuild() throws SOSHibernateConfigurationException {
-        Configuration conf = new Configuration();
-        Dialect dt = null;
-        try {
-            if (configFile.isPresent()) {
-                conf.configure(configFile.get().toUri().toURL());
-            } else {
-                conf.configure();
-            }
-            dt = Dialect.getDialect(conf.getProperties());
-        } catch (MalformedURLException e) {
-            throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
-        } catch (PersistenceException e) {
-            throw new SOSHibernateConfigurationException(e);
-        }
-        return getDbms(dt);
-    }
-
     public Properties getDefaultConfigurationProperties() {
         return defaultConfigurationProperties;
     }
@@ -418,6 +400,20 @@ public class SOSHibernateFactory implements Serializable {
             configuration.addSqlFunction(SOSHibernateJsonValue.NAME, new SOSHibernateJsonValue(this));
             configuration.addSqlFunction(SOSHibernateRegexp.NAME, new SOSHibernateRegexp(this));
         }
+    }
+
+    public static Enum<SOSHibernateFactory.Dbms> getDbms(Path configFile) throws SOSHibernateConfigurationException {
+        Dialect dt = null;
+        try {
+            Configuration conf = new Configuration();
+            conf.configure(configFile.toUri().toURL());
+            dt = Dialect.getDialect(conf.getProperties());
+        } catch (MalformedURLException e) {
+            throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
+        } catch (PersistenceException e) {
+            throw new SOSHibernateConfigurationException(e);
+        }
+        return getDbms(dt);
     }
 
     public static Enum<SOSHibernateFactory.Dbms> getDbms(Dialect dialect) {

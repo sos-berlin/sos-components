@@ -147,38 +147,39 @@ public class JocClusterConfiguration {
 
     private boolean clusterMode() {
         final ClassLoader webAppCL = this.getClass().getClassLoader();
-        URL lj = null;
+        URL lJar = null;
         try {
-            lj = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
+            lJar = webAppCL.loadClass(CLASS_NAME_CLUSTER_MODE).getProtectionDomain().getCodeSource().getLocation();
         } catch (Throwable e1) {
             return false;
         }
 
-        URLClassLoader ucl = null;
+        URLClassLoader currentCL = null;
         try {
             List<URL> jars = new ArrayList<>();
-            jars.add(lj.toURI().toURL());
+            jars.add(lJar);
 
-            URL slf4j = webAppCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
-            List<Path> logJars = SOSPath.getFileList(Paths.get(slf4j.toURI()).getParent(), "^slf4j|^log4j", java.util.regex.Pattern.CASE_INSENSITIVE);
+            URL slf4jJar = webAppCL.loadClass(LoggerFactory.class.getName()).getProtectionDomain().getCodeSource().getLocation();
+            List<Path> logJars = SOSPath.getFileList(Paths.get(slf4jJar.toURI()).getParent(), "^slf4j|^log4j",
+                    java.util.regex.Pattern.CASE_INSENSITIVE);
             for (Path jar : logJars) {
                 jars.add(jar.toUri().toURL());
             }
-            ucl = new URLClassLoader(jars.stream().toArray(URL[]::new));
+            currentCL = new URLClassLoader(jars.stream().toArray(URL[]::new));
 
-            Object o = ucl.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
+            Object o = currentCL.loadClass(CLASS_NAME_CLUSTER_MODE).newInstance();
             boolean result = (boolean) o.getClass().getDeclaredMethods()[0].invoke(o);
             try {
-                TimeUnit.SECONDS.sleep(1);// wait for logging ..
+                TimeUnit.SECONDS.sleep(1);// waiting for lJar logging ...
             } catch (Throwable e) {
             }
             return result;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         } finally {
-            if (ucl != null) {
+            if (currentCL != null) {
                 try {
-                    ucl.close();
+                    currentCL.close();
                 } catch (Throwable e) {
                 }
             }
