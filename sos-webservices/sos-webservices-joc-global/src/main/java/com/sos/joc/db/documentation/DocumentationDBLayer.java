@@ -23,7 +23,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 
 public class DocumentationDBLayer {
@@ -91,8 +90,8 @@ public class DocumentationDBLayer {
     }
     
     public String getUniqueDocRef(String reference) throws SOSHibernateException {
-        if (reference == null) {
-            reference = "";
+        if (reference == null || reference.isEmpty()) {
+            return null;
         }
         StringBuilder hql = new StringBuilder("select docRef from ").append(DBLayer.DBITEM_DOCUMENTATION);
         hql.append(" where lower(docRef) = :docRef or lower(docRef) like :likeDocRef");
