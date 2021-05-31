@@ -190,7 +190,11 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 // insert image
                 doc.setImageId(saveImage(dbLayer, doc));
             }
-            doc.setDocRef(dbLayer.getUniqueDocRef(doc.getDocRef()));
+            doc.setIsRef(DocumentationsResourceImpl.ASSIGN_TYPES.contains(doc.getType()));
+            if (doc.getIsRef()) {
+                String docRef = doc.getName().replaceFirst("^(.*)\\.[^\\.]+$", "$1"); // default = name without extension
+                doc.setDocRef(dbLayer.getUniqueDocRef(docRef));
+            }
             dbLayer.getSession().save(doc);
         }
     }
@@ -278,6 +282,7 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
                 }
                 documentation.setCreated(Date.from(Instant.now()));
                 documentation.setModified(documentation.getCreated());
+                
                 documentations.add(documentation);
             }
             if (!documentations.isEmpty()) {
@@ -318,10 +323,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         documentation.setType(mediaSubType);
         documentation.setContent(new String(b, StandardCharsets.UTF_8));
         documentation.setHasImage(false);
-        documentation.setIsRef(DocumentationsResourceImpl.ASSIGN_TYPES.contains(mediaSubType));
-        if (documentation.getIsRef()) {
-            documentation.setDocRef(filter.getFile().replaceFirst("^(.*)\\.[^\\.]+$", "$1")); // without extension
-        }
         return documentation;
     }
 
@@ -336,10 +337,6 @@ public class DocumentationsImportResourceImpl extends JOCResourceImpl implements
         documentation.setType(mediaSubType);
         documentation.setImage(b);
         documentation.setHasImage(true);
-        documentation.setIsRef(DocumentationsResourceImpl.ASSIGN_TYPES.contains(mediaSubType));
-        if (documentation.getIsRef()) {
-            documentation.setDocRef(filter.getFile().replaceFirst("^(.*)\\.[^\\.]+$", "$1")); // without extension
-        }
         return documentation;
     }
 
