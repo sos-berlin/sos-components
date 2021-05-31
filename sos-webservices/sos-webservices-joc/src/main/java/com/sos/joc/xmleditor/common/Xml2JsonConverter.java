@@ -187,6 +187,7 @@ public class Xml2JsonConverter {
         gen.writeBooleanField("xsd", fromXsd(current.getNodeName()));
         gen.writeStringField("parent", parentName);
         gen.writeNumberField("uuid", currentUuid);
+        gen.writeNumberField("key", currentUuid);// for drag and drop
         gen.writeBooleanField("expanded", expanded);
         if (parent != null) {
             gen.writeNumberField("parentId", parentId);
