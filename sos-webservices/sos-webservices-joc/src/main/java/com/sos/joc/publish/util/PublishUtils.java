@@ -1124,48 +1124,56 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+    public static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(
+            DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem, String account, DBLayerDeploy dbLayerDeploy, String commitId,
             String controllerId, Date deploymentDate, Long auditlogId) {
-        Set<DBItemDeploymentHistory> deployedObjects = null;
-        try {
-            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
-            deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
-                if (deployed.getId() != null) {
-					DBItemDepSignatures signature = deployedWithSignature.get(deployed);
-					if (signature == null) {
-						// simple item
-						deployed.setSignedContent("");
-					} else {
-						// signed item
-						deployed.setSignedContent(signature.getSignature());
-					}
-					deployed.setId(null);
-					deployed.setAccount(account);
-					// TODO: get Version to set here
-					deployed.setVersion(null);
-					deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-					deployed.setCommitId(commitId);
-					deployed.setControllerId(controllerId);
-					deployed.setControllerInstanceId(controllerInstance.getId());
-					deployed.setDeploymentDate(deploymentDate);
-					deployed.setOperation(OperationType.UPDATE.value());
-					deployed.setState(DeploymentState.DEPLOYED.value());
-					deployed.setAuditlogId(auditlogId);
-					dbLayerDeploy.getSession().save(deployed);
-					postDeployHistoryWorkflowEvent(deployed);
-					if (signature != null) {
-						signature.setDepHistoryId(deployed.getId());
-						dbLayerDeploy.getSession().update(signature);
-					}
-					deployedObjects.add(deployed);
+    	try {
+	        if (depHistoryItem.getId() != null) {
+				if (depSignatureItem == null) {
+					// simple item
+					depHistoryItem.setSignedContent("");
+				} else {
+					// signed item
+					depHistoryItem.setSignedContent(depSignatureItem.getSignature());
 				}
-            }
-        } catch(IOException e) {
+				depHistoryItem.setId(null);
+				depHistoryItem.setAccount(account);
+				// TODO: get Version to set here
+				depHistoryItem.setVersion(null);
+				depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
+				depHistoryItem.setCommitId(commitId);
+				depHistoryItem.setControllerId(controllerId);
+	            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+				depHistoryItem.setControllerInstanceId(controllerInstance.getId());
+				depHistoryItem.setDeploymentDate(deploymentDate);
+				depHistoryItem.setOperation(OperationType.UPDATE.value());
+				depHistoryItem.setState(DeploymentState.DEPLOYED.value());
+				depHistoryItem.setAuditlogId(auditlogId);
+				dbLayerDeploy.getSession().save(depHistoryItem);
+				postDeployHistoryWorkflowEvent(depHistoryItem);
+				if (depSignatureItem != null) {
+					depSignatureItem.setDepHistoryId(depHistoryItem.getId());
+					dbLayerDeploy.getSession().update(depSignatureItem);
+				}
+			}
+    	} catch(IOException e) {
         	throw new JocException(e);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
+        }
+    	return depHistoryItem;
+    }
+
+    public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+            String controllerId, Date deploymentDate, Long auditlogId) {
+        Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
+        for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
+            if (deployed.getId() != null) {
+				DBItemDepSignatures signature = deployedWithSignature.get(deployed);
+				deployedObjects.add(
+						cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId, deploymentDate, auditlogId));
+			}
         }
         return deployedObjects;
     }
