@@ -66,6 +66,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
                 workflow.setPath(content.getPath());
                 workflow.setVersionDate(content.getCreated());
+                workflow.setVersionId(content.getCommitId());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
                 
                 if (versionId == null || versionId.isEmpty()) {
