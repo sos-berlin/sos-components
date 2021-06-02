@@ -163,6 +163,10 @@ public class SSLContext {
             String tType = sosJocProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
             String tPass = sosJocProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
             if (tPath != null && !tPath.trim().isEmpty()) {
+                // for ldaps set properties
+                System.setProperty("javax.net.ssl.trustStore", tPath);
+                System.setProperty("javax.net.ssl.trustStoreType", tType);
+                System.setProperty("javax.net.ssl.trustStorePassword", tPass);
                 Path p = sosJocProperties.resolvePath(tPath.trim());
                 if (p != null) {
                     if (!Files.exists(p)) {

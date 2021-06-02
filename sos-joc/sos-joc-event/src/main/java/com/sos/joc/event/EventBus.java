@@ -22,7 +22,7 @@ public class EventBus {
 
     private static EventBus eventBus;
     private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
-    private static String threadNamePrefix = "Thread-EventBus-";
+    private static final String threadNamePrefix = "Thread-EventBus-";
     private CopyOnWriteArraySet<Object> listeners = new CopyOnWriteArraySet<>();
     
     private EventBus() {
