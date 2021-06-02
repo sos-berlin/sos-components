@@ -208,7 +208,7 @@ public abstract class PublishUtils {
     }
 
     public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDraftsWithSignature(String commitId, String account,
-            Set<DBItemDeploymentHistory> unsignedDrafts, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair,
+            List<DBItemDeploymentHistory> unsignedDeployments, Set<UpdateableWorkflowJobAgentName> updateableAgentNames, JocKeyPair keyPair,
             String controllerId, SOSHibernateSession session) throws JocMissingKeyException, JsonParseException, JsonMappingException,
             SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
             SignatureException, CertificateException {
@@ -218,25 +218,19 @@ public abstract class PublishUtils {
                     "No private key found for signing! - Please check your private key from the key management section in your profile.");
         } else {
             DBItemDepSignatures sig = null;
-            for (DBItemDeploymentHistory draft : unsignedDrafts) {
-                updateVersionId(draft, commitId);
+            for (DBItemDeploymentHistory deployed : unsignedDeployments) {
+                updateVersionId(deployed, commitId);
+                updatePath(deployed);
                 // update agentName in Workflow jobs before signing agentName -> agentId
-                if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                    replaceAgentNameWithAgentId(draft, updateableAgentNames, controllerId);
+                if (deployed.getType() == ConfigurationType.WORKFLOW.intValue()) {
+                    replaceAgentNameWithAgentId(deployed, updateableAgentNames, controllerId);
                 }
+                deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
                 if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    sig = new DBItemDepSignatures();
-                    sig.setAccount(account);
-                    sig.setInvConfigurationId(draft.getId());
-                    sig.setModified(Date.from(Instant.now()));
-                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        ((Workflow)draft.readUpdateableContent()).setPath(draft.getName());
-                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)draft.readUpdateableContent()).setPath(draft.getName());
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
+                        sig = new DBItemDepSignatures();
+                        sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
                     }
-                    draft.setContent(JsonSerializer.serializeAsString(draft.readUpdateableContent()));
-                    sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), draft.getContent(), null));
-                    signedDrafts.put(draft, sig);
                 } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = null;
                     if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
@@ -244,122 +238,29 @@ public abstract class PublishUtils {
                     } else {
                         kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
                     }
-                    sig = new DBItemDepSignatures();
-                    sig.setAccount(account);
-                    sig.setInvConfigurationId(draft.getId());
-                    sig.setModified(Date.from(Instant.now()));
-                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        ((Workflow)draft.readUpdateableContent()).setPath(draft.getName());
-                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)draft.readUpdateableContent()).setPath(draft.getName());
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                        sig = new DBItemDepSignatures();
+                        sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
                     }
-                    draft.setContent(JsonSerializer.serializeAsString(draft.readUpdateableContent()));
-                    sig.setSignature(SignObject.signX509(kp.getPrivate(), draft.getContent()));
-                    signedDrafts.put(draft, sig);
                 } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
                     KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
-                    sig = new DBItemDepSignatures();
-                    sig.setAccount(account);
-                    sig.setInvConfigurationId(draft.getId());
-                    sig.setModified(Date.from(Instant.now()));
                     // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if (draft.getType() == ConfigurationType.WORKFLOW.intValue()) {
-                        ((Workflow)draft.readUpdateableContent()).setPath(draft.getName());
-                    } else if (draft.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)draft.readUpdateableContent()).setPath(draft.getName());
+                    if (deployed.getType() == DeployType.WORKFLOW.intValue() || deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
+                        sig = new DBItemDepSignatures();
+                        sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
                     }
-                    draft.setContent(JsonSerializer.serializeAsString(draft.readUpdateableContent()));
-                    sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), draft.getContent()));
-                    signedDrafts.put(draft, sig);
                 }
                 if (sig != null) {
-                    session.save(sig);
-                }
-            }
-        }
-        return signedDrafts;
-    }
-
-    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String commitId, String account,
-            Set<DBItemDeploymentHistory> depHistoryToRedeploy, SOSHibernateSession session, JocSecurityLevel secLvl) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException {
-        DBLayerKeys dbLayer = new DBLayerKeys(session);
-        JocKeyPair keyPair = dbLayer.getKeyPair(account, secLvl);
-        if (keyPair != null) {
-            return getDeploymentsWithSignature(commitId, account, depHistoryToRedeploy, keyPair, session);
-        } else {
-            throw new JocMissingKeyException("No Key found for this account.");
-        }
-    }
-
-    public static Map<DBItemDeploymentHistory, DBItemDepSignatures> getDeploymentsWithSignature(String commitId, String account,
-            Set<DBItemDeploymentHistory> depHistoryToRedeploy, JocKeyPair keyPair, SOSHibernateSession session) throws JocMissingKeyException,
-            JsonParseException, JsonMappingException, SOSHibernateException, IOException, PGPException, NoSuchAlgorithmException,
-            InvalidKeySpecException, InvalidKeyException, SignatureException {
-        Map<DBItemDeploymentHistory, DBItemDepSignatures> signedReDeployable = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
-        if (keyPair.getPrivateKey() == null || keyPair.getPrivateKey().isEmpty()) {
-            throw new JocMissingKeyException(
-                    "No private key found for signing! - Please check your private key from the key management section in your profile.");
-        } else {
-            DBItemDepSignatures sig = null;
-            for (DBItemDeploymentHistory deployed : depHistoryToRedeploy) {
-                updateVersionId(deployed, commitId);
-                if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    sig = new DBItemDepSignatures();
                     sig.setAccount(account);
                     sig.setDepHistoryId(deployed.getId());
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                        ((Workflow)deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                    } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)deployed.readUpdateableContent()).setPath(deployed.getName());
-                    }
-                    deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-                    sig.setSignature(SignObject.signPGP(keyPair.getPrivateKey(), deployed.getContent(), null));
-                    signedReDeployable.put(deployed, sig);
-                } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    KeyPair kp = null;
-                    if (keyPair.getPrivateKey().startsWith(SOSKeyConstants.PRIVATE_RSA_KEY_HEADER)) {
-                        kp = KeyUtil.getKeyPairFromRSAPrivatKeyString(keyPair.getPrivateKey());
-                    } else {
-                        kp = KeyUtil.getKeyPairFromPrivatKeyString(keyPair.getPrivateKey());
-                    }
-                    sig = new DBItemDepSignatures();
-                    sig.setAccount(account);
-                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
-                    sig.setModified(Date.from(Instant.now()));
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                        ((Workflow)deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                    } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)deployed.readUpdateableContent()).setPath(deployed.getName());
-                    }
-                    deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-                    sig.setSignature(SignObject.signX509(kp.getPrivate(), deployed.getContent()));
-                    signedReDeployable.put(deployed, sig);
-                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(keyPair.getKeyAlgorithm())) {
-                    KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
-                    sig = new DBItemDepSignatures();
-                    sig.setAccount(account);
-                    sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
-                    sig.setModified(Date.from(Instant.now()));
-                    // X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
-                    if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-                        ((Workflow)deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
-                    } else if (deployed.getType() == ConfigurationType.JOBRESOURCE.intValue()) {
-                    	((JobResource)deployed.readUpdateableContent()).setPath(deployed.getName());
-                    }
-                    deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-                    sig.setSignature(SignObject.signX509(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, kp.getPrivate(), deployed.getContent()));
-                    signedReDeployable.put(deployed, sig);
-                }
-                if (sig != null) {
                     session.save(sig);
                 }
+                signedDrafts.put(deployed, sig);
             }
         }
-        return signedReDeployable;
+        return signedDrafts;
     }
 
     public static DBItemInventoryConfiguration verifySignature(String account, DBItemInventoryConfiguration signedDraft,
@@ -2289,10 +2190,10 @@ public abstract class PublishUtils {
         return pathsWithParents;
     }
 
-    private static void replaceAgentNameWithAgentId(DBItemDeploymentHistory draft, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
+    private static void replaceAgentNameWithAgentId(DBItemDeploymentHistory deployed, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Workflow workflow = (Workflow)draft.readUpdateableContent();
-        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(draft
+        Workflow workflow = (Workflow)deployed.readUpdateableContent();
+        Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(deployed
                 .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
@@ -3159,5 +3060,24 @@ public abstract class PublishUtils {
 		}
     	newItem.setCommitId(commitId);
     	return newItem;
+    }
+    
+    private static void updatePath (DBItemDeploymentHistory deployed) {
+        try {
+			if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
+			    ((Workflow)deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
+			} else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
+				((JobResource)deployed.readUpdateableContent()).setPath(deployed.getName());
+			} else if (deployed.getType() == DeployType.LOCK.intValue()) {
+				((Lock)deployed.readUpdateableContent()).setPath(deployed.getName());
+			} else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
+				((FileOrderSource)deployed.readUpdateableContent()).setPath(deployed.getName());
+			} else if (deployed.getType() == DeployType.JUNCTION.intValue()) {
+				((Junction)deployed.readUpdateableContent()).setPath(deployed.getName());
+			} else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
+				((JobClass)deployed.readUpdateableContent()).setPath(deployed.getName());
+			}
+		    deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
+		} catch (JsonProcessingException e) {} 
     }
 }

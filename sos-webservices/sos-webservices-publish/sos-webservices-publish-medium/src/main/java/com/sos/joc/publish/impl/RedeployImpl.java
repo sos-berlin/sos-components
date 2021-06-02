@@ -36,6 +36,7 @@ import com.sos.joc.publish.resource.IRedeploy;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.fileordersource.FileOrderSource;
 
 @Path("inventory/deployment")
 public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
@@ -69,7 +70,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.MEDIUM);
 
-            Set<DBItemDeploymentHistory> unsignedRedeployables = null;
+            List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
                 unsignedRedeployables = latest.stream().peek(item -> {
     				try {
@@ -78,7 +79,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 					} catch (IOException e) {
 						throw new JocException(e);
 					}
-				}).collect(Collectors.toSet());
+				}).collect(Collectors.toList());
             }
             // preparations
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
@@ -91,10 +92,16 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
                         item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
                 unsignedRedeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType()))).forEach(
-                        item -> updateableAgentNamesFileOrderSources.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer)));
+                        item ->  { 
+                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
+                        	updateableAgentNamesFileOrderSources.add(update);
+                            try {
+                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                updateableAgentNamesFileOrderSources.add(update);
+                            } catch (Exception e) {}
+                        });
 
-                verifiedRedeployables.putAll(PublishUtils.getDeploymentsWithSignature(commitId, account, unsignedRedeployables, hibernateSession,
-                        JocSecurityLevel.MEDIUM));
+                verifiedRedeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, unsignedRedeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
             }
             if (verifiedRedeployables != null && !verifiedRedeployables.isEmpty()) {
                 SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedRedeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,

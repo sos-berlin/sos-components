@@ -13,13 +13,14 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.common.IDeployObject;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_HISTORY)
+@Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]", "[COMMIT_ID]"}) })
 @SequenceGenerator(name = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, allocationSize = 1)
 public class DBItemDeploymentHistory extends DBItem {
 

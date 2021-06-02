@@ -171,10 +171,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         .forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
                 if (unsignedDrafts != null) {
-                    Set<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                    		.filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(item -> {
-                    			return PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId());
-                    }).collect(Collectors.toSet());
+                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
+                    		.filter(draft -> canAdd(draft.getPath(), permittedFolders))
+                    		.map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId()))
+                    		.collect(Collectors.toList());
+//                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = new ArrayList<DBItemDeploymentHistory>();
+//                    for (DBItemInventoryConfiguration cfg : unsignedDrafts) {
+//                    	if (canAdd(cfg.getPath(), permittedFolders)) {
+//                    		filteredUnsignedDrafts.add(PublishUtils.cloneInvCfgToDepHistory(cfg, account, controllerId, commitId, dbAuditlog.getId()));
+//                    	}
+//                    }
                     if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
 //                        // WORKAROUND: old items with leading slash
 //                        PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
@@ -187,9 +193,6 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         		UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
 	                            try {
 	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-//	                                        Globals.objectMapper.readValue(item.readUpdateableContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-//	                                fileOrderSource.setAgentPath(update.getAgentId());
-//	                                item.writeUpdateableContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
 	                                updateableAgentNamesFileOrderSources.add(update);
 	                            } catch (Exception e) {}
 	                        });
@@ -202,7 +205,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // all items will be signed or re-signed with current commitId
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
                 	// filter regarding folder permissions
-                	Set<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
+                	List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
                 			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
                 			.peek(item -> {
                 				try {
@@ -211,7 +214,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 								} catch (IOException e) {
 									throw new JocException(e);
 								}
-            				}).collect(Collectors.toSet());
+            				}).collect(Collectors.toList());
                 	if (!filteredUnsignedReDeployables.isEmpty()) {
 //                        // WORKAROUND: old items with leading slash
 //                        PublishUtils.updatePathWithNameInContent(filteredUnsignedReDeployables);
@@ -227,8 +230,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
 	                                updateableAgentNamesFileOrderSources.add(update);
 	                            } catch (Exception e) {}
 	                        });
-                        verifiedDeployables.putAll(
-                                PublishUtils.getDeploymentsWithSignature(commitId, account, filteredUnsignedReDeployables, hibernateSession, JocSecurityLevel.MEDIUM));
+                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
+                        		commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
                 	}
                 }
                 // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
