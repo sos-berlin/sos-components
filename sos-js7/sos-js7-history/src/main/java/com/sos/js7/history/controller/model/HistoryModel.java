@@ -41,7 +41,10 @@ import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.history.HistoryLogEvent;
+import com.sos.joc.event.bean.history.HistoryOrderLog;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
+import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
 import com.sos.joc.event.bean.history.HistoryOrderTaskStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
@@ -1669,6 +1672,7 @@ public class HistoryModel {
         Path file = null;
         boolean newLine;
         boolean append;
+        boolean isTaskLog = true;
 
         switch (entry.getEventType()) {
         case OrderProcessingStarted:
@@ -1746,6 +1750,7 @@ public class HistoryModel {
             // order log
             newLine = true;
             file = getOrderLog(dir, entry.getHistoryOrderId());
+            isTaskLog = false;
 
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
@@ -1753,6 +1758,18 @@ public class HistoryModel {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }
             content.append((new ObjectMapper()).writeValueAsString(orderEntry));
+        }
+        
+        if (content.length() > 0) {
+            if (isTaskLog) {
+                EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
+                        .getHistoryOrderStepId(), content.toString()));
+            } else {
+                EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content.toString()));
+            }
+        }
+        if (orderEntryContent != null) {
+            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntryContent.toString()));
         }
 
         try {

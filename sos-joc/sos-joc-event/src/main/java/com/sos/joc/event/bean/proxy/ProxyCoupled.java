@@ -17,11 +17,11 @@ public class ProxyCoupled extends ProxyEvent {
      */
     public ProxyCoupled(String controllerId, Boolean isCoupled) {
         super("ProxyCoupled", controllerId, null);
-        putVariable("isCoupled", isCoupled.toString());
+        putVariable("isCoupled", isCoupled);
     }
     
     @JsonIgnore
-    public boolean isCoupled() {
-        return Boolean.parseBoolean(getVariables().get("isCoupled"));
+    public Boolean isCoupled() {
+        return (Boolean) getVariables().get("isCoupled");
     }
 }

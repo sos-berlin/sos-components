@@ -34,7 +34,7 @@ public abstract class ProxyEvent extends JOCEvent {
         super(key, controllerId, null);
     }
     
-    public ProxyEvent(String key, String controllerId, Map<String, String> variables) {
+    public ProxyEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
 }

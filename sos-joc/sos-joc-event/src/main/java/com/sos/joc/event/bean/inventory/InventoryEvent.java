@@ -27,6 +27,6 @@ public class InventoryEvent extends JOCEvent {
     
     @JsonIgnore
     public String getFolder() {
-        return getVariables().get("folder");
+        return (String) getVariables().get("folder");
     }
 }

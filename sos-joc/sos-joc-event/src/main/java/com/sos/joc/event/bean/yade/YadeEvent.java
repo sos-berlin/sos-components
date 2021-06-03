@@ -17,7 +17,7 @@ public abstract class YadeEvent extends JOCEvent {
     public YadeEvent() {
     }
 
-    public YadeEvent(String key, String controllerId, Map<String, String> variables) {
+    public YadeEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
 }

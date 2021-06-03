@@ -16,7 +16,7 @@ public class EventServiceStart extends EventServiceEvent {
      * @param controllerId
      * @param variables
      */
-    public EventServiceStart(String key, String controllerId, Map<String, String> variables) {
+    public EventServiceStart(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
     

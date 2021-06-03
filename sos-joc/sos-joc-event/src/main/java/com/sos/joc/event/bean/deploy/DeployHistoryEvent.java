@@ -35,7 +35,7 @@ public class DeployHistoryEvent extends JOCEvent {
         putVariable("name", name);
         putVariable("commitId", commitId);
         putVariable("path", path);
-        putVariable("objectType", String.valueOf(objectType));
+        putVariable("objectType", objectType);
     }
     
     public DeployHistoryEvent(String key, String controllerId, String name, String commitId, String path, Integer objectType) {
@@ -43,30 +43,26 @@ public class DeployHistoryEvent extends JOCEvent {
         putVariable("name", name);
         putVariable("commitId", commitId);
         putVariable("path", path);
-        putVariable("objectType", String.valueOf(objectType));
+        putVariable("objectType", objectType);
     }
 
     @JsonIgnore
     public String getName() {
-        return getVariables().get("name");
+        return (String) getVariables().get("name");
     }
     
     @JsonIgnore
     public String getCommitId() {
-        return getVariables().get("commitId");
+        return (String) getVariables().get("commitId");
     }
     
     @JsonIgnore
     public String getPath() {
-        return getVariables().get("path");
+        return (String) getVariables().get("path");
     }
     
     @JsonIgnore
     public Integer getObjectType() {
-        try {
-            return Integer.parseInt(getVariables().get("historyId"));
-        } catch (Throwable e) {
-            return 0;
-        }
+        return (Integer) getVariables().get("historyId");
     }
 }

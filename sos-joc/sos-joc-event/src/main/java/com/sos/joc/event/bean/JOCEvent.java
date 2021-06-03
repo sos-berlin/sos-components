@@ -50,7 +50,7 @@ public abstract class JOCEvent {
      * @param controllerId
      * @param variables
      */
-    public JOCEvent(String key, String controllerId, Map<String, String> variables) {
+    public JOCEvent(String key, String controllerId, Map<String, Object> variables) {
         this.key = key;
         this.controllerId = controllerId;
         if (variables != null) {
@@ -85,7 +85,7 @@ public abstract class JOCEvent {
      * 
      */
     @JsonIgnore
-    private Map<String, String> variables = new HashMap<String, String>();
+    private Map<String, Object> variables = new HashMap<>();
 
     /**
      * 
@@ -160,16 +160,16 @@ public abstract class JOCEvent {
     }
     
     @JsonAnyGetter
-    public Map<String, String> getVariables() {
+    public Map<String, Object> getVariables() {
         return this.variables;
     }
     
-    public void putVariable(String name, String value) {
+    public void putVariable(String name, Object value) {
         this.variables.put(name, value);
     }
 
     @JsonAnySetter
-    public void setVariables(Map<String, String> variables) {
+    public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
     }
 

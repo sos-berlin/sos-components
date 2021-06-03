@@ -16,7 +16,7 @@ public class EventServiceStop extends EventServiceEvent {
      * @param controllerId
      * @param variables
      */
-    public EventServiceStop(String key, String controllerId, Map<String, String> variables) {
+    public EventServiceStop(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
     

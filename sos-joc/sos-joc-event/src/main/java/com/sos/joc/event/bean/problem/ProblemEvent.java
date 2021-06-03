@@ -2,6 +2,7 @@ package com.sos.joc.event.bean.problem;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sos.joc.event.bean.JOCEvent;
 
 
@@ -19,7 +20,7 @@ public class ProblemEvent extends JOCEvent {
      * @param controllerId
      * @param variables
      */
-    public ProblemEvent(String key, String controllerId, Map<String, String> variables) {
+    public ProblemEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
     
@@ -28,5 +29,10 @@ public class ProblemEvent extends JOCEvent {
         setKey(key);
         setControllerId(controllerId);
         putVariable("message", errorMsg);
+    }
+    
+    @JsonIgnore
+    public String getMessage() {
+        return (String) getVariables().get("message");
     }
 }

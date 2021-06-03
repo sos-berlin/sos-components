@@ -41,7 +41,6 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
             if (response != null) {
                 return response;
             }
-            checkRequiredParameter("historyId", in.getHistoryId());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session);
@@ -91,22 +90,18 @@ public class OrderHistoryResourceImpl extends JOCResourceImpl implements IOrderH
     }
 
     private void mapStates(OrderHistoryItemChildren answer, List<DBItemHistoryOrderState> states) {
-        if (states == null) {
-            return;
-        }
-        switch (states.size()) {
-        case 0:
-            return;
-        case 1:
-            Integer st = states.get(0).getState();
-            if (OrderStateText.FAILED.intValue().equals(st)) {
-                return;
+        if (states != null) {
+            switch (states.size()) {
+            case 0:
+                break;
+            case 1:
+                if (OrderStateText.FAILED.intValue() == states.get(0).getState()) {
+                    break;
+                }
+            default:
+                answer.setStates(states.stream().map(state -> HistoryMapper.map2OrderHistoryStateItem(state)).collect(Collectors.toList()));
+                break;
             }
-        default:
-            answer.setStates(states.stream().map(state -> {
-                return HistoryMapper.map2OrderHistoryStateItem(state);
-            }).collect(Collectors.toList()));
-            break;
         }
     }
 

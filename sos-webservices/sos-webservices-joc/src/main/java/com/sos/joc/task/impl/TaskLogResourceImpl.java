@@ -24,7 +24,7 @@ import com.sos.schema.JsonValidator;
 public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogResource {
 
     private static final String API_CALL_LOG = "./task/log";
-    private static final String API_CALL_RUNNING = "./task/log/runnning";
+    private static final String API_CALL_RUNNING = "./task/log/running";
     private static final String API_CALL_DOWNLOAD = "./task/log/download";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
 
@@ -35,6 +35,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 
     @Override
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
+//        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogsFilter.class);
@@ -45,17 +46,30 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
+            
+//            session = Globals.createSosHibernateStatelessConnection(API_CALL_RUNNING);
+//            if (taskLogs.getTasks().size() == 1) {
+//                Long historyId = taskLogs.getTasks().get(0).getTaskId();
+//                DBItemHistoryOrderStep historyOrderStepItem = session.get(DBItemHistoryOrderStep.class, historyId);
+//                if (historyOrderStepItem == null) {
+//                    throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
+//                }
+//                
+//                historyOrderStepItem.getHistoryOrderId();
+//                historyOrderStepItem.getOrderId()
+//            }
+            
 
             // TODO callables in several threads
             // Fake
-            //RunningTaskLogs logs = new RunningTaskLogs();
-            //List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
+//            RunningTaskLogs logs = new RunningTaskLogs();
+//            List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
             String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet implemented";
             for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
-                //RunningTaskLog runningTaskLog = new RunningTaskLog();
                 runningTaskLog.setComplete(true);
                 runningTaskLog.setEventId(null);
                 runningTaskLog.setLog(message);
+                //runningTaskLog.setTaskId(taskId);
                 //runningTasks.add(runningTaskLog);
             }
             //logs.setTasks(runningTasks);
@@ -66,6 +80,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+//        } finally {
+//            Globals.disconnect(session);
         }
     }
 

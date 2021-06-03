@@ -18,7 +18,7 @@ public abstract class ConfigurationEvent extends JOCEvent {
     public ConfigurationEvent() {
     }
 
-    public ConfigurationEvent(String key, String controllerId, Map<String, String> variables) {
+    public ConfigurationEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
 }

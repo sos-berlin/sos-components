@@ -23,7 +23,7 @@ public abstract class ConfigurationChangedEvent extends ConfigurationEvent {
 
     @JsonIgnore
     public String getConfigurationType() {
-        return getVariables().get("configurationType");
+        return (String) getVariables().get("configurationType");
     }
 
 }

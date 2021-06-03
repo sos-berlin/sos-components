@@ -153,8 +153,7 @@ public class LogTaskContent {
     }
 
     private InputStream getLogSnapshotFromHistoryService() {
-        // TODO read joc.properties (history.propertis) to find logs/history folder
-        eventId = Instant.now().toEpochMilli() * 1000;
+        eventId = Instant.now().getEpochSecond();
         complete = false;
         try {
             Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
@@ -164,10 +163,9 @@ public class LogTaskContent {
             }
         } catch (IOException e) {
             LOGGER.warn(e.toString());
-            // TODO Auto-generated catch block
-            // e.printStackTrace();
         }
-        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found\r\n";
+        //Standby JOC Cockpit instance has no access to snapshot log
+        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found\n";
         unCompressedLength = s.length() * 1L;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }

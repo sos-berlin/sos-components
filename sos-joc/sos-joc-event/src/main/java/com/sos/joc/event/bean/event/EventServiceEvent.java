@@ -32,7 +32,7 @@ public abstract class EventServiceEvent extends JOCEvent {
      * @param controllerId
      * @param variables
      */
-    public EventServiceEvent(String key, String controllerId, Map<String, String> variables) {
+    public EventServiceEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
     
@@ -46,6 +46,6 @@ public abstract class EventServiceEvent extends JOCEvent {
     }
     
     public String getAccessToken() {
-        return getVariables().get(accessTokenKey);
+        return (String) getVariables().get(accessTokenKey);
     }
 }

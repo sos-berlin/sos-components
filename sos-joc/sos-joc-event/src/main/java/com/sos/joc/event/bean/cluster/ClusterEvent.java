@@ -25,7 +25,7 @@ public abstract class ClusterEvent extends JOCEvent {
      * @param controllerId
      * @param variables
      */
-    public ClusterEvent(String key, String controllerId, Map<String, String> variables) {
+    public ClusterEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
     }
 

@@ -170,7 +170,7 @@ public class EventService {
             eventSnapshot.setEventType("ProblemEvent");
             eventSnapshot.setObjectType(EventType.PROBLEM);
             eventSnapshot.setAccessToken(evt.getKey());
-            eventSnapshot.setMessage(evt.getVariables().get("message"));
+            eventSnapshot.setMessage(evt.getMessage());
             addEvent(eventSnapshot);
         }
     }
@@ -180,7 +180,7 @@ public class EventService {
         if (controllerId.equals(evt.getControllerId())) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId());
-            String orderId = evt.getVariables().get("orderId");
+            String orderId = evt.getOrderId();
             if (orderId.contains("|")) {
                 // HistoryChildOrderStarted, HistoryChildOrderTerminated, HistoryChildOrderUpdated
                 eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", "ChildOrder"));
@@ -254,7 +254,9 @@ public class EventService {
 //            if (evt.isCoupled()) {
 //                setOrders();
 //            }
-            addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
+            if (evt.isCoupled() != null) {
+                addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
+            }
         } else {
             // to update Controller Status widget for other controllers
             addEvent(createControllerEvent(evt.getEventId()));

@@ -7,13 +7,13 @@ public class YadeTransferHistoryTerminated extends YadeEvent {
 
     public YadeTransferHistoryTerminated(String controllerId, Long transferId) {
         super(YadeTransferHistoryTerminated.class.getSimpleName(), controllerId, null);
-        putVariable("transferId", String.valueOf(transferId));
+        putVariable("transferId", transferId);
     }
 
     @JsonIgnore
     public Long getTransferId() {
         try {
-            return Long.parseLong(getVariables().get("transferId"));
+            return (Long) getVariables().get("transferId");
         } catch (Throwable e) {
             return null;
         }

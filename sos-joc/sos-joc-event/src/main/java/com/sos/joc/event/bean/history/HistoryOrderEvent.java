@@ -27,16 +27,16 @@ public abstract class HistoryOrderEvent extends HistoryEvent {
     
     @JsonIgnore
     public String getOrderId() {
-        return getVariables().get("orderId");
+        return (String) getVariables().get("orderId");
     }
 
     @JsonIgnore
     public String getWorkflowName() {
-        return getVariables().get("workflowName");
+        return (String) getVariables().get("workflowName");
     }
 
     @JsonIgnore
     public String getWorkflowVersionId() {
-        return getVariables().get("WorkflowVersionId");
+        return (String) getVariables().get("WorkflowVersionId");
     }
 }
