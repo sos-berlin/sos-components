@@ -379,40 +379,40 @@ public class JobStep<A extends JobArguments> {
         return JOutcome.succeeded();
     }
 
-    public JOutcome.Completed success(final String returnValueKey, final Object returnValue) {
-        if (returnValueKey != null && returnValue != null) {
-            return JOutcome.succeeded(convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
+    public JOutcome.Completed success(final String outcomeVarKey, final Object outcomeVarValue) {
+        if (outcomeVarKey != null && outcomeVarValue != null) {
+            return JOutcome.succeeded(convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
         }
         return JOutcome.succeeded();
     }
 
-    public JOutcome.Completed success(final JobReturnVariable<?>... returnValues) {
-        return success(getMap(returnValues));
+    public JOutcome.Completed success(final JobOutcomeVariable<?>... outcomes) {
+        return success(getMap(outcomes));
     }
 
-    public JOutcome.Completed success(final Map<String, Object> returnValues) {
-        if (returnValues == null || returnValues.size() == 0) {
+    public JOutcome.Completed success(final Map<String, Object> outcomes) {
+        if (outcomes == null || outcomes.size() == 0) {
             return JOutcome.succeeded();
         }
-        return JOutcome.succeeded(convert4engine(returnValues));
+        return JOutcome.succeeded(convert4engine(outcomes));
     }
 
-    public JOutcome.Completed failed(final String msg, final String returnValueKey, final Object returnValue) {
-        if (returnValueKey != null && returnValue != null) {
-            return failedWithMap(msg, convert4engine(Collections.singletonMap(returnValueKey, returnValue)));
+    public JOutcome.Completed failed(final String msg, final String outcomeVarKey, final Object outcomeVarValue) {
+        if (outcomeVarKey != null && outcomeVarValue != null) {
+            return failedWithMap(msg, convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
         }
         return failed(msg);
     }
 
-    public JOutcome.Completed failed(final String msg, JobReturnVariable<?>... returnValues) {
-        return failed(msg, getMap(returnValues));
+    public JOutcome.Completed failed(final String msg, JobOutcomeVariable<?>... outcomes) {
+        return failed(msg, getMap(outcomes));
     }
 
-    public JOutcome.Completed failed(final String msg, final Map<String, Object> returnValues) {
-        if (returnValues == null || returnValues.size() == 0) {
+    public JOutcome.Completed failed(final String msg, final Map<String, Object> outcomes) {
+        if (outcomes == null || outcomes.size() == 0) {
             return failed(msg);
         }
-        return failedWithMap(msg, convert4engine(returnValues));
+        return failedWithMap(msg, convert4engine(outcomes));
     }
 
     public JOutcome.Completed failed() {
@@ -453,18 +453,18 @@ public class JobStep<A extends JobArguments> {
         }
     }
 
-    private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> returnValues) {
-        logger.failed2slf4j(msg, returnValues);
-        return JOutcome.failed(msg, returnValues);
+    private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> outcomes) {
+        logger.failed2slf4j(msg, outcomes);
+        return JOutcome.failed(msg, outcomes);
     }
 
-    private Map<String, Object> getMap(JobReturnVariable<?>... returnValues) {
+    private Map<String, Object> getMap(JobOutcomeVariable<?>... outcomes) {
         Map<String, Object> map = new HashMap<String, Object>();
-        for (JobReturnVariable<?> arg : returnValues) {
-            if (arg.getName() == null || arg.getValue() == null) {
+        for (JobOutcomeVariable<?> var : outcomes) {
+            if (var.getName() == null || var.getValue() == null) {
                 continue;
             }
-            map.put(arg.getName(), arg.getValue());
+            map.put(var.getName(), var.getValue());
         }
         return map;
     }
