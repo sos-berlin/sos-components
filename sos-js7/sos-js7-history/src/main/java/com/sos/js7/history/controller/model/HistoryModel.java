@@ -44,7 +44,6 @@ import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.event.EventBus;
-import com.sos.joc.event.bean.history.HistoryLogEvent;
 import com.sos.joc.event.bean.history.HistoryOrderLog;
 import com.sos.joc.event.bean.history.HistoryOrderStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
@@ -1819,13 +1818,13 @@ public class HistoryModel {
         if (content.length() > 0) {
             if (isTaskLog) {
                 EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
-                        .getHistoryOrderStepId(), content.toString()));
+                        .getHistoryOrderStepId(), content.toString(), newLine));
             } else {
-                EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content.toString()));
+                EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content.toString(), newLine));
             }
         }
         if (orderEntryContent != null) {
-            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntryContent.toString()));
+            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntryContent.toString(), newLine));
         }
 
         try {

@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 public abstract class HistoryLogEvent extends HistoryEvent {
 
-    public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content) {
+    public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content, boolean newline) {
         super(key, null, null);
         if (historyOrderId == null) {
             putVariable("historyOrderId", null);
@@ -26,7 +26,11 @@ public abstract class HistoryLogEvent extends HistoryEvent {
         } else {
             putVariable("historyOrderStepId", historyOrderStepId);
         }
-        putVariable("content", content);
+        if (newline) {
+            putVariable("content", content + "\r\n");
+        } else {
+            putVariable("content", content);
+        }
     }
     
     @JsonIgnore
