@@ -20,6 +20,9 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
             GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry dailyPlanHistoryAge = new ConfigurationEntry("daily_plan_history_age", "30d", GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry auditLogAge = new ConfigurationEntry("audit_log_age", "90d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry monitoringHistoryAge = new ConfigurationEntry("monitoring_history_age", "1d", GlobalSettingsSectionValueType.DURATION);
+    private ConfigurationEntry notificationHistoryAge = new ConfigurationEntry("notification_history_age", "1d",
+            GlobalSettingsSectionValueType.DURATION);
     private ConfigurationEntry deploymentHistoryVersions = new ConfigurationEntry("deployment_history_versions", "10",
             GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
 
@@ -36,6 +39,9 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
         fileTransferHistoryAge.setOrdering(++index);
         auditLogAge.setOrdering(++index);
         dailyPlanHistoryAge.setOrdering(++index);
+        monitoringHistoryAge.setOrdering(++index);
+        notificationHistoryAge.setOrdering(++index);
+
         deploymentHistoryVersions.setOrdering(++index);
     }
 
@@ -77,6 +83,14 @@ public class ConfigurationGlobalsCleanup extends AConfigurationSection {
 
     public ConfigurationEntry getDailyPlanHistoryAge() {
         return dailyPlanHistoryAge;
+    }
+
+    public ConfigurationEntry getMonitoringHistoryAge() {
+        return monitoringHistoryAge;
+    }
+
+    public ConfigurationEntry getNotificationHistoryAge() {
+        return notificationHistoryAge;
     }
 
     public ConfigurationEntry getDeploymentHistoryVersions() {

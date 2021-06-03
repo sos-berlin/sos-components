@@ -23,6 +23,10 @@ public class JocServiceAnswer {
         this(null, null);
     }
 
+    public JocServiceAnswer(JocServiceAnswerState state) {
+        this.state = state;
+    }
+
     public JocServiceAnswer(Instant start, Instant end) {
         if (start == null || end == null) {
             state = JocServiceAnswerState.UNKNOWN;

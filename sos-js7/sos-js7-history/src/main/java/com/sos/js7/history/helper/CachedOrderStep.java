@@ -3,7 +3,9 @@ package com.sos.js7.history.helper;
 import java.util.Date;
 
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.event.EventType;
 import com.sos.joc.classes.history.HistoryMapper;
+import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
 public class CachedOrderStep {
@@ -37,6 +39,21 @@ public class CachedOrderStep {
         severity = item.getSeverity();
         returnCode = item.getReturnCode();
         endTime = item.getEndTime();
+    }
+
+    public HistoryOrderStepBean convert(EventType eventType, String controllerId) {
+        HistoryOrderStepBean b = new HistoryOrderStepBean(eventType, controllerId, id);
+        b.setHistoryOrderMainParentId(historyOrderMainParentId);
+        b.setHistoryOrderId(historyOrderId);
+        b.setOrderId(orderId);
+        b.setJobName(jobName);
+        b.setAgentId(agentId);
+        b.setAgentUri(agentUri);
+        b.setWorkflowPosition(workflowPosition);
+        b.setSeverity(severity);
+        b.setReturnCode(returnCode);
+        b.setEndTime(endTime);
+        return b;
     }
 
     public Long getId() {

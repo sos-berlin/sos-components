@@ -17,7 +17,7 @@ public class HistoryConfiguration {
 
     // Directory, History LOGS
     private String logDir = "logs/history";
-    // commit/store after n inserts
+    // commit after n db operations
     private int maxTransactions = 100;
 
     // Flux - Collect incoming values into a List that will be pushed into the returned Flux every timespan OR maxSize items.

@@ -34,6 +34,8 @@ import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.joc.DBItemJocVariable;
+import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
+import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
@@ -101,6 +103,13 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_HISTORY_TEMP_LOG = DBItemHistoryTempLog.class.getSimpleName();
     public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
+
+    /** MONITORING Tables */
+    public static final String DBITEM_MONITORING_ORDER = DBItemMonitoringOrder.class.getSimpleName();
+    public static final String TABLE_MONITORING_ORDERS = "MON_ORDERS";
+
+    public static final String DBITEM_MONITORING_ORDER_STEP = DBItemMonitoringOrderStep.class.getSimpleName();
+    public static final String TABLE_MONITORING_ORDER_STEPS = "MON_ORDER_STEPS";
 
     /** Daily plan tables */
     public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";
@@ -262,6 +271,15 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemDeploymentHistory.class);
         cl.merge(getYadeClassMapping().getClasses());
+        return cl;
+    }
+
+    public static SOSClassList getMonitoringClassMapping() {
+        SOSClassList cl = new SOSClassList();
+        cl.add(DBItemMonitoringOrder.class);
+        cl.add(DBItemMonitoringOrderStep.class);
+        
+        cl.add(DBItemHistoryOrder.class);
         return cl;
     }
 

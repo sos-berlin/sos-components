@@ -22,7 +22,7 @@ public class EventTest {
 
     @Test
     public void testObjectToJSON() throws JsonProcessingException {
-        HistoryOrderStarted evt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711");
+        HistoryOrderStarted evt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711",null);
         System.out.print(objectMapper.writeValueAsString(evt));
         assertEquals("testObjectToJSON", jsonTestTemplate, objectMapper.writeValueAsString(evt));
     }
@@ -32,7 +32,7 @@ public class EventTest {
     public void testJSONToObject() throws IOException {
         HistoryEvent evt = objectMapper.readValue(jsonTestTemplate, HistoryEvent.class);
         System.out.println(evt.toString());
-        HistoryOrderStarted expectEvt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711");
+        HistoryOrderStarted expectEvt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711",null);
         expectEvt.setTYPE(HistoryOrderStarted.class.getSimpleName());  // only for Test necessary
         assertEquals("testJSONToObject", expectEvt, evt);
     }

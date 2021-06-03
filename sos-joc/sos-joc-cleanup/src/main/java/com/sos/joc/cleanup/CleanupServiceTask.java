@@ -21,6 +21,7 @@ import com.sos.joc.cleanup.model.CleanupTaskAuditLog;
 import com.sos.joc.cleanup.model.CleanupTaskDailyPlan;
 import com.sos.joc.cleanup.model.CleanupTaskDeployment;
 import com.sos.joc.cleanup.model.CleanupTaskHistory;
+import com.sos.joc.cleanup.model.CleanupTaskMonitoring;
 import com.sos.joc.cleanup.model.CleanupTaskYade;
 import com.sos.joc.cleanup.model.ICleanupTask;
 import com.sos.joc.cluster.AJocClusterService;
@@ -105,6 +106,15 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                                 disabled = true;
                             } else {
                                 task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
+                                datetimes.add(datetime);
+                            }
+                        } else if (service.getIdentifier().equals(ClusterServices.monitoring.name())) {
+                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
+                                    cleanupSchedule.getFirstStart());
+                            if (datetime.getDatetime() == null) {
+                                disabled = true;
+                            } else {
+                                task = new CleanupTaskMonitoring(cleanupSchedule.getFactory(), service, batchSize);
                                 datetimes.add(datetime);
                             }
                         }

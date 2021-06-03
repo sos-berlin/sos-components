@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Period;
@@ -42,7 +43,7 @@ public class CleanupServiceSchedule {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceSchedule.class);
 
     private final static String DELIMITER = "->";
-    private static final int FACTORY_MAX_POOL_SIZE = 3;
+    private static final int FACTORY_MAX_POOL_SIZE = 5;
 
     private final CleanupService service;
     private JocClusterHibernateFactory factory;
@@ -540,6 +541,13 @@ public class CleanupServiceSchedule {
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getJocClassMapping());
+
+        Enum<SOSHibernateFactory.Dbms> dbms = SOSHibernateFactory.getDbms(configFile);
+        // TMP - only MYSQL, see MonitoringService
+        if (SOSHibernateFactory.Dbms.MYSQL.equals(dbms)) {
+            factory.addClassMapping(DBLayer.getMonitoringClassMapping());
+        }
+
         factory.build();
     }
 
