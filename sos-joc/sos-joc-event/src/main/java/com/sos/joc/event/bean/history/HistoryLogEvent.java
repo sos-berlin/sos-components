@@ -14,9 +14,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 public abstract class HistoryLogEvent extends HistoryEvent {
 
-    public HistoryLogEvent() {
-    }
-
     public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content) {
         super(key, null, null);
         if (historyOrderId == null) {

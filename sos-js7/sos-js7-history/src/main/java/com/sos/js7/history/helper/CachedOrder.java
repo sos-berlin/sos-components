@@ -1,6 +1,9 @@
 package com.sos.js7.history.helper;
 
+import com.sos.controller.model.event.EventType;
+import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.model.order.OrderStateText;
 
 import java.util.Date;
@@ -32,6 +35,22 @@ public class CachedOrder {
         hasStates = item.getHasStates();
         currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
         endTime = item.getEndTime();
+    }
+
+    public HistoryOrderBean convert(EventType eventType, String controllerId) {
+        HistoryOrderBean b = new HistoryOrderBean(eventType, controllerId, id);
+        b.setOrderId(orderId);
+        b.setMainParentId(mainParentId);
+        b.setParentId(parentId);
+        b.setWorkflowPath(workflowPath);
+        b.setWorkflowVersionId(workflowVersionId);
+        b.setState(state);
+        if (state != null) {
+            b.setSeverity(HistorySeverity.map2DbSeverity(state));
+        }
+        b.setCurrentHistoryOrderStepId(currentHistoryOrderStepId);
+        b.setEndTime(endTime);
+        return b;
     }
 
     public Long getId() {

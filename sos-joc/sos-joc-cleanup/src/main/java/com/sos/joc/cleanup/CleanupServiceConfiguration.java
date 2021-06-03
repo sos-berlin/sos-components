@@ -33,6 +33,8 @@ public class CleanupServiceConfiguration {
     private Age dailyPlanHistoryAge;
     private Age fileTransferHistoryAge;
     private Age auditLogAge;
+    private Age monitoringHistoryAge;
+    private Age notificationHistoryAge;
     private int deploymentHistoryVersions;
     private int batchSize;
 
@@ -56,6 +58,8 @@ public class CleanupServiceConfiguration {
         this.dailyPlanHistoryAge = new Age(configuration.getDailyPlanHistoryAge());
         this.fileTransferHistoryAge = new Age(configuration.getFileTransferHistoryAge());
         this.auditLogAge = new Age(configuration.getAuditLogAge());
+        this.monitoringHistoryAge = new Age(configuration.getMonitoringHistoryAge());
+        this.notificationHistoryAge = new Age(configuration.getNotificationHistoryAge());
         try {
             this.deploymentHistoryVersions = Integer.parseInt(configuration.getDeploymentHistoryVersions().getValue());
         } catch (Throwable e) {
@@ -98,6 +102,10 @@ public class CleanupServiceConfiguration {
 
     public Age getFileTransferHistoryAge() {
         return fileTransferHistoryAge;
+    }
+
+    public Age getMonitoringHistoryAge() {
+        return monitoringHistoryAge;
     }
 
     public int getDeploymentHistoryVersions() {
@@ -146,6 +154,10 @@ public class CleanupServiceConfiguration {
         sb.append(",auditLogAge=[configured=").append(auditLogAge.getConfigured()).append(",minutes=").append(auditLogAge.getMinutes()).append("]");
         sb.append(",fileTransferHistoryAge=[configured=").append(fileTransferHistoryAge.getConfigured()).append(",minutes=").append(
                 fileTransferHistoryAge.getMinutes()).append("]");
+        sb.append(",monitoringHistoryAge=[configured=").append(monitoringHistoryAge.getConfigured()).append(",minutes=").append(monitoringHistoryAge
+                .getMinutes()).append("]");
+        sb.append(",notificationHistoryAge=[configured=").append(notificationHistoryAge.getConfigured()).append(",minutes=").append(
+                notificationHistoryAge.getMinutes()).append("]");
         sb.append(",deploymentHistoryVersions=").append(deploymentHistoryVersions);
         sb.append("]");
         sb.append("]");

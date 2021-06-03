@@ -115,7 +115,7 @@ public class BusTest {
         Listener2 l6 = new Listener2();
 
         System.out.println(Instant.now());
-        HistoryEvent evt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711");
+        HistoryEvent evt = new HistoryOrderStarted("controllerId", "orderId", "myWorkflow", "4711",null);
         EventBus eventBus = EventBus.getInstance();
         eventBus.post(evt);
         try {

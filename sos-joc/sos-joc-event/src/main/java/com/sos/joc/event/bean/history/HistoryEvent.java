@@ -2,6 +2,7 @@ package com.sos.joc.event.bean.history;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -21,10 +22,21 @@ import com.sos.joc.event.bean.JOCEvent;
 
 public abstract class HistoryEvent extends JOCEvent {
 
-    public HistoryEvent() {
-    }
+    private final Object payload;
 
+    public HistoryEvent(String key, String controllerId, Map<String, Object> variables, Object payload) {
+        super(key, controllerId, variables);
+        this.payload = payload;
+    }
+    
     public HistoryEvent(String key, String controllerId, Map<String, Object> variables) {
         super(key, controllerId, variables);
+        this.payload = null;
     }
+
+    @JsonIgnore
+    public Object getPayload() {
+        return payload;
+    }
+
 }
