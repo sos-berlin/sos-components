@@ -331,6 +331,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                 val = Integer.valueOf(((BigDecimal) val).intValue());
             } else if (type.equals(Long.class)) {
                 val = Long.valueOf(((BigDecimal) val).longValue());
+            } else if (type.equals(String.class)) {
+                val = val.toString();
             }
         }
         return val;
