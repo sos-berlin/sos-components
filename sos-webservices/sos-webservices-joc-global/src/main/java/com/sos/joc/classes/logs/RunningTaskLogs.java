@@ -12,7 +12,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ public class RunningTaskLogs {
     private volatile Map<Long, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
     private volatile Set<Long> registeredTaskIds = new CopyOnWriteArraySet<>();
-    private volatile Map<Long, CopyOnWriteArraySet<Condition>> conditions = new ConcurrentHashMap<>();
     
     public enum Mode {
         COMPLETE, TRUE, FALSE;
@@ -69,13 +67,13 @@ public class RunningTaskLogs {
     }
     
     public synchronized void subscribe(Long taskId) {
-        LOGGER.info("taskId '" + taskId + "' will be observed for log events" );
+        LOGGER.info("taskId '" + taskId + "' is observed for log events" );
         registeredTaskIds.add(taskId);
     }
     
     public synchronized void unsubscribe(Long taskId) {
         registeredTaskIds.remove(taskId);
-        LOGGER.info("taskId '" + taskId + "' won't be longer observed for log events" );
+        LOGGER.info("taskId '" + taskId + "' is no longer observed for log events" );
     }
     
     public Mode hasEvents(Long eventId, Long taskId) {
