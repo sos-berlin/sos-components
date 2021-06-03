@@ -29,6 +29,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -69,13 +70,17 @@ public class LogTaskContent {
 
     public Map<String, Object> getHeaders() {
         Map<String, Object> headers = new HashMap<String, Object>();
-        headers.put("Access-Control-Expose-Headers", "X-Log-Complete,X-Log-Event-Id,X-Uncompressed-Length");
+        headers.put("Access-Control-Expose-Headers", "X-Log-Complete,X-Log-Event-Id,X-Log-Task-Id,X-Uncompressed-Length");
         headers.put("X-Log-Complete", complete);
+        headers.put("X-Log-Task-Id", historyId);
         if (unCompressedLength != null) {
             headers.put("X-Uncompressed-Length", unCompressedLength);
         }
-        if (eventId != null) {
-            headers.put("X-Log-Event-Id", eventId);
+        if (!isComplete()) {
+            headers.put("X-Log-Task-Id", historyId);
+            if (eventId != null) {
+                headers.put("X-Log-Event-Id", eventId);
+            }
         }
         return headers;
     }
@@ -153,20 +158,22 @@ public class LogTaskContent {
     }
 
     private InputStream getLogSnapshotFromHistoryService() {
-        eventId = Instant.now().getEpochSecond();
-        complete = false;
         try {
             Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
+                eventId = Instant.now().getEpochSecond();
+                complete = false;
                 unCompressedLength = Files.size(tasklog);
+                //RunningTaskLogs.getInstance().subscribe(historyId);
                 return Files.newInputStream(tasklog);
             }
         } catch (IOException e) {
             LOGGER.warn(e.toString());
         }
-        //Standby JOC Cockpit instance has no access to snapshot log
+        //TODO text for standby instance: "Standby JOC Cockpit instance has no access to snapshot log"
         String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found\n";
         unCompressedLength = s.length() * 1L;
+        complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     }
 

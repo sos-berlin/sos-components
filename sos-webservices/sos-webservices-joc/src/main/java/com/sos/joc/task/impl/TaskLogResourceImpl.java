@@ -3,6 +3,7 @@ package com.sos.joc.task.impl;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -14,8 +15,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogTaskContent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.job.RunningTaskLog;
-import com.sos.joc.model.job.RunningTaskLogs;
-import com.sos.joc.model.job.RunningTaskLogsFilter;
+import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.job.TaskFilter;
 import com.sos.joc.task.resource.ITaskLogResource;
 import com.sos.schema.JsonValidator;
@@ -38,10 +38,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 //        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_RUNNING, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, RunningTaskLogsFilter.class);
-            RunningTaskLogs taskLogs = Globals.objectMapper.readValue(filterBytes, RunningTaskLogs.class);
+            JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
+            RunningTaskLog taskLog = Globals.objectMapper.readValue(filterBytes, RunningTaskLog.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLogs.getControllerId(), getControllerPermissions(taskLogs
+            JOCDefaultResponse jocDefaultResponse = initPermissions(taskLog.getControllerId(), getControllerPermissions(taskLog
                     .getControllerId(), accessToken).getOrders().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -59,21 +59,30 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 //                historyOrderStepItem.getOrderId()
 //            }
             
+//            CompletableFuture.supplyAsync(() -> {
+//                Set<RunningTaskLog> s = null;
+//                return s;
+//            }).get(1, TimeUnit.MINUTES);
+            
 
             // TODO callables in several threads
             // Fake
 //            RunningTaskLogs logs = new RunningTaskLogs();
 //            List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
-            String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet implemented";
-            for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
-                runningTaskLog.setComplete(true);
-                runningTaskLog.setEventId(null);
-                runningTaskLog.setLog(message);
-                //runningTaskLog.setTaskId(taskId);
-                //runningTasks.add(runningTaskLog);
-            }
+            TimeUnit.MINUTES.sleep(1);
+            String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet completly implemented";
+            //taskLog.setComplete(true);
+            //taskLog.setEventId(null);
+            taskLog.setLog(message);
+//            for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
+//                runningTaskLog.setComplete(true);
+//                runningTaskLog.setEventId(null);
+//                runningTaskLog.setLog(message);
+//                //runningTaskLog.setTaskId(taskId);
+//                //runningTasks.add(runningTaskLog);
+//            }
             //logs.setTasks(runningTasks);
-            return JOCDefaultResponse.responseStatus200(taskLogs);
+            return JOCDefaultResponse.responseStatus200(taskLog);
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
