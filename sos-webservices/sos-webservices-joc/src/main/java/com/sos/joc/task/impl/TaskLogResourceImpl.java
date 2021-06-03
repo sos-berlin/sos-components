@@ -71,7 +71,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 //            List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
             TimeUnit.MINUTES.sleep(1);
             String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet completly implemented";
-            //taskLog.setComplete(true);
+            taskLog.setComplete(false);
             //taskLog.setEventId(null);
             taskLog.setLog(message);
 //            for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
