@@ -1,19 +1,27 @@
 package com.sos.joc.task.impl;
 
 import java.nio.charset.StandardCharsets;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import javax.ws.rs.Path;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogTaskContent;
 import com.sos.joc.classes.logs.RunningTaskLogs;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.history.HistoryOrderTaskLogArrived;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.job.RunningTaskLog;
 import com.sos.joc.model.job.RunningTaskLogFilter;
@@ -24,10 +32,16 @@ import com.sos.schema.JsonValidator;
 @Path("task")
 public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskLogResourceImpl.class);
     private static final String API_CALL_LOG = "./task/log";
     private static final String API_CALL_RUNNING = "./task/log/running";
     private static final String API_CALL_DOWNLOAD = "./task/log/download";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
+    //private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
+    private Lock lock = new ReentrantLock();
+    private Condition condition = null;
+    private Long taskId = null;
+    private volatile AtomicBoolean complete = new AtomicBoolean(false);
+    private volatile AtomicBoolean eventArrived = new AtomicBoolean(false);
 
     @Override
     public JOCDefaultResponse postTaskLog(String accessToken, byte[] filterBytes) {
@@ -36,7 +50,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 
     @Override
     public JOCDefaultResponse postRollingTaskLog(String accessToken, byte[] filterBytes) {
-//        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL_RUNNING, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, RunningTaskLogFilter.class);
@@ -48,47 +61,42 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 return jocDefaultResponse;
             }
             
-//            session = Globals.createSosHibernateStatelessConnection(API_CALL_RUNNING);
-//            if (taskLogs.getTasks().size() == 1) {
-//                Long historyId = taskLogs.getTasks().get(0).getTaskId();
-//                DBItemHistoryOrderStep historyOrderStepItem = session.get(DBItemHistoryOrderStep.class, historyId);
-//                if (historyOrderStepItem == null) {
-//                    throw new DBMissingDataException(String.format("Task (Id:%d) not found", historyId));
-//                }
-//                
-//                historyOrderStepItem.getHistoryOrderId();
-//                historyOrderStepItem.getOrderId()
-//            }
-            
-//            CompletableFuture.supplyAsync(() -> {
-//                Set<RunningTaskLog> s = null;
-//                return s;
-//            }).get(1, TimeUnit.MINUTES);
+            taskId = taskLog.getTaskId();
+            taskLog.setComplete(false);
+            taskLog.setLog(null);
             
             RunningTaskLogs r = RunningTaskLogs.getInstance();
-            RunningTaskLogs.Mode mode = r.hasEvents(taskLog.getEventId(), taskLog.getTaskId());
-            if (RunningTaskLogs.Mode.IMMEDIATLY.equals(mode)) {
+            RunningTaskLogs.Mode mode = r.hasEvents(taskLog.getEventId(), taskId);
+            LOGGER.info("has tasklogs: " + mode.name());
+            switch (mode) {
+            case TRUE:
+                try {
+                    TimeUnit.SECONDS.sleep(2);
+                } catch (InterruptedException e1) {
+                }
+            case COMPLETE:
                 taskLog = r.getRunningTaskLog(taskLog);
+                break;
+            case FALSE:
+                EventBus.getInstance().register(this);
+                condition = lock.newCondition();
+                waitingForEvents(TimeUnit.MINUTES.toMillis(1));
+                if (eventArrived.get()) {
+                    if (!complete.get()) {
+                        try {
+                            TimeUnit.SECONDS.sleep(2);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                    taskLog = r.getRunningTaskLog(taskLog);
+                }
+                break;
             }
             
 
-            // TODO callables in several threads
-            // Fake
-//            RunningTaskLogs logs = new RunningTaskLogs();
-//            List<RunningTaskLog> runningTasks = new ArrayList<RunningTaskLog>();
-            TimeUnit.MINUTES.sleep(1);
-            String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet completly implemented";
-            taskLog.setComplete(false);
-            //taskLog.setEventId(null);
-            taskLog.setLog(message);
-//            for (RunningTaskLog runningTaskLog : taskLogs.getTasks()) {
-//                runningTaskLog.setComplete(true);
-//                runningTaskLog.setEventId(null);
-//                runningTaskLog.setLog(message);
-//                //runningTaskLog.setTaskId(taskId);
-//                //runningTasks.add(runningTaskLog);
-//            }
-            //logs.setTasks(runningTasks);
+//            String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet completly implemented";
+//            taskLog.setComplete(false);
+//            taskLog.setLog(message);
             return JOCDefaultResponse.responseStatus200(taskLog);
 
         } catch (JocException e) {
@@ -96,8 +104,53 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-//        } finally {
-//            Globals.disconnect(session);
+        } finally {
+            EventBus.getInstance().unRegister(this);
+        }
+    }
+    
+    @Subscribe({ HistoryOrderTaskLogArrived.class })
+    public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
+        if (taskId != null && evt.getHistoryOrderStepId() == taskId) {
+            LOGGER.info("tasklog event received");
+            eventArrived.set(true);
+            complete.set(evt.getComplete() == Boolean.TRUE);
+            signalEvent();
+        }
+    }
+    
+    private void waitingForEvents(long maxDelay) {
+        try {
+            if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
+                try {
+                    condition.await(maxDelay, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e1) {
+                } finally {
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.warn("IllegalMonitorStateException at unlock lock after await");
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
+        }
+    }
+    
+    private synchronized void signalEvent() {
+        try {
+            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) {
+                try {
+                    condition.signal();
+                } finally {
+                    try {
+                        lock.unlock();
+                    } catch (IllegalMonitorStateException e) {
+                        LOGGER.warn("IllegalMonitorStateException at unlock lock after signal");
+                    }
+                }
+            }
+        } catch (InterruptedException e) {
         }
     }
 

@@ -12,7 +12,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +21,7 @@ import com.sos.controller.model.event.EventType;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryOrderTaskLog;
+import com.sos.joc.event.bean.history.HistoryOrderTaskLogArrived;
 import com.sos.joc.model.job.RunningTaskLog;
 
 public class RunningTaskLogs {
@@ -31,9 +32,10 @@ public class RunningTaskLogs {
     private volatile Map<Long, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
     private volatile Set<Long> registeredTaskIds = new CopyOnWriteArraySet<>();
+    private volatile Map<Long, CopyOnWriteArraySet<Condition>> conditions = new ConcurrentHashMap<>();
     
     public enum Mode {
-        IMMEDIATLY, TRUE, FALSE;
+        COMPLETE, TRUE, FALSE;
     }
     
     private RunningTaskLogs() {
@@ -79,7 +81,7 @@ public class RunningTaskLogs {
     public Mode hasEvents(Long eventId, Long taskId) {
         if (events.containsKey(taskId)) {
             if (completeLogs.contains(taskId)) {
-               return Mode.IMMEDIATLY; 
+               return Mode.COMPLETE; 
             } else if (events.get(taskId).stream().parallel().anyMatch(r -> eventId < r.getEventId())) {
                 return Mode.TRUE;
             } else {
@@ -134,7 +136,7 @@ public class RunningTaskLogs {
     private synchronized void addEvent(RunningTaskLog event) {
         events.putIfAbsent(event.getTaskId(), new CopyOnWriteArraySet<RunningTaskLog>());
         if (events.get(event.getTaskId()).add(event)) {
-            //signalAll
+            EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete()));
         }
     }
     
