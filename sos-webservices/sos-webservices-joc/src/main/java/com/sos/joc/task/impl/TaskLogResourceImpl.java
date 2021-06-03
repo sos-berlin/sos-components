@@ -13,6 +13,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.LogTaskContent;
+import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.job.RunningTaskLog;
 import com.sos.joc.model.job.RunningTaskLogFilter;
@@ -63,6 +64,12 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
 //                Set<RunningTaskLog> s = null;
 //                return s;
 //            }).get(1, TimeUnit.MINUTES);
+            
+            RunningTaskLogs r = RunningTaskLogs.getInstance();
+            RunningTaskLogs.Mode mode = r.hasEvents(taskLog.getEventId(), taskLog.getTaskId());
+            if (RunningTaskLogs.Mode.IMMEDIATLY.equals(mode)) {
+                taskLog = r.getRunningTaskLog(taskLog);
+            }
             
 
             // TODO callables in several threads

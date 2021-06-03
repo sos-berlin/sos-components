@@ -161,10 +161,10 @@ public class LogTaskContent {
         try {
             Path tasklog = Paths.get("logs", "history", orderMainParentId.toString(), orderId.toString() + "_" + historyId + ".log");
             if (Files.exists(tasklog)) {
-                eventId = Instant.now().getEpochSecond();
+                eventId = Instant.now().toEpochMilli();
                 complete = false;
                 unCompressedLength = Files.size(tasklog);
-                //RunningTaskLogs.getInstance().subscribe(historyId);
+                RunningTaskLogs.getInstance().subscribe(historyId);
                 return Files.newInputStream(tasklog);
             }
         } catch (IOException e) {

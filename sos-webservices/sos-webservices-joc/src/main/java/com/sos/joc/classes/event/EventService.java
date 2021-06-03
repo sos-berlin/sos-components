@@ -75,7 +75,6 @@ import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
@@ -166,7 +165,7 @@ public class EventService {
     public void createEvent(ProblemEvent evt) {
         if (evt.getControllerId() == null || evt.getControllerId().isEmpty() || evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
             eventSnapshot.setEventType("ProblemEvent");
             eventSnapshot.setObjectType(EventType.PROBLEM);
             eventSnapshot.setAccessToken(evt.getKey());
@@ -179,7 +178,7 @@ public class EventService {
     public void createHistoryOrderEvent(HistoryOrderEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
             EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
             String orderId = evt.getOrderId();
             if (orderId.contains("|")) {
                 // HistoryChildOrderStarted, HistoryChildOrderTerminated, HistoryChildOrderUpdated
@@ -198,7 +197,7 @@ public class EventService {
     public void createHistoryTaskEvent(HistoryTaskEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
             EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
             // HistoryTaskStarted, HistoryTaskTerminated
             eventSnapshot.setEventType(evt.getKey().replaceFirst("Order", ""));
             eventSnapshot.setObjectType(EventType.TASKHISTORY);
@@ -211,7 +210,7 @@ public class EventService {
     public void createHistoryTaskEvent(YadeEvent evt) {
         if (controllerId.equals(evt.getControllerId())) {
             EventSnapshot eventSnapshot = new EventSnapshot();
-            eventSnapshot.setEventId(evt.getEventId());
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
             eventSnapshot.setEventType(evt.getKey());
             eventSnapshot.setObjectType(EventType.FILETRANSFER);
             //eventSnapshot.setPath(evt.getTransferId().toString());
@@ -222,7 +221,7 @@ public class EventService {
     @Subscribe({ InventoryEvent.class, InventoryTrashEvent.class })
     public void createInventoryEvent(InventoryEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType(evt.getKey()); // InventoryUpdated, InventoryTrashUpdated
         eventSnapshot.setObjectType(EventType.FOLDER);
         eventSnapshot.setPath(evt.getFolder());
@@ -232,7 +231,7 @@ public class EventService {
     @Subscribe({ DocumentationEvent.class })
     public void createDocumentationEvent(DocumentationEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType(evt.getKey()); // DocumentationUpdated
         eventSnapshot.setObjectType(EventType.FOLDER);
         eventSnapshot.setPath(evt.getFolder());
@@ -242,7 +241,7 @@ public class EventService {
     @Subscribe({ ActiveClusterChangedEvent.class })
     public void createEvent(ActiveClusterChangedEvent evt) {
         EventSnapshot eventSnapshot = new EventSnapshot();
-        eventSnapshot.setEventId(evt.getEventId());
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType("JOCStateChanged");
         eventSnapshot.setObjectType(EventType.JOCCLUSTER);
         addEvent(eventSnapshot);
@@ -255,11 +254,11 @@ public class EventService {
 //                setOrders();
 //            }
             if (evt.isCoupled() != null) {
-                addEvent(createProxyEvent(evt.getEventId(), evt.isCoupled()));
+                addEvent(createProxyEvent(evt.getEventId() / 1000, evt.isCoupled()));
             }
         } else {
             // to update Controller Status widget for other controllers
-            addEvent(createControllerEvent(evt.getEventId()));
+            addEvent(createControllerEvent(evt.getEventId() / 1000));
         }
     }
 
@@ -496,16 +495,16 @@ public class EventService {
         return EventServiceFactory.Mode.FALSE;
     }
 
-    private void setOrders() {
-        try {
-            // possibly IllegalStateException
-            // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
-            // .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
-            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, 24),
-                    mapWorkflowId(o.workflowId())));
-        } catch (Exception e) {
-            //
-        }
-    }
+//    private void setOrders() {
+//        try {
+//            // possibly IllegalStateException
+//            // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
+//            // .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
+//            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, 24),
+//                    mapWorkflowId(o.workflowId())));
+//        } catch (Exception e) {
+//            //
+//        }
+//    }
 
 }

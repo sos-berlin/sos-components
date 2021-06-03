@@ -51,7 +51,7 @@ public class EventBus {
         if (evt != null) {
             CompletableFuture.runAsync(() -> {
                 Set<Object> unsubcribedListeners = new HashSet<>();
-                evt.setEventId(Instant.now().getEpochSecond());
+                evt.setEventId(Instant.now().toEpochMilli());
                 Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
                     if (!invokeSubcribedMethods(listener, evt)) {
                         unsubcribedListeners.add(listener);
