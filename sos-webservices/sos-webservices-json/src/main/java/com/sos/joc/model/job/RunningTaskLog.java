@@ -17,9 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "taskId",
     "complete",
-    "eventId",
     "log"
 })
 public class RunningTaskLog
@@ -27,55 +25,14 @@ public class RunningTaskLog
 {
 
     /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskId")
-    private Long taskId;
-    /**
      * 
      * (Required)
      * 
      */
     @JsonProperty("complete")
     private Boolean complete = false;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    private Long eventId;
     @JsonProperty("log")
     private String log;
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskId")
-    public Long getTaskId() {
-        return taskId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskId")
-    public void setTaskId(Long taskId) {
-        this.taskId = taskId;
-    }
 
     /**
      * 
@@ -97,28 +54,6 @@ public class RunningTaskLog
         this.complete = complete;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    public Long getEventId() {
-        return eventId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
     @JsonProperty("log")
     public String getLog() {
         return log;
@@ -131,12 +66,12 @@ public class RunningTaskLog
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("taskId", taskId).append("complete", complete).append("eventId", eventId).append("log", log).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("complete", complete).append("log", log).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(eventId).append(complete).append(log).append(taskId).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(complete).append(log).toHashCode();
     }
 
     @Override
@@ -148,7 +83,7 @@ public class RunningTaskLog
             return false;
         }
         RunningTaskLog rhs = ((RunningTaskLog) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(eventId, rhs.eventId).append(complete, rhs.complete).append(log, rhs.log).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(complete, rhs.complete).append(log, rhs.log).isEquals();
     }
 
 }

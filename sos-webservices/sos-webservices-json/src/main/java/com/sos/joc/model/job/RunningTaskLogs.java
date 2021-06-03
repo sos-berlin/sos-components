@@ -24,6 +24,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RunningTaskLogs {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     /**
@@ -34,11 +40,23 @@ public class RunningTaskLogs {
     @JsonProperty("tasks")
     private List<RunningTaskLog> tasks = new ArrayList<RunningTaskLog>();
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;

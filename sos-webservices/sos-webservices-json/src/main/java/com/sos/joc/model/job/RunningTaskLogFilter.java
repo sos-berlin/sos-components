@@ -17,11 +17,21 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "taskId",
     "eventId"
 })
 public class RunningTaskLogFilter {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -40,6 +50,30 @@ public class RunningTaskLogFilter {
      */
     @JsonProperty("eventId")
     private Long eventId;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * non negative long
@@ -91,12 +125,12 @@ public class RunningTaskLogFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("taskId", taskId).append("eventId", eventId).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("taskId", taskId).append("eventId", eventId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(taskId).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(controllerId).append(taskId).toHashCode();
     }
 
     @Override
@@ -108,7 +142,7 @@ public class RunningTaskLogFilter {
             return false;
         }
         RunningTaskLogFilter rhs = ((RunningTaskLogFilter) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(taskId, rhs.taskId).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(controllerId, rhs.controllerId).append(taskId, rhs.taskId).isEquals();
     }
 
 }
