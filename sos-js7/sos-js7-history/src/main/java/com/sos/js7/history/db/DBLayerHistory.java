@@ -379,20 +379,20 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public String getDeployedWorkflowPath(String controllerId, String workflowName, String workflowVersionId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select path from ");
+    public Object[] getDeployedWorkflow(String controllerId, String workflowName, String workflowVersionId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select path,invContent from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
         hql.append("where type=:type ");
         hql.append("and controllerId=:controllerId ");
         hql.append("and name=:workflowName ");
         hql.append("and commitId=:workflowVersionId");
 
-        Query<String> query = session.createQuery(hql.toString());
+        Query<Object[]> query = session.createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         query.setParameter("controllerId", controllerId);
         query.setParameter("workflowName", workflowName);
         query.setParameter("workflowVersionId", workflowVersionId);
-        List<String> result = session.getResultList(query);
+        List<Object[]> result = session.getResultList(query);
         if (result != null && result.size() > 0) {
             return result.get(0);
         }

@@ -37,11 +37,6 @@ public class JobLogger {
         }
     }
 
-    protected void init(LogLevel logLevel) {
-        isTraceEnabled = logLevel.equals(LogLevel.TRACE);
-        isDebugEnabled = logLevel.equals(LogLevel.DEBUG) || isTraceEnabled;
-    }
-
     public void info(final Object msg) {
         step.out().println(msg);
     }

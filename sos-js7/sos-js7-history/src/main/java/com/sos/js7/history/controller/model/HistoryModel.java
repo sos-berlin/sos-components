@@ -29,8 +29,11 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
-import com.sos.inventory.model.job.JobCriticality;
+import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.history.HistoryPosition;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -81,6 +84,7 @@ import com.sos.js7.history.helper.CachedAgent;
 import com.sos.js7.history.helper.CachedOrder;
 import com.sos.js7.history.helper.CachedOrderStep;
 import com.sos.js7.history.helper.CachedWorkflow;
+import com.sos.js7.history.helper.CachedWorkflowJob;
 import com.sos.js7.history.helper.Counter;
 import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.helper.LogEntry;
@@ -1184,6 +1188,7 @@ public class HistoryModel {
 
             String workflowName = HistoryUtil.getBasenameFromPath(entry.getWorkflowPath());
             CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, entry.getWorkflowVersionId());
+            CachedWorkflowJob job = cw.getJob(entry.getJobName());
 
             item.setWorkflowPath(cw.getPath());
             item.setWorkflowVersionId(entry.getWorkflowVersionId());
@@ -1198,8 +1203,8 @@ public class HistoryModel {
 
             item.setJobName(entry.getJobName());
             item.setJobLabel(entry.getJobLabel());
-            item.setJobTitle(null);// TODO
-            item.setCriticality(JobCriticality.NORMAL);// TODO
+            item.setJobTitle(job.getTitle());
+            item.setCriticality(job.getCriticality());
 
             item.setAgentId(entry.getAgentId());
             item.setAgentUri(ca.getUri());
@@ -1568,8 +1573,11 @@ public class HistoryModel {
         if (cw == null) {
             clearWorkflowCache(workflowName);
             String path = null;
+            Map<String, CachedWorkflowJob> jobs = null;
             try {
-                path = dbLayer.getDeployedWorkflowPath(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+                Object[] result = dbLayer.getDeployedWorkflow(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+                path = result[0].toString();
+                jobs = getWorkflowJobs(workflowName, workflowVersionId, result[1].toString());
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't evaluate path]%s", workflowName, workflowVersionId, e
                         .toString()));
@@ -1577,10 +1585,26 @@ public class HistoryModel {
             if (path == null) {
                 path = "/" + workflowName;
             }
-            cw = new CachedWorkflow(path);
+            cw = new CachedWorkflow(path, jobs);
             addCachedWorkflow(getCachedWorkflowKey(workflowName, workflowVersionId), cw);
         }
         return cw;
+    }
+
+    private Map<String, CachedWorkflowJob> getWorkflowJobs(String workflowName, String workflowVersionId, String content) {
+        try {
+            Workflow w = (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
+            WorkflowSearcher s = new WorkflowSearcher(w);
+            Map<String, CachedWorkflowJob> map = new HashMap<>();
+            for (WorkflowJob job : s.getJobs()) {
+                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getTitle(), job.getJob().getCriticality()));
+            }
+            return map;
+        } catch (Throwable e) {
+            LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't parse workflow]%s", workflowName, workflowVersionId, e
+                    .toString()));
+        }
+        return null;
     }
 
     private void addCachedWorkflow(String key, CachedWorkflow cw) {
@@ -1727,7 +1751,6 @@ public class HistoryModel {
         Path file = null;
         boolean newLine;
         boolean append;
-        boolean isTaskLog = true;
 
         switch (entry.getEventType()) {
         case OrderProcessingStarted:
@@ -1741,6 +1764,7 @@ public class HistoryModel {
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            postEventOrderLog(entry, orderEntryContent.toString(), newLine);
             write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
@@ -1748,6 +1772,7 @@ public class HistoryModel {
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
             content.append("[").append(entry.getLogLevel().name()).append("]    ");
             content.append(entry.getChunk());
+            postEventTaskLog(entry, content.toString(), newLine);
             break;
         case OrderProcessed:
             // order log
@@ -1760,6 +1785,7 @@ public class HistoryModel {
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            postEventOrderLog(entry, orderEntryContent.toString(), newLine);
             write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
@@ -1767,6 +1793,7 @@ public class HistoryModel {
             content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
             content.append("[").append(entry.getLogLevel().name()).append("]    ");
             content.append(entry.getChunk());
+            postEventTaskLog(entry, content.toString(), newLine);
             break;
 
         case OrderStdoutWritten:
@@ -1796,6 +1823,7 @@ public class HistoryModel {
             }
             cos.setLastStdEndsWithNewLine(entry.getChunk().endsWith("\n"));
             content.append(entry.getChunk());
+            postEventTaskLog(entry, content.toString(), newLine);
             break;
         case OrderAdded:
             if (!Files.exists(dir)) {
@@ -1805,7 +1833,6 @@ public class HistoryModel {
             // order log
             newLine = true;
             file = getOrderLog(dir, entry.getHistoryOrderId());
-            isTaskLog = false;
 
             orderEntry = createOrderLogEntry(entry);
             orderEntry.setControllerDatetime(getDateAsString(entry.getControllerDatetime(), controllerTimezone));
@@ -1813,18 +1840,7 @@ public class HistoryModel {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }
             content.append((new ObjectMapper()).writeValueAsString(orderEntry));
-        }
-        
-        if (content.length() > 0) {
-            if (isTaskLog) {
-                EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry
-                        .getHistoryOrderStepId(), content.toString(), newLine));
-            } else {
-                EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content.toString(), newLine));
-            }
-        }
-        if (orderEntryContent != null) {
-            EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntryContent.toString(), newLine));
+            postEventOrderLog(entry, content.toString(), newLine);
         }
 
         try {
@@ -1847,6 +1863,15 @@ public class HistoryModel {
         }
 
         return file;
+    }
+
+    private void postEventTaskLog(LogEntry entry, String content, boolean newLine) {
+        EventBus.getInstance().post(new HistoryOrderTaskLog(entry.getEventType().value(), entry.getHistoryOrderId(), entry.getHistoryOrderStepId(),
+                content, newLine));
+    }
+
+    private void postEventOrderLog(LogEntry entry, String content, boolean newLine) {
+        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content, newLine));
     }
 
     private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine) throws Exception {
