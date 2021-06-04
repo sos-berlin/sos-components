@@ -82,14 +82,18 @@ public class StoreDeployments {
             		if (item.getId() == null) {
                     	// first id == null 
                 		item.setContent(JsonSerializer.serializeAsString(entry.getKey().readUpdateableContent()));
-                		item.setSignedContent(entry.getValue().getSignature());
+                        DBItemDepSignatures signature = entry.getValue();
+                		if (signature != null) {
+                			item.setSignedContent(signature.getSignature());
+                		} else {
+                			item.setSignedContent("");
+                		}
                 		item.setDeploymentDate(deploymentDate);
                 		item.setOperation(OperationType.UPDATE.value());
                 		item.setState(DeploymentState.DEPLOYED.value());
                 		item.setAuditlogId(signedItemsSpec.getAuditlogId());
                 		dbLayer.getSession().save(item);
                         PublishUtils.postDeployHistoryWorkflowEvent(item);
-                        DBItemDepSignatures signature = entry.getValue();
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
                             dbLayer.getSession().update(signature);
