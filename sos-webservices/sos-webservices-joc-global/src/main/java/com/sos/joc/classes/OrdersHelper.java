@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,11 +95,11 @@ public class OrdersHelper {
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
-                    put(Order.ProcessingKilled$.class, OrderStateText.FAILED);
                     put(Order.Ready$.class, OrderStateText.INPROGRESS);
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing$.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
+                    put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
                 }
             });
@@ -121,14 +120,14 @@ public class OrdersHelper {
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
-            put("ProcessingKilled", OrderStateText.FAILED);
-            put("ProcessingCancelled", OrderStateText.FAILED); // obsolete?
             put("Ready", OrderStateText.INPROGRESS);
             put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);
             put("Suspended", OrderStateText.SUSPENDED);
             put("Finished", OrderStateText.FINISHED);
             put("Cancelled", OrderStateText.CANCELLED);
+            put("ProcessingKilled", OrderStateText.CANCELLED);
+            put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
             put("Blocked", OrderStateText.BLOCKED);
             put("Calling", OrderStateText.CALLING);
         }
