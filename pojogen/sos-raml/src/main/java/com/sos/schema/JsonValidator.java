@@ -98,7 +98,8 @@ public class JsonValidator {
             
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
-            put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
+            //put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
+            put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");

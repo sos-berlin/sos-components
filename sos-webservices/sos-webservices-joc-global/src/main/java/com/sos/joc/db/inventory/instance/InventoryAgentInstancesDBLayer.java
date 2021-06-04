@@ -75,50 +75,29 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
             boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        try {
-            StringBuilder hql = new StringBuilder();
-            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-            List<String> clauses = new ArrayList<>();
-            if (controllerIds != null && !controllerIds.isEmpty()) {
-                clauses.add("controllerId in (:controllerIds)");
-            }
-            if (onlyWatcher) {
-                clauses.add("isWatcher = 1");
-            }
-            if (onlyEnabledAgents) {
-                clauses.add("disabled = 0");
-            }
-            if (!clauses.isEmpty()) {
-                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
-            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
-            if (controllerIds != null && !controllerIds.isEmpty()) {
-                query.setParameterList("controllerIds", controllerIds);
-            }
-            return getSession().getResultList(query);
-        } catch (DBMissingDataException ex) {
-            throw ex;
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
+        return getAgentsByControllerIdAndAgentIdsAndUrls(controllerIds, null, null, onlyWatcher, onlyEnabledAgents);
     }
 
-    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(String controllerId, Collection<String> agentIds,
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(Collection<String> controllerIds, Collection<String> agentIds,
             Collection<String> agentUrls, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
+        boolean withAgentIds = agentIds != null && !agentIds.isEmpty();
+        boolean withAgentUrls = agentUrls != null && !agentUrls.isEmpty();
         try {
             StringBuilder hql = new StringBuilder();
             hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
             List<String> clauses = new ArrayList<>();
-            if (controllerId != null && !controllerId.isEmpty()) {
-                clauses.add("controllerId = :controllerId");
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    clauses.add("controllerId = :controllerId");
+                } else {
+                    clauses.add("controllerId in (:controllerIds)");
+                }
             }
-            if ((agentIds != null && !agentIds.isEmpty()) || (agentUrls != null && !agentUrls.isEmpty())) {
-                if ((agentIds != null && !agentIds.isEmpty()) && (agentUrls != null && !agentUrls.isEmpty())) {
+            if (withAgentIds || withAgentUrls) {
+                if (withAgentIds && withAgentUrls) {
                     clauses.add("(agentId in (:agentIds) or uri in (:agentUrls))");
-                } else if (agentIds != null && !agentIds.isEmpty()) {
+                } else if (withAgentIds) {
                     clauses.add("agentId in (:agentIds)");
                 } else {
                     clauses.add("uri in (:agentUrls)");
@@ -134,13 +113,17 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
-            if (controllerId != null && !controllerId.isEmpty()) {
-                query.setParameter("controllerId", controllerId);
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
             }
-            if (agentIds != null && !agentIds.isEmpty()) {
+            if (withAgentIds) {
                 query.setParameterList("agentIds", agentIds);
             }
-            if (agentUrls != null && !agentUrls.isEmpty()) {
+            if (withAgentUrls) {
                 query.setParameterList("agentUrls", agentUrls);
             }
             return getSession().getResultList(query);

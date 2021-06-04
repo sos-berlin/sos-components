@@ -162,6 +162,13 @@ public class JocClusterService {
         }
         return answer;
     }
+    
+    public boolean isRunning() {
+        if (cluster == null) {
+            return false;
+        }
+        return cluster.getHandler().isActive();
+    }
 
     /** not occur during JOC start/stop */
     /** TODO: will be sent for each user - JOC, HISTORY */

@@ -26,9 +26,12 @@ import org.slf4j.LoggerFactory;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -170,8 +173,12 @@ public class LogTaskContent {
         } catch (IOException e) {
             LOGGER.warn(e.toString());
         }
-        //TODO text for standby instance: "Standby JOC Cockpit instance has no access to snapshot log"
-        String s = ZonedDateTime.now().format(formatter) + " [INFO] Snapshot log not found\n";
+        String s = ZonedDateTime.now().format(formatter);
+        if (JocClusterService.getInstance().isRunning()) {
+            s += " [INFO] Snapshot log not found\r\n";
+        } else {
+            s += " [INFO] Standby JOC Cockpit instance has no access to snapshot log\r\n";
+        }
         unCompressedLength = s.length() * 1L;
         complete = true;
         return new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));

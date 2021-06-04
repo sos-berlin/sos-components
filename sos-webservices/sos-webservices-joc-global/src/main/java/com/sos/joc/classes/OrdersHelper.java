@@ -95,12 +95,12 @@ public class OrdersHelper {
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
+                    put(Order.ProcessingKilled$.class, OrderStateText.FAILED);
                     put(Order.Ready$.class, OrderStateText.INPROGRESS);
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
                     put(Order.Processing$.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
-                    put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
                 }
             });
 
@@ -120,13 +120,14 @@ public class OrdersHelper {
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
+            put("ProcessingKilled", OrderStateText.FAILED);
+            put("ProcessingCancelled", OrderStateText.FAILED); //obsolete?
             put("Ready", OrderStateText.INPROGRESS);
             put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);
             put("Suspended", OrderStateText.SUSPENDED);
             put("Finished", OrderStateText.FINISHED);
             put("Cancelled", OrderStateText.CANCELLED);
-            put("ProcessingCancelled", OrderStateText.CANCELLED);
             put("Blocked", OrderStateText.BLOCKED);
             put("Calling", OrderStateText.CALLING);
         }
@@ -232,7 +233,7 @@ public class OrdersHelper {
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         Long scheduledFor = oItem.getScheduledFor();
-        if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis) {
+        if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             o.setState(getState("Blocked", oItem.getIsSuspended()));
         } else {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
