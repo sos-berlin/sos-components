@@ -280,6 +280,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemMonitoringOrderStep.class);
         
         cl.add(DBItemHistoryOrder.class);
+        cl.add(DBItemJocVariable.class);
         return cl;
     }
 
