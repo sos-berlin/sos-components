@@ -67,7 +67,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             
             RunningTaskLogs r = RunningTaskLogs.getInstance();
             RunningTaskLogs.Mode mode = r.hasEvents(taskLog.getEventId(), taskId);
-            LOGGER.info("has tasklogs: " + mode.name());
+            LOGGER.debug("taskId '" + taskId + "' has tasklogs: " + mode.name());
             switch (mode) {
             case TRUE:
                 try {
@@ -112,7 +112,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     @Subscribe({ HistoryOrderTaskLogArrived.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
         if (taskId != null && evt.getHistoryOrderStepId() == taskId) {
-            LOGGER.info("tasklog event received");
+            LOGGER.debug("tasklog event received");
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();

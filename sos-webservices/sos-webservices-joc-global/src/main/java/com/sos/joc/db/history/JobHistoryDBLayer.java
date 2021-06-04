@@ -21,6 +21,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.db.history.items.JobsPerAgent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
@@ -210,6 +211,27 @@ public class JobHistoryDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public Map<String, List<JobsPerAgent>> getCountJobs() throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            Query<JobsPerAgent> query = createQuery(new StringBuilder().append("select new ").append(JobsPerAgent.class.getName()).append(
+                    "(agentId, error, count(id)) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(getOrderStepsWhere()).append(
+                            " group by agentId, error").toString());
+            if (filter.getLimit() > 0) {
+                query.setMaxResults(filter.getLimit());
+            }
+            List<JobsPerAgent> result = session.getResultList(query);
+            if (result == null) {
+                return Collections.emptyMap();
+            } else {
+                return result.stream().collect(Collectors.groupingBy(JobsPerAgent::getAgentId));
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     private String getOrdersWhere() {
         return getWhere(true);
@@ -226,6 +248,11 @@ public class JobHistoryDBLayer {
 
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
             where += and + " controllerId in (:controllerIds)";
+            and = " and";
+        }
+        
+        if (filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
+            where += and + " agentId in (:agentIds)";
             and = " and";
         }
 
@@ -374,6 +401,9 @@ public class JobHistoryDBLayer {
         Query<T> query = session.createQuery(hql);
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
             query.setParameterList("controllerIds", filter.getControllerIds());
+        }
+        if (filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
+            query.setParameterList("agentIds", filter.getAgentIds());
         }
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
             query.setParameterList("historyIds", filter.getHistoryIds());

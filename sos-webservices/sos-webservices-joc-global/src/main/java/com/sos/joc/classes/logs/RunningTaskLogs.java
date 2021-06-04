@@ -67,13 +67,13 @@ public class RunningTaskLogs {
     }
     
     public synchronized void subscribe(Long taskId) {
-        LOGGER.info("taskId '" + taskId + "' is observed for log events" );
+        LOGGER.debug("taskId '" + taskId + "' is observed for log events" );
         registeredTaskIds.add(taskId);
     }
     
     public synchronized void unsubscribe(Long taskId) {
         registeredTaskIds.remove(taskId);
-        LOGGER.info("taskId '" + taskId + "' is no longer observed for log events" );
+        LOGGER.debug("taskId '" + taskId + "' is no longer observed for log events" );
     }
     
     public Mode hasEvents(Long eventId, Long taskId) {
@@ -113,16 +113,16 @@ public class RunningTaskLogs {
     @Subscribe({ HistoryOrderTaskLog.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLog evt) {
         if (isRegistered(evt.getHistoryOrderStepId())) {
-            LOGGER.info("log event for taskId " + evt.getHistoryOrderStepId() + " arrived" );
-            RunningTaskLog event = new RunningTaskLog();
-            event.setEventId(evt.getEventId());
-            event.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
-            event.setLog(evt.getContent());
-            event.setTaskId(evt.getHistoryOrderStepId());
-            addEvent(event);
-            if (event.getComplete()) {
-                addCompleteness(event.getTaskId());
-                unsubscribe(event.getTaskId());
+            LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
+            RunningTaskLog r = new RunningTaskLog();
+            r.setEventId(evt.getEventId());
+            r.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
+            r.setLog(evt.getContent());
+            r.setTaskId(evt.getHistoryOrderStepId());
+            addEvent(r);
+            if (r.getComplete()) {
+                addCompleteness(r.getTaskId());
+                unsubscribe(r.getTaskId());
             }
         }
     }

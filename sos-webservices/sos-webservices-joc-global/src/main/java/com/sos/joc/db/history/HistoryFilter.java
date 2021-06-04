@@ -20,6 +20,7 @@ public class HistoryFilter {
     private Date startTime;
     private Date endTime;
     private Collection<String> controllerIds;
+    private Collection<String> agentIds;
     private Set<Folder> folders;
     private Set<HistoryStateText> states;
     private Set<String> criticalities;
@@ -156,6 +157,14 @@ public class HistoryFilter {
 
     public Collection<String> getControllerIds() {
         return controllerIds;
+    }
+    
+    public void setAgentIds(Collection<String> agentIds) {
+        this.agentIds = agentIds;
+    }
+
+    public Collection<String> getAgentIds() {
+        return agentIds;
     }
 
     public void setStartTime(final Date start) {
