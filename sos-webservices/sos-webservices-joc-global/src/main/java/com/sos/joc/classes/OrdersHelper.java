@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,7 @@ import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 public class OrdersHelper {
-    
+
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, OrderStateText>() {
 
@@ -121,7 +122,7 @@ public class OrdersHelper {
             put("FailedInFork", OrderStateText.FAILED);
             put("FailedWhileFresh", OrderStateText.FAILED);
             put("ProcessingKilled", OrderStateText.FAILED);
-            put("ProcessingCancelled", OrderStateText.FAILED); //obsolete?
+            put("ProcessingCancelled", OrderStateText.FAILED); // obsolete?
             put("Ready", OrderStateText.INPROGRESS);
             put("Processed", OrderStateText.INPROGRESS);
             put("Processing", OrderStateText.RUNNING);
@@ -181,7 +182,7 @@ public class OrdersHelper {
         }
         return getGroupedState(o.state().getClass());
     }
-    
+
     public static boolean isSuspendedOrFailed(JOrder order) {
         Order<Order.State> o = order.asScala();
         if (o.isSuspended()) {
@@ -200,7 +201,7 @@ public class OrdersHelper {
         oState.setSeverity(severityByGroupedStates.get(groupedState));
         return oState;
     }
-    
+
     public static OrderState getState(OrderStateText st) {
         OrderState state = new OrderState();
         state.set_text(st);
@@ -250,7 +251,7 @@ public class OrdersHelper {
         o.setWorkflowId(wId);
         return o;
     }
-    
+
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
@@ -271,7 +272,7 @@ public class OrdersHelper {
             }
             throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
         }
-        
+
         boolean invalid = false;
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
@@ -315,8 +316,8 @@ public class OrdersHelper {
                     break;
                 }
                 if (invalid) {
-                    throw new JocConfigurationException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param
-                            .getKey(), curArg.getClass().getSimpleName(), param.getValue().getType().value()));
+                    throw new JocConfigurationException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param.getKey(), curArg
+                            .getClass().getSimpleName(), param.getValue().getType().value()));
                 }
             }
         }
@@ -324,8 +325,9 @@ public class OrdersHelper {
     }
 
     public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
-            JocError jocError, Long auditlogId, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+            JocError jocError, Long auditlogId, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, ExecutionException {
 
         if (temporaryOrderIds.isEmpty()) {
             return Collections.emptyList();
@@ -335,7 +337,7 @@ public class OrdersHelper {
         JControllerState currentState = proxy.currentState();
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-        
+
         Function<JOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
             try {
@@ -343,7 +345,7 @@ public class OrdersHelper {
                 Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(e.get().id());
-                
+
                 // modify parameters if necessary
                 if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
                         || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
@@ -366,8 +368,8 @@ public class OrdersHelper {
                 }
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
-                if (dailyplanModifyOrder.getStartTime() != null) {
-                    scheduledFor = Optional.of(dailyplanModifyOrder.getStartTime().toInstant());
+                if (dailyplanModifyOrder.getScheduledFor() != null) {
+                    scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder.getTimeZone());
                 }
                 if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
                     scheduledFor = Optional.empty();
@@ -382,13 +384,13 @@ public class OrdersHelper {
             return either;
         };
 
-        Map<Boolean, Set<Either<Err419, JFreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id()
-                .string())).map(mapper).collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
+        Map<Boolean, Set<Either<Err419, JFreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).map(mapper)
+                .collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
-        
+
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                     Function.identity()));
@@ -404,8 +406,8 @@ public class OrdersHelper {
                                     proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
                                             .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
                                     // auditlog is written even removeOrdersWhenTerminated has a problem
-                                    storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper
-                                            .postExceptionEventIfExist(either5, accessToken, jocError, controllerId));
+                                    storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
+                                            either5, accessToken, jocError, controllerId));
                                 }
                             });
                         }
@@ -418,7 +420,7 @@ public class OrdersHelper {
         }
         return Collections.emptyList();
     }
-    
+
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(JControllerApi controllerApi, ModifyOrders modifyOrders,
             Collection<OrderId> oIds) {
         JCancelMode cancelMode = null;
@@ -431,11 +433,11 @@ public class OrdersHelper {
         }
         return controllerApi.cancelOrders(oIds, cancelMode);
     }
-    
+
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(ModifyOrders modifyOrders, Collection<OrderId> oIds) {
         return cancelOrders(ControllerApi.of(modifyOrders.getControllerId()), modifyOrders, oIds);
     }
-    
+
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName());
@@ -443,11 +445,11 @@ public class OrdersHelper {
                 variablesToScalaValuedArguments(order.getArguments()), JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order
                         .getTimeZone()));
     }
-    
+
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor) {
         return JFreshOrder.of(orderId, workflowPath, scheduledFor, args);
     }
-    
+
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
@@ -469,7 +471,7 @@ public class OrdersHelper {
         }
         return arguments;
     }
-    
+
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {
         Variables variables = new Variables();
         if (args != null) {
@@ -488,19 +490,19 @@ public class OrdersHelper {
             }
         });
     }
-    
+
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId) {
         return storeAuditLogDetails(jOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
                 .string())).collect(Collectors.toList()), auditlogId);
     }
-    
+
     private static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || !path.startsWith("/")) {
             return false;
         }
         return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
-    
+
     private static String getParent(String path) {
         Path p = Paths.get(path).getParent();
         if (p == null) {
@@ -509,5 +511,5 @@ public class OrdersHelper {
             return p.toString().replace('\\', '/');
         }
     }
-    
+
 }
