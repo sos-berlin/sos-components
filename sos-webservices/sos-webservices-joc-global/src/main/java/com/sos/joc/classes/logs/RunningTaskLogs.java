@@ -107,7 +107,7 @@ public class RunningTaskLogs {
             r.setEventId(evtIds.last());
             r.setLog(log.toString());
         }
-        return null;
+        return r;
     }
     
     @Subscribe({ HistoryOrderTaskLog.class })
