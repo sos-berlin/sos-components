@@ -29,6 +29,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
@@ -419,6 +420,8 @@ public class DBLayerDailyPlannedOrders {
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
         dbItemDailyPlannedOrders.setOrderId(plannedOrder.getFreshOrder().getId());
+        dbItemDailyPlannedOrders.setAuditLogId(plannedOrder.getAuditLogId());
+
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         dbItemDailyPlannedOrders.setPlannedStart(start);
         if (plannedOrder.getPeriod().getSingleStart() == null) {

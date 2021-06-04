@@ -61,6 +61,9 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
 
+    @Column(name = "[AUDIT_LOG_ID]", nullable = false)
+    private Long auditLogId;
+
     @Column(name = "[SUBMITTED]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean submitted;
@@ -226,6 +229,14 @@ public class DBItemDailyPlanOrders extends DBItem {
 
     public void setPeriodEnd(Date periodEnd) {
         this.periodEnd = periodEnd;
+    }
+
+    public Long getAuditLogId() {
+        return auditLogId;
+    }
+
+    public void setAuditLogId(Long auditLogId) {
+        this.auditLogId = auditLogId;
     }
 
     public Date getCreated() {

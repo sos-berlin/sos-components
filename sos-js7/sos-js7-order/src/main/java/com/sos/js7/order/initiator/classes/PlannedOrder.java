@@ -15,6 +15,7 @@ public class PlannedOrder {
     private FreshOrder freshOrder;
     private String controllerId;
     private Long calendarId;
+    private Long auditLogId;
     private Long submissionHistoryId;
     private Period period;
     private Long averageDuration = 0L;
@@ -38,6 +39,7 @@ public class PlannedOrder {
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
         freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowName());
         this.schedule = new Schedule();
+        this.auditLogId = dbItemDailyPlannedOrders.getAuditLogId();
         schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
         schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
         schedule.setWorkflowName(dbItemDailyPlannedOrders.getWorkflowName());
@@ -107,6 +109,16 @@ public class PlannedOrder {
 
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+    }
+
+    
+    public Long getAuditLogId() {
+        return auditLogId;
+    }
+
+    
+    public void setAuditLogId(Long auditLogId) {
+        this.auditLogId = auditLogId;
     }
 
 }

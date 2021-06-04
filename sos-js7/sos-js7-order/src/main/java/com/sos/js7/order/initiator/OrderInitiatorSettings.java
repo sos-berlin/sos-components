@@ -16,7 +16,6 @@ public class OrderInitiatorSettings {
     private String orderTemplatesDirectory;
     private int dayAheadPlan = 0;
     private int dayAheadSubmit = 0;
-    private Boolean dailyPlanDaysCreateOnStart=false;
     private String userAccount = "JS7";
     private String timeZone = "UTC";
     private String periodBegin = "00:00";
@@ -24,6 +23,7 @@ public class OrderInitiatorSettings {
     private boolean overwrite = false;
     private boolean submit = true;
     private StartupMode startMode;
+    private Long auditLogId=0L;
 
     public boolean isSubmit() {
         return submit;
@@ -142,6 +142,16 @@ public class OrderInitiatorSettings {
     
     public void setDailyPlanStartTime(String dailyPlanStartTime) {
         this.dailyPlanStartTime = dailyPlanStartTime;
+    }
+
+    
+    public Long getAuditLogId() {
+        return auditLogId;
+    }
+
+    
+    public void setAuditLogId(Long auditLogId) {
+        this.auditLogId = auditLogId;
     }
 
 }

@@ -17,29 +17,23 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanSubmissionsResource;
 
 @Path("daily_plan")
-public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyPlanSubmissionsResource {
+public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements IDailyPlanSubmissionsResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmissionsImpl.class);
     private static final String API_CALL = "./daily_plan/submissions";
-    private OrderInitiatorSettings settings;
-
+ 
     @Override
     public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
@@ -200,12 +194,5 @@ public class DailyPlanSubmissionsImpl extends JOCResourceImpl implements IDailyP
         return sdfFromTimezone.parse(sdfToTimezone.format(d));
     }
 
-    private void setSettings() throws Exception {
-        if (Globals.configurationGlobals != null) {
-
-            GlobalSettingsReader reader = new GlobalSettingsReader();
-            AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-            this.settings = reader.getSettings(section);
-        }
-    }
+    
 }

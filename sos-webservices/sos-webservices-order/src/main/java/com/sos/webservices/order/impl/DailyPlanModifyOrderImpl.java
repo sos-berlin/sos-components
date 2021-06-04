@@ -26,11 +26,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.OrdersHelper;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
@@ -53,7 +51,6 @@ import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -62,13 +59,11 @@ import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanModifyOrder;
 
 @Path("daily_plan")
-public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyPlanModifyOrder {
+public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements IDailyPlanModifyOrder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanModifyOrderImpl.class);
     private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
-
-    private OrderInitiatorSettings settings;
-
+ 
     @Override
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) throws JocException {
 
@@ -79,8 +74,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder dailyplanModifyOrder = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyplanModifyOrder.getControllerId(), getJocPermissions(
-                    accessToken).getDailyPlan().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyplanModifyOrder.getControllerId(), getJocPermissions(accessToken)
+                    .getDailyPlan().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -89,24 +84,24 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             // TODO this check is not necessary if schema specifies orderIds as required and with minItems:1
             // uniqueItems should also better
             this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
-            if (dailyplanModifyOrder.getStartTime() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder
+            if (dailyplanModifyOrder.getScheduledFor() == null && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder
                     .getVariables() == null) {
-                throw new JocMissingRequiredParameterException("variables, removeVariables or startTime missing");
+                throw new JocMissingRequiredParameterException("variables, removeVariables or scheduledFor missing");
             }
-            
+
             List<String> orderIds = dailyplanModifyOrder.getOrderIds();
             Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
             orderIds.removeAll(temporaryOrderIds);
-            
+
             CategoryType category = CategoryType.DAILYPLAN;
             if (orderIds.isEmpty()) {
                 category = CategoryType.CONTROLLER;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(dailyplanModifyOrder.getAuditLog(), dailyplanModifyOrder.getControllerId(), category);
 
-            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(),
-                    dbAuditlog.getId(), folderPermissions);
-            
+            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(), dbAuditlog
+                    .getId(), folderPermissions);
+
             if (!orderIds.isEmpty()) {
                 setSettings();
 
@@ -120,7 +115,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
                 }
 
                 for (String orderId : listOfOrderIds) {
-                    modifyOrder(orderId, dailyplanModifyOrder);
+                    modifyOrder(orderId, dailyplanModifyOrder, dbAuditlog);
                 }
             }
 
@@ -137,12 +132,6 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
-    }
-
-    private void setSettings() throws Exception {
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-        this.settings = reader.getSettings(section);
     }
 
     private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws SOSHibernateException {
@@ -171,8 +160,8 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
 
     private void submitOrdersToController(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException,
-            URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
+            ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
+            InterruptedException, ExecutionException, TimeoutException {
 
         if (listOfPlannedOrders.size() > 0) {
 
@@ -185,7 +174,7 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            orderInitiatorRunner.submitOrders(listOfPlannedOrders.get(0).getControllerId(),getJocError(), getAccessToken(), listOfPlannedOrders);
+            orderInitiatorRunner.submitOrders(listOfPlannedOrders.get(0).getControllerId(), getJocError(), getAccessToken(), listOfPlannedOrders);
         }
     }
 
@@ -253,10 +242,10 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
         }
     }
 
-    private void modifyOrder(String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws JocConfigurationException,
-            DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException, URISyntaxException,
-            InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
+    private void modifyOrder(String orderId, DailyPlanModifyOrder dailyplanModifyOrder, DBItemJocAuditLog dbAuditlog)
+            throws JocConfigurationException, DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException,
+            URISyntaxException, InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -276,8 +265,15 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             if (listOfPlannedOrders.size() == 1) {
                 DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 dbItemDailyPlanOrder.setModified(new Date());
-                if (dailyplanModifyOrder.getStartTime() != null) {
-                    dbItemDailyPlanOrder.setPlannedStart(dailyplanModifyOrder.getStartTime());
+                dbItemDailyPlanOrder.setAuditLogId(dbAuditlog.getId());
+
+                if (dailyplanModifyOrder.getScheduledFor() != null) {
+                    Date scheduledFor = Date.from(JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder
+                            .getTimeZone()).get());
+
+                    Long expectedDuration = dbItemDailyPlanOrder.getExpectedEnd().getTime() - dbItemDailyPlanOrder.getPlannedStart().getTime();
+                    dbItemDailyPlanOrder.setExpectedEnd(new Date(expectedDuration + scheduledFor.getTime()));
+                    dbItemDailyPlanOrder.setPlannedStart(scheduledFor);
                     sosHibernateSession.update(dbItemDailyPlanOrder);
                 }
                 if ((dailyplanModifyOrder.getVariables() != null && dailyplanModifyOrder.getVariables() != null) || (dailyplanModifyOrder
@@ -316,5 +312,5 @@ public class DailyPlanModifyOrderImpl extends JOCResourceImpl implements IDailyP
             Globals.disconnect(sosHibernateSession);
         }
     }
-
+   
 }

@@ -409,9 +409,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 OrderInitiatorSettings settings;
                 if (Globals.configurationGlobals != null) {
 
-                AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-                 settings = reader.getSettings(configuration);
-                }else {
+                    AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+                    settings = reader.getSettings(configuration);
+                } else {
                     settings = new OrderInitiatorSettings();
                     settings.setTimeZone("Europe/Berlin");
                     settings.setPeriodBegin("00:00");

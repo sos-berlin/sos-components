@@ -1,7 +1,6 @@
 
 package com.sos.joc.model.dailyplan;
 
-import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "startTime",
+    "scheduledFor",
+    "timeZone",
     "variables",
     "removeVariables",
     "orderIds",
@@ -40,14 +40,22 @@ public class DailyPlanModifyOrder {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * timestamp
+     * timestamp with now
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
-    @JsonProperty("startTime")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date startTime;
+    @JsonProperty("scheduledFor")
+    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
+    private String scheduledFor;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeZone")
+    private String timeZone;
     /**
      * key-value pairs
      * <p>
@@ -100,25 +108,47 @@ public class DailyPlanModifyOrder {
     }
 
     /**
-     * timestamp
+     * timestamp with now
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
-    @JsonProperty("startTime")
-    public Date getStartTime() {
-        return startTime;
+    @JsonProperty("scheduledFor")
+    public String getScheduledFor() {
+        return scheduledFor;
     }
 
     /**
-     * timestamp
+     * timestamp with now
      * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
      * 
      */
-    @JsonProperty("startTime")
-    public void setStartTime(Date startTime) {
-        this.startTime = startTime;
+    @JsonProperty("scheduledFor")
+    public void setScheduledFor(String scheduledFor) {
+        this.scheduledFor = scheduledFor;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     /**
@@ -199,12 +229,12 @@ public class DailyPlanModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("startTime", startTime).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(removeVariables).append(controllerId).append(auditLog).append(startTime).append(orderIds).toHashCode();
+        return new HashCodeBuilder().append(variables).append(removeVariables).append(controllerId).append(auditLog).append(scheduledFor).append(timeZone).append(orderIds).toHashCode();
     }
 
     @Override
@@ -216,7 +246,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(startTime, rhs.startTime).append(orderIds, rhs.orderIds).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).isEquals();
     }
 
 }

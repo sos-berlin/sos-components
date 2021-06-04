@@ -29,11 +29,10 @@ import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.ICyclicOrdersResource;
 
 @Path("utilities")
-public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersResource {
+public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrdersResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CyclicOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders/cyclic";
-    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postCyclicOrders(String accessToken, byte[] filterBytes) {
@@ -67,7 +66,6 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     private void addCyclicOrderIds(Collection<String> orderIds, String orderId, OrdersFilterV ordersFilterV) throws SOSHibernateException {
@@ -104,7 +102,6 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
                     }
                 }
             } else {
-                // LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
             }
         } finally {
@@ -112,10 +109,6 @@ public class CyclicOrdersImpl extends JOCResourceImpl implements ICyclicOrdersRe
         }
     }
 
-    private void setSettings() throws Exception {
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-        this.settings = reader.getSettings(section);
-    }
+ 
 
 }

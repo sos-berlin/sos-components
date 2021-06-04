@@ -48,12 +48,11 @@ import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanSubmitOrderResource;
 
 @Path("daily_plan")
-public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDailyPlanSubmitOrderResource {
+public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanSubmitOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmitOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders/submit";
-    private OrderInitiatorSettings settings;
-
+ 
     private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException,
@@ -188,10 +187,5 @@ public class DailyPlanSubmitOrdersImpl extends JOCResourceImpl implements IDaily
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-
-    private void setSettings() throws Exception {
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-        this.settings = reader.getSettings(section);
-    }
+ 
 }

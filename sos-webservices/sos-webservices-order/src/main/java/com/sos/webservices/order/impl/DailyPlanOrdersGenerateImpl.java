@@ -1,8 +1,11 @@
 package com.sos.webservices.order.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -14,6 +17,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
@@ -30,11 +34,10 @@ import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
-public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDailyPlanOrdersGenerateResource {
+public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements IDailyPlanOrdersGenerateResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersGenerateImpl.class);
     private static final String API_CALL = "./daily_plan/orders/generate";
-    private OrderInitiatorSettings settings;
 
     @Override
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) throws JocException {
@@ -43,16 +46,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderSelector dailyPlanOrderSelector = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderSelector.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanOrderSelector.getControllerId(), getControllerPermissions(
-                    dailyPlanOrderSelector.getControllerId(), accessToken).getOrders().getCreate());
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
-            }
-
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
-            storeAuditLog(dailyPlanOrderSelector.getAuditLog(), dailyPlanOrderSelector.getControllerId(), CategoryType.DAILYPLAN);
-            setSettings();
 
             if (dailyPlanOrderSelector.getSelector() == null) {
                 Folder root = new Folder();
@@ -63,26 +56,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 dailyPlanOrderSelector.getSelector().getFolders().add(root);
             }
 
-            Set<Folder> folders = addPermittedFolder(dailyPlanOrderSelector.getSelector().getFolders());
-            dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
-            for (Folder folder : folders) {
-                dailyPlanOrderSelector.getSelector().getFolders().add(folder);
-            }
-
-            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
-            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            orderInitiatorSettings.setOverwrite(dailyPlanOrderSelector.getOverwrite());
-            orderInitiatorSettings.setSubmit(dailyPlanOrderSelector.getWithSubmit());
-
-            if (settings != null) {
-                orderInitiatorSettings.setTimeZone(settings.getTimeZone());
-                orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
-            } else {
-                orderInitiatorSettings.setTimeZone("Europe/Berlin");
-                orderInitiatorSettings.setPeriodBegin("00:00");
-            }
-
-            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
             if (dailyPlanOrderSelector.getControllerIds() == null) {
                 dailyPlanOrderSelector.setControllerIds(new ArrayList<String>());
                 dailyPlanOrderSelector.getControllerIds().add(dailyPlanOrderSelector.getControllerId());
@@ -92,39 +65,85 @@ public class DailyPlanOrdersGenerateImpl extends JOCResourceImpl implements IDai
                 }
             }
 
+            Set<String> allowedControllers = Collections.emptySet();
+            allowedControllers = dailyPlanOrderSelector.getControllerIds().stream().filter(availableController -> getControllerPermissions(
+                    availableController, accessToken).getOrders().getCreate()).collect(Collectors.toSet());
+            boolean permitted = !allowedControllers.isEmpty();
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
+
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
+            setSettings();
+
+            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            orderInitiatorSettings.setOverwrite(dailyPlanOrderSelector.getOverwrite());
+            orderInitiatorSettings.setSubmit(dailyPlanOrderSelector.getWithSubmit());
+
+            orderInitiatorSettings.setTimeZone(settings.getTimeZone());
+            orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
+
+            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+
             OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
                     .getDailyPlanDate()).getTime());
             OrderInitiatorGlobals.submissionTime = new Date();
 
-            for (String controllerId : dailyPlanOrderSelector.getControllerIds()) {
+            boolean withFolderSelector = (dailyPlanOrderSelector.getSelector().getFolders() != null && !dailyPlanOrderSelector.getSelector()
+                    .getFolders().isEmpty());
 
-                ScheduleSource scheduleSource = null;
-                scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
-
-                orderInitiatorRunner.readSchedules(scheduleSource);
-                orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(),
-                        dailyPlanOrderSelector.getWithSubmit());
-
-                //storeAuditLogEntry(orderAudit);
+            Set<Folder> inFolders = new HashSet<Folder>();
+            if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
+                for (String schedulePath : dailyPlanOrderSelector.getSelector().getSchedulePaths()) {
+                    Folder folder = new Folder();
+                    folder.setFolder(schedulePath);
+                    folder.setRecursive(false);
+                    inFolders.add(folder);
+                }
             }
 
+            for (String controllerId : allowedControllers) {
+                DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderSelector.getAuditLog(), dailyPlanOrderSelector.getControllerId(),
+                        CategoryType.DAILYPLAN);
+                OrderInitiatorGlobals.orderInitiatorSettings.setAuditLogId(dbItemJocAuditLog.getId());
+
+                boolean hasPermission = true;
+                folderPermissions.setSchedulerId(controllerId);
+                if (withFolderSelector) {
+                    Set<Folder> permittedFolders = addPermittedFolder(inFolders);
+                    if (withFolderSelector && (permittedFolders == null || permittedFolders.isEmpty())) {
+                        hasPermission = false;
+                    }
+                    dailyPlanOrderSelector.getSelector().getFolders().clear();
+                    for (Folder permittedFolder : permittedFolders) {
+                        dailyPlanOrderSelector.getSelector().getFolders().add(permittedFolder);
+                    }
+                }
+
+                if (hasPermission) {
+                    ScheduleSource scheduleSource = null;
+                    scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
+
+                    orderInitiatorRunner.readSchedules(scheduleSource);
+                    orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(),
+                            dailyPlanOrderSelector.getWithSubmit());
+                }
+            }
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
-        } catch (JocException e) {
+        } catch (
+
+        JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
-    }
-
-    private void setSettings() throws Exception {
-        if (Globals.configurationGlobals != null) {
-            GlobalSettingsReader reader = new GlobalSettingsReader();
-            AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-            this.settings = reader.getSettings(section);
-        }
     }
 
 }

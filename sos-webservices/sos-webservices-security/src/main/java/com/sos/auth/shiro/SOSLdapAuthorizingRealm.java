@@ -10,12 +10,12 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
-import org.apache.shiro.realm.ldap.JndiLdapRealm;
+import org.apache.shiro.realm.ldap.DefaultLdapRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SOSLdapAuthorizingRealm extends JndiLdapRealm {
+public class SOSLdapAuthorizingRealm extends DefaultLdapRealm  {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SOSLdapAuthorizingRealm.class);
 

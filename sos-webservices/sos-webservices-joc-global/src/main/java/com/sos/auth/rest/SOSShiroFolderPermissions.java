@@ -18,7 +18,7 @@ public class SOSShiroFolderPermissions {
     private Map<String, Set<Folder>> listOfFoldersForInstance;
     private Map<String, Set<String>> listOfNotPermittedParentFoldersForInstance;
     private String objectFilter = "";
-    private String schedulerId;
+    private String controllerId;
 
     public SOSShiroFolderPermissions() {
         listOfFoldersForInstance = new HashMap<String, Set<Folder>>();
@@ -31,9 +31,9 @@ public class SOSShiroFolderPermissions {
         this.objectFilter = objectFilter;
     }
 
-    public Set<Folder> getListOfFolders(String jobSchedulerId) {
-        if (jobSchedulerId != null && !jobSchedulerId.isEmpty() && listOfFoldersForInstance.get(jobSchedulerId) != null) {
-            Set<Folder> retListOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
+    public Set<Folder> getListOfFolders(String controllerId) {
+        if (controllerId != null && !controllerId.isEmpty() && listOfFoldersForInstance.get(controllerId) != null) {
+            Set<Folder> retListOfFolders = listOfFoldersForInstance.get(controllerId);
             if (listOfFoldersForInstance.get("") != null) {
                 Set<String> folderNames = retListOfFolders.stream().map(Folder::getFolder).collect(Collectors.toSet());
                 retListOfFolders.addAll(listOfFoldersForInstance.get("").stream().filter(f -> !folderNames.contains(f.getFolder())).collect(Collectors
@@ -65,9 +65,9 @@ public class SOSShiroFolderPermissions {
         return listOfNotPermittedParentFoldersForInstance;
     }
 
-    public void setFolders(String jobSchedulerId, String folders) {
+    public void setFolders(String controllerId, String folders) {
         String[] stringlistOfFolders = folders.split(",");
-        Set<Folder> listOfFolders = listOfFoldersForInstance.get(jobSchedulerId);
+        Set<Folder> listOfFolders = listOfFoldersForInstance.get(controllerId);
         if (listOfFolders == null) {
             listOfFolders = new HashSet<Folder>();
         }
@@ -94,7 +94,7 @@ public class SOSShiroFolderPermissions {
 
             }
         }
-        listOfFoldersForInstance.put(jobSchedulerId, listOfFolders);
+        listOfFoldersForInstance.put(controllerId, listOfFolders);
     }
 
     private static String normalizeFolder(String folder) {
@@ -182,11 +182,11 @@ public class SOSShiroFolderPermissions {
     }
 
     public Set<Folder> getListOfFolders() {
-        return getListOfFolders(schedulerId);
+        return getListOfFolders(controllerId);
     }
 
-    public void setSchedulerId(String schedulerId) {
-        this.schedulerId = schedulerId;
+    public void setSchedulerId(String controllerId) {
+        this.controllerId = controllerId;
     }
 
 }

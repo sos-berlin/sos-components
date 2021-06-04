@@ -272,10 +272,11 @@ public class OrderListSynchronizer {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
                     dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
-
+                    
                     if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                         LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
                         plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        plannedOrder.setAuditLogId(OrderInitiatorGlobals.orderInitiatorSettings.getAuditLogId());
                         dbLayerDailyPlan.store(plannedOrder);
                         plannedOrder.setStoredInDb(true);
                     }

@@ -20,10 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
@@ -35,21 +32,18 @@ import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.resource.IDailyPlanOrdersSummaryResource;
 
 @Path("daily_plan")
-public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDailyPlanOrdersSummaryResource {
+public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements IDailyPlanOrdersSummaryResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersSummaryImpl.class);
     private static final String API_CALL = "./daily_plan/orders/summary";
-    private OrderInitiatorSettings settings;
-
+ 
     private PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
 
         PlannedOrderItem p = new PlannedOrderItem();
@@ -246,11 +240,5 @@ public class DailyPlanOrdersSummaryImpl extends JOCResourceImpl implements IDail
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-    }
-
-    private void setSettings() throws Exception {
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
-        this.settings = reader.getSettings(section);
     }
 }
