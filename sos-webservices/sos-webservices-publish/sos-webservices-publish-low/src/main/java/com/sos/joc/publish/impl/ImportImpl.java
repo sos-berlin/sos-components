@@ -33,6 +33,7 @@ import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
@@ -99,6 +100,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                 uploadFileName = URLDecoder.decode(body.getContentDisposition().getFileName(), "UTF-8");
             } else {
                 throw new JocMissingRequiredParameterException("undefined 'file'");
+            }
+            if (filter.getOverwrite() && (filter.getSuffix() != null || filter.getPrefix() != null)) {
+            	throw new JocImportException("conflicting arguments: overwrite=true - no prefix/suffix allowed!");
             }
             
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
