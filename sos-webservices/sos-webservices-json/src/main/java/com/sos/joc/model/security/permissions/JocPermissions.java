@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "getLog",
     "administration",
     "cluster",
     "inventory",
@@ -33,6 +34,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class JocPermissions {
 
+    @JsonProperty("getLog")
+    private Boolean getLog = false;
     @JsonProperty("administration")
     private Administration administration;
     @JsonProperty("cluster")
@@ -69,13 +72,15 @@ public class JocPermissions {
      * @param dailyPlan
      * @param fileTransfer
      * @param calendars
+     * @param getLog
      * @param administration
      * @param documentations
      * @param inventory
      * @param others
      */
-    public JocPermissions(Administration administration, Cluster cluster, Inventory inventory, Calendars calendars, Documentations documentations, AuditLog auditLog, DailyPlan dailyPlan, FileTransfer fileTransfer, Notification notification, Others others) {
+    public JocPermissions(Boolean getLog, Administration administration, Cluster cluster, Inventory inventory, Calendars calendars, Documentations documentations, AuditLog auditLog, DailyPlan dailyPlan, FileTransfer fileTransfer, Notification notification, Others others) {
         super();
+        this.getLog = getLog;
         this.administration = administration;
         this.cluster = cluster;
         this.inventory = inventory;
@@ -86,6 +91,16 @@ public class JocPermissions {
         this.fileTransfer = fileTransfer;
         this.notification = notification;
         this.others = others;
+    }
+
+    @JsonProperty("getLog")
+    public Boolean getGetLog() {
+        return getLog;
+    }
+
+    @JsonProperty("getLog")
+    public void setGetLog(Boolean getLog) {
+        this.getLog = getLog;
     }
 
     @JsonProperty("administration")
@@ -190,12 +205,12 @@ public class JocPermissions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("administration", administration).append("cluster", cluster).append("inventory", inventory).append("calendars", calendars).append("documentations", documentations).append("auditLog", auditLog).append("dailyPlan", dailyPlan).append("fileTransfer", fileTransfer).append("notification", notification).append("others", others).toString();
+        return new ToStringBuilder(this).append("getLog", getLog).append("administration", administration).append("cluster", cluster).append("inventory", inventory).append("calendars", calendars).append("documentations", documentations).append("auditLog", auditLog).append("dailyPlan", dailyPlan).append("fileTransfer", fileTransfer).append("notification", notification).append("others", others).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cluster).append(notification).append(auditLog).append(dailyPlan).append(fileTransfer).append(calendars).append(administration).append(documentations).append(inventory).append(others).toHashCode();
+        return new HashCodeBuilder().append(cluster).append(notification).append(auditLog).append(dailyPlan).append(fileTransfer).append(calendars).append(getLog).append(administration).append(documentations).append(inventory).append(others).toHashCode();
     }
 
     @Override
@@ -207,7 +222,7 @@ public class JocPermissions {
             return false;
         }
         JocPermissions rhs = ((JocPermissions) other);
-        return new EqualsBuilder().append(cluster, rhs.cluster).append(notification, rhs.notification).append(auditLog, rhs.auditLog).append(dailyPlan, rhs.dailyPlan).append(fileTransfer, rhs.fileTransfer).append(calendars, rhs.calendars).append(administration, rhs.administration).append(documentations, rhs.documentations).append(inventory, rhs.inventory).append(others, rhs.others).isEquals();
+        return new EqualsBuilder().append(cluster, rhs.cluster).append(notification, rhs.notification).append(auditLog, rhs.auditLog).append(dailyPlan, rhs.dailyPlan).append(fileTransfer, rhs.fileTransfer).append(calendars, rhs.calendars).append(getLog, rhs.getLog).append(administration, rhs.administration).append(documentations, rhs.documentations).append(inventory, rhs.inventory).append(others, rhs.others).isEquals();
     }
 
 }

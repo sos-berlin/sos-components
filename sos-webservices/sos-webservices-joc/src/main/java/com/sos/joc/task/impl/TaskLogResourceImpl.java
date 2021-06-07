@@ -36,7 +36,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     private static final String API_CALL_LOG = "./task/log";
     private static final String API_CALL_RUNNING = "./task/log/running";
     private static final String API_CALL_DOWNLOAD = "./task/log/download";
-    //private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd' 'HH:mm:ss.SSSZ");
     private Lock lock = new ReentrantLock();
     private Condition condition = null;
     private Long taskId = null;
@@ -71,7 +70,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
             switch (mode) {
             case TRUE:
                 try {
-                    TimeUnit.SECONDS.sleep(2);
+                    TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException e1) {
                 }
             case COMPLETE:
@@ -84,7 +83,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 if (eventArrived.get()) {
                     if (!complete.get()) {
                         try {
-                            TimeUnit.SECONDS.sleep(2);
+                            TimeUnit.MILLISECONDS.sleep(500);
                         } catch (InterruptedException e1) {
                         }
                     }
@@ -93,10 +92,6 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 break;
             }
             
-
-//            String message = ZonedDateTime.now().format(formatter) + " [INFO] Running log is not yet completly implemented";
-//            taskLog.setComplete(false);
-//            taskLog.setLog(message);
             return JOCDefaultResponse.responseStatus200(taskLog);
 
         } catch (JocException e) {

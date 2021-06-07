@@ -178,12 +178,13 @@ public class SOSPermissionsCreator {
     
     private JocPermissions getJocPermissions() {
         
-        JocPermissions jocPermissions = new JocPermissions(new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
+        JocPermissions jocPermissions = new JocPermissions(false, new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
                 new Customization()), new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(), new DailyPlan(),
                 new FileTransfer(), new Notification(), new Others());
 
         if (currentUser != null && currentUser.getCurrentSubject() != null) {
             
+            jocPermissions.setGetLog(haveRight("", "sos:products:joc:get_log"));
             Administration admin = jocPermissions.getAdministration();
             admin.getAccounts().setView(haveRight("", "sos:products:joc:adminstration:accounts:view"));
             admin.getAccounts().setManage(haveRight("", "sos:products:joc:adminstration:accounts:manage"));
@@ -220,7 +221,7 @@ public class SOSPermissionsCreator {
 
     private ControllerPermissions getControllerPermissions(String controllerId) {
 
-        ControllerPermissions controllerPermissions = new ControllerPermissions(false, false, false, false, new Deployments(), new Orders(),
+        ControllerPermissions controllerPermissions = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
                 new Agents(), new Locks(), new Workflows());
 
         if (currentUser != null && currentUser.getCurrentSubject() != null) {
@@ -228,6 +229,7 @@ public class SOSPermissionsCreator {
             controllerPermissions.setView(haveRight(controllerId, "sos:products:controller:view"));
             controllerPermissions.setRestart(haveRight(controllerId, "sos:products:controller:restart"));
             controllerPermissions.setTerminate(haveRight(controllerId, "sos:products:controller:terminate"));
+            controllerPermissions.setGetLog(haveRight(controllerId, "sos:products:controller:get_log"));
             controllerPermissions.setSwitchOver(haveRight(controllerId, "sos:products:controller:switch_over"));
             controllerPermissions.getAgents().setView(haveRight(controllerId, "sos:products:controller:agents:view"));
             controllerPermissions.getDeployments().setView(haveRight(controllerId, "sos:products:controller:deployment:view"));

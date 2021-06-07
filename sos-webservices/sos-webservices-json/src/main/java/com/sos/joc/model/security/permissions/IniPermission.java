@@ -26,6 +26,7 @@ public class IniPermission {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -55,6 +56,7 @@ public class IniPermission {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("path")
@@ -66,6 +68,7 @@ public class IniPermission {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("path")
