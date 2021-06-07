@@ -33,13 +33,16 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
     private static final String API_CALL = "./log";
     private static final String logDirectory = "logs";
     private static final String currentLogFileName = "joc.log";
-    private final Predicate<String> pattern = Pattern.compile("^(joc.log|joc-.*\\.log\\.gz)$").asPredicate();
 
     @Override
     public JOCDefaultResponse postLog(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JOClog jocLog = Globals.objectMapper.readValue(filterBytes, JOClog.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getGetLog());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
     
             return postLog(accessToken, jocLog);
         } catch (Exception e) {
@@ -59,6 +62,7 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             }
             
             List<String> filenames = new ArrayList<String>();
+            Predicate<String> pattern = Pattern.compile("^(joc.log|joc-.*\\.log\\.gz)$").asPredicate();
             for (Path logFile : getFileListStream(logDir, pattern)) {
                 filenames.add(logFile.getFileName().toString());
             }
@@ -83,6 +87,11 @@ public class LogImpl extends JOCResourceImpl implements ILogResource {
             }
             String s = "{\"filename\":\"" + filename + "\"}";
             initLogging(API_CALL, s.getBytes(), accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getGetLog());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
             JOClog jocLog = new JOClog();
             jocLog.setFilename(filename);
             return postLog(accessToken, jocLog);

@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "view",
     "restart",
     "terminate",
+    "getLog",
     "switchOver",
     "deployments",
     "orders",
@@ -40,6 +41,8 @@ public class ControllerPermissions {
     private Boolean restart = false;
     @JsonProperty("terminate")
     private Boolean terminate = false;
+    @JsonProperty("getLog")
+    private Boolean getLog = false;
     @JsonProperty("switchOver")
     private Boolean switchOver = false;
     @JsonProperty("deployments")
@@ -66,17 +69,19 @@ public class ControllerPermissions {
      * @param switchOver
      * @param deployments
      * @param restart
+     * @param getLog
      * @param orders
      * @param terminate
      * @param workflows
      * @param locks
      * @param agents
      */
-    public ControllerPermissions(Boolean view, Boolean restart, Boolean terminate, Boolean switchOver, Deployments deployments, Orders orders, Agents agents, Locks locks, Workflows workflows) {
+    public ControllerPermissions(Boolean view, Boolean restart, Boolean terminate, Boolean getLog, Boolean switchOver, Deployments deployments, Orders orders, Agents agents, Locks locks, Workflows workflows) {
         super();
         this.view = view;
         this.restart = restart;
         this.terminate = terminate;
+        this.getLog = getLog;
         this.switchOver = switchOver;
         this.deployments = deployments;
         this.orders = orders;
@@ -113,6 +118,16 @@ public class ControllerPermissions {
     @JsonProperty("terminate")
     public void setTerminate(Boolean terminate) {
         this.terminate = terminate;
+    }
+
+    @JsonProperty("getLog")
+    public Boolean getGetLog() {
+        return getLog;
+    }
+
+    @JsonProperty("getLog")
+    public void setGetLog(Boolean getLog) {
+        this.getLog = getLog;
     }
 
     @JsonProperty("switchOver")
@@ -177,12 +192,12 @@ public class ControllerPermissions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("view", view).append("restart", restart).append("terminate", terminate).append("switchOver", switchOver).append("deployments", deployments).append("orders", orders).append("agents", agents).append("locks", locks).append("workflows", workflows).toString();
+        return new ToStringBuilder(this).append("view", view).append("restart", restart).append("terminate", terminate).append("getLog", getLog).append("switchOver", switchOver).append("deployments", deployments).append("orders", orders).append("agents", agents).append("locks", locks).append("workflows", workflows).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(view).append(switchOver).append(deployments).append(restart).append(orders).append(terminate).append(workflows).append(locks).append(agents).toHashCode();
+        return new HashCodeBuilder().append(view).append(switchOver).append(deployments).append(restart).append(getLog).append(orders).append(terminate).append(workflows).append(locks).append(agents).toHashCode();
     }
 
     @Override
@@ -194,7 +209,7 @@ public class ControllerPermissions {
             return false;
         }
         ControllerPermissions rhs = ((ControllerPermissions) other);
-        return new EqualsBuilder().append(view, rhs.view).append(switchOver, rhs.switchOver).append(deployments, rhs.deployments).append(restart, rhs.restart).append(orders, rhs.orders).append(terminate, rhs.terminate).append(workflows, rhs.workflows).append(locks, rhs.locks).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(view, rhs.view).append(switchOver, rhs.switchOver).append(deployments, rhs.deployments).append(restart, rhs.restart).append(getLog, rhs.getLog).append(orders, rhs.orders).append(terminate, rhs.terminate).append(workflows, rhs.workflows).append(locks, rhs.locks).append(agents, rhs.agents).isEquals();
     }
 
 }

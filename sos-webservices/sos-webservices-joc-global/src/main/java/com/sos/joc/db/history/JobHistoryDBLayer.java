@@ -388,6 +388,22 @@ public class JobHistoryDBLayer {
                     where += and + " " + clause;
                     and = " and";
                 }
+                if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
+                    if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
+                        where += and + " orderId like :orderId";
+                    } else {
+                        where += and + " orderId = :orderId";
+                    }
+                    and = " and";
+                }
+                if (filter.getWorkflowPath() != null && !filter.getWorkflowPath().isEmpty()) {
+                    if (filter.getWorkflowPath().contains("*") || filter.getWorkflowPath().contains("?")) {
+                        where += and + " workflowPath like :workflowPath";
+                    } else {
+                        where += and + " workflowPath = :workflowPath";
+                    }
+                    and = " and";
+                }
             }
         }
 
@@ -419,6 +435,20 @@ public class JobHistoryDBLayer {
         }
         if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
             query.setParameterList("excludedWorkflows", filter.getExcludedWorkflows());
+        }
+        if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
+            if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
+                query.setParameter("orderId", filter.getOrderId().replace('*', '%').replace('?', '_'));
+            } else {
+                query.setParameter("orderId", filter.getOrderId());
+            }
+        }
+        if (filter.getWorkflowPath() != null && !filter.getWorkflowPath().isEmpty()) {
+            if (filter.getWorkflowPath().contains("*") || filter.getWorkflowPath().contains("?")) {
+                query.setParameter("workflowPath", filter.getWorkflowPath().replace('*', '%').replace('?', '_'));
+            } else {
+                query.setParameter("workflowPath", filter.getWorkflowPath());
+            }
         }
         return query;
     }

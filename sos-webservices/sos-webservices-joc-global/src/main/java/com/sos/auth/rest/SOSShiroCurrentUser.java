@@ -178,9 +178,9 @@ public class SOSShiroCurrentUser {
     private Permissions initPermissions() {
         Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
                 new Customization());
-        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, new Deployments(), new Orders(),
+        ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
                 new Agents(), new Locks(), new Workflows());
-        JocPermissions joc = new JocPermissions(administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
+        JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
                 new DailyPlan(), new FileTransfer(), new Notification(), new Others());
         return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());
     }

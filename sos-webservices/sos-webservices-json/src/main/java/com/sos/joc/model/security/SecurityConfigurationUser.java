@@ -18,10 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SecurityConfigurationUser {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("user")
     private String user;
     @JsonProperty("password")
     private String password;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("roles")
     private List<String> roles = new ArrayList<String>();
 
@@ -45,11 +55,21 @@ public class SecurityConfigurationUser {
         this.roles = roles;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("user")
     public String getUser() {
         return user;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("user")
     public void setUser(String user) {
         this.user = user;
@@ -65,11 +85,21 @@ public class SecurityConfigurationUser {
         this.password = password;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("roles")
     public List<String> getRoles() {
         return roles;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("roles")
     public void setRoles(List<String> roles) {
         this.roles = roles;

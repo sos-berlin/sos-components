@@ -18,8 +18,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SecurityConfigurationMainEntry {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryName")
     private String entryName;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryValue")
     private List<String> entryValue = new ArrayList<String>();
     @JsonProperty("entryComment")
@@ -45,21 +55,41 @@ public class SecurityConfigurationMainEntry {
         this.entryComment = entryComment;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryName")
     public String getEntryName() {
         return entryName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryName")
     public void setEntryName(String entryName) {
         this.entryName = entryName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryValue")
     public List<String> getEntryValue() {
         return entryValue;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("entryValue")
     public void setEntryValue(List<String> entryValue) {
         this.entryValue = entryValue;
