@@ -115,6 +115,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             break;
                         case FILEORDERSOURCE:
                             folder.getFileOrderSources().add(config);
+                            break;
                         case SCHEDULE:
                             folder.getSchedules().add(config);
                             break;
