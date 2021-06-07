@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DepHistoryItem;
 import com.sos.joc.model.publish.DeploymentState;
@@ -68,8 +70,11 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemDeploymentHistory> dbHistoryItems = null;
+            folderPermissions.setSchedulerId(controllerId);
+            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             if (filter.getCompactFilter() != null) {
-                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
+                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers).stream()
+                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toList());
                 dbHistoryItems.stream().forEach(item -> {
                     item.setId(null);
                     item.setType(null);
@@ -81,7 +86,8 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                     item.setInventoryConfigurationId(null);
                 });
             } else {
-                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers);
+                dbHistoryItems = dbLayer.getDeploymentHistoryDetails(filter, allowedControllers).stream()
+                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toList());
             }
             return JOCDefaultResponse.responseStatus200(getDepHistoryFromDBItems(dbHistoryItems));
         } catch (JocException e) {
