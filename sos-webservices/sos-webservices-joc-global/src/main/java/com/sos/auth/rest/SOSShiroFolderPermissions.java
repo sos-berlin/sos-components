@@ -47,6 +47,20 @@ public class SOSShiroFolderPermissions {
         }
     }
     
+    public boolean allFoldersArePermitted(Set<String> controllerIds) {
+        if (controllerIds != null) {
+            controllerIds.add("");
+        } else {
+            controllerIds = Collections.singleton("");
+        }
+        final Set<String> c = controllerIds;
+        return listOfFoldersForInstance.entrySet().stream().filter(e -> c.contains(e.getKey())).mapToInt(s -> s.getValue().size()).sum() == 0;
+    }
+    
+    public Map<String, Set<Folder>> getListsOfFoldersForInstance() {
+        return listOfFoldersForInstance;
+    }
+    
     public Map<String, Set<String>> getNotPermittedParentFolders() {
         if (listOfNotPermittedParentFoldersForInstance.isEmpty()) {
             listOfFoldersForInstance.forEach((k, v) -> {
