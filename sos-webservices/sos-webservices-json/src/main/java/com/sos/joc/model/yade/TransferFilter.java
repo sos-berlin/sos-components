@@ -25,24 +25,27 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "compact",
     "regex",
     "profiles",
-    "mandator",
     "states",
     "operations",
     "dateFrom",
     "dateTo",
     "timeZone",
     "limit",
-    "hasIntervention",
-    "isIntervention",
     "sources",
     "targets",
-    "sourceFilesRegex",
-    "targetFilesRegex",
+    "sourceFile",
+    "targetFile",
     "sourceFiles",
     "targetFiles"
 })
 public class TransferFilter {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("transferIds")
@@ -59,16 +62,14 @@ public class TransferFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
+    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
     private String regex;
     @JsonProperty("profiles")
     private List<String> profiles = new ArrayList<String>();
-    @JsonProperty("mandator")
-    private String mandator;
     @JsonProperty("states")
     private List<TransferStateText> states = new ArrayList<TransferStateText>();
     @JsonProperty("operations")
@@ -92,6 +93,8 @@ public class TransferFilter {
     @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String dateTo;
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -105,42 +108,50 @@ public class TransferFilter {
     @JsonProperty("limit")
     @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
-    @JsonProperty("hasIntervention")
-    private Boolean hasIntervention;
-    @JsonProperty("isIntervention")
-    private Boolean isIntervention;
     @JsonProperty("sources")
     private List<ProtocolFragment> sources = new ArrayList<ProtocolFragment>();
     @JsonProperty("targets")
     private List<ProtocolFragment> targets = new ArrayList<ProtocolFragment>();
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("sourceFilesRegex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    private String sourceFilesRegex;
+    @JsonProperty("sourceFile")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String sourceFile;
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("targetFilesRegex")
-    @JsonPropertyDescription("regular expression to filter JobScheduler objects by matching the path")
-    private String targetFilesRegex;
+    @JsonProperty("targetFile")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String targetFile;
     @JsonProperty("sourceFiles")
     private List<String> sourceFiles = new ArrayList<String>();
     @JsonProperty("targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public String getControllerId() {
         return controllerId;
     }
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("controllerId")
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
@@ -181,7 +192,7 @@ public class TransferFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -192,7 +203,7 @@ public class TransferFilter {
     /**
      * filter with regex
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * regular expression to filter Controller objects by matching the path
      * 
      */
     @JsonProperty("regex")
@@ -208,16 +219,6 @@ public class TransferFilter {
     @JsonProperty("profiles")
     public void setProfiles(List<String> profiles) {
         this.profiles = profiles;
-    }
-
-    @JsonProperty("mandator")
-    public String getMandator() {
-        return mandator;
-    }
-
-    @JsonProperty("mandator")
-    public void setMandator(String mandator) {
-        this.mandator = mandator;
     }
 
     @JsonProperty("states")
@@ -285,6 +286,8 @@ public class TransferFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -294,6 +297,8 @@ public class TransferFilter {
     }
 
     /**
+     * string without < and >
+     * <p>
      * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
      * 
      */
@@ -320,26 +325,6 @@ public class TransferFilter {
         this.limit = limit;
     }
 
-    @JsonProperty("hasIntervention")
-    public Boolean getHasIntervention() {
-        return hasIntervention;
-    }
-
-    @JsonProperty("hasIntervention")
-    public void setHasIntervention(Boolean hasIntervention) {
-        this.hasIntervention = hasIntervention;
-    }
-
-    @JsonProperty("isIntervention")
-    public Boolean getIsIntervention() {
-        return isIntervention;
-    }
-
-    @JsonProperty("isIntervention")
-    public void setIsIntervention(Boolean isIntervention) {
-        this.isIntervention = isIntervention;
-    }
-
     @JsonProperty("sources")
     public List<ProtocolFragment> getSources() {
         return sources;
@@ -361,47 +346,47 @@ public class TransferFilter {
     }
 
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("sourceFilesRegex")
-    public String getSourceFilesRegex() {
-        return sourceFilesRegex;
+    @JsonProperty("sourceFile")
+    public String getSourceFile() {
+        return sourceFile;
     }
 
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("sourceFilesRegex")
-    public void setSourceFilesRegex(String sourceFilesRegex) {
-        this.sourceFilesRegex = sourceFilesRegex;
+    @JsonProperty("sourceFile")
+    public void setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
     }
 
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("targetFilesRegex")
-    public String getTargetFilesRegex() {
-        return targetFilesRegex;
+    @JsonProperty("targetFile")
+    public String getTargetFile() {
+        return targetFile;
     }
 
     /**
-     * filter with regex
+     * glob pattern
      * <p>
-     * regular expression to filter JobScheduler objects by matching the path
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
-    @JsonProperty("targetFilesRegex")
-    public void setTargetFilesRegex(String targetFilesRegex) {
-        this.targetFilesRegex = targetFilesRegex;
+    @JsonProperty("targetFile")
+    public void setTargetFile(String targetFile) {
+        this.targetFile = targetFile;
     }
 
     @JsonProperty("sourceFiles")
@@ -426,12 +411,12 @@ public class TransferFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("mandator", mandator).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("hasIntervention", hasIntervention).append("isIntervention", isIntervention).append("sources", sources).append("targets", targets).append("sourceFilesRegex", sourceFilesRegex).append("targetFilesRegex", targetFilesRegex).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("transferIds", transferIds).append("compact", compact).append("regex", regex).append("profiles", profiles).append("states", states).append("operations", operations).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).append("limit", limit).append("sources", sources).append("targets", targets).append("sourceFile", sourceFile).append("targetFile", targetFile).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(isIntervention).append(dateFrom).append(targets).append(transferIds).append(hasIntervention).append(states).append(regex).append(operations).append(sourceFilesRegex).append(sourceFiles).append(dateTo).append(limit).append(targetFilesRegex).append(targetFiles).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(compact).append(sources).append(profiles).append(timeZone).append(dateFrom).append(targets).append(sourceFile).append(transferIds).append(states).append(regex).append(operations).append(sourceFiles).append(targetFile).append(dateTo).append(limit).append(targetFiles).toHashCode();
     }
 
     @Override
@@ -443,7 +428,7 @@ public class TransferFilter {
             return false;
         }
         TransferFilter rhs = ((TransferFilter) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(isIntervention, rhs.isIntervention).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(transferIds, rhs.transferIds).append(hasIntervention, rhs.hasIntervention).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFilesRegex, rhs.sourceFilesRegex).append(sourceFiles, rhs.sourceFiles).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFilesRegex, rhs.targetFilesRegex).append(targetFiles, rhs.targetFiles).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(sources, rhs.sources).append(profiles, rhs.profiles).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(targets, rhs.targets).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).append(regex, rhs.regex).append(operations, rhs.operations).append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).isEquals();
     }
 
 }

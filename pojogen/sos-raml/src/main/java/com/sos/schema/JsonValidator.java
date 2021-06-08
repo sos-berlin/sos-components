@@ -153,6 +153,7 @@ public class JsonValidator {
             put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
             
+            put("com.sos.joc.model.yade.TransferFilter","yade/transferFilter-schema.json");
             put("com.sos.joc.model.yade.FileFilter","yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter","yade/filesFilter-schema.json");
             

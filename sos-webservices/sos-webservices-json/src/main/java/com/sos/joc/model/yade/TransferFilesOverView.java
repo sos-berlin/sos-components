@@ -45,6 +45,11 @@ public class TransferFilesOverView {
     @JsonProperty("surveyDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("files")
     private TransferFilesSummary files;
 
@@ -96,11 +101,21 @@ public class TransferFilesOverView {
         this.surveyDate = surveyDate;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("files")
     public TransferFilesSummary getFiles() {
         return files;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("files")
     public void setFiles(TransferFilesSummary files) {
         this.files = files;

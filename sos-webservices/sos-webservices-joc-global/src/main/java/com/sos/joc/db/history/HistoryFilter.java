@@ -248,7 +248,10 @@ public class HistoryFilter {
     }
 
     public void setOrderId(String orderId) {
-        this.orderId = orderId;
+        if (orderId != null) {
+            this.orderId = orderId.trim();
+        }
+        this.orderId = null;
     }
     
     public String getWorkflowPath() {
@@ -256,7 +259,10 @@ public class HistoryFilter {
     }
 
     public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+        if (workflowPath != null) {
+            this.workflowPath = workflowPath.trim();
+        }
+        this.workflowPath = null;
     }
 
 }

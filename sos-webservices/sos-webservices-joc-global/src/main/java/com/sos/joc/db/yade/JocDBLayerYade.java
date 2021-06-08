@@ -1,9 +1,13 @@
 package com.sos.joc.db.yade;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.persistence.TemporalType;
 
@@ -186,14 +190,16 @@ public class JocDBLayerYade {
 
     private <T> List<T> getTransfers(JocYadeFilter filter, boolean onlyTransferIds) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            boolean withControllerId = filter.getControllerId() != null && !filter.getControllerId().isEmpty();
+            boolean withControllerIds = filter.getControllerIds() != null && !filter.getControllerIds().isEmpty();
             boolean withTransferIds = filter.getTransferIds() != null && !filter.getTransferIds().isEmpty();
             boolean withOperations = filter.getOperations() != null && !filter.getOperations().isEmpty();
             boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
             boolean withSourceHosts = filter.getSourceHosts() != null && !filter.getSourceHosts().isEmpty();
             boolean withSourceProtocols = filter.getSourceProtocols() != null && !filter.getSourceProtocols().isEmpty();
+            boolean withSourceProtocolHosts = filter.getSourceProtocolHosts() != null && !filter.getSourceProtocolHosts().isEmpty();
             boolean withTargetHosts = filter.getTargetHosts() != null && !filter.getTargetHosts().isEmpty();
             boolean withTargetProtocols = filter.getTargetProtocols() != null && !filter.getTargetProtocols().isEmpty();
+            boolean withTargetProtocolHosts = filter.getTargetProtocolHosts() != null && !filter.getTargetProtocolHosts().isEmpty();
             boolean withProfiles = filter.getProfiles() != null && !filter.getProfiles().isEmpty();
             String and = " where";
 
@@ -203,22 +209,22 @@ public class JocDBLayerYade {
                 hql.append(".id");
             }
             hql.append(" from ").append(DBLayer.DBITEM_YADE_TRANSFERS).append(" yt");
-            if (withSourceHosts || withSourceProtocols) {
+            if (withSourceHosts || withSourceProtocols || withSourceProtocolHosts) {
                 hql.append(", ").append(DBLayer.DBITEM_YADE_PROTOCOLS).append(" yps");
             }
-            if (withTargetHosts || withTargetProtocols) {
+            if (withTargetHosts || withTargetProtocols || withTargetProtocolHosts) {
                 hql.append(", ").append(DBLayer.DBITEM_YADE_PROTOCOLS).append(" ypt");
             }
-            if (withSourceHosts || withSourceProtocols) {
+            if (withSourceHosts || withSourceProtocols || withSourceProtocolHosts) {
                 hql.append(and).append(" yt.sourceProtocolId = yps.id");
                 and = " and";
             }
-            if (withTargetHosts || withTargetProtocols) {
+            if (withTargetHosts || withTargetProtocols || withTargetProtocolHosts) {
                 hql.append(and).append(" yt.targetProtocolId is not null and yt.targetProtocolId = ypt.id");
                 and = " and";
             }
-            if (withControllerId) {
-                hql.append(and).append(" yt.controllerId = :controllerId");
+            if (withControllerIds) {
+                hql.append(and).append(" yt.controllerId in (:controllerIds)");
                 and = " and";
             }
             if (withTransferIds) {
@@ -233,24 +239,37 @@ public class JocDBLayerYade {
                 hql.append(and).append(" yt.state in (:states)");
                 and = " and";
             }
+            
+            List<String> source = new ArrayList<String>();
             if (withSourceHosts) {
-                hql.append(and).append(SearchStringHelper.getStringSetSql(filter.getSourceHosts(), "yps.hostname"));
-                and = " and";
+                source.add("yps.hostname in (:sourceHostnames)");
             }
-
-            if (withTargetHosts) {
-                hql.append(and).append(SearchStringHelper.getStringSetSql(filter.getTargetHosts(), "ypt.hostname"));
-                and = " and";
-            }
-
             if (withSourceProtocols) {
-                hql.append(and).append(" yps.protocol in (:sourceProtocols)");
+                source.add("yps.protocol in (:sourceProtocols)");
+            }
+            if (withSourceProtocolHosts) {
+                source.add("concat(yps.protocol,yps.hostname) in (:sourceProtocolHostnames)");
+            }
+            if (!source.isEmpty()) {
+                hql.append(and).append(source.stream().collect(Collectors.joining(" or ", " (", ") ")));
                 and = " and";
+            }
+            
+            List<String> target = new ArrayList<String>();
+            if (withTargetHosts) {
+                target.add("ypt.hostname in (:targetHostnames)");
             }
             if (withTargetProtocols) {
-                hql.append(and).append(" ypt.protocol in (:targetProtocols)");
+                source.add("ypt.protocol in (:targetProtocols)");
+            }
+            if (withTargetProtocolHosts) {
+                source.add("concat(ypt.protocol,ypt.hostname) in (:targetProtocolHostnames)");
+            }
+            if (!target.isEmpty()) {
+                hql.append(and).append(target.stream().collect(Collectors.joining(" or ", " (", ") ")));
                 and = " and";
             }
+            
             if (withProfiles) {
                 hql.append(and).append(SearchStringHelper.getStringListPathSql(filter.getProfiles(), "yt.profileName"));
                 and = " and";
@@ -266,20 +285,32 @@ public class JocDBLayerYade {
                 hql.append(" group by yt.id");
             }
             Query<T> query = session.createQuery(hql.toString());
-            if (withControllerId) {
-                query.setParameter("controllerId", filter.getControllerId());
+            if (withControllerIds) {
+                query.setParameterList("controllerIds", filter.getControllerIds());
             }
             if (withTransferIds) {
-                query.setParameter("transferIds", filter.getTransferIds());
+                query.setParameterList("transferIds", filter.getTransferIds());
             }
             if (withOperations) {
                 query.setParameterList("operations", filter.getOperations());
+            }
+            if (withSourceHosts) {
+                query.setParameterList("sourceHostnames", filter.getSourceHosts());
+            }
+            if (withTargetHosts) {
+                query.setParameterList("targetHostnames", filter.getTargetHosts());
             }
             if (withSourceProtocols) {
                 query.setParameterList("sourceProtocols", filter.getSourceProtocols());
             }
             if (withTargetProtocols) {
                 query.setParameterList("targetProtocols", filter.getTargetProtocols());
+            }
+            if (withSourceProtocolHosts) {
+                query.setParameterList("sourceProtocolHostnames", filter.getSourceProtocolHosts());
+            }
+            if (withTargetProtocolHosts) {
+                query.setParameterList("targetProtocolHostnames", filter.getTargetProtocolHosts());
             }
             if (withStates) {
                 query.setParameterList("states", filter.getStates());
@@ -470,31 +501,61 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<Long> transferIdsFilteredBySourceTargetPath(List<Long> transferIds, List<String> sourceFiles, List<String> targetFiles)
-            throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<Long> transferIdsFilteredBySourceTargetPath(Collection<Long> transferIds, Collection<String> sourceFiles,
+            Collection<String> targetFiles, String sourcePattern, String targetPattern) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            boolean withTransferIds = (transferIds != null && !transferIds.isEmpty());
-            boolean withSourceFiles = (sourceFiles != null && !sourceFiles.isEmpty());
-            boolean withTargetFiles = (targetFiles != null && !targetFiles.isEmpty());
+            boolean withTransferIds = transferIds != null && !transferIds.isEmpty();
+            boolean withSourceFiles = sourceFiles != null && !sourceFiles.isEmpty();
+            boolean withTargetFiles = targetFiles != null && !targetFiles.isEmpty();
+            boolean withSourcePattern = !withSourceFiles && sourcePattern != null && !sourcePattern.isEmpty();
+            boolean withTargetPattern = !withTargetFiles && targetPattern != null && !targetPattern.isEmpty();
             String and = " where";
             StringBuilder hql = new StringBuilder();
-            hql.append("select transferId from ");
-            hql.append(DBLayer.DBITEM_YADE_FILES);
+            hql.append("select transferId from ").append(DBLayer.DBITEM_YADE_FILES);
             if (withTransferIds) {
                 hql.append(and).append(" transferId in (:transferIds)");
                 and = " and";
             }
             if (withSourceFiles) {
-                hql.append(and).append(SearchStringHelper.getStringListPathSql(sourceFiles, "sourcePath"));
+                hql.append(and).append(" sourcePath in (:sourcePaths)");
                 and = " and";
             }
             if (withTargetFiles) {
-                hql.append(and).append(SearchStringHelper.getStringListPathSql(targetFiles, "targetPath"));
+                hql.append(and).append(" targetPath in (:targetPaths)");
+                and = " and";
+            }
+            if (withSourcePattern) {
+                if (SearchStringHelper.isGlobPattern(sourcePattern)) {
+                    hql.append(and).append(" sourcePath like :sourcePattern");
+                } else {
+                    hql.append(and).append(" sourcePath = :sourcePattern");
+                }
+                and = " and";
+            }
+            if (withTargetPattern) {
+                if (SearchStringHelper.isGlobPattern(targetPattern)) {
+                    hql.append(and).append(" targetPath like :targetPattern");
+                } else {
+                    hql.append(and).append(" targetPath = :targetPattern");
+                }
+                and = " and";
             }
             hql.append(" group by transferId");
             Query<Long> query = session.createQuery(hql.toString());
             if (withTransferIds) {
                 query.setParameterList("transferIds", transferIds);
+            }
+            if (withSourceFiles) {
+                query.setParameterList("sourcePaths", sourceFiles);
+            }
+            if (withTargetFiles) {
+                query.setParameterList("targetPaths", targetFiles);
+            }
+            if (withSourcePattern) {
+                query.setParameter("sourcePattern", SearchStringHelper.globToSqlPattern(sourcePattern));
+            }
+            if (withTargetPattern) {
+                query.setParameter("targetPattern", SearchStringHelper.globToSqlPattern(targetPattern));
             }
 
             return session.getResultList(query);
@@ -526,38 +587,39 @@ public class JocDBLayerYade {
         }
     }
 
-    private Integer getTransfersCount(String controllerId, boolean successFull, Date from, Date to) throws SOSHibernateException,
+    private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to) throws SOSHibernateException,
             DBInvalidDataException, DBConnectionRefusedException {
         StringBuilder hql = new StringBuilder();
         hql.append("select count(*) from ");
-        hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" transfer");
-        if (successFull) {
-            hql.append(" where state = 1");
-        } else {
-            hql.append(" where state = 3");
-        }
-        if (controllerId != null) {
-            hql.append(" and controllerId = :controllerId");
+        hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
+        hql.append(" where state = :state");
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            hql.append(" and controllerId in (:controllerIds)");
         }
         if (from != null) {
-            hql.append(" and transfer.end >= :from");
+            hql.append(" and end >= :from");
         }
         if (to != null) {
-            hql.append(" and transfer.end < :to");
+            hql.append(" and end < :to");
         }
         Query<Long> query = session.createQuery(hql.toString());
+        if (successful) {
+            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
+        } else {
+            query.setParameter("state", TransferState.FAILED.intValue());
+        }
         if (from != null) {
             query.setParameter("from", from, TemporalType.TIMESTAMP);
         }
         if (to != null) {
             query.setParameter("to", to, TemporalType.TIMESTAMP);
         }
-        if (controllerId != null) {
-            query.setParameter("controllerId", controllerId);
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            query.setParameterList("controllerIds", controllerIds);
         }
 
         try {
-            return session.getSingleResult(query).intValue();
+            return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -565,50 +627,49 @@ public class JocDBLayerYade {
         }
     }
 
-    private Integer getTransfersCount(String controllerId, boolean successFull, Date from, Date to, Collection<Folder> permittedFolders)
+    private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to, Map<String, Set<Folder>> permittedFoldersMap)
             throws SOSHibernateException, DBInvalidDataException, DBConnectionRefusedException {
-        if (permittedFolders == null || permittedFolders.isEmpty()) {
-            return getTransfersCount(controllerId, successFull, from, to);
+        if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
+            return getTransfersCount(controllerIds, successful, from, to);
         }
         StringBuilder hql = new StringBuilder();
-        hql.append("select new ").append(YADE_GROUPED_SUMMARY).append("(count(*), workflowPath) from ");
-        hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" transfer");
-        TransferState state = TransferState.UNKNOWN;
-        if (successFull) {
-            hql.append(" where state = :state");
-            state = TransferState.SUCCESSFUL;
-        } else {
-            hql.append(" where state = :state");
-            state = TransferState.FAILED;
-        }
-        if (controllerId != null) {
-            hql.append(" and controllerId = :controllerId");
+        hql.append("select new ").append(YADE_GROUPED_SUMMARY).append("(count(id), controllerId, workflowPath) from ");
+        hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
+        hql.append(" where state = :state");
+        
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            hql.append(" and controllerId in (:controllerIds)");
         }
         if (from != null) {
-            hql.append(" and transfer.end >= :from");
+            hql.append(" and end >= :from");
         }
         if (to != null) {
-            hql.append(" and transfer.end < :to");
+            hql.append(" and end < :to");
         }
-        hql.append(" group by jobChain, job");
+        hql.append(" group by controllerId, workflowPath");
         Query<YadeGroupedSummary> query = session.createQuery(hql.toString());
-        query.setParameter("state", state.intValue());
+        if (successful) {
+            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
+        } else {
+            query.setParameter("state", TransferState.FAILED.intValue());
+        }
         if (from != null) {
             query.setParameter("from", from);
         }
         if (to != null) {
             query.setParameter("to", to);
         }
-        if (controllerId != null) {
-            query.setParameter("controllerId", controllerId);
+        if (controllerIds != null && !controllerIds.isEmpty()) {
+            query.setParameterList("controllerIds", controllerIds);
         }
 
         try {
             List<YadeGroupedSummary> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFolders)).mapToInt(s -> s.getCount()).sum();
+                return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(""))).filter(s -> isPermittedForFolder(
+                        s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s.getCount()).sum();
             }
-            return 0;
+            return 0L;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -628,14 +689,14 @@ public class JocDBLayerYade {
         return permittedFolders.stream().parallel().anyMatch(filter);
     }
 
-    public Integer getSuccessFulTransfersCount(String controllerId, Date from, Date to, Collection<Folder> folders) throws SOSHibernateException,
-            DBInvalidDataException, DBConnectionRefusedException {
-        return getTransfersCount(controllerId, true, from, to, folders);
+    public Long getSuccessFulTransfersCount(Collection<String> controllerIds, Date from, Date to, Map<String, Set<Folder>> permittedFoldersMap)
+            throws SOSHibernateException, DBInvalidDataException, DBConnectionRefusedException {
+        return getTransfersCount(controllerIds, true, from, to, permittedFoldersMap);
     }
 
-    public Integer getFailedTransfersCount(String controllerId, Date from, Date to, Collection<Folder> folders) throws SOSHibernateException,
-            DBInvalidDataException, DBConnectionRefusedException {
-        return getTransfersCount(controllerId, false, from, to, folders);
+    public Long getFailedTransfersCount(Collection<String> controllerIds, Date from, Date to, Map<String, Set<Folder>> permittedFoldersMap)
+            throws SOSHibernateException, DBInvalidDataException, DBConnectionRefusedException {
+        return getTransfersCount(controllerIds, false, from, to, permittedFoldersMap);
     }
 
 }

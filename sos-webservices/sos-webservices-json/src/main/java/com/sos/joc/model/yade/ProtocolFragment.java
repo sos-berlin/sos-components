@@ -25,6 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ProtocolFragment {
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -40,18 +42,14 @@ public class ProtocolFragment {
      */
     @JsonProperty("protocol")
     private Protocol protocol;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("port")
     private Integer port;
     @JsonProperty("account")
     private String account;
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -62,6 +60,8 @@ public class ProtocolFragment {
     }
 
     /**
+     * string without < and >
+     * <p>
      * 
      * (Required)
      * 
@@ -95,23 +95,11 @@ public class ProtocolFragment {
         this.protocol = protocol;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("port")
     public Integer getPort() {
         return port;
     }
 
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("port")
     public void setPort(Integer port) {
         this.port = port;
