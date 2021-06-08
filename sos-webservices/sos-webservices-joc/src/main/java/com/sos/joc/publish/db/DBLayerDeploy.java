@@ -2155,13 +2155,6 @@ public class DBLayerDeploy {
         }
         if(filter.getCompactFilter() != null) {
             StringBuilder hql = new StringBuilder();
-            /*
-                SELECT ID, COMMIT_ID FROM DEP_HISTORY AS dep WHERE dep.id = (
-                    SELECT MIN(history.id) FROM DEP_HISTORY AS history 
-                        WHERE history.COMMIT_ID = dep.COMMIT_ID
-                        AND history.CONTROLLER_ID = 'master') order by id asc;
-             */
-
             hql.append("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (")
                 .append(" select min(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history")
@@ -2172,9 +2165,6 @@ public class DBLayerDeploy {
                 if (!allowedControllers.isEmpty()) {
                     hql.append(" and history.controllerId in (:controllerIds)");
                 }
-//                if (filter.getCompactFilter().getControllerId() != null) {
-//                    hql.append(" and history.controllerId = :controllerId");
-//                }
                 if (filter.getCompactFilter().getFolder() != null) {
                     hql.append(" and history.folder = :folder");
                 }
@@ -2211,9 +2201,6 @@ public class DBLayerDeploy {
             if (!allowedControllers.isEmpty()) {
                 query.setParameterList("controllerIds", allowedControllers);
             }
-//            if (filter.getCompactFilter().getControllerId() != null) {
-//                query.setParameter("controllerId", filter.getCompactFilter().getControllerId());
-//            }
             if (filter.getCompactFilter().getFolder() != null) {
                 query.setParameter("folder", filter.getCompactFilter().getFolder());
             }

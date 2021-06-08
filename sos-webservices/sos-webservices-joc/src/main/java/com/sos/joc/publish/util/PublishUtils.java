@@ -825,9 +825,9 @@ public abstract class PublishUtils {
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
             		.map(item -> {
                         try {
-                        	Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
+                        	FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
+                            fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.deleteSimple(OrderWatchPath.of(fileOrderSource.getPath()));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
