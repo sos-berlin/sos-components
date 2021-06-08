@@ -10,8 +10,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -85,10 +83,10 @@ public class EventServiceFactory {
             }
         }
 
-        public void await() throws InterruptedException {
+        public void await(long time) throws InterruptedException {
             this.unhold.set(false);
             this.hold.set(true);
-            this.eventArrived.await(cleanupPeriodInMillis - 1000, TimeUnit.MILLISECONDS);
+            this.eventArrived.await(time, TimeUnit.MILLISECONDS);
         }
     }
     
@@ -149,16 +147,7 @@ public class EventServiceFactory {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
                 if (delay > 200) {
-                    ScheduledFuture<Void> watchdog = startWatchdog(delay, eventArrived);
-                    mode = waitingForEvents(eventArrived, service);
-                    if (!watchdog.isDone()) {
-                        watchdog.cancel(false);
-                        if (isDebugEnabled) {
-                            LOGGER.debug("event watchdog is cancelled");
-                        }
-                    } else if (isDebugEnabled) {
-                        LOGGER.debug("watchdog has stopped waiting events for " + controllerId);
-                    }
+                    mode = waitingForEvents(eventArrived, service, delay);
                 } else {
                     if (delay > 0) {
                        TimeUnit.MILLISECONDS.sleep(delay); 
@@ -218,13 +207,13 @@ public class EventServiceFactory {
         return events;
     }
     
-    private static Mode waitingForEvents(EventCondition eventArrived, EventService service) {
+    private static Mode waitingForEvents(EventCondition eventArrived, EventService service, long time) {
         try {
             if (eventArrived.isUnHold() && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
 //                    LOGGER.info("Waiting for Events ");
                     service.addCondition(eventArrived);
-                    eventArrived.await();
+                    eventArrived.await(time);
                 } catch (InterruptedException e1) {
                 } finally {
                     try {
@@ -265,11 +254,7 @@ public class EventServiceFactory {
             if (timeout < 0L) {
                 return cleanupPeriodInMillis;
             }
-            long l = timeout - 1000L;
-            if (l < 0L) {
-                return 0L;
-            }
-            return l;
+            return Math.max(0L, timeout - 1000L);
         } catch (SessionNotExistException e) {
             throw e;
         } catch (InvalidSessionException e) {
@@ -292,16 +277,6 @@ public class EventServiceFactory {
             }
         } catch (InterruptedException e) {
         }
-    }
-    
-    private static ScheduledFuture<Void> startWatchdog(long maxDelay, EventCondition eventArrived) {
-        return Executors.newScheduledThreadPool(1).schedule(() -> {
-            if (isDebugEnabled) {
-                LOGGER.debug("start watchdog which stops waiting after for " + maxDelay + "ms");
-            }
-            signalEvent(eventArrived);
-            return null;
-        }, maxDelay, TimeUnit.MILLISECONDS);
     }
 
 }
