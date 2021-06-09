@@ -34,7 +34,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IReleaseResource;
 import com.sos.joc.model.common.Err419;
-import com.sos.joc.model.common.IReleaseObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
@@ -127,7 +126,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                 }
             }
             return either;
-        }).filter(e -> e.isLeft()).map(e -> e.getLeft()).collect(Collectors.toList());
+        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
     }
     
     public static void delete(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders,
@@ -175,7 +174,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             }
             return either;
 
-        }).filter(e -> e.isLeft()).map(e -> e.getLeft()).collect(Collectors.toList());
+        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
     }
     
     private static void updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog)
@@ -211,8 +210,8 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
                 dbLayer.getSession().delete(contraintReleaseItem);
             }
-            DBItemInventoryReleasedConfiguration release = setReleaseItem(releaseItem.getId(), conf, dbAuditLog.getCreated());
-            dbLayer.getSession().update(release);
+            setReleaseItem(releaseItem, conf, dbAuditLog.getCreated());
+            dbLayer.getSession().update(releaseItem);
         }
         conf.setReleased(true);
         conf.setModified(dbAuditLog.getCreated());
@@ -226,23 +225,26 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 //        updateReleasedObject(conf, dbLayer, dbAuditLog);
 //    }
     
-    private static DBItemInventoryReleasedConfiguration setReleaseItem(Long releaseId, DBItemInventoryConfiguration conf, Date now)
+    private static DBItemInventoryReleasedConfiguration setReleaseItem(DBItemInventoryReleasedConfiguration releaseItem, DBItemInventoryConfiguration conf, Date now)
             throws JsonParseException, JsonMappingException, IOException {
-        DBItemInventoryReleasedConfiguration release = new DBItemInventoryReleasedConfiguration();
-        release.setId(releaseId);
-        release.setAuditLogId(conf.getAuditLogId());
-        release.setCid(conf.getId());
-        IReleaseObject r = (IReleaseObject) Globals.objectMapper.readValue(conf.getContent(), JocInventory.CLASS_MAPPING.get(conf.getTypeAsEnum()));
-        r.setPath(conf.getPath());
-        release.setContent(Globals.objectMapper.writeValueAsString(r));
-        release.setCreated(now);
-        release.setFolder(conf.getFolder());
-        release.setModified(now);
-        release.setName(conf.getName());
-        release.setPath(conf.getPath());
-        release.setTitle(conf.getTitle());
-        release.setType(conf.getType());
-        return release;
+        if (releaseItem == null) {
+            releaseItem = new DBItemInventoryReleasedConfiguration();
+            releaseItem.setId(null);
+            releaseItem.setCreated(now);
+        }
+        releaseItem.setAuditLogId(conf.getAuditLogId());
+        releaseItem.setCid(conf.getId());
+//        IReleaseObject r = (IReleaseObject) Globals.objectMapper.readValue(conf.getContent(), JocInventory.CLASS_MAPPING.get(conf.getTypeAsEnum()));
+//        r.setPath(conf.getPath());
+//        releaseItem.setContent(Globals.objectMapper.writeValueAsString(r));
+        releaseItem.setContent(conf.getContent());
+        releaseItem.setFolder(conf.getFolder());
+        releaseItem.setModified(now);
+        releaseItem.setName(conf.getName());
+        releaseItem.setPath(conf.getPath());
+        releaseItem.setTitle(conf.getTitle());
+        releaseItem.setType(conf.getType());
+        return releaseItem;
     }
 
     private static void deleteReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog,
