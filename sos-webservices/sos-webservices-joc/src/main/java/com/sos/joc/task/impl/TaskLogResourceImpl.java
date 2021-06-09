@@ -80,6 +80,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                 EventBus.getInstance().register(this);
                 condition = lock.newCondition();
                 waitingForEvents(TimeUnit.MINUTES.toMillis(1));
+                LOGGER.debug("taskId '" + taskId + "' end of waiting events: event received? " + eventArrived.get() + ", complete? " + complete.get());
                 if (eventArrived.get()) {
                     if (!complete.get()) {
                         try {
@@ -89,6 +90,9 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                     }
                     taskLog = r.getRunningTaskLog(taskLog);
                 }
+                break;
+            case BROKEN:
+                taskLog.setComplete(true); // to avoid endless calls
                 break;
             }
             
@@ -106,8 +110,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     
     @Subscribe({ HistoryOrderTaskLogArrived.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
-        LOGGER.debug("tasklog event received");
-        if (taskId != null && evt.getHistoryOrderStepId() == taskId) {
+        LOGGER.debug("tasklog event received with taskId '" + evt.getHistoryOrderStepId() + "', expected taskId '" + taskId + "'");
+        if (taskId != null && taskId.longValue() == evt.getHistoryOrderStepId()) {
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
@@ -118,6 +122,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         try {
             if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
+                    LOGGER.debug("waitingForEvents: await " + condition.hashCode());
                     condition.await(maxDelay, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e1) {
                 } finally {
@@ -134,8 +139,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     
     private synchronized void signalEvent() {
         try {
-            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) {
+            LOGGER.debug("signalEvent: " + (condition != null));
+            if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
                 try {
+                    LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
                     condition.signalAll();
                 } finally {
                     try {
@@ -144,8 +151,11 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
                         LOGGER.warn("IllegalMonitorStateException at unlock lock after signal");
                     }
                 }
+            } else {
+                LOGGER.warn("signalEvent failed"); 
             }
         } catch (InterruptedException e) {
+            LOGGER.warn("signalEvent: " + e.toString());
         }
     }
 

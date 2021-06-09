@@ -33,7 +33,7 @@ public class RunningTaskLogs {
     private volatile Set<Long> registeredTaskIds = new CopyOnWriteArraySet<>();
     
     public enum Mode {
-        COMPLETE, TRUE, FALSE;
+        COMPLETE, TRUE, FALSE, BROKEN;
     }
     
     private RunningTaskLogs() {
@@ -86,6 +86,9 @@ public class RunningTaskLogs {
                 return Mode.FALSE;
             }
         } else {
+            if (!registeredTaskIds.contains(taskId)) {
+                return Mode.BROKEN;
+            }
             return Mode.FALSE;
         }
     }

@@ -17,12 +17,12 @@ public abstract class HistoryLogEvent extends HistoryEvent {
     public HistoryLogEvent(String key, Long historyOrderId, Long historyOrderStepId, String content, boolean newline) {
         super(key, null, null);
         if (historyOrderId == null) {
-            putVariable("historyOrderId", null);
+            putVariable("historyOrderId", 0L);
         } else {
             putVariable("historyOrderId", historyOrderId);
         }
         if (historyOrderStepId == null) {
-            putVariable("historyOrderStepId", null);
+            putVariable("historyOrderStepId", 0L);
         } else {
             putVariable("historyOrderStepId", historyOrderStepId);
         }
@@ -39,8 +39,8 @@ public abstract class HistoryLogEvent extends HistoryEvent {
     }
 
     @JsonIgnore
-    public Long getHistoryOrderStepId() {
-        return (Long) getVariables().get("historyOrderStepId");
+    public long getHistoryOrderStepId() {
+        return ((Long) getVariables().get("historyOrderStepId")).longValue();
     }
     
     @JsonIgnore
