@@ -6,6 +6,7 @@ import com.sos.commons.vfs.ssh.SSHProvider;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
+import com.sos.jitl.jobs.ssh.SSHJobArguments;
 
 import js7.data_for_java.order.JOutcome.Completed;
 
