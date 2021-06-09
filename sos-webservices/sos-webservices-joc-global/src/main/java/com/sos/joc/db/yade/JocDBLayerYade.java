@@ -22,6 +22,8 @@ import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.yade.FileTransferStateText;
+import com.sos.joc.model.yade.FilesFilter;
+import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;
 import com.sos.yade.commons.Yade.TransferState;
 
@@ -167,12 +169,7 @@ public class JocDBLayerYade {
 
     public DBItemYadeFile getTransferFile(Long id) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES).append(" ");
-            hql.append("where id=:id");
-
-            Query<DBItemYadeFile> query = session.createQuery(hql.toString());
-            query.setParameter("id", id);
-            return session.getSingleResult(query);
+            return session.get(DBItemYadeFile.class, id);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -347,100 +344,64 @@ public class JocDBLayerYade {
         }
     }
 
-    public List<DBItemYadeFile> getFilteredTransferFiles(List<Long> transferIds, List<FileTransferStateText> states, List<String> sources,
-            List<String> targets, List<Long> interventionTransferIds, Integer limit) throws DBInvalidDataException, DBConnectionRefusedException {
+    public List<DBItemYadeFile> getFilteredTransferFiles(FilesFilter filter, Integer limit) throws DBInvalidDataException, DBConnectionRefusedException {
         try {
-            boolean anotherValueAlreadySet = false;
+            boolean withTransferIds = filter.getTransferIds() != null && !filter.getTransferIds().isEmpty();
+            boolean withSourceFiles = filter.getSourceFiles() != null && !filter.getSourceFiles().isEmpty();
+            boolean withTargetFiles = filter.getTargetFiles() != null && !filter.getTargetFiles().isEmpty();
+            boolean withSourcePattern = filter.getSourceFile() != null && !filter.getSourceFile().isEmpty();
+            boolean withTargetPattern = filter.getTargetFile() != null && !filter.getTargetFile().isEmpty();
+            boolean withStates = filter.getStates() != null && !filter.getStates().isEmpty();
+            
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_YADE_FILES);
-            if ((transferIds != null && !transferIds.isEmpty()) || (states != null && !states.isEmpty()) || (sources != null && !sources.isEmpty())
-                    || (targets != null && !targets.isEmpty()) || (interventionTransferIds != null && !interventionTransferIds.isEmpty())) {
-                hql.append(" where ");
-                if (transferIds != null && !transferIds.isEmpty()) {
-                    boolean first = true;
-                    hql.append("transferId in (");
-                    for (Long transferId : transferIds) {
-                        if (first) {
-                            first = false;
-                            hql.append(transferId.toString());
-                        } else {
-                            hql.append(", ").append(transferId.toString());
-                        }
-                    }
-                    hql.append(")");
-                    anotherValueAlreadySet = true;
+            List<String> clauses = new ArrayList<>();
+            if (withTransferIds) {
+                clauses.add("transferId in (:transferIds)");
+            }
+            if (withStates) {
+                clauses.add("state in (:states)");
+            }
+            if (withSourceFiles) {
+                clauses.add("sourcePath in (:sources)"); 
+            } else if (withSourcePattern) {
+                if (SearchStringHelper.isGlobPattern(filter.getSourceFile())) {
+                    clauses.add("sourcePath like :source"); 
+                } else {
+                    clauses.add("sourcePath = :source");
                 }
-                if (states != null && !states.isEmpty()) {
-                    if (anotherValueAlreadySet) {
-                        hql.append(" and");
-                    }
-                    boolean first = true;
-                    hql.append("state in (");
-                    for (FileTransferStateText state : states) {
-                        if (first) {
-                            first = false;
-                            hql.append(state.name());
-                        } else {
-                            hql.append(", ").append(state.name());
-                        }
-                    }
-                    hql.append(")");
-                    anotherValueAlreadySet = true;
+            }
+            if (withTargetFiles) {
+                clauses.add("targetPath in (:targets)");
+            } else if (withTargetPattern) {
+                if (SearchStringHelper.isGlobPattern(filter.getTargetFile())) {
+                    clauses.add("targetPath like :target"); 
+                } else {
+                    clauses.add("targetPath = :target");
                 }
-                if (sources != null && !sources.isEmpty()) {
-                    if (anotherValueAlreadySet) {
-                        hql.append(" and");
-                    }
-                    boolean first = true;
-                    hql.append("sourcePath in (");
-                    for (String source : sources) {
-                        if (first) {
-                            first = false;
-                            hql.append(source);
-                        } else {
-                            hql.append(", ").append(source);
-                        }
-                    }
-                    hql.append(")");
-                    anotherValueAlreadySet = true;
-                }
-                if (targets != null && !targets.isEmpty()) {
-                    if (anotherValueAlreadySet) {
-                        hql.append(" and");
-                    }
-                    boolean first = true;
-                    hql.append("targetPath in (");
-                    for (String target : targets) {
-                        if (first) {
-                            first = false;
-                            hql.append(target);
-                        } else {
-                            hql.append(", ").append(target);
-                        }
-                    }
-                    hql.append(")");
-                    anotherValueAlreadySet = true;
-                }
-                if (interventionTransferIds != null && !interventionTransferIds.isEmpty()) {
-                    if (anotherValueAlreadySet) {
-                        hql.append(" and");
-                    }
-                    boolean first = true;
-                    hql.append("interventionTransferId in (");
-                    for (Long interventionTransferId : interventionTransferIds) {
-                        if (first) {
-                            first = false;
-                            hql.append(interventionTransferId);
-                        } else {
-                            hql.append(", ").append(interventionTransferId);
-                        }
-                    }
-                    hql.append(")");
-                    anotherValueAlreadySet = true;
-                }
+            }
+            if (!clauses.isEmpty()) {
+                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             Query<DBItemYadeFile> query = session.createQuery(hql.toString());
             if (limit != null && limit > 0) {
                 query.setMaxResults(limit);
+            }
+            if (withTransferIds) {
+                query.setParameterList("transferIds", filter.getTransferIds());
+            }
+            if (withStates) {
+                query.setParameterList("states", filter.getStates());
+            }
+            if (withSourceFiles) {
+                query.setParameterList("sources", filter.getSourceFiles().stream().map(s -> Yade.TransferEntryState.fromValue(s).intValue()).collect(
+                        Collectors.toSet()));
+            } else if (withSourcePattern) {
+                query.setParameter("source", SearchStringHelper.globToSqlPattern(filter.getSourceFile()));
+            }
+            if (withTargetFiles) {
+                query.setParameterList("targets", filter.getTargetFiles());
+            } else if (withTargetPattern) {
+                query.setParameter("target", SearchStringHelper.globToSqlPattern(filter.getTargetFile()));
             }
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -666,8 +627,8 @@ public class JocDBLayerYade {
         try {
             List<YadeGroupedSummary> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(""))).filter(s -> isPermittedForFolder(
-                        s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s.getCount()).sum();
+                return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s
+                        .getCount()).sum();
             }
             return 0L;
         } catch (SOSHibernateInvalidSessionException ex) {

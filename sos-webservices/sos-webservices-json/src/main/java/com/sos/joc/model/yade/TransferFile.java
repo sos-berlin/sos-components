@@ -23,7 +23,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "surveyDate",
     "id",
     "transferId",
-    "interventionTransferId",
     "state",
     "integrityHash",
     "modificationDate",
@@ -62,14 +61,6 @@ public class TransferFile {
      */
     @JsonProperty("transferId")
     private Long transferId;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("interventionTransferId")
-    private Long interventionTransferId;
     /**
      * state for each transferred file
      * <p>
@@ -185,28 +176,6 @@ public class TransferFile {
     @JsonProperty("transferId")
     public void setTransferId(Long transferId) {
         this.transferId = transferId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("interventionTransferId")
-    public Long getInterventionTransferId() {
-        return interventionTransferId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("interventionTransferId")
-    public void setInterventionTransferId(Long interventionTransferId) {
-        this.interventionTransferId = interventionTransferId;
     }
 
     /**
@@ -359,12 +328,12 @@ public class TransferFile {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("transferId", transferId).append("interventionTransferId", interventionTransferId).append("state", state).append("integrityHash", integrityHash).append("modificationDate", modificationDate).append("size", size).append("error", error).append("sourcePath", sourcePath).append("sourceName", sourceName).append("targetPath", targetPath).append("targetName", targetName).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("transferId", transferId).append("state", state).append("integrityHash", integrityHash).append("modificationDate", modificationDate).append("size", size).append("error", error).append("sourcePath", sourcePath).append("sourceName", sourceName).append("targetPath", targetPath).append("targetName", targetName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(interventionTransferId).append(targetName).append(surveyDate).append(targetPath).append(transferId).append(error).append(modificationDate).append(size).append(id).append(state).append(sourceName).append(integrityHash).append(sourcePath).toHashCode();
+        return new HashCodeBuilder().append(targetName).append(surveyDate).append(targetPath).append(transferId).append(error).append(modificationDate).append(size).append(id).append(state).append(sourceName).append(integrityHash).append(sourcePath).toHashCode();
     }
 
     @Override
@@ -376,7 +345,7 @@ public class TransferFile {
             return false;
         }
         TransferFile rhs = ((TransferFile) other);
-        return new EqualsBuilder().append(interventionTransferId, rhs.interventionTransferId).append(targetName, rhs.targetName).append(surveyDate, rhs.surveyDate).append(targetPath, rhs.targetPath).append(transferId, rhs.transferId).append(error, rhs.error).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(id, rhs.id).append(state, rhs.state).append(sourceName, rhs.sourceName).append(integrityHash, rhs.integrityHash).append(sourcePath, rhs.sourcePath).isEquals();
+        return new EqualsBuilder().append(targetName, rhs.targetName).append(surveyDate, rhs.surveyDate).append(targetPath, rhs.targetPath).append(transferId, rhs.transferId).append(error, rhs.error).append(modificationDate, rhs.modificationDate).append(size, rhs.size).append(id, rhs.id).append(state, rhs.state).append(sourceName, rhs.sourceName).append(integrityHash, rhs.integrityHash).append(sourcePath, rhs.sourcePath).isEquals();
     }
 
 }

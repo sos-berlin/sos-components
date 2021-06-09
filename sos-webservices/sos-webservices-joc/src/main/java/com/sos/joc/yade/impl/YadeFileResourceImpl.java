@@ -10,7 +10,6 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.yade.DBItemYadeFile;
-import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.yade.FileFilter;
@@ -29,25 +28,21 @@ public class YadeFileResourceImpl extends JOCResourceImpl implements IYadeFileRe
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, FileFilter.class);
+            JsonValidator.validateFailFast(inBytes, FileFilter.class);
             FileFilter in = Globals.objectMapper.readValue(inBytes, FileFilter.class);
 
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
-            checkRequiredParameter("fileId", in.getFileId());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            JocDBLayerYade dbLayer = new JocDBLayerYade(session);
-
-            DBItemYadeFile file = dbLayer.getTransferFile(in.getFileId());
+            DBItemYadeFile file = session.get(DBItemYadeFile.class, in.getFileId());
             if (file == null) {
-                throw new DBMissingDataException(String.format("File with id = %1$s not found in DB!", in.getFileId()));
+                throw new DBMissingDataException(String.format("File with id = %1$s not found!", in.getFileId()));
             }
-
             TransferFile200 answer = new TransferFile200();
-            answer.setFile(TransferFileUtils.getFile(file));
+            answer.setFile(TransferFileUtils.getFile(file, in.getCompact() == Boolean.TRUE));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

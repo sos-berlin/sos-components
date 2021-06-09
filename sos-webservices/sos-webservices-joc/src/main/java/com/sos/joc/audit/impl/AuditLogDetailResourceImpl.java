@@ -81,7 +81,7 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
                     }
                     break;
                 case DEPLOYMENT:
-                    // TODO controller permissions will filter the result later
+                    // controller permissions will filter the result later
                     break;
                 default:
                     break;
@@ -97,10 +97,8 @@ public class AuditLogDetailResourceImpl extends JOCResourceImpl implements IAudi
                     case CONTROLLER:
                     case DOCUMENTATIONS:
                     case INVENTORY:
-                        details = dbLayer.getDetails(auditLogId);
-                        break;
                     case DAILYPLAN:
-                        // TODO @Uwe: which tables contains info
+                        details = dbLayer.getDetails(auditLogId);
                         break;
                     case DEPLOYMENT:
                         Set<String> allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(

@@ -106,8 +106,8 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     
     @Subscribe({ HistoryOrderTaskLogArrived.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
+        LOGGER.debug("tasklog event received");
         if (taskId != null && evt.getHistoryOrderStepId() == taskId) {
-            LOGGER.debug("tasklog event received");
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
             signalEvent();
@@ -136,7 +136,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         try {
             if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) {
                 try {
-                    condition.signal();
+                    condition.signalAll();
                 } finally {
                     try {
                         lock.unlock();

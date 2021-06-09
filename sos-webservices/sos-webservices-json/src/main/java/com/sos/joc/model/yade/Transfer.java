@@ -34,7 +34,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "target",
     "jump",
     "numOfFiles",
-    "hasIntervention",
     "controllerId",
     "workflowPath",
     "orderId",
@@ -120,30 +119,27 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * (Required)
      * 
      */
     @JsonProperty("source")
-    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment source;
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("target")
-    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment target;
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("jump")
-    @JsonPropertyDescription("compact=true -> only required fields")
     private ProtocolFragment jump;
     /**
      * non negative integer
@@ -153,8 +149,6 @@ public class Transfer {
      */
     @JsonProperty("numOfFiles")
     private Integer numOfFiles;
-    @JsonProperty("hasIntervention")
-    private Boolean hasIntervention = false;
     /**
      * controllerId
      * <p>
@@ -408,7 +402,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * (Required)
      * 
      */
@@ -420,7 +414,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * (Required)
      * 
      */
@@ -432,7 +426,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("target")
@@ -443,7 +437,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("target")
@@ -454,7 +448,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("jump")
@@ -465,7 +459,7 @@ public class Transfer {
     /**
      * protocol, host, port, account
      * <p>
-     * compact=true -> only required fields
+     * 
      * 
      */
     @JsonProperty("jump")
@@ -493,16 +487,6 @@ public class Transfer {
     @JsonProperty("numOfFiles")
     public void setNumOfFiles(Integer numOfFiles) {
         this.numOfFiles = numOfFiles;
-    }
-
-    @JsonProperty("hasIntervention")
-    public Boolean getHasIntervention() {
-        return hasIntervention;
-    }
-
-    @JsonProperty("hasIntervention")
-    public void setHasIntervention(Boolean hasIntervention) {
-        this.hasIntervention = hasIntervention;
     }
 
     /**
@@ -639,12 +623,12 @@ public class Transfer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("hasIntervention", hasIntervention).append("controllerId", controllerId).append("workflowPath", workflowPath).append("orderId", orderId).append("job", job).append("jobPosition", jobPosition).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("controllerId", controllerId).append("workflowPath", workflowPath).append("orderId", orderId).append("job", job).append("jobPosition", jobPosition).append("historyId", historyId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(workflowPath).append(orderId).append(profile).append(start).append(source).append(error).append(hasIntervention).append(target).append(jobPosition).append(_operation).append(parent_id).append(historyId).append(end).append(id).append(state).append(job).append(jump).toHashCode();
+        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(workflowPath).append(orderId).append(profile).append(start).append(source).append(error).append(target).append(jobPosition).append(_operation).append(parent_id).append(historyId).append(end).append(id).append(state).append(job).append(jump).toHashCode();
     }
 
     @Override
@@ -656,7 +640,7 @@ public class Transfer {
             return false;
         }
         Transfer rhs = ((Transfer) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(source, rhs.source).append(error, rhs.error).append(hasIntervention, rhs.hasIntervention).append(target, rhs.target).append(jobPosition, rhs.jobPosition).append(_operation, rhs._operation).append(parent_id, rhs.parent_id).append(historyId, rhs.historyId).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(jump, rhs.jump).isEquals();
+        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(source, rhs.source).append(error, rhs.error).append(target, rhs.target).append(jobPosition, rhs.jobPosition).append(_operation, rhs._operation).append(parent_id, rhs.parent_id).append(historyId, rhs.historyId).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(jump, rhs.jump).isEquals();
     }
 
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.common.HistorySeverity;
+import com.sos.joc.db.history.items.HistoryGroupedSummary;
 import com.sos.joc.db.history.items.JobsPerAgent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -199,17 +201,42 @@ public class JobHistoryDBLayer {
         }
     }
 
-    public Long getCountOrders(HistoryStateText state) throws DBConnectionRefusedException, DBInvalidDataException {
+    public Long getCountOrders(HistoryStateText state, Map<String, Set<Folder>> permittedFoldersMap) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             filter.setState(state);
-            Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
-                    getOrdersWhere()).toString());
-            return session.getSingleResult(query);
+            if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
+                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
+                        getOrdersWhere()).toString());
+                return session.getSingleResult(query);
+            } else {
+                Query<HistoryGroupedSummary> query = createQuery(new StringBuilder().append("select new ").append(HistoryGroupedSummary.class.getName())
+                        .append("(count(id), controllerId, workflowFolder) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(getOrdersWhere()).append(
+                                " group by controllerId, workflowFolder").toString());
+
+                List<HistoryGroupedSummary> result = session.getResultList(query);
+                if (result != null) {
+                    return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s
+                            .getCount()).sum();
+                }
+                return 0L;
+            }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+
+    private static boolean isPermittedForFolder(String folder, Collection<Folder> permittedFolders) {
+        if (folder == null || folder.isEmpty()) {
+            return true;
+        }
+        if (permittedFolders == null || permittedFolders.isEmpty()) {
+            return true;
+        }
+        Predicate<Folder> filter = f -> f.getFolder().equals(folder) || (f.getRecursive() && ("/".equals(f.getFolder()) || folder.startsWith(f
+                .getFolder() + "/")));
+        return permittedFolders.stream().parallel().anyMatch(filter);
     }
     
     public Map<String, List<JobsPerAgent>> getCountJobs() throws DBConnectionRefusedException, DBInvalidDataException {

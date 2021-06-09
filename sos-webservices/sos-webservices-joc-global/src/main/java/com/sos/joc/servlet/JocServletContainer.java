@@ -147,11 +147,11 @@ public class JocServletContainer extends ServletContainer {
     
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
-        Path logDir = Paths.get(System.getProperty("jetty.base"), "logs");
-        LOGGER.info("cleanup log files: " + logDir.toString());
-        Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
-        if (Files.exists(logDir)) {
-            try {
+        try {
+            Path logDir = Paths.get(System.getProperty("jetty.base"), "logs");
+            LOGGER.info("cleanup log files: " + logDir.toString());
+            Predicate<Path> jettyLogFilter = p -> Pattern.compile("jetty\\.log\\.[0-9]+").asPredicate().test(p.getFileName().toString());
+            if (Files.exists(logDir)) {
                 Files.list(logDir).filter(jettyLogFilter).forEach(p -> {
                     try {
                         Files.deleteIfExists(p);
@@ -159,11 +159,11 @@ public class JocServletContainer extends ServletContainer {
                         LOGGER.warn("cleanup log files: " + e.toString());
                     }
                 });
-            } catch (Exception e) {
-                LOGGER.warn("cleanup log files: " + e.toString());
+            } else {
+                LOGGER.warn("cleanup log files: " + logDir.toString() + " not found");
             }
-        } else {
-            LOGGER.warn("cleanup log files: " + logDir.toString() + " not found");
+        } catch (Exception e) {
+            LOGGER.warn("cleanup log files: " + e.toString());
         }
     }
 

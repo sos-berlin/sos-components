@@ -47,14 +47,28 @@ public class SOSShiroFolderPermissions {
         }
     }
     
-    public boolean allFoldersArePermitted(Set<String> controllerIds) {
-        if (controllerIds != null) {
-            controllerIds.add("");
+    public Map<String, Set<Folder>> getListOfFolders(final Collection<String> controllerIds) {
+        if (controllerIds == null) {
+            return Collections.emptyMap();
         } else {
-            controllerIds = Collections.singleton("");
+            Map<String, Set<Folder>> map = new HashMap<>();
+            controllerIds.forEach(controllerId -> {
+                map.put(controllerId, getListOfFolders(controllerId));
+            });
+            return map;
         }
-        final Set<String> c = controllerIds;
-        return listOfFoldersForInstance.entrySet().stream().filter(e -> c.contains(e.getKey())).mapToInt(s -> s.getValue().size()).sum() == 0;
+    }
+    
+    public boolean noFolderRestrictionAreSpecified(final Set<String> controllerIds) {
+        Set<String> c = Collections.emptySet();
+        if (controllerIds == null) {
+            c = Collections.singleton("");
+        } else {
+            c = new HashSet<>(controllerIds);
+            c.add("");
+        }
+        final Set<String> c2 = c;
+        return listOfFoldersForInstance.entrySet().stream().filter(e -> c2.contains(e.getKey())).mapToInt(s -> s.getValue().size()).sum() == 0;
     }
     
     public Map<String, Set<Folder>> getListsOfFoldersForInstance() {

@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * yade filter
+ * file transfer filter
  * <p>
  * 
  * 

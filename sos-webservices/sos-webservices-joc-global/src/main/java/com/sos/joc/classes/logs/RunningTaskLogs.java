@@ -132,9 +132,11 @@ public class RunningTaskLogs {
     }
 
     private synchronized void addEvent(RunningTaskLog event) {
+        LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
         events.putIfAbsent(event.getTaskId(), new CopyOnWriteArraySet<RunningTaskLog>());
         if (events.get(event.getTaskId()).add(event)) {
             EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete()));
+            LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published" );
         }
     }
     

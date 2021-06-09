@@ -1,9 +1,9 @@
 package com.sos.joc.yade.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -14,9 +14,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.db.yade.JocDBLayerYade;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.yade.FileFilter;
 import com.sos.joc.model.yade.FilesFilter;
-import com.sos.joc.model.yade.TransferFile;
 import com.sos.joc.model.yade.TransferFiles;
 import com.sos.joc.yade.common.TransferFileUtils;
 import com.sos.joc.yade.resource.IYadeFilesResource;
@@ -32,35 +30,27 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, FileFilter.class);
+            JsonValidator.validateFailFast(inBytes, FilesFilter.class);
             FilesFilter in = Globals.objectMapper.readValue(inBytes, FilesFilter.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
 
-            if (in.getControllerId() == null) {
-                in.setControllerId("");
-            }
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             Integer limit = in.getLimit();
             if (limit == null) {
                 limit = 10000; // default
-            } else if (limit == -1) {
-                limit = null; // unlimited
             }
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
-            List<DBItemYadeFile> dbFiles = dbLayer.getFilteredTransferFiles(in.getTransferIds(), in.getStates(), in.getSourceFiles(), in
-                    .getTargetFiles(), in.getInterventionTransferIds(), limit);
-
-            List<TransferFile> files = new ArrayList<TransferFile>();
-            for (DBItemYadeFile file : dbFiles) {
-                files.add(TransferFileUtils.getFile(file));
-            }
+            List<DBItemYadeFile> dbFiles = dbLayer.getFilteredTransferFiles(in, limit);
+            boolean compact = in.getCompact() == Boolean.TRUE;
 
             TransferFiles answer = new TransferFiles();
-            answer.setFiles(files);
+            if (dbFiles != null) {
+                answer.setFiles(dbFiles.stream().map(file -> TransferFileUtils.getFile(file, compact)).collect(Collectors.toList()));
+            }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

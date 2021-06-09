@@ -3,6 +3,7 @@ package com.sos.joc.orders.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.history.HistoryFilter;
 import com.sos.joc.db.history.JobHistoryDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.order.OrdersFilter;
 import com.sos.joc.model.order.OrdersHistoricSummary;
@@ -46,22 +48,31 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
                         availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
                                 Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
-                }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
             
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(controllerId, permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
+            }
+            
+            Map<String, Set<Folder>> permittedFoldersMap = null;
+            if (controllerId.isEmpty()) {
+                if (!folderPermissions.noFolderRestrictionAreSpecified(allowedControllers)) {
+                    permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
+                }
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet();
+                }
             }
 
             HistoryFilter historyFilter = new HistoryFilter();
             historyFilter.setControllerIds(allowedControllers);
-            historyFilter.setFolders(folderPermissions.getListOfFolders());
+            if (!controllerId.isEmpty()) {
+                historyFilter.setFolders(folderPermissions.getListOfFolders(controllerId));
+            }
             historyFilter.setMainOrder(true);
 
             if (ordersFilter.getDateFrom() != null) {
@@ -77,8 +88,8 @@ public class OrdersResourceOverviewSummaryImpl extends JOCResourceImpl implement
             entity.setOrders(ordersHistoricSummary);
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
-            ordersHistoricSummary.setFailed(jobHistoryDBLayer.getCountOrders(HistoryStateText.FAILED));
-            ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL));
+            ordersHistoricSummary.setFailed(jobHistoryDBLayer.getCountOrders(HistoryStateText.FAILED, permittedFoldersMap));
+            ordersHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountOrders(HistoryStateText.SUCCESSFUL, permittedFoldersMap));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

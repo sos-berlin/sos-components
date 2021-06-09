@@ -12,7 +12,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * protocol, host, port, account
  * <p>
- * compact=true -> only required fields
+ * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -28,7 +28,6 @@ public class ProtocolFragment {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("host")
@@ -37,7 +36,6 @@ public class ProtocolFragment {
      * protocol
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("protocol")
@@ -51,7 +49,6 @@ public class ProtocolFragment {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("host")
@@ -63,7 +60,6 @@ public class ProtocolFragment {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("host")
@@ -75,7 +71,6 @@ public class ProtocolFragment {
      * protocol
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("protocol")
@@ -87,7 +82,6 @@ public class ProtocolFragment {
      * protocol
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("protocol")

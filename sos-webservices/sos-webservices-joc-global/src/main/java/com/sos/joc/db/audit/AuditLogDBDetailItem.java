@@ -24,5 +24,14 @@ public class AuditLogDBDetailItem extends AuditLogDetailItem {
         } catch (Exception e) {
         }
     }
+    
+    public AuditLogDBDetailItem(String path, String orderId) {
+        if (orderId == null) {
+            setPath(path);
+        } else {
+            setPath(path + "," + orderId);
+        }
+        setType(ObjectType.ORDER);
+    }
 
 }

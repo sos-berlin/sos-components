@@ -34,7 +34,7 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, TransferFilter.class);
+            JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
 
             JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
@@ -56,15 +56,14 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             }
             
             Map<String, Set<Folder>> permittedFoldersMap = null;
-            if (folderPermissions.allFoldersArePermitted(allowedControllers)) {
-                permittedFoldersMap = folderPermissions.getListsOfFoldersForInstance();
+            if (!folderPermissions.noFolderRestrictionAreSpecified(allowedControllers)) {
+                permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
             }
             if (controllerId.isEmpty() && allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                 allowedControllers = Collections.emptySet();
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            // TODO folder permissions for individual controllers
             Date from = JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone());
             Date to = JobSchedulerDate.getDateFrom(in.getDateTo(), in.getTimeZone());
 
@@ -74,6 +73,7 @@ public class YadeOverviewSummaryResourceImpl extends JOCResourceImpl implements 
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
             files.setSuccessful(dbLayer.getSuccessFulTransfersCount(allowedControllers, from, to, permittedFoldersMap));
             files.setFailed(dbLayer.getFailedTransfersCount(allowedControllers, from, to, permittedFoldersMap));
+            answer.setFiles(files);
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

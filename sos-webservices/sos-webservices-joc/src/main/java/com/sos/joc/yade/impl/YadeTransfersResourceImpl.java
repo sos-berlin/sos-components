@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,31 +48,30 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         SOSHibernateSession session = null;
         try {
             initLogging(IMPL_PATH, inBytes, accessToken);
-            JsonValidator.validate(inBytes, TransferFilter.class);
+            JsonValidator.validateFailFast(inBytes, TransferFilter.class);
             TransferFilter in = Globals.objectMapper.readValue(inBytes, TransferFilter.class);
             
             String controllerId = in.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
-            boolean permitted = true;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
                         availableController -> getControllerPermissions(availableController, accessToken).getView()).collect(
                                 Collectors.toSet());
-                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet();
-                }
-            } else {
+            } else if (getControllerPermissions(controllerId, accessToken).getView()) {
                 allowedControllers = Collections.singleton(controllerId);
-                permitted = getControllerPermissions(controllerId, accessToken).getView();
             }
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), permitted && getJocPermissions(accessToken).getFileTransfer().getView());
+            JOCDefaultResponse response = initPermissions("", getJocPermissions(accessToken).getFileTransfer().getView());
             if (response != null) {
                 return response;
             }
             
-            Map<String, Set<Folder>> permittedFoldersMap = folderPermissions.getListsOfFoldersForInstance();
+            Map<String, Set<Folder>> permittedFoldersMap = folderPermissions.getListOfFolders(allowedControllers);
+            if (controllerId.isEmpty() && allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                allowedControllers = Collections.emptySet();
+            }
+            
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
 
@@ -120,19 +118,17 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
                 if (filteredTransferIds == null) {
                     filteredTransferIds = Collections.emptyList();
                 }
+                boolean compact = in.getCompact() == Boolean.TRUE;
                 for (DBItemYadeTransfer item : items) {
                     if (withSourceTargetFilter && !filteredTransferIds.contains(item.getId())) {
                         continue;
                     }
                     if (item.getWorkflowPath() != null && !item.getWorkflowPath().isEmpty()) {
-                        if (!canAdd(item.getWorkflowPath(), permittedFoldersMap.get(""))) {
-                            continue;
-                        }
                         if (!canAdd(item.getWorkflowPath(), permittedFoldersMap.get(item.getControllerId()))) {
                             continue;
                         }
                     }
-                    transfers.add(fillTransfer(dbLayer, item, in.getCompact()));
+                    transfers.add(fillTransfer(dbLayer, item, compact));
                 }
             }
             entity.setTransfers(transfers);
@@ -148,7 +144,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         }
     }
 
-    private Transfer fillTransfer(JocDBLayerYade dbLayer, DBItemYadeTransfer item, Boolean compact) throws Exception {
+    private Transfer fillTransfer(JocDBLayerYade dbLayer, DBItemYadeTransfer item, boolean compact) throws Exception {
         Transfer transfer = new Transfer();
         transfer.setId(item.getId());
         transfer.setControllerId(item.getControllerId());

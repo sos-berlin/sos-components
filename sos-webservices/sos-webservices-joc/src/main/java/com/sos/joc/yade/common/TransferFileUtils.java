@@ -12,28 +12,29 @@ import com.sos.yade.commons.Yade.TransferEntryState;
 
 public class TransferFileUtils {
 
-    public static TransferFile getFile(DBItemYadeFile item) {
+    public static TransferFile getFile(DBItemYadeFile item, boolean compact) {
         TransferFile file = new TransferFile();
-        if (item.getErrorMessage() != null && !item.getErrorMessage().isEmpty()) {
-            Err error = new Err();
-            error.setMessage(item.getErrorMessage());
-            file.setError(error);
-        }
-        file.setId(item.getId());
-        file.setIntegrityHash(item.getIntegrityHash());
-        file.setInterventionTransferId(0L);// file.getInterventionTransferId()
-        file.setModificationDate(item.getModificationDate());
-        file.setSize(item.getSize());
-        file.setSourceName(getBasenameFromPath(item.getSourcePath()));
-        file.setSourcePath(item.getSourcePath());
-        if (!SOSString.isEmpty(item.getTargetPath())) {
-            file.setTargetName(getBasenameFromPath(item.getTargetPath()));
-            file.setTargetPath(item.getTargetPath());
-        }
         file.setTransferId(item.getTransferId());
-        file.setState(getState(TransferEntryState.fromValue(item.getState())));
-        // no Created-Date in DB, therefore use ModificationDate as surveyDate also
-        file.setSurveyDate(item.getModificationDate());
+        file.setSourcePath(item.getSourcePath());
+        file.setTargetPath(item.getTargetPath());
+        if (!compact) {
+            if (item.getErrorMessage() != null && !item.getErrorMessage().isEmpty()) {
+                Err error = new Err();
+                error.setMessage(item.getErrorMessage());
+                file.setError(error);
+            }
+            file.setId(item.getId());
+            file.setIntegrityHash(item.getIntegrityHash());
+            file.setModificationDate(item.getModificationDate());
+            file.setSize(item.getSize());
+            file.setSourceName(getBasenameFromPath(item.getSourcePath()));
+            file.setSourcePath(item.getSourcePath());
+            if (!SOSString.isEmpty(item.getTargetPath())) {
+                file.setTargetName(getBasenameFromPath(item.getTargetPath()));
+            }
+            file.setState(getState(TransferEntryState.fromValue(item.getState())));
+            file.setSurveyDate(item.getModificationDate());
+        }
         return file;
     }
 

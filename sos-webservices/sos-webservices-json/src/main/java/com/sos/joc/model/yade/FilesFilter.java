@@ -13,34 +13,26 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * yade filter
+ * file transfer files filter
  * <p>
  * 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
-    "fileIds",
     "transferIds",
-    "interventionTransferIds",
     "compact",
-    "regex",
     "states",
     "sourceFiles",
     "targetFiles",
+    "sourceFile",
+    "targetFile",
     "limit"
 })
 public class FilesFilter {
 
-    @JsonProperty("controllerId")
-    private String controllerId;
-    @JsonProperty("fileIds")
-    private List<Long> fileIds = new ArrayList<Long>();
     @JsonProperty("transferIds")
     private List<Long> transferIds = new ArrayList<Long>();
-    @JsonProperty("interventionTransferIds")
-    private List<Long> interventionTransferIds = new ArrayList<Long>();
     /**
      * compact parameter
      * <p>
@@ -50,15 +42,6 @@ public class FilesFilter {
     @JsonProperty("compact")
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter Controller objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    @JsonPropertyDescription("regular expression to filter Controller objects by matching the path")
-    private String regex;
     @JsonProperty("states")
     private List<FileTransferStateText> states = new ArrayList<FileTransferStateText>();
     @JsonProperty("sourceFiles")
@@ -66,32 +49,30 @@ public class FilesFilter {
     @JsonProperty("targetFiles")
     private List<String> targetFiles = new ArrayList<String>();
     /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("sourceFile")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String sourceFile;
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("targetFile")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
+    private String targetFile;
+    /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
      */
     @JsonProperty("limit")
     @JsonPropertyDescription("only for db history urls to restrict the number of responsed records; -1=unlimited")
     private Integer limit = 10000;
-
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    @JsonProperty("fileIds")
-    public List<Long> getFileIds() {
-        return fileIds;
-    }
-
-    @JsonProperty("fileIds")
-    public void setFileIds(List<Long> fileIds) {
-        this.fileIds = fileIds;
-    }
 
     @JsonProperty("transferIds")
     public List<Long> getTransferIds() {
@@ -101,16 +82,6 @@ public class FilesFilter {
     @JsonProperty("transferIds")
     public void setTransferIds(List<Long> transferIds) {
         this.transferIds = transferIds;
-    }
-
-    @JsonProperty("interventionTransferIds")
-    public List<Long> getInterventionTransferIds() {
-        return interventionTransferIds;
-    }
-
-    @JsonProperty("interventionTransferIds")
-    public void setInterventionTransferIds(List<Long> interventionTransferIds) {
-        this.interventionTransferIds = interventionTransferIds;
     }
 
     /**
@@ -133,28 +104,6 @@ public class FilesFilter {
     @JsonProperty("compact")
     public void setCompact(Boolean compact) {
         this.compact = compact;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter Controller objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public String getRegex() {
-        return regex;
-    }
-
-    /**
-     * filter with regex
-     * <p>
-     * regular expression to filter Controller objects by matching the path
-     * 
-     */
-    @JsonProperty("regex")
-    public void setRegex(String regex) {
-        this.regex = regex;
     }
 
     @JsonProperty("states")
@@ -188,6 +137,50 @@ public class FilesFilter {
     }
 
     /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("sourceFile")
+    public String getSourceFile() {
+        return sourceFile;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("sourceFile")
+    public void setSourceFile(String sourceFile) {
+        this.sourceFile = sourceFile;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("targetFile")
+    public String getTargetFile() {
+        return targetFile;
+    }
+
+    /**
+     * glob pattern
+     * <p>
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
+     * 
+     */
+    @JsonProperty("targetFile")
+    public void setTargetFile(String targetFile) {
+        this.targetFile = targetFile;
+    }
+
+    /**
      * only for db history urls to restrict the number of responsed records; -1=unlimited
      * 
      */
@@ -207,12 +200,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("fileIds", fileIds).append("transferIds", transferIds).append("interventionTransferIds", interventionTransferIds).append("compact", compact).append("regex", regex).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("transferIds", transferIds).append("compact", compact).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(regex).append(sourceFiles).append(controllerId).append(compact).append(fileIds).append(limit).append(interventionTransferIds).append(targetFiles).append(transferIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(sourceFiles).append(compact).append(targetFile).append(limit).append(targetFiles).append(sourceFile).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -224,7 +217,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(regex, rhs.regex).append(sourceFiles, rhs.sourceFiles).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(fileIds, rhs.fileIds).append(limit, rhs.limit).append(interventionTransferIds, rhs.interventionTransferIds).append(targetFiles, rhs.targetFiles).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(compact, rhs.compact).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }
