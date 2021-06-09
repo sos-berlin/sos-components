@@ -45,11 +45,10 @@ public class YadeFilesResourceImpl extends JOCResourceImpl implements IYadeFiles
             }
             JocDBLayerYade dbLayer = new JocDBLayerYade(session);
             List<DBItemYadeFile> dbFiles = dbLayer.getFilteredTransferFiles(in, limit);
-            boolean compact = in.getCompact() == Boolean.TRUE;
 
             TransferFiles answer = new TransferFiles();
             if (dbFiles != null) {
-                answer.setFiles(dbFiles.stream().map(file -> TransferFileUtils.getFile(file, compact)).collect(Collectors.toList()));
+                answer.setFiles(dbFiles.stream().map(file -> TransferFileUtils.getFile(file)).collect(Collectors.toList()));
             }
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));

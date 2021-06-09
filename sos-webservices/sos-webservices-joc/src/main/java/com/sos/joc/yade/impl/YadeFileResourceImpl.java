@@ -42,7 +42,7 @@ public class YadeFileResourceImpl extends JOCResourceImpl implements IYadeFileRe
                 throw new DBMissingDataException(String.format("File with id = %1$s not found!", in.getFileId()));
             }
             TransferFile200 answer = new TransferFile200();
-            answer.setFile(TransferFileUtils.getFile(file, in.getCompact() == Boolean.TRUE));
+            answer.setFile(TransferFileUtils.getFile(file));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

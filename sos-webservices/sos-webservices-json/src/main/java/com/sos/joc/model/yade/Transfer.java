@@ -15,16 +15,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * save and response configuration
  * <p>
- * compact=true -> required fields + possibly profile, mandator, target
+ * compact=true -> required fields + possibly numOfFiles, end, error
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "surveyDate",
     "id",
-    "parent_id",
     "profile",
-    "mandator",
     "state",
     "_operation",
     "start",
@@ -47,6 +45,7 @@ public class Transfer {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -56,26 +55,23 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
     private Long id;
     /**
-     * non negative long
-     * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("parent_id")
-    private Long parent_id;
     @JsonProperty("profile")
     private String profile;
-    @JsonProperty("mandator")
-    private String mandator;
     /**
      * transfer state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -120,7 +116,6 @@ public class Transfer {
      * protocol, host, port, account
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("source")
@@ -153,6 +148,7 @@ public class Transfer {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -161,6 +157,7 @@ public class Transfer {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -170,6 +167,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -178,6 +176,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("job")
@@ -186,6 +185,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("jobPosition")
@@ -194,6 +194,7 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("historyId")
@@ -203,6 +204,7 @@ public class Transfer {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -214,6 +216,7 @@ public class Transfer {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("surveyDate")
@@ -225,6 +228,7 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -236,6 +240,7 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("id")
@@ -244,51 +249,30 @@ public class Transfer {
     }
 
     /**
-     * non negative long
-     * <p>
      * 
-     * 
-     */
-    @JsonProperty("parent_id")
-    public Long getParent_id() {
-        return parent_id;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
+     * (Required)
      * 
      */
-    @JsonProperty("parent_id")
-    public void setParent_id(Long parent_id) {
-        this.parent_id = parent_id;
-    }
-
     @JsonProperty("profile")
     public String getProfile() {
         return profile;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("profile")
     public void setProfile(String profile) {
         this.profile = profile;
-    }
-
-    @JsonProperty("mandator")
-    public String getMandator() {
-        return mandator;
-    }
-
-    @JsonProperty("mandator")
-    public void setMandator(String mandator) {
-        this.mandator = mandator;
     }
 
     /**
      * transfer state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -300,6 +284,7 @@ public class Transfer {
      * transfer state
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("state")
@@ -403,7 +388,6 @@ public class Transfer {
      * protocol, host, port, account
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("source")
@@ -415,7 +399,6 @@ public class Transfer {
      * protocol, host, port, account
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("source")
@@ -493,6 +476,7 @@ public class Transfer {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -504,6 +488,7 @@ public class Transfer {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -515,6 +500,7 @@ public class Transfer {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -526,6 +512,7 @@ public class Transfer {
      * path
      * <p>
      * absolute path of an object.
+     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -537,6 +524,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -548,6 +536,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("orderId")
@@ -559,6 +548,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("job")
@@ -570,6 +560,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("job")
@@ -581,6 +572,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("jobPosition")
@@ -592,6 +584,7 @@ public class Transfer {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("jobPosition")
@@ -603,6 +596,7 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("historyId")
@@ -614,6 +608,7 @@ public class Transfer {
      * non negative long
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("historyId")
@@ -623,12 +618,12 @@ public class Transfer {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("parent_id", parent_id).append("profile", profile).append("mandator", mandator).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("controllerId", controllerId).append("workflowPath", workflowPath).append("orderId", orderId).append("job", job).append("jobPosition", jobPosition).append("historyId", historyId).toString();
+        return new ToStringBuilder(this).append("surveyDate", surveyDate).append("id", id).append("profile", profile).append("state", state).append("_operation", _operation).append("start", start).append("end", end).append("error", error).append("source", source).append("target", target).append("jump", jump).append("numOfFiles", numOfFiles).append("controllerId", controllerId).append("workflowPath", workflowPath).append("orderId", orderId).append("job", job).append("jobPosition", jobPosition).append("historyId", historyId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(mandator).append(numOfFiles).append(surveyDate).append(controllerId).append(workflowPath).append(orderId).append(profile).append(start).append(source).append(error).append(target).append(jobPosition).append(_operation).append(parent_id).append(historyId).append(end).append(id).append(state).append(job).append(jump).toHashCode();
+        return new HashCodeBuilder().append(numOfFiles).append(surveyDate).append(controllerId).append(workflowPath).append(orderId).append(profile).append(start).append(source).append(error).append(target).append(jobPosition).append(_operation).append(historyId).append(end).append(id).append(state).append(job).append(jump).toHashCode();
     }
 
     @Override
@@ -640,7 +635,7 @@ public class Transfer {
             return false;
         }
         Transfer rhs = ((Transfer) other);
-        return new EqualsBuilder().append(mandator, rhs.mandator).append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(source, rhs.source).append(error, rhs.error).append(target, rhs.target).append(jobPosition, rhs.jobPosition).append(_operation, rhs._operation).append(parent_id, rhs.parent_id).append(historyId, rhs.historyId).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(jump, rhs.jump).isEquals();
+        return new EqualsBuilder().append(numOfFiles, rhs.numOfFiles).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(workflowPath, rhs.workflowPath).append(orderId, rhs.orderId).append(profile, rhs.profile).append(start, rhs.start).append(source, rhs.source).append(error, rhs.error).append(target, rhs.target).append(jobPosition, rhs.jobPosition).append(_operation, rhs._operation).append(historyId, rhs.historyId).append(end, rhs.end).append(id, rhs.id).append(state, rhs.state).append(job, rhs.job).append(jump, rhs.jump).isEquals();
     }
 
 }

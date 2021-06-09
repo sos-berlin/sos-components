@@ -156,18 +156,18 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         transfer.setStart(item.getStart());
         transfer.setEnd(item.getEnd());
         transfer.setSurveyDate(item.getCreated());
-        transfer.setSource(getProtocolFragment(dbLayer, item.getSourceProtocolId()));
-        transfer.setTarget(getProtocolFragment(dbLayer, item.getTargetProtocolId()));
+        transfer.setWorkflowPath(item.getWorkflowPath());
+        transfer.setOrderId(item.getOrderId());
+        transfer.setJob(item.getJob());
+        transfer.setJobPosition(item.getJobPosition());
 
         Err err = new Err();
         err.setMessage(item.getErrorMessage());
         transfer.setError(err);
 
         if (!compact) {
-            transfer.setWorkflowPath(item.getWorkflowPath());
-            transfer.setOrderId(item.getOrderId());
-            transfer.setJob(item.getJob());
-            transfer.setJobPosition(item.getJobPosition());
+            transfer.setSource(getProtocolFragment(dbLayer, item.getSourceProtocolId()));
+            transfer.setTarget(getProtocolFragment(dbLayer, item.getTargetProtocolId()));
             transfer.setJump(getProtocolFragment(dbLayer, item.getJumpProtocolId()));
         }
         return transfer;
