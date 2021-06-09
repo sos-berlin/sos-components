@@ -54,7 +54,7 @@ public class DBLayer implements Serializable {
     /** JOC Tables */
     public static final String DBITEM_JOC_VARIABLE = DBItemJocVariable.class.getSimpleName();
     public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
-
+ 
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
     public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
     public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JOC_I";
@@ -278,7 +278,7 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemMonitoringOrder.class);
         cl.add(DBItemMonitoringOrderStep.class);
-        
+
         cl.add(DBItemHistoryOrder.class);
         cl.add(DBItemJocVariable.class);
         return cl;

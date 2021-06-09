@@ -1,12 +1,17 @@
 package com.sos.joc.monitoring.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -16,7 +21,10 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSSerializer;
 import com.sos.commons.util.SOSString;
+import com.sos.history.JobWarning;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -25,6 +33,7 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.event.EventBus;
@@ -40,18 +49,22 @@ public class HistoryMonitoringModel {
     private static final String IDENTIFIER = ClusterServices.history.name();
 
     private final SOSHibernateFactory factory;
+    private final DBLayerMonitoring dbLayer;
     private final String serviceIdentifier;
 
     private ScheduledExecutorService threadPool;
     private CopyOnWriteArraySet<AHistoryBean> payloads = new CopyOnWriteArraySet<>();
+    private ConcurrentHashMap<Long, Date> longerThan = new ConcurrentHashMap<>();
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
+    private AtomicBoolean closed = new AtomicBoolean();
 
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
 
     public HistoryMonitoringModel(SOSHibernateFactory factory, String serviceIdentifier) {
         this.factory = factory;
+        this.dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         this.serviceIdentifier = serviceIdentifier;
         EventBus.getInstance().register(this);
     }
@@ -64,6 +77,27 @@ public class HistoryMonitoringModel {
     }
 
     public void start(ThreadGroup threadGroup) {
+        closed.set(false);
+
+        deserialize();
+        schedule(threadGroup);
+
+        AJocClusterService.setLogger(serviceIdentifier);
+        LOGGER.info(String.format("[%s][%s]start..", serviceIdentifier, IDENTIFIER));
+    }
+
+    public void close() {
+        closed.set(true);
+
+        if (threadPool != null) {
+            AJocClusterService.setLogger(serviceIdentifier);
+            JocCluster.shutdownThreadPool(StartupMode.automatic, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            threadPool = null;
+            serialize();
+        }
+    }
+
+    private void schedule(ThreadGroup threadGroup) {
         this.threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(threadGroup, serviceIdentifier + "-h"));
         this.threadPool.scheduleWithFixedDelay(new Runnable() {
 
@@ -73,7 +107,6 @@ public class HistoryMonitoringModel {
                     AJocClusterService.setLogger(serviceIdentifier);
 
                     setLastActivityStart();
-                    DBLayerMonitoring dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER);
                     try {
                         List<AHistoryBean> l = new ArrayList<>();
                         boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -84,8 +117,12 @@ public class HistoryMonitoringModel {
                             if (isDebugEnabled) {
                                 LOGGER.debug(b.getEventType() + "=" + SOSString.toString(b));
                             }
+                            if (closed.get()) {
+                                break;
+                            }
 
                             switch (b.getEventType()) {
+                            // Order
                             case OrderStarted:
                                 orderStarted(dbLayer, (HistoryOrderBean) b);
                                 break;
@@ -113,7 +150,7 @@ public class HistoryMonitoringModel {
                             case OrderFinished:
                                 orderFinished(dbLayer, (HistoryOrderBean) b);
                                 break;
-
+                            // OrderStep
                             case OrderProcessingStarted:
                                 orderStepStarted(dbLayer, (HistoryOrderStepBean) b);
                                 break;
@@ -123,7 +160,6 @@ public class HistoryMonitoringModel {
                             default:
                                 break;
                             }
-
                             l.add(b);
                         }
                         dbLayer.getSession().commit();
@@ -140,9 +176,6 @@ public class HistoryMonitoringModel {
                 }
             }
         }, 0 /* start delay */, 2 /* duration */, TimeUnit.SECONDS);
-
-        AJocClusterService.setLogger(serviceIdentifier);
-        LOGGER.info(String.format("[%s][%s]start..", serviceIdentifier, IDENTIFIER));
     }
 
     private void orderStarted(DBLayerMonitoring dbLayer, HistoryOrderBean hob) throws SOSHibernateException {
@@ -272,7 +305,7 @@ public class HistoryMonitoringModel {
         item.setStartParameters(hosb.getStartParameters());
 
         item.setError(false);
-        item.setWarn(false);
+        item.setWarn(JobWarning.NONE);
 
         item.setCreated(new Date());
         item.setModified(item.getCreated());
@@ -282,6 +315,7 @@ public class HistoryMonitoringModel {
             if (!dbLayer.updateOrderOnOrderStep(item.getHistoryOrderId(), item.getHistoryId())) {
                 insert(dbLayer, hosb.getOrderId(), item.getHistoryOrderId());
             }
+            handleLongerThan(hosb);
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -290,8 +324,55 @@ public class HistoryMonitoringModel {
         }
     }
 
+    private void handleLongerThan(HistoryOrderStepBean hosb) {
+        if (!SOSString.isEmpty(hosb.getTaskIfLongerThan())) {
+            longerThan.put(hosb.getHistoryId(), hosb.getStartTime());
+        }
+    }
+
     private void orderStepProcessed(DBLayerMonitoring dbLayer, HistoryOrderStepBean hosb) throws SOSHibernateException {
-        dbLayer.setOrderStepEnd(hosb);
+        dbLayer.setOrderStepEnd(analyzeExecutionTime(hosb));
+    }
+
+    private HistoryOrderStepResult analyzeExecutionTime(HistoryOrderStepBean hosb) {
+        if (hosb.getStartTime() == null) {
+            return new HistoryOrderStepResult(hosb, null);
+        }
+
+        HistoryOrderStepResultWarn warn = longerThan(hosb.getHistoryId(), hosb.getStartTime(), hosb.getEndTime(), hosb.getTaskIfLongerThan());
+        if (warn == null) {
+            warn = shorterThan(hosb.getStartTime(), hosb.getEndTime(), hosb.getTaskIfShorterThan());
+        }
+        return new HistoryOrderStepResult(hosb, warn);
+    }
+
+    private HistoryOrderStepResultWarn longerThan(Long historyId, Date startTime, Date endDate, String definition) {
+        if (SOSString.isEmpty(definition)) {
+            return null;
+        }
+
+        if (longerThan.containsKey(historyId)) {
+            longerThan.remove(historyId);
+        }
+
+        long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        if (SOSDate.getTimeAsSeconds(definition) > diff) {
+            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Task runs longer than the expected duration of %s",
+                    definition));
+        }
+        return null;
+    }
+
+    private HistoryOrderStepResultWarn shorterThan(Date startTime, Date endDate, String definition) {
+        if (SOSString.isEmpty(definition)) {
+            return null;
+        }
+        long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        if (SOSDate.getTimeAsSeconds(definition) < diff) {
+            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Task runs shorter than the expected duration of %s",
+                    definition));
+        }
+        return null;
     }
 
     private boolean insert(DBLayerMonitoring dbLayer, String orderId, Long historyId) {
@@ -360,13 +441,81 @@ public class HistoryMonitoringModel {
         return item;
     }
 
-    public void close() {
-        AJocClusterService.setLogger(serviceIdentifier);
-        if (threadPool != null) {
-            AJocClusterService.setLogger(serviceIdentifier);
-            JocCluster.shutdownThreadPool(StartupMode.automatic, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-            AJocClusterService.clearLogger();
-            threadPool = null;
+    private void serialize() {
+        if (payloads.size() > 0 || longerThan.size() > 0) {
+            try {
+                saveJocVariable(new SOSSerializer<SerializedResult>().serialize2bytes(new SerializedResult(payloads, longerThan)));
+            } catch (Exception e) {
+                LOGGER.error(e.toString(), e);
+            }
+            payloads.clear();
+            longerThan.clear();
+        } else {
+            deleteJocVariable();
+        }
+    }
+
+    private void deserialize() {
+        try {
+            DBItemJocVariable var = getJocVariable();
+            if (var == null) {
+                return;
+            }
+            SerializedResult sr = new SOSSerializer<SerializedResult>().deserialize(var.getBinaryValue());
+            if (sr.getPayloads() != null) {
+                // payloads can be not empty because event subscription
+                payloads.addAll(sr.getPayloads());
+            }
+            if (sr.getLongerThan() != null) {
+                // longerThan is empty ... ?
+                longerThan.putAll(sr.getLongerThan());
+            }
+
+        } catch (Throwable e) {
+            LOGGER.error(e.toString(), e);
+        }
+    }
+
+    private DBItemJocVariable getJocVariable() throws Exception {
+        try {
+            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            dbLayer.getSession().beginTransaction();
+            DBItemJocVariable item = dbLayer.getVariable();
+            dbLayer.getSession().commit();
+            return item;
+        } catch (Exception e) {
+            dbLayer.rollback();
+            throw e;
+        } finally {
+            dbLayer.close();
+        }
+    }
+
+    private void saveJocVariable(byte[] val) throws Exception {
+        try {
+            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            dbLayer.getSession().beginTransaction();
+            dbLayer.saveVariable(val);
+            dbLayer.getSession().commit();
+        } catch (Exception e) {
+            dbLayer.rollback();
+            throw e;
+        } finally {
+            dbLayer.close();
+        }
+    }
+
+    private void deleteJocVariable() {
+        try {
+            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            dbLayer.getSession().beginTransaction();
+            dbLayer.deleteVariable();
+            dbLayer.getSession().commit();
+        } catch (Exception e) {
+            dbLayer.rollback();
+            LOGGER.error(e.toString(), e);
+        } finally {
+            dbLayer.close();
         }
     }
 
@@ -384,5 +533,64 @@ public class HistoryMonitoringModel {
 
     public AtomicLong getLastActivityEnd() {
         return lastActivityEnd;
+    }
+
+    protected class SerializedResult implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final Collection<AHistoryBean> payloads;
+        private final Map<Long, Date> longerThan;
+
+        protected SerializedResult(Collection<AHistoryBean> payloads, Map<Long, Date> longerThan) {
+            this.payloads = payloads;
+            this.longerThan = longerThan;
+        }
+
+        protected Collection<AHistoryBean> getPayloads() {
+            return payloads;
+        }
+
+        protected Map<Long, Date> getLongerThan() {
+            return longerThan;
+        }
+    }
+
+    public class HistoryOrderStepResult {
+
+        private final HistoryOrderStepBean step;
+        private final HistoryOrderStepResultWarn warn;
+
+        public HistoryOrderStepResult(HistoryOrderStepBean step, HistoryOrderStepResultWarn warn) {
+            this.step = step;
+            this.warn = warn;
+        }
+
+        public HistoryOrderStepBean getStep() {
+            return step;
+        }
+
+        public HistoryOrderStepResultWarn getWarn() {
+            return warn;
+        }
+    }
+
+    public class HistoryOrderStepResultWarn {
+
+        private final JobWarning reason;
+        private final String text;
+
+        public HistoryOrderStepResultWarn(JobWarning reason, String text) {
+            this.reason = reason;
+            this.text = text;
+        }
+
+        public JobWarning getReason() {
+            return reason;
+        }
+
+        public String getText() {
+            return text;
+        }
     }
 }

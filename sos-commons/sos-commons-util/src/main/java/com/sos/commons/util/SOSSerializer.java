@@ -46,18 +46,6 @@ public class SOSSerializer<T extends Serializable> {
         }
     }
 
-    /** Serialize string compressed */
-    public static String serializeString(final String content) throws Exception {
-        SOSSerializer<String> ser = new SOSSerializer<String>();
-        return ser.serialize(content);
-    }
-
-    /** Deserialize compressed string */
-    public static String deserializeString(final String content) throws Exception {
-        SOSSerializer<String> ser = new SOSSerializer<String>();
-        return ser.deserialize(content);
-    }
-
     public String serializeNonCompressed(final T t) throws Exception {
         if (t == null) {
             return null;

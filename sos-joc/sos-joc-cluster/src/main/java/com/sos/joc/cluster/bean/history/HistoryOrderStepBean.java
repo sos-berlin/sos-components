@@ -32,11 +32,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String errorText;
     private Long logId;
 
+    private String taskIfLongerThan;
+    private String taskIfShorterThan;
+
     public HistoryOrderStepBean(EventType eventType, String controllerId, Long historyId) {
         super(eventType, controllerId, historyId);
     }
 
-    public HistoryOrderStepBean(EventType eventType, DBItemHistoryOrderStep item) {
+    public HistoryOrderStepBean(EventType eventType, DBItemHistoryOrderStep item, String taskIfLongerThan, String taskIfShorterThan) {
         super(eventType, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
@@ -63,6 +66,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
         this.errorCode = item.getErrorCode();
         this.errorText = item.getErrorText();
         this.logId = item.getLogId();
+
+        this.taskIfLongerThan = taskIfLongerThan;
+        this.taskIfShorterThan = taskIfShorterThan;
     }
 
     public String getWorkflowPosition() {
@@ -257,4 +263,19 @@ public class HistoryOrderStepBean extends AHistoryBean {
         logId = val;
     }
 
+    public void setTaskIfLongerThan(String val) {
+        taskIfLongerThan = val;
+    }
+
+    public String getTaskIfLongerThan() {
+        return taskIfLongerThan;
+    }
+
+    public void setTaskIfShorterThan(String val) {
+        taskIfShorterThan = val;
+    }
+
+    public String getTaskIfShorterThan() {
+        return taskIfShorterThan;
+    }
 }

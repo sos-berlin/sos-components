@@ -21,6 +21,7 @@ public class CachedOrderStep {
     private final String workflowPosition;
     private Integer severity;
     private Integer returnCode;
+    private Date startTime;
     private Date endTime;
     private CachedOrderStepError error;
     private Boolean lastStdEndsWithNewLine;
@@ -38,6 +39,7 @@ public class CachedOrderStep {
         workflowPosition = item.getWorkflowPosition();
         severity = item.getSeverity();
         returnCode = item.getReturnCode();
+        startTime = item.getStartTime();
         endTime = item.getEndTime();
     }
 
@@ -52,6 +54,7 @@ public class CachedOrderStep {
         b.setWorkflowPosition(workflowPosition);
         b.setSeverity(severity);
         b.setReturnCode(returnCode);
+        b.setStartTime(startTime);
         b.setEndTime(endTime);
         return b;
     }

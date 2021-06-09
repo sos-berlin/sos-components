@@ -172,7 +172,7 @@ public class CleanupServiceConfiguration {
 
         public Age(ConfigurationEntry entry) {
             this.propertyName = entry.getName();
-            this.configured = entry.getValue() == null ? "" : configured;
+            this.configured = entry.getValue() == null ? "" : entry.getValue();
             try {
                 if (SOSString.isEmpty(this.configured) || this.configured.equals("0")) {
                     minutes = 0;
@@ -304,6 +304,24 @@ public class CleanupServiceConfiguration {
         public List<Integer> getWeekDays() {
             return weekDays;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("[");
+            sb.append(Period.class.getSimpleName());
+            sb.append(" configured=").append(configured);
+            sb.append(",weekdays=[");
+            if (weekDays == null) {
+                sb.append("null");
+            } else {
+                sb.append(StringUtils.join(weekDays, ","));
+            }
+            sb.append("]");
+            sb.append(",begin=").append(begin);
+            sb.append(",end=").append(end);
+            sb.append("]");
+            return sb.toString();
+        }
     }
 
     public class PeriodTime {
@@ -312,7 +330,6 @@ public class CleanupServiceConfiguration {
         private int hours = 0;
         private int minutes = 0;
         private int seconds = 0;
-        private long value = 0;
 
         public PeriodTime(int hours) {
             this(hours < 0 ? "23" : String.valueOf(hours));
@@ -355,8 +372,16 @@ public class CleanupServiceConfiguration {
             return seconds;
         }
 
-        public long getValue() {
-            return value;
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("[");
+            sb.append(PeriodTime.class.getSimpleName());
+            sb.append(" configured=").append(configured);
+            sb.append(",hours=").append(hours);
+            sb.append(",minutes=").append(minutes);
+            sb.append(",seconds=").append(seconds);
+            sb.append("]");
+            return sb.toString();
         }
     }
 

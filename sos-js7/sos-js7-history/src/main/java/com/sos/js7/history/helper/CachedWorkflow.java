@@ -27,6 +27,6 @@ public class CachedWorkflow {
     }
 
     private CachedWorkflowJob defaultJob(String name) {
-        return new CachedWorkflowJob(null, JobCriticality.NORMAL);
+        return new CachedWorkflowJob(JobCriticality.NORMAL, null, null, null);
     }
 }

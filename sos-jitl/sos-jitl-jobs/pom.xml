@@ -12,24 +12,17 @@
 	<artifactId>sos-jitl-jobs</artifactId>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.oracle</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<scope>provided</scope>
-		</dependency>
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-hibernate</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
 			<artifactId>js7-executor-for-java_2.13</artifactId>
 			<scope>provided</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
 			<artifactId>sos-commons-sign</artifactId>
@@ -56,7 +49,6 @@
 			<version>${project.version}</version>
 		</dependency>
 
-
 		<!-- 3rd Party Dependencies -->
 		<dependency>
 			<groupId>com.typesafe</groupId>
@@ -65,9 +57,16 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.google.code.findbugs</groupId>
 			<artifactId>jsr305</artifactId>
 		</dependency>
+
 		<!-- for tests -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
@@ -79,7 +78,6 @@
 			<artifactId>log4j-slf4j-impl</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

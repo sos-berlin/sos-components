@@ -103,7 +103,6 @@ public class HistoryModel {
     private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
-    private static final long MAX_LOCK_VERSION = 10_000_000;
     private static final String KEY_DELIMITER = "|||";
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
@@ -111,7 +110,6 @@ public class HistoryModel {
     private YadeHandler yadeHandler;
     private String identifier;
     private final String variableName;
-    private Long lockVersion;
     private Long storedEventId;
     private boolean closed = false;
     private int maxTransactions = 100;
@@ -154,11 +152,10 @@ public class HistoryModel {
             dbLayer.getSession().beginTransaction();
             DBItemJocVariable item = dbLayer.getVariable(variableName);
             if (item == null) {
-                item = dbLayer.insertJocVariable(variableName, "0");
+                item = dbLayer.insertVariable(variableName, "0");
             }
             dbLayer.getSession().commit();
 
-            lockVersion = item.getLockVersion();
             return Long.parseLong(item.getTextValue());
         } catch (Exception e) {
             if (dbLayer != null) {
@@ -529,14 +526,9 @@ public class HistoryModel {
         if (!dbLayer.getSession().isTransactionOpened()) {
             dbLayer.getSession().beginTransaction();
         }
-        updateJocVariable(dbLayer, eventId);
+        dbLayer.updateVariable(variableName, eventId);
         dbLayer.getSession().commit();
         storedEventId = eventId;
-    }
-
-    private void updateJocVariable(DBLayerHistory dbLayer, Long eventId) throws Exception {
-        boolean resetLockVersion = lockVersion != null && lockVersion > MAX_LOCK_VERSION;// TODO lockVersion reset
-        dbLayer.updateJocVariable(variableName, eventId, resetLockVersion);
     }
 
     private void controllerReady(DBLayerHistory dbLayer, FatEventControllerReady entry) throws Exception {
@@ -1245,7 +1237,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, item);
+            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, item, job.getTaskIfLongerThan(), job.getTaskIfShorterThan());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1310,14 +1302,7 @@ public class HistoryModel {
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endParameters, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
-
-            hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId());
-            hosb.setEndParameters(endParameters);
-            hosb.setError(le.isError());
-            hosb.setErrorCode(le.getErrorCode());
-            hosb.setErrorReason(le.getErrorReason());
-            hosb.setErrorState(le.getErrorState());
-            hosb.setErrorText(le.getErrorText());
+            hosb = onOrderStepProcessed(dbLayer, co, cos, le, endParameters);
 
             Path log = storeLog2File(le);
             DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, cos.getHistoryOrderMainParentId(), cos.getHistoryOrderId(), cos.getId(), true, log);
@@ -1338,6 +1323,23 @@ public class HistoryModel {
             }
             hosb = null;
         }
+        return hosb;
+    }
+
+    private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, CachedOrder co, CachedOrderStep cos, LogEntry le, String endParameters)
+            throws Exception {
+        String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
+        CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
+        CachedWorkflowJob job = cw.getJob(cos.getJobName());
+        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId());
+        hosb.setEndParameters(endParameters);
+        hosb.setError(le.isError());
+        hosb.setErrorCode(le.getErrorCode());
+        hosb.setErrorReason(le.getErrorReason());
+        hosb.setErrorState(le.getErrorState());
+        hosb.setErrorText(le.getErrorText());
+        hosb.setTaskIfLongerThan(job.getTaskIfLongerThan());
+        hosb.setTaskIfShorterThan(job.getTaskIfShorterThan());
         return hosb;
     }
 
@@ -1597,7 +1599,8 @@ public class HistoryModel {
             WorkflowSearcher s = new WorkflowSearcher(w);
             Map<String, CachedWorkflowJob> map = new HashMap<>();
             for (WorkflowJob job : s.getJobs()) {
-                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getTitle(), job.getJob().getCriticality()));
+                // TODO taskIfLongerThan, taskIfShorterThan
+                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), null, null));
             }
             return map;
         } catch (Throwable e) {
@@ -1821,7 +1824,7 @@ public class HistoryModel {
                 content.append(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone())).append(" ");
                 content.append("[").append(outType).append("]  ");
             }
-            cos.setLastStdEndsWithNewLine(entry.getChunk().endsWith("\n"));
+            cos.setLastStdEndsWithNewLine(SOSPath.endsWithNewLine(entry.getChunk()));
             content.append(entry.getChunk());
             postEventTaskLog(entry, content.toString(), newLine);
             break;

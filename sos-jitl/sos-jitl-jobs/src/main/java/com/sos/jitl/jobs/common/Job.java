@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
@@ -55,23 +56,7 @@ public class Job {
     }
 
     public static long getTimeAsSeconds(final JobArgument<String> arg) {
-        return getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefaultValue() : arg.getValue());
-    }
-
-    // s, hh:mm:ss, hh:mm
-    public static long getTimeAsSeconds(String val) {
-        if (SOSString.isEmpty(val)) {
-            return 0L;
-        }
-
-        int[] num = { 1, 60, 3600, 3600 * 24 };
-        int j = 0;
-        long seconds = 0L;
-        String[] arr = val.split(":");
-        for (int i = arr.length - 1; i >= 0; i--) {
-            seconds += new Integer(arr[i].trim()) * num[j++];
-        }
-        return seconds;
+        return SOSDate.getTimeAsSeconds(SOSString.isEmpty(arg.getValue()) ? arg.getDefaultValue() : arg.getValue());
     }
 
     public static Map<String, Object> convert(final Map<String, Value> map) {

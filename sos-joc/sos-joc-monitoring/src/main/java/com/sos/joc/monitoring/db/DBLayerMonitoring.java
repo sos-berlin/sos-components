@@ -11,16 +11,22 @@ import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
+import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
+import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
 
 public class DBLayerMonitoring {
 
     private final String identifier;
+    private final String jocVariableName;
+
     private SOSHibernateSession session;
 
-    public DBLayerMonitoring(String identifier) {
+    public DBLayerMonitoring(String identifier, String jocVariableName) {
         this.identifier = identifier;
+        this.jocVariableName = jocVariableName;
     }
 
     public void setSession(SOSHibernateSession hibernateSession) {
@@ -167,7 +173,7 @@ public class DBLayerMonitoring {
         return r != 0;
     }
 
-    public int setOrderStepEnd(HistoryOrderStepBean hosb) throws SOSHibernateException {
+    public int setOrderStepEnd(HistoryOrderStepResult result) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MONITORING_ORDER_STEP).append(" ");
         hql.append("set endTime=:endTime ");
@@ -180,9 +186,15 @@ public class DBLayerMonitoring {
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
         hql.append(",modified=:modified ");
+        HistoryOrderStepResultWarn warn = result.getWarn();
+        if (warn != null) {
+            hql.append(",warn=:warnReason ");
+            hql.append(",warnText=:warnText ");
+        }
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = session.createQuery(hql.toString());
+        HistoryOrderStepBean hosb = result.getStep();
         query.setParameter("endTime", hosb.getEndTime());
         query.setParameter("endParameters", hosb.getEndParameters());
         query.setParameter("returnCode", hosb.getReturnCode());
@@ -194,7 +206,37 @@ public class DBLayerMonitoring {
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(hosb.getErrorText()));
         query.setParameter("modified", new Date());
         query.setParameter("historyId", hosb.getHistoryId());
+        if (warn != null) {
+            query.setParameter("warnReason", warn.getReason().intValue());
+            query.setParameter("warnText", warn.getText());
+        }
         return session.executeUpdate(query);
     }
 
+    public DBItemJocVariable getVariable() throws SOSHibernateException {
+        String hql = String.format("from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
+        Query<DBItemJocVariable> query = session.createQuery(hql);
+        query.setParameter("name", jocVariableName);
+        return session.getSingleResult(query);
+    }
+
+    public int deleteVariable() throws SOSHibernateException {
+        String hql = String.format("delete from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
+        Query<DBItemJocVariable> query = session.createQuery(hql);
+        query.setParameter("name", jocVariableName);
+        return session.executeUpdate(query);
+    }
+
+    public void saveVariable(byte[] val) throws SOSHibernateException {
+        DBItemJocVariable item = getVariable();
+        if (item == null) {
+            item = new DBItemJocVariable();
+            item.setName(jocVariableName);
+            item.setBinaryValue(val);
+            session.save(item);
+        } else {
+            item.setBinaryValue(val);
+            session.update(item);
+        }
+    }
 }

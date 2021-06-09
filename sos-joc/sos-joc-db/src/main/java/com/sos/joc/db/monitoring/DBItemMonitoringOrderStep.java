@@ -10,11 +10,10 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Type;
 
+import com.sos.history.JobWarning;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.history.common.HistorySeverity;
-import com.sos.joc.model.order.OrderStateText;
 
 @Entity
 @Table(name = DBLayer.TABLE_MONITORING_ORDER_STEPS)
@@ -95,11 +94,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     private String errorText;
 
     @Column(name = "[WARN]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean warn;
-
-    @Column(name = "[WARN_REASON]", nullable = true)
-    private String warnReason;// TaskIfLongerThan, TaskIfShorterThan etc
+    private Integer warn;
 
     @Column(name = "[WARN_TEXT]", nullable = true)
     private String warnText;
@@ -276,11 +271,6 @@ public class DBItemMonitoringOrderStep extends DBItem {
         severity = val;
     }
 
-    @Transient
-    public void setSeverity(OrderStateText val) {
-        setSeverity(HistorySeverity.map2DbSeverity(val));
-    }
-
     public void setError(boolean val) {
         error = val;
     }
@@ -331,20 +321,29 @@ public class DBItemMonitoringOrderStep extends DBItem {
         return errorText;
     }
 
-    public void setWarn(boolean val) {
+    public void setWarn(Integer val) {
+        if (val == null) {
+            val = JobWarning.NONE.intValue();
+        }
         warn = val;
     }
 
-    public boolean getWarn() {
+    @Transient
+    public void setWarn(JobWarning val) {
+        setWarn(val == null ? null : val.intValue());
+    }
+
+    public Integer getWarn() {
         return warn;
     }
 
-    public void setWarnReason(String val) {
-        warnReason = val;
-    }
-
-    public String getWarnReason() {
-        return warnReason;
+    @Transient
+    public JobWarning getWarnAsEnum() {
+        try {
+            return JobWarning.fromValue(criticality);
+        } catch (IllegalArgumentException e) {
+            return JobWarning.NONE;
+        }
     }
 
     public void setWarnText(String val) {

@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.sos.commons.util.SOSDate;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.file.exception.SOSFileOperationsException;
 
@@ -129,8 +128,8 @@ public abstract class AFileOperations {
     private boolean existsFile(File file, final String fileSpec, final int fileSpecFlags, final String minFileAge, final String maxFileAge,
             final String minFileSize, final String maxFileSize, final int skipFirstFiles, final int skipLastFiles, final int minNumOfFiles,
             final int maxNumOfFiles) throws Exception {
-        long minAge = calculateFileAge(minFileAge);
-        long maxAge = calculateFileAge(maxFileAge);
+        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
+        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -244,8 +243,8 @@ public abstract class AFileOperations {
         boolean gracious = has(flags, GRACIOUS);
         boolean wipe = has(flags, WIPE);
         boolean removeDir = has(flags, REMOVE_DIR);
-        long minAge = calculateFileAge(minFileAge);
-        long maxAge = calculateFileAge(maxFileAge);
+        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
+        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -547,8 +546,8 @@ public abstract class AFileOperations {
         boolean createDir = has(flags, CREATE_DIR);
         boolean gracious = has(flags, GRACIOUS);
         boolean overwrite = !has(flags, NOT_OVERWRITE);
-        long minAge = calculateFileAge(minFileAge);
-        long maxAge = calculateFileAge(maxFileAge);
+        long minAge = SOSDate.getTimeAsSeconds(minFileAge);
+        long maxAge = SOSDate.getTimeAsSeconds(maxFileAge);
         long minSize = calculateFileSize(minFileSize);
         long maxSize = calculateFileSize(maxFileSize);
 
@@ -757,10 +756,6 @@ public abstract class AFileOperations {
             filelist.sort(new FileComparatorAge());
         }
         return filelist;
-    }
-
-    private long calculateFileAge(final String fileage) throws Exception {
-        return Job.getTimeAsSeconds(fileage);
     }
 
     private long calculateFileSize(final String filesize) throws Exception {

@@ -24,39 +24,34 @@ public class Utils {
     }
 
     public static JsonArray string2json(String text) throws Exception {
+        StringReader sr = null;
+        JsonReader jr = null;
         try {
-            StringReader sr = null;
-            JsonReader jr = null;
-            try {
-                sr = new StringReader(text);
-                jr = Json.createReader(sr);
-                return jr.readArray();
+            sr = new StringReader(text);
+            jr = Json.createReader(sr);
+            return jr.readArray();
 
-            } catch (Throwable e) {
-                LOGGER.error(String.format("[%s]%s", text, e.toString()), e);
-                throw e;
-            } finally {
-                if (jr != null) {
-                    jr.close();
-                }
-                if (sr != null) {
-                    sr.close();
-                }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s]%s", text, e.toString()), e);
+            throw e;
+        } finally {
+            if (jr != null) {
+                jr.close();
             }
-        } catch (Exception ex) {
-
-            throw ex;
+            if (sr != null) {
+                sr.close();
+            }
         }
     }
 
     public static String serialize(String content) throws Exception {
-        return SOSSerializer.serializeString(content);
+        return new SOSSerializer<String>().serialize(content);
     }
 
     public static String deserializeJson(String content) throws Exception {
         if (content == null || content.startsWith("{")) {
             return content;
         }
-        return SOSSerializer.deserializeString(content);
+        return new SOSSerializer<String>().deserialize(content);
     }
 }

@@ -205,16 +205,22 @@ public class JocClusterHandler {
         JocServiceAnswer answer = s.getInfo();
         if (!answer.getState().equals(JocServiceAnswerState.RELAX)) {
             AJocClusterService.setLogger();
-            LOGGER.info(String.format("[%s][restart][%s][service status %s]wait 60s and ask again...", mode, identifier, answer.getState()));
+            LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 60s and ask again...", mode,
+                    identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
             cluster.waitFor(60);
             answer = s.getInfo();
             if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
                 LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));
             } else {
-                String msg = String.format("[%s][restart][%s][skip]service status %s", mode, identifier, answer.getState());
-                LOGGER.error(msg);
-                AJocClusterService.clearLogger();
-                return JocCluster.getErrorAnswer(msg);
+                String msg = String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]force restart", mode, identifier,
+                        answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd());
+                LOGGER.info(msg);
+
+                // String msg = String.format("[%s][restart][%s][skip][service status %s][last activity start=%s, end=%s]", mode, identifier, answer
+                // .getState(), answer.getLastActivityStart(), answer.getLastActivityEnd());
+                // LOGGER.error(msg);
+                // AJocClusterService.clearLogger();
+                // return JocCluster.getErrorAnswer(msg);
             }
         }
 

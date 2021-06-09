@@ -73,10 +73,12 @@ public class CleanupService extends AJocClusterService {
 
                     @Override
                     public void run() {
+                        StartupMode startupMode = mode;
                         while (!closed.get()) {
                             AJocClusterService.setLogger(IDENTIFIER);
                             try {
-                                schedule.start(mode);
+                                schedule.start(startupMode);
+                                startupMode = StartupMode.automatic;
                                 waitFor(30);
                             } catch (CleanupComputeException e) {
                                 closed.set(true);

@@ -363,6 +363,8 @@ public class SOSPath {
             }
             raf.seek(len);
             byte readByte = raf.readByte();
+            // LF 10 \n
+            // CR 13 \r
             if (readByte == 10 || readByte == 13) {
                 return true;
             }
@@ -374,6 +376,13 @@ public class SOSPath {
                 }
         }
         return false;
+    }
+
+    public static boolean endsWithNewLine(String content) throws IOException {
+        if (SOSString.isEmpty(content)) {
+            return false;
+        }
+        return content.endsWith("\n") || content.endsWith("\r");
     }
 
     public static byte[] gzipFile(Path path) throws Exception {// TODO use commons.compress implementation

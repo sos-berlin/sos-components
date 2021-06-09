@@ -1,19 +1,19 @@
 package com.sos.joc.db.joc;
 
-import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.persistence.Version;
 
+import org.hibernate.annotations.Type;
+
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
 @Table(name = DBLayer.TABLE_JOC_VARIABLES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]" }) })
-public class DBItemJocVariable implements Serializable {
+public class DBItemJocVariable extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,9 +27,9 @@ public class DBItemJocVariable implements Serializable {
     @Column(name = "[TEXT_VALUE]", nullable = true)
     private String textValue;
 
-    @Version
-    @Column(name = "[LOCK_VERSION]", nullable = false)
-    private Long lockVersion;
+    @Type(type = "org.hibernate.type.BinaryType")
+    @Column(name = "[BINARY_VALUE]", nullable = true)
+    private byte[] binaryValue;
 
     public DBItemJocVariable() {
     }
@@ -58,27 +58,11 @@ public class DBItemJocVariable implements Serializable {
         return textValue;
     }
 
-    public Long getLockVersion() {
-        return lockVersion;
+    public byte[] getBinaryValue() {
+        return binaryValue;
     }
 
-    public void setLockVersion(Long val) {
-        lockVersion = val;
+    public void setBinaryValue(byte[] val) {
+        binaryValue = val;
     }
-
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof DBItemJocVariable)) {
-            return false;
-        }
-        DBItemJocVariable item = (DBItemJocVariable) o;
-        if (!getName().equals(item.getName())) {
-            return false;
-        }
-        return true;
-    }
-
-    public int hashCode() {
-        return getName() == null ? "".hashCode() : getName().hashCode();
-    }
-
 }

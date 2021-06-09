@@ -517,6 +517,26 @@ public class SOSDate {
         return result;
     }
 
+    /** @param val, format: s, hh:mm:ss, hh:mm<br/>
+     *            e.g. 1, 00:00:05, 01:00 */
+    public static long getTimeAsSeconds(String val) {
+        if (SOSString.isEmpty(val)) {
+            return 0L;
+        }
+
+        int[] num = { 1, 60, 3600, 3600 * 24 };
+        int j = 0;
+        long seconds = 0L;
+        String[] arr = val.split(":");
+        for (int i = arr.length - 1; i >= 0; i--) {
+            try {
+                seconds += new Integer(arr[i].trim()) * num[j++];
+            } catch (Throwable e) {
+            }
+        }
+        return seconds;
+    }
+
     public static void main(String[] args) {
         try {
             Date d = SOSDate.getCurrentDate();

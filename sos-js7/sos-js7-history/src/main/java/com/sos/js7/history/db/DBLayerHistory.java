@@ -43,13 +43,20 @@ public class DBLayerHistory {
     }
 
     public DBItemJocVariable getVariable(String name) throws SOSHibernateException {
-        String hql = String.format("from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLE);
-        Query<DBItemJocVariable> query = session.createQuery(hql);
+        String hql = String.format("select name,textValue from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
+        Query<Object[]> query = session.createQuery(hql);
         query.setParameter("name", name);
-        return session.getSingleResult(query);
+        Object[] o = session.getSingleResult(query);
+        if (o == null) {
+            return null;
+        }
+        DBItemJocVariable item = new DBItemJocVariable();
+        item.setName(name);
+        item.setTextValue(o[1].toString());
+        return item;
     }
 
-    public DBItemJocVariable insertJocVariable(String name, String eventId) throws SOSHibernateException {
+    public DBItemJocVariable insertVariable(String name, String eventId) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);
         item.setTextValue(String.valueOf(eventId));
@@ -57,12 +64,9 @@ public class DBLayerHistory {
         return item;
     }
 
-    public int updateJocVariable(String name, Long eventId, boolean resetLockVersion) throws SOSHibernateException {
+    public int updateVariable(String name, Long eventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLE).append(" ");
         hql.append("set textValue=:textValue ");
-        if (resetLockVersion) {
-            hql.append(",lockVersion=0 ");
-        }
         hql.append("where name=:name");
         Query<DBItemJocVariable> query = session.createQuery(hql.toString());
         query.setParameter("textValue", String.valueOf(eventId));

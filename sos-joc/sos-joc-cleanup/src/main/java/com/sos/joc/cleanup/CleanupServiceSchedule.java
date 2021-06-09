@@ -68,6 +68,7 @@ public class CleanupServiceSchedule {
             createFactory(service.getConfig().getHibernateConfiguration());
         }
         try {
+            LOGGER.info("[start]" + mode);
             service.setLastActivityStart(new Date().getTime());
             long delay = computeNextDelay(mode);
             if (delay > 0) {
@@ -113,7 +114,7 @@ public class CleanupServiceSchedule {
         try {
             dbLayer.setSession(getFactory().openStatelessSession(service.getIdentifier()));
             if (mode.equals(StartupMode.manual) || mode.equals(StartupMode.settings_changed)) {
-                deleteJocVariable();
+                deleteJocVariable(mode);
             } else {
                 item = getJocVariable();
             }
@@ -136,12 +137,11 @@ public class CleanupServiceSchedule {
                 String[] arr = item.getTextValue().split(DELIMITER);
                 if (arr.length > 3) {
                     storedPeriod = parsePeriodFromDb(arr[0].trim());
-                    storedNextBegin = parseDateFromDb(arr[1].trim());
-                    storedNextEnd = parseDateFromDb(arr[2].trim());
-                    storedFirstStart = parseDateFromDb(arr[3].trim());
+                    storedNextBegin = parseDateFromDb(mode, arr[1].trim());
+                    storedNextEnd = parseDateFromDb(mode, arr[2].trim());
+                    storedFirstStart = parseDateFromDb(mode, arr[3].trim());
 
-                    LOGGER.info(String.format("[computeNextDelay][stored=%s][storedPeriod=%s]", item.getTextValue(), SOSString.toString(
-                            storedPeriod)));
+                    LOGGER.info(String.format("[computeNextDelay][stored=%s][storedPeriod=%s]", item.getTextValue(), storedPeriod));
 
                     if (storedNextBegin != null && storedNextEnd != null) {
                         storedState = JocClusterAnswerState.RESTARTED;
@@ -220,7 +220,6 @@ public class CleanupServiceSchedule {
             }
 
             if (storedNextBegin != null) {
-                LOGGER.info(String.format("[computeNextDelay]use stored"));
                 storedFirstStart = storedFirstStart.withHour(period.getBegin().getHours()).withMinute(period.getBegin().getMinutes()).withSecond(
                         period.getBegin().getSeconds()).withNano(0);
 
@@ -228,6 +227,7 @@ public class CleanupServiceSchedule {
                         .getBegin().getSeconds());
                 nextEnd = storedNextEnd.withHour(period.getEnd().getHours()).withMinute(period.getEnd().getMinutes()).withSecond(period.getEnd()
                         .getSeconds());
+                LOGGER.info(String.format("[computeNextDelay][use stored][begin=%s, end=%s]", nextBegin, nextEnd));
             }
 
             int newPeriodDaysDiff = -1;
@@ -276,6 +276,10 @@ public class CleanupServiceSchedule {
                     if (newPeriodDaysDiff == -1) {
                         newPeriodDaysDiff = 7;
                     }
+                    // if (newPeriodDaysDiff > 0) {
+                    // nextBegin.plusDays(newPeriodDaysDiff);
+                    // nextEnd.plusDays(newPeriodDaysDiff);
+                    // }
                 }
                 LOGGER.info(String.format("[weekdays][newPeriodDaysDiff=%s][nextBegin=%s][nextEnd=%s]", newPeriodDaysDiff, nextBegin, nextEnd));
             } else {
@@ -370,12 +374,12 @@ public class CleanupServiceSchedule {
         return service.getConfig().getPeriod();
     }
 
-    private ZonedDateTime parseDateFromDb(String date) {
+    private ZonedDateTime parseDateFromDb(StartupMode mode, String date) {
         try {
             return ZonedDateTime.parse(date, DateTimeFormatter.ISO_ZONED_DATE_TIME);
         } catch (Throwable e) {
             try {
-                deleteJocVariable();
+                deleteJocVariable(mode);
             } catch (Exception e1) {
                 LOGGER.error(String.format("[%s]%s", date, e.toString()), e);
             }
@@ -401,9 +405,9 @@ public class CleanupServiceSchedule {
             }
         }
         if (resultFuture != null) {
-            resultFuture.cancel(false);
+            resultFuture.cancel(true);// with intruption
             AJocClusterService.setLogger(service.getIdentifier());
-            LOGGER.info(String.format("[%s][%s]resultFuture cancelled", service.getIdentifier(), mode));
+            LOGGER.info(String.format("[%s][%s]schedule cancelled", service.getIdentifier(), mode));
             AJocClusterService.clearLogger();
         }
         if (threadPool != null) {
@@ -432,7 +436,7 @@ public class CleanupServiceSchedule {
         }
     }
 
-    private void deleteJocVariable() throws Exception {
+    private void deleteJocVariable(StartupMode mode) throws Exception {
         // if (item == null) {
         // return;
         // }
@@ -440,6 +444,7 @@ public class CleanupServiceSchedule {
             dbLayer.getSession().beginTransaction();
             dbLayer.deleteVariable(service.getIdentifier());
             dbLayer.getSession().commit();
+            LOGGER.info("[deleted]because " + mode);
             item = null;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -454,9 +459,9 @@ public class CleanupServiceSchedule {
     private DBItemJocVariable insertJocVariable(String value) throws Exception {
         try {
             dbLayer.getSession().beginTransaction();
-            DBItemJocVariable item = dbLayer.insertJocVariable(service.getIdentifier(), value);
+            DBItemJocVariable item = dbLayer.insertVariable(service.getIdentifier(), value);
             dbLayer.getSession().commit();
-            LOGGER.info("[stored][inserted]" + item.getTextValue());
+            LOGGER.info("[inserted]" + item.getTextValue());
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -470,7 +475,7 @@ public class CleanupServiceSchedule {
             item.setTextValue(getInitialValue().toString());
             dbLayer.getSession().update(item);
             dbLayer.getSession().commit();
-            LOGGER.info("[stored][updated]" + item.getTextValue());
+            LOGGER.info("[updated]" + item.getTextValue());
             return item;
         } catch (Exception e) {
             dbLayer.rollback();
@@ -505,7 +510,7 @@ public class CleanupServiceSchedule {
                 dbLayer.getSession().update(item);
                 dbLayer.getSession().commit();
             }
-            LOGGER.info("[stored][updated]" + item.getTextValue());
+            LOGGER.info("[updated]" + item.getTextValue());
         } catch (Exception e) {
             dbLayer.rollback();
             throw e;
