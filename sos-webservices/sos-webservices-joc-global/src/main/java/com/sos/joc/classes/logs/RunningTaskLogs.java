@@ -116,7 +116,7 @@ public class RunningTaskLogs {
     @Subscribe({ HistoryOrderTaskLog.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLog evt) {
         if (isRegistered(evt.getHistoryOrderStepId())) {
-            LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
+            //LOGGER.debug("log event for taskId '" + evt.getHistoryOrderStepId() + "' arrived" );
             RunningTaskLog r = new RunningTaskLog();
             r.setEventId(evt.getEventId());
             r.setComplete(EventType.OrderProcessed.value().equals(evt.getKey()));
@@ -135,11 +135,11 @@ public class RunningTaskLogs {
     }
 
     private synchronized void addEvent(RunningTaskLog event) {
-        LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
+        //LOGGER.debug("try to add log event for taskId '" + event.getTaskId() + "'" );
         events.putIfAbsent(event.getTaskId(), new CopyOnWriteArraySet<RunningTaskLog>());
         if (events.get(event.getTaskId()).add(event)) {
             EventBus.getInstance().post(new HistoryOrderTaskLogArrived(event.getTaskId(), event.getComplete()));
-            LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published" );
+            //LOGGER.debug("log event for taskId '" + event.getTaskId() + "' published" );
         }
     }
     

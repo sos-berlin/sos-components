@@ -110,7 +110,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     
     @Subscribe({ HistoryOrderTaskLogArrived.class })
     public void createHistoryTaskEvent(HistoryOrderTaskLogArrived evt) {
-        LOGGER.debug("tasklog event received with taskId '" + evt.getHistoryOrderStepId() + "', expected taskId '" + taskId + "'");
+        //LOGGER.debug("tasklog event received with taskId '" + evt.getHistoryOrderStepId() + "', expected taskId '" + taskId + "'");
         if (taskId != null && taskId.longValue() == evt.getHistoryOrderStepId()) {
             eventArrived.set(true);
             complete.set(evt.getComplete() == Boolean.TRUE);
@@ -122,7 +122,7 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
         try {
             if (condition != null && lock.tryLock(200L, TimeUnit.MILLISECONDS)) { // with timeout
                 try {
-                    LOGGER.debug("waitingForEvents: await " + condition.hashCode());
+                    //LOGGER.debug("waitingForEvents: await " + condition.hashCode());
                     condition.await(maxDelay, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e1) {
                 } finally {
@@ -139,10 +139,10 @@ public class TaskLogResourceImpl extends JOCResourceImpl implements ITaskLogReso
     
     private synchronized void signalEvent() {
         try {
-            LOGGER.debug("signalEvent: " + (condition != null));
+            //LOGGER.debug("signalEvent: " + (condition != null));
             if (condition != null && lock.tryLock(2L, TimeUnit.SECONDS)) { // with timeout
                 try {
-                    LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
+                    //LOGGER.debug("signalEvent: signalAll" + condition.hashCode());
                     condition.signalAll();
                 } finally {
                     try {
