@@ -35,7 +35,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "documentationName",
     "logLevel",
-    "criticality"
+    "criticality",
+    "warnIfShorter",
+    "warnIfLonger"
 })
 public class Job implements IConfigurationObject
 {
@@ -146,6 +148,22 @@ public class Job implements IConfigurationObject
      */
     @JsonProperty("criticality")
     private JobCriticality criticality;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfShorter")
+    private Integer warnIfShorter;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfLonger")
+    private Integer warnIfLonger;
 
     /**
      * No args constructor for use in serialization
@@ -157,6 +175,7 @@ public class Job implements IConfigurationObject
     /**
      * 
      * @param taskLimit
+     * @param warnIfLonger
      * @param jobResourceNames
      * @param criticality
      * @param agentName
@@ -164,6 +183,7 @@ public class Job implements IConfigurationObject
      * @param title
      * @param executable
      * @param timeout
+     * @param warnIfShorter
      * @param returnCodeMeaning
      * @param graceTimeout
      * @param defaultArguments
@@ -171,7 +191,7 @@ public class Job implements IConfigurationObject
      * @param jobClass
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobLogLevel logLevel, JobCriticality criticality) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobLogLevel logLevel, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -187,6 +207,8 @@ public class Job implements IConfigurationObject
         this.documentationName = documentationName;
         this.logLevel = logLevel;
         this.criticality = criticality;
+        this.warnIfShorter = warnIfShorter;
+        this.warnIfLonger = warnIfLonger;
     }
 
     /**
@@ -467,14 +489,58 @@ public class Job implements IConfigurationObject
         this.criticality = criticality;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfShorter")
+    public Integer getWarnIfShorter() {
+        return warnIfShorter;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfShorter")
+    public void setWarnIfShorter(Integer warnIfShorter) {
+        this.warnIfShorter = warnIfShorter;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfLonger")
+    public Integer getWarnIfLonger() {
+        return warnIfLonger;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("warnIfLonger")
+    public void setWarnIfLonger(Integer warnIfLonger) {
+        this.warnIfLonger = warnIfLonger;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("logLevel", logLevel).append("criticality", criticality).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("logLevel", logLevel).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(taskLimit).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(taskLimit).append(warnIfLonger).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).append(documentationName).toHashCode();
     }
 
     @Override
@@ -486,7 +552,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(taskLimit, rhs.taskLimit).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(taskLimit, rhs.taskLimit).append(warnIfLonger, rhs.warnIfLonger).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }
