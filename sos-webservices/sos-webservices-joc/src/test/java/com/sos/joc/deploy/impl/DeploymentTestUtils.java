@@ -199,7 +199,7 @@ public class DeploymentTestUtils {
     public static Job createJob(String agentRef, String script) {
         Job job = new Job();
         job.setAgentPath(agentRef);
-        job.setTaskLimit(5);
+        job.setParallelism(5);
         ExecutableScript executableScript = new ExecutableScript();
         executableScript.setScript(script);
         job.setExecutable(executableScript);

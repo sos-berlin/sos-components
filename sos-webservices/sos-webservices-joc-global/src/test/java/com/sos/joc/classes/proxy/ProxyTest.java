@@ -31,19 +31,19 @@ import js7.base.io.https.KeyStoreRef;
 import js7.base.io.https.TrustStoreRef;
 import js7.base.problem.Problem;
 import js7.data.cluster.ClusterEvent;
+import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent;
-import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
-import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.JControllerProxy;
 import js7.data_for_java.cluster.JClusterState;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
+import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
 
 public class ProxyTest {
@@ -205,7 +205,7 @@ public class ProxyTest {
             LOGGER.info(map1.toString());
 
             // Variante 2 (preferred if you need predicates, e.g 'o -> true')
-            Map<String, Long> map2 = controllerState.ordersBy(o -> true).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder
+            Map<String, Long> map2 = controllerState.ordersBy(JOrderPredicates.any()).collect(Collectors.groupingBy(jOrder -> groupStatesMap.get(jOrder
                     .asScala().state().getClass()), Collectors.counting()));
             LOGGER.info(map2.toString());
 
@@ -244,7 +244,7 @@ public class ProxyTest {
             JControllerProxy controllerProxy = Proxy.of(credential);
             Instant b = Instant.now();
             LOGGER.info("---------------------" + b.toString());
-            JControllerProxy controllerProxy2 = ControllerApi.of(credential).startProxy().get();
+            //JControllerProxy controllerProxy2 = ControllerApi.of(credential).startProxy().get();
 //            JControllerProxy controllerProxy2 = Proxy.of(ProxyCredentialsBuilder.withControllerIdAndUrl("testsuite", "http://centosdev_secondary:5444")
 //            .withBackupUrl("http://centosdev_secondary:5544").withAccount(ProxyUser.HISTORY).build());
             Instant c = Instant.now();
@@ -254,28 +254,30 @@ public class ProxyTest {
             BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController = (stampedEvt, state) -> LOGGER.info(
                     "###########1: " + orderEventToString(stampedEvt));
             
-            BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController2 = (stampedEvt, state) -> LOGGER.info(
-                    "+++++++++++2: " + orderEventToString(stampedEvt));
+//            BiConsumer<Stamped<KeyedEvent<Event>>, JControllerState> callbackOfCurrentController2 = (stampedEvt, state) -> LOGGER.info(
+//                    "+++++++++++2: " + orderEventToString(stampedEvt));
 
             JControllerEventBus evtBus = controllerProxy.controllerEventBus();
             evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
             
-            controllerProxy2.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class), callbackOfCurrentController2);;
+            //controllerProxy2.controllerEventBus().subscribe(Arrays.asList(ControllerEvent.class), callbackOfCurrentController2);;
 
             final String restartJson = Globals.objectMapper.writeValueAsString(new Terminate(true, null));
+            //final String restartJson = Globals.objectMapper.writeValueAsString(new Abort(false));
             LOGGER.info(restartJson);
             try {
-                evtBus.close();
+                //evtBus.close();
                 //evtBus.subscribe(Collections.emptyList(), callbackOfCurrentController);
                 TimeUnit.SECONDS.sleep(5);
                 //evtBus.subscribe(Arrays.asList(ControllerEvent.class, ClusterEvent.class), callbackOfCurrentController);
                 controllerProxy.api().executeCommandJson(restartJson).get();
-                controllerReady = finished.get(40, TimeUnit.SECONDS);
+                controllerReady = finished.get(240, TimeUnit.SECONDS);
             } catch (Exception e) {
                 LOGGER.error("", e);
             } finally {
                 controllerProxy.stop();
-                controllerProxy2.stop();
+                //controllerProxy2.stop();
+                evtBus.close();
             }
             LOGGER.info("---------------------" + a.toString());
             LOGGER.info("---------------------" + b.toString());
@@ -320,7 +322,7 @@ public class ProxyTest {
         Instant timestamp = stamped.timestamp().toInstant();
         KeyedEvent<Event> event = stamped.value();
         Event evt = event.event();
-        if (evt instanceof ControllerReady) {
+        if (evt instanceof ClusterCoupled) {
             finished.complete(true);
         }
         return timestamp.toString() + " " + event.toString();

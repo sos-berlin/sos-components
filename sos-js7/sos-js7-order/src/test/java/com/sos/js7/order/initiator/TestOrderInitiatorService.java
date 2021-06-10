@@ -58,12 +58,14 @@ public class TestOrderInitiatorService {
         return list;
     }
 
+    @Ignore
     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Path resDir = Paths.get("src/test/resources");
+        // test ignore  -> @Uwe: Resource resDir.resolve("hibernate.cfg.xml") missing
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
                 "", 0);
 
