@@ -1,33 +1,58 @@
 package com.sos.cluster;
 
-public class ThreadTest implements Runnable {
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
-    Thread thread = null;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    public synchronized void start() {
-        if (thread == null) {
-            thread = new Thread(this);
-            thread.start();
+public class ThreadTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThreadTest.class);
+
+    private Object lock = new Object();
+    private String name;
+
+    public void A() {
+        synchronized (lock) {
+            name = "test A";
+            LOGGER.info("A name=" + name);
         }
     }
 
-    public synchronized void stop() {
-        if (thread != null) {
-            thread = null;
+    public void B() {
+        synchronized (lock) {
+            name = "test B";
+            LOGGER.info("B name=" + name);
         }
     }
 
-    public synchronized void interrupt() {
-        if (thread != null) {
-            thread.interrupt();
-        }
-    }
+    public static void main(String[] args) {
+        ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
-    @Override
-    public void run() {
-        while(thread != null) {
-            
-        }
-    }
+        ThreadTest t1 = new ThreadTest();
 
+        threadPool.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                t1.A();
+            }
+        });
+        threadPool.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                t1.B();
+            }
+        });
+        threadPool.submit(new Runnable() {
+
+            @Override
+            public void run() {
+                t1.A();
+            }
+        });
+        threadPool.shutdown();
+    }
 }

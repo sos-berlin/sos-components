@@ -6,6 +6,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.history.JobWarning;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.DBLayer;
@@ -186,11 +187,8 @@ public class DBLayerMonitoring {
         hql.append(",errorCode=:errorCode ");
         hql.append(",errorText=:errorText ");
         hql.append(",modified=:modified ");
-        HistoryOrderStepResultWarn warn = result.getWarn();
-        if (warn != null) {
-            hql.append(",warn=:warnReason ");
-            hql.append(",warnText=:warnText ");
-        }
+        hql.append(",warn=:warnReason ");
+        hql.append(",warnText=:warnText ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = session.createQuery(hql.toString());
@@ -206,10 +204,31 @@ public class DBLayerMonitoring {
         query.setParameter("errorText", DBItemHistoryOrderStep.normalizeErrorText(hosb.getErrorText()));
         query.setParameter("modified", new Date());
         query.setParameter("historyId", hosb.getHistoryId());
-        if (warn != null) {
+        HistoryOrderStepResultWarn warn = result.getWarn();
+        if (warn == null) {// set to none - e.g. handleLongerThan calculation was wrong (maybe agent was not reachable ..)
+            query.setParameter("warnReason", JobWarning.NONE.intValue());
+            query.setParameter("warnText", null);
+        } else {
             query.setParameter("warnReason", warn.getReason().intValue());
             query.setParameter("warnText", warn.getText());
         }
+        return session.executeUpdate(query);
+    }
+
+    public int updateOrderStepOnLongerThan(Long historyId, HistoryOrderStepResultWarn warn) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MONITORING_ORDER_STEP).append(" ");
+        hql.append("set modified=:modified ");
+        hql.append(",warn=:warnReason ");
+        hql.append(",warnText=:warnText ");
+        hql.append("where historyId=:historyId ");
+        hql.append("and warn=:warnNone");
+
+        Query<DBItemMonitoringOrderStep> query = session.createQuery(hql.toString());
+        query.setParameter("modified", new Date());
+        query.setParameter("warnReason", warn.getReason().intValue());
+        query.setParameter("warnText", warn.getText());
+        query.setParameter("historyId", historyId);
+        query.setParameter("warnNone", JobWarning.NONE.intValue());
         return session.executeUpdate(query);
     }
 
