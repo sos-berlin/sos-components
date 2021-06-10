@@ -18,15 +18,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.Schedule;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class DBLayerSchedules {
 
@@ -83,7 +80,6 @@ public class DBLayerSchedules {
     public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
             JsonParseException, JsonMappingException, IOException {
 
-        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
 
@@ -122,6 +118,7 @@ public class DBLayerSchedules {
         filterInventoryConfigurations.setType(ConfigurationType.WORKFLOW);
 
         FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
+        filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
         filterDeployHistory.setOrderCriteria("deploymentDate");
         filterDeployHistory.setSortMode("desc");
         filterDeployHistory.setType(ConfigurationType.WORKFLOW);
@@ -153,32 +150,32 @@ public class DBLayerSchedules {
             }
 
             if (schedule != null) {
-                if (workflowPaths.get(schedule.getWorkflowName()) != null) {
-                    schedule.setWorkflowPath(workflowPaths.get(schedule.getWorkflowName()));
-                    dbItemInventoryConfiguration.setSchedule(schedule);
-                    filteredResultset.add(dbItemInventoryConfiguration);
-                } else {
-                    String s = "WARN:Workflow " + schedule.getWorkflowName() + " is not deployed. schedule->" + schedule.getPath();
-                    if (OrderInitiatorGlobals.dailyPlanDate != null) {
-                        DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                        if (filter.getListOfControllerIds().size() > 0) {
-                            dbItemDailyPlanHistory.setControllerId(filter.getListOfControllerIds().get(0));
-                        }
-                        dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                        dbItemDailyPlanHistory.setSubmitted(false);
-                        dbItemDailyPlanHistory.setMessage(s);
-                        dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
-                        dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
-                        dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
-                        dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
-
-                    }
-                    LOGGER.warn(s);
-                }
+                schedule.setWorkflowPath(workflowPaths.get(schedule.getWorkflowName()));
+                dbItemInventoryConfiguration.setSchedule(schedule);
+                filteredResultset.add(dbItemInventoryConfiguration);
             }
         }
 
         return filteredResultset;
+    }
+
+    public String getSchedulePath(String scheduleName) throws SOSHibernateException {
+
+        FilterSchedules filter = new FilterSchedules();
+        filter.addScheduleName(scheduleName);
+
+        String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
+
+        query.setMaxResults(1);
+
+        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
+
+        if (resultset.size() > 0) {
+            return resultset.get(0).getFolder();
+        }
+
+        return null;
     }
 
 }

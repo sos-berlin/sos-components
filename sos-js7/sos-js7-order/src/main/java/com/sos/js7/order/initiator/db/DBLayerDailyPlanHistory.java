@@ -10,6 +10,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
+import com.sos.joc.model.common.Folder;
 
 public class DBLayerDailyPlanHistory {
 
@@ -58,6 +59,23 @@ public class DBLayerDailyPlanHistory {
             where += and + " orderId = :orderId";
             and = " and ";
         }
+        
+        if (filter.getSetOfWorkflowFolders() != null && filter.getSetOfWorkflowFolders().size() > 0) {
+            where += and + "(";
+            for (Folder filterFolder : filter.getSetOfWorkflowFolders()) {
+                if (filterFolder.getRecursive()) {
+                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
+                    where += " (" + "workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "workflowFolder" + " like '" + likeFolder + "')";
+                } else {
+                    where += String.format("workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
+                            .getFolder()));
+                }
+                where += " or ";
+            }
+            where += " 0=1)";
+            and = " and ";
+        }
+
 
         if (!"".equals(where.trim())) {
             where = " where " + where;

@@ -13,8 +13,7 @@ import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
-
+ 
 // Test fails in nightly build
 @Ignore
 public class TestDBLayerDailyPlan {
@@ -25,7 +24,6 @@ public class TestDBLayerDailyPlan {
         Globals.setProperties();
 		OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
 		orderInitiatorSettings.setHibernateConfigurationFile(Paths.get("src/test/resources/hibernate_jobscheduler2.cfg.xml"));
-		OrderInitiatorGlobals.orderInitiatorSettings = orderInitiatorSettings;
 		SOSHibernateSession sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
 
 		FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();

@@ -26,6 +26,7 @@ import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanSubmissionsResource;
 
 @Path("daily_plan")

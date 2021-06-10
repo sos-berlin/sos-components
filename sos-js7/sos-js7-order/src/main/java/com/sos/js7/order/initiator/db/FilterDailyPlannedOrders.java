@@ -1,7 +1,5 @@
 package com.sos.js7.order.initiator.db;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +41,8 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Collection<String> listOfOrders;
 
     private List<OrderStateText> states;
-    private Set<Folder> setOfFolders;
+    private Set<Folder> setOfWorkflowFolders;
+    private Set<Folder> setOfScheduleFolders;
     private Date plannedStart;
     private Boolean isLate;
     private String controllerId;
@@ -52,6 +51,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private List<Long> listOfSubmissionIds;
 
     private Long calendarId;
+ 
     private Long plannedOrderId;
     private List<String> listOfScheduleNames;
     private String scheduleName;
@@ -118,12 +118,12 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         return orderPlannedStartTo;
     }
 
-    public Set<Folder> getListOfFolders() {
-        return setOfFolders;
+    public Set<Folder> getListOfWorkflowFolders() {
+        return setOfWorkflowFolders;
     }
 
-    public void setListOfFolders(Set<Folder> listOfFolders) {
-        this.setOfFolders = listOfFolders;
+    public void setListOfWorkflowFolders(Set<Folder> listOfWorkflowFolders) {
+        this.setOfWorkflowFolders = listOfWorkflowFolders;
     }
 
     public FilterDailyPlannedOrders() {
@@ -132,26 +132,45 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.setOrderCriteria("plannedStart");
     }
 
-    public void addFolderPaths(Set<Folder> folders) {
-        if (setOfFolders == null) {
-            setOfFolders = new HashSet<Folder>();
+    public void addWorkflowFolders(Set<Folder> workflowFolders) {
+        if (setOfWorkflowFolders == null) {
+            setOfWorkflowFolders = new HashSet<Folder>();
         }
-        if (folders != null) {
-            setOfFolders.addAll(folders);
+        if (workflowFolders != null) {
+            setOfWorkflowFolders.addAll(workflowFolders);
         }
     }
 
-    public void addFolderPath(String folder, boolean recursive) {
-        LOGGER.debug("Add folder: " + folder);
-        if (setOfFolders == null) {
-            setOfFolders = new HashSet<Folder>();
+    public void addWorkflowFolders(String workflowFolder, boolean recursive) {
+        LOGGER.debug("Add workflowFolder: " + workflowFolder);
+        if (setOfWorkflowFolders == null) {
+            setOfWorkflowFolders = new HashSet<Folder>();
         }
         Folder filterFolder = new Folder();
-        filterFolder.setFolder(folder);
+        filterFolder.setFolder(workflowFolder);
         filterFolder.setRecursive(recursive);
-        setOfFolders.add(filterFolder);
+        setOfWorkflowFolders.add(filterFolder);
     }
 
+    public void addScheduleFolders(Set<Folder> scheduleFolders) {
+        if (setOfScheduleFolders == null) {
+            setOfScheduleFolders = new HashSet<Folder>();
+        }
+        if (setOfScheduleFolders != null) {
+            setOfScheduleFolders.addAll(scheduleFolders);
+        }
+    }
+
+    public void addScheduleFolders(String scheduleFolder, boolean recursive) {
+        LOGGER.debug("Add scheduleFolder: " + scheduleFolder);
+        if (setOfScheduleFolders == null) {
+            setOfScheduleFolders = new HashSet<Folder>();
+        }
+        Folder filterFolder = new Folder();
+        filterFolder.setFolder(scheduleFolder);
+        filterFolder.setRecursive(recursive);
+        setOfScheduleFolders.add(filterFolder);
+    }
     public List<OrderStateText> getStates() {
         return states;
     }
@@ -197,24 +216,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
 
     public void setCalendarId(Long calendarId) {
         this.calendarId = calendarId;
-    }
-
-    public boolean containsFolder(String path) {
-        if (setOfFolders == null || setOfFolders.size() == 0) {
-            return true;
-        } else {
-            Path p = Paths.get(path).getParent();
-            String parent = "";
-            if (p != null) {
-                parent = p.toString().replace('\\', '/');
-            }
-            for (Folder folder : setOfFolders) {
-                if ((folder.getRecursive() && (parent + "/").startsWith(folder.getFolder())) || folder.getFolder().equals(parent)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public String getOrderId() {
@@ -347,5 +348,28 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setRepeatInterval(Long repeatInterval) {
         this.repeatInterval = repeatInterval;
     }
+
+    
+    public Set<Folder> getSetOfScheduleFolders() {
+        return setOfScheduleFolders;
+    }
+
+    
+    public void setSetOfScheduleFolders(Set<Folder> setOfScheduleFolders) {
+        this.setOfScheduleFolders = setOfScheduleFolders;
+    }
+
+    
+    public Set<Folder> getSetOfWorkflowFolders() {
+        return setOfWorkflowFolders;
+    }
+
+    
+    public void setSetOfWorkflowFolders(Set<Folder> setOfWorkflowFolders) {
+        this.setOfWorkflowFolders = setOfWorkflowFolders;
+    }
+
+    
+ 
 
 }

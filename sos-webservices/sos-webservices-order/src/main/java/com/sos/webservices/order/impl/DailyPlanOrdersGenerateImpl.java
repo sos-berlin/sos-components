@@ -1,9 +1,10 @@
 package com.sos.webservices.order.impl;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,9 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -28,9 +26,10 @@ import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.classes.FolderPermissionEvaluator;
+import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanOrdersGenerateResource;
 
 @Path("daily_plan")
@@ -56,18 +55,25 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 dailyPlanOrderSelector.getSelector().getFolders().add(root);
             }
 
-            if (dailyPlanOrderSelector.getControllerIds() == null) {
-                dailyPlanOrderSelector.setControllerIds(new ArrayList<String>());
-                dailyPlanOrderSelector.getControllerIds().add(dailyPlanOrderSelector.getControllerId());
-            } else {
-                if (!dailyPlanOrderSelector.getControllerIds().contains(dailyPlanOrderSelector.getControllerId())) {
-                    dailyPlanOrderSelector.getControllerIds().add(dailyPlanOrderSelector.getControllerId());
-                }
+            if (dailyPlanOrderSelector.getSelector().getFolders() == null) {
+                dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
+            }
+            if (dailyPlanOrderSelector.getSelector().getScheduleNames() == null) {
+                dailyPlanOrderSelector.getSelector().setScheduleNames(new ArrayList<String>());
+            }
+            if (dailyPlanOrderSelector.getSelector().getSchedulePaths() == null) {
+                dailyPlanOrderSelector.getSelector().setSchedulePaths(new ArrayList<String>());
+            }
+            if (dailyPlanOrderSelector.getSelector().getWorkflowNames() == null) {
+                dailyPlanOrderSelector.getSelector().setWorkflowNames(new ArrayList<String>());
+            }
+            if (dailyPlanOrderSelector.getSelector().getWorkflowPaths() == null) {
+                dailyPlanOrderSelector.getSelector().setWorkflowPaths(new ArrayList<String>());
             }
 
-            Set<String> allowedControllers = Collections.emptySet();
-            allowedControllers = dailyPlanOrderSelector.getControllerIds().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getCreate()).collect(Collectors.toSet());
+            Set<String> allowedControllers = getAllowedControllersOrdersView(dailyPlanOrderSelector.getControllerId(), dailyPlanOrderSelector
+                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
+                            accessToken).getOrders().getView()).collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
@@ -87,44 +93,47 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             orderInitiatorSettings.setTimeZone(settings.getTimeZone());
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
 
+            orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
+                    .getDailyPlanDate()).getTime()));
+            orderInitiatorSettings.setSubmissionTime(new Date());
+
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-            OrderInitiatorGlobals.dailyPlanDate = DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
-                    .getDailyPlanDate()).getTime());
-            OrderInitiatorGlobals.submissionTime = new Date();
-
-            boolean withFolderSelector = (dailyPlanOrderSelector.getSelector().getFolders() != null && !dailyPlanOrderSelector.getSelector()
-                    .getFolders().isEmpty());
-
-            Set<Folder> inFolders = new HashSet<Folder>();
-            if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
-                for (String schedulePath : dailyPlanOrderSelector.getSelector().getSchedulePaths()) {
-                    Folder folder = new Folder();
-                    folder.setFolder(schedulePath);
-                    folder.setRecursive(false);
-                    inFolders.add(folder);
-                }
-            }
+            FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
+            folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderSelector.getSelector().getFolders());
+            folderPermissionEvaluator.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getScheduleNames());
+            folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderSelector.getSelector().getSchedulePaths());
+            folderPermissionEvaluator.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowNames());
+            folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
 
             for (String controllerId : allowedControllers) {
                 DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderSelector.getAuditLog(), dailyPlanOrderSelector.getControllerId(),
                         CategoryType.DAILYPLAN);
-                OrderInitiatorGlobals.orderInitiatorSettings.setAuditLogId(dbItemJocAuditLog.getId());
+                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
-                boolean hasPermission = true;
                 folderPermissions.setSchedulerId(controllerId);
-                if (withFolderSelector) {
-                    Set<Folder> permittedFolders = addPermittedFolder(inFolders);
-                    if (withFolderSelector && (permittedFolders == null || permittedFolders.isEmpty())) {
-                        hasPermission = false;
-                    }
-                    dailyPlanOrderSelector.getSelector().getFolders().clear();
-                    for (Folder permittedFolder : permittedFolders) {
-                        dailyPlanOrderSelector.getSelector().getFolders().add(permittedFolder);
-                    }
-                }
+                folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
-                if (hasPermission) {
+                folderPermissions.setSchedulerId(controllerId);
+
+                if (folderPermissionEvaluator.isHasPermission()) {
+
+                    dailyPlanOrderSelector.getSelector().getFolders().clear();
+                    dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
+                    if (filter.getSetOfScheduleFolders() != null) {
+                        dailyPlanOrderSelector.getSelector().getFolders().addAll(filter.getSetOfScheduleFolders());
+                    }
+                    dailyPlanOrderSelector.getSelector().getSchedulePaths().clear();
+                    dailyPlanOrderSelector.getSelector().getWorkflowPaths().clear();
+                    dailyPlanOrderSelector.getSelector().getScheduleNames().clear();
+                    dailyPlanOrderSelector.getSelector().getWorkflowNames().clear();
+                    if (folderPermissionEvaluator.getListOfPermittedScheduleNames() != null) {
+                        dailyPlanOrderSelector.getSelector().getScheduleNames().addAll(folderPermissionEvaluator.getListOfPermittedScheduleNames());
+                    }
+                    if (folderPermissionEvaluator.getListOfPermittedWorkflowNames() != null) {
+                        dailyPlanOrderSelector.getSelector().getWorkflowNames().addAll(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
+                    }
+
                     ScheduleSource scheduleSource = null;
                     scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
 

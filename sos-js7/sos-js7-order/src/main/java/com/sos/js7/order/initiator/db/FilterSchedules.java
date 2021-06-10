@@ -1,6 +1,7 @@
 package com.sos.js7.order.initiator.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -50,6 +51,13 @@ public class FilterSchedules extends SOSFilter {
         this.listOfControllerIds = listOfControllerIds;
     }
 
+    public void addListOfControllerIds(Collection<String> listOfControllerIds) {
+        if (listOfControllerIds == null) {
+            listOfControllerIds = new ArrayList<String>();
+        }
+        listOfControllerIds.addAll(listOfControllerIds);
+    }
+
     public List<Folder> getListOfFolders() {
         return listOfFolders;
     }
@@ -82,5 +90,7 @@ public class FilterSchedules extends SOSFilter {
     public void setListOfScheduleNames(List<String> listOfScheduleNames) {
         this.listOfScheduleNames = listOfScheduleNames;
     }
+    
+    
 
 }

@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class PeriodResolver {
 
@@ -28,9 +27,11 @@ public class PeriodResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodResolver.class);
     private Map<Long, Period> listOfStartTimes;
     private Map<String, Period> listOfPeriods;
-
-    public PeriodResolver() {
+    private OrderInitiatorSettings orderInitiatorSettings;
+    
+    public PeriodResolver(OrderInitiatorSettings orderInitiatorSettings) {
         super();
+        this.orderInitiatorSettings = orderInitiatorSettings;
         listOfStartTimes = new HashMap<Long, Period>();
         listOfPeriods = new HashMap<String, Period>();
     }
@@ -182,8 +183,8 @@ public class PeriodResolver {
     }
 
     private boolean dayIsInPlan(Date start, String dailyPlanDate, String timeZone) throws ParseException {
-        String timeZoneDailyplan = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
-        String periodBegin = OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin();
+        String timeZoneDailyplan = orderInitiatorSettings.getTimeZone();
+        String periodBegin = orderInitiatorSettings.getPeriodBegin();
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
         Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZoneDailyplan).get();

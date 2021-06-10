@@ -2,12 +2,15 @@ package com.sos.js7.order.initiator.db;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.SOSFilter;
+import com.sos.joc.model.common.Folder;
 
 public class FilterDailyPlanHistory extends SOSFilter {
 
@@ -18,6 +21,7 @@ public class FilterDailyPlanHistory extends SOSFilter {
     private Date dailyPlanDate;
     private Date dailyPlanDateFrom;
     private Date dailyPlanDateTo;
+    private Set<Folder> setOfWorkflowFolders;
 
     public void setControllerId(String controllerId) {
         this.addControllerId(controllerId);
@@ -78,6 +82,31 @@ public class FilterDailyPlanHistory extends SOSFilter {
 
     public void setListOfControllerIds(List<String> listOfControllerIds) {
         this.listOfControllerIds = listOfControllerIds;
+    }
+
+    public void addListOfControllerIds(Set<String> allowedControllers) {
+        if (allowedControllers != null) {
+            if (listOfControllerIds == null) {
+                listOfControllerIds = new ArrayList<String>();
+            }
+            listOfControllerIds.addAll(allowedControllers);
+        }
+    }
+
+    public Set<Folder> getSetOfWorkflowFolders() {
+        return setOfWorkflowFolders;
+    }
+
+    public void setSetOfWorkflowFolders(Set<Folder> setOfWorkflowFolders) {
+        this.setOfWorkflowFolders = setOfWorkflowFolders;
+    }
+
+    public void addFolder(Set<Folder> listOfFolders) {
+        if (setOfWorkflowFolders == null) {
+            setOfWorkflowFolders = new HashSet<Folder>();
+        }
+        setOfWorkflowFolders.addAll(listOfFolders);
+
     }
 
 }

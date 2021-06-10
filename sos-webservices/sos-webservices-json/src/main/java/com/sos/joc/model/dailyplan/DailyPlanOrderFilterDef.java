@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "submissionHistoryIds",
-    "folders",
+    "scheduleFolders",
+    "workflowFolders",
     "schedulePaths",
     "workflowPaths",
     "scheduleNames",
@@ -44,8 +45,16 @@ public class DailyPlanOrderFilterDef {
      * 
      * 
      */
-    @JsonProperty("folders")
-    private List<Folder> folders = null;
+    @JsonProperty("scheduleFolders")
+    private List<Folder> scheduleFolders = null;
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    private List<Folder> workflowFolders = null;
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = null;
     @JsonProperty("workflowPaths")
@@ -97,9 +106,9 @@ public class DailyPlanOrderFilterDef {
      * 
      * 
      */
-    @JsonProperty("folders")
-    public List<Folder> getFolders() {
-        return folders;
+    @JsonProperty("scheduleFolders")
+    public List<Folder> getScheduleFolders() {
+        return scheduleFolders;
     }
 
     /**
@@ -108,9 +117,31 @@ public class DailyPlanOrderFilterDef {
      * 
      * 
      */
-    @JsonProperty("folders")
-    public void setFolders(List<Folder> folders) {
-        this.folders = folders;
+    @JsonProperty("scheduleFolders")
+    public void setScheduleFolders(List<Folder> scheduleFolders) {
+        this.scheduleFolders = scheduleFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public List<Folder> getWorkflowFolders() {
+        return workflowFolders;
+    }
+
+    /**
+     * folders
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowFolders")
+    public void setWorkflowFolders(List<Folder> workflowFolders) {
+        this.workflowFolders = workflowFolders;
     }
 
     @JsonProperty("schedulePaths")
@@ -239,12 +270,12 @@ public class DailyPlanOrderFilterDef {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submissionHistoryIds", submissionHistoryIds).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("scheduleNames", scheduleNames).append("workflowNames", workflowNames).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
+        return new ToStringBuilder(this).append("submissionHistoryIds", submissionHistoryIds).append("scheduleFolders", scheduleFolders).append("workflowFolders", workflowFolders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("scheduleNames", scheduleNames).append("workflowNames", workflowNames).append("orderIds", orderIds).append("controllerIds", controllerIds).append("states", states).append("late", late).append("dailyPlanDate", dailyPlanDate).append("schedulesFolder", schedulesFolder).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folders).append(dailyPlanDate).append(states).append(workflowNames).append(schedulePaths).append(late).append(controllerIds).append(scheduleNames).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).toHashCode();
+        return new HashCodeBuilder().append(dailyPlanDate).append(scheduleFolders).append(states).append(workflowNames).append(schedulePaths).append(late).append(workflowFolders).append(controllerIds).append(scheduleNames).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).toHashCode();
     }
 
     @Override
@@ -256,7 +287,7 @@ public class DailyPlanOrderFilterDef {
             return false;
         }
         DailyPlanOrderFilterDef rhs = ((DailyPlanOrderFilterDef) other);
-        return new EqualsBuilder().append(folders, rhs.folders).append(dailyPlanDate, rhs.dailyPlanDate).append(states, rhs.states).append(workflowNames, rhs.workflowNames).append(schedulePaths, rhs.schedulePaths).append(late, rhs.late).append(controllerIds, rhs.controllerIds).append(scheduleNames, rhs.scheduleNames).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).isEquals();
+        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(scheduleFolders, rhs.scheduleFolders).append(states, rhs.states).append(workflowNames, rhs.workflowNames).append(schedulePaths, rhs.schedulePaths).append(late, rhs.late).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(scheduleNames, rhs.scheduleNames).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).isEquals();
     }
 
 }

@@ -1,5 +1,6 @@
 package com.sos.js7.order.initiator.db;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.LockModeType;
@@ -11,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 
 public class DBLayerDailyPlanSubmissions {
 
@@ -123,8 +123,8 @@ public class DBLayerDailyPlanSubmissions {
         return row;
     }
 
-    public void storeSubmission(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions) throws SOSHibernateException {
-        dbItemDailyPlanSubmissions.setCreated(OrderInitiatorGlobals.submissionTime);
+    public void storeSubmission(DBItemDailyPlanSubmissions dbItemDailyPlanSubmissions, Date submissionTime) throws SOSHibernateException {
+        dbItemDailyPlanSubmissions.setCreated(submissionTime);
         sosHibernateSession.save(dbItemDailyPlanSubmissions);
     }
 

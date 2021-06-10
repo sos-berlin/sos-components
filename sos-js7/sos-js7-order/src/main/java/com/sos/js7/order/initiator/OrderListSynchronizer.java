@@ -1,5 +1,6 @@
 package com.sos.js7.order.initiator;
 
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,7 +40,6 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.classes.OrderApi;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
@@ -52,6 +52,8 @@ public class OrderListSynchronizer {
 
     final JControllerState currentState;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
+    private OrderInitiatorSettings orderInitiatorSettings;
+
     private Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders;
     private Map<String, Long> listOfDurations;
     private Map<WorkflowAtController, Boolean> listOfExistingWorkflows;
@@ -102,14 +104,13 @@ public class OrderListSynchronizer {
         }
     }
 
-    public OrderListSynchronizer(JControllerState _currentState) {
+    public OrderListSynchronizer(JControllerState _currentState, OrderInitiatorSettings orderInitiatorSettings) {
         listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
+        this.orderInitiatorSettings = orderInitiatorSettings;
         currentState = _currentState;
     }
 
-
-
-    public boolean add(String controllerId,PlannedOrder o) {
+    public boolean add(String controllerId, PlannedOrder o) {
         boolean added = false;
         if (listOfExistingWorkflows == null) {
             listOfExistingWorkflows = new HashMap<WorkflowAtController, Boolean>();
@@ -179,7 +180,7 @@ public class OrderListSynchronizer {
             throws SOSHibernateException {
 
         List<DBItemDailyPlanHistory> listOfInsertHistoryEntries = new ArrayList<DBItemDailyPlanHistory>();
-        if (OrderInitiatorGlobals.submissionTime != null && OrderInitiatorGlobals.dailyPlanDate != null) {
+        if (orderInitiatorSettings.getSubmissionTime() != null && orderInitiatorSettings.getDailyPlanDate() != null) {
 
             DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
             for (PlannedOrder addedOrder : addedOrders) {
@@ -187,12 +188,16 @@ public class OrderListSynchronizer {
                 dbItemDailyPlanHistory.setSubmitted(false);
                 dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
                 dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanHistory.setDailyPlanDate(OrderInitiatorGlobals.dailyPlanDate);
+                dbItemDailyPlanHistory.setDailyPlanDate(orderInitiatorSettings.getDailyPlanDate());
                 dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
                 dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
                 dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
-                dbItemDailyPlanHistory.setSubmissionTime(OrderInitiatorGlobals.submissionTime);
-                dbItemDailyPlanHistory.setUserAccount(OrderInitiatorGlobals.orderInitiatorSettings.getUserAccount());
+                if (dbItemDailyPlanHistory.getWorkflowPath() != null) {
+                    String folderName = Paths.get(dbItemDailyPlanHistory.getWorkflowPath()).getParent().toString().replace('\\', '/');
+                    dbItemDailyPlanHistory.setWorkflowFolder(folderName);
+                }
+                dbItemDailyPlanHistory.setSubmissionTime(orderInitiatorSettings.getSubmissionTime());
+                dbItemDailyPlanHistory.setUserAccount(orderInitiatorSettings.getUserAccount());
                 dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
                 listOfInsertHistoryEntries.add(dbItemDailyPlanHistory);
             }
@@ -225,7 +230,7 @@ public class OrderListSynchronizer {
                 Globals.commit(sosHibernateSession);
 
                 OrderApi.addOrderToController(controllerId, jocError, accessToken, addedOrders, listOfInsertHistoryEntries);
-                
+
             } catch (Exception e) {
                 LOGGER.warn(e.getLocalizedMessage());
             }
@@ -235,8 +240,8 @@ public class OrderListSynchronizer {
 
     }
 
-    public void addPlannedOrderToDB(String controllerId) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
+    public void addPlannedOrderToDB(String controllerId) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
+            ParseException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
             DBInvalidDataException, JsonProcessingException, InterruptedException, ExecutionException {
         LOGGER.debug("... addPlannedOrderToDB");
 
@@ -250,7 +255,7 @@ public class OrderListSynchronizer {
             Globals.beginTransaction(sosHibernateSession);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite()) {
+            if (orderInitiatorSettings.isOverwrite()) {
                 LOGGER.debug("Overwrite orders");
                 for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                     FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -272,11 +277,10 @@ public class OrderListSynchronizer {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
                     dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
-                    
-                    if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
+
+                    if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                         LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
                         plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        plannedOrder.setAuditLogId(OrderInitiatorGlobals.orderInitiatorSettings.getAuditLogId());
                         dbLayerDailyPlan.store(plannedOrder);
                         plannedOrder.setStoredInDb(true);
                     }
@@ -311,7 +315,7 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
                     dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
-                    if (OrderInitiatorGlobals.orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
+                    if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
                         LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " " + plannedOrder
                                 .uniqueOrderkey());
                         plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
@@ -332,10 +336,10 @@ public class OrderListSynchronizer {
 
     }
 
-    public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException, DBConnectionRefusedException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
-            DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException, ExecutionException,
-            TimeoutException {
+    public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException,
+            DBConnectionRefusedException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException,
+            ExecutionException, TimeoutException {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
 
         addPlannedOrderToDB(controllerId);

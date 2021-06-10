@@ -1,6 +1,7 @@
 package com.sos.js7.order.initiator;
 
 import java.nio.file.Path;
+import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,9 @@ public class OrderInitiatorSettings {
     private boolean overwrite = false;
     private boolean submit = true;
     private StartupMode startMode;
-    private Long auditLogId=0L;
+    
+    private Date dailyPlanDate;
+    private Date submissionTime;
 
     public boolean isSubmit() {
         return submit;
@@ -143,15 +146,25 @@ public class OrderInitiatorSettings {
     public void setDailyPlanStartTime(String dailyPlanStartTime) {
         this.dailyPlanStartTime = dailyPlanStartTime;
     }
-
+ 
     
-    public Long getAuditLogId() {
-        return auditLogId;
+    public Date getDailyPlanDate() {
+        return dailyPlanDate;
     }
 
     
-    public void setAuditLogId(Long auditLogId) {
-        this.auditLogId = auditLogId;
+    public void setDailyPlanDate(Date dailyPlanDate) {
+        this.dailyPlanDate = dailyPlanDate;
+    }
+
+    
+    public Date getSubmissionTime() {
+        return submissionTime;
+    }
+
+    
+    public void setSubmissionTime(Date submissionTime) {
+        this.submissionTime = submissionTime;
     }
 
 }

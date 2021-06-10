@@ -29,7 +29,6 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
@@ -88,7 +87,7 @@ public class DBLayerDailyPlannedOrders {
                     } catch (InterruptedException e1) {
                     }
                     retryCount = retryCount + 1;
-                    LOGGER.debug("Retry delete orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount );
+                    LOGGER.debug("Retry delete orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount);
                 }
             }
         } while (retryCount < 10);
@@ -226,6 +225,39 @@ public class DBLayerDailyPlannedOrders {
             }
             where += " 1=0)";
         }
+
+        if (!"".equals(pathField) && filter.getSetOfScheduleFolders() != null && filter.getSetOfScheduleFolders().size() > 0) {
+            where += and + "(";
+            for (Folder filterFolder : filter.getSetOfScheduleFolders()) {
+                if (filterFolder.getRecursive()) {
+                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
+                    where += " (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder + "')";
+                } else {
+                    where += String.format("p.scheduleFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
+                            .getFolder()));
+                }
+                where += " or ";
+            }
+            where += " 0=1)";
+            and = " and ";
+        }
+
+        if (!"".equals(pathField) && filter.getSetOfWorkflowFolders() != null && filter.getSetOfWorkflowFolders().size() > 0) {
+            where += and + "(";
+            for (Folder filterFolder : filter.getSetOfWorkflowFolders()) {
+                if (filterFolder.getRecursive()) {
+                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
+                    where += " (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder + "')";
+                } else {
+                    where += String.format("p.workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
+                            .getFolder()));
+                }
+                where += " or ";
+            }
+            where += " 0=1)";
+            and = " and ";
+        }
+
         if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
             where += and + "(";
             for (OrderId orderId : filter.getSetOfOrders()) {
@@ -239,22 +271,6 @@ public class DBLayerDailyPlannedOrders {
                 where += " p.orderId = '" + orderId + "' or";
             }
             where += " 1=0)";
-        }
-
-        if (!"".equals(pathField) && filter.getListOfFolders() != null && filter.getListOfFolders().size() > 0) {
-            where += and + "(";
-            for (Folder filterFolder : filter.getListOfFolders()) {
-                if (filterFolder.getRecursive()) {
-                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " (" + pathField + " = '" + filterFolder.getFolder() + "' or " + pathField + " like '" + likeFolder + "')";
-                } else {
-                    where += String.format(pathField + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
-                            .getFolder()));
-                }
-                where += " or ";
-            }
-            where += " 0=1)";
-            and = " and ";
         }
 
         if (!"".equals(where.trim())) {
@@ -420,7 +436,6 @@ public class DBLayerDailyPlannedOrders {
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
         dbItemDailyPlannedOrders.setOrderId(plannedOrder.getFreshOrder().getId());
-        dbItemDailyPlannedOrders.setAuditLogId(plannedOrder.getAuditLogId());
 
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
         dbItemDailyPlannedOrders.setPlannedStart(start);
@@ -429,8 +444,14 @@ public class DBLayerDailyPlannedOrders {
             dbItemDailyPlannedOrders.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
             dbItemDailyPlannedOrders.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         }
+        
+        String workflowFolder = Paths.get(plannedOrder.getSchedule().getWorkflowPath()).getParent().toString().replace('\\', '/');
+        String scheduleFolder = Paths.get(plannedOrder.getSchedule().getPath()).getParent().toString().replace('\\', '/');
+
         dbItemDailyPlannedOrders.setControllerId(plannedOrder.getControllerId());
         dbItemDailyPlannedOrders.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+        dbItemDailyPlannedOrders.setWorkflowFolder(workflowFolder);
+        dbItemDailyPlannedOrders.setScheduleFolder(scheduleFolder);
         dbItemDailyPlannedOrders.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
         dbItemDailyPlannedOrders.setSubmitted(false);
         dbItemDailyPlannedOrders.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
@@ -475,7 +496,6 @@ public class DBLayerDailyPlannedOrders {
             hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=0,submitTime=null  " + getWhere(filter);
         }
         LOGGER.debug("Update submitting on controller:" + hql);
-
 
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
 

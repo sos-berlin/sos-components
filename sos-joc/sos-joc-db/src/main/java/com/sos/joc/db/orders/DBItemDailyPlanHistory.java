@@ -42,6 +42,9 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[WORKFLOW_PATH]", nullable = true)
     private String workflowPath;
     
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = true)
+    private String workflowFolder;
+    
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SCHEDULED_FOR]", nullable = true)
     private Date scheduledFor;
@@ -155,6 +158,16 @@ public class DBItemDailyPlanHistory extends DBItem {
     
     public void setScheduledFor(Date scheduledFor) {
         this.scheduledFor = scheduledFor;
+    }
+
+    
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    
+    public void setWorkflowFolder(String workflowFolder) {
+        this.workflowFolder = workflowFolder;
     }
 
 }

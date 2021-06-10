@@ -12,20 +12,16 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.order.OrderIds;
 import com.sos.joc.model.order.OrdersFilterV;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.ICyclicOrdersResource;
 
 @Path("utilities")

@@ -35,8 +35,7 @@ public class ScheduleSourceList extends ScheduleSource {
         for (String schedulePath : this.schedules) {
             filterSchedules.addScheduleName(Paths.get(schedulePath).getFileName().toString());
         }
-
-
+        
         List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
         for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
             listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());

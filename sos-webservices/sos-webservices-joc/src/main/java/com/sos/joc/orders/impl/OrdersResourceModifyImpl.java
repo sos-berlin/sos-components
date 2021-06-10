@@ -235,7 +235,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders());
         
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
-            command(currentState, action, modifyOrders, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
+            command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight() && !Action.CANCEL_DAILYPLAN.equals(action)) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
@@ -293,7 +293,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return cyclicOrderStream;
     }
 
-    private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders, Set<OrderId> oIds) {
+    private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders,DBItemJocAuditLog dbAuditLog, Set<OrderId> oIds) {
 
         switch (action) {
         case CANCEL_DAILYPLAN:

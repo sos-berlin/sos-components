@@ -23,8 +23,7 @@ import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.configuration.globals.GlobalSettingsSection;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
-import com.sos.js7.order.initiator.classes.OrderInitiatorGlobals;
-
+ 
 public class OrderInitiatorService extends AJocClusterService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorService.class);
@@ -53,12 +52,10 @@ public class OrderInitiatorService extends AJocClusterService {
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
             setSettings(mode, globalSettings);
-
-            OrderInitiatorGlobals.orderInitiatorSettings = settings;
-
-            LOGGER.info("will start creating daily plan at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " for "
+            
+            LOGGER.info("will start creating daily plan at " + DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(),settings.getDailyPlanStartTime(),settings.getPeriodBegin()) + " " + settings.getTimeZone() + " for "
                     + settings.getDayAheadPlan() + " days ahead");
-            LOGGER.info("will start submitting daily plan at " + DailyPlanHelper.getStartTimeAsString() + " " + settings.getTimeZone() + " for "
+            LOGGER.info("will start submitting daily plan at " + DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(),settings.getDailyPlanStartTime(),settings.getPeriodBegin()) + " " + settings.getTimeZone() + " for "
                     + settings.getDayAheadSubmit() + " days ahead");
 
             if (settings.getDayAheadPlan() > 0) {
@@ -117,18 +114,7 @@ public class OrderInitiatorService extends AJocClusterService {
         timer.schedule(orderInitiatorRunner, 0, 60 * 1000);
     }
 
-    private String getProperty(JocCockpitProperties sosCockpitProperties, String prop, String defaults) {
-        String val = defaults;
-        if (sosCockpitProperties != null) {
-            val = sosCockpitProperties.getProperty(prop);
-            if (val == null) {
-                val = defaults;
-            }
-
-        }
-        LOGGER.debug("Setting " + prop + "=" + val);
-        return val;
-    }
+   
 
     private void setSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
         settings = new OrderInitiatorSettings();
@@ -147,26 +133,5 @@ public class OrderInitiatorService extends AJocClusterService {
         settings.setDayAheadSubmit(readerSettings.getDayAheadSubmit());
     }
 
-    @SuppressWarnings("unused")
-    private void setSettingsOld(GlobalSettingsSection globalSettings) throws Exception {
-        settings = new OrderInitiatorSettings();
-        if (Globals.sosCockpitProperties == null) {
-            Globals.sosCockpitProperties = new JocCockpitProperties(getJocConfig().getResourceDirectory().resolve("joc.properties"));
-        }
-
-        LOGGER.debug("...Settings from " + getJocConfig().getResourceDirectory().resolve("joc.properties").normalize());
-
-        settings.setDayAheadPlan(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_plan", "7"));
-        settings.setDayAheadSubmit(getProperty(Globals.sosCockpitProperties, "daily_plan_days_ahead_submit", "3"));
-        settings.setTimeZone(getProperty(Globals.sosCockpitProperties, "daily_plan_time_zone", "UTC"));
-        settings.setPeriodBegin(getProperty(Globals.sosCockpitProperties, "daily_plan_period_begin", "00:00"));
-      //  settings.setDailyPlanDaysCreateOnStart("1".equals(getProperty(Globals.sosCockpitProperties, "daily_plan_days_create_on_start", "1")));
-        settings.setDailyPlanStartTime(getProperty(Globals.sosCockpitProperties, "daily_plan_start_time", "00:00"));
-
-        settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
-
-        settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
-
-    }
-
+   
 }

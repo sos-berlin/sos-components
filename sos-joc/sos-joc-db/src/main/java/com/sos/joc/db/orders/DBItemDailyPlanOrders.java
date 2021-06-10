@@ -43,6 +43,12 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
+    @Column(name = "[SCHEDULE_FOLDER]", nullable = false)
+    private String scheduleFolder;
+
+    @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
+    private String workflowFolder;
+
     @Column(name = "[WORKFLOW_PATH]", nullable = false)
     private String workflowPath;
 
@@ -61,10 +67,7 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
 
-    @Column(name = "[AUDIT_LOG_ID]", nullable = false)
-    private Long auditLogId;
-
-    @Column(name = "[SUBMITTED]", nullable = false)
+   @Column(name = "[SUBMITTED]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean submitted;
 
@@ -231,13 +234,6 @@ public class DBItemDailyPlanOrders extends DBItem {
         this.periodEnd = periodEnd;
     }
 
-    public Long getAuditLogId() {
-        return auditLogId;
-    }
-
-    public void setAuditLogId(Long auditLogId) {
-        this.auditLogId = auditLogId;
-    }
 
     public Date getCreated() {
         return created;
@@ -295,6 +291,26 @@ public class DBItemDailyPlanOrders extends DBItem {
     public String getDailyPlanDate() {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         return format.format(plannedStart);
+    }
+
+    
+    public String getScheduleFolder() {
+        return scheduleFolder;
+    }
+
+    
+    public void setScheduleFolder(String scheduleFolder) {
+        this.scheduleFolder = scheduleFolder;
+    }
+
+    
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    
+    public void setWorkflowFolder(String workflowFolder) {
+        this.workflowFolder = workflowFolder;
     }
 
 }

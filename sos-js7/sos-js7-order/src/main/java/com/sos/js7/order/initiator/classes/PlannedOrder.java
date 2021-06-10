@@ -39,7 +39,6 @@ public class PlannedOrder {
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
         freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowName());
         this.schedule = new Schedule();
-        this.auditLogId = dbItemDailyPlannedOrders.getAuditLogId();
         schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
         schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
         schedule.setWorkflowName(dbItemDailyPlannedOrders.getWorkflowName());

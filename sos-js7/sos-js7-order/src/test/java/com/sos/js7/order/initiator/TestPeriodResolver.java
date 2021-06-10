@@ -17,7 +17,7 @@ public class TestPeriodResolver {
 
     @Test
     public void testAddStartTimes() throws SOSInvalidDataException, ParseException {
-        PeriodResolver periodResolver = new PeriodResolver();
+        PeriodResolver periodResolver = new PeriodResolver(null);
         Period period = new Period();
         period.setBegin("12:00");
         period.setEnd("15:00");

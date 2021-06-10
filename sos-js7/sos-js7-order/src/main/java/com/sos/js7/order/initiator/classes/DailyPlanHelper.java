@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.js7.order.initiator.OrderInitiatorSettings;
 
 public class DailyPlanHelper {
 
@@ -46,9 +47,8 @@ public class DailyPlanHelper {
         return calendar.getTime();
     }
 
-    public static java.util.Calendar getDailyplanCalendar(String time) {
+    public static java.util.Calendar getDailyplanCalendar(String time,String timeZoneName) {
 
-        String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
         if (time == null) {
             time = "00:00";
         }
@@ -161,16 +161,15 @@ public class DailyPlanHelper {
 
     }
 
-    public static String getStartTimeAsString() {
+    public static String getStartTimeAsString(String timeZoneName, String dailyPlanStartTime, String periodBegin) {
         java.util.Calendar startCalendar;
-        String timeZoneName = OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone();
         TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
         java.util.Calendar now = java.util.Calendar.getInstance(timeZone);
 
-        if (!"".equals(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime())) {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getDailyPlanStartTime());
+        if (!"".equals(dailyPlanStartTime)) {
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(dailyPlanStartTime,timeZoneName);
         } else {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(OrderInitiatorGlobals.orderInitiatorSettings.getPeriodBegin());
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(periodBegin,timeZoneName);
             startCalendar.add(java.util.Calendar.DATE, 1);
             startCalendar.add(java.util.Calendar.MINUTE, -30);
         }
@@ -217,8 +216,8 @@ public class DailyPlanHelper {
                 dbItemDailyPlanOrders.getStartMode());
     }
 
-    public static Date getNextDay(Date dateForPlan) throws ParseException {
-        TimeZone timeZone = TimeZone.getTimeZone(OrderInitiatorGlobals.orderInitiatorSettings.getTimeZone());
+    public static Date getNextDay(Date dateForPlan,OrderInitiatorSettings orderInitiatorSettings) throws ParseException {
+        TimeZone timeZone = TimeZone.getTimeZone(orderInitiatorSettings.getTimeZone());
 
         java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
 

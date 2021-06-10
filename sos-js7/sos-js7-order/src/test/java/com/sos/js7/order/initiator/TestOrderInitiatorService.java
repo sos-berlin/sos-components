@@ -58,7 +58,6 @@ public class TestOrderInitiatorService {
         return list;
     }
 
-    @Ignore
     @Test
     public void test() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();

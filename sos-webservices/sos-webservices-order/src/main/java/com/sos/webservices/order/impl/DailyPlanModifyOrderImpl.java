@@ -56,6 +56,7 @@ import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
+import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanModifyOrder;
 
 @Path("daily_plan")
@@ -265,7 +266,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (listOfPlannedOrders.size() == 1) {
                 DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 dbItemDailyPlanOrder.setModified(new Date());
-                dbItemDailyPlanOrder.setAuditLogId(dbAuditlog.getId());
 
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
                     Date scheduledFor = Date.from(JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder
