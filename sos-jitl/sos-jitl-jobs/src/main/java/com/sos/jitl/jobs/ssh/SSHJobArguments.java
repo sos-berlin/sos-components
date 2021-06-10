@@ -17,9 +17,7 @@ public class SSHJobArguments extends JobArguments {
     private JobArgument<Boolean> ignoreError = new JobArgument<>("ignore_error", false, false);
     private JobArgument<List<Integer>> exitCodesToIgnore = new JobArgument<>("exit_codes_to_ignore", false);
     private JobArgument<Boolean> ignoreStdErr = new JobArgument<>("ignore_stderr", false, false);
-    private JobArgument<Boolean> ignoreSignal = new JobArgument<>("ignore_signal", false, false);
     private JobArgument<String> tmpDir = new JobArgument<>("tmp_dir", false);
-    private JobArgument<String> getPidCommand = new JobArgument<>("get_pid_command", false, "echo $$");
     private JobArgument<Boolean> createEnvVars = new JobArgument<>("create_env_vars", false, false);
     private JobArgument<String> preCommand = new JobArgument<>("pre_command", false, "export %s='%s'");
     private JobArgument<String> postCommandRead = new JobArgument<>("post_command_read", false, "test -r %s && cat %s; exit 0");
@@ -66,16 +64,8 @@ public class SSHJobArguments extends JobArguments {
 		return ignoreStdErr;
 	}
 
-	public JobArgument<Boolean> getIgnoreSignal() {
-		return ignoreSignal;
-	}
-
 	public JobArgument<String> getTmpDir() {
 		return tmpDir;
-	}
-
-	public JobArgument<String> getGetPidCommand() {
-		return getPidCommand;
 	}
 
 	public JobArgument<Boolean> getCreateEnvVars() {

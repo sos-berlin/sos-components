@@ -3,6 +3,7 @@ package com.sos.jitl.jobs.ssh.util;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.jitl.jobs.common.JobLogger;
@@ -10,6 +11,9 @@ import com.sos.jitl.jobs.ssh.SSHJobArguments;
 import com.sos.jitl.jobs.ssh.exception.SOSJobSSHException;
 
 public class SSHJobUtil {
+	
+	private static final String AGENT_ENVVAR_PREFIX = "JS7_AGENT_";
+	private static final String YADE_ENVVAR_PREFIX = "JS7_YADE_";
 	
     private static final String DEFAULT_WINDOWS_PRE_COMMAND = "set \"%s=%s\"";
     private static final String DEFAULT_LINUX_PRE_COMMAND = "export %s='%s'";
@@ -101,6 +105,18 @@ public class SSHJobUtil {
                 }
             }
         }
+    }
+
+    public static Map<String, String> getAgentEnvVars() {
+    	Map<String, String> unfiltered = System.getenv();
+    	return unfiltered.entrySet().stream().filter(item -> item.getKey().startsWith(AGENT_ENVVAR_PREFIX))
+    			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    public static Map<String, String> getYadeEnvVars() {
+    	Map<String, String> unfiltered = System.getenv();
+    	return unfiltered.entrySet().stream().filter(item -> item.getKey().startsWith(YADE_ENVVAR_PREFIX))
+    			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
 }
