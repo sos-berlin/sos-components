@@ -212,7 +212,7 @@
 						</goals>
 					</execution>
 					<execution>
-						<id>generate-jobscheduler-model</id>
+						<id>generate-controller-model</id>
 						<phase>generate-sources</phase>
 						<configuration>
 							<sourceDirectory>${basedir}/src/main/resources/raml/controller/schemas</sourceDirectory>
