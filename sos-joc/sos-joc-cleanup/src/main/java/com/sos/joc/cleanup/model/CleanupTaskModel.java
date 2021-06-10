@@ -161,9 +161,8 @@ public class CleanupTaskModel implements ICleanupTask {
 
     protected boolean askService() {
         if (this.type.equals(TaskType.SERVICE_TASK)) {
-            LOGGER.info(String.format("[%s]ask %s service...", identifier, identifier));
             JocServiceAnswer info = getService().getInfo();
-            LOGGER.info(String.format("[%s]%s", identifier, SOSString.toString(info)));
+            LOGGER.info(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
             return info.getState().equals(JocServiceAnswerState.RELAX);
         }
         return true;
@@ -188,6 +187,10 @@ public class CleanupTaskModel implements ICleanupTask {
                 }
             }
         }
+    }
+
+    protected StringBuilder getDeleted(String table, int current, int total) {
+        return new StringBuilder("[").append(table).append("=").append(current).append(" total=").append(total).append("]");
     }
 
 }

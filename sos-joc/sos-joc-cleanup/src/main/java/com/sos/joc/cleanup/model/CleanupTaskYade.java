@@ -19,6 +19,9 @@ public class CleanupTaskYade extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskYade.class);
 
+    private int totalFiles = 0;
+    private int totalTransfers = 0;
+
     public CleanupTaskYade(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         super(factory, batchSize, identifier);
     }
@@ -80,8 +83,17 @@ public class CleanupTaskYade extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_YADE_TRANSFERS, r
-                .size()));
+        int size = r.size();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_YADE_TRANSFERS,
+                    size));
+        } else {
+            if (size == 0) {
+                LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_YADE_TRANSFERS,
+                        size));
+            }
+        }
+
         return r;
     }
 
@@ -97,7 +109,8 @@ public class CleanupTaskYade extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_YADE_FILES).append("=").append(r).append("]");
+        totalFiles += r;
+        log.append(getDeleted(DBLayer.TABLE_YADE_FILES, r, totalFiles));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -112,7 +125,8 @@ public class CleanupTaskYade extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_YADE_TRANSFERS).append("=").append(r).append("]");
+        totalTransfers += r;
+        log.append(getDeleted(DBLayer.TABLE_YADE_TRANSFERS, r, totalTransfers));
 
         LOGGER.info(log.toString());
     }

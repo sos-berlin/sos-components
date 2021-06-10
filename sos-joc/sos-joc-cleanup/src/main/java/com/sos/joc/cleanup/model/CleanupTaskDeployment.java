@@ -21,6 +21,13 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDeployment.class);
 
+    private int totalSubmissions = 0;
+    private int totalCommitIds = 0;
+    private int totalSignatures = 0;
+    private int totalSearchWorkflowsDepHistory = 0;
+    private int totalSearchWorkflows = 0;
+    private int totalHistory = 0;
+
     public CleanupTaskDeployment(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         super(factory, batchSize, identifier);
     }
@@ -149,7 +156,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_DEP_SUBMISSIONS).append("=").append(r).append("]");
+        totalSubmissions += r;
+        log.append(getDeleted(DBLayer.TABLE_DEP_SUBMISSIONS, r, totalSubmissions));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -164,7 +172,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_DEP_COMMIT_IDS).append("=").append(r).append("]");
+        totalCommitIds += r;
+        log.append(getDeleted(DBLayer.TABLE_DEP_COMMIT_IDS, r, totalCommitIds));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -179,7 +188,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_DEP_SIGNATURES).append("=").append(r).append("]");
+        totalSignatures += r;
+        log.append(getDeleted(DBLayer.TABLE_DEP_SIGNATURES, r, totalSignatures));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -194,7 +204,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append("=").append(r).append("]");
+        totalSearchWorkflowsDepHistory += r;
+        log.append(getDeleted(DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY, r, totalSearchWorkflowsDepHistory));
 
         if (Math.abs(r) > 0) {
             // getDbLayer().getSession().beginTransaction();
@@ -207,7 +218,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             query = getDbLayer().getSession().createQuery(hql.toString());
             r = getDbLayer().getSession().executeUpdate(query);
             // getDbLayer().getSession().commit();
-            log.append("[").append(DBLayer.TABLE_SEARCH_WORKFLOWS).append("=").append(r).append("]");
+            totalSearchWorkflows += r;
+            log.append(getDeleted(DBLayer.TABLE_SEARCH_WORKFLOWS, r, totalSearchWorkflows));
         }
 
         if (isStopped()) {
@@ -223,7 +235,8 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         // getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_DEP_HISTORY).append("=").append(r).append("]");
+        totalHistory += r;
+        log.append(getDeleted(DBLayer.TABLE_DEP_HISTORY, r, totalHistory));
 
         LOGGER.info(log.toString());
     }

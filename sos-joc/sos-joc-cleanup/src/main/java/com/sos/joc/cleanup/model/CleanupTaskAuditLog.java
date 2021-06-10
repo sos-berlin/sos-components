@@ -19,6 +19,9 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskAuditLog.class);
 
+    private int totalAuditLogs = 0;
+    private int totalAuditLogDetails = 0;
+
     public CleanupTaskAuditLog(JocClusterHibernateFactory factory, int batchSize, String identifier) {
         super(factory, batchSize, identifier);
     }
@@ -79,7 +82,17 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_JOC_AUDIT_LOG, r.size()));
+        int size = r.size();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_JOC_AUDIT_LOG,
+                    size));
+
+        } else {
+            if (size == 0) {
+                LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_JOC_AUDIT_LOG,
+                        size));
+            }
+        }
         return r;
     }
 
@@ -95,7 +108,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS).append("=").append(r).append("]");
+        totalAuditLogDetails += r;
+        log.append(getDeleted(DBLayer.TABLE_JOC_AUDIT_LOG_DETAILS, r, totalAuditLogDetails));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -110,7 +124,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_JOC_AUDIT_LOG).append("=").append(r).append("]");
+        totalAuditLogs += r;
+        log.append(getDeleted(DBLayer.TABLE_JOC_AUDIT_LOG, r, totalAuditLogs));
 
         LOGGER.info(log.toString());
     }

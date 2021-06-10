@@ -18,6 +18,9 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskMonitoring.class);
 
+    private int totalOrders = 0;
+    private int totalOrderSteps = 0;
+
     public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
@@ -71,7 +74,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
                 List<Long> rc = getChildOrderIds(datetime, rm);
                 if (rc != null && rc.size() > 0) {
-                    if (!cleanupOrders(datetime, "childs", rc)) {
+                    if (!cleanupOrders(datetime, "children", rc)) {
                         return JocServiceTaskAnswerState.UNCOMPLETED;
                     }
                 }
@@ -100,8 +103,16 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s][main]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_MONITORING_ORDERS, r
-                .size()));
+        int size = r.size();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.info(String.format("[%s][%s][%s][main]found=%s", getIdentifier(), datetime.getAge().getConfigured(),
+                    DBLayer.TABLE_MONITORING_ORDERS, size));
+        } else {
+            if (size == 0) {
+                LOGGER.info(String.format("[%s][%s][%s][main]found=%s", getIdentifier(), datetime.getAge().getConfigured(),
+                        DBLayer.TABLE_MONITORING_ORDERS, size));
+            }
+        }
         return r;
     }
 
@@ -117,8 +128,10 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s][childs]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_MONITORING_ORDERS,
-                r.size()));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s][children]found=%s", getIdentifier(), datetime.getAge().getConfigured(),
+                    DBLayer.TABLE_MONITORING_ORDERS, r.size()));
+        }
         return r;
     }
 
@@ -135,7 +148,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         query.setParameterList("orderIds", orderIds);
         int r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_MONITORING_ORDER_STEPS).append("=").append(r).append("]");
+        totalOrderSteps += r;
+        log.append(getDeleted(DBLayer.TABLE_MONITORING_ORDER_STEPS, r, totalOrderSteps));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -150,7 +164,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.TABLE_MONITORING_ORDERS).append("=").append(r).append("]");
+        totalOrders += r;
+        log.append(getDeleted(DBLayer.TABLE_MONITORING_ORDERS, r, totalOrders));
 
         LOGGER.info(log.toString());
         return true;

@@ -17,6 +17,11 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskDailyPlan.class);
 
+    private int totalVariables = 0;
+    private int totalHistory = 0;
+    private int totalOrders = 0;
+    private int totalSubmissions;
+
     public CleanupTaskDailyPlan(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
     }
@@ -72,7 +77,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.DAILY_PLAN_VARIABLES_TABLE).append("=").append(r).append("]");
+        totalVariables += r;
+        log.append(getDeleted(DBLayer.DAILY_PLAN_VARIABLES_TABLE, r, totalVariables));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -90,7 +96,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.DAILY_PLAN_HISTORY_TABLE).append("=").append(r).append("]");
+        totalHistory += r;
+        log.append(getDeleted(DBLayer.DAILY_PLAN_HISTORY_TABLE, r, totalHistory));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -105,7 +112,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.DAILY_PLAN_ORDERS_TABLE).append("=").append(r).append("]");
+        totalOrders += r;
+        log.append(getDeleted(DBLayer.DAILY_PLAN_ORDERS_TABLE, r, totalOrders));
 
         if (isStopped()) {
             LOGGER.info(log.toString());
@@ -120,7 +128,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
         getDbLayer().getSession().commit();
-        log.append("[").append(DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE).append("=").append(r).append("]");
+        totalSubmissions += r;
+        log.append(getDeleted(DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, r, totalSubmissions));
 
         LOGGER.info(log.toString());
     }
@@ -136,8 +145,17 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         List<Long> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 
-        LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, r
-                .size()));
+        int size = r.size();
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(),
+                    DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, size));
+
+        } else {
+            if (size == 0) {
+                LOGGER.info(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(),
+                        DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE, size));
+            }
+        }
         return r;
     }
 
