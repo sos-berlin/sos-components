@@ -8,6 +8,7 @@ import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -194,6 +195,7 @@ public class JsonSerializer {
         case ShellScriptExecutable:
         case ScriptExecutable:
             ExecutableScript es = e.cast();
+            es.setTYPE(ExecutableType.ShellScriptExecutable);
             if (es.getReturnCodeMeaning() == null) {
                 es.setReturnCodeMeaning(emptyReturnCodeToNull(rc));
             } else {
