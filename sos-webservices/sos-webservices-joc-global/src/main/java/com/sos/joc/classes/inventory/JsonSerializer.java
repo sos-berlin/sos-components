@@ -112,8 +112,8 @@ public class JsonSerializer {
                     }
                     job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
-                    job.setReturnCodeMeaning(emptyReturnCodeToNull(job.getReturnCodeMeaning()));
-                    emptyExecutableToNull(job.getExecutable());
+                    emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
+                    job.setReturnCodeMeaning(null);
                 });
             }
         }
@@ -131,8 +131,8 @@ public class JsonSerializer {
                     }
                     job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
-                    job.setReturnCodeMeaning(emptyReturnCodeToNull(job.getReturnCodeMeaning()));
-                    emptyExecutableToNull(job.getExecutable());
+                    emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
+                    job.setReturnCodeMeaning(null);
                 });
             }
         }
@@ -184,15 +184,21 @@ public class JsonSerializer {
         return null;
     }
     
-    private static void emptyExecutableToNull(Executable e) {
+    private static void emptyExecutableToNull(Executable e, JobReturnCode rc) {
         switch (e.getTYPE()) {
         case InternalExecutable:
             ExecutableJava ej = e.cast();
             ej.setArguments(emptyEnvToNull(ej.getArguments()));
             ej.setJobArguments(emptyVarsToNull(ej.getJobArguments()));
             break;
+        case ShellScriptExecutable:
         case ScriptExecutable:
             ExecutableScript es = e.cast();
+            if (es.getReturnCodeMeaning() == null) {
+                es.setReturnCodeMeaning(emptyReturnCodeToNull(rc));
+            } else {
+                es.setReturnCodeMeaning(emptyReturnCodeToNull(es.getReturnCodeMeaning()));
+            }
             es.setEnv(emptyEnvToNull(es.getEnv()));
             if (es.getV1Compatible() == Boolean.FALSE) {
                 es.setV1Compatible(null);
