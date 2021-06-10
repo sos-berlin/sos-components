@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "transferIds",
-    "compact",
     "states",
     "sourceFiles",
     "targetFiles",
@@ -33,15 +32,6 @@ public class FilesFilter {
 
     @JsonProperty("transferIds")
     private List<Long> transferIds = new ArrayList<Long>();
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object's data is compact or detailed")
-    private Boolean compact = false;
     @JsonProperty("states")
     private List<FileTransferStateText> states = new ArrayList<FileTransferStateText>();
     @JsonProperty("sourceFiles")
@@ -82,28 +72,6 @@ public class FilesFilter {
     @JsonProperty("transferIds")
     public void setTransferIds(List<Long> transferIds) {
         this.transferIds = transferIds;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public Boolean getCompact() {
-        return compact;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public void setCompact(Boolean compact) {
-        this.compact = compact;
     }
 
     @JsonProperty("states")
@@ -200,12 +168,12 @@ public class FilesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("transferIds", transferIds).append("compact", compact).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("transferIds", transferIds).append("states", states).append("sourceFiles", sourceFiles).append("targetFiles", targetFiles).append("sourceFile", sourceFile).append("targetFile", targetFile).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(sourceFiles).append(compact).append(targetFile).append(limit).append(targetFiles).append(sourceFile).append(transferIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(sourceFiles).append(targetFile).append(limit).append(targetFiles).append(sourceFile).append(transferIds).append(states).toHashCode();
     }
 
     @Override
@@ -217,7 +185,7 @@ public class FilesFilter {
             return false;
         }
         FilesFilter rhs = ((FilesFilter) other);
-        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(compact, rhs.compact).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(sourceFiles, rhs.sourceFiles).append(targetFile, rhs.targetFile).append(limit, rhs.limit).append(targetFiles, rhs.targetFiles).append(sourceFile, rhs.sourceFile).append(transferIds, rhs.transferIds).append(states, rhs.states).isEquals();
     }
 
 }

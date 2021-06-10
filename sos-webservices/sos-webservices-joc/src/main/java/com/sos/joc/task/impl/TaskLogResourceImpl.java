@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.LogTaskContent;
+import com.sos.joc.classes.logs.LogTaskContent;
 import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;

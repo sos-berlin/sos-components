@@ -15,6 +15,9 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.agents.resource.IAgentsResourceState;
@@ -50,6 +53,7 @@ import js7.data_for_java.order.JOrderPredicates;
 @Path("agents")
 public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsResourceState {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AgentsResourceStateImpl.class);
     private static String API_CALL = "./agents";
     private static final Map<AgentStateText, Integer> agentStates = Collections.unmodifiableMap(new HashMap<AgentStateText, Integer>() {
 
@@ -99,7 +103,9 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     Long surveyDateMillis = currentState.eventId() / 1000;
                     Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
                     boolean olderThan20sec = currentStateMoment.isBefore(Instant.now().minusSeconds(20));
+                    LOGGER.debug("current state older than 20sec? " + olderThan20sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
                     agents.setSurveyDate(Date.from(currentStateMoment));
+                    
                     Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
                             .attached() != null && o.attached().isRight());
                     if (agentsParam.getCompact() == Boolean.TRUE) {
@@ -123,6 +129,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         AgentStateText stateText = AgentStateText.UNKNOWN;
                         if (!olderThan20sec || Proxies.isCoupled(controllerId)) {
                             if (either.isRight()) {
+                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
                                 AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
                                 if (couplingState instanceof AgentRefState.CouplingFailed) {
                                     stateText = AgentStateText.COUPLINGFAILED;
@@ -135,6 +142,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                     stateText = AgentStateText.RESET;
                                 }
                             } else {
+                                LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
                                 agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
                         }

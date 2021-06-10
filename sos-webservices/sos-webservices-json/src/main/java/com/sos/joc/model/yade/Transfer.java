@@ -137,13 +137,13 @@ public class Transfer {
     @JsonProperty("jump")
     private ProtocolFragment jump;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFiles")
-    private Integer numOfFiles;
+    private Long numOfFiles;
     /**
      * controllerId
      * <p>
@@ -451,24 +451,24 @@ public class Transfer {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFiles")
-    public Integer getNumOfFiles() {
+    public Long getNumOfFiles() {
         return numOfFiles;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("numOfFiles")
-    public void setNumOfFiles(Integer numOfFiles) {
+    public void setNumOfFiles(Long numOfFiles) {
         this.numOfFiles = numOfFiles;
     }
 

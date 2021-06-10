@@ -9,7 +9,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.LogOrderContent;
+import com.sos.joc.classes.logs.LogOrderContent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderHistoryFilter;
 import com.sos.joc.model.order.OrderRunningLogFilter;

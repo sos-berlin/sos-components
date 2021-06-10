@@ -152,7 +152,7 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         transfer.set_operation(Operation.fromValue(Yade.TransferOperation.fromValue(item.getOperation()).name()));
         transfer.setState(getState(Yade.TransferState.fromValue(item.getState())));
         transfer.setProfile(item.getProfileName());
-        transfer.setNumOfFiles(item.getNumOfFiles() == null ? null : item.getNumOfFiles().intValue());
+        transfer.setNumOfFiles(item.getNumOfFiles());
         transfer.setStart(item.getStart());
         transfer.setEnd(item.getEnd());
         transfer.setSurveyDate(item.getCreated());

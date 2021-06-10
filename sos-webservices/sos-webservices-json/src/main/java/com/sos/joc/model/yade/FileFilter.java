@@ -3,7 +3,6 @@ package com.sos.joc.model.yade;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,8 +17,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "fileId",
-    "compact"
+    "fileId"
 })
 public class FileFilter {
 
@@ -32,15 +30,6 @@ public class FileFilter {
      */
     @JsonProperty("fileId")
     private Long fileId;
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    @JsonPropertyDescription("controls if the object's data is compact or detailed")
-    private Boolean compact = false;
 
     /**
      * non negative long
@@ -66,36 +55,14 @@ public class FileFilter {
         this.fileId = fileId;
     }
 
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public Boolean getCompact() {
-        return compact;
-    }
-
-    /**
-     * compact parameter
-     * <p>
-     * controls if the object's data is compact or detailed
-     * 
-     */
-    @JsonProperty("compact")
-    public void setCompact(Boolean compact) {
-        this.compact = compact;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("fileId", fileId).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("fileId", fileId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(compact).append(fileId).toHashCode();
+        return new HashCodeBuilder().append(fileId).toHashCode();
     }
 
     @Override
@@ -107,7 +74,7 @@ public class FileFilter {
             return false;
         }
         FileFilter rhs = ((FileFilter) other);
-        return new EqualsBuilder().append(compact, rhs.compact).append(fileId, rhs.fileId).isEquals();
+        return new EqualsBuilder().append(fileId, rhs.fileId).isEquals();
     }
 
 }

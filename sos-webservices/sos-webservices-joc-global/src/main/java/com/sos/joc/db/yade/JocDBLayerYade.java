@@ -21,7 +21,6 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.yade.FileTransferStateText;
 import com.sos.joc.model.yade.FilesFilter;
 import com.sos.yade.commons.Yade;
 import com.sos.yade.commons.Yade.TransferEntryState;

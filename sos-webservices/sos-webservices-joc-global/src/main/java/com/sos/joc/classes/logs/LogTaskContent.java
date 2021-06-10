@@ -1,4 +1,4 @@
-package com.sos.joc.classes;
+package com.sos.joc.classes.logs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,7 +28,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.cluster.JocClusterService;
-import com.sos.joc.classes.logs.RunningTaskLogs;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;

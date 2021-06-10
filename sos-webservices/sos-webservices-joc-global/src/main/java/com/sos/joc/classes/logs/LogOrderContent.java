@@ -1,4 +1,4 @@
-package com.sos.joc.classes;
+package com.sos.joc.classes.logs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
