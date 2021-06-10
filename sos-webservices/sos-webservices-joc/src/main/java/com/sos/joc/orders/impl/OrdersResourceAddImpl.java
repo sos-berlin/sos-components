@@ -113,9 +113,9 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                         Function.identity()));
                 proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either -> {
                     if (either.isRight()) {
-                        proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
+                        proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e,
                                 accessToken, getJocError(), addOrders.getControllerId()));
-                        // auditlog is written even "removeOrdersWhenTerminated" has a problem
+                        // auditlog is written even "deleteOrdersWhenTerminated" has a problem
                         OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, accessToken, getJocError(), addOrders.getControllerId()));
                     } else {

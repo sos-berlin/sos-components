@@ -459,7 +459,7 @@ public abstract class PublishUtils {
 						try {
 							String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
 	            			LOGGER.debug(json);
-	                    	return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
+	                    	return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
 						} catch (JsonProcessingException e) {
 							return null;
 						}
@@ -513,7 +513,7 @@ public abstract class PublishUtils {
         			LOGGER.debug("JSON send to controller: ");
         			String json = JsonSerializer.serializeAsString(item.getKey().getContent());
         			LOGGER.debug(json);
-                    return JUpdateItemOperation.addOrChangeVersioned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
+                    return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
                 } catch (JsonProcessingException e1) {
                     throw new JocDeployException(e1);
                 }
@@ -568,7 +568,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
             		.map(item -> {
 						try {
-							return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithCertificate(
+							return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
 									JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
 						} catch (IOException e) {
 							return null;
@@ -630,7 +630,7 @@ public abstract class PublishUtils {
             updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
             		.map(item -> {
 							try {
-		            			return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithSignerDN(
+		            			return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
 		            					JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
 							} catch (IOException e) {
 								return null;
@@ -689,7 +689,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
             		.map(item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithCertificate(
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
                             		JsonSerializer.serializeAsString(item.getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
                         } catch (IOException e) {
                             throw new JocDeployException(e);
@@ -749,7 +749,7 @@ public abstract class PublishUtils {
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
             		.map(item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeVersioned(getSignedStringWithSignerDN(
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
                             		JsonSerializer.serializeAsString(item.getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
@@ -1683,7 +1683,7 @@ public abstract class PublishUtils {
                 ZipOutputStream zipOut = null;
                 try {
                     zipOut = new ZipOutputStream(new BufferedOutputStream(output), StandardCharsets.UTF_8);
-                    String content = null;
+                    byte[] contentBytes = null;
                     if (deployables != null && !deployables.isEmpty()) {
                         for (ControllerObject deployable : deployables) {
                             String extension = null;
@@ -1697,30 +1697,30 @@ public abstract class PublishUtils {
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = JsonSerializer.serializeAsString(workflow);
+                                contentBytes = JsonSerializer.serializeAsBytes(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = JsonSerializer.serializeAsString(jobResource);
+                                contentBytes = JsonSerializer.serializeAsBytes(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = JsonSerializer.serializeAsString(lock);
+                                contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = JsonSerializer.serializeAsString(junction);
+                                contentBytes = JsonSerializer.serializeAsBytes(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = JsonSerializer.serializeAsString(jobClass);
+                                contentBytes = JsonSerializer.serializeAsBytes(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -1729,13 +1729,13 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = JsonSerializer.serializeAsString(fileOrderSource);
+                                contentBytes = JsonSerializer.serializeAsBytes(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
                             ZipEntry entry = new ZipEntry(zipEntryName);
                             zipOut.putNextEntry(entry);
-                            zipOut.write(content.getBytes());
+                            zipOut.write(contentBytes);
                             zipOut.closeEntry();
                         }
                     }
@@ -1755,11 +1755,11 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = Globals.objectMapper.writeValueAsString(releasable.getConfiguration());
+                                contentBytes = Globals.objectMapper.writeValueAsBytes(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 ZipEntry entry = new ZipEntry(zipEntryName);
                                 zipOut.putNextEntry(entry);
-                                zipOut.write(content.getBytes());
+                                zipOut.write(contentBytes);
                                 zipOut.closeEntry();
                             }
                         }
@@ -1892,7 +1892,7 @@ public abstract class PublishUtils {
                     bOut = new BufferedOutputStream(output);
                     gzipOut = new GZIPOutputStream(bOut);
                     tarOut = new TarArchiveOutputStream(gzipOut);
-                    String content = null;
+                    byte[] contentBytes = null;
                     if (deployables != null && !deployables.isEmpty()) {
                         for (ControllerObject deployable : deployables) {
                             String extension = null;
@@ -1906,30 +1906,30 @@ public abstract class PublishUtils {
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 // workflow.setPath(deployable.getPath());
-                                content = JsonSerializer.serializeAsString(workflow);
+                                contentBytes = JsonSerializer.serializeAsBytes(workflow);
                                 break;
                             case JOBRESOURCE:
                                 extension = ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.toString();
                                 JobResource jobResource = (JobResource) deployable.getContent();
                                 jobResource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = JsonSerializer.serializeAsString(jobResource);
+                                contentBytes = JsonSerializer.serializeAsBytes(jobResource);
                                 break;
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 Lock lock = (Lock) deployable.getContent();
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
-                                content = JsonSerializer.serializeAsString(lock);
+                                contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
                             case JUNCTION:
                                 extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
                                 Junction junction = (Junction) deployable.getContent();
                                 junction.setVersionId(commitId);
-                                content = JsonSerializer.serializeAsString(junction);
+                                contentBytes = JsonSerializer.serializeAsBytes(junction);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
                                 JobClass jobClass = (JobClass) deployable.getContent();
-                                content = JsonSerializer.serializeAsString(jobClass);
+                                contentBytes = JsonSerializer.serializeAsBytes(jobClass);
                                 break;
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
@@ -1938,12 +1938,11 @@ public abstract class PublishUtils {
                                 if (controllerId != null && updateableAgentNames != null) {
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
-                                content = JsonSerializer.serializeAsString(fileOrderSource);
+                                contentBytes = JsonSerializer.serializeAsBytes(fileOrderSource);
                                 break;
                             }
                             String zipEntryName = deployable.getPath().substring(1).concat(extension);
                             TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
-                            byte[] contentBytes = content.getBytes();
                             entry.setSize(contentBytes.length);
                             tarOut.putArchiveEntry(entry);
                             tarOut.write(contentBytes);
@@ -1966,10 +1965,9 @@ public abstract class PublishUtils {
                                 break;
                             }
                             if (extension != null) {
-                                content = Globals.objectMapper.writeValueAsString(releasable.getConfiguration());
+                                contentBytes = Globals.objectMapper.writeValueAsBytes(releasable.getConfiguration());
                                 String zipEntryName = releasable.getPath().substring(1).concat(extension);
                                 TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
-                                byte[] contentBytes = content.getBytes();
                                 entry.setSize(contentBytes.length);
                                 tarOut.putArchiveEntry(entry);
                                 tarOut.write(contentBytes);

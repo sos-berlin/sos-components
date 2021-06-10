@@ -65,9 +65,10 @@ public class ExecutableJava
      * @param className
      * @param jobArguments
      * @param arguments
+     * @param tYPE
      */
-    public ExecutableJava(String className, Variables jobArguments, Environment arguments) {
-        super();
+    public ExecutableJava(String className, Variables jobArguments, Environment arguments, ExecutableType tYPE) {
+        super(tYPE);
         this.className = className;
         this.jobArguments = jobArguments;
         this.arguments = arguments;

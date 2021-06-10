@@ -8,6 +8,7 @@
     "executable",
     "taskLimit"
   ],
+  "description": "returnCodeMeaning is deprecated: moved to ShellScriptExecutable",
   "properties": {
     "agentPath": {
 		"alias": "agentId,agentName",
@@ -26,7 +27,8 @@
     "returnCodeMeaning": {
       "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
     },
-    "taskLimit": {
+    "parallelism": {
+      "alias": "taskLimit",
       "type": "integer",
       "minimum": 1,
       "default": 1

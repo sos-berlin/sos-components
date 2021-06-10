@@ -125,7 +125,7 @@ public class OrderApi {
 
                         OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
                         OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                        jControllerProxy.api().removeOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                        jControllerProxy.api().deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
                                 .postProblemEventIfExist(e, accessToken, jocError, controllerId));
                         Globals.commit(sosHibernateSession);
 

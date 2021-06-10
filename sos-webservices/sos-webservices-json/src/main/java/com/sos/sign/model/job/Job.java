@@ -18,7 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * job
  * <p>
- * 
+ * returnCodeMeaning is deprecated: moved to ShellScriptExecutable
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentPath",
     "executable",
     "returnCodeMeaning",
-    "taskLimit",
+    "parallelism",
     "timeout",
     "graceTimeout",
     "failOnErrWritten",
@@ -62,13 +62,11 @@ public class Job {
      */
     @JsonProperty("returnCodeMeaning")
     private JobReturnCode returnCodeMeaning;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskLimit")
-    private Integer taskLimit = 1;
+    @JsonProperty("parallelism")
+    @JsonAlias({
+        "taskLimit"
+    })
+    private Integer parallelism = 1;
     /**
      * non negative integer
      * <p>
@@ -122,21 +120,21 @@ public class Job {
      * 
      * @param agentPath
      * @param returnCodeMeaning
-     * @param taskLimit
      * @param graceTimeout
      * @param defaultArguments
      * @param jobResourcePaths
      * @param jobClass
+     * @param parallelism
      * @param failOnErrWritten
      * @param executable
      * @param timeout
      */
-    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer taskLimit, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
-        this.taskLimit = taskLimit;
+        this.parallelism = parallelism;
         this.timeout = timeout;
         this.graceTimeout = graceTimeout;
         this.failOnErrWritten = failOnErrWritten;
@@ -207,24 +205,14 @@ public class Job {
         this.returnCodeMeaning = returnCodeMeaning;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskLimit")
-    public Integer getTaskLimit() {
-        return taskLimit;
+    @JsonProperty("parallelism")
+    public Integer getParallelism() {
+        return parallelism;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("taskLimit")
-    public void setTaskLimit(Integer taskLimit) {
-        this.taskLimit = taskLimit;
+    @JsonProperty("parallelism")
+    public void setParallelism(Integer parallelism) {
+        this.parallelism = parallelism;
     }
 
     /**
@@ -337,12 +325,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("taskLimit", taskLimit).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(taskLimit).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(failOnErrWritten).append(executable).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).toHashCode();
     }
 
     @Override
@@ -354,7 +342,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(taskLimit, rhs.taskLimit).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
     }
 
 }

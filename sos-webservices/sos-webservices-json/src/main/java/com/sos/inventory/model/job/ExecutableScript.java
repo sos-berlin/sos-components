@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * executable script
  * <p>
- * executable with fixed property 'TYPE':'ScriptExecutable'
+ * executable with fixed property 'TYPE':'ShellScriptExecutable'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "script",
     "env",
     "v1Compatible",
+    "returnCodeMeaning",
     "login"
 })
 public class ExecutableScript
@@ -45,6 +46,14 @@ public class ExecutableScript
     private Environment env;
     @JsonProperty("v1Compatible")
     private Boolean v1Compatible = false;
+    /**
+     * job
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCodeMeaning")
+    private JobReturnCode returnCodeMeaning;
     @JsonProperty("login")
     private ExecutableScriptLogin login;
 
@@ -57,16 +66,19 @@ public class ExecutableScript
 
     /**
      * 
+     * @param returnCodeMeaning
      * @param env
      * @param login
+     * @param tYPE
      * @param script
      * @param v1Compatible
      */
-    public ExecutableScript(String script, Environment env, Boolean v1Compatible, ExecutableScriptLogin login) {
-        super();
+    public ExecutableScript(String script, Environment env, Boolean v1Compatible, JobReturnCode returnCodeMeaning, ExecutableScriptLogin login, ExecutableType tYPE) {
+        super(tYPE);
         this.script = script;
         this.env = env;
         this.v1Compatible = v1Compatible;
+        this.returnCodeMeaning = returnCodeMeaning;
         this.login = login;
     }
 
@@ -122,6 +134,28 @@ public class ExecutableScript
         this.v1Compatible = v1Compatible;
     }
 
+    /**
+     * job
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCodeMeaning")
+    public JobReturnCode getReturnCodeMeaning() {
+        return returnCodeMeaning;
+    }
+
+    /**
+     * job
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("returnCodeMeaning")
+    public void setReturnCodeMeaning(JobReturnCode returnCodeMeaning) {
+        this.returnCodeMeaning = returnCodeMeaning;
+    }
+
     @JsonProperty("login")
     public ExecutableScriptLogin getLogin() {
         return login;
@@ -134,12 +168,12 @@ public class ExecutableScript
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("script", script).append("env", env).append("v1Compatible", v1Compatible).append("login", login).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("script", script).append("env", env).append("v1Compatible", v1Compatible).append("returnCodeMeaning", returnCodeMeaning).append("login", login).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(env).append(login).append(script).append(v1Compatible).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(returnCodeMeaning).append(env).append(login).append(script).append(v1Compatible).toHashCode();
     }
 
     @Override
@@ -151,7 +185,7 @@ public class ExecutableScript
             return false;
         }
         ExecutableScript rhs = ((ExecutableScript) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(env, rhs.env).append(login, rhs.login).append(script, rhs.script).append(v1Compatible, rhs.v1Compatible).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(returnCodeMeaning, rhs.returnCodeMeaning).append(env, rhs.env).append(login, rhs.login).append(script, rhs.script).append(v1Compatible, rhs.v1Compatible).isEquals();
     }
 
 }

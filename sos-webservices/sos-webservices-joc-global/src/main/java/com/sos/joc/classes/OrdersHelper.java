@@ -67,7 +67,7 @@ import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.command.JCancelMode;
+import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
@@ -393,7 +393,7 @@ public class OrdersHelper {
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
                     Function.identity()));
-            proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
+            proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                 if (either.isRight()) {
                     cancelOrders(proxy.api(), modifyOrders, freshOrders.keySet()).thenAccept(either2 -> {
@@ -402,9 +402,9 @@ public class OrdersHelper {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    proxy.api().removeOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
+                                    proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
                                             .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
-                                    // auditlog is written even removeOrdersWhenTerminated has a problem
+                                    // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));
                                 }
@@ -422,13 +422,13 @@ public class OrdersHelper {
 
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(JControllerApi controllerApi, ModifyOrders modifyOrders,
             Collection<OrderId> oIds) {
-        JCancelMode cancelMode = null;
+        JCancellationMode cancelMode = null;
         if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
-            cancelMode = JCancelMode.freshOnly();
+            cancelMode = JCancellationMode.freshOnly();
         } else if (modifyOrders.getKill() == Boolean.TRUE) {
-            cancelMode = JCancelMode.kill(true);
+            cancelMode = JCancellationMode.kill(true);
         } else {
-            cancelMode = JCancelMode.kill();
+            cancelMode = JCancellationMode.kill();
         }
         return controllerApi.cancelOrders(oIds, cancelMode);
     }

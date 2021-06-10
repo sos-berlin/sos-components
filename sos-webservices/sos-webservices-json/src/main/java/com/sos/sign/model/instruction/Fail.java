@@ -5,34 +5,38 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.instruction.Outcome;
+import com.sos.inventory.model.common.Variables;
 
 
 /**
  * fail
  * <p>
- * instruction with fixed property 'TYPE':'Fail' and optional outcome with fixed property 'TYPE':'Failed'
+ * instruction with fixed property 'TYPE':'Fail'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "outcome"
+    "message",
+    "namedValues",
+    "uncatchable"
 })
 public class Fail
     extends Instruction
 {
 
-    /**
-     * outcome
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("outcome")
-    private Outcome outcome;
+    @JsonProperty("message")
+    private String message;
+    @JsonProperty("namedValues")
+    @JsonAlias({
+        "arguments"
+    })
+    private Variables namedValues;
+    @JsonProperty("uncatchable")
+    private Boolean uncatchable = false;
 
     /**
      * No args constructor for use in serialization
@@ -43,43 +47,55 @@ public class Fail
 
     /**
      * 
-     * @param outcome
+     * @param namedValues
+     * @param uncatchable
+     * @param message
      */
-    public Fail(Outcome outcome) {
+    public Fail(String message, Variables namedValues, Boolean uncatchable) {
         super();
-        this.outcome = outcome;
+        this.message = message;
+        this.namedValues = namedValues;
+        this.uncatchable = uncatchable;
     }
 
-    /**
-     * outcome
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("outcome")
-    public Outcome getOutcome() {
-        return outcome;
+    @JsonProperty("message")
+    public String getMessage() {
+        return message;
     }
 
-    /**
-     * outcome
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("outcome")
-    public void setOutcome(Outcome outcome) {
-        this.outcome = outcome;
+    @JsonProperty("message")
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    @JsonProperty("namedValues")
+    public Variables getNamedValues() {
+        return namedValues;
+    }
+
+    @JsonProperty("namedValues")
+    public void setNamedValues(Variables namedValues) {
+        this.namedValues = namedValues;
+    }
+
+    @JsonProperty("uncatchable")
+    public Boolean getUncatchable() {
+        return uncatchable;
+    }
+
+    @JsonProperty("uncatchable")
+    public void setUncatchable(Boolean uncatchable) {
+        this.uncatchable = uncatchable;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("outcome", outcome).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("namedValues", namedValues).append("uncatchable", uncatchable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(outcome).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(uncatchable).append(message).append(namedValues).toHashCode();
     }
 
     @Override
@@ -91,7 +107,7 @@ public class Fail
             return false;
         }
         Fail rhs = ((Fail) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(outcome, rhs.outcome).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(uncatchable, rhs.uncatchable).append(message, rhs.message).append(namedValues, rhs.namedValues).isEquals();
     }
 
 }

@@ -30,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
         property = "TYPE",
         visible = true)
 @JsonSubTypes({ 
-        @JsonSubTypes.Type(value = ExecutableScript.class, name = "ScriptExecutable"),
+        @JsonSubTypes.Type(value = ExecutableScript.class, name = "ShellScriptExecutable"),
+        @JsonSubTypes.Type(value = ExecutableScript.class, name = "ScriptExecutable"), //TODO only temporary
         @JsonSubTypes.Type(value = ExecutableJava.class, name = "InternalExecutable")})
 public abstract class Executable
     extends ClassHelper

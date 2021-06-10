@@ -50,7 +50,7 @@ import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
-import js7.data.item.ItemPath;
+import js7.data.item.VersionedItemPath;
 import js7.data.item.SimpleItemPath;
 import js7.data.item.UnsignedSimpleItemEvent;
 import js7.data.item.VersionedEvent.VersionedItemEvent;
@@ -67,7 +67,7 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
-import js7.data.order.OrderEvent.OrderRemoved$;
+import js7.data.order.OrderEvent.OrderDeleted$;
 import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderTerminated;
@@ -84,11 +84,11 @@ public class EventService {
     private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
-    // OrderFinished, OrderCancelled, OrderRemoved$ extends OrderTerminated
+    // OrderFinished, OrderCancelled, OrderDeleted$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
-            OrderProcessingStarted$.class, OrderRemoved$.class, VersionedItemEvent.class, UnsignedSimpleItemEvent.class, 
+            OrderProcessingStarted$.class, OrderDeleted$.class, VersionedItemEvent.class, UnsignedSimpleItemEvent.class, 
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -284,7 +284,7 @@ public class EventService {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     }
                 } else {
-                    if (evt instanceof OrderRemoved$) {
+                    if (evt instanceof OrderDeleted$) {
                         String mainOrderId = orderId.string().substring(0, 24);
                         if (orders.containsKey(mainOrderId)) {
                             addEvent(createWorkflowEventOfOrder(eventId, orders.get(mainOrderId)));
@@ -299,7 +299,7 @@ public class EventService {
             } else if (evt instanceof VersionedItemEvent) {
                 // VersionedItemAdded, VersionedItemChanged and VersionedItemDeleted.
                 String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
-                ItemPath path = ((VersionedItemEvent) evt).path();
+                VersionedItemPath path = ((VersionedItemEvent) evt).path();
                 if (path instanceof WorkflowPath) {
                     addEvent(createWorkflowEvent(eventId, path.string(), eventType));
                 } else {

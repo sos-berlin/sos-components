@@ -350,7 +350,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             return ControllerApi.of(modifyOrders.getControllerId()).suspendOrders(oIds, suspendMode);
         default: // case REMOVE_WHEN_TERMINATED
-            return ControllerApi.of(modifyOrders.getControllerId()).removeOrdersWhenTerminated(oIds);
+            return ControllerApi.of(modifyOrders.getControllerId()).deleteOrdersWhenTerminated(oIds);
         }
     }
     

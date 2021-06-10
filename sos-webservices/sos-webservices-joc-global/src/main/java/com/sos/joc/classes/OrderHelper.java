@@ -24,7 +24,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.order.OrderId;
-import js7.data_for_java.command.JCancelMode;
+import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 
@@ -41,7 +41,7 @@ public class OrderHelper {
 
         try {
             Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().filter(dbItem->dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
-                    .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
+                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
             throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
@@ -55,7 +55,7 @@ public class OrderHelper {
 
         try {
             Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem
-                    .getOrderId())).collect(Collectors.toSet()), JCancelMode.freshOnly()).get(99, TimeUnit.SECONDS);
+                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()).get(99, TimeUnit.SECONDS);
             ProblemHelper.throwProblemIfExist(response);
         } catch (TimeoutException e1) {
             throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));

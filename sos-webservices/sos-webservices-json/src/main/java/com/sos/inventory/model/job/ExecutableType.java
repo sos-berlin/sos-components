@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ExecutableType {
 
+    ShellScriptExecutable("ShellScriptExecutable"),
     ScriptExecutable("ScriptExecutable"),
     InternalExecutable("InternalExecutable");
     private final String value;
