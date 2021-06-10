@@ -108,9 +108,8 @@ public class JsonSerializer {
                 return null;
             } else {
                 j.getAdditionalProperties().forEach((key, job) -> {
-                    if (job.getFailOnErrWritten() == Boolean.FALSE) {
-                        job.setFailOnErrWritten(null);
-                    }
+                    job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
+                    job.setParallelism(defaultToNull(job.getParallelism(), 1));
                     job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
@@ -127,9 +126,8 @@ public class JsonSerializer {
                 return null;
             } else {
                 j.getAdditionalProperties().forEach((key, job) -> {
-                    if (job.getFailOnErrWritten() == Boolean.FALSE) {
-                        job.setFailOnErrWritten(null);
-                    }
+                    job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
+                    job.setParallelism(defaultToNull(job.getParallelism(), 1));
                     job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
@@ -171,6 +169,13 @@ public class JsonSerializer {
             return null;
         }
         return r;
+    }
+    
+    private static <T> T defaultToNull(T val, T _default) {
+        if (val != null && val.equals(_default)) {
+            return null;
+        }
+        return val;
     }
     
     private static JobReturnCode emptyReturnCodeToNull(JobReturnCode j) {

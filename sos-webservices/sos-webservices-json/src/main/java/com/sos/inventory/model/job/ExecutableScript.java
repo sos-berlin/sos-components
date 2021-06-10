@@ -73,8 +73,8 @@ public class ExecutableScript
      * @param script
      * @param v1Compatible
      */
-    public ExecutableScript(String script, Environment env, Boolean v1Compatible, JobReturnCode returnCodeMeaning, ExecutableScriptLogin login, ExecutableType tYPE) {
-        super(tYPE);
+    public ExecutableScript(String script, Environment env, Boolean v1Compatible, JobReturnCode returnCodeMeaning, ExecutableScriptLogin login) {
+        super();
         this.script = script;
         this.env = env;
         this.v1Compatible = v1Compatible;
