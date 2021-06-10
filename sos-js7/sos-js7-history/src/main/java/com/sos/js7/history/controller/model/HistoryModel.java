@@ -1237,7 +1237,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, item, job.getTaskIfLongerThan(), job.getTaskIfShorterThan());
+            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, item, job.getWarnIfLonger(), job.getWarnIfShorter());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1338,8 +1338,8 @@ public class HistoryModel {
         hosb.setErrorReason(le.getErrorReason());
         hosb.setErrorState(le.getErrorState());
         hosb.setErrorText(le.getErrorText());
-        hosb.setTaskIfLongerThan(job.getTaskIfLongerThan());
-        hosb.setTaskIfShorterThan(job.getTaskIfShorterThan());
+        hosb.setWarnIfLonger(job.getWarnIfLonger());
+        hosb.setWarnIfShorter(job.getWarnIfShorter());
         return hosb;
     }
 
@@ -1599,8 +1599,8 @@ public class HistoryModel {
             WorkflowSearcher s = new WorkflowSearcher(w);
             Map<String, CachedWorkflowJob> map = new HashMap<>();
             for (WorkflowJob job : s.getJobs()) {
-                // TODO taskIfLongerThan, taskIfShorterThan
-                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), null, null));
+                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(),
+                        job.getJob().getWarnIfShorter()));
             }
             return map;
         } catch (Throwable e) {

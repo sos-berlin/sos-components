@@ -366,8 +366,8 @@ public class HistoryMonitoringModel {
             if (!dbLayer.updateOrderOnOrderStep(item.getHistoryOrderId(), item.getHistoryId())) {
                 insert(hosb.getOrderId(), item.getHistoryOrderId());
             }
-            if (!SOSString.isEmpty(hosb.getTaskIfLongerThan())) {
-                longerThan.put(hosb.getHistoryId(), new LongerThan(hosb.getTaskIfLongerThan(), hosb.getStartTime()));
+            if (hosb.getWarnIfLonger() != null) {
+                longerThan.put(hosb.getHistoryId(), new LongerThan(hosb.getWarnIfLonger(), hosb.getStartTime()));
             }
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -386,16 +386,16 @@ public class HistoryMonitoringModel {
             return new HistoryOrderStepResult(hosb, null);
         }
 
-        HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb.getTaskIfLongerThan(), hosb.getStartTime(), hosb.getEndTime(), hosb.getHistoryId(),
+        HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb.getWarnIfLonger(), hosb.getStartTime(), hosb.getEndTime(), hosb.getHistoryId(),
                 true);
         if (warn == null) {
-            warn = analyzeShorterThan(hosb.getStartTime(), hosb.getEndTime(), hosb.getTaskIfShorterThan());
+            warn = analyzeShorterThan(hosb.getWarnIfShorter(), hosb.getStartTime(), hosb.getEndTime());
         }
         return new HistoryOrderStepResult(hosb, warn);
     }
 
-    private HistoryOrderStepResultWarn analyzeLongerThan(String definition, Date startTime, Date endDate, Long historyId, boolean remove) {
-        if (SOSString.isEmpty(definition)) {
+    private HistoryOrderStepResultWarn analyzeLongerThan(Integer definition, Date startTime, Date endDate, Long historyId, boolean remove) {
+        if (definition == null) {
             return null;
         }
 
@@ -404,8 +404,8 @@ public class HistoryMonitoringModel {
         }
 
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff > SOSDate.getTimeAsSeconds(definition)) {
-            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Task runs longer than the expected duration of %s",
+        if (diff > definition) {
+            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Task runs longer than the expected duration of %ss",
                     definition));
         } else {
             if (!remove) {// remove old entries
@@ -417,13 +417,13 @@ public class HistoryMonitoringModel {
         return null;
     }
 
-    private HistoryOrderStepResultWarn analyzeShorterThan(Date startTime, Date endDate, String definition) {
-        if (SOSString.isEmpty(definition)) {
+    private HistoryOrderStepResultWarn analyzeShorterThan(Integer definition, Date startTime, Date endDate) {
+        if (definition == null) {
             return null;
         }
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff < SOSDate.getTimeAsSeconds(definition)) {
-            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Task runs shorter than the expected duration of %s",
+        if (diff < definition) {
+            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Task runs shorter than the expected duration of %ss",
                     definition));
         }
         return null;
@@ -612,15 +612,15 @@ public class HistoryMonitoringModel {
 
     protected class LongerThan {
 
-        private final String definition;
+        private final Integer definition;
         private final Date startTime;
 
-        protected LongerThan(String definition, Date startTime) {
+        protected LongerThan(Integer definition, Date startTime) {
             this.definition = definition;
             this.startTime = startTime;
         }
 
-        protected String getDefinition() {
+        protected Integer getDefinition() {
             return definition;
         }
 

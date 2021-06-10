@@ -32,14 +32,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String errorText;
     private Long logId;
 
-    private String taskIfLongerThan;
-    private String taskIfShorterThan;
+    private Integer warnIfLonger;
+    private Integer warnIfShorter;
 
     public HistoryOrderStepBean(EventType eventType, String controllerId, Long historyId) {
         super(eventType, controllerId, historyId);
     }
 
-    public HistoryOrderStepBean(EventType eventType, DBItemHistoryOrderStep item, String taskIfLongerThan, String taskIfShorterThan) {
+    public HistoryOrderStepBean(EventType eventType, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter) {
         super(eventType, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
@@ -67,8 +67,8 @@ public class HistoryOrderStepBean extends AHistoryBean {
         this.errorText = item.getErrorText();
         this.logId = item.getLogId();
 
-        this.taskIfLongerThan = taskIfLongerThan;
-        this.taskIfShorterThan = taskIfShorterThan;
+        this.warnIfLonger = warnIfLonger;
+        this.warnIfShorter = warnIfShorter;
     }
 
     public String getWorkflowPosition() {
@@ -263,19 +263,19 @@ public class HistoryOrderStepBean extends AHistoryBean {
         logId = val;
     }
 
-    public void setTaskIfLongerThan(String val) {
-        taskIfLongerThan = val;
+    public void setWarnIfLonger(Integer val) {
+        warnIfLonger = val;
     }
 
-    public String getTaskIfLongerThan() {
-        return taskIfLongerThan;
+    public Integer getWarnIfLonger() {
+        return warnIfLonger;
     }
 
-    public void setTaskIfShorterThan(String val) {
-        taskIfShorterThan = val;
+    public void setWarnIfShorter(Integer val) {
+        warnIfShorter = val;
     }
 
-    public String getTaskIfShorterThan() {
-        return taskIfShorterThan;
+    public Integer getWarnIfShorter() {
+        return warnIfShorter;
     }
 }
