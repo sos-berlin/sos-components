@@ -263,10 +263,17 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
     }
 
     public void put(String source, String target) throws Exception {
+        put(source, target, -1);
+    }
+
+    public void put(String source, String target, int perm) throws Exception {
         if (sftpClient == null) {
             throw new SOSSFTPClientNotInitializedException();
         }
         sftpClient.put(new FileSystemFile(source), target);
+        if (perm > -1) {
+            sftpClient.chmod(target, perm);
+        }
     }
 
     public void get(String source, String target) throws Exception {
