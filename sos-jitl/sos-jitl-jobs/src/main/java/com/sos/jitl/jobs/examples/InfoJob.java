@@ -143,7 +143,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
             if (args.getRedefineShowEnv().getValue()) {
                 map.put(args.getShowEnv().getName(), !args.getShowEnv().getValue());
             }
-            if (!args.getReturnVariables().getValue().isEmpty()) {
+            if (args.getReturnVariables().getValue() != null) {
                 String[] arr = args.getReturnVariables().getValue().split("__");
                 for (String val : arr) {
                     String[] valArr = val.trim().split("_");

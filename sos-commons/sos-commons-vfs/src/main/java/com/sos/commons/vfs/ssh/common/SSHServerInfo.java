@@ -102,6 +102,10 @@ public class SSHServerInfo {
         return serverVersion;
     }
 
+    public boolean hasWindowsShell() {
+        return shell.equals(Shell.WINDOWS);
+    }
+
     @Override
     public String toString() {
         List<String> l = new ArrayList<>();

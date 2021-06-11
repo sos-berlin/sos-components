@@ -122,11 +122,6 @@
 			<artifactId>sos-webservices-joc-global</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-webservices-global</artifactId>
-			<version>${project.version}</version>
-		</dependency>
  
 		<dependency>
 			<groupId>javax.servlet</groupId>

@@ -16,6 +16,7 @@ public class FilterDailyPlanHistory extends SOSFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanHistory.class);
     private List<String> listOfControllerIds;
+    private List<String> listOfOrderIds;
     private Boolean submitted;
     private String orderId;
     private Date dailyPlanDate;
@@ -93,6 +94,15 @@ public class FilterDailyPlanHistory extends SOSFilter {
         }
     }
 
+    public void addListOfOrderIds(List<String> orderIds) {
+        if (orderIds != null) {
+            if (listOfOrderIds == null) {
+                listOfOrderIds = new ArrayList<String>();
+            }
+            listOfOrderIds.addAll(orderIds);
+        }
+    }
+
     public Set<Folder> getSetOfWorkflowFolders() {
         return setOfWorkflowFolders;
     }
@@ -107,6 +117,14 @@ public class FilterDailyPlanHistory extends SOSFilter {
         }
         setOfWorkflowFolders.addAll(listOfFolders);
 
+    }
+
+    public List<String> getListOfOrderIds() {
+        return listOfOrderIds;
+    }
+
+    public void setListOfOrderIds(List<String> listOfOrderIds) {
+        this.listOfOrderIds = listOfOrderIds;
     }
 
 }

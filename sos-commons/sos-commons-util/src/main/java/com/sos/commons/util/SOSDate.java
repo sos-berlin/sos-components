@@ -427,6 +427,10 @@ public class SOSDate {
         return duration == null ? null : duration.toString().replace("PT", "").toLowerCase();
     }
 
+    public static String getDuration(long seconds) {
+        return getDuration(Duration.ofSeconds(seconds));
+    }
+
     public static boolean equals(Date val1, Date val2) {
         if (val1 == null && val2 == null) {
             return true;
@@ -545,6 +549,9 @@ public class SOSDate {
             System.out.println(SOSDate.getYear(d));
             System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("PST")));
             System.out.println(SOSDate.getDateAsString(d, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone("Europe/Berlin")));
+            System.out.println(SOSDate.getDuration(0));
+            System.out.println(SOSDate.getDuration(60));
+            System.out.println(SOSDate.getDuration(100_000));
         } catch (Exception e) {
             System.err.println("..error: " + e.toString());
         }

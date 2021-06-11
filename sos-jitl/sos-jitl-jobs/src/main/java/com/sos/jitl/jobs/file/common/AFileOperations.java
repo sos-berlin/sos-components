@@ -951,8 +951,9 @@ public abstract class AFileOperations {
     }
 
     private boolean wipe(final File file) {
+        RandomAccessFile rwFile = null;
         try {
-            RandomAccessFile rwFile = new RandomAccessFile(file, "rw");
+            rwFile = new RandomAccessFile(file, "rw");
             byte[] bytes = new byte[(int) rwFile.length()];
             int i = 0;
             while ((bytes[i++] = (byte) rwFile.read()) != -1) {
@@ -968,10 +969,18 @@ public abstract class AFileOperations {
             if (logger.isDebugEnabled()) {
                 logger.debug("[%s][deleting file]%s", file.getCanonicalPath(), rc);
             }
+            rwFile = null;
             return rc;
         } catch (Exception e) {
             logger.warn("Failed to wipe file: " + e.toString(), e);
             return false;
+        } finally {
+            if (rwFile != null) {
+                try {
+                    rwFile.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
 

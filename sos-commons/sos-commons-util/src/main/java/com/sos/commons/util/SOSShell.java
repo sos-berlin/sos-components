@@ -43,8 +43,8 @@ public class SOSShell {
         SOSCommandResult result = new SOSCommandResult(script);
         try {
             ProcessBuilder pb = new ProcessBuilder(getCommand(script));
-            if (env != null && env.getEnvVars().size() > 0) {
-                pb.environment().putAll(env.getEnvVars());
+            if (env != null && env.getLocalEnvs().size() > 0) {
+                pb.environment().putAll(env.getLocalEnvs());
             }
             final Process p = pb.start();
 

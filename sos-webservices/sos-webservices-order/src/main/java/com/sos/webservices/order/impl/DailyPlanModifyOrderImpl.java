@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -29,6 +30,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
@@ -51,6 +54,8 @@ import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -64,7 +69,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanModifyOrderImpl.class);
     private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
- 
+
     @Override
     public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) throws JocException {
 
@@ -116,7 +121,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 for (String orderId : listOfOrderIds) {
-                    modifyOrder(orderId, dailyplanModifyOrder, dbAuditlog);
+                    modifyOrder(orderId,accessToken, dailyplanModifyOrder, dbAuditlog);
                 }
             }
 
@@ -243,7 +248,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void modifyOrder(String orderId, DailyPlanModifyOrder dailyplanModifyOrder, DBItemJocAuditLog dbAuditlog)
+    private void modifyOrder(String orderId, String accessToken, DailyPlanModifyOrder dailyplanModifyOrder, DBItemJocAuditLog dbAuditlog)
             throws JocConfigurationException, DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
@@ -264,6 +269,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
             if (listOfPlannedOrders.size() == 1) {
+
                 DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 dbItemDailyPlanOrder.setModified(new Date());
 
@@ -303,14 +309,20 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 } else {
                     Globals.commit(sosHibernateSession);
                 }
+                
+
+                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+                auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
+                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either -> ProblemHelper
+                        .postExceptionEventIfExist(either, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
 
             } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId());
-                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
+                LOGGER.warn("Expected one record for order-id " + filter.getOrderId() + " found: " + listOfPlannedOrders.size());
+                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId() + " found: " + listOfPlannedOrders.size());
             }
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
     }
-   
+
 }

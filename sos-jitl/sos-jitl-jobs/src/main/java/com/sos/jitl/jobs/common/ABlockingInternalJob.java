@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,13 +137,16 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
         if (step == null) {
             map = Job.convert(jobContext.jobArguments());
         } else {
-            Stream<Map<String, Value>> stream = null;
+            Set<Entry<String, Value>> stepArgs = step.getInternalStep().arguments().entrySet();
+            Set<Entry<String, Value>> orderArgs = step.getInternalStep().order().arguments().entrySet();
+
+            Stream<Map.Entry<String, Value>> stream = null;
             if (jobContext == null) {
-                stream = Stream.of(step.getInternalStep().arguments(), step.getInternalStep().order().arguments());
+                stream = Stream.concat(stepArgs.stream(), orderArgs.stream());
             } else {
-                stream = Stream.of(jobContext.jobArguments(), step.getInternalStep().arguments(), step.getInternalStep().order().arguments());
+                stream = Stream.concat(Stream.concat(jobContext.jobArguments().entrySet().stream(), stepArgs.stream()), orderArgs.stream());
             }
-            map = Job.convert(stream.flatMap(m -> m.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+            map = Job.convert(stream.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (value1, value2) -> value2)));
         }
         return map;
     }

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -23,6 +24,9 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -39,6 +43,8 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -52,10 +58,10 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmitOrdersImpl.class);
     private static final String API_CALL = "./daily_plan/orders/submit";
 
-    private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter,Collection<String> allowedControllers) throws JsonParseException, JsonMappingException,
-            DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
-            ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
-            InterruptedException, ExecutionException, TimeoutException {
+    private void submitOrdersToController(DailyPlanOrderFilter dailyPlanOrderFilter, Collection<String> allowedControllers, String accessToken)
+            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, IOException,
+            ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
         setSettings();
 
@@ -124,6 +130,16 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                     Globals.commit(sosHibernateSession);
                     orderInitiatorRunner.submitOrders(controllerId, getJocError(), getAccessToken(), listOfPlannedOrders);
+
+                    List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+
+                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                        auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getControllerId()));
+                    }
+
+                    OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
+                            .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
+
                 }
             }
         } finally {
@@ -160,7 +176,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 return jocDefaultResponse;
             }
 
-            submitOrdersToController(dailyPlanOrderFilter, allowedControllers);
+            submitOrdersToController(dailyPlanOrderFilter, allowedControllers, accessToken);
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {

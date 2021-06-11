@@ -25,8 +25,11 @@ import com.sos.joc.model.dailyplan.DailyPlanHistoryFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionTimes;
 import com.sos.joc.model.dailyplan.DailyplanHistoryOrderItem;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanHistoryResource;
@@ -213,85 +216,96 @@ public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDaily
 
             filter.setSortMode("desc");
             filter.setOrderCriteria("id");
-
-            for (String controllerId : allowedControllers) {
-                folderPermissions.setSchedulerId(controllerId);
-                filter.setControllerId(controllerId);
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
-                if (permittedFolders.size() > 0) {
-                    filter.addFolder(permittedFolders);
+            boolean haveEntries = true;
+            if (dailyPlanHistoryFilter.getFilter().getAuditLogId() != null) {
+                List<String> orderIds = dbLayerDailyPlanHistory.getOrderIdsByAuditLog(dailyPlanHistoryFilter.getFilter().getAuditLogId());
+                if (orderIds.isEmpty()) {
+                    haveEntries = false;
+                } else {
+                    filter.addListOfOrderIds(orderIds);
                 }
-
-                List<DBItemDailyPlanHistory> listOfDailyPlanHistory = dbLayerDailyPlanHistory.getDailyPlanHistory(filter, 0);
-
-                Map<Date, DailyPlanHistoryDateItem> mapOfHistoryDateItems = new HashMap<Date, DailyPlanHistoryDateItem>();
-                Map<ControllerDateKey, DailyPlanHistoryControllerItem> mapOfControllerItems =
-                        new HashMap<ControllerDateKey, DailyPlanHistoryControllerItem>();
-                Map<SubmissionControllerDateKey, DailyPlanSubmissionTimes> mapOfSubmissionTimesItems =
-                        new HashMap<SubmissionControllerDateKey, DailyPlanSubmissionTimes>();
-
-                for (DBItemDailyPlanHistory dbItemDailySubmissionHistory : listOfDailyPlanHistory) {
-
-                    if (mapOfHistoryDateItems.get(dbItemDailySubmissionHistory.getDailyPlanDate()) == null) {
-                        DailyPlanHistoryDateItem dailyPlanHistoryDateItem = new DailyPlanHistoryDateItem();
-                        dailyPlanHistoryDateItem.setControllers(new ArrayList<DailyPlanHistoryControllerItem>());
-                        dailyPlanHistoryDateItem.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
-                        mapOfHistoryDateItems.put(dbItemDailySubmissionHistory.getDailyPlanDate(), dailyPlanHistoryDateItem);
-                        dailyPlanHistory.getDailyPlans().add(dailyPlanHistoryDateItem);
+            }
+            if (haveEntries) {
+                for (String controllerId : allowedControllers) {
+                    folderPermissions.setSchedulerId(controllerId);
+                    filter.setControllerId(controllerId);
+                    Set<Folder> permittedFolders = folderPermissions.getListOfFolders(controllerId);
+                    if (permittedFolders.size() > 0) {
+                        filter.addFolder(permittedFolders);
                     }
 
-                    DailyPlanHistoryDateItem dailyPlanHistoryDateItem = mapOfHistoryDateItems.get(dbItemDailySubmissionHistory.getDailyPlanDate());
+                    List<DBItemDailyPlanHistory> listOfDailyPlanHistory = dbLayerDailyPlanHistory.getDailyPlanHistory(filter, 0);
 
-                    ControllerDateKey controllerDateKey = new ControllerDateKey();
-                    controllerDateKey.setControllerId(dbItemDailySubmissionHistory.getControllerId());
-                    controllerDateKey.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
+                    Map<Date, DailyPlanHistoryDateItem> mapOfHistoryDateItems = new HashMap<Date, DailyPlanHistoryDateItem>();
+                    Map<ControllerDateKey, DailyPlanHistoryControllerItem> mapOfControllerItems =
+                            new HashMap<ControllerDateKey, DailyPlanHistoryControllerItem>();
+                    Map<SubmissionControllerDateKey, DailyPlanSubmissionTimes> mapOfSubmissionTimesItems =
+                            new HashMap<SubmissionControllerDateKey, DailyPlanSubmissionTimes>();
 
-                    if (mapOfControllerItems.get(controllerDateKey) == null) {
+                    for (DBItemDailyPlanHistory dbItemDailySubmissionHistory : listOfDailyPlanHistory) {
 
-                        DailyPlanHistoryControllerItem dailyPlanHistoryControllerItem = new DailyPlanHistoryControllerItem();
-                        dailyPlanHistoryControllerItem.setControllerId(dbItemDailySubmissionHistory.getControllerId());
-                        dailyPlanHistoryControllerItem.setSubmissions(new ArrayList<DailyPlanSubmissionTimes>());
-                        mapOfControllerItems.put(controllerDateKey, dailyPlanHistoryControllerItem);
-                        dailyPlanHistoryDateItem.getControllers().add(dailyPlanHistoryControllerItem);
-                    }
+                        if (mapOfHistoryDateItems.get(dbItemDailySubmissionHistory.getDailyPlanDate()) == null) {
+                            DailyPlanHistoryDateItem dailyPlanHistoryDateItem = new DailyPlanHistoryDateItem();
+                            dailyPlanHistoryDateItem.setControllers(new ArrayList<DailyPlanHistoryControllerItem>());
+                            dailyPlanHistoryDateItem.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
+                            mapOfHistoryDateItems.put(dbItemDailySubmissionHistory.getDailyPlanDate(), dailyPlanHistoryDateItem);
+                            dailyPlanHistory.getDailyPlans().add(dailyPlanHistoryDateItem);
+                        }
 
-                    DailyPlanHistoryControllerItem dailyPlanHistoryControllerItem = mapOfControllerItems.get(controllerDateKey);
+                        DailyPlanHistoryDateItem dailyPlanHistoryDateItem = mapOfHistoryDateItems.get(dbItemDailySubmissionHistory
+                                .getDailyPlanDate());
 
-                    SubmissionControllerDateKey submissionControllerDateKey = new SubmissionControllerDateKey();
-                    submissionControllerDateKey.setControllerId(dbItemDailySubmissionHistory.getControllerId());
-                    submissionControllerDateKey.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
-                    submissionControllerDateKey.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
+                        ControllerDateKey controllerDateKey = new ControllerDateKey();
+                        controllerDateKey.setControllerId(dbItemDailySubmissionHistory.getControllerId());
+                        controllerDateKey.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
 
-                    if (mapOfSubmissionTimesItems.get(submissionControllerDateKey) == null) {
-                        DailyPlanSubmissionTimes dailyPlanSubmissionTimes = new DailyPlanSubmissionTimes();
-                        dailyPlanSubmissionTimes.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
-                        dailyPlanSubmissionTimes.setErrorMessages(new ArrayList<String>());
-                        dailyPlanSubmissionTimes.setOrderIds(new ArrayList<DailyplanHistoryOrderItem>());
-                        dailyPlanSubmissionTimes.setWarnMessages(new ArrayList<String>());
+                        if (mapOfControllerItems.get(controllerDateKey) == null) {
+
+                            DailyPlanHistoryControllerItem dailyPlanHistoryControllerItem = new DailyPlanHistoryControllerItem();
+                            dailyPlanHistoryControllerItem.setControllerId(dbItemDailySubmissionHistory.getControllerId());
+                            dailyPlanHistoryControllerItem.setSubmissions(new ArrayList<DailyPlanSubmissionTimes>());
+                            mapOfControllerItems.put(controllerDateKey, dailyPlanHistoryControllerItem);
+                            dailyPlanHistoryDateItem.getControllers().add(dailyPlanHistoryControllerItem);
+                        }
+
+                        DailyPlanHistoryControllerItem dailyPlanHistoryControllerItem = mapOfControllerItems.get(controllerDateKey);
+
+                        SubmissionControllerDateKey submissionControllerDateKey = new SubmissionControllerDateKey();
+                        submissionControllerDateKey.setControllerId(dbItemDailySubmissionHistory.getControllerId());
+                        submissionControllerDateKey.setDailyPlanDate(dbItemDailySubmissionHistory.getDailyPlanDate());
+                        submissionControllerDateKey.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
+
+                        if (mapOfSubmissionTimesItems.get(submissionControllerDateKey) == null) {
+                            DailyPlanSubmissionTimes dailyPlanSubmissionTimes = new DailyPlanSubmissionTimes();
+                            dailyPlanSubmissionTimes.setSubmissionTime(dbItemDailySubmissionHistory.getSubmissionTime());
+                            dailyPlanSubmissionTimes.setErrorMessages(new ArrayList<String>());
+                            dailyPlanSubmissionTimes.setOrderIds(new ArrayList<DailyplanHistoryOrderItem>());
+                            dailyPlanSubmissionTimes.setWarnMessages(new ArrayList<String>());
+                            mapOfSubmissionTimesItems.put(submissionControllerDateKey, dailyPlanSubmissionTimes);
+                            dailyPlanHistoryControllerItem.getSubmissions().add(dailyPlanSubmissionTimes);
+                        }
+
+                        DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimesItems.get(submissionControllerDateKey);
+
+                        DailyplanHistoryOrderItem dailyplanHistoryOrderItem = new DailyplanHistoryOrderItem();
+                        dailyplanHistoryOrderItem.setOrderId(dbItemDailySubmissionHistory.getOrderId());
+                        dailyplanHistoryOrderItem.setScheduledFor(dbItemDailySubmissionHistory.getScheduledFor());
+                        dailyplanHistoryOrderItem.setSubmitted(dbItemDailySubmissionHistory.isSubmitted());
+                        dailyplanHistoryOrderItem.setWorkflowPath(dbItemDailySubmissionHistory.getWorkflowPath());
+
+                        if (dbItemDailySubmissionHistory.getMessage() != null) {
+                            if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {
+                                dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage().substring(WARN.length()));
+                            }
+                            if (dbItemDailySubmissionHistory.getMessage().startsWith(ERROR)) {
+                                dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length()));
+                            }
+                        } else {
+                            dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
+                        }
+
                         mapOfSubmissionTimesItems.put(submissionControllerDateKey, dailyPlanSubmissionTimes);
-                        dailyPlanHistoryControllerItem.getSubmissions().add(dailyPlanSubmissionTimes);
                     }
-
-                    DailyPlanSubmissionTimes dailyPlanSubmissionTimes = mapOfSubmissionTimesItems.get(submissionControllerDateKey);
-
-                    DailyplanHistoryOrderItem dailyplanHistoryOrderItem = new DailyplanHistoryOrderItem();
-                    dailyplanHistoryOrderItem.setOrderId(dbItemDailySubmissionHistory.getOrderId());
-                    dailyplanHistoryOrderItem.setScheduledFor(dbItemDailySubmissionHistory.getScheduledFor());
-                    dailyplanHistoryOrderItem.setSubmitted(dbItemDailySubmissionHistory.isSubmitted());
-                    dailyplanHistoryOrderItem.setWorkflowPath(dbItemDailySubmissionHistory.getWorkflowPath());
-
-                    if (dbItemDailySubmissionHistory.getMessage() != null) {
-                        if (dbItemDailySubmissionHistory.getMessage().startsWith(WARN)) {
-                            dailyPlanSubmissionTimes.getWarnMessages().add(dbItemDailySubmissionHistory.getMessage().substring(WARN.length()));
-                        }
-                        if (dbItemDailySubmissionHistory.getMessage().startsWith(ERROR)) {
-                            dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailySubmissionHistory.getMessage().substring(ERROR.length()));
-                        }
-                    } else {
-                        dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
-                    }
-
-                    mapOfSubmissionTimesItems.put(submissionControllerDateKey, dailyPlanSubmissionTimes);
                 }
             }
 
