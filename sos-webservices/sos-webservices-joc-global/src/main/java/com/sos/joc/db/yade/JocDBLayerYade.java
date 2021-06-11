@@ -557,10 +557,10 @@ public class JocDBLayerYade {
             hql.append(" and controllerId in (:controllerIds)");
         }
         if (from != null) {
-            hql.append(" and end >= :from");
+            hql.append(" and start >= :from");
         }
         if (to != null) {
-            hql.append(" and end < :to");
+            hql.append(" and start < :to");
         }
         Query<Long> query = session.createQuery(hql.toString());
         if (successful) {
