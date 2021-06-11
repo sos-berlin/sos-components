@@ -1,10 +1,10 @@
 package com.sos.webservices.order.impl;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
@@ -26,6 +29,8 @@ import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.FolderPermissionEvaluator;
@@ -138,8 +143,18 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
 
                     orderInitiatorRunner.readSchedules(scheduleSource);
-                    orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(), accessToken, dailyPlanOrderSelector.getDailyPlanDate(),
-                            dailyPlanOrderSelector.getWithSubmit());
+                    Map<PlannedOrderKey, PlannedOrder> generatedOrders = orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(),
+                            accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
+
+                    List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+
+                    for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
+                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getFreshOrder().getWorkflowPath(), entry.getValue().getFreshOrder().getId()));
+                    }
+
+                    OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
+                            .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
+
                 }
             }
             return JOCDefaultResponse.responseStatusJSOk(new Date());

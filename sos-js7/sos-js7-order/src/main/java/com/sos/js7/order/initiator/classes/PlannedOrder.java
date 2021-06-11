@@ -15,7 +15,6 @@ public class PlannedOrder {
     private FreshOrder freshOrder;
     private String controllerId;
     private Long calendarId;
-    private Long auditLogId;
     private Long submissionHistoryId;
     private Period period;
     private Long averageDuration = 0L;
@@ -110,14 +109,6 @@ public class PlannedOrder {
         this.controllerId = controllerId;
     }
 
-    
-    public Long getAuditLogId() {
-        return auditLogId;
-    }
-
-    
-    public void setAuditLogId(Long auditLogId) {
-        this.auditLogId = auditLogId;
-    }
+ 
 
 }

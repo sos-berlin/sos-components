@@ -60,6 +60,7 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.OrderCounter;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerInventoryConfigurations;
@@ -115,7 +116,7 @@ public class OrderInitiatorRunner extends TimerTask {
         this.fromService = fromService;
     }
 
-    public void generateDailyPlan(String controllerId, JocError jocError, String accessToken, String dailyPlanDate, Boolean withSubmit)
+    public Map<PlannedOrderKey, PlannedOrder> generateDailyPlan(String controllerId, JocError jocError, String accessToken, String dailyPlanDate, Boolean withSubmit)
             throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
             JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
@@ -130,7 +131,7 @@ public class OrderInitiatorRunner extends TimerTask {
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(controllerId, withSubmit);
         }
-        orderListSynchronizer.resetListOfPlannedOrders();
+         return orderListSynchronizer.getListOfPlannedOrders();
     }
 
     public void generateDailyPlan(String controllerId, String dailyPlanDate, Boolean withSubmit) throws JsonParseException, JsonMappingException,
