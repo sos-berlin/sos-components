@@ -662,7 +662,7 @@ public class HistoryModel {
             item.setWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
-            item.setWorkflowTitle(null);// TODO
+            item.setWorkflowTitle(cw.getTitle());
 
             item.setMainParentId(new Long(0L));// TODO see below
             item.setParentId(new Long(0L));
@@ -1066,7 +1066,7 @@ public class HistoryModel {
             item.setWorkflowPosition(forkOrder.getPosition());
             item.setWorkflowFolder(HistoryUtil.getFolderFromPath(item.getWorkflowPath()));
             item.setWorkflowName(workflowName);
-            item.setWorkflowTitle(null);// TODO
+            item.setWorkflowTitle(cw.getTitle());
 
             item.setMainParentId(parentOrder.getMainParentId());
             item.setParentId(parentOrder.getId());
@@ -1575,11 +1575,16 @@ public class HistoryModel {
         if (cw == null) {
             clearWorkflowCache(workflowName);
             String path = null;
+            String title = null;
             Map<String, CachedWorkflowJob> jobs = null;
             try {
                 Object[] result = dbLayer.getDeployedWorkflow(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
                 path = result[0].toString();
-                jobs = getWorkflowJobs(workflowName, workflowVersionId, result[1].toString());
+                Workflow w = getWorkflow(workflowName, workflowVersionId, result[1].toString());
+                if (w != null) {
+                    jobs = getWorkflowJobs(w);
+                    title = w.getTitle();
+                }
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't evaluate path]%s", workflowName, workflowVersionId, e
                         .toString()));
@@ -1587,27 +1592,30 @@ public class HistoryModel {
             if (path == null) {
                 path = "/" + workflowName;
             }
-            cw = new CachedWorkflow(path, jobs);
+            cw = new CachedWorkflow(path, title, jobs);
             addCachedWorkflow(getCachedWorkflowKey(workflowName, workflowVersionId), cw);
         }
         return cw;
     }
 
-    private Map<String, CachedWorkflowJob> getWorkflowJobs(String workflowName, String workflowVersionId, String content) {
+    private Workflow getWorkflow(String workflowName, String workflowVersionId, String content) {
         try {
-            Workflow w = (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
-            WorkflowSearcher s = new WorkflowSearcher(w);
-            Map<String, CachedWorkflowJob> map = new HashMap<>();
-            for (WorkflowJob job : s.getJobs()) {
-                map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(),
-                        job.getJob().getWarnIfShorter()));
-            }
-            return map;
+            return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't parse workflow]%s", workflowName, workflowVersionId, e
                     .toString()));
         }
         return null;
+    }
+
+    private Map<String, CachedWorkflowJob> getWorkflowJobs(Workflow w) {
+        WorkflowSearcher s = new WorkflowSearcher(w);
+        Map<String, CachedWorkflowJob> map = new HashMap<>();
+        for (WorkflowJob job : s.getJobs()) {
+            map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(), job
+                    .getJob().getWarnIfShorter()));
+        }
+        return map;
     }
 
     private void addCachedWorkflow(String key, CachedWorkflow cw) {
