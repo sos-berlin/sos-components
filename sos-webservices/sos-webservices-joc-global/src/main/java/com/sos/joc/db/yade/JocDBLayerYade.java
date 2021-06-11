@@ -55,10 +55,10 @@ public class JocDBLayerYade {
             hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" yt ");
             hql.append("where yf.transferId=yt.id ");
             if (from != null) {
-                hql.append("and yt.end >= :from ");
+                hql.append("and yt.start >= :from ");  // or end?
             }
             if (to != null) {
-                hql.append("and yt.end < :to ");
+                hql.append("and yt.start < :to ");  // or end?
             }
             hql.append("and yf.state=:state").append(state.intValue());
 
@@ -601,10 +601,10 @@ public class JocDBLayerYade {
             hql.append(" and controllerId in (:controllerIds)");
         }
         if (from != null) {
-            hql.append(" and end >= :from");
+            hql.append(" and start >= :from");
         }
         if (to != null) {
-            hql.append(" and end < :to");
+            hql.append(" and start < :to");
         }
         hql.append(" group by controllerId, workflowPath");
         Query<YadeGroupedSummary> query = session.createQuery(hql.toString());
