@@ -228,7 +228,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
             }
         }
         logger.info(String.format("[tmp commandScript file locally][tmp command script file remote] [%s] : [%s]", source.getCanonicalPath(), target));
-        provider.put(source.getCanonicalPath(), target);
+        provider.put(source.getCanonicalPath(), target, 0700);
         addTemporaryFilesToDelete(target);
         // handler.putFile(source, target, 0700);
         return target;
