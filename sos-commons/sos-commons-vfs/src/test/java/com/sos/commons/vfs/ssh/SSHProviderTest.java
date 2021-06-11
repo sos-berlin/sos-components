@@ -215,15 +215,15 @@ public class SSHProviderTest {
 
             LOGGER.info("[EXISTS]" + p.exists("/home/sos/test.txt"));
             LOGGER.info("[EXISTS]" + p.exists("/home/sos"));
-            LOGGER.info("[SIZE]" + p.getSize("/home/sos"));
-            LOGGER.info("[SIZE]" + p.getSize("/home/sos/test.txt"));
+            // LOGGER.info("[SIZE]" + p.getSize("/home/sos"));
+            // LOGGER.info("[SIZE]" + p.getSize("/home/sos/test.txt"));
 
             LOGGER.info("[IS_FILE]" + p.isFile("/home/sos"));
             LOGGER.info("[IS_FILE]" + p.isFile("/home/sos/test.txt"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("/home/sos/test.txt"));
 
-            // p.delete("/home/sos/jstack_target.log");
+            // p.delete("/home/sos/tmp_target.log");
             // p.delete("/home/sos/test");
             // LOGGER.info("[DELETED]" + p.deleteIfExists("/home/sos/test/"));
 
@@ -252,7 +252,7 @@ public class SSHProviderTest {
             p.connect();
             // p.put("D://tmp.log", "D://tmp_target.log");
             // p.get("D://tmp_target.log", "D://tmp_get.log");
-            
+
             // p.rename("D://tmp_target.log", "D://tmp_target_renamed.log");
 
             // p.createDirectory("D://tmp");
@@ -260,15 +260,15 @@ public class SSHProviderTest {
 
             LOGGER.info("[EXISTS]" + p.exists("D://tmp/test.txt"));
             LOGGER.info("[EXISTS]" + p.exists("D://tmp/sos"));
-            LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos"));
-            LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos/test.txt"));
+            // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos"));
+            // LOGGER.info("[SIZE]" + p.getSize("D://tmp/sos/test.txt"));
 
             LOGGER.info("[IS_FILE]" + p.isFile("D://tmp/sos"));
             LOGGER.info("[IS_FILE]" + p.isFile("D://tmp/sos/test.txt"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos"));
             LOGGER.info("[IS_DIRECTORY]" + p.isDirectory("D://tmp/sos/test.txt"));
 
-            // p.delete("D://tmp/sos/jstack_target.log");
+            // p.delete("D://tmp/1");
             // p.delete("D://tmp/sos/test");
             // LOGGER.info("[DELETED]" + p.deleteIfExists("D://tmp/sos/test/"));
 
