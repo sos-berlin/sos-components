@@ -97,9 +97,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
                 Map<String, List<OrderV>> ordersPerAgent = new HashMap<>();
-                JControllerState currentState;
                 try {
-                    currentState = Proxy.of(controllerId).currentState();
+                    JControllerState currentState = Proxy.of(controllerId).currentState();
                     Long surveyDateMillis = currentState.eventId() / 1000;
                     Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
                     boolean olderThan20sec = currentStateMoment.isBefore(Instant.now().minusSeconds(20));

@@ -311,8 +311,8 @@ public class EventService {
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
                 if (itemId instanceof AgentPath) {
-                    eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
-                    addEvent(createAgentEvent(eventId, itemId.string(), eventType));
+                    //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
+                    addEvent(createAgentEvent(eventId, itemId.string()));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
 //                } else if (itemId instanceof OrderWatchPath) {

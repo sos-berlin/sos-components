@@ -549,36 +549,35 @@ public class JocDBLayerYade {
 
     private Long getTransfersCount(Collection<String> controllerIds, boolean successful, Date from, Date to) throws SOSHibernateException,
             DBInvalidDataException, DBConnectionRefusedException {
-        StringBuilder hql = new StringBuilder();
-        hql.append("select count(*) from ");
-        hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
-        hql.append(" where state = :state");
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            hql.append(" and controllerId in (:controllerIds)");
-        }
-        if (from != null) {
-            hql.append(" and start >= :from");
-        }
-        if (to != null) {
-            hql.append(" and start < :to");
-        }
-        Query<Long> query = session.createQuery(hql.toString());
-        if (successful) {
-            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
-        } else {
-            query.setParameter("state", TransferState.FAILED.intValue());
-        }
-        if (from != null) {
-            query.setParameter("from", from, TemporalType.TIMESTAMP);
-        }
-        if (to != null) {
-            query.setParameter("to", to, TemporalType.TIMESTAMP);
-        }
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            query.setParameterList("controllerIds", controllerIds);
-        }
-
         try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("select count(*) from ").append(DBLayer.DBITEM_YADE_TRANSFERS);
+            hql.append(" where state = :state");
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                hql.append(" and controllerId in (:controllerIds)");
+            }
+            if (from != null) {
+                hql.append(" and start >= :from");
+            }
+            if (to != null) {
+                hql.append(" and start < :to");
+            }
+            Query<Long> query = session.createQuery(hql.toString());
+            if (successful) {
+                query.setParameter("state", TransferState.SUCCESSFUL.intValue());
+            } else {
+                query.setParameter("state", TransferState.FAILED.intValue());
+            }
+            if (from != null) {
+                query.setParameter("from", from, TemporalType.TIMESTAMP);
+            }
+            if (to != null) {
+                query.setParameter("to", to, TemporalType.TIMESTAMP);
+            }
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                query.setParameterList("controllerIds", controllerIds);
+            }
+
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -592,38 +591,38 @@ public class JocDBLayerYade {
         if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
             return getTransfersCount(controllerIds, successful, from, to);
         }
-        StringBuilder hql = new StringBuilder();
-        hql.append("select new ").append(YADE_GROUPED_SUMMARY).append("(count(id), controllerId, workflowPath) from ");
-        hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
-        hql.append(" where state = :state");
-        
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            hql.append(" and controllerId in (:controllerIds)");
-        }
-        if (from != null) {
-            hql.append(" and start >= :from");
-        }
-        if (to != null) {
-            hql.append(" and start < :to");
-        }
-        hql.append(" group by controllerId, workflowPath");
-        Query<YadeGroupedSummary> query = session.createQuery(hql.toString());
-        if (successful) {
-            query.setParameter("state", TransferState.SUCCESSFUL.intValue());
-        } else {
-            query.setParameter("state", TransferState.FAILED.intValue());
-        }
-        if (from != null) {
-            query.setParameter("from", from);
-        }
-        if (to != null) {
-            query.setParameter("to", to);
-        }
-        if (controllerIds != null && !controllerIds.isEmpty()) {
-            query.setParameterList("controllerIds", controllerIds);
-        }
-
         try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("select new ").append(YADE_GROUPED_SUMMARY).append("(count(id), controllerId, workflowPath) from ");
+            hql.append(DBLayer.DBITEM_YADE_TRANSFERS);
+            hql.append(" where state = :state");
+
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                hql.append(" and controllerId in (:controllerIds)");
+            }
+            if (from != null) {
+                hql.append(" and start >= :from");
+            }
+            if (to != null) {
+                hql.append(" and start < :to");
+            }
+            hql.append(" group by controllerId, workflowPath");
+            Query<YadeGroupedSummary> query = session.createQuery(hql.toString());
+            if (successful) {
+                query.setParameter("state", TransferState.SUCCESSFUL.intValue());
+            } else {
+                query.setParameter("state", TransferState.FAILED.intValue());
+            }
+            if (from != null) {
+                query.setParameter("from", from, TemporalType.TIMESTAMP);
+            }
+            if (to != null) {
+                query.setParameter("to", to, TemporalType.TIMESTAMP);
+            }
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                query.setParameterList("controllerIds", controllerIds);
+            }
+
             List<YadeGroupedSummary> result = session.getResultList(query);
             if (result != null) {
                 return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(s -> s
