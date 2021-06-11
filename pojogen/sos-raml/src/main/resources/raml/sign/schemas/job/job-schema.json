@@ -5,8 +5,7 @@
   "type": "object",
   "required": [
     "agentPath",
-    "executable",
-    "taskLimit"
+    "executable"
   ],
   "description": "returnCodeMeaning is deprecated: moved to ShellScriptExecutable",
   "properties": {

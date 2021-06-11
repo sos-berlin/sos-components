@@ -306,7 +306,7 @@ public class EventService {
                     // TODO other versioned objects
                 }
                 
-            }  else if (evt instanceof UnsignedSimpleItemEvent) {
+            } else if (evt instanceof UnsignedSimpleItemEvent) {
                 // UnsignedSimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
