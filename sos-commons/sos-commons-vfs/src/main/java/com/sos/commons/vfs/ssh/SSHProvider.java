@@ -5,9 +5,7 @@ import java.nio.file.Path;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Map;
 
 import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.exception.SOSNoSuchFileException;
@@ -53,8 +51,6 @@ import net.schmizz.sshj.userauth.method.PasswordResponseProvider;
 import net.schmizz.sshj.xfer.FileSystemFile;
 
 public class SSHProvider extends AProvider<SSHProviderArguments> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SSHProvider.class);
 
     private Config config;
     private SSHClient sshClient;
@@ -306,7 +302,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
             if (getArguments().getSimulateShell().getValue()) {
                 session.allocateDefaultPTY();
             }
-            handleEnvs(session, env);
+            command = handleEnvs(command, session, env);
             Command cmd = session.exec(command);
 
             // TODO use Charset?
@@ -524,20 +520,37 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return new AuthPublickey(keyProvider);
     }
 
-    private void handleEnvs(Session session, SOSEnv env) {
+    private String handleEnvs(String command, Session session, SOSEnv env) throws Exception {
         if (env == null) {
-            return;
+            return command;
         }
-        // only global env vars
-        if (env.getEnvVars() != null && env.getEnvVars().size() > 0) {
-            env.getEnvVars().forEach((k, v) -> {
+        // global/ssh server env vars
+        if (env.getGlobalEnvs() != null && env.getGlobalEnvs().size() > 0) {
+            for (Map.Entry<String, String> entry : env.getGlobalEnvs().entrySet()) {
                 try {
-                    session.setEnvVar(k, v);
+                    session.setEnvVar(entry.getKey(), entry.getValue());
                 } catch (Throwable e) {
-                    LOGGER.error(String.format("[%s=%s]%s", k, v, e.toString()), e);
+                    throw new Exception(String.format("[can't set ssh session environment variable][%s=%s]%s", entry.getKey(), entry.getValue(), e
+                            .toString()), e);
                 }
-            });
+            }
         }
+
+        // local/system env vars
+        if (env.getLocalEnvs() != null && env.getLocalEnvs().size() > 0) {
+            getServerInfo();
+
+            StringBuilder envs = new StringBuilder();
+            for (Map.Entry<String, String> entry : env.getLocalEnvs().entrySet()) {
+                if (serverInfo.hasWindowsShell()) {
+                    envs.append(String.format("set %s=%s&", entry.getKey(), entry.getValue()));
+                } else {
+                    envs.append(String.format("export \"%s=%s\";", entry.getKey(), entry.getValue()));
+                }
+            }
+            command = envs.toString() + command;
+        }
+        return command;
     }
 
     private void dirInfo(SFTPClient client, String path, Deque<RemoteResourceInfo> result, boolean recursive) throws Exception {

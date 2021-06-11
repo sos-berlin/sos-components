@@ -1,36 +1,39 @@
 package com.sos.commons.util.common;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SOSEnv {
 
-    private final Map<String, String> envVars;
+    private Map<String, String> localEnvs;
+    private Map<String, String> globalEnvs;
 
-    public SOSEnv(Map<String, String> envVars) {
-        this.envVars = envVars;
+    public SOSEnv() {
+
     }
 
-    public Map<String, String> getEnvVars() {
-        return envVars;
-    }
-    
-    public SOSEnv merge(SOSEnv toAdd) {
-    	return merge(toAdd, false);
+    public SOSEnv(Map<String, String> localEnvs) {
+        this(localEnvs, null);
     }
 
-    public SOSEnv merge(SOSEnv toAdd, boolean overwrite) {
-    	if (overwrite) {
-    		// same key: values will be taken from map of second SOSEnv 
-    		return new SOSEnv(Stream.concat(envVars.entrySet().stream(), toAdd.getEnvVars().entrySet().stream())
-    				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (envVarsEntry, toAddEntry) -> toAddEntry)));
-    	} else {
-    		// same key: values will be taken from map of first SOSEnv 
-    		return new SOSEnv(Stream.concat(envVars.entrySet().stream(), toAdd.getEnvVars().entrySet().stream())
-    				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (envVarsEntry, toAddEntry) -> envVarsEntry)));
-    	}
+    public SOSEnv(Map<String, String> localEnvs, Map<String, String> globalEnvs) {
+        this.localEnvs = localEnvs;
+        this.globalEnvs = globalEnvs;
+    }
+
+    public Map<String, String> getLocalEnvs() {
+        return localEnvs;
+    }
+
+    public void setLocalEnvs(Map<String, String> val) {
+        localEnvs = val;
+    }
+
+    public Map<String, String> getGlobalEnvs() {
+        return globalEnvs;
+    }
+
+    public void setGlobalEnvs(Map<String, String> val) {
+        globalEnvs = val;
     }
 
 }
