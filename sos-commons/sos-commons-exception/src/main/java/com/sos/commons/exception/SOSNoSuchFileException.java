@@ -13,8 +13,8 @@ public class SOSNoSuchFileException extends SOSException {
         this.path = path == null ? null : path.toString();
     }
 
-    public SOSNoSuchFileException(String path) {
-        super(path == null ? "null" : path);
+    public SOSNoSuchFileException(String path, Throwable cause) {
+        super(path == null ? "null" : path, cause);
         this.path = path;
     }
 

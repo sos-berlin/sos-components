@@ -39,7 +39,9 @@ import net.schmizz.sshj.connection.channel.direct.Session.Command;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.FileMode;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
+import net.schmizz.sshj.sftp.Response.StatusCode;
 import net.schmizz.sshj.sftp.SFTPClient;
+import net.schmizz.sshj.sftp.SFTPException;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.UserAuthException;
@@ -108,7 +110,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
-        sftpClient.mkdir(sftpClient.canonicalize(path));
+        sftpClient.mkdir(path);
     }
 
     @Override
@@ -119,7 +121,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
-        sftpClient.mkdirs(sftpClient.canonicalize(path));
+        sftpClient.mkdirs(path);
     }
 
     @Override
@@ -130,11 +132,12 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
-        path = sftpClient.canonicalize(path);
-        FileAttributes attr = getFileAttributes(path);
-        if (attr == null) {
-            throw new SOSNoSuchFileException(path);
+        try {
+            path = sftpClient.canonicalize(path);
+        } catch (SFTPException e) {
+            throwException(e, path);
         }
+        FileAttributes attr = getFileAttributes(path);
         switch (attr.getType()) {
         case DIRECTORY:
             deleteDirectories(path);
@@ -146,6 +149,16 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         default:
             break;
         }
+    }
+
+    private void throwException(SFTPException e, String msg) throws Exception {
+        StatusCode sc = e.getStatusCode();
+        if (sc != null) {
+            if (sc.equals(StatusCode.NO_SUCH_FILE) || sc.equals(StatusCode.NO_SUCH_PATH)) {
+                throw new SOSNoSuchFileException(msg, e);
+            }
+        }
+        throw e;
     }
 
     @Override
@@ -184,7 +197,13 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (SOSString.isEmpty(oldpath) || SOSString.isEmpty(newpath)) {
             throw new SOSMissingDataException("oldpath or newpath");
         }
-        sftpClient.rename(sftpClient.canonicalize(oldpath), sftpClient.canonicalize(newpath));
+        try {
+            oldpath = sftpClient.canonicalize(oldpath);
+        } catch (SFTPException e) {
+            throwException(e, oldpath);
+        }
+
+        sftpClient.rename(oldpath, newpath);
     }
 
     @Override
@@ -213,9 +232,13 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
 
     @Override
     public long getSize(String path) throws Exception {
-        FileAttributes attr = getFileAttributes(path);
-        if (attr != null) {
-            return attr.getSize();
+        try {
+            FileAttributes attr = getFileAttributes(path);
+            if (attr != null) {
+                return attr.getSize();
+            }
+        } catch (SFTPException e) {
+            throwException(e, path);
         }
         return -1;
     }
@@ -225,9 +248,13 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
-        FileAttributes attr = getFileAttributes(path);
-        if (attr != null) {
-            return attr.getMtime();
+        try {
+            FileAttributes attr = getFileAttributes(path);
+            if (attr != null) {
+                return attr.getMtime();
+            }
+        } catch (SFTPException e) {
+            throwException(e, path);
         }
         return -1;
     }
@@ -243,7 +270,7 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (sftpClient == null) {
             throw new SOSSFTPClientNotInitializedException();
         }
-        sftpClient.put(new FileSystemFile(source), sftpClient.canonicalize(target));
+        sftpClient.put(new FileSystemFile(source), target);
     }
 
     public void get(String source, String target) throws Exception {
@@ -311,14 +338,14 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         return serverInfo;
     }
 
-    public FileAttributes getFileAttributes(String path) throws Exception {
+    private FileAttributes getFileAttributes(String path) throws Exception {
         if (sftpClient == null) {
             throw new SOSSFTPClientNotInitializedException();
         }
         if (SOSString.isEmpty(path)) {
             throw new SOSMissingDataException("path");
         }
-        return sftpClient.stat(sftpClient.canonicalize(path));
+        return sftpClient.stat(path);
     }
 
     public SSHClient getSSHClient() {
