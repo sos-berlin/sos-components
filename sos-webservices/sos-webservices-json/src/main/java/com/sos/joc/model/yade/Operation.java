@@ -13,7 +13,8 @@ public enum Operation {
     GETLIST("GETLIST"),
     RENAME("RENAME"),
     COPYTOINTERNET("COPYTOINTERNET"),
-    COPYFROMINTERNET("COPYFROMINTERNET");
+    COPYFROMINTERNET("COPYFROMINTERNET"),
+    UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, Operation> CONSTANTS = new HashMap<String, Operation>();
 
