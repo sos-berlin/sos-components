@@ -583,6 +583,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                     plannedOrder.setControllerId(controllerId);
 
                                     plannedOrder.setFreshOrder(freshOrder);
+                                    plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
                                     plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
                                     plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(dbItemDailyPlanSubmissionHistory.getId());

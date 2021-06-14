@@ -20,6 +20,7 @@ public class PlannedOrder {
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
     private Schedule schedule;
+    private String workflowPath;
 
     public boolean isStoredInDb() {
         return storedInDb;
@@ -36,7 +37,7 @@ public class PlannedOrder {
         this.freshOrder = new FreshOrder();
         freshOrder.setId(dbItemDailyPlannedOrders.getOrderId());
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
-        freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowName());
+        freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowPath());
         this.schedule = new Schedule();
         schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
         schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
@@ -107,6 +108,16 @@ public class PlannedOrder {
 
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
+    }
+
+    
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
+
+    
+    public void setWorkflowPath(String workflowPath) {
+        this.workflowPath = workflowPath;
     }
 
  

@@ -263,7 +263,8 @@ public class OrderListSynchronizer {
                     LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
                     filter.setControllerId(controllerId);
-                    filter.addWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
+                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
+                    filter.addWorkflowName(workflowName);
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     try {
                         OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);

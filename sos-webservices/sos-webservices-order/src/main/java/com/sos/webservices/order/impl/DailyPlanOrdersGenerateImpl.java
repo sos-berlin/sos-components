@@ -149,7 +149,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
                     for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getFreshOrder().getWorkflowPath(), entry.getValue().getFreshOrder().getId()));
+                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId()));
                     }
 
                     OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper

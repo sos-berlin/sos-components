@@ -2,6 +2,7 @@ package com.sos.joc.orders.impl;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
@@ -45,6 +48,8 @@ import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -162,7 +167,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             modifyOrders.setOrderType(cancelDailyPlanOrders.getOrderType());
             modifyOrders.setAuditLog(cancelDailyPlanOrders.getAuditLog());
             
-            postOrdersModify(Action.CANCEL_DAILYPLAN, modifyOrders);
+            postOrdersModify(Action.CANCEL_DAILYPLAN, modifyOrders);            
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -237,7 +243,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                if (either.isRight() && !Action.CANCEL_DAILYPLAN.equals(action)) {
+                if (either.isRight()) {
                     OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
                             .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
