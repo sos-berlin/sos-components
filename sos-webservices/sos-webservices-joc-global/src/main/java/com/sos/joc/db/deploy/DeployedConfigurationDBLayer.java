@@ -111,7 +111,6 @@ public class DeployedConfigurationDBLayer {
             List<String> clauses = new ArrayList<>();
             if (controllerId != null && !controllerId.isEmpty()) {
                 clauses.add("controllerId = :controllerId");
-                //hql.append(" where controllerId = :controllerId");
             }
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
                 String clause = permittedFolders.stream().map(folder -> {
@@ -125,9 +124,8 @@ public class DeployedConfigurationDBLayer {
                     clause = "(" + clause + ")";
                 }
                 clauses.add(clause);
-                // hql.append(" and " + clause);
+                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
-            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             hql.append(" group by type");
             Query<NumOfDeployment> query = session.createQuery(hql.toString());
             if (controllerId != null && !controllerId.isEmpty()) {
