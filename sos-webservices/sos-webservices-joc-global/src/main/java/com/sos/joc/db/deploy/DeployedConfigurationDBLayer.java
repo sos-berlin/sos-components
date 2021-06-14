@@ -124,6 +124,8 @@ public class DeployedConfigurationDBLayer {
                     clause = "(" + clause + ")";
                 }
                 clauses.add(clause);
+            }
+            if (!clauses.isEmpty()) {
                 hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
             hql.append(" group by type");
