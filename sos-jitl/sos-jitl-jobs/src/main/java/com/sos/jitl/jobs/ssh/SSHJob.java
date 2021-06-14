@@ -150,8 +150,13 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     if (e instanceof SOSJobSSHException) {
                         throw e;
                     } else {
-                        String msg = "error occurred processing ssh command: " + e.getMessage() + " " + e.getCause();
-                        throw new SOSJobSSHException(msg, e);
+                        // String msg = "error occurred processing ssh command: " + e.getMessage() + " " + e.getCause();
+                        StringBuilder sb = new StringBuilder(e.getClass().getSimpleName());
+                        sb.append(": ").append(e.getMessage());
+                        if (e.getCause() != null) {
+                            sb.append(" ").append(e.getCause());
+                        }
+                        throw new SOSJobSSHException(sb.toString(), e);
                     }
                 }
             }

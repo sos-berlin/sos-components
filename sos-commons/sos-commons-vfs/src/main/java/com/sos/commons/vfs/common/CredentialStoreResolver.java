@@ -41,6 +41,10 @@ public class CredentialStoreResolver {
             }
             setDatabase(args);
         }
+        if (arg.getValue() == null) {
+            return false;
+        }
+
         SOSKeePassPath keePassPath = new SOSKeePassPath(args.getKeepassDatabase().isKDBX(), arg.getValue().toString(), args
                 .getCredentialStoreEntryPath().getValue());
         if (keePassPath.isValid()) {
