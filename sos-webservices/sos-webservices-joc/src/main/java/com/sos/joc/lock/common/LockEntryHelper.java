@@ -147,6 +147,7 @@ public class LockEntryHelper {
             lw = new LockWorkflow();
             lw.setPath(wId.getPath());
             lw.setVersionId(wId.getVersionId());
+            workflows.put(wId, lw);
         }
         return lw;
     }

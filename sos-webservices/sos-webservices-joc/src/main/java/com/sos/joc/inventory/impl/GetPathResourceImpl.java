@@ -75,15 +75,15 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                     throw e;
                 } else if (e instanceof SOSHibernateQueryNonUniqueResultException) {
                     throw new JocSosHibernateException(
-                            String.format("Could not determine path for name %1$s, multiple objects found in database.", filter.getName()), e);
+                            String.format("Could not determine path for %1$s '%2$s', multiple objects found in database.", filter.getObjectType(), filter.getName()), e);
                 } else if (e.getCause() instanceof NullPointerException) {
-                    throw new JocSosHibernateException(String.format("Could not determine path for name %1$s, no object found in database.", filter.getName()), e);
+                    throw new JocSosHibernateException(String.format("Could not determine path for %1$s '%2$s', no object found in database.", filter.getObjectType(), filter.getName()), e);
                 } 
             }
             if (path == null) {
                 Err420 error = new Err420();
                 Err err = new Err();
-                err.setMessage(String.format("Could not determine path for name %1$s, no object found in database.", filter.getName()));
+                err.setMessage(String.format("Could not determine path for %1$s '%2$s', no object found in database.", filter.getObjectType(), filter.getName()));
                 error.setError(err);
                 return JOCDefaultResponse.responseStatus420(error);
             } else {
