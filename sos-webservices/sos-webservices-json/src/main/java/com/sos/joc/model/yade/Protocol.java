@@ -16,7 +16,8 @@ public enum Protocol {
     HTTPS("HTTPS"),
     WEBDAV("WEBDAV"),
     WEBDAVS("WEBDAVS"),
-    SMB("SMB");
+    SMB("SMB"),
+    UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, Protocol> CONSTANTS = new HashMap<String, Protocol>();
 
