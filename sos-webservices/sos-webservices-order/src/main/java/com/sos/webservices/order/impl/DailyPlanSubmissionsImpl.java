@@ -23,6 +23,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
+import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.schema.JsonValidator;
@@ -63,13 +64,11 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
             if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
-                        dailyPlanSubmissionHistoryFilter.getTimeZone());
+                Date fromDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom());
                 filter.setDateFrom(fromDate);
             }
             if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
-                Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(), dailyPlanSubmissionHistoryFilter
-                        .getTimeZone());
+                Date toDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
                 filter.setDateTo(toDate);
             }
 
@@ -132,31 +131,17 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
 
             if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
-                Date date = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor(), dailyPlanSubmissionHistoryFilter
-                        .getTimeZone());
+                Date date = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor());
                 filter.setDateFor(date);
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(filter.getDateFor());
-                calendar.add(java.util.Calendar.DATE, 1);
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-                calendar.set(java.util.Calendar.SECOND, 0);
-                calendar.set(java.util.Calendar.MILLISECOND, 0);
-                calendar.set(java.util.Calendar.MINUTE, 0);
-
-                filter.setDateFor(calendar.getTime());
-
             } else {
 
                 if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                    Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom(),
-                            dailyPlanSubmissionHistoryFilter.getTimeZone());
-                    filter.setDateFrom(utc2Timezone(fromDate, dailyPlanSubmissionHistoryFilter.getTimeZone()));
+                    Date fromDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom());
+                    filter.setDateFrom(fromDate);
                 }
                 if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
-                    Date toDate = JobSchedulerDate.getDateTo(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo(),
-                            dailyPlanSubmissionHistoryFilter.getTimeZone());
-                    filter.setDateTo(utc2Timezone(toDate, dailyPlanSubmissionHistoryFilter.getTimeZone()));
+                    Date toDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+                    filter.setDateTo(toDate);
                 }
             }
 
@@ -177,23 +162,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             Globals.disconnect(sosHibernateSession);
         }
     }
-
-    private Date utc2Timezone(Date d, String fromTimeZone) throws ParseException {
-        String timeZone;
-        if (fromTimeZone == null) {
-            fromTimeZone = "UTC";
-        }
-        if (settings == null) {
-            timeZone = "Europe/Berlin";
-        } else {
-            timeZone = settings.getTimeZone();
-        }
-        SimpleDateFormat sdfFromTimezone = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdfFromTimezone.setTimeZone(TimeZone.getTimeZone(fromTimeZone));
-        SimpleDateFormat sdfToTimezone = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdfToTimezone.setTimeZone(TimeZone.getTimeZone(timeZone));
-        return sdfFromTimezone.parse(sdfToTimezone.format(d));
-    }
+ 
 
     
 }

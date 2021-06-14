@@ -27,39 +27,39 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class DailyPlanSubmissionsFilterDef {
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFrom")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateFrom;
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateTo")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateTo;
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFor")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dateFor;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFrom")
@@ -68,9 +68,9 @@ public class DailyPlanSubmissionsFilterDef {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFrom")
@@ -79,9 +79,9 @@ public class DailyPlanSubmissionsFilterDef {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateTo")
@@ -90,9 +90,9 @@ public class DailyPlanSubmissionsFilterDef {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateTo")
@@ -101,9 +101,9 @@ public class DailyPlanSubmissionsFilterDef {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFor")
@@ -112,9 +112,9 @@ public class DailyPlanSubmissionsFilterDef {
     }
 
     /**
-     * string for dateFrom and dateTo as search filter
+     * date
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     * ISO date YYYY-MM-DD
      * 
      */
     @JsonProperty("dateFor")
