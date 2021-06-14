@@ -1,8 +1,6 @@
 package com.sos.commons.vfs.ssh;
 
 import java.net.Proxy.Type;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +25,7 @@ public class SSHProviderTest {
     private static final String SSH_USER = "sos";
     private static final String SSH_PASSWORD = "sos";
     private static final int SSH_PORT = 22;
-    private static final Path SSH_AUTH_FILE = Paths.get("C://id_rsa.ppk");
+    private static final String SSH_AUTH_FILE = "C://id_rsa.ppk";
 
     private static final Proxy PROXY = new Proxy(Type.SOCKS, "proxy_host", 1080, "proxy_user", "12345", 30);
 

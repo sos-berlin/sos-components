@@ -129,6 +129,21 @@ public class SOSArgument<T> {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
+    public void fromString(String val) {
+        if (value == null) {
+            return;
+        }
+        if (value instanceof String) {
+            value = (T) val;
+        } else if (value instanceof Integer) {
+            value = (T) new Integer(val);
+        } else if (value instanceof Long) {
+            value = (T) new Long(val);
+        }
+        // TODO
+    }
+
     private void setIsDirty() {
         if (value == null) {
             dirty = defaultValue == null ? false : true;

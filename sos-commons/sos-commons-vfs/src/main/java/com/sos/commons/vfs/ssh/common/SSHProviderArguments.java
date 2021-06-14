@@ -18,7 +18,8 @@ public class SSHProviderArguments extends AProviderArguments {
 
     // Authentication
     private SOSArgument<String> passphrase = new SOSArgument<String>("passphrase", false, DisplayMode.MASKED);
-    private SOSArgument<Path> authFile = new SOSArgument<Path>("auth_file", false);
+    /** String because can contains cs:// syntax */
+    private SOSArgument<String> authFile = new SOSArgument<String>("auth_file", false);
     private SOSArgument<AuthMethod> authMethod = new SOSArgument<AuthMethod>("auth_method", false);
     private SOSArgument<List<AuthMethod>> preferredAuthentications = new SOSArgument<List<AuthMethod>>("preferred_authentications", false);
     private SOSArgument<List<AuthMethod>> requiredAuthentications = new SOSArgument<List<AuthMethod>>("required_authentications", false);
@@ -56,7 +57,7 @@ public class SSHProviderArguments extends AProviderArguments {
         return passphrase;
     }
 
-    public SOSArgument<Path> getAuthFile() {
+    public SOSArgument<String> getAuthFile() {
         return authFile;
     }
 
