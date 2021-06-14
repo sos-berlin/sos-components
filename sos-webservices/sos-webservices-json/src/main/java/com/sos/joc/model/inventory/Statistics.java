@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "numOfWorkflows",
     "numOfLocks",
     "numOfJunctions",
+    "numOfJobResources",
     "numOfFileOrderSources",
     "numOfSchedules",
     "numOfCalendars"
@@ -83,6 +84,14 @@ public class Statistics {
      */
     @JsonProperty("numOfJunctions")
     private Long numOfJunctions;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfJobResources")
+    private Long numOfJobResources;
     /**
      * non negative long
      * <p>
@@ -250,6 +259,28 @@ public class Statistics {
      * 
      * 
      */
+    @JsonProperty("numOfJobResources")
+    public Long getNumOfJobResources() {
+        return numOfJobResources;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfJobResources")
+    public void setNumOfJobResources(Long numOfJobResources) {
+        this.numOfJobResources = numOfJobResources;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("numOfFileOrderSources")
     public Long getNumOfFileOrderSources() {
         return numOfFileOrderSources;
@@ -312,12 +343,12 @@ public class Statistics {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfJunctions", numOfJunctions).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfJunctions", numOfJunctions).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfJunctions).append(numOfSchedules).append(deliveryDate).append(numOfWorkflows).toHashCode();
+        return new HashCodeBuilder().append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfJunctions).append(numOfSchedules).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
     }
 
     @Override
@@ -329,7 +360,7 @@ public class Statistics {
             return false;
         }
         Statistics rhs = ((Statistics) other);
-        return new EqualsBuilder().append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfJunctions, rhs.numOfJunctions).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
+        return new EqualsBuilder().append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfJunctions, rhs.numOfJunctions).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
     }
 
 }

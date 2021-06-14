@@ -25,6 +25,7 @@ import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.tree.Tree;
 
@@ -95,21 +96,38 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public Map<ConfigurationType, Long> getNumOfDeployedObjects(String controllerId) {
-        return getNumOfObjects(DBLayer.DBITEM_DEP_CONFIGURATIONS, controllerId);
+    public Map<ConfigurationType, Long> getNumOfDeployedObjects(String controllerId, Set<Folder> permittedFolders) {
+        return getNumOfObjects(DBLayer.DBITEM_DEP_CONFIGURATIONS, controllerId, permittedFolders);
     }
 
-    public Map<ConfigurationType, Long> getNumOfReleasedObjects() {
-        return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, null);
+    public Map<ConfigurationType, Long> getNumOfReleasedObjects(Set<Folder> permittedFolders) {
+        return getNumOfObjects(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS, null, permittedFolders);
     }
 
-    private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId) {
+    private Map<ConfigurationType, Long> getNumOfObjects(String tableName, String controllerId, Set<Folder> permittedFolders) {
         try {
             StringBuilder hql = new StringBuilder("select new ").append(NumOfDeployment.class.getName());
             hql.append("(type, count(id) as numof) from ").append(tableName);
+            List<String> clauses = new ArrayList<>();
             if (controllerId != null && !controllerId.isEmpty()) {
-                hql.append(" where controllerId = :controllerId");
+                clauses.add("controllerId = :controllerId");
+                //hql.append(" where controllerId = :controllerId");
             }
+            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                String clause = permittedFolders.stream().map(folder -> {
+                    if (folder.getRecursive()) {
+                        return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                    } else {
+                        return "folder = '" + folder.getFolder() + "'";
+                    }
+                }).collect(Collectors.joining(" or "));
+                if (permittedFolders.size() > 1) {
+                    clause = "(" + clause + ")";
+                }
+                clauses.add(clause);
+                // hql.append(" and " + clause);
+            }
+            hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
             hql.append(" group by type");
             Query<NumOfDeployment> query = session.createQuery(hql.toString());
             if (controllerId != null && !controllerId.isEmpty()) {
@@ -117,8 +135,8 @@ public class DeployedConfigurationDBLayer {
             }
             List<NumOfDeployment> result = session.getResultList(query);
             if (result != null) {
-                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.toMap(NumOfDeployment::getConfigurationType,
-                        NumOfDeployment::getNumOf));
+                return result.stream().filter(i -> i.getConfigurationType() != null).collect(Collectors.groupingBy(
+                        NumOfDeployment::getConfigurationType, Collectors.summingLong(NumOfDeployment::getNumOf)));
             }
             return Collections.emptyMap();
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -128,7 +146,7 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public Long getNumOfDeployedJobs(String controllerId) {
+    public Long getNumOfDeployedJobs(String controllerId, Set<Folder> permittedFolders) {
         try {
             StringBuilder hql = new StringBuilder("select sum(sw.jobsCount) as numofjobs from ");
             hql.append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
@@ -141,6 +159,19 @@ public class DeployedConfigurationDBLayer {
             hql.append(" where type=:workflowType");
             if (!SOSString.isEmpty(controllerId)) {
                 hql.append(" and controllerId=:controllerId");
+            }
+            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                String clause = permittedFolders.stream().map(folder -> {
+                    if (folder.getRecursive()) {
+                        return "(folder = '" + folder.getFolder() + "' or folder like '" + (folder.getFolder() + "/%").replaceAll("//+", "/") + "')";
+                    } else {
+                        return "folder = '" + folder.getFolder() + "'";
+                    }
+                }).collect(Collectors.joining(" or "));
+                if (permittedFolders.size() > 1) {
+                    clause = "(" + clause + ")";
+                }
+                hql.append(" and " + clause);
             }
             hql.append(")");
             Query<Long> query = session.createQuery(hql);
