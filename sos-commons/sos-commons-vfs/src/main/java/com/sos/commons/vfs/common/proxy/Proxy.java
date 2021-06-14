@@ -2,6 +2,9 @@ package com.sos.commons.vfs.common.proxy;
 
 import java.net.InetSocketAddress;
 
+import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
+
 public class Proxy {
 
     private final java.net.Proxy proxy;
@@ -56,6 +59,23 @@ public class Proxy {
             }
         }
         this.port = port;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(getClass().getSimpleName()).append("[");
+        if (proxy != null) {
+            sb.append("type=").append(proxy.type());
+        }
+        sb.append(",host=").append(host);
+        sb.append(",port=").append(port);
+        sb.append(",user=").append(user);
+        if (!SOSString.isEmpty(password)) {
+            sb.append(",password=").append(DisplayMode.MASKED.getValue());
+        }
+        sb.append(",connectTimeout=").append(connectTimeout).append("ms");
+        sb.append("]");
+        return sb.toString();
     }
 
 }

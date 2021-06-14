@@ -2,6 +2,7 @@ package com.sos.commons.vfs.ssh;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.commons.util.common.SOSTimeout;
 import com.sos.commons.vfs.common.AProvider;
 import com.sos.commons.vfs.common.AProviderArguments.Protocol;
+import com.sos.commons.vfs.common.CredentialStoreResolver;
 import com.sos.commons.vfs.common.proxy.Proxy;
 import com.sos.commons.vfs.common.proxy.ProxySocketFactory;
 import com.sos.commons.vfs.exception.SOSAuthenticationFailedException;
@@ -66,6 +68,10 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
 
     @Override
     public void connect() throws Exception {
+        if (CredentialStoreResolver.resolve(getArguments(), getArguments().getPassphrase())) {
+            CredentialStoreResolver.resolveAttachment(getArguments(), getArguments().getAuthFile());
+        }
+
         createSSHClient();
         sshClient.connect(getArguments().getHost().getValue(), getArguments().getPort().getValue());
         authenticate();
@@ -512,10 +518,10 @@ public class SSHProvider extends AProvider<SSHProviderArguments> {
         if (getArguments().getKeepassDatabase() != null) {   // from Keepass attachment
             keyProvider = SSHProviderUtil.getKeyProviderFromKeepass(config, getArguments());
         } else {// from File
-            Path authFile = getArguments().getAuthFile().getValue();
-            if (authFile == null) {
+            if (SOSString.isEmpty(getArguments().getAuthFile().getValue())) {
                 throw new SOSRequiredArgumentMissingException(getArguments().getAuthFile().getName());
             }
+            Path authFile = Paths.get(getArguments().getAuthFile().getValue());
             if (getArguments().getPassphrase().isEmpty()) {
                 keyProvider = sshClient.loadKeys(authFile.toFile().getCanonicalPath());
             } else {
