@@ -28,7 +28,8 @@ public class JobSchedulerDate {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
     // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
-    private static final Instant NEVER =  Instant.ofEpochMilli(253402300799000L);
+    public static final Long NEVER_MILLIS =  253402300799000L;
+    private static final Instant NEVER =  Instant.ofEpochMilli(NEVER_MILLIS);
 
     
     public static Date nowInUtc() {
@@ -116,7 +117,7 @@ public class JobSchedulerDate {
         if (scheduledFor == null || scheduledFor.isEmpty() || "now".equals(scheduledFor.trim().toLowerCase())) {
             return Optional.empty();
         } else if ("never".equals(scheduledFor.trim().toLowerCase())) {
-            Optional.of(NEVER);
+            return Optional.of(NEVER);
         }
         scheduledFor = scheduledFor.trim();
         if (userTimezone == null) {

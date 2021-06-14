@@ -66,9 +66,6 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                 return jocDefaultResponse;
             }
 
-            if (addOrders.getOrders().size() == 0) {
-                throw new JocMissingRequiredParameterException("undefined 'orders'");
-            }
             DBItemJocAuditLog dbAuditLog = storeAuditLog(addOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();

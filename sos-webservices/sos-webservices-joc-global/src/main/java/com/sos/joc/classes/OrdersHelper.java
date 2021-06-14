@@ -239,6 +239,7 @@ public class OrdersHelper {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
         o.setScheduledFor(scheduledFor);
+        o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.PENDING.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
         }
