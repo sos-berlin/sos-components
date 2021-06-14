@@ -85,22 +85,17 @@ public class ClusterSettings {
     }
     
     private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {
-        String suffix = "";
-        String prefix = "";
-        if (!suffixPrefixIsDefault(suf)) {
-            suffix = suf.getValue();
-        }
+        String suffix = suf.getValue();
+        String prefix = pref.getValue();
         if (suffix == null || suffix.isEmpty()) {
-            if (!suffixPrefixIsDefault(pref)) {
-                prefix = pref.getValue();
-            }
-            if (prefix == null || prefix.isEmpty()) {
-                suffix = suf.getDefault();
-            } else {
-                prefix = trimPrefix(prefix);
-            }
+            suffix = suf.getDefault();
         } else {
             suffix = trimSuffix(suffix);
+        }
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = pref.getDefault();
+        } else {
+            prefix = trimPrefix(prefix);
         }
         SuffixPrefix sp = new SuffixPrefix();
         sp.setPrefix(prefix);
@@ -114,10 +109,6 @@ public class ClusterSettings {
     
     private static String trimPrefix(String prefix) {
         return prefix.trim().replaceFirst("-+$", "");
-    }
-    
-    private static boolean suffixPrefixIsDefault(ConfigurationEntry suffixPrefix) {
-        return suffixPrefix.getDefault().equals(suffixPrefix.getValue());
     }
     
     private static Optional<String> logShowViewSettings(Map<ShowViewName, Boolean> showViews) {

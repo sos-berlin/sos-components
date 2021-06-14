@@ -25,6 +25,10 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
 
         try {
             initLogging(API_CALL, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
             
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
