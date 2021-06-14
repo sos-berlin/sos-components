@@ -33,7 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "states",
     "folders",
     "dateTo",
-    "timeZone"
+    "timeZone",
+    "scheduledNever"
 })
 public class OrdersFilterV {
 
@@ -96,6 +97,8 @@ public class OrdersFilterV {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    @JsonProperty("scheduledNever")
+    private Boolean scheduledNever = false;
 
     /**
      * controllerId
@@ -257,14 +260,24 @@ public class OrdersFilterV {
         this.timeZone = timeZone;
     }
 
+    @JsonProperty("scheduledNever")
+    public Boolean getScheduledNever() {
+        return scheduledNever;
+    }
+
+    @JsonProperty("scheduledNever")
+    public void setScheduledNever(Boolean scheduledNever) {
+        this.scheduledNever = scheduledNever;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(folders).append(controllerId).append(compact).append(dateTo).append(timeZone).append(orderIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(scheduledNever).append(folders).append(controllerId).append(compact).append(dateTo).append(timeZone).append(orderIds).append(states).toHashCode();
     }
 
     @Override
@@ -276,7 +289,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
     }
 
 }

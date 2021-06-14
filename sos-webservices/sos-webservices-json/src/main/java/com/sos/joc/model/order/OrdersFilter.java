@@ -66,20 +66,22 @@ public class OrdersFilter {
     @JsonPropertyDescription("controls if the object's data is compact or detailed")
     private Boolean compact = false;
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("orderId")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String orderId;
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonPropertyDescription("pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character")
     private String workflowPath;
     @JsonProperty("states")
     private List<OrderStateText> states = new ArrayList<OrderStateText>();
@@ -193,9 +195,9 @@ public class OrdersFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("orderId")
@@ -204,9 +206,9 @@ public class OrdersFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("orderId")
@@ -215,9 +217,9 @@ public class OrdersFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")
@@ -226,9 +228,9 @@ public class OrdersFilter {
     }
 
     /**
-     * string without < and >
+     * glob pattern
      * <p>
-     * 
+     * pattern with wildcards '*' and '?' where '*' match zero or more characters and '?' match any single character
      * 
      */
     @JsonProperty("workflowPath")

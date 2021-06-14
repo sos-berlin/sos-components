@@ -29,7 +29,7 @@ public class JobSchedulerDate {
     private static final Logger LOGGER = LoggerFactory.getLogger(JobSchedulerDate.class);
     // max datetime in database with 000 millis: 9999-12-31T23:59:59.000Z -> 253402300799000L
     public static final Long NEVER_MILLIS =  253402300799000L;
-    private static final Instant NEVER =  Instant.ofEpochMilli(NEVER_MILLIS);
+    public static final Instant NEVER =  Instant.ofEpochMilli(NEVER_MILLIS);
 
     
     public static Date nowInUtc() {
@@ -171,6 +171,12 @@ public class JobSchedulerDate {
     }
 
     public static Instant getInstantFromDateStr(String dateStr, boolean dateTo, String timeZone) throws ControllerInvalidResponseDataException {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        if (dateStr.trim().toLowerCase().equals("never")) {
+            return NEVER;
+        }
         Pattern offsetPattern = Pattern.compile(
                 "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");

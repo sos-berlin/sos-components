@@ -139,7 +139,14 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             int numOfFreshOrders = 0;
             if (freshOrders != null) {
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
-                if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
+                if (body.getScheduledNever() == Boolean.TRUE) {
+                    Predicate<JOrder> neverFilter = o -> {
+                        Optional<Instant> scheduledFor = o.scheduledFor();
+                        return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                    };
+                    numOfFreshOrders = freshOrderSet.stream().filter(neverFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
+                            e -> 1).sum();
+                } else if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
                     String dateTo = body.getDateTo();
                     if ("0d".equals(dateTo)) {
                         dateTo = "1d";
