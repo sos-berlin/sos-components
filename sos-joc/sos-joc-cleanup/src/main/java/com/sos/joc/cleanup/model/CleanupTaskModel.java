@@ -162,8 +162,11 @@ public class CleanupTaskModel implements ICleanupTask {
     protected boolean askService() {
         if (this.type.equals(TaskType.SERVICE_TASK)) {
             JocServiceAnswer info = getService().getInfo();
-            LOGGER.info(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
-            return info.getState().equals(JocServiceAnswerState.RELAX);
+            boolean rc = info.getState().equals(JocServiceAnswerState.RELAX);
+            if (!rc) {
+                LOGGER.info(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
+            }
+            return rc;
         }
         return true;
     }
