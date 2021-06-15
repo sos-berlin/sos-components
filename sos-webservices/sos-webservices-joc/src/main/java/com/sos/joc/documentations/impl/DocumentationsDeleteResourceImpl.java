@@ -24,7 +24,7 @@ import com.sos.joc.documentations.resource.IDocumentationsDeleteResource;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.audit.ObjectType;
-import com.sos.joc.model.docu.DocumentationsFilter;
+import com.sos.joc.model.docu.DocumentationsDeleteFilter;
 import com.sos.schema.JsonValidator;
 
 @Path("documentations")
@@ -38,21 +38,23 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DocumentationsFilter.class);
-            DocumentationsFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken)
-                    .getDocumentations().getManage());
-
+            JsonValidator.validate(filterBytes, DocumentationsDeleteFilter.class);
+            DocumentationsDeleteFilter documentationsFilter = Globals.objectMapper.readValue(filterBytes, DocumentationsDeleteFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getDocumentations().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            checkRequiredParameter("documentations", documentationsFilter.getDocumentations());
             DBItemJocAuditLog dbAuditItem = storeAuditLog(documentationsFilter.getAuditLog(), CategoryType.DOCUMENTATIONS);
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
-            List<DBItemDocumentation> docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
+            List<DBItemDocumentation> docs = null;
+            if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
+                docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
+            } else {
+                docs = dbLayer.getDocumentations(documentationsFilter.getFolder(), false);
+            }
             JocAuditLog.storeAuditLogDetails(docs.stream().map(dbDoc -> new AuditLogDetail(dbDoc.getPath(), ObjectType.DOCUMENTATION.intValue()))
                     .collect(Collectors.toList()), connection, dbAuditItem);
             
