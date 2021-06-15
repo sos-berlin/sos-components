@@ -38,6 +38,7 @@ import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
+import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -359,10 +360,20 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+            connection.setAutoCommit(false);
+            Globals.beginTransaction(connection);
             InventoryInstancesDBLayer instanceDBLayer = new InventoryInstancesDBLayer(connection);
             InventoryOperatingSystemsDBLayer osDBLayer = new InventoryOperatingSystemsDBLayer(connection);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
             
+            
+            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
+            if (dbAgents != null) {
+                //throw new ControllerConflictException("Agents has to be removed before the Controller"); 
+                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
+                    agentDBLayer.deleteInstance(dbAgent);
+                }
+            }
             List<DBItemInventoryJSInstance> instances = instanceDBLayer.getInventoryInstancesByControllerId(controllerId);
             if (instances != null) {
                for (DBItemInventoryJSInstance instance : instances) {
@@ -374,26 +385,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                }
                ProxiesEdit.remove(controllerId);
             }
-            List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
-            if (dbAgents != null) {
-                Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(dbAgents.stream().map(
-                        DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()));
-                for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
-                    agentDBLayer.deleteInstance(dbAgent);
-                    Set<DBItemInventoryAgentName> dbAliase = allAliases.get(dbAgent.getAgentId());
-                    if (dbAliase != null) {
-                        for (DBItemInventoryAgentName item : dbAliase) {
-                            connection.delete(item);
-                        }
-                    }
-                }
-            }
-            
+            Globals.commit(connection);
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
+            Globals.rollback(connection);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
+            Globals.rollback(connection);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(connection);

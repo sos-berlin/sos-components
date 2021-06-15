@@ -105,14 +105,18 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                         SOSHibernateSession connection = null;
                         try {
                             connection = Globals.createSosHibernateStatelessConnection(API_CALL_REMOVE);
+                            connection.setAutoCommit(false);
+                            Globals.beginTransaction(connection);
                             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
                             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(Collections.singleton(
                                     controllerId), Collections.singleton(agentCommand.getAgentId()), null, false, false);
                             if (dbAgents != null && !dbAgents.isEmpty()) {
-                                // TODO delete aliase too
                                 dbLayer.deleteInstance(dbAgents.get(0));
                             }
+                            Globals.commit(connection);
                         } catch (Exception e1) {
+                            Globals.rollback(connection);
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e1), accessToken, getJocError(), controllerId);
                         } finally {
                             Globals.disconnect(connection);
                         }

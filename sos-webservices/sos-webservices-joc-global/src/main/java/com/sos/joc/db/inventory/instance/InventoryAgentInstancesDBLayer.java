@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
@@ -298,12 +299,21 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         try {
             if (agent != null) {
                 getSession().delete(agent);
+                deleteAliase(agent.getAgentId());
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
         }
+    }
+    
+    public Integer deleteAliase(String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+        hql.append(" where agentId = :agentId");
+        Query<Integer> query = getSession().createQuery(hql.toString());
+        query.setParameter("agentId", agentId);
+        return getSession().executeUpdate(query);
     }
 
 }
