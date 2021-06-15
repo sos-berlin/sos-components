@@ -96,7 +96,7 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             ProblemHelper.throwProblemIfExist(either);
             AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
             
-            if (couplingState instanceof AgentRefState.Reset$) {
+            //if (couplingState instanceof AgentRefState.Coupled$) {
                 
                 JUpdateItemOperation op = JUpdateItemOperation.deleteSimple(agent);
                 proxy.api().updateItems(Flux.just(op)).thenAccept(e -> {
@@ -122,9 +122,9 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
                         }
                     }
                 });
-            } else {
-                throw new ControllerConflictException("Agent has to be reset before removal");
-            }
+//            } else {
+//                throw new ControllerConflictException("Agent has to be coupled");
+//            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
