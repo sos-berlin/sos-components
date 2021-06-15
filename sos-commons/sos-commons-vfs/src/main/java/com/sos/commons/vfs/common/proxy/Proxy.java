@@ -1,6 +1,7 @@
 package com.sos.commons.vfs.common.proxy;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
@@ -13,6 +14,7 @@ public class Proxy {
     private final String password;
     private final int connectTimeout;// milliseconds
     private int port;
+    private Charset charset = Charset.defaultCharset();
 
     public Proxy(java.net.Proxy.Type type, String host, int port, String user, String password, int connectTimeout) {
         this.host = host;
@@ -47,6 +49,14 @@ public class Proxy {
         return connectTimeout;
     }
 
+    public void setCharset(Charset val) {
+        charset = val;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
     private void setPort(java.net.Proxy.Type type, int port) {
         if (port <= 0) {
             switch (type) {
@@ -73,6 +83,7 @@ public class Proxy {
         if (!SOSString.isEmpty(password)) {
             sb.append(",password=").append(DisplayMode.MASKED.getValue());
         }
+        sb.append(",charset=").append(charset);
         sb.append(",connectTimeout=").append(connectTimeout).append("ms");
         sb.append("]");
         return sb.toString();

@@ -37,13 +37,13 @@ public class HttpProxySocket extends Socket {
 
         InetSocketAddress address = (InetSocketAddress) endpoint;
         OutputStream out = this.getOutputStream();
-        IOUtils.write(String.format("CONNECT %s:%s HTTP/1.0\r\n", address.getHostName(), address.getPort()), out);
+        IOUtils.write(String.format("CONNECT %s:%s HTTP/1.0\r\n", address.getHostName(), address.getPort()), out, proxy.getCharset());
         if (basicAuth != null) {
-            IOUtils.write("Proxy-Authorization: Basic ", out);
-            IOUtils.write(basicAuth, out);
+            IOUtils.write("Proxy-Authorization: Basic ", out, proxy.getCharset());
+            IOUtils.write(basicAuth, out, proxy.getCharset());
         }
-        IOUtils.write("\r\n", out);
-        IOUtils.write("\r\n", out);
+        IOUtils.write("\r\n", out, proxy.getCharset());
+        IOUtils.write("\r\n", out, proxy.getCharset());
         out.flush();
 
         InputStream in = this.getInputStream();

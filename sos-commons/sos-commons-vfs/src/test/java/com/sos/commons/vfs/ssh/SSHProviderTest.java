@@ -27,7 +27,7 @@ public class SSHProviderTest {
     private static final int SSH_PORT = 22;
     private static final String SSH_AUTH_FILE = "C://id_rsa.ppk";
 
-    private static final Proxy PROXY = new Proxy(Type.SOCKS, "proxy_host", 1080, "proxy_user", "12345", 30);
+    private static final Proxy PROXY = new Proxy(Type.SOCKS, "proxy_host", 1080, "proxy_user", "12345", 30_000);
 
     @Ignore
     @Test
@@ -147,6 +147,7 @@ public class SSHProviderTest {
         try {
             p.connect();
             LOGGER.info(p.getServerInfo().toString());
+            LOGGER.info(PROXY.toString());
         } catch (Throwable e) {
             throw e;
         } finally {

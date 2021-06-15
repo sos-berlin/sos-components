@@ -78,10 +78,7 @@ public abstract class AProviderArguments extends ASOSArguments {
         if (proxy != null) {
             return proxy;
         }
-        if (proxyType.getValue() != null && proxyHost.getValue() != null) {
-            proxy = new Proxy(proxyType.getValue(), proxyHost.getValue(), proxyPort.getValue(), proxyUser.getValue(), proxyPassword.getValue(), asMs(
-                    proxyConnectTimeout));
-        }
+        tryCreateProxy();
         return proxy;
     }
 
@@ -89,9 +86,15 @@ public abstract class AProviderArguments extends ASOSArguments {
         if (proxy == null) {
             return proxy;
         }
-        proxy = new Proxy(proxyType.getValue(), proxyHost.getValue(), proxyPort.getValue(), proxyUser.getValue(), proxyPassword.getValue(), asMs(
-                proxyConnectTimeout));
+        tryCreateProxy();
         return proxy;
+    }
+
+    private void tryCreateProxy() {
+        if (proxyType.getValue() != null && proxyHost.getValue() != null) {
+            proxy = new Proxy(proxyType.getValue(), proxyHost.getValue(), proxyPort.getValue(), proxyUser.getValue(), proxyPassword.getValue(), asMs(
+                    proxyConnectTimeout));
+        }
     }
 
     public void setProxy(Proxy val) {
