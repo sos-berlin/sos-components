@@ -32,6 +32,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.FreshOrder;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -338,13 +339,15 @@ public class OrdersHelper {
         Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
-        Function<JOrder, Either<Err419, JFreshOrder>> mapper = order -> {
-            Either<Err419, JFreshOrder> either = null;
+        Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
+            Either<Err419, FreshOrder> either = null;
             try {
                 Map<String, Value> args = order.arguments();
                 Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(e.get().id());
+                
+                //TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
 
                 // modify parameters if necessary
                 if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
@@ -374,9 +377,10 @@ public class OrdersHelper {
                 if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
                     scheduledFor = Optional.empty();
                 }
-
-                JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
-                auditLogDetails.add(new AuditLogDetail(workflowPath, o.id().string()));
+                
+                FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
+                //JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
+                auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string()));
                 either = Either.right(o);
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.workflowId().path().string() + "/" + order.id().string()));
@@ -384,7 +388,7 @@ public class OrdersHelper {
             return either;
         };
 
-        Map<Boolean, Set<Either<Err419, JFreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).map(mapper)
+        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).map(mapper)
                 .collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
         ModifyOrders modifyOrders = new ModifyOrders();
@@ -392,8 +396,9 @@ public class OrdersHelper {
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
 
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
-            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id,
-                    Function.identity()));
+            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(FreshOrder::getOldOrderId,
+                    FreshOrder::getJFreshOrder));
+            
             proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                 if (either.isRight()) {
@@ -403,8 +408,9 @@ public class OrdersHelper {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either4 -> ProblemHelper
-                                            .postProblemEventIfExist(either4, accessToken, jocError, controllerId));
+                                    proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
+                                            .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
+                                                    controllerId));
                                     // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));
