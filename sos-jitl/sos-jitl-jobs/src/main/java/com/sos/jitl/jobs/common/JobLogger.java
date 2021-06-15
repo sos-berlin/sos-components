@@ -132,12 +132,8 @@ public class JobLogger {
         return e;
     }
 
-    protected void failed2slf4j() {
-        LOGGER.error(String.format("[failed]%s", stepInfo));
-    }
-
     protected void failed2slf4j(String msg) {
-        LOGGER.error(String.format("[failed]%s%s", stepInfo, msg));
+        LOGGER.error(String.format("[failed]%s%s", stepInfo, SOSString.isEmpty(msg) ? "" : msg));
     }
 
     // TODO

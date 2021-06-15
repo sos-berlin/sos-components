@@ -24,6 +24,9 @@ public class Job {
 
     public static final String NAMED_NAME_RETURN_CODE = "returnCode";
 
+    public static final Integer DEFAULT_RETURN_CODE_SUCCEEDED = new Integer(0);
+    public static final Integer DEFAULT_RETURN_CODE_FAILED = new Integer(99);
+
     public static final String VAR_NAME_CONTROLLER_ID = "js7ControllerId";
     public static final String VAR_NAME_ORDER_ID = "js7OrderId";
     public static final String VAR_NAME_WORKFLOW_PATH = "js7WorkflowPath";

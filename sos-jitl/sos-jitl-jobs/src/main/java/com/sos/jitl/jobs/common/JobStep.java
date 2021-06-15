@@ -376,59 +376,114 @@ public class JobStep<A extends JobArguments> {
     }
 
     public JOutcome.Completed success() {
-        return JOutcome.succeeded();
+        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED);
+    }
+
+    public JOutcome.Completed success(final Integer returnCode) {
+        return success(returnCode, new HashMap<String, Object>());
     }
 
     public JOutcome.Completed success(final String outcomeVarKey, final Object outcomeVarValue) {
+        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomeVarKey, outcomeVarValue);
+    }
+
+    public JOutcome.Completed success(final Integer returnCode, final String outcomeVarKey, final Object outcomeVarValue) {
+        Map<String, Object> map = new HashMap<>();
         if (outcomeVarKey != null && outcomeVarValue != null) {
-            return JOutcome.succeeded(convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
+            map.put(outcomeVarKey, outcomeVarValue);
         }
-        return JOutcome.succeeded();
+        return success(returnCode, map);
     }
 
     public JOutcome.Completed success(final JobOutcomeVariable<?>... outcomes) {
-        return success(getMap(outcomes));
+        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
+    }
+
+    public JOutcome.Completed success(final Integer returnCode, final JobOutcomeVariable<?>... outcomes) {
+        return success(returnCode, getMap(outcomes));
     }
 
     public JOutcome.Completed success(final Map<String, Object> outcomes) {
+        return success(Job.DEFAULT_RETURN_CODE_SUCCEEDED, outcomes);
+    }
+
+    public JOutcome.Completed success(final Integer returnCode, final Map<String, Object> outcomes) {
         if (outcomes == null || outcomes.size() == 0) {
-            return JOutcome.succeeded();
+            return JOutcome.succeeded(mapResult(null, returnCode));
         }
-        return JOutcome.succeeded(convert4engine(outcomes));
+        return JOutcome.succeeded(mapResult(convert4engine(outcomes), returnCode));
     }
 
     public JOutcome.Completed failed(final String msg, final String outcomeVarKey, final Object outcomeVarValue) {
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomeVarKey, outcomeVarValue);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg, final String outcomeVarKey, final Object outcomeVarValue) {
         if (outcomeVarKey != null && outcomeVarValue != null) {
-            return failedWithMap(msg, convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
+            return failedWithMap(returnCode, msg, convert4engine(Collections.singletonMap(outcomeVarKey, outcomeVarValue)));
         }
-        return failed(msg);
+        return failed(returnCode, msg);
     }
 
     public JOutcome.Completed failed(final String msg, JobOutcomeVariable<?>... outcomes) {
-        return failed(msg, getMap(outcomes));
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg, JobOutcomeVariable<?>... outcomes) {
+        return failed(returnCode, msg, getMap(outcomes));
     }
 
     public JOutcome.Completed failed(final String msg, final Map<String, Object> outcomes) {
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, outcomes);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg, final Map<String, Object> outcomes) {
         if (outcomes == null || outcomes.size() == 0) {
-            return failed(msg);
+            return failed(returnCode, msg);
         }
-        return failedWithMap(msg, convert4engine(outcomes));
+        return failedWithMap(returnCode, msg, convert4engine(outcomes));
     }
 
     public JOutcome.Completed failed() {
-        logger.failed2slf4j();
-        return JOutcome.failed();
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED);
     }
 
-    public JOutcome.Completed failed(String msg) {
+    public JOutcome.Completed failed(final Integer returnCode) {
+        return failed(returnCode, null);
+    }
+
+    public JOutcome.Completed failed(final String msg) {
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg) {
         logger.failed2slf4j(msg);
-        return JOutcome.failed(msg);
+        return JOutcome.failed(msg, mapResult(null, returnCode));
     }
 
     public JOutcome.Completed failed(final String msg, Throwable e) {
+        return failed(Job.DEFAULT_RETURN_CODE_FAILED, msg, e);
+    }
+
+    public JOutcome.Completed failed(final Integer returnCode, final String msg, Throwable e) {
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(e.toString(), ex);
-        return JOutcome.failed(logger.err2String(msg, ex));
+        return JOutcome.failed(logger.err2String(msg, ex), mapResult(null, returnCode));
+    }
+
+    private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
+        logger.failed2slf4j(msg, outcomes);
+        return JOutcome.failed(msg, mapResult(outcomes, returnCode));
+    }
+
+    private Map<String, Value> mapResult(Map<String, Value> map, Integer returnCode) {
+        if (map == null || map.size() == 0) {
+            map = Collections.singletonMap(Job.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
+        } else {
+            // override
+            map.put(Job.NAMED_NAME_RETURN_CODE, NumberValue.of(returnCode));
+        }
+        return map;
     }
 
     public String replaceVars(Path path) throws Exception {
@@ -453,11 +508,6 @@ public class JobStep<A extends JobArguments> {
         }
     }
 
-    private JOutcome.Completed failedWithMap(final String msg, final Map<String, Value> outcomes) {
-        logger.failed2slf4j(msg, outcomes);
-        return JOutcome.failed(msg, outcomes);
-    }
-
     private Map<String, Object> getMap(JobOutcomeVariable<?>... outcomes) {
         Map<String, Object> map = new HashMap<String, Object>();
         for (JobOutcomeVariable<?> var : outcomes) {
@@ -471,7 +521,7 @@ public class JobStep<A extends JobArguments> {
 
     private Map<String, Value> convert4engine(final Map<String, Object> map) {
         if (map == null || map.size() == 0) {
-            return Collections.emptyMap();
+            return new HashMap<>();
         }
         return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> getEngineValue(e.getValue())));
     }
