@@ -17,24 +17,18 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
-import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.AgentCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
-import js7.data.agent.AgentRefState;
 import js7.data.controller.ControllerCommand;
-import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.item.JUpdateItemOperation;
-import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 @Path("agent")
@@ -89,17 +83,17 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
             
-            JControllerProxy proxy = Proxy.of(controllerId);
+            //JControllerProxy proxy = Proxy.of(controllerId);
             AgentPath agent = AgentPath.of(agentCommand.getAgentId());
             
-            Either<Problem, JAgentRefState> either = proxy.currentState().pathToAgentRefState(agent);
-            ProblemHelper.throwProblemIfExist(either);
-            AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
+            //Either<Problem, JAgentRefState> either = proxy.currentState().pathToAgentRefState(agent);
+            //ProblemHelper.throwProblemIfExist(either);
+            //AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
             
             //if (couplingState instanceof AgentRefState.Coupled$) {
                 
                 JUpdateItemOperation op = JUpdateItemOperation.deleteSimple(agent);
-                proxy.api().updateItems(Flux.just(op)).thenAccept(e -> {
+                ControllerApi.of(controllerId).updateItems(Flux.just(op)).thenAccept(e -> {
                     ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
                     if (e.isRight()) {
                         SOSHibernateSession connection = null;

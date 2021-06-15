@@ -55,22 +55,24 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             } else {
                 docs = dbLayer.getDocumentations(documentationsFilter.getFolder(), false);
             }
-            JocAuditLog.storeAuditLogDetails(docs.stream().map(dbDoc -> new AuditLogDetail(dbDoc.getPath(), ObjectType.DOCUMENTATION.intValue()))
-                    .collect(Collectors.toList()), connection, dbAuditItem);
-            
-            Set<String> folders = new HashSet<>();
-            for (DBItemDocumentation dbDoc : docs) {
-                if (dbDoc.getImageId() != null) {
-                    DBItemDocumentationImage dbImage = connection.get(DBItemDocumentationImage.class, dbDoc.getImageId());
-                    if (dbImage != null) {
-                        connection.delete(dbImage);
+            if (docs != null) {
+                JocAuditLog.storeAuditLogDetails(docs.stream().map(dbDoc -> new AuditLogDetail(dbDoc.getPath(), ObjectType.DOCUMENTATION.intValue()))
+                        .collect(Collectors.toList()), connection, dbAuditItem);
+
+                Set<String> folders = new HashSet<>();
+                for (DBItemDocumentation dbDoc : docs) {
+                    if (dbDoc.getImageId() != null) {
+                        DBItemDocumentationImage dbImage = connection.get(DBItemDocumentationImage.class, dbDoc.getImageId());
+                        if (dbImage != null) {
+                            connection.delete(dbImage);
+                        }
                     }
+                    connection.delete(dbDoc);
+                    folders.add(dbDoc.getFolder());
                 }
-                connection.delete(dbDoc);
-                folders.add(dbDoc.getFolder());
+
+                folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
             }
-            
-            folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
