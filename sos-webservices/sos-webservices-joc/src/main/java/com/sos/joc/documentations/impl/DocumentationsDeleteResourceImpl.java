@@ -53,7 +53,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
                 docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
             } else {
-                docs = dbLayer.getDocumentations(documentationsFilter.getFolder(), false);
+                docs = dbLayer.getDocumentations(null, documentationsFilter.getFolder(), true, false);
             }
             if (docs != null) {
                 JocAuditLog.storeAuditLogDetails(docs.stream().map(dbDoc -> new AuditLogDetail(dbDoc.getPath(), ObjectType.DOCUMENTATION.intValue()))
