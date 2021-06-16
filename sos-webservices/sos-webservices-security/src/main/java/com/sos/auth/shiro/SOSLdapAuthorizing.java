@@ -317,26 +317,21 @@ public class SOSLdapAuthorizing {
         }
     }
 
-//    private void setSSLEnvironmentVariablesForTruststore() throws NamingException {
-//        if (Globals.sosCockpitProperties != null) {
-//            ldapContext.addToEnvironment("java.naming.ldap.factory.socket", "com.sos.auth.shiro.SOSSSLSocketFactory");           
-//        }
-//    }
 
     public void setSosLdapAuthorizingRealm(SOSLdapAuthorizingRealm sosLdapAuthorizingRealm) throws IOException, NamingException {
 
         LOGGER.debug("...reading contextFactory. TLS=" + sosLdapAuthorizingRealm.getUseStartTls());
 
         this.sosLdapAuthorizingRealm = sosLdapAuthorizingRealm;
-        
+
         ldapContextFactory = sosLdapAuthorizingRealm.getContextFactory();
-        
+
         Object principal = sosLdapAuthorizingRealm.getLdapPrincipal(authcToken);
         Object credentials = authcToken.getCredentials();
         try {
             ldapContext = ldapContextFactory.getLdapContext(principal, credentials);
             setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
-            
+
             JndiLdapContextFactory jndiLdapContextFactory = (JndiLdapContextFactory) ldapContextFactory;
             if (sosLdapAuthorizingRealm.isUseStartTls_()) {
                 LOGGER.debug("using StartTls for authentication");
@@ -384,7 +379,7 @@ public class SOSLdapAuthorizing {
             throw t;
         }
     }
-    
+
     public void setSSLEnvironmentVariablesForTruststore(JocCockpitProperties jocCockpitProperties) throws NamingException {
         if (jocCockpitProperties == null) {
             jocCockpitProperties = new JocCockpitProperties();
@@ -396,12 +391,12 @@ public class SOSLdapAuthorizing {
             if (tPath != null && !tPath.trim().isEmpty()) {
                 Path p = jocCockpitProperties.resolvePath(tPath.trim());
                 if (p != null) {
-                    ldapContext.addToEnvironment("javax.net.ssl.trustStore", p.toString()); 
+                    System.setProperty("javax.net.ssl.trustStore", p.toString());
                     if (tType != null && !tType.trim().isEmpty()) {
-                        ldapContext.addToEnvironment("javax.net.ssl.trustStoreType", tType);
+                        System.setProperty("javax.net.ssl.trustStoreType", tType);
                     }
                     if (tPass != null && !tPass.trim().isEmpty()) {
-                        ldapContext.addToEnvironment("javax.net.ssl.trustStorePassword", tPass);
+                        System.setProperty("javax.net.ssl.trustStorePassword", tPass);
                     }
                 }
             }
