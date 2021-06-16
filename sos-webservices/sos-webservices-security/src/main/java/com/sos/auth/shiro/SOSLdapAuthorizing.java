@@ -1,6 +1,7 @@
 package com.sos.auth.shiro;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JocCockpitProperties;
 
 public class SOSLdapAuthorizing {
 
@@ -315,25 +317,25 @@ public class SOSLdapAuthorizing {
         }
     }
 
-    private void setSSLEnvironmentVariablesForTruststore() throws NamingException {
-        if (Globals.sosCockpitProperties != null) {
-            ldapContext.addToEnvironment("java.naming.ldap.factory.socket", "com.sos.auth.shiro.SOSSSLSocketFactory");           
-        }
-    }
+//    private void setSSLEnvironmentVariablesForTruststore() throws NamingException {
+//        if (Globals.sosCockpitProperties != null) {
+//            ldapContext.addToEnvironment("java.naming.ldap.factory.socket", "com.sos.auth.shiro.SOSSSLSocketFactory");           
+//        }
+//    }
 
     public void setSosLdapAuthorizingRealm(SOSLdapAuthorizingRealm sosLdapAuthorizingRealm) throws IOException, NamingException {
 
         LOGGER.debug("...reading contextFactory. TLS=" + sosLdapAuthorizingRealm.getUseStartTls());
 
         this.sosLdapAuthorizingRealm = sosLdapAuthorizingRealm;
-
+        
         ldapContextFactory = sosLdapAuthorizingRealm.getContextFactory();
-
+        
         Object principal = sosLdapAuthorizingRealm.getLdapPrincipal(authcToken);
         Object credentials = authcToken.getCredentials();
         try {
             ldapContext = ldapContextFactory.getLdapContext(principal, credentials);
-            setSSLEnvironmentVariablesForTruststore();
+            setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
             
             JndiLdapContextFactory jndiLdapContextFactory = (JndiLdapContextFactory) ldapContextFactory;
             if (sosLdapAuthorizingRealm.isUseStartTls_()) {
@@ -380,6 +382,29 @@ public class SOSLdapAuthorizing {
             LdapUtils.closeContext(ldapContext);
             LOGGER.error("Unexpected failure to negotiate TLS connection", t);
             throw t;
+        }
+    }
+    
+    public void setSSLEnvironmentVariablesForTruststore(JocCockpitProperties jocCockpitProperties) throws NamingException {
+        if (jocCockpitProperties == null) {
+            jocCockpitProperties = new JocCockpitProperties();
+        }
+        if (jocCockpitProperties != null) {
+            String tPath = jocCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
+            String tType = jocCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
+            String tPass = jocCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
+            if (tPath != null && !tPath.trim().isEmpty()) {
+                Path p = jocCockpitProperties.resolvePath(tPath.trim());
+                if (p != null) {
+                    ldapContext.addToEnvironment("javax.net.ssl.trustStore", p.toString()); 
+                    if (tType != null && !tType.trim().isEmpty()) {
+                        ldapContext.addToEnvironment("javax.net.ssl.trustStoreType", tType);
+                    }
+                    if (tPass != null && !tPass.trim().isEmpty()) {
+                        ldapContext.addToEnvironment("javax.net.ssl.trustStorePassword", tPass);
+                    }
+                }
+            }
         }
     }
 
