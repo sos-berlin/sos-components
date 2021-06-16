@@ -315,20 +315,9 @@ public class SOSLdapAuthorizing {
         }
     }
 
-    public void setSSLEnvironmentVariablesForTruststore() throws NamingException {
+    private void setSSLEnvironmentVariablesForTruststore() throws NamingException {
         if (Globals.sosCockpitProperties != null) {
-            String tPath = Globals.sosCockpitProperties.getProperty("truststore_path", System.getProperty("javax.net.ssl.trustStore"));
-            String tType = Globals.sosCockpitProperties.getProperty("truststore_type", System.getProperty("javax.net.ssl.trustStoreType"));
-            String tPass = Globals.sosCockpitProperties.getProperty("truststore_password", System.getProperty("javax.net.ssl.trustStorePassword"));
-            if (tType != null && !tType.trim().isEmpty()) {
-                ldapContext.addToEnvironment("javax.net.ssl.trustStoreType", tType);
-            }
-            if (tPass != null && !tPass.trim().isEmpty()) {
-                ldapContext.addToEnvironment("javax.net.ssl.trustStorePassword", tPass);
-            }
-            if (tPath != null && !tPath.trim().isEmpty()) {
-                ldapContext.addToEnvironment("javax.net.ssl.trustStore", tPath);
-            }
+            ldapContext.addToEnvironment("java.naming.ldap.factory.socket", "com.sos.auth.shiro.SOSSSLSocketFactory");           
         }
     }
 
