@@ -100,7 +100,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
 
             orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
-                    .getDailyPlanDate())));
+                    .getDailyPlanDate()).getTime()));
             orderInitiatorSettings.setSubmissionTime(new Date());
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
