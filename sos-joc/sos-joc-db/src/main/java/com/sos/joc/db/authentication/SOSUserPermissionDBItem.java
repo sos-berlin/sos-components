@@ -1,57 +1,56 @@
-package com.sos.auth.shiro.db;
+package com.sos.joc.db.authentication;
 
 import javax.persistence.*;
- 
 
 @Entity
 @Table(name = "SOS_USER_PERMISSION")
-public class SOSUserPermissionDBItem  {
-
-    private Long id;
-    private Long roleId;
-    private Long userId;
-    private String sosUserPermission;
-
-    public SOSUserPermissionDBItem() {}
+public class SOSUserPermissionDBItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "[ID]")
+    private Long id;
+
+    @Column(name = "[ROLE_ID]")
+    private Long roleId;
+
+    @Column(name = "[USER_ID]")
+    private Long userId;
+
+    @Column(name = "[SOS_USER_PERMISSION`", nullable = false)
+    private String sosUserPermission;
+
+    public SOSUserPermissionDBItem() {
+    }
+
     public Long getId() {
         return id;
     }
 
-    @Column(name = "[ID]")
     public void setId(Long id) {
         this.id = id;
     }
 
-    @Column(name = "[SOS_USER_PERMISSION`", nullable = false)
     public void setSosUserPermission(String sosUserPermission) {
         this.sosUserPermission = sosUserPermission;
     }
 
-    @Column(name = "[SOS_USER_PERMISSION`", nullable = false)
     public String getSosUserPermission() {
         return sosUserPermission;
     }
 
-    @Column(name = "[USER_ID]")
     public Long getUserId() {
         return userId;
     }
 
-    @Column(name = "[USER_ID]")
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    @Column(name = "[ROLE_ID]")
     public Long getRoleId() {
         return roleId;
     }
 
-    @Column(name = "[ROLE_ID]")
     public void setRoleId(Long roleId) {
         this.roleId = roleId;
     }

@@ -121,7 +121,7 @@ public class OrderInitiatorRunner extends TimerTask {
             JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
-        orderListSynchronizer = calculateStartTimes(controllerId, DailyPlanHelper.stringAsDate(dailyPlanDate));
+        orderListSynchronizer = calculateStartTimes(controllerId, DailyPlanHelper.stringAsDate(dailyPlanDate,orderInitiatorSettings.getTimeZone()));
         orderListSynchronizer.setJocError(jocError);
         orderListSynchronizer.setAccessToken(accessToken);
         OrderCounter o = DailyPlanHelper.getOrderCount(orderListSynchronizer.getListOfPlannedOrders());
@@ -618,6 +618,7 @@ public class OrderInitiatorRunner extends TimerTask {
             DBLayerDailyPlanSubmissions dbLayerDailyPlanSubmissions = new DBLayerDailyPlanSubmissions(sosHibernateSession);
             DBItemDailyPlanSubmissions dbItemDailyPlanSubmissionHistory = new DBItemDailyPlanSubmissions();
             dbItemDailyPlanSubmissionHistory.setControllerId(controllerId);
+
             dbItemDailyPlanSubmissionHistory.setSubmissionForDate(dateForPlan);
             dbItemDailyPlanSubmissionHistory.setUserAccount(orderInitiatorSettings.getUserAccount());
 

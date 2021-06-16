@@ -37,7 +37,7 @@ public class DBItemDailyPlanSubmissions extends DBItem {
     private String userAccount;
  
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.DATE)
     @Column(name = "[SUBMISSION_FOR_DATE]", nullable = false)
     private Date submissionForDate;
 

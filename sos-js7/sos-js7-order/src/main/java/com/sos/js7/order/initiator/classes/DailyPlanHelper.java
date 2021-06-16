@@ -25,8 +25,12 @@ public class DailyPlanHelper {
     private static final String UTC = "UTC";
 
     public static Date stringAsDate(String date) throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return formatter.parse(date);
+        TimeZone savT = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyy-MM-dd");
+        Date d = sdfUtc.parse(date);
+        TimeZone.setDefault(savT);
+        return d;
     }
 
     public static String dateAsString(Date date) {
@@ -47,7 +51,7 @@ public class DailyPlanHelper {
         return calendar.getTime();
     }
 
-    public static java.util.Calendar getDailyplanCalendar(String time,String timeZoneName) {
+    public static java.util.Calendar getDailyplanCalendar(String time, String timeZoneName) {
 
         if (time == null) {
             time = "00:00";
@@ -147,7 +151,7 @@ public class DailyPlanHelper {
                 cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
                 if (mapOfCycledOrders.get(cycleOrderKey) == null) {
                     mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());
-                    o.countCycled = o.countCycled+1;
+                    o.countCycled = o.countCycled + 1;
                 }
 
                 mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
@@ -167,9 +171,9 @@ public class DailyPlanHelper {
         java.util.Calendar now = java.util.Calendar.getInstance(timeZone);
 
         if (!"".equals(dailyPlanStartTime)) {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(dailyPlanStartTime,timeZoneName);
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(dailyPlanStartTime, timeZoneName);
         } else {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(periodBegin,timeZoneName);
+            startCalendar = DailyPlanHelper.getDailyplanCalendar(periodBegin, timeZoneName);
             startCalendar.add(java.util.Calendar.DATE, 1);
             startCalendar.add(java.util.Calendar.MINUTE, -30);
         }
@@ -216,7 +220,7 @@ public class DailyPlanHelper {
                 dbItemDailyPlanOrders.getStartMode());
     }
 
-    public static Date getNextDay(Date dateForPlan,OrderInitiatorSettings orderInitiatorSettings) throws ParseException {
+    public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings orderInitiatorSettings) throws ParseException {
         TimeZone timeZone = TimeZone.getTimeZone(orderInitiatorSettings.getTimeZone());
 
         java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);

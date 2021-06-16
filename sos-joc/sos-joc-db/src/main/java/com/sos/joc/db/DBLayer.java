@@ -4,6 +4,10 @@ import java.io.Serializable;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSClassList;
+import com.sos.joc.db.authentication.SOSUser2RoleDBItem;
+import com.sos.joc.db.authentication.SOSUserDBItem;
+import com.sos.joc.db.authentication.SOSUserPermissionDBItem;
+import com.sos.joc.db.authentication.SOSUserRoleDBItem;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepConfiguration;
 import com.sos.joc.db.deployment.DBItemDepKeys;
@@ -326,6 +330,11 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepCommitIds.class);
         cl.add(DBItemDepNamePaths.class);
 
+        cl.add(SOSUserDBItem.class);
+        cl.add(SOSUser2RoleDBItem.class);
+        cl.add(SOSUserPermissionDBItem.class);
+        cl.add(SOSUserRoleDBItem.class);
+ 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
 

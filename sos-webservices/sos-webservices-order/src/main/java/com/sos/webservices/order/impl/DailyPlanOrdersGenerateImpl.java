@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -99,7 +100,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
 
             orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(dailyPlanOrderSelector
-                    .getDailyPlanDate()).getTime()));
+                    .getDailyPlanDate())));
             orderInitiatorSettings.setSubmissionTime(new Date());
 
             OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
@@ -143,8 +144,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     scheduleSource = new ScheduleSourceDB(dailyPlanOrderSelector);
 
                     orderInitiatorRunner.readSchedules(scheduleSource);
+                    TimeZone savT = TimeZone.getDefault();
+                    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
                     Map<PlannedOrderKey, PlannedOrder> generatedOrders = orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(),
                             accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
+                    TimeZone.setDefault(savT);
 
                     List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
