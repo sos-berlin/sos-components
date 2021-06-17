@@ -66,6 +66,8 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
 
             authorizing.setAuthcToken(authcToken);
             try {
+                setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
+
                 authorizing.setSosLdapAuthorizingRealm(this);
                 authzInfo = authorizing.setRoles(authzInfo, principalCollection);
 
@@ -117,6 +119,7 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
     }
 
     public void setSSLEnvironmentVariablesForTruststore(JocCockpitProperties jocCockpitProperties) {
+        LOGGER.debug("--> setSSLEnvironmentVariablesForTruststore");
         if (jocCockpitProperties == null) {
             jocCockpitProperties = new JocCockpitProperties();
         }
@@ -127,6 +130,7 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
             if (tPath != null && !tPath.trim().isEmpty()) {
                 Path p = jocCockpitProperties.resolvePath(tPath.trim());
                 if (p != null) {
+                    LOGGER.debug("javax.net.ssl.trustStore:" + p.toString());
                     System.setProperty("javax.net.ssl.trustStore", p.toString());
                     if (tType != null && !tType.trim().isEmpty()) {
                         System.setProperty("javax.net.ssl.trustStoreType", tType);

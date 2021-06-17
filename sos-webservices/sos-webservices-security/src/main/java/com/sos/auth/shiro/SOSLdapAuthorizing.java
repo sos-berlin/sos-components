@@ -1,7 +1,6 @@
 package com.sos.auth.shiro;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JocCockpitProperties;
 
 public class SOSLdapAuthorizing {
 
