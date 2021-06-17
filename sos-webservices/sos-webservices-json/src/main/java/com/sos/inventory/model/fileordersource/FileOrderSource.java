@@ -4,7 +4,9 @@ package com.sos.inventory.model.fileordersource;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
@@ -22,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
+    "version",
     "workflowName",
     "agentName",
     "directory",
@@ -31,7 +34,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "title",
     "documentationName"
 })
-public class FileOrderSource implements IConfigurationObject, IDeployObject
+public class FileOrderSource implements IInventoryObject, IConfigurationObject, IDeployObject
 {
 
     /**
@@ -42,6 +45,15 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.FILEORDERSOURCE;
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * 
      * (Required)
@@ -141,6 +153,28 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -295,12 +329,12 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("workflowName", workflowName).append("agentName", agentName).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(documentationName).append(tYPE).append(title).append(directory).toHashCode();
+        return new HashCodeBuilder().append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(documentationName).append(tYPE).append(title).append(version).append(directory).toHashCode();
     }
 
     @Override
@@ -312,7 +346,7 @@ public class FileOrderSource implements IConfigurationObject, IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(directory, rhs.directory).isEquals();
     }
 
 }

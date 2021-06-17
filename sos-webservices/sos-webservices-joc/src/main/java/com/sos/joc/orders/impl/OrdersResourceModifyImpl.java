@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -30,7 +29,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
@@ -48,8 +46,6 @@ import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
-import com.sos.js7.order.initiator.classes.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -61,7 +57,7 @@ import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
-import js7.data_for_java.command.JSuspendMode;
+import js7.data_for_java.command.JSuspensionMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JHistoricOutcome;
 import js7.data_for_java.order.JOrder;
@@ -338,6 +334,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         case RESUME:
             if (oIds.size() == 1) { // position and historicOutcome only for one Order!
                 Optional<List<JHistoricOutcome>> historyOutcomes = Optional.empty(); // TODO parameter resp. historicOutcome
+//                List<JHistoricOutcome> h = new ArrayList<>();
+//                JHistoricOutcome jh = JHistoricOutcome.
                 Optional<JPosition> position = Optional.empty();
                 if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
                     Either<Problem, JPosition> posEither = JPosition.fromList(modifyOrders.getPosition());
@@ -348,11 +346,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             return ControllerApi.of(modifyOrders.getControllerId()).resumeOrders(oIds);
         case SUSPEND:
-            JSuspendMode suspendMode = null;
+            JSuspensionMode suspendMode = null;
             if (modifyOrders.getKill() == Boolean.TRUE) {
-                suspendMode = JSuspendMode.kill(true);
+                suspendMode = JSuspensionMode.kill(true);
             } else {
-                suspendMode = JSuspendMode.kill();
+                suspendMode = JSuspensionMode.kill();
             }
             return ControllerApi.of(modifyOrders.getControllerId()).suspendOrders(oIds, suspendMode);
         default: // case REMOVE_WHEN_TERMINATED

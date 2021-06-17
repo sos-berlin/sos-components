@@ -22,7 +22,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.Schedule;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
-import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
@@ -268,6 +267,7 @@ public class Validator {
                 }
                 break;
             case ScriptExecutable:
+            case ShellScriptExecutable:
                 ExecutableScript es = entry.getValue().getExecutable().cast();
                 if (es.getEnv() != null) {
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
@@ -326,7 +326,8 @@ public class Validator {
                 case IF:
                     IfElse ifElse = inst.cast();
                     try {
-                        PredicateParser.parse(ifElse.getPredicate());
+                        //PredicateParser.parse(ifElse.getPredicate());
+                        validateExpression(ifElse.getPredicate());
                     } catch (Exception e) {
                         throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
                     }
@@ -394,8 +395,8 @@ public class Validator {
         }
     }
 
-    private static void validateArgumentKeys(Variables arguments, String position) throws JocConfigurationException {
-        final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+    private static void validateArgumentKeys(Environment arguments, String position) throws JocConfigurationException {
+        final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
         args.keySet().forEach(key -> validateKey(key, position));
     }
 
@@ -404,10 +405,10 @@ public class Validator {
         args.keySet().forEach(key -> validateKey(key, position));
     }
 
-    private static void validateArguments(Variables arguments, Requirements orderRequirements, String position) throws JocConfigurationException {
+    private static void validateArguments(Environment arguments, Requirements orderRequirements, String position) throws JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
-        final Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
+        final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
 
         // jobs and job instructions can have arguments which are not declared in orderRequrirements ??
         Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
@@ -475,6 +476,15 @@ public class Validator {
         Either<Problem, JExpression> e = JExpression.parse(value);
         if (e.isLeft()) {
             throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
+        }
+    }
+    
+    public static void validateExpression(String value) throws JocConfigurationException {
+        if (value != null) {
+            Either<Problem, JExpression> e = JExpression.parse(value);
+            if (e.isLeft()) {
+                throw new JocConfigurationException(e.getLeft().message());
+            }
         }
     }
 }

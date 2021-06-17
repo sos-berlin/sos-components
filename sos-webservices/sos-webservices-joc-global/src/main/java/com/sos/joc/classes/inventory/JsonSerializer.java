@@ -1,17 +1,29 @@
 package com.sos.joc.classes.inventory;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.IfElse;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.Lock;
+import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.ExecutableJava;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobReturnCode;
+import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data_for_java.value.JExpression;
 
 public class JsonSerializer {
     
@@ -68,6 +80,7 @@ public class JsonSerializer {
         emptyStringCollectionsToNull(w.getJobResourcePaths());
         w.setOrderRequirements(emptyRequirementsToNull(w.getOrderRequirements()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
+        cleanSignedInstructions(w.getInstructions());
         return w;
     }
 
@@ -79,6 +92,7 @@ public class JsonSerializer {
         emptyStringCollectionsToNull(w.getJobResourceNames());
         w.setOrderRequirements(emptyRequirementsToNull(w.getOrderRequirements()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
+        cleanInventoryInstructions(w.getInstructions());
         return w;
     }
     
@@ -110,7 +124,7 @@ public class JsonSerializer {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
-                    job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
+                    job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
@@ -128,7 +142,7 @@ public class JsonSerializer {
                 j.getAdditionalProperties().forEach((key, job) -> {
                     job.setFailOnErrWritten(defaultToNull(job.getFailOnErrWritten(), Boolean.FALSE));
                     job.setParallelism(defaultToNull(job.getParallelism(), 1));
-                    job.setDefaultArguments(emptyVarsToNull(job.getDefaultArguments()));
+                    job.setDefaultArguments(emptyEnvToNullAndQuoteStrings(job.getDefaultArguments()));
                     emptyStringCollectionsToNull(job.getJobResourceNames());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
@@ -220,6 +234,111 @@ public class JsonSerializer {
                 }
             }
             break;
+        }
+    }
+    
+    
+    // only temporary to convert Variables to Environment
+    private static Environment emptyEnvToNullAndQuoteStrings(Environment env) {
+        if (env != null) {
+            if (env.getAdditionalProperties().isEmpty()) {
+                return null;
+            } else {
+                env.getAdditionalProperties().replaceAll((k, v) -> quoteString(v));
+            }
+        }
+        return env;
+    }
+    
+    private static String quoteString(String str) {
+        Either<Problem, JExpression> e = JExpression.parse(str);
+        if (e.isLeft()) {
+            str = JExpression.quoteString(str);
+        }
+        return str;
+    }
+    
+    private static void cleanInventoryInstructions(List<Instruction> instructions) {
+        if (instructions != null) {
+            for (Instruction inst : instructions) {
+                switch (inst.getTYPE()) {
+                case AWAIT:
+                case FAIL:
+                case FINISH:
+                case PUBLISH:
+                case RETRY:
+                case IMPLICIT_END:
+                    break;
+                case EXECUTE_NAMED:
+                    NamedJob nj = inst.cast();
+                    nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
+                    break;
+                case FORK:
+                    ForkJoin fj = inst.cast();
+                    for (Branch branch : fj.getBranches()) {
+                        cleanInventoryInstructions(branch.getWorkflow().getInstructions());
+                    }
+                    break;
+                case IF:
+                    IfElse ifElse = inst.cast();
+                    cleanInventoryInstructions(ifElse.getThen().getInstructions());
+                    if (ifElse.getElse() != null) {
+                        cleanInventoryInstructions(ifElse.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    TryCatch tryCatch = inst.cast();
+                    cleanInventoryInstructions(tryCatch.getTry().getInstructions());
+                    cleanInventoryInstructions(tryCatch.getCatch().getInstructions());
+                    break;
+                case LOCK:
+                    Lock lock = inst.cast();
+                    cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions());
+                    break;
+                }
+            }
+        }
+    }
+    
+    private static void cleanSignedInstructions(List<com.sos.sign.model.instruction.Instruction> instructions) {
+        if (instructions != null) {
+            for (com.sos.sign.model.instruction.Instruction inst : instructions) {
+                switch (inst.getTYPE()) {
+                case AWAIT:
+                case FAIL:
+                case FINISH:
+                case PUBLISH:
+                case RETRY:
+                case IMPLICIT_END:
+                    break;
+                case EXECUTE_NAMED:
+                    com.sos.sign.model.instruction.NamedJob nj = inst.cast();
+                    nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
+                    break;
+                case FORK:
+                    com.sos.sign.model.instruction.ForkJoin fj = inst.cast();
+                    for (com.sos.sign.model.workflow.Branch branch : fj.getBranches()) {
+                        cleanSignedInstructions(branch.getWorkflow().getInstructions());
+                    }
+                    break;
+                case IF:
+                    com.sos.sign.model.instruction.IfElse ifElse = inst.cast();
+                    cleanSignedInstructions(ifElse.getThen().getInstructions());
+                    if (ifElse.getElse() != null) {
+                        cleanSignedInstructions(ifElse.getElse().getInstructions());
+                    }
+                    break;
+                case TRY:
+                    com.sos.sign.model.instruction.TryCatch tryCatch = inst.cast();
+                    cleanSignedInstructions(tryCatch.getTry().getInstructions());
+                    cleanSignedInstructions(tryCatch.getCatch().getInstructions());
+                    break;
+                case LOCK:
+                    com.sos.sign.model.instruction.Lock lock = inst.cast();
+                    cleanSignedInstructions(lock.getLockedWorkflow().getInstructions());
+                    break;
+                }
+            }
         }
     }
 

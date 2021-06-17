@@ -11,6 +11,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.sos.joc.exceptions.JocConfigurationException;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data_for_java.value.JExpression;
+
 
 public class PredicateValidatorTest {
 
@@ -84,11 +90,11 @@ public class PredicateValidatorTest {
     @Test
     public void testParse() throws IllegalArgumentException, IOException {
         parseTester("${こんにちは}_ != 'h' && ${äöü}.toNumber in [42]|| variable('abc', default='DEF//AULT', label = LABEL).toNumber <= 9 && returnCode != 0", false);
-        parseTester("${こんにちは} != 'h' && (${äöü} in [42]|| variable(key='abc', default='DEF//AULT', label = LABEL).toNumber <= 9) && $returnCode!= 0", true);
+        parseTester("${こんにちは} != 'h' && ((${äöü} in [42])|| variable(key='abc', default='DEF//AULT', label = LABEL).toNumber <= 9) && $returnCode!= 0", true);
         parseTester("${こんにちは} != 'h' && ${äöü}.toNumber in [42]|| variable(`abc`, default='DEF//AULT', label = LABEL).toNumber <= 9 && returnCode != 0", false);
         parseTester("hallo", false);
         parseTester("${こんにちは}.toBoolean", true);
-        parseTester("${こんにちは}.toNumber", false);
+        parseTester("${こんにちは}.toNumber", true); // why not false?
         parseTester("${こんにちは}", true);
         parseTester("${こんにちは} != '''a'", false);
         parseTester("variable('abc', default='') != 'a'", false);
@@ -102,13 +108,37 @@ public class PredicateValidatorTest {
         parseTester("${こんにちは} ++'1' != 'h'", true);
     }
     
+    @Test
+    public void testQuoting() throws IllegalArgumentException, IOException {
+        quoteTester(quoteTester("hallo welt"));
+        quoteTester(quoteTester(42));
+        quoteTester(quoteTester(true));
+        quoteTester(quoteTester("Olli's Test"));
+        quoteTester(quoteTester("Olli\"s Test"));
+        quoteTester(quoteTester("こんにちは"));
+    }
+    
     private void parseTester(String str, boolean expect) {
         try {
-            PredicateParser.parse(str);
+            Either<Problem, JExpression> e = JExpression.parse(str);
+            if (e.isLeft()) {
+                throw new JocConfigurationException(e.getLeft().message());
+            }
+            //PredicateParser.parse(str);
             assertTrue(expect);
         } catch (Exception e) {
             System.out.println(e.getMessage());
             assertFalse(expect);
         }
+    }
+    
+    private String quoteTester(Object str) {
+        String s = str.toString();
+        Either<Problem, JExpression> e = JExpression.parse(s);
+        if (e.isLeft()) {
+            s = JExpression.quoteString(s);
+        }
+        System.out.println("str: " + str + " -> " + s);
+        return s;
     }
 }

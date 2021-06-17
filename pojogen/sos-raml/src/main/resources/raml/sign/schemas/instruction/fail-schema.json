@@ -13,7 +13,7 @@
       "type": "string"
     },
     "namedValues": {
-      "alias": "arguments",
+      "alias": "outcome",
       "javaType": "com.sos.inventory.model.common.Variables",
   	  "type": "object",
   	  "additionalProperties": true

@@ -134,7 +134,7 @@ public class WorkflowSearcherTest {
         LOGGER.info(" ");
         LOGGER.info("[getJobArgument(job_1,job_1_arg_1)] " + value);
 
-        Map<String, Object> values = ws.getJobArguments("job_10");
+        Map<String, String> values = ws.getJobArguments("job_10");
         LOGGER.info(" ");
         LOGGER.info("[getJobArguments(job_10)] " + values);
 

@@ -3,7 +3,9 @@ package com.sos.inventory.model.junction;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IDeployObject;
@@ -21,12 +23,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
+    "version",
     "lifetime",
     "orderId",
     "documentationName",
     "title"
 })
-public class Junction implements IConfigurationObject, IDeployObject
+public class Junction implements IInventoryObject, IConfigurationObject, IDeployObject
 {
 
     /**
@@ -37,6 +40,15 @@ public class Junction implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.JUNCTION;
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * non negative integer
      * <p>
@@ -102,6 +114,28 @@ public class Junction implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -194,12 +228,12 @@ public class Junction implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("lifetime", lifetime).append("orderId", orderId).append("documentationName", documentationName).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("lifetime", lifetime).append("orderId", orderId).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(lifetime).append(documentationName).append(tYPE).append(title).append(orderId).toHashCode();
+        return new HashCodeBuilder().append(orderId).append(lifetime).append(documentationName).append(tYPE).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -211,7 +245,7 @@ public class Junction implements IConfigurationObject, IDeployObject
             return false;
         }
         Junction rhs = ((Junction) other);
-        return new EqualsBuilder().append(lifetime, rhs.lifetime).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(orderId, rhs.orderId).isEquals();
+        return new EqualsBuilder().append(orderId, rhs.orderId).append(lifetime, rhs.lifetime).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

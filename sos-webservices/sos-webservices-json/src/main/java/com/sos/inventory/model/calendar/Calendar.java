@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.joc.model.common.ICalendarObject;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "id",
     "path",
     "name",
+    "version",
     "documentationName",
     "type",
     "title",
@@ -37,7 +39,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "includes",
     "excludes"
 })
-public class Calendar implements ICalendarObject, IConfigurationObject, IReleaseObject
+public class Calendar implements IInventoryObject, ICalendarObject, IConfigurationObject, IReleaseObject
 {
 
     /**
@@ -65,6 +67,15 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
      */
     @JsonProperty("name")
     private String name;
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * string without < and >
      * <p>
@@ -225,6 +236,28 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
     @JsonProperty("name")
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -395,12 +428,12 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("documentationName", documentationName).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).append("additionalProperties", additionalProperties).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("version", version).append("documentationName", documentationName).append("type", type).append("title", title).append("from", from).append("to", to).append("includes", includes).append("excludes", excludes).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(excludes).append(name).append(from).append(includes).append(id).append(documentationName).append(to).append(additionalProperties).append(type).append(title).toHashCode();
+        return new HashCodeBuilder().append(excludes).append(includes).append(type).append(title).append(version).append(path).append(name).append(from).append(id).append(documentationName).append(to).append(additionalProperties).toHashCode();
     }
 
     @Override
@@ -412,7 +445,7 @@ public class Calendar implements ICalendarObject, IConfigurationObject, IRelease
             return false;
         }
         Calendar rhs = ((Calendar) other);
-        return new EqualsBuilder().append(path, rhs.path).append(excludes, rhs.excludes).append(name, rhs.name).append(from, rhs.from).append(includes, rhs.includes).append(id, rhs.id).append(documentationName, rhs.documentationName).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).append(type, rhs.type).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(excludes, rhs.excludes).append(includes, rhs.includes).append(type, rhs.type).append(title, rhs.title).append(version, rhs.version).append(path, rhs.path).append(name, rhs.name).append(from, rhs.from).append(id, rhs.id).append(documentationName, rhs.documentationName).append(to, rhs.to).append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 
 }

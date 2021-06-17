@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.model.common.IConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -101,14 +100,14 @@ public class Job implements IConfigurationObject
     @JsonPropertyDescription("absolute path of an object.")
     private String jobClass;
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables defaultArguments;
+    private Environment defaultArguments;
     @JsonProperty("jobResourceNames")
     @JsonAlias({
         "jobResourcePaths"
@@ -189,7 +188,7 @@ public class Job implements IConfigurationObject
      * @param jobClass
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Variables defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobLogLevel logLevel, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobLogLevel logLevel, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -358,24 +357,24 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
-    public Variables getDefaultArguments() {
+    public Environment getDefaultArguments() {
         return defaultArguments;
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
-    public void setDefaultArguments(Variables defaultArguments) {
+    public void setDefaultArguments(Environment defaultArguments) {
         this.defaultArguments = defaultArguments;
     }
 

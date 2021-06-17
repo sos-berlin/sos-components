@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "message",
-    "arguments",
+    "outcome",
     "uncatchable"
 })
 public class Fail
@@ -30,11 +30,11 @@ public class Fail
 
     @JsonProperty("message")
     private String message;
-    @JsonProperty("arguments")
+    @JsonProperty("outcome")
     @JsonAlias({
         "namedValues"
     })
-    private Variables arguments;
+    private Variables outcome;
     @JsonProperty("uncatchable")
     private Boolean uncatchable = false;
 
@@ -47,14 +47,15 @@ public class Fail
 
     /**
      * 
-     * @param arguments
      * @param uncatchable
      * @param message
+     * 
+     * @param outcome
      */
-    public Fail(String message, Variables arguments, Boolean uncatchable) {
+    public Fail(String message, Variables outcome, Boolean uncatchable) {
         super();
         this.message = message;
-        this.arguments = arguments;
+        this.outcome = outcome;
         this.uncatchable = uncatchable;
     }
 
@@ -68,14 +69,14 @@ public class Fail
         this.message = message;
     }
 
-    @JsonProperty("arguments")
-    public Variables getArguments() {
-        return arguments;
+    @JsonProperty("outcome")
+    public Variables getOutcome() {
+        return outcome;
     }
 
-    @JsonProperty("arguments")
-    public void setArguments(Variables arguments) {
-        this.arguments = arguments;
+    @JsonProperty("outcome")
+    public void setOutcome(Variables outcome) {
+        this.outcome = outcome;
     }
 
     @JsonProperty("uncatchable")
@@ -90,12 +91,12 @@ public class Fail
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("arguments", arguments).append("uncatchable", uncatchable).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("message", message).append("outcome", outcome).append("uncatchable", uncatchable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(arguments).append(uncatchable).append(message).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(uncatchable).append(message).append(outcome).toHashCode();
     }
 
     @Override
@@ -107,7 +108,7 @@ public class Fail
             return false;
         }
         Fail rhs = ((Fail) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(arguments, rhs.arguments).append(uncatchable, rhs.uncatchable).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(uncatchable, rhs.uncatchable).append(message, rhs.message).append(outcome, rhs.outcome).isEquals();
     }
 
 }

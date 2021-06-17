@@ -5,7 +5,9 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -24,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
+    "version",
     "versionId",
     "orderRequirements",
     "jobResourceNames",
@@ -32,7 +35,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "documentationName",
     "jobs"
 })
-public class Workflow implements IConfigurationObject, IDeployObject
+public class Workflow implements IInventoryObject, IConfigurationObject, IDeployObject
 {
 
     /**
@@ -43,6 +46,15 @@ public class Workflow implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.WORKFLOW;
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * string without < and >
      * <p>
@@ -135,6 +147,28 @@ public class Workflow implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -281,12 +315,12 @@ public class Workflow implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(versionId).append(orderRequirements).append(jobResourceNames).append(jobs).append(documentationName).append(tYPE).append(title).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(versionId).append(orderRequirements).append(jobResourceNames).append(jobs).append(documentationName).append(tYPE).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -298,7 +332,7 @@ public class Workflow implements IConfigurationObject, IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(orderRequirements, rhs.orderRequirements).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

@@ -1,15 +1,15 @@
 
 package com.sos.inventory.model.instruction;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.job.Environment;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -43,14 +43,14 @@ public class NamedJob
     @JsonProperty("label")
     private String label;
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables defaultArguments;
+    private Environment defaultArguments;
 
     /**
      * No args constructor for use in serialization
@@ -69,9 +69,11 @@ public class NamedJob
      * @param jobName
      * @param defaultArguments
      * @param label
+     * @param position
      * 
+     * @param positionString
      */
-    public NamedJob(String jobName, String label, Variables defaultArguments) {
+    public NamedJob(String jobName, String label, Environment defaultArguments) {
         super();
         this.jobName = jobName;
         this.label = label;
@@ -119,24 +121,24 @@ public class NamedJob
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
-    public Variables getDefaultArguments() {
+    public Environment getDefaultArguments() {
         return defaultArguments;
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("defaultArguments")
-    public void setDefaultArguments(Variables defaultArguments) {
+    public void setDefaultArguments(Environment defaultArguments) {
         this.defaultArguments = defaultArguments;
     }
 

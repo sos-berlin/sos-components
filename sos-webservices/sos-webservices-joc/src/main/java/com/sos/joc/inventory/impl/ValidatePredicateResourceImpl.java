@@ -1,5 +1,6 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
@@ -8,7 +9,7 @@ import javax.ws.rs.Path;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.classes.inventory.PredicateParser;
+import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IValidatePredicateResource;
 import com.sos.joc.model.inventory.Validate;
@@ -26,7 +27,8 @@ public class ValidatePredicateResourceImpl extends JOCResourceImpl implements IV
             }
             Validate entity = new Validate();
             try {
-                PredicateParser.parse(body);
+                //PredicateParser.parse(body);
+                Validator.validateExpression(new String(body, StandardCharsets.UTF_8));
                 entity.setValid(true);
             } catch (Throwable e) {
                 entity.setValid(false);

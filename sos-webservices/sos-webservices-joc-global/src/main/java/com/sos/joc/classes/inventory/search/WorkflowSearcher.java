@@ -206,11 +206,11 @@ public class WorkflowSearcher {
         return getJobArgumentsStream(job).filter(e -> e.getKey().equals(argName)).map(Map.Entry::getValue).findFirst().orElse(null);
     }
 
-    public Map<String, Object> getJobArguments(String jobName) {
+    public Map<String, String> getJobArguments(String jobName) {
         return getJobArguments(jobName, null);
     }
 
-    public Map<String, Object> getJobArguments(String jobName, String argNameRegex) {
+    public Map<String, String> getJobArguments(String jobName, String argNameRegex) {
         WorkflowJob job = getJob(jobName);
         if (job == null) {
             return null;
@@ -218,11 +218,11 @@ public class WorkflowSearcher {
         return getJobArguments(job.getJob(), argNameRegex);
     }
 
-    public Map<String, Object> getJobArguments(Job job) {
+    public Map<String, String> getJobArguments(Job job) {
         return getJobArguments(job, null);
     }
 
-    public Map<String, Object> getJobArguments(Job job, String argNameRegex) {
+    public Map<String, String> getJobArguments(Job job, String argNameRegex) {
         if (job == null) {
             return null;
         }
@@ -453,14 +453,14 @@ public class WorkflowSearcher {
         return workflow.getJobs() == null ? null : workflow.getJobs().getAdditionalProperties().entrySet().stream();
     }
 
-    private Stream<Entry<String, Object>> getJobArgumentsStream(Job job) {
+    private Stream<Entry<String, String>> getJobArgumentsStream(Job job) {
         if (job == null || job.getDefaultArguments() == null) {
             return Stream.empty(); // new HashSet<Entry<String, String>>().stream();
         }
         return job.getDefaultArguments().getAdditionalProperties().entrySet().stream();
     }
 
-    private Stream<Entry<String, Object>> getNamedJobArgumentsStream(NamedJob job) {
+    private Stream<Entry<String, String>> getNamedJobArgumentsStream(NamedJob job) {
         if (job == null || job.getDefaultArguments() == null) {
             return Stream.empty(); // new HashSet<Entry<String, String>>().stream();
         }

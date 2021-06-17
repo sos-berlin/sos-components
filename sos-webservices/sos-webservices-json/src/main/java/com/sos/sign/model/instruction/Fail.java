@@ -1,15 +1,15 @@
 
 package com.sos.sign.model.instruction;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.instruction.InstructionType;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -32,7 +32,7 @@ public class Fail
     private String message;
     @JsonProperty("namedValues")
     @JsonAlias({
-        "arguments"
+        "outcome"
     })
     private Variables namedValues;
     @JsonProperty("uncatchable")
@@ -50,9 +50,10 @@ public class Fail
      * @param namedValues
      * @param uncatchable
      * @param message
+     * @param tYPE
      */
-    public Fail(String message, Variables namedValues, Boolean uncatchable) {
-        super();
+    public Fail(String message, Variables namedValues, Boolean uncatchable, InstructionType tYPE) {
+        super(tYPE);
         this.message = message;
         this.namedValues = namedValues;
         this.uncatchable = uncatchable;

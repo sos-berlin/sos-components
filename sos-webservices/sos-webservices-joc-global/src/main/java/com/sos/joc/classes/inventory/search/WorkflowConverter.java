@@ -1,7 +1,5 @@
 package com.sos.joc.classes.inventory.search;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,7 +64,7 @@ public class WorkflowConverter {
         private List<String> documentationNames;
         private List<String> scripts;
         private List<String> argNames;
-        private List<Object> argValues;
+        private List<String> argValues;
 
         private JsonObject mainInfo;
         private JsonObject scriptInfo;
@@ -82,7 +80,7 @@ public class WorkflowConverter {
             documentationNames = new ArrayList<String>();
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
-            argValues = new ArrayList<Object>();
+            argValues = new ArrayList<String>();
         }
 
         public void process(com.sos.inventory.model.workflow.Jobs jobs) {
@@ -170,7 +168,7 @@ public class WorkflowConverter {
             return argNames;
         }
 
-        public List<Object> getArgValues() {
+        public List<String> getArgValues() {
             return argValues;
         }
 
@@ -247,7 +245,7 @@ public class WorkflowConverter {
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
-        private List<Object> jobArgValues;
+        private List<String> jobArgValues;
 
         private JsonObject mainInfo;
         private JsonObject argInfo;
@@ -259,7 +257,7 @@ public class WorkflowConverter {
             locks = new HashMap<String, Integer>();
 
             jobArgNames = new ArrayList<String>();
-            jobArgValues = new ArrayList<Object>();
+            jobArgValues = new ArrayList<String>();
         }
 
         public void process(List<Instruction> instructions) {
@@ -320,7 +318,7 @@ public class WorkflowConverter {
             return jobArgNames;
         }
 
-        public List<Object> getJobArgValues() {
+        public List<String> getJobArgValues() {
             return jobArgValues;
         }
 
@@ -404,31 +402,15 @@ public class WorkflowConverter {
         return b;
     }
 
-    private static void jsonAddObjectValues(JsonObjectBuilder builder, String key, List<Object> list) {
+    private static void jsonAddObjectValues(JsonObjectBuilder builder, String key, List<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArrayFromObjects(list));
         }
     }
 
-    private static JsonArrayBuilder getJsonArrayFromObjects(List<Object> list) {
+    private static JsonArrayBuilder getJsonArrayFromObjects(List<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
-        for (Object n : list) {
-            if (n instanceof String) {
-                b.add((String) n);
-            } else if (n instanceof Boolean) {
-                b.add((Boolean) n);
-            } else if (n instanceof Integer) {
-                b.add((Integer) n);
-            } else if (n instanceof BigInteger) {
-                b.add((BigInteger) n);
-            } else if (n instanceof Long) {
-                b.add((Long) n);
-            } else if (n instanceof Double) {
-                b.add((Double) n);
-            } else if (n instanceof BigDecimal) {
-                b.add((BigDecimal) n);
-            }
-        }
+        list.forEach(s -> b.add(s));
         return b;
     }
 

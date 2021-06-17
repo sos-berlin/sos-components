@@ -162,25 +162,38 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             }
 
             // OrderIds beat dateTo
-            if (!withOrderIdFilter && ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) {
+            if (!withOrderIdFilter && ((ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) || ordersFilter.getScheduledNever() == Boolean.TRUE)) {
                 // only necessary if fresh orders in orderStream
                 if (!withStatesFilter || lookingForPending) {
-                    // temp. workaround
-                    String dateTo = ordersFilter.getDateTo();
-                    if ("0d".equals(dateTo)) {
-                        dateTo = "1d";
-                    }
-                    Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
-                    final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
-                    Predicate<JOrder> dateToFilter = o -> {
-                        if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
-                            if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
-                                return false;
+                    
+                    if (ordersFilter.getScheduledNever() == Boolean.TRUE) {
+                        Predicate<JOrder> neverFilter = o -> {
+                            if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                                if (!o.scheduledFor().isPresent() || o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS) {
+                                    return false;
+                                }
                             }
+                            return true;
+                        };
+                        orderStream = orderStream.filter(neverFilter);
+                    } else {
+                        // temp. workaround
+                        String dateTo = ordersFilter.getDateTo();
+                        if ("0d".equals(dateTo)) {
+                            dateTo = "1d";
                         }
-                        return true;
-                    };
-                    orderStream = orderStream.filter(dateToFilter);
+                        Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
+                        final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
+                        Predicate<JOrder> dateToFilter = o -> {
+                            if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                                if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        };
+                        orderStream = orderStream.filter(dateToFilter);
+                    }
                 }
             }
 

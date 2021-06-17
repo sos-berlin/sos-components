@@ -46,7 +46,7 @@
       "$ref": "../../../inventory/schemas/common/path-schema.json"
     },
     "defaultArguments": {
-      "$ref": "../../../inventory/schemas/common/variables-schema.json"
+      "$ref": "../../../inventory/schemas/job/env-schema.json"
     },
     "jobResourcePaths": {
       "alias": "jobResourceNames",

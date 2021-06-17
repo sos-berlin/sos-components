@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.common.Variables;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
@@ -24,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "version",
     "path",
     "workflowPath",
     "workflowName",
@@ -35,9 +37,18 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "nonWorkingCalendars",
     "variables"
 })
-public class Schedule implements IConfigurationObject, IReleaseObject
+public class Schedule implements IInventoryObject, IConfigurationObject, IReleaseObject
 {
 
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * path
      * <p>
@@ -79,7 +90,6 @@ public class Schedule implements IConfigurationObject, IReleaseObject
      * 
      */
     @JsonProperty("documentationName")
-    @JsonPropertyDescription("absolute path of an object.")
     private String documentationName;
     @JsonProperty("submitOrderToControllerWhenPlanned")
     private Boolean submitOrderToControllerWhenPlanned = false;
@@ -111,6 +121,28 @@ public class Schedule implements IConfigurationObject, IReleaseObject
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
     /**
      * path
@@ -314,12 +346,12 @@ public class Schedule implements IConfigurationObject, IReleaseObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(documentationName).append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(workflowName).append(title).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(variables).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(workflowName).append(documentationName).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -331,7 +363,7 @@ public class Schedule implements IConfigurationObject, IReleaseObject
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(documentationName, rhs.documentationName).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(workflowName, rhs.workflowName).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

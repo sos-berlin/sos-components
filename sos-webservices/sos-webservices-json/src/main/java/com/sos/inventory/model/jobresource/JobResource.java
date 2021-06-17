@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.Environment;
 import com.sos.joc.model.common.IConfigurationObject;
@@ -24,12 +25,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
+    "version",
     "arguments",
     "env",
     "documentationName",
     "title"
 })
-public class JobResource implements IConfigurationObject, IDeployObject
+public class JobResource implements IInventoryObject, IConfigurationObject, IDeployObject
 {
 
     /**
@@ -40,6 +42,15 @@ public class JobResource implements IConfigurationObject, IDeployObject
      */
     @JsonProperty("TYPE")
     private DeployType tYPE = DeployType.JOBRESOURCE;
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
     /**
      * a map for arbitrary key-value pairs
      * 
@@ -108,6 +119,28 @@ public class JobResource implements IConfigurationObject, IDeployObject
     @JsonProperty("TYPE")
     public DeployType getTYPE() {
         return tYPE;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     /**
@@ -196,12 +229,12 @@ public class JobResource implements IConfigurationObject, IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("arguments", arguments).append("env", env).append("documentationName", documentationName).append("title", title).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("arguments", arguments).append("env", env).append("documentationName", documentationName).append("title", title).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(arguments).append(documentationName).append(tYPE).append(env).append(title).toHashCode();
+        return new HashCodeBuilder().append(arguments).append(documentationName).append(tYPE).append(env).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -213,7 +246,7 @@ public class JobResource implements IConfigurationObject, IDeployObject
             return false;
         }
         JobResource rhs = ((JobResource) other);
-        return new EqualsBuilder().append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).isEquals();
+        return new EqualsBuilder().append(arguments, rhs.arguments).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(env, rhs.env).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }
