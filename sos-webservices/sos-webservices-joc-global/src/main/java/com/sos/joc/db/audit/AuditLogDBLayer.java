@@ -59,7 +59,10 @@ public class AuditLogDBLayer {
                 hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al ");
             }
             hql.append(getWhere(auditLogDBFilter, "al."));
-            hql.append(" order by al.created desc");
+            if (withDeploymentJoin) {
+                hql.append(" group by al, dh.commitId");
+            }
+            hql.append(" order by al.id desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString());
 
             bindParameters(query, auditLogDBFilter);

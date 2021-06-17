@@ -1934,6 +1934,21 @@ public class DBLayerDeploy {
     }
     
     public void createSubmissionForFailedDeployments(List<DBItemDeploymentHistory> failedDeployments) {
+        // TODO constraint violation
+        /*
+REQUEST: ./inventory/deployment/deploy
+PARAMS: {"controllerIds":["testsuite"],"store":{"draftConfigurations":[{"configuration":{"path":"/ProductDemo","objectType":"FOLDER","recursive":true}}],"deployConfigurations":[{"configuration":{"path":"/ProductDemo","objectType":"FOLDER","recursive":true}}]},"auditLog":{}}
+USER: root
+2021-06-17T16:02:55,043 ERROR JControllerProxy-55  c.s.j.c.ProblemHelper                        - 
+com.sos.joc.exceptions.JocSosHibernateException: could not execute statement: 1062 (conn=188225) Duplicate entry '/ProductDemo/DatabaseSQLExecution/dbSQLPlusExecution-testsuite-5' for key 'DEP_SUB_UNIQUE'
+    at com.sos.joc.publish.db.DBLayerDeploy.createSubmissionForFailedDeployments(DBLayerDeploy.java:1958) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
+    at com.sos.joc.publish.util.StoreDeployments.processAfterAdd(StoreDeployments.java:165) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
+    at com.sos.joc.publish.util.StoreDeployments.lambda$callUpdateItemsFor$7(StoreDeployments.java:217) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
+    at java.util.concurrent.CompletableFuture.uniAccept(CompletableFuture.java:670) ~[?:1.8.0_282]
+    at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:646) ~[?:1.8.0_282]
+    at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:488) ~[?:1.8.0_282]
+    at java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:1975) ~[?:1.8.0_282]
+         */
         try {
             for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
                 DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();
