@@ -101,8 +101,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     JControllerState currentState = Proxy.of(controllerId).currentState();
                     Long surveyDateMillis = currentState.eventId() / 1000;
                     Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
-                    boolean olderThan20sec = currentStateMoment.isBefore(Instant.now().minusSeconds(20));
-                    LOGGER.debug("current state older than 20sec? " + olderThan20sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
+                    boolean olderThan30sec = currentStateMoment.isBefore(Instant.now().minusSeconds(30));
+                    LOGGER.debug("current state older than 30sec? " + olderThan30sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
                     agents.setSurveyDate(Date.from(currentStateMoment));
                     
                     Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
@@ -126,7 +126,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Either<Problem, JAgentRefState> either = currentState.pathToAgentRefState(AgentPath.of(dbAgent.getAgentId()));
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
-                        if (!olderThan20sec || Proxies.isCoupled(controllerId)) {
+                        //if (!olderThan30sec) {
+                        //if (!olderThan30sec || Proxies.isCoupled(controllerId)) {
                             if (either.isRight()) {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
                                 AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
@@ -144,7 +145,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
                                 agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
-                        }
+                        //}
                         if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
                             return null;
                         }

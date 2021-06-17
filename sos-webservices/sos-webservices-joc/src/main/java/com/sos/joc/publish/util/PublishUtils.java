@@ -48,6 +48,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1037,20 +1038,31 @@ public abstract class PublishUtils {
 					// signed item
 					depHistoryItem.setSignedContent(depSignatureItem.getSignature());
 				}
-				depHistoryItem.setId(null);
+				
+				//Metode tries to change commitId and ControllerId but it can face into Constraint Violation
+                boolean constraintViolation = new EqualsBuilder().append(commitId, depHistoryItem.getCommitId()).append(controllerId, depHistoryItem
+                        .getControllerId()).isEquals();
+
+				if (!constraintViolation) {
+				    depHistoryItem.setId(null);
+				}
 				depHistoryItem.setAccount(account);
 				// TODO: get Version to set here
 				depHistoryItem.setVersion(null);
 				depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
 				depHistoryItem.setCommitId(commitId);
 				depHistoryItem.setControllerId(controllerId);
-	            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
+	            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
 				depHistoryItem.setControllerInstanceId(controllerInstance.getId());
 				depHistoryItem.setDeploymentDate(deploymentDate);
 				depHistoryItem.setOperation(OperationType.UPDATE.value());
 				depHistoryItem.setState(DeploymentState.DEPLOYED.value());
 				depHistoryItem.setAuditlogId(auditlogId);
-				dbLayerDeploy.getSession().save(depHistoryItem);
+				if (!constraintViolation) {
+				    dbLayerDeploy.getSession().save(depHistoryItem);
+				} else {
+				    dbLayerDeploy.getSession().update(depHistoryItem);
+				}
 				postDeployHistoryWorkflowEvent(depHistoryItem);
 				if (depSignatureItem != null) {
 					depSignatureItem.setDepHistoryId(depHistoryItem.getId());
