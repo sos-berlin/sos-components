@@ -81,9 +81,9 @@ public class HistoryEventsTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 130; // seconds
+    private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int CHECKER_REFRESH_INTERVAL = 10; // seconds
-    private static final Long START_EVENT_ID = 0L;
+    private static final Long START_EVENT_ID = 1623760260086003L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
     private AtomicBoolean stopped = new AtomicBoolean();
@@ -93,14 +93,20 @@ public class HistoryEventsTest {
     @Test
     public void testGetEvents() throws Exception {
         JProxyTestClass proxy = new JProxyTestClass();
+        JControllerApi api = null;
         try {
-            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
 
             setStopper(stopper);
             setChecker();
             process(api, START_EVENT_ID);
 
         } catch (Throwable e) {
+            try {
+                Long id = api.journalInfo().thenApply(o -> o.get().tornEventId()).get();
+                LOGGER.info(String.format("[tornEventId]%s", id));
+            } catch (Throwable ee) {
+            }
             throw e;
         } finally {
             proxy.close();
