@@ -95,7 +95,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
         if (xml != null) {
             try {
                 Document doc = SOSXML.parse(xml);
-                NodeList nodes = SOSXML.selectNodes(doc, "//Profile");
+                NodeList nodes = SOSXML.newXPath().selectNodes(doc, "//Profile");
                 if (nodes != null) {
                     for (int i = 0; i < nodes.getLength(); i++) {
                         Node child = nodes.item(i);
@@ -108,7 +108,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
                                 result.add(profileId);
                             }
                         } catch (Throwable e) {
-                            LOGGER.error(String.format("[%s]can't get attribute profile_id", child.getLocalName()), e);
+                            LOGGER.error(String.format("[%s]can't get attribute profile_id", child.getNodeName()), e);
                         }
                     }
                 }

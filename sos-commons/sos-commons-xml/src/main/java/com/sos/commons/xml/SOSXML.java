@@ -3,6 +3,8 @@ package com.sos.commons.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,11 +36,14 @@ public class SOSXML {
         return parse(new InputSource(is));
     }
 
+    public static Document parse(Path path) throws Exception {
+        return parse(new InputSource(Files.newInputStream(path)));
+    }
+
     public static Document parse(InputSource is) throws Exception {
         try {
             return getDocumentBuilder().parse(is);
         } catch (SAXException e) {
-            // TODO check ...
             if (e.getMessage().toUpperCase().contains("DOCTYPE")) {
                 throw new SOSDoctypeException("A DOCTYPE was passed into the XML document", e);
             }
@@ -49,9 +54,8 @@ public class SOSXML {
         }
     }
 
-    public static NodeList selectNodes(Document doc, String expression) throws XPathExpressionException {
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        return (NodeList) xpath.compile(expression).evaluate((Node) doc.getDocumentElement(), XPathConstants.NODESET);
+    public static SOSXMLXPath newXPath() {
+        return new SOSXML().new SOSXMLXPath();
     }
 
     private static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
@@ -68,5 +72,19 @@ public class SOSXML {
         DocumentBuilder builder = factory.newDocumentBuilder();
         builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
         return builder;
+    }
+
+    public class SOSXMLXPath {
+
+        private XPath xpath = XPathFactory.newInstance().newXPath();
+
+        public NodeList selectNodes(Document doc, String expression) throws XPathExpressionException {
+            return selectNodes((Node) doc.getDocumentElement(), expression);
+        }
+
+        public NodeList selectNodes(Node node, String expression) throws XPathExpressionException {
+            return (NodeList) xpath.compile(expression).evaluate(node, XPathConstants.NODESET);
+        }
+
     }
 }

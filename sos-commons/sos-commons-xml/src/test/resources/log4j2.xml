@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+		<!-- Appender for root logger -->
+		<Console name="stdout" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%d{ISO8601}{Europe/Berlin} %-5p %-16.16t %-44.70c{1.} - %m%n" />
+		</Console>
+	</Appenders>
+
+	<Loggers>
+		<Logger name="com.sos" level="debug" />
+
+		<Root level="trace">
+			<AppenderRef ref="stdout" />
+		</Root>
+	</Loggers>
+</Configuration>
