@@ -15,12 +15,13 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.dom4j.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.XMLBuilder;
+import com.sos.commons.xml.SOSXML;
 import com.sos.joc.classes.xmleditor.exceptions.AssignSchemaException;
 import com.sos.joc.classes.xmleditor.jobscheduler.JobSchedulerXmlEditor;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -66,14 +67,14 @@ public class JocXmlEditor {
         if (SOSString.isEmpty(xml)) {
             return null;
         }
-        return XMLBuilder.parse(xml);
+        return SOSXML.parse(xml);
     }
 
     public static Document parseXml(InputStream is) throws Exception {
         if (is == null) {
             return null;
         }
-        return XMLBuilder.parse(is);
+        return SOSXML.parse(is);
     }
 
     public static String getResourceImplPath(final String path) {

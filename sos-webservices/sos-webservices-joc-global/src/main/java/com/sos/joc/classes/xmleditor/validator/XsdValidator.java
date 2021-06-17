@@ -10,10 +10,9 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.SchemaFactory;
 
-import org.dom4j.Document;
-import org.dom4j.io.DocumentSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 
@@ -58,28 +57,18 @@ public class XsdValidator {
         } catch (Throwable e) {
         }
 
-        InputStream is = null;
         try {
-            is = Files.newInputStream(schema);
-            Document xsdDoc = JocXmlEditor.parseXml(is);
 
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(false);
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            factory.setSchema(schemaFactory.newSchema(new DocumentSource(xsdDoc)));
+            factory.setSchema(schemaFactory.newSchema(schema.toFile()));
 
             SAXParser parser = factory.newSAXParser();
             // parser.parse(new InputSource(new StringReader(content.replaceAll(">\\s+<", "><").trim())), new XsdValidatorHandler());
             parser.parse(new InputSource(new StringReader(content)), new XsdValidatorHandler());
         } catch (Throwable e) {
             throw e;
-        } finally {
-            if (is != null) {
-                try {
-                    is.close();
-                } catch (Throwable ex) {
-                }
-            }
         }
     }
 

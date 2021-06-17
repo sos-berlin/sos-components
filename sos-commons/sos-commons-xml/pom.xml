@@ -17,11 +17,5 @@
 			<artifactId>sos-commons-exception</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.dom4j</groupId>
-			<artifactId>dom4j</artifactId>
-		</dependency>
-
 	</dependencies>
 </project>

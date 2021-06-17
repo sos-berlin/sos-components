@@ -7,15 +7,15 @@ import java.util.List;
 
 import javax.ws.rs.Path;
 
-import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
-import org.dom4j.XPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.XMLBuilder;
+import com.sos.commons.xml.SOSXML;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -94,18 +94,21 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
         List<String> result = new ArrayList<String>();
         if (xml != null) {
             try {
-                XPath xpath = DocumentHelper.createXPath("//Profile");
-                List<?> nodes = xpath.selectNodes(XMLBuilder.parse(xml));
-                if (nodes != null && nodes.size() > 0) {
-                    for (int i = 0; i < nodes.size(); i++) {
-                        Element el = ((Element) nodes.get(i));
+                Document doc = SOSXML.parse(xml);
+                NodeList nodes = SOSXML.selectNodes(doc, "//Profile");
+                if (nodes != null) {
+                    for (int i = 0; i < nodes.getLength(); i++) {
+                        Node child = nodes.item(i);
+                        if (child.getNodeType() != Node.ELEMENT_NODE) {
+                            continue;
+                        }
                         try {
-                            String profileId = el.attribute("profile_id").getValue();
+                            String profileId = child.getAttributes().getNamedItem("profile_id").getNodeValue();
                             if (!SOSString.isEmpty(profileId)) {
                                 result.add(profileId);
                             }
                         } catch (Throwable e) {
-                            LOGGER.error(String.format("[%s]can't get attribute profile_id", el.getName()), e);
+                            LOGGER.error(String.format("[%s]can't get attribute profile_id", child.getLocalName()), e);
                         }
                     }
                 }
