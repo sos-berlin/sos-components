@@ -508,7 +508,7 @@ public class DBItemHistoryOrder extends DBItem {
 
     public void setLogId(Long val) {
         if (val == null) {
-            val = new Long(0);
+            val = Long.valueOf(0);
         }
         logId = val;
     }

@@ -94,7 +94,7 @@ public class SSHJobUtil {
             throws SOSJobSSHException {
         if (exitCode != null) {
             outcomes.put("exit_code", exitCode);
-            if (!exitCode.equals(new Integer(0))) {
+            if (!exitCode.equals(Integer.valueOf(0))) {
                 if (jobArgs.getIgnoreError().getValue() || (jobArgs.getExitCodesToIgnore().getValue() != null && jobArgs.getExitCodesToIgnore()
                         .getValue().contains(exitCode))) {
                     outcomes.put("exit_code_ignored", true);

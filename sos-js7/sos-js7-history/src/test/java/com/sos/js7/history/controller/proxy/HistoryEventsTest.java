@@ -98,7 +98,7 @@ public class HistoryEventsTest {
 
             setStopper(stopper);
             setChecker();
-            process(api, new Long(START_EVENT_ID));
+            process(api, START_EVENT_ID);
 
         } catch (Throwable e) {
             throw e;

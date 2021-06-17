@@ -2,7 +2,6 @@ package com.sos.js7.history.db;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.Date;
 import java.util.TimeZone;
@@ -38,9 +37,9 @@ public class DBItemLogTest {
             item = new DBItemHistoryLog();
             item.setControllerId("jobscheduler2.0");
 
-            item.setHistoryOrderMainParentId(new Long(0));
-            item.setHistoryOrderId(new Long(0));
-            item.setHistoryOrderStepId(new Long(0));
+            item.setHistoryOrderMainParentId(Long.valueOf(0));
+            item.setHistoryOrderId(Long.valueOf(0));
+            item.setHistoryOrderStepId(Long.valueOf(0));
 
             item.setFileBasename(SOSPath.getFileNameWithoutExtension(logFile.getFileName()));
             item.setFileSizeUncomressed(Files.size(logFile));
@@ -70,8 +69,8 @@ public class DBItemLogTest {
 
         DBItemLogTest t = new DBItemLogTest();
 
-        Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
-        Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        //Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        //Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;

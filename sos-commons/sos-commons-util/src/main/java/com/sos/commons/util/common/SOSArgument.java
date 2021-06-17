@@ -137,9 +137,9 @@ public class SOSArgument<T> {
         if (value instanceof String) {
             value = (T) val;
         } else if (value instanceof Integer) {
-            value = (T) new Integer(val);
+            value = (T) Integer.valueOf(val);
         } else if (value instanceof Long) {
-            value = (T) new Long(val);
+            value = (T) Long.valueOf(val);
         }
         // TODO
     }

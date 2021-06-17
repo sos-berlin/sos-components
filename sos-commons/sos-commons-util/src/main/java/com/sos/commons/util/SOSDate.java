@@ -480,7 +480,7 @@ public class SOSDate {
             break;
         }
 
-        Long result = new Long(0);
+        Long result = Long.valueOf(0);
         String[] parts = age.trim().toLowerCase().split(" ");
         for (String part : parts) {
             if (!SOSString.isEmpty(part)) {
@@ -534,7 +534,7 @@ public class SOSDate {
         String[] arr = val.split(":");
         for (int i = arr.length - 1; i >= 0; i--) {
             try {
-                seconds += new Integer(arr[i].trim()) * num[j++];
+                seconds += Integer.valueOf(arr[i].trim()) * num[j++];
             } catch (Throwable e) {
             }
         }

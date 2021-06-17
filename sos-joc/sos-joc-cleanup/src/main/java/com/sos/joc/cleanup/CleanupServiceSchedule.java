@@ -177,7 +177,7 @@ public class CleanupServiceSchedule {
                             }
                         }
                         if (storedNextBegin != null) {
-                            if (weekDays.contains(new Integer(storedNextBegin.getDayOfWeek().getValue()))) {
+                            if (weekDays.contains(Integer.valueOf(storedNextBegin.getDayOfWeek().getValue()))) {
                                 int storedNextDayOfWeek = storedNextBegin.getDayOfWeek().getValue();
                                 int nowDayOfWeek = now.getDayOfWeek().getValue();
                                 for (Integer weekDay : weekDays) {
@@ -185,7 +185,7 @@ public class CleanupServiceSchedule {
                                         continue;
                                     }
                                     if (weekDay.intValue() == nowDayOfWeek) {
-                                        if (!storedPeriod.getWeekDays().contains(new Integer(nowDayOfWeek))) {
+                                        if (!storedPeriod.getWeekDays().contains(Integer.valueOf(nowDayOfWeek))) {
                                             LOGGER.info(String.format(
                                                     "[computeNextDelay][stored][skip]period was changed - today added (old=%s, new=%s)", storedPeriod
                                                             .getConfigured(), period.getConfigured()));

@@ -23,9 +23,9 @@ public class LogEntry {
     private final Date controllerDatetime;
     private final Date agentDatetime;
     private String orderId = ".";
-    private Long historyOrderMainParentId = new Long(0L);
-    private Long historyOrderId = new Long(0L);
-    private Long historyOrderStepId = new Long(0L);
+    private Long historyOrderMainParentId = Long.valueOf(0);
+    private Long historyOrderId = Long.valueOf(0);
+    private Long historyOrderStepId = Long.valueOf(0);
     private String position;
     private String jobName = ".";
     private String agentTimezone = null;

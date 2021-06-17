@@ -265,7 +265,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         hql.append("having count(dh.id) > :versions ");
 
         Query<DeploymentVersion> query = getDbLayer().getSession().createQuery(hql.toString(), DeploymentVersion.class);
-        query.setParameter("versions", new Long(versions));
+        query.setParameter("versions", Long.valueOf(versions));
         List<DeploymentVersion> r = getDbLayer().getSession().getResultList(query);
         getDbLayer().getSession().commit();
 

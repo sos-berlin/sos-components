@@ -105,7 +105,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         } else {
             item.setSchemaLocation(in.getSchemaIdentifier());
         }
-        item.setAuditLogId(new Long(0));// TODO
+        item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
         item.setCreated(new Date());
         item.setModified(item.getCreated());

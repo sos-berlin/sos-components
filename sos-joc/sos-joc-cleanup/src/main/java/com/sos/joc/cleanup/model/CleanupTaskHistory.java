@@ -383,7 +383,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        Long eventId = new Long(datetime.getDatetime().getTime() * 1_000 + 999);
+        Long eventId = Long.valueOf(datetime.getDatetime().getTime() * 1_000 + 999);
 
         getDbLayer().getSession().beginTransaction();
 

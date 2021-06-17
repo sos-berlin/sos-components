@@ -225,7 +225,7 @@ public class SOSSQLCommandExtractor {
         } else {
             int apostropheSecond = st.indexOf("'", apostropheFirst + 1);
             if (apostropheSecond != -1) {
-                split(commands, st, new Integer(apostropheSecond + 1), procedurEnd, returnProcedureBegin, count);
+                split(commands, st, Integer.valueOf(apostropheSecond + 1), procedurEnd, returnProcedureBegin, count);
             } else {
                 throw new SOSHibernateSQLCommandExtractorException(String.format("closing apostrophe not found = %s = %s ", apostropheFirst, st));
             }

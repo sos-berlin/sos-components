@@ -126,7 +126,7 @@ public class DefaultNotifier implements INotifier {
     private class ErrorNotifier {
 
         private long counter = 0;
-        private Long last = new Long(0);
+        private Long last = Long.valueOf(0);
         private Throwable exception;
         private Class<?> caller;
 

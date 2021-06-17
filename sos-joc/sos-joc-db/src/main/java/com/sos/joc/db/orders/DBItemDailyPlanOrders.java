@@ -283,7 +283,7 @@ public class DBItemDailyPlanOrders extends DBItem {
 
         if (repeat != null) {
             Integer i = c.get(Calendar.HOUR) * 60 * 60 + c.get(Calendar.MINUTE) * 60 + c.get(Calendar.SECOND);
-            repeatInterval = new Long(i);
+            repeatInterval = Long.valueOf(i);
         }
     }
 

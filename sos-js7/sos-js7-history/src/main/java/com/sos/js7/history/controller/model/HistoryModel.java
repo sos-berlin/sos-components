@@ -184,8 +184,8 @@ public class HistoryModel {
         Map<String, CachedOrderStep> endedOrderSteps = new HashMap<>();
         Instant start = Instant.now();
         Long startEventId = storedEventId;
-        Long firstEventId = new Long(0L);
-        Long lastSuccessEventId = new Long(0L);
+        Long firstEventId = Long.valueOf(0);
+        Long lastSuccessEventId = Long.valueOf(0);
 
         Counter counter = new Counter();
         counter.setTotal(list.size());
@@ -456,9 +456,9 @@ public class HistoryModel {
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
-        String startEventIdAsTime = startEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(startEventId));
-        String endEventIdAsTime = storedEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(storedEventId));
-        String firstEventIdAsTime = firstEventId.equals(new Long(0L)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(firstEventId));
+        String startEventIdAsTime = startEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(startEventId));
+        String endEventIdAsTime = storedEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(storedEventId));
+        String firstEventIdAsTime = firstEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(firstEventId));
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
 
@@ -664,8 +664,8 @@ public class HistoryModel {
             item.setWorkflowName(workflowName);
             item.setWorkflowTitle(cw.getTitle());
 
-            item.setMainParentId(new Long(0L));// TODO see below
-            item.setParentId(new Long(0L));
+            item.setMainParentId(Long.valueOf(0));// TODO see below
+            item.setParentId(Long.valueOf(0));
             item.setParentOrderId(null);
             item.setHasChildren(false);
             item.setRetryCounter(HistoryPosition.getRetry(entry.getPosition()));
@@ -681,11 +681,11 @@ public class HistoryModel {
             item.setStartEventId(entry.getEventId());
             item.setStartParameters(entry.getArgumentsAsJsonString());
 
-            item.setCurrentHistoryOrderStepId(new Long(0));
+            item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
-            item.setEndHistoryOrderStepId(new Long(0));
+            item.setEndHistoryOrderStepId(Long.valueOf(0));
 
             item.setSeverity(OrderStateText.RUNNING);
             item.setState(OrderStateText.RUNNING);
@@ -702,7 +702,7 @@ public class HistoryModel {
             item.setErrorText(null);
             item.setEndEventId(null);
 
-            item.setLogId(new Long(0));
+            item.setLogId(Long.valueOf(0));
 
             item.setConstraintHash(constraintHash);
             item.setCreated(new Date());
@@ -849,7 +849,7 @@ public class HistoryModel {
             Path log = storeLog2File(le);
             // if (completeOrder && co.getParentId().longValue() == 0L) {
             if (terminateOrder) {
-                DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), new Long(0L), false, log);
+                DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, co.getMainParentId(), co.getId(), Long.valueOf(0), false, log);
                 if (logItem != null) {
                     hob.setLogId(logItem.getId());
                     dbLayer.setOrderLogId(co.getId(), hob.getLogId());
@@ -1084,11 +1084,11 @@ public class HistoryModel {
             item.setStartEventId(entry.getEventId());
             item.setStartParameters(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
 
-            item.setCurrentHistoryOrderStepId(new Long(0L));
+            item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
             item.setEndTime(null);
             item.setEndWorkflowPosition(null);
-            item.setEndHistoryOrderStepId(new Long(0L));
+            item.setEndHistoryOrderStepId(Long.valueOf(0));
 
             item.setSeverity(OrderStateText.RUNNING);
             item.setState(OrderStateText.RUNNING);
@@ -1103,7 +1103,7 @@ public class HistoryModel {
             item.setErrorText(null);
             item.setEndEventId(null);
 
-            item.setLogId(new Long(0L));
+            item.setLogId(Long.valueOf(0));
 
             item.setConstraintHash(constraintHash);
             item.setCreated(new Date());
@@ -1216,7 +1216,7 @@ public class HistoryModel {
             item.setErrorCode(null);
             item.setErrorText(null);
 
-            item.setLogId(new Long(0));
+            item.setLogId(Long.valueOf(0));
 
             constraintHash = hashOrderStepConstraint(entry.getEventId(), item.getOrderId(), item.getWorkflowPosition());
             item.setConstraintHash(constraintHash);

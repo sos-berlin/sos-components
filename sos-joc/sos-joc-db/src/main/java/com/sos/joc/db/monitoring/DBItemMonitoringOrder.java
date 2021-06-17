@@ -306,7 +306,7 @@ public class DBItemMonitoringOrder extends DBItem {
 
     public void setCurrentHistoryOrderStepId(Long val) {
         if (val == null) {
-            val = new Long(0);
+            val = Long.valueOf(0);
         }
         currentHistoryOrderStepId = val;
     }
@@ -332,7 +332,7 @@ public class DBItemMonitoringOrder extends DBItem {
 
     public void setEndHistoryOrderStepId(Long val) {
         if (val == null) {
-            val = new Long(0);
+            val = Long.valueOf(0);
         }
         endHistoryOrderStepId = val;
     }
