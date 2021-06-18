@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,11 +46,15 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefState;
+import js7.data.controller.ControllerCommand;
 import js7.data.order.Order;
 import js7.data_for_java.agent.JAgentRefState;
+import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
+import js7.proxy.javaapi.JControllerProxy;
+import scala.compat.java8.OptionConverters;
 
 @Path("agents")
 public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsResourceState {
@@ -98,11 +104,24 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
                 Map<String, List<OrderV>> ordersPerAgent = new HashMap<>();
                 try {
-                    JControllerState currentState = Proxy.of(controllerId).currentState();
+                    JControllerProxy proxy = Proxy.of(controllerId);
+                    JControllerState currentState = proxy.currentState();
                     Long surveyDateMillis = currentState.eventId() / 1000;
                     Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
                     boolean olderThan30sec = currentStateMoment.isBefore(Instant.now().minusSeconds(30));
                     LOGGER.debug("current state older than 30sec? " + olderThan30sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
+                    if (!Proxies.isCoupled(controllerId)) {
+                        JControllerCommand noOpCommand = JControllerCommand.apply(new ControllerCommand.NoOperation(OptionConverters.toScala(Optional.empty())));
+                        try {
+                            Either<Problem, js7.data.controller.ControllerCommand.Response> anEither = proxy.api().executeCommand(noOpCommand).get(
+                                    500, TimeUnit.MILLISECONDS);
+                            if (anEither.isRight()) {
+                                Proxies.setCoupled(controllerId, true);
+                                LOGGER.info("noOp answer: " + anEither.get().toString() + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
+                            }
+                        } catch (Exception e) {
+                        }
+                    }
                     agents.setSurveyDate(Date.from(currentStateMoment));
                     
                     Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
