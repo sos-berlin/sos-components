@@ -262,6 +262,14 @@ public class Proxies {
         }
     }
     
+    public static void setCoupled(String controllerId, boolean isCoupled) {
+        Proxies.getInstance()._setCoupled(controllerId, isCoupled);
+    }
+    
+    private void _setCoupled(String controllerId, boolean isCoupled) {
+        coupledStates.put(controllerId, isCoupled);
+    }
+    
     private void _startAll(final JocCockpitProperties properties, final long delay, final ProxyUser account, Map<String, String> urlMapper) {
         LOGGER.info(String.format("starting all proxies for user %s ...", account));
         try {
