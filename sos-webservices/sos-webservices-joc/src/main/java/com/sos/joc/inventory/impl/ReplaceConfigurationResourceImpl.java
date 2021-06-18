@@ -114,6 +114,9 @@ public class ReplaceConfigurationResourceImpl extends JOCResourceImpl implements
             for (String event : events) {
                 JocInventory.postEvent(event);
             }
+            if (!events.isEmpty()) {
+                JocInventory.postFolderEvent(config.getFolder());
+            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
 

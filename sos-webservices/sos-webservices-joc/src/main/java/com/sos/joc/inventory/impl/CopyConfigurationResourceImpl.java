@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,9 +71,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             ConfigurationType type = config.getTypeAsEnum();
             
             final java.nio.file.Path oldPath = Paths.get(config.getPath());
+            final String oldFolder = config.getFolder();
             // without any prefix/suffix
-            java.nio.file.Path pWithoutFix = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
-            String newFolder = pWithoutFix.getParent().toString().replace('\\', '/');
+            java.nio.file.Path pWithoutFix = Paths.get(oldFolder).resolve(in.getNewPath()).normalize();
+            boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(pWithoutFix.toString().replace('\\', '/'));
+            String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : pWithoutFix.getParent().toString().replace('\\', '/');
             String newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
             
             // folder copy or (object copy where target and source name are the same)
@@ -92,7 +93,8 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             }
             
             final List<String> replace = JocInventory.getSearchReplace(suffixPrefix);
-            Set<String> events = new HashSet<>();
+            Set<String> events = Collections.emptySet();
+            Set<String> folderEvents = Collections.emptySet();
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
             
@@ -166,14 +168,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                     if (newItem == null) {
                         DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                        //auditLogId = createAuditLog(newDbItem, in.getAuditLog());
                         newDbItem.setAuditLogId(dbAuditLog.getId());
                         JocInventory.insertConfiguration(dbLayer, newDbItem);
                         JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
                         response.setId(newDbItem.getId());
                         response.setPath(newDbItem.getPath());
                     } else if (!oldDBFolderContent.isEmpty()) {
-                        //auditLogId = createAuditLog(newItem, in.getAuditLog());
                         response.setId(newItem.getId());
                         response.setPath(newItem.getPath());
                     }
@@ -247,7 +247,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         JocInventory.insertConfiguration(dbLayer, item);
                     }
                 }
-                events.add(config.getFolder());
+                
+                events = Collections.singleton(newPathWithoutFix);
+                folderEvents = Collections.singleton(newFolder);
                 
             } else {
                 if (!folderPermissions.isPermittedForFolder(newFolder)) {
@@ -293,12 +295,15 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), newDbItem.getAuditLogId());
                 response.setId(newDbItem.getId());
                 response.setPath(newDbItem.getPath());
-                events.add(newDbItem.getFolder());
+                events = Collections.singleton(newDbItem.getFolder());
             }
 
             session.commit();
             for (String event : events) {
                 JocInventory.postEvent(event);
+            }
+            for (String event : folderEvents) {
+                JocInventory.postFolderEvent(event);
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));

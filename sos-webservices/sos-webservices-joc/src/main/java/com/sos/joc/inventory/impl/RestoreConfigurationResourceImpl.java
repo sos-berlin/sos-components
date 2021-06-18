@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +75,8 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             // without any prefix/suffix
             if (in.getNewPath() != null && !in.getNewPath().isEmpty()) {
                 pWithoutFix = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
-                newFolder = pWithoutFix.getParent().toString().replace('\\', '/');
+                boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(pWithoutFix.toString().replace('\\', '/'));
+                newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : pWithoutFix.getParent().toString().replace('\\', '/');
                 newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
             }
             
@@ -84,7 +84,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
             final List<String> replace = JocInventory.getSearchReplace(JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), ClusterSettings
                     .getRestoreSuffixPrefix(clusterSettings), clusterSettings.getRestoreSuffix().getDefault(), config.getName(), type, dbLayer));
 
-            Set<String> events = new HashSet<>();
+            Set<String> events = Collections.emptySet();
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
             
@@ -150,8 +150,6 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 
                 dbLayer.deleteTrashFolder(config.getPath());
                 
-                events.add(config.getFolder());
-                
             } else {
                 
                 if (!folderPermissions.isPermittedForFolder(newFolder)) {
@@ -182,13 +180,19 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                 }
                 JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), dbAuditLog.getId());
                 session.delete(config);
-                events.add(config.getFolder());
+                events = Collections.singleton(config.getFolder());
             }
 
             session.commit();
-            for (String event : events) {
-                JocInventory.postEvent(event);
-                JocInventory.postTrashEvent(event);
+            if (JocInventory.isFolder(type)) {
+                JocInventory.postFolderEvent(newFolder);
+                JocInventory.postTrashFolderEvent(config.getFolder());
+                JocInventory.postEvent(newPathWithoutFix);
+            } else {
+                for (String event : events) {
+                    JocInventory.postEvent(event);
+                    JocInventory.postTrashEvent(event);
+                }
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));

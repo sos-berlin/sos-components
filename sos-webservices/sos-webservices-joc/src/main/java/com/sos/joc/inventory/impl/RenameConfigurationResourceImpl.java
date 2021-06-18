@@ -72,11 +72,15 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             }
             
             final java.nio.file.Path oldPath = Paths.get(config.getPath());
-            final java.nio.file.Path p = Paths.get(config.getFolder()).resolve(in.getNewPath()).normalize();
-            String newFolder = p.getParent().toString().replace('\\', '/');
+            final String oldFolder = config.getFolder();
+            final java.nio.file.Path p = Paths.get(oldFolder).resolve(in.getNewPath()).normalize();
+            boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(p.toString().replace('\\', '/'));
+            String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
             boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
-            Set<String> events = new HashSet<>();
+            
+            Set<String> events = Collections.emptySet();
+            Set<String> folderEvents = Collections.emptySet();
             
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
@@ -164,7 +168,9 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 }
                 response.setPath(config.getPath());
                 response.setId(config.getId());
-                events.add(config.getFolder());
+                
+                events = Collections.singleton(newPath);
+                folderEvents = Collections.singleton(newFolder);
                 
             } else {
                 if (!newPath.equalsIgnoreCase(config.getPath())) { //if not only upper-lower case is changed then check if target exists
@@ -194,12 +200,16 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 JocInventory.makeParentDirs(dbLayer, p.getParent(), config.getAuditLogId());
                 response.setPath(config.getPath());
                 response.setId(config.getId());
-                events.add(config.getFolder());
+                
+                events = Collections.singleton(newFolder);
             }
             
             session.commit();
             for (String event : events) {
                 JocInventory.postEvent(event);
+            }
+            for (String event : folderEvents) {
+                JocInventory.postFolderEvent(event);
             }
 
             response.setDeliveryDate(Date.from(Instant.now()));

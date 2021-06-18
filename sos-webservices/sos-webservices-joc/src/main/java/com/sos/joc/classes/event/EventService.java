@@ -289,7 +289,12 @@ public class EventService {
                         if (orders.containsKey(mainOrderId)) {
                             addEvent(createWorkflowEventOfOrder(eventId, orders.get(mainOrderId)));
                             orders.remove(mainOrderId);
+                        } else {
+                            //addEvent(createWorkflowEventOfDeletedOrder(eventId, orderId.string()));
+                            LOGGER.warn("OrderDeleted event without unknown orderId is received: " + event.toString());
                         }
+                    } else {
+                        LOGGER.warn("Order event without orderId is received: " + event.toString());
                     }
                 }
                 
@@ -357,6 +362,15 @@ public class EventService {
         evt.setWorkflow(workflowId);
         return evt;
     }
+    
+//    private EventSnapshot createWorkflowEventOfDeletedOrder(long eventId, String orderId) {
+//        EventSnapshot evt = new EventSnapshot();
+//        evt.setEventId(eventId);
+//        evt.setEventType("WorkflowStateChanged");
+//        evt.setObjectType(EventType.WORKFLOW);
+//        evt.setMessage(orderId);
+//        return evt;
+//    }
 
     private EventSnapshot createTaskEventOfOrder(long eventId, WorkflowId workflowId) {
         EventSnapshot evt = new EventSnapshot();

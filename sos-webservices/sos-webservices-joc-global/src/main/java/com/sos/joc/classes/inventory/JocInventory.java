@@ -53,7 +53,9 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
+import com.sos.joc.event.bean.inventory.InventoryFolderEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
+import com.sos.joc.event.bean.inventory.InventoryTrashFolderEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -387,8 +389,16 @@ public class JocInventory {
         EventBus.getInstance().post(new InventoryEvent(folder));
     }
     
+    public static void postFolderEvent(String folder) {
+        EventBus.getInstance().post(new InventoryFolderEvent(folder));
+    }
+    
     public static void postTrashEvent(String folder) {
         EventBus.getInstance().post(new InventoryTrashEvent(folder));
+    }
+    
+    public static void postTrashFolderEvent(String folder) {
+        EventBus.getInstance().post(new InventoryTrashFolderEvent(folder));
     }
 
     public static class InventoryPath {

@@ -217,7 +217,9 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             JocInventory.deleteEmptyFolders(dbLayer, folder.getPath());
             
             Globals.commit(session);
-            JocInventory.postEvent(folder.getFolder());
+            JocInventory.postFolderEvent(folder.getFolder());
+            JocInventory.postTrashFolderEvent(folder.getFolder());
+            JocInventory.postTrashEvent(folder.getPath());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {
             Globals.rollback(session);
@@ -282,6 +284,7 @@ public class DeleteConfigurationResourceImpl extends JOCResourceImpl implements 
             dbLayer.deleteTrashFolder(config.getPath());
             Globals.commit(session);
             JocInventory.postTrashEvent(config.getFolder());
+            JocInventory.postTrashFolderEvent(config.getPath());
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (Throwable e) {

@@ -101,7 +101,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             ResponseItem entity = new ResponseItem();
             Set<RequestFilter> requests = in.getObjects().stream().filter(isFolder.negate()).collect(Collectors.toSet());
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            Date now = Date.from(Instant.now());
             for (RequestFilter r : requests) {
                 DBItemInventoryConfiguration config = JocInventory.getConfiguration(dbLayer, r, folderPermissions);
                 if (config.getDeployed() || config.getReleased()) {
@@ -151,7 +150,6 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
 
             List<DBItemInventoryConfiguration> dbFolderContent = dbLayer.getFolderContent(config.getPath(), true, null);
             DBItemJocAuditLog dbAuditLog = JocInventory.storeAuditLog(getJocAuditLog(), in.getAuditLog());
-            Date now = Date.from(Instant.now());
             for (DBItemInventoryConfiguration item : dbFolderContent) {
                 if (!item.getDeployed() && !item.getReleased() && !ConfigurationType.FOLDER.intValue().equals(item.getType())) {
                     deleteUpdateDraft(item.getTypeAsEnum(), dbLayer, item, dbAuditLog.getId());
@@ -174,7 +172,8 @@ public class DeleteDraftResourceImpl extends JOCResourceImpl implements IDeleteD
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             if (deleted.size() + updated.size() > 0) {
-                JocInventory.postEvent(config.getFolder());
+                JocInventory.postEvent(config.getPath());
+                JocInventory.postFolderEvent(config.getFolder());
             }
 
             return JOCDefaultResponse.responseStatus200(entity);
