@@ -5,6 +5,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -12,8 +13,15 @@ import java.util.TimeZone;
 import javax.json.Json;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
+import org.apache.shiro.config.Ini.Section;
 import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.RealmSecurityManager;
+import org.apache.shiro.realm.AuthorizingRealm;
+import org.apache.shiro.realm.Realm;
+import org.apache.shiro.realm.text.IniRealm;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +46,7 @@ import com.sos.joc.model.common.JocSecurityLevel;
 
 public class Globals {
 
+    private static final String MAIN_SECTION = "main";
     public static final String DEFAULT_SHIRO_INI_PATH = "classpath:shiro.ini";
     public static final String DEFAULT_SHIRO_INI_FILENAME = "shiro.ini";
 
@@ -100,6 +109,27 @@ public class Globals {
             throw new DBOpenSessionException(e);
         }
     }
+    
+    private static boolean shiroNeedFactoryReloadAfterIniChanged(Ini oldShiroIni,Ini currentShiroIni) {
+            RealmSecurityManager mgr = (RealmSecurityManager) SecurityUtils.getSecurityManager();
+
+            Collection<Realm> realmCollection = mgr.getRealms();
+            if (realmCollection != null) {
+                for (Realm realm : realmCollection) {
+                    if (realm instanceof IniRealm) {
+                       return true;
+                    }
+                }
+            }
+            Section oldMain = oldShiroIni.getSection(MAIN_SECTION);
+            Section currentMain = currentShiroIni.getSection(MAIN_SECTION);
+            if (!oldMain.equals(currentMain)){
+                return true;
+            }
+            return false;
+        }
+
+    
 
     @SuppressWarnings("deprecation")
     public static IniSecurityManagerFactory getShiroIniSecurityManagerFactory() {
@@ -109,7 +139,7 @@ public class Globals {
         } else {
             Ini oldShiroIni = factory.getIni();
             Ini currentShiroIni = Ini.fromResourcePath(getIniFileForShiro(iniFile));
-            if (!oldShiroIni.equals(currentShiroIni)) {
+            if (shiroNeedFactoryReloadAfterIniChanged(oldShiroIni,currentShiroIni) && !oldShiroIni.equals(currentShiroIni)) {
                 LOGGER.debug(getIniFileForShiro(iniFile) + " is changed");
                 factory = new IniSecurityManagerFactory();
                 factory.setIni(currentShiroIni);
