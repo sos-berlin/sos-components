@@ -172,7 +172,7 @@ public class HistoryEventsTest {
                 HistoryControllerReady cr = entry.getControllerReady();
 
                 event = new FatEventControllerReady(entry.getEventId(), entry.getEventDate());
-                event.set(CONTROLLER_ID, cr.getTimezone());
+                event.set(CONTROLLER_ID, cr.getTimezone(), cr.getTotalRunningTimeAsMillis());
                 break;
 
             case ControllerShutDown:
@@ -237,8 +237,6 @@ public class HistoryEventsTest {
 
                 JOrderJoined joj = (JOrderJoined) entry.getJOrderEvent();
                 oi = order.getOutcomeInfo(joj.outcome());
-
-                LOGGER.info("AA:" + SOSString.toString(joj.outcome()));
 
                 outcome = null;
                 if (oi != null) {

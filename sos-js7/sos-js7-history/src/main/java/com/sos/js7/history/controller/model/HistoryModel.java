@@ -539,9 +539,8 @@ public class HistoryModel {
             item.setUri(controllerConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
             item.setReadyTime(entry.getEventDatetime());
-            item.setIsPrimary(controllerConfiguration.getCurrent().isPrimary());// TODO
+            item.setTotalRunningTime(entry.getTotalRunningTime());
             item.setCreated(new Date());
-
             dbLayer.getSession().save(item);
 
             controllerTimezone = item.getTimezone();
@@ -603,6 +602,7 @@ public class HistoryModel {
                     getDateAsString(entry.getEventDatetime())));
         } else {
             if (item.getCouplingFailedTime() == null) {
+                item.setCouplingFailedMessage(entry.getMessage());
                 item.setCouplingFailedTime(entry.getEventDatetime());
                 dbLayer.getSession().update(item);
             } else {

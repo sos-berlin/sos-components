@@ -38,6 +38,9 @@ public class DBItemHistoryAgent extends DBItem {
     @Column(name = "[COUPLING_FAILED_TIME]", nullable = true)
     private Date couplingFailedTime;
 
+    @Column(name = "[COUPLING_FAILED_MESSAGE]", nullable = true)
+    private String couplingFailedMessage;
+
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
 
@@ -98,6 +101,14 @@ public class DBItemHistoryAgent extends DBItem {
 
     public void setCouplingFailedTime(Date val) {
         couplingFailedTime = val;
+    }
+
+    public String getCouplingFailedMessage() {
+        return couplingFailedMessage;
+    }
+
+    public void setCouplingFailedMessage(String val) {
+        couplingFailedMessage = normalizeValue(val, 500);
     }
 
     public void setCreated(Date val) {

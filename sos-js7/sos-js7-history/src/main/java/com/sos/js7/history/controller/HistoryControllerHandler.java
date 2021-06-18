@@ -261,7 +261,7 @@ public class HistoryControllerHandler {
                 HistoryControllerReady cr = entry.getControllerReady();
 
                 event = new FatEventControllerReady(entry.getEventId(), entry.getEventDate());
-                event.set(controllerConfig.getCurrent().getId(), cr.getTimezone());
+                event.set(controllerConfig.getCurrent().getId(), cr.getTimezone(), cr.getTotalRunningTimeAsMillis());
                 break;
 
             case ControllerShutDown:

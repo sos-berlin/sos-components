@@ -7,8 +7,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Type;
-
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
@@ -31,15 +29,15 @@ public class DBItemHistoryController extends DBItem {
     @Column(name = "[TIMEZONE]", nullable = false)
     private String timezone;
 
+    // milliseconds
+    @Column(name = "[TOTAL_RUNNING_TIME]", nullable = false)
+    private Long totalRunningTime;
+
     @Column(name = "[READY_TIME]", nullable = false)
     private Date readyTime;
 
     @Column(name = "[SHUTDOWN_TIME]", nullable = true)
     private Date shutdownTime;
-
-    @Column(name = "[IS_PRIMARY]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean isPrimary;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -79,6 +77,17 @@ public class DBItemHistoryController extends DBItem {
         timezone = val;
     }
 
+    public void setTotalRunningTime(Long val) {
+        if (val == null) {
+            val = Long.valueOf(0);
+        }
+        totalRunningTime = val;
+    }
+
+    public Long getTotalRunningTime() {
+        return totalRunningTime;
+    }
+
     public Date getReadyTime() {
         return readyTime;
     }
@@ -93,14 +102,6 @@ public class DBItemHistoryController extends DBItem {
 
     public void setShutdownTime(Date val) {
         shutdownTime = val;
-    }
-
-    public void setIsPrimary(boolean val) {
-        isPrimary = val;
-    }
-
-    public boolean getIsPrimary() {
-        return isPrimary;
     }
 
     public void setCreated(Date val) {

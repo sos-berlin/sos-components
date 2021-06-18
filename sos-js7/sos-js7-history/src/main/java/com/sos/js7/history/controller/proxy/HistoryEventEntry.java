@@ -1,5 +1,6 @@
 package com.sos.js7.history.controller.proxy;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,6 +53,7 @@ import js7.data_for_java.workflow.position.JWorkflowPosition;
 import js7.proxy.javaapi.data.controller.JEventAndControllerState;
 import scala.Option;
 import scala.collection.JavaConverters;
+import scala.concurrent.duration.FiniteDuration;
 import scala.jdk.javaapi.OptionConverters;
 
 public class HistoryEventEntry {
@@ -610,15 +612,25 @@ public class HistoryEventEntry {
     public class HistoryControllerReady {
 
         private final String timezone;
+        private final Duration totalRunningTime;
 
         public HistoryControllerReady() {
-            timezone = ((ControllerReady) event).timezone();
+            ControllerReady ev = (ControllerReady) event;
+            timezone = ev.timezone();
+            totalRunningTime = getDuration(ev.totalRunningTime());
         }
 
         public String getTimezone() {
             return timezone;
         }
 
+        public Duration getTotalRunningTime() {
+            return totalRunningTime;
+        }
+
+        public Long getTotalRunningTimeAsMillis() {
+            return Long.valueOf(totalRunningTime == null ? 0 : totalRunningTime.toMillis());
+        }
     }
 
     public class HistoryAgentCouplingFailed {
@@ -652,7 +664,8 @@ public class HistoryEventEntry {
         private String uri;
 
         public HistoryAgentReady() throws FatEventProblemException {
-            timezone = ((AgentReady) event).timezone();
+            AgentReady ev = (AgentReady) event;
+            timezone = ev.timezone();
 
             AgentPath arp = (AgentPath) keyedEvent.key();
             id = arp.string();
@@ -682,5 +695,9 @@ public class HistoryEventEntry {
             throw new FatEventProblemException(either.getLeft());
         }
         return either.get();
+    }
+
+    private Duration getDuration(FiniteDuration fd) {
+        return fd == null ? null : Duration.ofNanos(fd.toNanos());
     }
 }
