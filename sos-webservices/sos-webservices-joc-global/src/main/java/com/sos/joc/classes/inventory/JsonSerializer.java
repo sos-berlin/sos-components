@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
@@ -263,11 +264,14 @@ public class JsonSerializer {
             for (Instruction inst : instructions) {
                 switch (inst.getTYPE()) {
                 case AWAIT:
-                case FAIL:
                 case FINISH:
                 case PUBLISH:
                 case RETRY:
                 case IMPLICIT_END:
+                    break;
+                case FAIL:
+                    Fail f = inst.cast();
+                    f.setMessage(quoteString(f.getMessage()));
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
@@ -305,11 +309,14 @@ public class JsonSerializer {
             for (com.sos.sign.model.instruction.Instruction inst : instructions) {
                 switch (inst.getTYPE()) {
                 case AWAIT:
-                case FAIL:
                 case FINISH:
                 case PUBLISH:
                 case RETRY:
                 case IMPLICIT_END:
+                    break;
+                case FAIL:
+                    com.sos.sign.model.instruction.Fail f = inst.cast();
+                    f.setMessage(quoteString(f.getMessage()));
                     break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();

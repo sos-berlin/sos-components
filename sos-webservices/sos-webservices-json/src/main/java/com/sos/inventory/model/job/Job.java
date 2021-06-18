@@ -33,7 +33,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobResourceNames",
     "title",
     "documentationName",
-    "logLevel",
     "criticality",
     "warnIfShorter",
     "warnIfLonger"
@@ -130,14 +129,6 @@ public class Job implements IConfigurationObject
     @JsonProperty("documentationName")
     private String documentationName;
     /**
-     * log levels
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("logLevel")
-    private JobLogLevel logLevel;
-    /**
      * criticalities
      * <p>
      * 
@@ -184,11 +175,10 @@ public class Job implements IConfigurationObject
      * @param returnCodeMeaning
      * @param graceTimeout
      * @param defaultArguments
-     * @param logLevel
      * @param jobClass
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobLogLevel logLevel, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
+    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -202,7 +192,6 @@ public class Job implements IConfigurationObject
         this.jobResourceNames = jobResourceNames;
         this.title = title;
         this.documentationName = documentationName;
-        this.logLevel = logLevel;
         this.criticality = criticality;
         this.warnIfShorter = warnIfShorter;
         this.warnIfLonger = warnIfLonger;
@@ -433,28 +422,6 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * log levels
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("logLevel")
-    public JobLogLevel getLogLevel() {
-        return logLevel;
-    }
-
-    /**
-     * log levels
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("logLevel")
-    public void setLogLevel(JobLogLevel logLevel) {
-        this.logLevel = logLevel;
-    }
-
-    /**
      * criticalities
      * <p>
      * 
@@ -522,12 +489,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("logLevel", logLevel).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(logLevel).append(jobClass).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobClass).append(documentationName).toHashCode();
     }
 
     @Override
@@ -539,7 +506,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(logLevel, rhs.logLevel).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }
