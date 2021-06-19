@@ -271,7 +271,9 @@ public class JsonSerializer {
                     break;
                 case FAIL:
                     Fail f = inst.cast();
-                    f.setMessage(quoteString(f.getMessage()));
+                    if (f.getMessage() != null) {
+                        f.setMessage(quoteString(f.getMessage()));
+                    }
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
@@ -316,7 +318,9 @@ public class JsonSerializer {
                     break;
                 case FAIL:
                     com.sos.sign.model.instruction.Fail f = inst.cast();
-                    f.setMessage(quoteString(f.getMessage()));
+                    if (f.getMessage() != null) {
+                        f.setMessage(quoteString(f.getMessage()));
+                    }
                     break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();
