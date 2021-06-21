@@ -144,7 +144,8 @@ public class SOSSQLCommandExtractor {
             throw new SOSHibernateSQLCommandExtractorException("command is empty");
         }
         command = command.toLowerCase().trim();
-        if (command.startsWith("procedure") || command.startsWith("function") || command.startsWith("declare") || command.startsWith("begin")) {
+        if (command.startsWith("procedure") || command.startsWith("function") || command.startsWith("declare") || command.startsWith("begin")
+                || command.startsWith("if ")) {
             return true;
         }
         StringBuilder patterns = new StringBuilder();
