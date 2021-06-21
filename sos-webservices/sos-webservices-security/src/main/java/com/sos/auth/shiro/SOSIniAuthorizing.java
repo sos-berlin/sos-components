@@ -78,6 +78,13 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                                 authorizationInfo.addStringPermission(permission.getPath());
                             }
                         }
+                        for (IniPermission permission : permissions.getControllerDefaults()) {
+                            if (permission.getExcluded()) {
+                                authorizationInfo.addStringPermission("-" + permission.getPath());
+                            } else {
+                                authorizationInfo.addStringPermission(permission.getPath());
+                            }
+                        }                        
                     }
                 }
             }
