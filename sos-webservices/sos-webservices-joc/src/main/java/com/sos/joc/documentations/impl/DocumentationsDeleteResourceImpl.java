@@ -71,7 +71,12 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
                     folders.add(dbDoc.getFolder());
                 }
 
-                folders.forEach(f -> DocumentationResourceImpl.postEvent(f));
+                if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
+                    folders.forEach(f -> DocumentationResourceImpl.postEvent(f)); 
+                } else {
+                    String parentFolder = "/".equals(documentationsFilter.getFolder()) ? "/" : getParent(documentationsFilter.getFolder());
+                    DocumentationResourceImpl.postFolderEvent(parentFolder); 
+                }
             }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

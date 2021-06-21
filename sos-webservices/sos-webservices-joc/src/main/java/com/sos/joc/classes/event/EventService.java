@@ -58,6 +58,7 @@ import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
+import js7.data.order.OrderEvent.OrderCancellationMarked;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
 import js7.data.order.OrderEvent.OrderLockAcquired;
@@ -69,7 +70,11 @@ import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
 import js7.data.order.OrderEvent.OrderDeleted$;
 import js7.data.order.OrderEvent.OrderRetrying;
+import js7.data.order.OrderEvent.OrderResumed;
+import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderStarted$;
+import js7.data.order.OrderEvent.OrderSuspended$;
+import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
@@ -83,11 +88,13 @@ public class EventService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
     private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
-    // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken extends OrderActorEvent
+    // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken, OrderSuspended$
+    // OrderResumed, OrderResumptionMarked, OrderCancellationMarked extends OrderActorEvent
     // OrderFinished, OrderCancelled, OrderDeleted$ extends OrderTerminated
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
-            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class,
+            OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
+            OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class,  
             OrderProcessingStarted$.class, OrderDeleted$.class, VersionedItemEvent.class, UnsignedSimpleItemEvent.class, 
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
@@ -291,7 +298,7 @@ public class EventService {
                             orders.remove(mainOrderId);
                         } else {
                             //addEvent(createWorkflowEventOfDeletedOrder(eventId, orderId.string()));
-                            LOGGER.warn("OrderDeleted event without unknown orderId is received: " + event.toString());
+                            LOGGER.warn("OrderDeleted event without known orderId is received: " + event.toString());
                         }
                     } else {
                         LOGGER.warn("Order event without orderId is received: " + event.toString());

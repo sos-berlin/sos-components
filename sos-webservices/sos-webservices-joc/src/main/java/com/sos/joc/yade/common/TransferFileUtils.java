@@ -43,70 +43,70 @@ public class TransferFileUtils {
         // severity=FINISHED
         case TRANSFERRED:
             state.set_text(FileTransferStateText.TRANSFERRED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case COMPRESSED:
             state.set_text(FileTransferStateText.COMPRESSED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case RENAMED:
             state.set_text(FileTransferStateText.RENAMED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case MOVED:
             state.set_text(FileTransferStateText.RENAMED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case NOT_OVERWRITTEN:
             state.set_text(FileTransferStateText.NOT_OVERWRITTEN);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT:
             state.set_text(FileTransferStateText.IGNORED_DUE_TO_ZEROBYTE_CONSTRAINT);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case SKIPPED:
             state.set_text(FileTransferStateText.SKIPPED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case DELETED:
             state.set_text(FileTransferStateText.DELETED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case ROLLED_BACK:
             state.set_text(FileTransferStateText.ROLLED_BACK);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         // severity=INPROGRESS
         case WAITING:
             state.set_text(FileTransferStateText.WAITING);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
         case TRANSFERRING:
             state.set_text(FileTransferStateText.TRANSFERRING);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
         case IN_PROGRESS:
             state.set_text(FileTransferStateText.IN_PROGRESS);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
         case POLLING:
             state.set_text(FileTransferStateText.POLLING);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
         // severity=FAILED
         case FAILED:
             state.set_text(FileTransferStateText.FAILED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FAILED));
             break;
         case ABORTED:
             state.set_text(FileTransferStateText.ABORTED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FAILED));
             break;
         // severity=3
         case UNKNOWN:
             state.set_text(FileTransferStateText.UNDEFINED);
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FAILED));
             break;
         default:
             break;

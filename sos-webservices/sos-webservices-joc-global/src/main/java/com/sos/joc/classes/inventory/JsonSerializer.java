@@ -274,6 +274,12 @@ public class JsonSerializer {
                     if (f.getMessage() != null) {
                         f.setMessage(quoteString(f.getMessage()));
                     }
+                    if (f.getOutcome() == null) {
+                        f.setOutcome(new Variables());
+                    }
+                    if (!f.getOutcome().getAdditionalProperties().containsKey("returnCode") ) {
+                        f.getOutcome().setAdditionalProperty("returnCode", 1);
+                    }
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
@@ -320,6 +326,12 @@ public class JsonSerializer {
                     com.sos.sign.model.instruction.Fail f = inst.cast();
                     if (f.getMessage() != null) {
                         f.setMessage(quoteString(f.getMessage()));
+                    }
+                    if (f.getNamedValues() == null) {
+                        f.setNamedValues(new Variables());
+                    }
+                    if (!f.getNamedValues().getAdditionalProperties().containsKey("returnCode") ) {
+                        f.getNamedValues().setAdditionalProperty("returnCode", 1);
                     }
                     break;
                 case EXECUTE_NAMED:

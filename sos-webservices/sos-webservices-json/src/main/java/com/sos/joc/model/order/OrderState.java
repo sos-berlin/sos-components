@@ -18,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "severity",
-    "_text"
+    "_text",
+    "_marked"
 })
 public class OrderState {
 
@@ -38,6 +39,14 @@ public class OrderState {
      */
     @JsonProperty("_text")
     private OrderStateText _text;
+    /**
+     * order mark text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_marked")
+    private OrderMarkText _marked;
 
     /**
      * 
@@ -83,14 +92,36 @@ public class OrderState {
         this._text = _text;
     }
 
+    /**
+     * order mark text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_marked")
+    public OrderMarkText get_marked() {
+        return _marked;
+    }
+
+    /**
+     * order mark text
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_marked")
+    public void set_marked(OrderMarkText _marked) {
+        this._marked = _marked;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("_marked", _marked).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).toHashCode();
+        return new HashCodeBuilder().append(severity).append(_text).append(_marked).toHashCode();
     }
 
     @Override
@@ -102,7 +133,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).append(_marked, rhs._marked).isEquals();
     }
 
 }

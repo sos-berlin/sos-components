@@ -16,7 +16,6 @@ import com.sos.joc.model.common.HistoryStateText;
 import com.sos.joc.model.job.TaskHistoryItem;
 import com.sos.joc.model.order.OrderHistoryItem;
 import com.sos.joc.model.order.OrderHistoryStateItem;
-import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 
 public class HistoryMapper {
@@ -30,7 +29,7 @@ public class HistoryMapper {
         history.setPlannedTime(item.getStartTimePlanned());
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
-        history.setOrderState(OrdersHelper.getState(item.getStateAsEnum()));
+        history.setOrderState(OrdersHelper.getHistoryState(item.getStateAsEnum()));
         history.setSurveyDate(item.getModified());
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
@@ -65,7 +64,7 @@ public class HistoryMapper {
         OrderHistoryStateItem history = new OrderHistoryStateItem();
         history.setStateTime(item.getStateTime());
         history.setStateText(item.getStateText());
-        history.setState(OrdersHelper.getState(item.getStateAsEnum()));
+        history.setState(OrdersHelper.getHistoryState(item.getStateAsEnum()));
         return history;
     }
 
@@ -110,25 +109,18 @@ public class HistoryMapper {
     public static HistoryState getState(Integer historySeverity) {
         HistoryState state = new HistoryState();
 
-        OrderState os;
         switch (historySeverity.intValue()) {
         case HistorySeverity.SUCCESSFUL:
             state.set_text(HistoryStateText.SUCCESSFUL);
-
-            os = OrdersHelper.getState(OrderStateText.FINISHED);
-            state.setSeverity(os.getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             break;
         case HistorySeverity.INCOMPLETE:
             state.set_text(HistoryStateText.INCOMPLETE);
-
-            os = OrdersHelper.getState(OrderStateText.INPROGRESS);
-            state.setSeverity(os.getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             break;
         case HistorySeverity.FAILED:
             state.set_text(HistoryStateText.FAILED);
-
-            os = OrdersHelper.getState(OrderStateText.FAILED);
-            state.setSeverity(os.getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FAILED));
             break;
         }
         return state;

@@ -192,15 +192,15 @@ public class YadeTransfersResourceImpl extends JOCResourceImpl implements IYadeT
         TransferState state = new TransferState();
         switch (value) {
         case SUCCESSFUL:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FINISHED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FINISHED));
             state.set_text(TransferStateText.SUCCESSFUL);
             return state;
         case INCOMPLETE:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.INPROGRESS).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.INPROGRESS));
             state.set_text(TransferStateText.INCOMPLETE);
             return state;
         case FAILED:
-            state.setSeverity(OrdersHelper.getState(OrderStateText.FAILED).getSeverity());
+            state.setSeverity(OrdersHelper.getHistoryStateSeverity(OrderStateText.FAILED));
             state.set_text(TransferStateText.FAILED);
             return state;
         default:
