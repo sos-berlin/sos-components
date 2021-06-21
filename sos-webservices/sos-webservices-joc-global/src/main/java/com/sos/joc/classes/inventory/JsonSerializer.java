@@ -280,6 +280,7 @@ public class JsonSerializer {
                     if (!f.getOutcome().getAdditionalProperties().containsKey("returnCode") ) {
                         f.getOutcome().setAdditionalProperty("returnCode", 1);
                     }
+                    f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
                     break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
@@ -333,6 +334,7 @@ public class JsonSerializer {
                     if (!f.getNamedValues().getAdditionalProperties().containsKey("returnCode") ) {
                         f.getNamedValues().setAdditionalProperty("returnCode", 1);
                     }
+                    f.setUncatchable(defaultToNull(f.getUncatchable(), Boolean.FALSE));
                     break;
                 case EXECUTE_NAMED:
                     com.sos.sign.model.instruction.NamedJob nj = inst.cast();

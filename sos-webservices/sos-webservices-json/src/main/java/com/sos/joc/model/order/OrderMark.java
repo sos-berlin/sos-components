@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "severity",
     "_text"
 })
-public class OrderState {
+public class OrderMark {
 
     /**
      * 
@@ -30,14 +30,14 @@ public class OrderState {
     @JsonProperty("severity")
     private Integer severity;
     /**
-     * order state text
+     * order mark text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    private OrderStateText _text;
+    private OrderMarkText _text;
 
     /**
      * 
@@ -60,26 +60,26 @@ public class OrderState {
     }
 
     /**
-     * order state text
+     * order mark text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    public OrderStateText get_text() {
+    public OrderMarkText get_text() {
         return _text;
     }
 
     /**
-     * order state text
+     * order mark text
      * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("_text")
-    public void set_text(OrderStateText _text) {
+    public void set_text(OrderMarkText _text) {
         this._text = _text;
     }
 
@@ -98,10 +98,10 @@ public class OrderState {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderState) == false) {
+        if ((other instanceof OrderMark) == false) {
             return false;
         }
-        OrderState rhs = ((OrderState) other);
+        OrderMark rhs = ((OrderMark) other);
         return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
     }
 

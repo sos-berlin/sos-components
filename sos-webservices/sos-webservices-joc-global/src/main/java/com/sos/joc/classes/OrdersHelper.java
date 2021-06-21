@@ -53,6 +53,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.OrderMark;
 import com.sos.joc.model.order.OrderMarkText;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
@@ -64,6 +65,9 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
+import js7.data.order.OrderMark.Cancelling;
+import js7.data.order.OrderMark.Resuming;
+import js7.data.order.OrderMark.Suspending;
 import js7.data.value.BooleanValue;
 import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
@@ -78,6 +82,7 @@ import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
+import scala.Option;
 
 public class OrdersHelper {
 
@@ -156,6 +161,29 @@ public class OrdersHelper {
             put(OrderStateText.UNKNOWN, 2);
         }
     });
+    
+    public static final Map<Class<? extends js7.data.order.OrderMark>, OrderMarkText> groupByMarkClasses = Collections.unmodifiableMap(
+            new HashMap<Class<? extends js7.data.order.OrderMark>, OrderMarkText>() {
+
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(Resuming.class, OrderMarkText.RESUMING);
+                    put(Suspending.class, OrderMarkText.SUSPENDING);
+                    put(Cancelling.class, OrderMarkText.CANCELLING);
+                }
+            });
+    
+    public static final Map<OrderMarkText, Integer> severityByMarks = Collections.unmodifiableMap(new HashMap<OrderMarkText, Integer>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(OrderMarkText.RESUMING, 0);
+            put(OrderMarkText.SUSPENDING, 5);
+            put(OrderMarkText.CANCELLING, 2);
+        }
+    });
 
     public static OrderStateText getGroupedState(Class<? extends Order.State> state) {
         OrderStateText groupedState = groupByStateClasses.get(state);
@@ -192,7 +220,7 @@ public class OrdersHelper {
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
 
-    public static OrderState getState(String state, Boolean isSuspended, OrderMarkText mark) {
+    public static OrderState getState(String state, Boolean isSuspended) {
         OrderState oState = new OrderState();
         if (isSuspended == Boolean.TRUE) {
             state = "Suspended";
@@ -200,7 +228,6 @@ public class OrdersHelper {
         OrderStateText groupedState = getGroupedState(state);
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
-        oState.set_marked(mark);
         return oState;
     }
 
@@ -211,7 +238,6 @@ public class OrdersHelper {
         if (state.getSeverity() == null) {
             state.setSeverity(HistorySeverity.FAILED);
         }
-        state.set_marked(null);
         return state;
     }
     
@@ -223,16 +249,36 @@ public class OrdersHelper {
         return severity;
     }
     
-    private static OrderMarkText getMark(Order<Order.State> o) {
-        OrderMarkText mark = null;
-        if (o.isCancelling()) {
-            mark = OrderMarkText.CANCELLING; 
-        } else if (o.isSuspending() || o.isSuspendingWithKill()) {
-            mark = OrderMarkText.SUSPENDING; 
-        } else if (o.isResuming()) {
-            mark = OrderMarkText.RESUMING; 
+//    private static OrderMark getMark(Order<Order.State> o) {
+//        OrderMarkText markText = null;
+//        if (o.isCancelling()) {
+//            markText = OrderMarkText.CANCELLING; 
+//        } else if (o.isSuspending() || o.isSuspendingWithKill()) {
+//            markText = OrderMarkText.SUSPENDING; 
+//        } else if (o.isResuming()) {
+//            markText = OrderMarkText.RESUMING; 
+//        }
+//        if (markText != null) {
+//           OrderMark mark = new OrderMark();
+//           mark.set_text(markText);
+//           mark.setSeverity(severityByMarks.get(markText));
+//           return mark;
+//        }
+//        return null;
+//    }
+    
+    private static OrderMark getMark(Option<js7.data.order.OrderMark> opt) {
+        OrderMarkText markText = null;
+        if (opt.nonEmpty()) {
+            markText = groupByMarkClasses.get(opt.get().getClass());
         }
-        return mark;
+        if (markText != null) {
+           OrderMark mark = new OrderMark();
+           mark.set_text(markText);
+           mark.setSeverity(severityByMarks.get(markText));
+           return mark;
+        }
+        return null;
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
@@ -255,14 +301,14 @@ public class OrdersHelper {
             o.setAgentId(opt.get().string());
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
-        OrderMarkText mark = getMark(jOrder.asScala());
         o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
-            o.setState(getState("Blocked", oItem.getIsSuspended(), mark));
+            o.setState(getState("Blocked", oItem.getIsSuspended()));
         } else {
-            o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended(), mark));
+            o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
+        o.setMarked(getMark(jOrder.asScala().mark()));
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.PENDING.equals(o.getState().get_text())) {
