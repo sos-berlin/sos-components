@@ -13,6 +13,6 @@ public class InventoryFolderEvent extends InventoryEvent {
      * @param folder
      */
     public InventoryFolderEvent(String folder) {
-        super("InventoryFolderUpdated", folder);
+        super("InventoryTreeUpdated", folder);
     }
 }

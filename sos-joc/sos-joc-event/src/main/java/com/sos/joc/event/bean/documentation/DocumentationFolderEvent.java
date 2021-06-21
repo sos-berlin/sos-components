@@ -13,6 +13,6 @@ public class DocumentationFolderEvent extends DocumentationEvent {
      * @param folder
      */
     public DocumentationFolderEvent(String folder) {
-        super("DocumentationFolderUpdated", folder);
+        super("DocumentationTreeUpdated", folder);
     }
 }

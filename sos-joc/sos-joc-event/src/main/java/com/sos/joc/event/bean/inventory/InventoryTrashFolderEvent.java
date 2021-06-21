@@ -13,6 +13,6 @@ public class InventoryTrashFolderEvent extends InventoryEvent {
      * @param folder
      */
     public InventoryTrashFolderEvent(String folder) {
-        super("InventoryTrashFolderUpdated", folder);
+        super("InventoryTrashTreeUpdated", folder);
     }
 }
