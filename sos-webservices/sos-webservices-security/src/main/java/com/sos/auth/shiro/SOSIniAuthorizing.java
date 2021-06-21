@@ -1,6 +1,8 @@
 package com.sos.auth.shiro;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.subject.PrincipalCollection;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
+import com.sos.joc.classes.security.SOSSecurityPermissionItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IniPermissions;
 import com.sos.joc.model.security.SecurityConfiguration;
@@ -84,7 +87,25 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                             } else {
                                 authorizationInfo.addStringPermission(permission.getPath());
                             }
-                        }                        
+                        }
+
+                        if (permissions.getControllers() != null && permissions.getControllers().getAdditionalProperties() != null && !permissions
+                                .getControllers().getAdditionalProperties().isEmpty()) {
+                            for (Map.Entry<String, List<IniPermission>> controllerPermissions : permissions.getControllers().getAdditionalProperties()
+                                    .entrySet()) {
+                                if (controllerPermissions.getValue() != null) {
+                                    for (IniPermission permission : controllerPermissions.getValue()) {
+                                        if (permission.getPath() != null) {
+                                            if (permission.getExcluded()) {
+                                                authorizationInfo.addStringPermission("-" + permission.getPath());
+                                            } else {
+                                                authorizationInfo.addStringPermission(permission.getPath());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -94,6 +115,5 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
         }
         return authorizationInfo_;
     }
-    
-    
+
 }
