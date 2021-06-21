@@ -18,8 +18,10 @@ public class SOSSQLCommandExtractorTest {
     @Ignore
     @Test
     public void test() throws Exception {
-        Path file = Paths.get("src/test/resources/sql.txt");
-        SOSSQLCommandExtractor ex = new SOSSQLCommandExtractor(SOSHibernateFactory.Dbms.MSSQL);
+        SOSHibernateFactory.Dbms dbms = SOSHibernateFactory.Dbms.MSSQL;
+
+        SOSSQLCommandExtractor ex = new SOSSQLCommandExtractor(dbms);
+        Path file = Paths.get("src/test/resources/" + dbms.name().toLowerCase() + ".txt");
 
         String content = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
 
