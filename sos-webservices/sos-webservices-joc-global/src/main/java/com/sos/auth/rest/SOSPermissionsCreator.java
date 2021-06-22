@@ -299,6 +299,7 @@ public class SOSPermissionsCreator {
         String iniFile = Globals.getShiroIniInClassPath();
         factory = new IniSecurityManagerFactory(Globals.getIniFileForShiro(iniFile));
         return factory.getIni();
+    }
 
  
 
