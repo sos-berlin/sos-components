@@ -26,7 +26,6 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;

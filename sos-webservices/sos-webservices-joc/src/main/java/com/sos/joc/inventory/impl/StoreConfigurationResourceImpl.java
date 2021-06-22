@@ -70,7 +70,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                         .getPath(), item.getType())));
                 item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.updateConfiguration(dbLayer, item, in.getConfiguration());
-                JocInventory.postEvent(item.getFolder());
+                if (JocInventory.isFolder(item.getType())) {
+                    JocInventory.postFolderEvent(item.getFolder());
+                } else {
+                    JocInventory.postEvent(item.getFolder());
+                }
                 
             } catch (DBMissingDataException e) {
                 checkRequiredParameter("path", in.getPath());
@@ -107,7 +111,11 @@ public class StoreConfigurationResourceImpl extends JOCResourceImpl implements I
                 item.setCreated(Date.from(Instant.now()));
                 item.setAuditLogId(dbAuditLog.getId());
                 JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
-                JocInventory.postEvent(item.getFolder());
+                if (JocInventory.isFolder(item.getType())) {
+                    JocInventory.postFolderEvent(item.getFolder());
+                } else {
+                    JocInventory.postEvent(item.getFolder());
+                }
                 JocAuditLog.storeAuditLogDetail(new AuditLogDetail(item.getPath(), item.getType()), session, dbAuditLog);
             }
             session.commit();

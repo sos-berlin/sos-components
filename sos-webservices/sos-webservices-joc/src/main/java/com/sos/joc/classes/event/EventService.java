@@ -50,15 +50,19 @@ import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
-import js7.data.item.VersionedItemPath;
+import js7.data.item.BasicItemEvent.ItemDeleted;
+import js7.data.item.InventoryItemKey;
 import js7.data.item.SimpleItemPath;
 import js7.data.item.UnsignedSimpleItemEvent;
-import js7.data.item.VersionedEvent.VersionedItemEvent;
+import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
+import js7.data.item.VersionedItemId;
+import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
 import js7.data.order.OrderEvent.OrderCancellationMarked;
+import js7.data.order.OrderEvent.OrderDeleted$;
 import js7.data.order.OrderEvent.OrderFailed;
 import js7.data.order.OrderEvent.OrderFailedInFork;
 import js7.data.order.OrderEvent.OrderLockAcquired;
@@ -68,10 +72,9 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
-import js7.data.order.OrderEvent.OrderDeleted$;
-import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
+import js7.data.order.OrderEvent.OrderRetrying;
 import js7.data.order.OrderEvent.OrderStarted$;
 import js7.data.order.OrderEvent.OrderSuspended$;
 import js7.data.order.OrderEvent.OrderSuspensionMarked;
@@ -95,7 +98,7 @@ public class EventService {
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class,  
-            OrderProcessingStarted$.class, OrderDeleted$.class, VersionedItemEvent.class, UnsignedSimpleItemEvent.class, 
+            OrderProcessingStarted$.class, OrderDeleted$.class, VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -122,6 +125,7 @@ public class EventService {
             if (evtBus == null) {
                 evtBus = Proxy.of(controllerId).controllerEventBus();
                 if (evtBus != null) {
+                    LOGGER.info("Start EventBus");
                     evtBus.subscribe(eventsOfController, callbackOfController);
                     //setOrders();
                 }
@@ -275,6 +279,7 @@ public class EventService {
             long eventId = stampedEvt.eventId() / 1000000; //eventId per second
             Object key = event.key();
             Event evt = event.event();
+            LOGGER.info(evt.toString());
 
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
@@ -303,23 +308,24 @@ public class EventService {
                     } else {
                         LOGGER.warn("Order event without orderId is received: " + event.toString());
                     }
-                }
+                } 
                 
             } else if (evt instanceof ControllerEvent || evt instanceof ClusterEvent) {
                 addEvent(createControllerEvent(eventId));
                 
-            } else if (evt instanceof VersionedItemEvent) {
-                // VersionedItemAdded, VersionedItemChanged and VersionedItemDeleted.
-                String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
-                VersionedItemPath path = ((VersionedItemEvent) evt).path();
-                if (path instanceof WorkflowPath) {
-                    addEvent(createWorkflowEvent(eventId, path.string(), eventType));
-                } else {
-                    // TODO other versioned objects
-                }
+            } else if (evt instanceof VersionedItemAddedOrChanged) {
+                    // VersionedItemAdded, VersionedItemChanged
+                    // VersionedItemRemoved -> see ItemDeleted
+                    String eventType = evt.getClass().getSimpleName().replaceFirst("Versioned", "");
+                    VersionedItemPath path = ((VersionedItemAddedOrChanged) evt).path();
+                    if (path instanceof WorkflowPath) {
+                        addEvent(createWorkflowEvent(eventId, path.string(), eventType));
+                    } else {
+                        // TODO other versioned objects
+                    }
                 
             } else if (evt instanceof UnsignedSimpleItemEvent) {
-                // UnsignedSimpleItemAdded SimpleItemAddedAndChanged SimpleItemDeleted and SimpleItemChanged etc.
+                // UnsignedSimpleItemAdded SimpleItemAddedAndChanged and SimpleItemChanged etc.
                 String eventType = evt.getClass().getSimpleName().replaceFirst(".*Simple", "");
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
                 if (itemId instanceof AgentPath) {
@@ -340,7 +346,18 @@ public class EventService {
 //                SignableItemKey itemId = ((SignedItemEvent) evt).key();
 //                if (itemId instanceof JobResourcePath) {
 //                    addEvent(createJobResourceEvent(eventId, ((JobResourcePath) itemId).string(), eventType));
-//                } 
+//                }
+                
+            } else if (evt instanceof ItemDeleted) {
+                InventoryItemKey itemId = ((ItemDeleted) evt).key();
+                String eventType = "ItemDeleted";
+                if (itemId instanceof AgentPath) {
+                    addEvent(createAgentEvent(eventId, itemId.path().string(), eventType));
+                } else if (itemId instanceof LockPath) {
+                    addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
+                } else if (itemId instanceof VersionedItemId<?>) {
+                    addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
+                } // JobResourcePath, OrderWatchPath
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
@@ -360,11 +377,22 @@ public class EventService {
         w.setVersionId(workflowId.versionId().string());
         return w;
     }
+    
+    private WorkflowId mapWorkflowId(VersionedItemId<?> workflowId) {
+        WorkflowId w = new WorkflowId();
+        w.setPath(workflowId.path().string());
+        w.setVersionId(workflowId.versionId().string());
+        return w;
+    }
 
     private EventSnapshot createWorkflowEventOfOrder(long eventId, WorkflowId workflowId) {
+        return createWorkflowEvent(eventId, workflowId, "WorkflowStateChanged");
+    }
+    
+    private EventSnapshot createWorkflowEvent(long eventId, WorkflowId workflowId, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("WorkflowStateChanged");
+        evt.setEventType("eventType");
         evt.setObjectType(EventType.WORKFLOW);
         evt.setWorkflow(workflowId);
         return evt;
