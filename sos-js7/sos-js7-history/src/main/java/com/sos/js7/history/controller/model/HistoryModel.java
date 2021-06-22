@@ -1717,6 +1717,11 @@ public class HistoryModel {
             Error error = new Error();
             error.setErrorState(logEntry.getErrorState());
             error.setErrorReason(logEntry.getErrorReason());
+            if (error.getErrorState() != null && error.getErrorReason() != null) {
+                if (error.getErrorState().equals(error.getErrorReason())) {
+                    error.setErrorReason(null);
+                }
+            }
             error.setErrorCode(logEntry.getErrorCode());
             error.setErrorText(logEntry.getErrorText());
             entry.setError(error);
