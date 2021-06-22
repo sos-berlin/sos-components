@@ -46,6 +46,7 @@ public class DeployTest {
     private static final Path PRIVATE_KEY_PGP = Paths.get("src/test/resources/sos.private-pgp-key.asc");
     private static final Path PUBLIC_KEY_PGP = Paths.get("src/test/resources/sos.public-pgp-key.asc");
 
+    private static final Path WORKFLOW_WITH_FAIL = Paths.get("src/test/resources/deploy/helper/workflow_fail.workflow.json");
     private static final Path WORKFLOW_WITH_FORK = Paths.get("src/test/resources/deploy/helper/workflow_fork.workflow.json");
     private static final Path WORKFLOW_WITH_LOCK = Paths.get("src/test/resources/deploy/helper/workflow_lock.workflow.json");
     private static final Path WORKFLOW_WITH_JAVA_JOB = Paths.get("src/test/resources/deploy/helper/workflow_java.workflow.json");
@@ -93,6 +94,21 @@ public class DeployTest {
         try {
             JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
             deployWorkflow(api, WORKFLOW_WITH_JAVA_JOB, "1");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDeployWorkflowWithFail() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
+
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            deployWorkflow(api, WORKFLOW_WITH_FAIL, "1");
         } catch (Throwable e) {
             throw e;
         } finally {

@@ -369,33 +369,18 @@ public class HistoryEventEntry {
             private OutcomeInfo(Outcome outcome) {
                 if (outcome instanceof Completed) {
                     Completed c = (Completed) outcome;
-
-                    if (c.namedValues() != null) {
-                        namedValues = JavaConverters.asJava(c.namedValues());
-                        try {
-                            Value rt = namedValues.get(NAMED_NAME_RETURN_CODE);
-                            if (rt != null) {
-                                returnCode = Integer.parseInt(rt.toString());
-                            }
-                        } catch (Throwable e) {
-                            LOGGER.error(String.format("[can't extract returnCode][%s]", SOSString.toString(namedValues), e.toString()), e);
-                        }
-                    }
-
+                    handleNamedValues(c);
                     isSucceeded = c.isSucceeded();
                     isFailed = c.isFailed();
                     if (isFailed) {
                         type = OutcomeType.failed;
                         if (outcome instanceof Failed) {
-                            Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
-                            if (em.isPresent()) {
-                                errorMessage = em.get();
-                            }
+                            setError((Failed) outcome);
                         } else {
                             LOGGER.warn(String.format("[not handled failed type]%s", SOSString.toString(outcome)));
                         }
                     } else {
-                        if (returnCode != null) {
+                        if (returnCode == null) {
                             returnCode = 0;
                         }
                         type = OutcomeType.succeeded;
@@ -411,7 +396,7 @@ public class HistoryEventEntry {
                 switch (type) {
                 case failed:
                 case broken:
-                    returnCode = null;
+                    returnCode = null;// TODO ?
                     isSucceeded = false;
                     isFailed = true;
                     break;
@@ -424,11 +409,35 @@ public class HistoryEventEntry {
                 this.type = type;
                 if (problem instanceof Disrupted) {
                     handleDisrupted(null, (Disrupted) problem);
+                } else if (problem instanceof Failed) {
+                    handleFailed((Failed) problem);
                 }
             }
 
+            private void handleNamedValues(Completed c) {
+                if (c.namedValues() != null) {
+                    namedValues = JavaConverters.asJava(c.namedValues());
+                    try {
+                        Value rt = namedValues.get(NAMED_NAME_RETURN_CODE);
+                        if (rt != null) {
+                            returnCode = Integer.parseInt(rt.toString());
+                        }
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[can't extract returnCode][%s]", SOSString.toString(namedValues), e.toString()), e);
+                    }
+                }
+            }
+
+            private void handleFailed(Failed failed) {
+                isSucceeded = failed.isSucceeded();
+                isFailed = failed.isFailed();
+                type = OutcomeType.failed;
+                handleNamedValues(failed);
+                setError(failed);
+            }
+
             private void handleDisrupted(Outcome outcome, Disrupted problem) {
-                returnCode = null;
+                returnCode = null; // TODO ?
                 isSucceeded = problem.isSucceeded();
                 isFailed = problem.isFailed();
                 type = OutcomeType.disrupted;
@@ -440,11 +449,15 @@ public class HistoryEventEntry {
                     }
 
                     if (SOSString.isEmpty(errorMessage) && outcome != null && outcome instanceof Failed) {
-                        Optional<String> em = OptionConverters.toJava(((Failed) outcome).errorMessage());
-                        if (em.isPresent()) {
-                            errorMessage = em.get();
-                        }
+                        setError((Failed) outcome);
                     }
+                }
+            }
+
+            private void setError(Failed failed) {
+                Optional<String> em = OptionConverters.toJava(failed.errorMessage());
+                if (em.isPresent()) {
+                    errorMessage = em.get();
                 }
             }
 

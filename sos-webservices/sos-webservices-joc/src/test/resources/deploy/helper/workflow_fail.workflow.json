@@ -1,0 +1,32 @@
+{
+	"TYPE": "Workflow",
+	"path": "fail_message",
+	"versionId": "1",
+	"instructions": [
+		{
+			"TYPE": "Execute.Named",
+			"jobName": "job",
+			"label": "job"
+		},
+		{
+			"TYPE": "Fail",
+			"message": "'My FAIL message'",
+			"namedValues": {
+				"returnCode": 0
+			},
+			"uncatchable": false
+		}
+	],
+	"jobs": {
+		"job": {
+			"agentId": "agent",
+			"executable": {
+				"TYPE": "ShellScriptExecutable",
+				"script": "dir",
+				"v1Compatible": false
+			},
+			"parallelism": 1,
+			"failOnErrWritten": false
+		}
+	}
+}
