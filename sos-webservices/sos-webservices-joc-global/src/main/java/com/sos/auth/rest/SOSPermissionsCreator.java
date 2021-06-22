@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
+import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.config.Ini.Section;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.InvalidSessionException;
@@ -294,11 +295,11 @@ public class SOSPermissionsCreator {
     }
 
     public Ini getIni() {
+        org.apache.shiro.config.IniSecurityManagerFactory factory = null;
+        String iniFile = Globals.getShiroIniInClassPath();
+        factory = new IniSecurityManagerFactory(Globals.getIniFileForShiro(iniFile));
+        return factory.getIni();
 
-        if (ini == null) {
-            return Globals.getIniFromSecurityManagerFactory();
-        }
-        return ini;
-    }
+ 
 
 }

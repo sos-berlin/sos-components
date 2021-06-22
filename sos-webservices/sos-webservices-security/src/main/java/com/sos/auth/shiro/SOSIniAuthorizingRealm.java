@@ -48,9 +48,9 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authcToken) throws AuthenticationException {
         authToken = (UsernamePasswordToken) authcToken;
- 
+
         try {
-             if (matches()) {
+            if (matches()) {
                 return new SimpleAuthenticationInfo(authToken.getUsername(), authToken.getPassword(), getName());
             } else {
                 return null;
@@ -64,11 +64,10 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
 
     private boolean matches() throws InvalidFileFormatException, IOException, JocException, SOSHibernateException {
 
-        PasswordService psd = new DefaultPasswordService();        
+        PasswordService psd = new DefaultPasswordService();
         SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
         SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration();
 
-    
         String passwordIni = null;
         for (SecurityConfigurationUser securityConfigurationUser : securityConfiguration.getUsers()) {
             if (authToken.getUsername().equals(securityConfigurationUser.getUser())) {
@@ -76,11 +75,35 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
                 break;
             }
         }
-        return psd.passwordsMatch (authToken.getPassword(), passwordIni);
+        return psd.passwordsMatch(authToken.getPassword(), passwordIni);
     }
 
     public void setAuthorizing(ISOSAuthorizing authorizing) {
         this.authorizing = authorizing;
     }
+
+   /* protected SimpleRole getRole(String rolename) {
+        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
+        SecurityConfiguration securityConfiguration;
+        SimpleRole simpleRole = new SimpleRole();
+        try {
+            securityConfiguration = sosSecurityConfiguration.readConfiguration();
+
+            IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(rolename).getPermissions();
+            for (IniPermission permission : permissions.getJoc()) {
+                final Permission _permission;
+                if (permission.getExcluded()) {
+                    _permission = new WildcardPermission("-" + permission.getPath());
+                } else {
+                    _permission = new WildcardPermission(permission.getPath());
+                }
+                simpleRole.add(_permission);
+            }
+        } catch (JocException | SOSHibernateException | IOException e) {
+            LOGGER.error("Error reaging roles",e);
+        }
+        return simpleRole;
+    }
+    */
 
 }
