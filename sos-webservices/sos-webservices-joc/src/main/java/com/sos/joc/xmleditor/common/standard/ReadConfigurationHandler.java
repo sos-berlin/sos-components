@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
+import com.sos.joc.classes.xmleditor.exceptions.XmlNotMatchSchemaException;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.model.xmleditor.common.AnswerMessage;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -133,8 +134,18 @@ public class ReadConfigurationHandler {
 
                 if (current.getConfigurationJson() == null) {
                     // configuration from draft - should be recreated
-                    answer.setConfigurationJson(convert(type, draft.getConfiguration()));
-                    answer.setRecreateJson(true);
+                    try {
+                        answer.setConfigurationJson(convert(type, draft.getConfiguration()));
+                        answer.setRecreateJson(true);
+                    } catch (XmlNotMatchSchemaException e) {
+                        answer.setConfiguration(null);
+                        answer.getState().getMessage().setMessage(JocXmlEditor.MESSAGE_NO_CONFIGURATION_EXIST);
+                        answer.getState().getMessage().setCode(JocXmlEditor.CODE_NO_CONFIGURATION_EXIST);
+                        answer.getState().setVersionState(ObjectVersionState.NO_CONFIGURATION_EXIST);
+
+                        answer.setConfigurationJson(null);
+                        answer.setRecreateJson(false);
+                    }
                 } else {// configuration from draft - should not be recreated
                     answer.setConfigurationJson(current.getConfigurationJson());
                     answer.setRecreateJson(false);

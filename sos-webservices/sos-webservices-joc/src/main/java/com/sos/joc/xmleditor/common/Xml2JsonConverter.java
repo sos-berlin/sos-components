@@ -79,8 +79,9 @@ public class Xml2JsonConverter {
         } catch (ConnectException e) {
             throw new Exception(String.format("[%s][cant't get schema]%s", schema.toString(), e.toString()), e);
         } catch (XmlNotMatchSchemaException e) {
-            LOGGER.error(String.format("[%s][%s]%s", schema.toString(), xml, e.toString()), e);
-            throw new Exception(String.format("XML does not match xsd schema: %s", e.getMessage()));
+            // LOGGER.error(String.format("[%s][%s]%s", schema.toString(), xml, e.toString()), e);
+            // throw new Exception(String.format("XML does not match xsd schema: %s", e.getMessage()));
+            throw e;
         } catch (Exception e) {
             LOGGER.error(String.format("[%s][%s]%s", schema.toString(), xml, e.toString()), e);
             throw new Exception(String.format("XML can't be loaded: %s", e.getMessage()));
