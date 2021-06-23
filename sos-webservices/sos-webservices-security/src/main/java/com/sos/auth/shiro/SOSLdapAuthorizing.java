@@ -315,7 +315,6 @@ public class SOSLdapAuthorizing {
         }
     }
 
-
     public void setSosLdapAuthorizingRealm(SOSLdapAuthorizingRealm sosLdapAuthorizingRealm) throws IOException, NamingException {
 
         LOGGER.debug("...reading contextFactory. TLS=" + sosLdapAuthorizingRealm.getUseStartTls());
@@ -325,55 +324,57 @@ public class SOSLdapAuthorizing {
         ldapContextFactory = sosLdapAuthorizingRealm.getContextFactory();
 
         Object principal = sosLdapAuthorizingRealm.getLdapPrincipal(authcToken);
-        Object credentials = authcToken.getCredentials();
-        try {
-            ldapContext = ldapContextFactory.getLdapContext(principal, credentials);
+        if (principal != null) {
+            Object credentials = authcToken.getCredentials();
+            try {
+                ldapContext = ldapContextFactory.getLdapContext(principal, credentials);
 
-            JndiLdapContextFactory jndiLdapContextFactory = (JndiLdapContextFactory) ldapContextFactory;
-            if (sosLdapAuthorizingRealm.isUseStartTls_()) {
-                LOGGER.debug("using StartTls for authentication");
-                StartTlsRequest startTlsRequest = new StartTlsRequest();
-                StartTlsResponse tls = (StartTlsResponse) ldapContext.extendedOperation(startTlsRequest);
+                JndiLdapContextFactory jndiLdapContextFactory = (JndiLdapContextFactory) ldapContextFactory;
+                if (sosLdapAuthorizingRealm.isUseStartTls_()) {
+                    LOGGER.debug("using StartTls for authentication");
+                    StartTlsRequest startTlsRequest = new StartTlsRequest();
+                    StartTlsResponse tls = (StartTlsResponse) ldapContext.extendedOperation(startTlsRequest);
 
-                if (Globals.withHostnameVerification) {
-                    if ("false".equalsIgnoreCase(sosLdapAuthorizingRealm.getHostNameVerification()) || "off".equalsIgnoreCase(sosLdapAuthorizingRealm
-                            .getHostNameVerification())) {
-                        LOGGER.debug("HostNameVerification=false");
-                        tls.setHostnameVerifier(new DummyVerifier());
+                    if (Globals.withHostnameVerification) {
+                        if ("false".equalsIgnoreCase(sosLdapAuthorizingRealm.getHostNameVerification()) || "off".equalsIgnoreCase(
+                                sosLdapAuthorizingRealm.getHostNameVerification())) {
+                            LOGGER.debug("HostNameVerification=false");
+                            tls.setHostnameVerifier(new DummyVerifier());
+                        } else {
+                            LOGGER.debug("HostNameVerification=true");
+                        }
                     } else {
-                        LOGGER.debug("HostNameVerification=true");
+                        if ("true".equalsIgnoreCase(sosLdapAuthorizingRealm.getHostNameVerification()) || "on".equalsIgnoreCase(
+                                sosLdapAuthorizingRealm.getHostNameVerification())) {
+                            LOGGER.debug("HostNameVerification=true");
+                        } else {
+                            LOGGER.debug("HostNameVerification=false");
+                            tls.setHostnameVerifier(new DummyVerifier());
+                        }
                     }
-                } else {
-                    if ("true".equalsIgnoreCase(sosLdapAuthorizingRealm.getHostNameVerification()) || "on".equalsIgnoreCase(sosLdapAuthorizingRealm
-                            .getHostNameVerification())) {
-                        LOGGER.debug("HostNameVerification=true");
-                    } else {
-                        LOGGER.debug("HostNameVerification=false");
-                        tls.setHostnameVerifier(new DummyVerifier());
+                    LOGGER.debug("negotiate ...");
+                    tls.negotiate();
+                    LOGGER.debug("...negotiation succeeded");
+                    if (jndiLdapContextFactory.getAuthenticationMechanism() != null) {
+                        ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, jndiLdapContextFactory.getAuthenticationMechanism());
                     }
+                    ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, principal);
+                    ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, credentials);
+                    LOGGER.debug("reconnect ...");
+                    ldapContext.reconnect(ldapContext.getConnectControls());
+                    LOGGER.debug("... reconnection succeeded");
                 }
-                LOGGER.debug("negotiate ...");
-                tls.negotiate();
-                LOGGER.debug("...negotiation succeeded");
-                if (jndiLdapContextFactory.getAuthenticationMechanism() != null) {
-                    ldapContext.addToEnvironment(Context.SECURITY_AUTHENTICATION, jndiLdapContextFactory.getAuthenticationMechanism());
-                }
-                ldapContext.addToEnvironment(Context.SECURITY_PRINCIPAL, principal);
-                ldapContext.addToEnvironment(Context.SECURITY_CREDENTIALS, credentials);
-                LOGGER.debug("reconnect ...");
-                ldapContext.reconnect(ldapContext.getConnectControls());
-                LOGGER.debug("... reconnection succeeded");
+            } catch (IOException e) {
+                LdapUtils.closeContext(ldapContext);
+                LOGGER.error("Failed to negotiate TLS connection': ", e);
+                throw e;
+            } catch (NamingException e) {
+                LOGGER.info(e.getMessage());
+            } catch (Throwable t) {
+                LdapUtils.closeContext(ldapContext);
+                LOGGER.error("Unexpected failure to negotiate TLS connection", t);
+                throw t;
             }
-        } catch (IOException e) {
-            LdapUtils.closeContext(ldapContext);
-            LOGGER.error("Failed to negotiate TLS connection': ", e);
-            throw e;
-        } catch (NamingException e) {
-            LOGGER.info(e.getMessage());
-        } catch (Throwable t) {
-            LdapUtils.closeContext(ldapContext);
-            LOGGER.error("Unexpected failure to negotiate TLS connection", t);
-            throw t;
         }
     }
 

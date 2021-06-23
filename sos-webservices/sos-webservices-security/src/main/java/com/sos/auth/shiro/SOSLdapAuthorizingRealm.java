@@ -13,9 +13,11 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.ldap.DefaultLdapRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.shiro.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ctc.wstx.util.StringUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 
@@ -59,7 +61,14 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
         } else {
             return authzInfo;
         }
-
+        Object principal = authcToken.getPrincipal();
+        if (principal instanceof String) {
+            String sPrincipal = (String) principal;
+            if (!StringUtils.hasText(sPrincipal)) {
+                return null;
+            }
+         }  
+        
         if (authorizing != null) {
 
             LOGGER.debug("doGetAuthorizationInfo: " + authcToken.getPrincipal().toString());
@@ -111,6 +120,13 @@ public class SOSLdapAuthorizingRealm extends DefaultLdapRealm {
             setSSLEnvironmentVariablesForTruststore(Globals.sosCockpitProperties);
 
             authenticationInfo = super.doGetAuthenticationInfo(authcToken);
+            Object principal = authcToken.getPrincipal();
+            if (principal instanceof String) {
+                String sPrincipal = (String) principal;
+                if (!StringUtils.hasText(sPrincipal)) {
+                    return null;
+                }
+             }  
             return super.doGetAuthenticationInfo(authcToken);
         } catch (AuthenticationException e) {
             LOGGER.info(e.getMessage());

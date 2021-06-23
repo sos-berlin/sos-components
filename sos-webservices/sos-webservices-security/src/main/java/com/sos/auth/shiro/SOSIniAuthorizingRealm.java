@@ -75,35 +75,16 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
                 break;
             }
         }
-        return psd.passwordsMatch(authToken.getPassword(), passwordIni);
+        if (passwordIni == null) {
+            return false;
+        } else {
+            return psd.passwordsMatch(authToken.getPassword(), passwordIni);
+        }
     }
 
     public void setAuthorizing(ISOSAuthorizing authorizing) {
         this.authorizing = authorizing;
     }
 
-   /* protected SimpleRole getRole(String rolename) {
-        SOSSecurityConfiguration sosSecurityConfiguration = new SOSSecurityConfiguration();
-        SecurityConfiguration securityConfiguration;
-        SimpleRole simpleRole = new SimpleRole();
-        try {
-            securityConfiguration = sosSecurityConfiguration.readConfiguration();
-
-            IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(rolename).getPermissions();
-            for (IniPermission permission : permissions.getJoc()) {
-                final Permission _permission;
-                if (permission.getExcluded()) {
-                    _permission = new WildcardPermission("-" + permission.getPath());
-                } else {
-                    _permission = new WildcardPermission(permission.getPath());
-                }
-                simpleRole.add(_permission);
-            }
-        } catch (JocException | SOSHibernateException | IOException e) {
-            LOGGER.error("Error reaging roles",e);
-        }
-        return simpleRole;
-    }
-    */
-
+  
 }
