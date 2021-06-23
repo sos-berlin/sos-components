@@ -1,6 +1,5 @@
 package com.sos.joc.classes.xmleditor.validator;
 
-import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,15 +11,13 @@ import javax.xml.validation.SchemaFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 
-import com.sos.commons.xml.exception.SOSDoctypeException;
+import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.exception.SOSXMLDoctypeException;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
-
-import com.sos.commons.util.SOSString;
 
 public class XsdValidator {
 
@@ -52,7 +49,7 @@ public class XsdValidator {
         try {
             // check for vulnerabilities
             JocXmlEditor.parseXml(content);
-        } catch (SOSDoctypeException e) {
+        } catch (SOSXMLDoctypeException e) {
             throw e;
         } catch (Throwable e) {
         }
