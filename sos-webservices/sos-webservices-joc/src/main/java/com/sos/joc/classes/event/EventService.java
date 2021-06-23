@@ -330,7 +330,7 @@ public class EventService {
                 SimpleItemPath itemId = ((UnsignedSimpleItemEvent) evt).key();
                 if (itemId instanceof AgentPath) {
                     //eventType = evt.getClass().getSimpleName().replaceFirst(".*SimpleItem", "Agent");
-                    addEvent(createAgentEvent(eventId, itemId.string()));
+                    addEvent(createAgentEvent(eventId, itemId.string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.string(), eventType));
 //                } else if (itemId instanceof OrderWatchPath) {
@@ -392,7 +392,7 @@ public class EventService {
     private EventSnapshot createWorkflowEvent(long eventId, WorkflowId workflowId, String eventType) {
         EventSnapshot evt = new EventSnapshot();
         evt.setEventId(eventId);
-        evt.setEventType("eventType");
+        evt.setEventType(eventType);
         evt.setObjectType(EventType.WORKFLOW);
         evt.setWorkflow(workflowId);
         return evt;
