@@ -100,7 +100,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                 DBItemJocCluster activeMember = dbLayer.getCluster();
                 boolean isInactive = activeMember == null || !activeMember.getMemberId().equals(in.getMemberId());
                 Instant now = Instant.now();
-                if (isInactive && (member.getHeartBeat() == null || now.getEpochSecond() - member.getHeartBeat().toInstant().getEpochSecond() <= 61)) {
+                if (isInactive && (member.getHeartBeat() == null || now.getEpochSecond() - member.getHeartBeat().toInstant().getEpochSecond() > 60)) {
                     // Long osId = member.getOsId();
                     // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
                     connection.delete(member);
