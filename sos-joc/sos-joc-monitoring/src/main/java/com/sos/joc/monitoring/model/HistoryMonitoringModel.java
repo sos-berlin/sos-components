@@ -405,7 +405,7 @@ public class HistoryMonitoringModel {
 
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
         if (diff > definition) {
-            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Task runs longer than the expected duration of %s", SOSDate
+            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected duration of %s", SOSDate
                     .getDuration(definition)));
         } else {
             if (!remove) {// remove old entries
@@ -423,7 +423,7 @@ public class HistoryMonitoringModel {
         }
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
         if (diff < definition) {
-            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Task runs shorter than the expected duration of %s", SOSDate
+            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected duration of %s", SOSDate
                     .getDuration(definition)));
         }
         return null;

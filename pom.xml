@@ -88,8 +88,9 @@
         <apache.commons.net.version>3.3</apache.commons.net.version>
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.38.v20210224</jetty.version>
-
-		<!--javax.jms-api.version>2.0.1</javax.jms-api.version> <xerces.version>2.12.0</xerces.version> 
+        <javax.jms-api.version>2.0.1</javax.jms-api.version>
+        <apache.activemq.version>5.4.2</apache.activemq.version>
+		<!--<xerces.version>2.12.0</xerces.version> 
 			<xalan.version>2.7.1</xalan.version> <jcifs.version>1.3.17</jcifs.version> 
 			<org.jdom.version>1.1</org.jdom.version> <h2.version>1.3.170</h2.version> 
 			<saxon.version>9.8.0-5</saxon.version> <apache.shiro.version>1.2.3</apache.shiro.version> 
@@ -694,6 +695,16 @@
 				<groupId>org.linguafranca.pwdb</groupId>
 				<artifactId>KeePassJava2</artifactId>
 				<version>${keepass.java2.version}</version>
+			</dependency>
+            <dependency>
+				<groupId>javax.jms</groupId>
+				<artifactId>javax.jms-api</artifactId>
+				<version>${javax.jms-api.version}</version>
+			</dependency>
+            <dependency>
+				<groupId>org.apache.activemq</groupId>
+				<artifactId>activemq-all</artifactId>
+				<version>${apache.activemq.version}</version>
 			</dependency>
 			<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 			<dependency>

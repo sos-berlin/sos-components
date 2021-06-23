@@ -1,9 +1,11 @@
 package com.sos.commons.util;
 
+import java.net.URL;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SOSClassUtil extends java.lang.Object {
+public class SOSClassUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSClassUtil.class);
 
@@ -48,6 +50,22 @@ public class SOSClassUtil extends java.lang.Object {
 
     public static String getSimpleName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
+    }
+
+    public static URL getLocation(String fullyQualifiedClassName) throws ClassNotFoundException {
+        return getLocation(SOSClassUtil.class.getClassLoader(), fullyQualifiedClassName);
+    }
+
+    public static URL getLocation(ClassLoader cl, Class<?> clazz) throws ClassNotFoundException {
+        return getLocation(cl, clazz.getName());
+    }
+
+    public static URL getLocation(ClassLoader cl, String fullyQualifiedClassName) throws ClassNotFoundException {
+        return getLocation(cl.loadClass(fullyQualifiedClassName));
+    }
+
+    public static URL getLocation(Class<?> clazz) {
+        return clazz.getProtectionDomain().getCodeSource().getLocation();
     }
 
 }

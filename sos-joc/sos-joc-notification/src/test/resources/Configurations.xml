@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Configurations>
+	<Fragments>
+		<MessageFragments>
+			<Message name="plain_message_on_error"><![CDATA[plain message ${SOME_VARIABLE}]]></Message>
+			<Message name="html_message_on_error"><![CDATA[<h1><strong>html message</strong></h1>]]></Message>
+		</MessageFragments>
+		<MonitorFragments>
+			<CommandFragment name="cmd_nagios">
+				<MessageRef ref="plain_message_on_error"/>
+				<Command><![CDATA[echo -e ${MESSAGE} | /usr/local/nagios/bin/send_nsca -H monitor_host -c /usr/local/nagios/etc/send_nsca.cfg]]></Command>
+			</CommandFragment>
+			<MailFragment name="mail" content_type="text/html" charset="ISO-8859-1" encoding="7bit" priority="Normal">
+				<MessageRef ref="html_message_on_error"/>
+				<Subject><![CDATA[Subject ${SOME_VARIABLE}]]></Subject>
+				<To><![CDATA[info@sos-berlin.com]]></To>
+			</MailFragment>
+		</MonitorFragments>
+		<ObjectsFragments>
+			<Workflows name="set_1">
+				<Workflow name="x">
+					<WorkflowJob name="x" label="y"/>
+				</Workflow>
+				<Workflow name="y"/>
+			</Workflows>
+		</ObjectsFragments>
+	</Fragments>
+	<Notifications>
+		<Notification type="ON_ERROR">
+			<NotificationMonitors>
+				<CommandFragmentRef ref="cmd_nagios"/>
+				<MailFragmentRef ref="mail">
+					<Subject><![CDATA[Example - Redefined subject]]></Subject>
+					<To><![CDATA[example_redefined_to@sos-berlin.com]]></To>
+				</MailFragmentRef>
+			</NotificationMonitors>
+			<NotificationObjects>
+				<WorkflowsRef/>
+			</NotificationObjects>
+		</Notification>
+	</Notifications>
+</Configurations>
