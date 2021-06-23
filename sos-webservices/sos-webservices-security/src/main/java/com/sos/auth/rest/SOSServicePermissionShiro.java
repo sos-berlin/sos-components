@@ -111,13 +111,12 @@ public class SOSServicePermissionShiro {
     @Path("/joc_cockpit_permissions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(ACCESS_TOKEN) String accessTokenFromHeader,
-            @HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader) {
+    public JOCDefaultResponse postJocCockpitPermissions(@HeaderParam(X_ACCESS_TOKEN) String accessToken) {
 
         MDC.put("context", ThreadCtx);
         SOSWebserviceAuthenticationRecord sosWebserviceAuthenticationRecord = new SOSWebserviceAuthenticationRecord();
         try {
-            String accessToken = getAccessToken(xAccessTokenFromHeader, EMPTY_STRING);
+            accessToken = getAccessToken(accessToken, EMPTY_STRING);
 
             SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
             sosPermissionsCreator.loginFromAccessToken(accessToken);
@@ -134,7 +133,7 @@ public class SOSServicePermissionShiro {
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentUser.getSosPermissionJocCockpitControllers()));
         } catch (org.apache.shiro.session.ExpiredSessionException e) {
-            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessTokenFromHeader,
+            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = createSOSShiroCurrentUserAnswer(accessToken,
                     sosWebserviceAuthenticationRecord.getUser(), e.getMessage());
             return JOCDefaultResponse.responseStatus440(sosShiroCurrentUserAnswer);
         } catch (Exception e) {
@@ -437,7 +436,7 @@ public class SOSServicePermissionShiro {
         return sosShiroCurrentUserAnswer;
     }
 
-    @POST
+    @GET
     @Path("/permission")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse isPermitted(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,

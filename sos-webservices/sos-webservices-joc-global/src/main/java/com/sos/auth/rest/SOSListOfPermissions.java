@@ -32,6 +32,8 @@ public class SOSListOfPermissions {
         SOSPermissions sosPermissions = o.createSOSPermissions();
 
         // JocPermissions
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:get_log");
+        
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:accounts:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:accounts:manage");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:joc:adminstration:certificates:view");
@@ -66,6 +68,7 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:restart");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:terminate");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:switch_over");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:get_log");
         
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:agents:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:deployment:view");
