@@ -16,6 +16,8 @@ import com.sos.joc.cluster.resource.IClusterResource;
 import com.sos.joc.db.cluster.JocInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocCluster;
 import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
@@ -104,6 +106,7 @@ public class ClusterResourceImpl extends JOCResourceImpl implements IClusterReso
                     // Long osId = member.getOsId();
                     // TODO delete obsolete row in INV_OPERATING_SYSTEMS if not used with other controller or cluster instances
                     connection.delete(member);
+                    EventBus.getInstance().post(new ActiveClusterChangedEvent());
                 } else {
                     throw new JocBadRequestException("The cluster member is either active or its last heartbeat is younger than one minute.");
                 }
