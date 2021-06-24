@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * order log
+ * running order log
  * <p>
  * 
  * 
@@ -21,10 +21,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "complete",
-    "eventId",
     "logEvents"
 })
-public class OrderLog {
+public class RunningOrderLogEvents
+    extends OrderRunningLogFilter
+{
 
     /**
      * 
@@ -33,20 +34,6 @@ public class OrderLog {
      */
     @JsonProperty("complete")
     private Boolean complete = false;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    private Long eventId;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("logEvents")
     private List<OrderLogEntry> logEvents = new ArrayList<OrderLogEntry>();
 
@@ -70,45 +57,11 @@ public class OrderLog {
         this.complete = complete;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    public Long getEventId() {
-        return eventId;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("eventId")
-    public void setEventId(Long eventId) {
-        this.eventId = eventId;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("logEvents")
     public List<OrderLogEntry> getLogEvents() {
         return logEvents;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("logEvents")
     public void setLogEvents(List<OrderLogEntry> logEvents) {
         this.logEvents = logEvents;
@@ -116,12 +69,12 @@ public class OrderLog {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("complete", complete).append("eventId", eventId).append("logEvents", logEvents).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("complete", complete).append("logEvents", logEvents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(logEvents).append(complete).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(complete).append(logEvents).toHashCode();
     }
 
     @Override
@@ -129,11 +82,11 @@ public class OrderLog {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderLog) == false) {
+        if ((other instanceof RunningOrderLogEvents) == false) {
             return false;
         }
-        OrderLog rhs = ((OrderLog) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(logEvents, rhs.logEvents).append(complete, rhs.complete).isEquals();
+        RunningOrderLogEvents rhs = ((RunningOrderLogEvents) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(complete, rhs.complete).append(logEvents, rhs.logEvents).isEquals();
     }
 
 }

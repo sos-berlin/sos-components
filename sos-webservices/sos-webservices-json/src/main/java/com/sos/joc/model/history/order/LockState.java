@@ -1,5 +1,5 @@
 
-package com.sos.webservices.json.jobscheduler.history.order;
+package com.sos.joc.model.history.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

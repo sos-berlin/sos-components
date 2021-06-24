@@ -32,19 +32,20 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.event.EventType;
 import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
+import com.sos.joc.model.history.order.OrderLogEntry;
+import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.order.OrderLog;
-import com.sos.joc.model.order.OrderLogItem;
-import com.sos.joc.model.order.OrderLogItem.LogEvent;
-import com.sos.joc.model.order.OrderLogItemError;
 import com.sos.joc.model.order.OrderRunningLogFilter;
 
 public class LogOrderContent {
@@ -86,13 +87,13 @@ public class LogOrderContent {
     private OrderLog getLogRollingFromHistoryService() {
         // TODO
         OrderLog orderLog = new OrderLog();
-        OrderLogItem item = new OrderLogItem();
+        OrderLogEntry item = new OrderLogEntry();
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
-        item.setLogEvent(LogEvent.OrderBroken);
+        item.setLogEvent(EventType.OrderBroken);
         item.setLogLevel("ERROR");
         // item.setOrderId(orderId);
         item.setPosition("...");
-        OrderLogItemError err = new OrderLogItemError();
+        OrderLogEntryError err = new OrderLogEntryError();
         err.setErrorText("Running log is not yet implemented");
         err.setErrorState("failed");
         err.setErrorCode("99");
@@ -102,49 +103,61 @@ public class LogOrderContent {
         return orderLog;
     }
 
-    private OrderLog getLogFromHistoryService() {
+    private OrderLog getLogSnapshotFromHistoryService() {
         OrderLog orderLog = new OrderLog();
-        orderLog.setComplete(false);
-        orderLog.setEventId(Instant.now().toEpochMilli() * 1000);
+        orderLog.setComplete(true);
+        orderLog.setEventId(null);
         try {
             Path logFile = Paths.get("logs", "history", mainParentHistoryId.toString(), historyId + ".log");
             if (Files.exists(logFile)) {
                 LOGGER.debug(String.format("[%s]LOG file found", logFile));
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(logFile, Collectors.joining(",", "[", "]")),
-                        OrderLogItem[].class)));
+                        OrderLogEntry[].class)));
                 unCompressedLength = Files.size(logFile);
                 // no running log if OrderFailed or OrderSuspended etc. (later with events)
                 int numOfLogEvents = orderLog.getLogEvents().size();
+                boolean isIncomplete = false;
                 if (numOfLogEvents > 0) {
-                    List<LogEvent> evts = Arrays.asList(LogEvent.OrderCancelled, LogEvent.OrderBroken, LogEvent.OrderFailed,
-                            LogEvent.OrderFailedinFork, LogEvent.OrderFinished, LogEvent.OrderSuspended);
-                    LogEvent evt = orderLog.getLogEvents().get(numOfLogEvents - 1).getLogEvent();
-                    if (evts.contains(evt)) {
-                        orderLog.setComplete(true);
-                        orderLog.setEventId(null);
+                    List<EventType> evts = Arrays.asList(EventType.OrderCancelled, EventType.OrderBroken, EventType.OrderFailed,
+                            EventType.OrderFailedinFork, EventType.OrderFinished, EventType.OrderSuspended);
+                    EventType lastEvt = orderLog.getLogEvents().get(numOfLogEvents - 1).getLogEvent();
+                    if (!evts.contains(lastEvt)) {
+                        isIncomplete = true;
                     }
+                } else {
+                    isIncomplete = true;
+                }
+                if (isIncomplete) {
+                    orderLog.setComplete(false);
+                    orderLog.setEventId(Instant.now().toEpochMilli());
+                    RunningOrderLogs.getInstance().subscribe(historyId);
                 }
                 return orderLog;
             } else {
                 LOGGER.debug(String.format("[%s]LOG file not found. try to read fron db...", logFile));
-
                 // only for the rare moment that the file is deleted and now in the database
-                return getLogFromDb();
+                OrderLog oLog = getLogFromDb();
+                if (oLog != null) {
+                   return oLog; 
+                }
             }
         } catch (Exception e) {
             LOGGER.warn(e.toString());
-            // TODO Auto-generated catch block
-            // e.printStackTrace();
         }
-        OrderLogItem item = new OrderLogItem();
+        
+        OrderLogEntry item = new OrderLogEntry();
         item.setOrderId(orderId);
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
-        item.setLogEvent(LogEvent.OrderBroken);
+        item.setLogEvent(EventType.OrderBroken);
         item.setLogLevel("INFO");
         item.setPosition("...");
-        OrderLogItemError err = new OrderLogItemError();
-        err.setErrorText("Snapshot log not found");
-        err.setErrorReason("Current JOC Cockpit Node is on standby?");
+        OrderLogEntryError err = new OrderLogEntryError();
+        err.setErrorReason(null);
+        if (JocClusterService.getInstance().isRunning()) {
+            err.setErrorText("Snapshot log not found");
+        } else {
+            err.setErrorText("Standby JOC Cockpit instance has no access to snapshot log");
+        }
         err.setErrorState("Failed");
         err.setErrorCode("99");
         item.setError(err);
@@ -215,7 +228,7 @@ public class LogOrderContent {
                     if (!historyDBItem.fileContentIsNull()) {
                         OrderLog orderLog = new OrderLog();
                         orderLog.setComplete(true);
-                        orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(historyDBItem.getFileContent(), OrderLogItem[].class)));
+                        orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(historyDBItem.getFileContent(), OrderLogEntry[].class)));
                         return orderLog;
                     }
                     // Order is running
@@ -227,9 +240,8 @@ public class LogOrderContent {
         }
     }
 
-    public OrderLog getOrderLog() throws JsonParseException, JsonMappingException,
-            JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException, IOException,
-            JocMissingRequiredParameterException {
+    public OrderLog getOrderLog() throws JsonParseException, JsonMappingException, JocConfigurationException, DBOpenSessionException,
+            SOSHibernateException, DBMissingDataException, IOException, JocMissingRequiredParameterException {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }
@@ -240,15 +252,15 @@ public class LogOrderContent {
         } else {
             orderLog = getLogFromDb();
             if (orderLog == null) {
-                orderLog = getLogFromHistoryService();
+                orderLog = getLogSnapshotFromHistoryService();
             }
         }
         // TODO later part of Robert's history
-        if (orderLog != null && orderLog.getLogEvents() != null) {
+        if (orderLog.getLogEvents() != null) {
             orderLog.setLogEvents(orderLog.getLogEvents().stream().map(item -> getMappedLogItem(item)).collect(Collectors.toList()));
 
             // set complete true if Order only added -> no running log expected
-            if (orderLog.getLogEvents().size() == 1 && LogEvent.OrderAdded.equals(orderLog.getLogEvents().get(0).getLogEvent())) {
+            if (orderLog.getLogEvents().size() == 1 && EventType.OrderAdded.equals(orderLog.getLogEvents().get(0).getLogEvent())) {
                 orderLog.setComplete(true);
                 orderLog.setEventId(null);
             }
@@ -267,10 +279,10 @@ public class LogOrderContent {
         OrderLog orderLog = null;
         orderLog = getLogFromDb();
         if (orderLog == null) {
-            orderLog = getLogFromHistoryService();
+            orderLog = getLogSnapshotFromHistoryService();
         }
         if (orderLog != null) {
-            final List<OrderLogItem> logItems = orderLog.getLogEvents();
+            final List<OrderLogEntry> logItems = orderLog.getLogEvents();
             out = new StreamingOutput() {
 
                 @Override
@@ -280,12 +292,12 @@ public class LogOrderContent {
                     try {
                         byte[] buffer = new byte[4096];
                         int length;
-                        for (OrderLogItem i : logItems) {
+                        for (OrderLogEntry i : logItems) {
                             inStream = getLogLine(i);
                             while ((length = inStream.read(buffer)) > 0) {
                                 output.write(buffer, 0, length);
                             }
-                            if (i.getLogEvent() == LogEvent.OrderProcessingStarted) {
+                            if (i.getLogEvent() == EventType.OrderProcessingStarted) {
                                 // read tasklog
                                 LogTaskContent logTaskContent = new LogTaskContent(i.getTaskId());
                                 inStream = logTaskContent.getLogStream();
@@ -319,7 +331,7 @@ public class LogOrderContent {
         return out;
     }
 
-    public static ByteArrayInputStream getLogLine(OrderLogItem item) {
+    public static ByteArrayInputStream getLogLine(OrderLogEntry item) {
         // "masterDatetime [logLevel] [logEvent] id:orderId, pos:position"
         // and further optional additions
         // " ,Job=job, Agent (url=agentUrl, id=agentId, time=agentDatetime), Job=job"
@@ -328,7 +340,7 @@ public class LogOrderContent {
         List<String> info = new ArrayList<String>();
 
         String agent = null;
-        if (item.getLogEvent() == LogEvent.OrderProcessingStarted) {
+        if (item.getLogEvent() == EventType.OrderProcessingStarted) {
             if (!SOSString.isEmpty(item.getAgentUrl())) {
                 info.add("url=" + item.getAgentUrl());
             }
@@ -346,7 +358,7 @@ public class LogOrderContent {
         info.clear();
         String error = null;
         if (item.getError() != null) {
-            OrderLogItemError err = item.getError();
+            OrderLogEntryError err = item.getError();
             if (!SOSString.isEmpty(err.getErrorState())) {
                 info.add("status=" + err.getErrorState());
             }
@@ -385,7 +397,7 @@ public class LogOrderContent {
         }
         if (item.getLock() != null) {
             List<String> lock = new ArrayList<String>();
-            lock.add("id=" + item.getLock().getLockId());
+            lock.add("name=" + item.getLock().getLockName());
             lock.add("limit=" + item.getLock().getLimit());
             if (item.getLock().getCount() != null) {
                 lock.add("count=" + item.getLock().getCount());
@@ -411,10 +423,10 @@ public class LogOrderContent {
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static OrderLogItem getMappedLogItem(OrderLogItem item) {
+    private static OrderLogEntry getMappedLogItem(OrderLogEntry item) {
         if (item.getError() != null) {
             item.setLogLevel("ERROR");
-        } else if (item.getLogEvent() == LogEvent.OrderProcessed) {
+        } else if (item.getLogEvent() == EventType.OrderProcessed) {
             item.setLogLevel("SUCCESS");
         }
         if (item.getOrderId() != null && item.getOrderId().contains("/")) {

@@ -54,6 +54,10 @@ import com.sos.joc.event.bean.history.HistoryOrderTaskStarted;
 import com.sos.joc.event.bean.history.HistoryOrderTaskTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderTerminated;
 import com.sos.joc.event.bean.history.HistoryOrderUpdated;
+import com.sos.joc.model.history.order.Lock;
+import com.sos.joc.model.history.order.LockState;
+import com.sos.joc.model.history.order.OrderLogEntry;
+import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.history.controller.HistoryService;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
@@ -89,10 +93,6 @@ import com.sos.js7.history.helper.Counter;
 import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.helper.LogEntry;
 import com.sos.js7.history.helper.LogEntry.LogLevel;
-import com.sos.webservices.json.jobscheduler.history.order.Error;
-import com.sos.webservices.json.jobscheduler.history.order.Lock;
-import com.sos.webservices.json.jobscheduler.history.order.LockState;
-import com.sos.webservices.json.jobscheduler.history.order.OrderLogEntry;
 import com.sos.yade.commons.Yade;
 
 import js7.data.value.Value;
@@ -1714,7 +1714,7 @@ public class HistoryModel {
         entry.setPosition(SOSString.isEmpty(logEntry.getPosition()) ? null : logEntry.getPosition());
         entry.setReturnCode(logEntry.getReturnCode() == null ? null : logEntry.getReturnCode().longValue());// TODO change to Integer
         if (logEntry.isError()) {
-            Error error = new Error();
+            OrderLogEntryError error = new OrderLogEntryError();
             error.setErrorState(logEntry.getErrorState());
             error.setErrorReason(logEntry.getErrorReason());
             if (error.getErrorState() != null && error.getErrorReason() != null) {
@@ -1780,7 +1780,7 @@ public class HistoryModel {
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
-            postEventOrderLog(entry, orderEntryContent.toString(), newLine);
+            postEventOrderLog(entry, orderEntry);
             write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
@@ -1801,7 +1801,7 @@ public class HistoryModel {
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
-            postEventOrderLog(entry, orderEntryContent.toString(), newLine);
+            postEventOrderLog(entry, orderEntry);
             write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
@@ -1856,7 +1856,7 @@ public class HistoryModel {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }
             content.append((new ObjectMapper()).writeValueAsString(orderEntry));
-            postEventOrderLog(entry, content.toString(), newLine);
+            postEventOrderLog(entry, orderEntry);
         }
 
         try {
@@ -1886,8 +1886,8 @@ public class HistoryModel {
                 content, newLine));
     }
 
-    private void postEventOrderLog(LogEntry entry, String content, boolean newLine) {
-        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), content, newLine));
+    private void postEventOrderLog(LogEntry entry, OrderLogEntry orderEntry) {
+        EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
     }
 
     private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine) throws Exception {

@@ -1,5 +1,5 @@
 
-package com.sos.webservices.json.jobscheduler.history.order;
+package com.sos.joc.model.history.order;
 
 import java.util.ArrayList;
 import java.util.List;

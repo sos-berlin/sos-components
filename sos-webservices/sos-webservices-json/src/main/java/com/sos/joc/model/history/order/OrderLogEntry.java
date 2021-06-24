@@ -1,22 +1,18 @@
 
-package com.sos.joc.model.order;
+package com.sos.joc.model.history.order;
 
-import java.util.HashMap;
-import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.sos.controller.model.event.EventType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * order log item
+ * order history log entry
  * <p>
  * 
  * 
@@ -24,11 +20,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerDatetime",
+    "agentDatetime",
     "orderId",
     "logLevel",
     "logEvent",
     "position",
-    "agentDatetime",
     "agentId",
     "agentUrl",
     "job",
@@ -37,16 +33,22 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "error",
     "lock"
 })
-public class OrderLogItem {
+public class OrderLogEntry {
 
     /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
      * (Required)
      * 
      */
     @JsonProperty("controllerDatetime")
-    @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
     private String controllerDatetime;
+    @JsonProperty("agentDatetime")
+    private String agentDatetime;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     private String orderId;
     /**
@@ -57,12 +59,14 @@ public class OrderLogItem {
     @JsonProperty("logLevel")
     private String logLevel;
     /**
+     * eventType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logEvent")
-    private OrderLogItem.LogEvent logEvent;
+    private EventType logEvent;
     /**
      * 
      * (Required)
@@ -70,13 +74,6 @@ public class OrderLogItem {
      */
     @JsonProperty("position")
     private String position;
-    /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
-     * 
-     */
-    @JsonProperty("agentDatetime")
-    @JsonPropertyDescription("datetime with timeOffset: format \"yyyy-MM-dd' 'HH:mm:ss.SSSZ\"")
-    private String agentDatetime;
     @JsonProperty("agentId")
     @JsonAlias({
         "agentPath"
@@ -86,29 +83,17 @@ public class OrderLogItem {
     private String agentUrl;
     @JsonProperty("job")
     private String job;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskId")
     private Long taskId;
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("returnCode")
     private Long returnCode;
     @JsonProperty("error")
-    private OrderLogItemError error;
+    private OrderLogEntryError error;
     @JsonProperty("lock")
     private Lock lock;
 
     /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
      * (Required)
      * 
      */
@@ -118,7 +103,7 @@ public class OrderLogItem {
     }
 
     /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
+     * 
      * (Required)
      * 
      */
@@ -127,11 +112,31 @@ public class OrderLogItem {
         this.controllerDatetime = controllerDatetime;
     }
 
+    @JsonProperty("agentDatetime")
+    public String getAgentDatetime() {
+        return agentDatetime;
+    }
+
+    @JsonProperty("agentDatetime")
+    public void setAgentDatetime(String agentDatetime) {
+        this.agentDatetime = agentDatetime;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public String getOrderId() {
         return orderId;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("orderId")
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -158,22 +163,26 @@ public class OrderLogItem {
     }
 
     /**
+     * eventType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logEvent")
-    public OrderLogItem.LogEvent getLogEvent() {
+    public EventType getLogEvent() {
         return logEvent;
     }
 
     /**
+     * eventType
+     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("logEvent")
-    public void setLogEvent(OrderLogItem.LogEvent logEvent) {
+    public void setLogEvent(EventType logEvent) {
         this.logEvent = logEvent;
     }
 
@@ -195,24 +204,6 @@ public class OrderLogItem {
     @JsonProperty("position")
     public void setPosition(String position) {
         this.position = position;
-    }
-
-    /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
-     * 
-     */
-    @JsonProperty("agentDatetime")
-    public String getAgentDatetime() {
-        return agentDatetime;
-    }
-
-    /**
-     * datetime with timeOffset: format "yyyy-MM-dd' 'HH:mm:ss.SSSZ"
-     * 
-     */
-    @JsonProperty("agentDatetime")
-    public void setAgentDatetime(String agentDatetime) {
-        this.agentDatetime = agentDatetime;
     }
 
     @JsonProperty("agentId")
@@ -245,57 +236,33 @@ public class OrderLogItem {
         this.job = job;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskId")
     public Long getTaskId() {
         return taskId;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("taskId")
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("returnCode")
     public Long getReturnCode() {
         return returnCode;
     }
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("returnCode")
     public void setReturnCode(Long returnCode) {
         this.returnCode = returnCode;
     }
 
     @JsonProperty("error")
-    public OrderLogItemError getError() {
+    public OrderLogEntryError getError() {
         return error;
     }
 
     @JsonProperty("error")
-    public void setError(OrderLogItemError error) {
+    public void setError(OrderLogEntryError error) {
         this.error = error;
     }
 
@@ -311,7 +278,7 @@ public class OrderLogItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentDatetime", agentDatetime).append("agentId", agentId).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
+        return new ToStringBuilder(this).append("controllerDatetime", controllerDatetime).append("agentDatetime", agentDatetime).append("orderId", orderId).append("logLevel", logLevel).append("logEvent", logEvent).append("position", position).append("agentId", agentId).append("agentUrl", agentUrl).append("job", job).append("taskId", taskId).append("returnCode", returnCode).append("error", error).append("lock", lock).toString();
     }
 
     @Override
@@ -324,72 +291,11 @@ public class OrderLogItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof OrderLogItem) == false) {
+        if ((other instanceof OrderLogEntry) == false) {
             return false;
         }
-        OrderLogItem rhs = ((OrderLogItem) other);
+        OrderLogEntry rhs = ((OrderLogEntry) other);
         return new EqualsBuilder().append(agentId, rhs.agentId).append(orderId, rhs.orderId).append(error, rhs.error).append(agentDatetime, rhs.agentDatetime).append(logEvent, rhs.logEvent).append(returnCode, rhs.returnCode).append(controllerDatetime, rhs.controllerDatetime).append(logLevel, rhs.logLevel).append(lock, rhs.lock).append(position, rhs.position).append(agentUrl, rhs.agentUrl).append(job, rhs.job).append(taskId, rhs.taskId).isEquals();
-    }
-
-    public enum LogEvent {
-
-        OrderAdded("OrderAdded"),
-        OrderStarted("OrderStarted"),
-        OrderFailed("OrderFailed"),
-        OrderFailedinFork("OrderFailedinFork"),
-        OrderFinished("OrderFinished"),
-        OrderCancelled("OrderCancelled"),
-        OrderForked("OrderForked"),
-        OrderProcessingStarted("OrderProcessingStarted"),
-        OrderRetrying("OrderRetrying"),
-        OrderAwaiting("OrderAwaiting"),
-        OrderOffered("OrderOffered"),
-        OrderProcessed("OrderProcessed"),
-        OrderResumed("OrderResumed"),
-        OrderResumeMarked("OrderResumeMarked"),
-        OrderMoved("OrderMoved"),
-        OrderCatched("OrderCatched"),
-        OrderAwoke("OrderAwoke"),
-        OrderJoined("OrderJoined"),
-        OrderSuspended("OrderSuspended"),
-        OrderSuspendMarked("OrderSuspendMarked"),
-        OrderBroken("OrderBroken"),
-        OrderLockAcquired("OrderLockAcquired"),
-        OrderLockQueued("OrderLockQueued"),
-        OrderLockReleased("OrderLockReleased");
-        private final String value;
-        private final static Map<String, OrderLogItem.LogEvent> CONSTANTS = new HashMap<String, OrderLogItem.LogEvent>();
-
-        static {
-            for (OrderLogItem.LogEvent c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        private LogEvent(String value) {
-            this.value = value;
-        }
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static OrderLogItem.LogEvent fromValue(String value) {
-            OrderLogItem.LogEvent constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
     }
 
 }

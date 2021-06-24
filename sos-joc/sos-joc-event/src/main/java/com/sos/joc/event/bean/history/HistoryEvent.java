@@ -17,7 +17,9 @@ import com.sos.joc.event.bean.JOCEvent;
     @JsonSubTypes.Type(HistoryOrderTaskStarted.class),
     @JsonSubTypes.Type(HistoryOrderTaskTerminated.class),
     @JsonSubTypes.Type(HistoryOrderTaskLog.class),
-    @JsonSubTypes.Type(HistoryOrderLog.class)
+    @JsonSubTypes.Type(HistoryOrderLog.class),
+    @JsonSubTypes.Type(HistoryOrderTaskLogArrived.class),
+    @JsonSubTypes.Type(HistoryOrderLogArrived.class)
 })
 
 public abstract class HistoryEvent extends JOCEvent {

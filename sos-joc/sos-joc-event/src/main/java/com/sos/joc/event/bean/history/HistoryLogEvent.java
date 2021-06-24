@@ -9,7 +9,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
 @JsonSubTypes({ 
     @JsonSubTypes.Type(HistoryOrderTaskLog.class),
-    @JsonSubTypes.Type(HistoryOrderLog.class)
+    @JsonSubTypes.Type(HistoryOrderLog.class),
+    @JsonSubTypes.Type(HistoryOrderTaskLogArrived.class),
+    @JsonSubTypes.Type(HistoryOrderLogArrived.class)
 })
 
 public abstract class HistoryLogEvent extends HistoryEvent {
@@ -33,6 +35,17 @@ public abstract class HistoryLogEvent extends HistoryEvent {
         }
     }
     
+    public HistoryLogEvent(String key, Long historyOrderId, Object content) {
+        super(key, null, null);
+        if (historyOrderId == null) {
+            putVariable("historyOrderId", 0L);
+        } else {
+            putVariable("historyOrderId", historyOrderId);
+        }
+        putVariable("historyOrderStepId", 0L);
+        putVariable("orderLogEntry", content);
+    }
+    
     @JsonIgnore
     public Long getHistoryOrderId() {
         return (Long) getVariables().get("historyOrderId");
@@ -46,5 +59,10 @@ public abstract class HistoryLogEvent extends HistoryEvent {
     @JsonIgnore
     public String getContent() {
         return (String) getVariables().get("content");
+    }
+    
+    @JsonIgnore
+    public Object getOrderLogEntry() {
+        return getVariables().get("orderLogEntry");
     }
 }

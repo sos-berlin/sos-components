@@ -1,5 +1,5 @@
 
-package com.sos.webservices.json.jobscheduler.history.order;
+package com.sos.joc.model.history.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "errorCode",
     "errorText"
 })
-public class Error {
+public class OrderLogEntryError {
 
     @JsonProperty("errorState")
     private String errorState;
@@ -81,10 +81,10 @@ public class Error {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Error) == false) {
+        if ((other instanceof OrderLogEntryError) == false) {
             return false;
         }
-        Error rhs = ((Error) other);
+        OrderLogEntryError rhs = ((OrderLogEntryError) other);
         return new EqualsBuilder().append(errorCode, rhs.errorCode).append(errorText, rhs.errorText).append(errorState, rhs.errorState).append(errorReason, rhs.errorReason).isEquals();
     }
 
