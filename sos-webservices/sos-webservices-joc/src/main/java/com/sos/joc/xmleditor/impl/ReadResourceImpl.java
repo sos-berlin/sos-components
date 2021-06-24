@@ -79,10 +79,12 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         DBItemXmlEditorConfiguration item = getItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()));
 
-        ReadConfigurationHandler handler = new ReadConfigurationHandler(this, in.getObjectType());
-        handler.readCurrent(item, in.getControllerId(), (in.getForceLive() != null && in.getForceLive()));
+        ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
+        handler.readCurrent(item, in.getControllerId(), (in.getForceRelease() != null && in.getForceRelease()));
         ReadStandardConfigurationAnswer answer = handler.getAnswer();
-        answer.setValidation(getValidation(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()), answer.getConfiguration()));
+        if (answer.getConfiguration() != null) {
+            answer.setValidation(getValidation(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()), answer.getConfiguration()));
+        }
         return answer;
     }
 
@@ -151,12 +153,6 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
                 answer.getConfiguration().setRecreateJson(false);
                 answer.getConfiguration().setConfigurationJson(Utils.deserializeJson(item.getConfigurationDraftJson()));
             }
-            // answer.getConfiguration().setState(new AnswerConfigurationState());
-            // answer.getConfiguration().getState().setMessage(new AnswerMessage());
-            // answer.getConfiguration().getState().setDeployed(false);
-            // answer.getConfiguration().getState().getMessage().setMessage(JocXmlEditor.MESSAGE_LIVE_NOT_EXIST);
-            // answer.getConfiguration().getState().getMessage().setCode(JocXmlEditor.CODE_OBJECT_TYPE_OTHER);
-            // answer.getConfiguration().getState().setVersionState(ObjectVersionState.LIVE_NOT_EXIST);
             answer.getConfiguration().setValidation(getValidation(JocXmlEditor.getSchema(in.getObjectType(), answer.getConfiguration()
                     .getSchemaIdentifier(), false), answer.getConfiguration().getConfiguration()));
 

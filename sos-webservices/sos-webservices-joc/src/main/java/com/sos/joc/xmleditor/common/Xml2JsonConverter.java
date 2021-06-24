@@ -41,7 +41,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.classes.xmleditor.exceptions.XmlNotMatchSchemaException;
-import com.sos.joc.classes.xmleditor.jobscheduler.JobSchedulerXmlEditor;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
 public class Xml2JsonConverter {
@@ -69,7 +68,7 @@ public class Xml2JsonConverter {
         }
 
         if (!type.equals(ObjectType.OTHER)) {
-            rootElementNameXml = JobSchedulerXmlEditor.getRootElementName(type);
+            rootElementNameXml = JocXmlEditor.getRootElementName(type);
         }
 
         try {
@@ -263,6 +262,7 @@ public class Xml2JsonConverter {
         }
     }
 
+    @SuppressWarnings("unused")
     private void writeDocs(JsonGenerator gen) throws Exception {
         if (!generateGlobalDocs) {
             return;

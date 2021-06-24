@@ -105,8 +105,10 @@ public class JsonValidator {
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
             put("SchemaAssignConfiguration", "xmleditor/schema/assign/schema-assign-configuration-schema.json");
             put("DeleteAll", "xmleditor/delete/all/delete-all-schema.json");
-            put("DeleteDraft", "xmleditor/delete/delete-draft-schema.json");
-            put("DeployConfiguration", "xmleditor/deploy/deploy-configuration-schema.json");
+            put("DeleteConfiguration", "xmleditor/delete/delete-configuration-schema.json");
+            put("RemoveAll", "xmleditor/remove/all/remove-all-schema.json");
+            put("RemoveConfiguration", "xmleditor/remove/remove-configuration-schema.json");
+            put("ReleaseConfiguration", "xmleditor/release/release-configuration-schema.json");
             put("ReadConfiguration", "xmleditor/read/read-configuration-schema.json");
             put("SchemaReassignConfiguration", "xmleditor/schema/reassign/schema-reassign-configuration-schema.json");
             put("RenameConfiguration", "xmleditor/rename/rename-configuration-schema.json");

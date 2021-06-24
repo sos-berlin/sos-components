@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.xmleditor.common.AnswerMessage;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -16,7 +16,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor apply configuration answer
  * <p>
- * 
+ * state,released,hasReleases only for notification
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,7 +29,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "recreateJson",
     "modified",
     "validationError",
-    "message"
+    "state",
+    "released",
+    "hasReleases"
 })
 public class ApplyConfigurationAnswer {
 
@@ -63,13 +65,17 @@ public class ApplyConfigurationAnswer {
     @JsonProperty("validationError")
     private ErrorMessage validationError;
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    private AnswerMessage message;
+    @JsonProperty("state")
+    private ItemStateEnum state;
+    @JsonProperty("released")
+    private Boolean released;
+    @JsonProperty("hasReleases")
+    private Boolean hasReleases;
 
     @JsonProperty("id")
     public Integer getId() {
@@ -176,35 +182,55 @@ public class ApplyConfigurationAnswer {
     }
 
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    public AnswerMessage getMessage() {
-        return message;
+    @JsonProperty("state")
+    public ItemStateEnum getState() {
+        return state;
     }
 
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    public void setMessage(AnswerMessage message) {
-        this.message = message;
+    @JsonProperty("state")
+    public void setState(ItemStateEnum state) {
+        this.state = state;
+    }
+
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
+
+    @JsonProperty("hasReleases")
+    public Boolean getHasReleases() {
+        return hasReleases;
+    }
+
+    @JsonProperty("hasReleases")
+    public void setHasReleases(Boolean hasReleases) {
+        this.hasReleases = hasReleases;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("modified", modified).append("validationError", validationError).append("message", message).toString();
+        return new ToStringBuilder(this).append("id", id).append("name", name).append("schemaIdentifier", schemaIdentifier).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("modified", modified).append("validationError", validationError).append("state", state).append("released", released).append("hasReleases", hasReleases).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(configuration).append(name).append(configurationJson).append(recreateJson).append(modified).append(id).append(schemaIdentifier).append(message).append(validationError).toHashCode();
+        return new HashCodeBuilder().append(configuration).append(name).append(configurationJson).append(recreateJson).append(modified).append(id).append(schemaIdentifier).append(state).append(validationError).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -216,7 +242,7 @@ public class ApplyConfigurationAnswer {
             return false;
         }
         ApplyConfigurationAnswer rhs = ((ApplyConfigurationAnswer) other);
-        return new EqualsBuilder().append(configuration, rhs.configuration).append(name, rhs.name).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(modified, rhs.modified).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(message, rhs.message).append(validationError, rhs.validationError).isEquals();
+        return new EqualsBuilder().append(configuration, rhs.configuration).append(name, rhs.name).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(modified, rhs.modified).append(id, rhs.id).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(validationError, rhs.validationError).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

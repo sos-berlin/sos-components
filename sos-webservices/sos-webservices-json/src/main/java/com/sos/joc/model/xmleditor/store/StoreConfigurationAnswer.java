@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.xmleditor.common.AnswerMessage;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -15,14 +15,16 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor store configuration answer
  * <p>
- * 
+ * state,releases, hasReleases only for notification
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
     "modified",
-    "message"
+    "state",
+    "released",
+    "hasReleases"
 })
 public class StoreConfigurationAnswer {
 
@@ -38,13 +40,17 @@ public class StoreConfigurationAnswer {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date modified;
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    private AnswerMessage message;
+    @JsonProperty("state")
+    private ItemStateEnum state;
+    @JsonProperty("released")
+    private Boolean released;
+    @JsonProperty("hasReleases")
+    private Boolean hasReleases;
 
     @JsonProperty("id")
     public Integer getId() {
@@ -79,35 +85,55 @@ public class StoreConfigurationAnswer {
     }
 
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    public AnswerMessage getMessage() {
-        return message;
+    @JsonProperty("state")
+    public ItemStateEnum getState() {
+        return state;
     }
 
     /**
-     * xmleditor answer message
+     * version state text
      * <p>
      * 
      * 
      */
-    @JsonProperty("message")
-    public void setMessage(AnswerMessage message) {
-        this.message = message;
+    @JsonProperty("state")
+    public void setState(ItemStateEnum state) {
+        this.state = state;
+    }
+
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
+
+    @JsonProperty("hasReleases")
+    public Boolean getHasReleases() {
+        return hasReleases;
+    }
+
+    @JsonProperty("hasReleases")
+    public void setHasReleases(Boolean hasReleases) {
+        this.hasReleases = hasReleases;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("modified", modified).append("message", message).toString();
+        return new ToStringBuilder(this).append("id", id).append("modified", modified).append("state", state).append("released", released).append("hasReleases", hasReleases).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(modified).append(id).append(message).toHashCode();
+        return new HashCodeBuilder().append(modified).append(id).append(state).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -119,7 +145,7 @@ public class StoreConfigurationAnswer {
             return false;
         }
         StoreConfigurationAnswer rhs = ((StoreConfigurationAnswer) other);
-        return new EqualsBuilder().append(modified, rhs.modified).append(id, rhs.id).append(message, rhs.message).isEquals();
+        return new EqualsBuilder().append(modified, rhs.modified).append(id, rhs.id).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

@@ -18,14 +18,15 @@ import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
-import com.sos.joc.model.xmleditor.delete.DeleteOtherDraftAnswer;
 import com.sos.joc.model.xmleditor.read.standard.ReadStandardConfigurationAnswer;
+import com.sos.joc.model.xmleditor.remove.RemoveConfiguration;
+import com.sos.joc.model.xmleditor.remove.RemoveOtherAnswer;
 import com.sos.joc.xmleditor.common.standard.ReadConfigurationHandler;
-import com.sos.joc.xmleditor.resource.IDeleteResource;
+import com.sos.joc.xmleditor.resource.IRemoveResource;
 import com.sos.schema.JsonValidator;
 
 @Path(JocXmlEditor.APPLICATION_PATH)
-public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteResource {
+public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteResourceImpl.class);
     private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
@@ -35,7 +36,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DeleteConfiguration.class);
-            DeleteConfiguration in = Globals.objectMapper.readValue(filterBytes, DeleteConfiguration.class);
+            RemoveConfiguration in = Globals.objectMapper.readValue(filterBytes, RemoveConfiguration.class);
 
             checkRequiredParameters(in);
 
@@ -62,12 +63,12 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         }
     }
 
-    private void checkRequiredParameters(final DeleteConfiguration in) throws Exception {
+    private void checkRequiredParameters(final RemoveConfiguration in) throws Exception {
         checkRequiredParameter("controllerId", in.getControllerId());
         JocXmlEditor.checkRequiredParameter("objectType", in.getObjectType());
     }
 
-    private ReadStandardConfigurationAnswer handleStandardConfiguration(DeleteConfiguration in) throws Exception {
+    private ReadStandardConfigurationAnswer handleStandardConfiguration(RemoveConfiguration in) throws Exception {
         DBItemXmlEditorConfiguration item = updateStandardItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
                 .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue());
 
@@ -76,18 +77,18 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         return handler.getAnswer();
     }
 
-    private DeleteOtherDraftAnswer handleMultipleConfigurations(DeleteConfiguration in) throws Exception {
-        boolean deleted = delete(in.getObjectType(), in.getId());
-        DeleteOtherDraftAnswer answer = new DeleteOtherDraftAnswer();
-        if (deleted) {
-            answer.setDeleted(new Date());
+    private RemoveOtherAnswer handleMultipleConfigurations(RemoveConfiguration in) throws Exception {
+        boolean removed = remove(in.getObjectType(), in.getId());
+        RemoveOtherAnswer answer = new RemoveOtherAnswer();
+        if (removed) {
+            answer.setRemoved(new Date());
         } else {
             answer.setFound(false);
         }
         return answer;
     }
 
-    private boolean delete(ObjectType type, Integer id) throws Exception {
+    private boolean remove(ObjectType type, Integer id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);

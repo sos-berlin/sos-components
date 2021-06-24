@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * xmleditor read configuration in
  * <p>
- * id only for OTHER
+ * id only for OTHER, forceRelease for notification 
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "objectType",
     "id",
-    "forceLive"
+    "forceRelease"
 })
 public class ReadConfiguration {
 
@@ -45,8 +45,8 @@ public class ReadConfiguration {
     private ObjectType objectType;
     @JsonProperty("id")
     private Integer id;
-    @JsonProperty("forceLive")
-    private Boolean forceLive;
+    @JsonProperty("forceRelease")
+    private Boolean forceRelease;
 
     /**
      * controllerId
@@ -106,24 +106,24 @@ public class ReadConfiguration {
         this.id = id;
     }
 
-    @JsonProperty("forceLive")
-    public Boolean getForceLive() {
-        return forceLive;
+    @JsonProperty("forceRelease")
+    public Boolean getForceRelease() {
+        return forceRelease;
     }
 
-    @JsonProperty("forceLive")
-    public void setForceLive(Boolean forceLive) {
-        this.forceLive = forceLive;
+    @JsonProperty("forceRelease")
+    public void setForceRelease(Boolean forceRelease) {
+        this.forceRelease = forceRelease;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).append("forceLive", forceLive).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("objectType", objectType).append("id", id).append("forceRelease", forceRelease).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(controllerId).append(objectType).append(forceLive).toHashCode();
+        return new HashCodeBuilder().append(forceRelease).append(id).append(controllerId).append(objectType).toHashCode();
     }
 
     @Override
@@ -135,7 +135,7 @@ public class ReadConfiguration {
             return false;
         }
         ReadConfiguration rhs = ((ReadConfiguration) other);
-        return new EqualsBuilder().append(id, rhs.id).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).append(forceLive, rhs.forceLive).isEquals();
+        return new EqualsBuilder().append(forceRelease, rhs.forceRelease).append(id, rhs.id).append(controllerId, rhs.controllerId).append(objectType, rhs.objectType).isEquals();
     }
 
 }

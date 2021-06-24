@@ -12,7 +12,7 @@ import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.xmleditor.common.AnswerMessage;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.store.StoreConfiguration;
 import com.sos.joc.model.xmleditor.store.StoreConfigurationAnswer;
@@ -147,13 +147,13 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         answer.setId(id.intValue());
         answer.setModified(modified);
         if (type.equals(ObjectType.NOTIFICATION)) {
-            answer.setMessage(new AnswerMessage());
+            answer.setReleased(false);
             if (deployed == null) {
-                answer.getMessage().setCode(JocXmlEditor.MESSAGE_CODE_LIVE_NOT_EXIST);
-                answer.getMessage().setMessage(JocXmlEditor.MESSAGE_LIVE_NOT_EXIST);
+                answer.setHasReleases(true);
+                answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
             } else {
-                answer.getMessage().setCode(JocXmlEditor.MESSAGE_CODE_DRAFT_IS_NEWER);
-                answer.getMessage().setMessage(JocXmlEditor.MESSAGE_DRAFT_IS_NEWER);
+                answer.setHasReleases(false);
+                answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
             }
         }
         return answer;

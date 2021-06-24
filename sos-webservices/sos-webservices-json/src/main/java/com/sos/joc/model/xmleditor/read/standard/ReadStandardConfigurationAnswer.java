@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.xmleditor.common.AnswerMessage;
+import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.validate.ValidateConfigurationAnswer;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -27,9 +27,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "schema",
     "schemaIdentifier",
     "state",
+    "released",
+    "hasReleases",
     "validation",
-    "warning",
-    "modified"
+    "configurationDate"
 })
 public class ReadStandardConfigurationAnswer {
 
@@ -54,15 +55,18 @@ public class ReadStandardConfigurationAnswer {
     @JsonProperty("schemaIdentifier")
     private String schemaIdentifier;
     /**
-     * xmleditor read standard configuration (YADE, NOTIFICATION) answer
+     * version state text
      * <p>
-     * Describes the situation live/draft
+     * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    @JsonPropertyDescription("Describes the situation live/draft")
-    private ReadStandardConfigurationAnswerState state;
+    private ItemStateEnum state;
+    @JsonProperty("released")
+    private Boolean released;
+    @JsonProperty("hasReleases")
+    private Boolean hasReleases;
     /**
      * xmleditor validate configuration answer
      * <p>
@@ -73,22 +77,14 @@ public class ReadStandardConfigurationAnswer {
     @JsonPropertyDescription("")
     private ValidateConfigurationAnswer validation;
     /**
-     * xmleditor answer message
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("warning")
-    private AnswerMessage warning;
-    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("modified")
+    @JsonProperty("configurationDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date modified;
+    private Date configurationDate;
 
     /**
      * 
@@ -161,27 +157,47 @@ public class ReadStandardConfigurationAnswer {
     }
 
     /**
-     * xmleditor read standard configuration (YADE, NOTIFICATION) answer
+     * version state text
      * <p>
-     * Describes the situation live/draft
+     * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    public ReadStandardConfigurationAnswerState getState() {
+    public ItemStateEnum getState() {
         return state;
     }
 
     /**
-     * xmleditor read standard configuration (YADE, NOTIFICATION) answer
+     * version state text
      * <p>
-     * Describes the situation live/draft
+     * 
      * (Required)
      * 
      */
     @JsonProperty("state")
-    public void setState(ReadStandardConfigurationAnswerState state) {
+    public void setState(ItemStateEnum state) {
         this.state = state;
+    }
+
+    @JsonProperty("released")
+    public Boolean getReleased() {
+        return released;
+    }
+
+    @JsonProperty("released")
+    public void setReleased(Boolean released) {
+        this.released = released;
+    }
+
+    @JsonProperty("hasReleases")
+    public Boolean getHasReleases() {
+        return hasReleases;
+    }
+
+    @JsonProperty("hasReleases")
+    public void setHasReleases(Boolean hasReleases) {
+        this.hasReleases = hasReleases;
     }
 
     /**
@@ -207,25 +223,14 @@ public class ReadStandardConfigurationAnswer {
     }
 
     /**
-     * xmleditor answer message
+     * timestamp
      * <p>
-     * 
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("warning")
-    public AnswerMessage getWarning() {
-        return warning;
-    }
-
-    /**
-     * xmleditor answer message
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("warning")
-    public void setWarning(AnswerMessage warning) {
-        this.warning = warning;
+    @JsonProperty("configurationDate")
+    public Date getConfigurationDate() {
+        return configurationDate;
     }
 
     /**
@@ -234,30 +239,19 @@ public class ReadStandardConfigurationAnswer {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("modified")
-    public Date getModified() {
-        return modified;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("modified")
-    public void setModified(Date modified) {
-        this.modified = modified;
+    @JsonProperty("configurationDate")
+    public void setConfigurationDate(Date configurationDate) {
+        this.configurationDate = configurationDate;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("validation", validation).append("warning", warning).append("modified", modified).toString();
+        return new ToStringBuilder(this).append("configuration", configuration).append("configurationJson", configurationJson).append("recreateJson", recreateJson).append("schema", schema).append("schemaIdentifier", schemaIdentifier).append("state", state).append("released", released).append("hasReleases", hasReleases).append("validation", validation).append("configurationDate", configurationDate).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schema).append(configuration).append(configurationJson).append(recreateJson).append(warning).append(modified).append(schemaIdentifier).append(state).append(validation).toHashCode();
+        return new HashCodeBuilder().append(schema).append(configurationDate).append(configuration).append(configurationJson).append(recreateJson).append(schemaIdentifier).append(state).append(released).append(hasReleases).append(validation).toHashCode();
     }
 
     @Override
@@ -269,7 +263,7 @@ public class ReadStandardConfigurationAnswer {
             return false;
         }
         ReadStandardConfigurationAnswer rhs = ((ReadStandardConfigurationAnswer) other);
-        return new EqualsBuilder().append(schema, rhs.schema).append(configuration, rhs.configuration).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(warning, rhs.warning).append(modified, rhs.modified).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(validation, rhs.validation).isEquals();
+        return new EqualsBuilder().append(schema, rhs.schema).append(configurationDate, rhs.configurationDate).append(configuration, rhs.configuration).append(configurationJson, rhs.configurationJson).append(recreateJson, rhs.recreateJson).append(schemaIdentifier, rhs.schemaIdentifier).append(state, rhs.state).append(released, rhs.released).append(hasReleases, rhs.hasReleases).append(validation, rhs.validation).isEquals();
     }
 
 }

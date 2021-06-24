@@ -22,7 +22,6 @@ import org.w3c.dom.Document;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.classes.xmleditor.exceptions.AssignSchemaException;
-import com.sos.joc.classes.xmleditor.jobscheduler.JobSchedulerXmlEditor;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
@@ -30,37 +29,35 @@ public class JocXmlEditor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JocXmlEditor.class);
 
+    public static final String SCHEMA_URI_YADE = "https://www.sos-berlin.com/schema/yade/YADE_configuration_v1.12.xsd";
+    public static final String SCHEMA_URI_NOTIFICATION = "https://www.sos-berlin.com/schema/jobscheduler/Notification_configuration_v1.0.xsd";
+    public static final String SCHEMA_FILENAME_YADE = "YADE_configuration_v1.12.xsd";
+    public static final String SCHEMA_FILENAME_NOTIFICATION = "Notification_configuration_v1.0.xsd";
+    public static final String SCHEMA_ROOT_ELEMENT_NAME_YADE = "Configurations";
+    public static final String SCHEMA_ROOT_ELEMENT_NAME__NOTIFICATION = "Configurations";
+
+    public static final String CONFIGURATION_BASENAME_YADE = "yade";
+    public static final String CONFIGURATION_BASENAME_NOTIFICATION = "notification";
+
     public static final String APPLICATION_PATH = "xmleditor";
-
-    public static final String XML_DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     public static final String CHARSET = "UTF-8";
-
     public static final String JOC_SCHEMA_LOCATION = "xsd";
-
-    public static final String MESSAGE_DRAFT_NOT_EXIST = "Using version in live folder. No draft version found in database";
-    public static final String MESSAGE_LIVE_NOT_EXIST = "Using draft version, no live version found";
-    public static final String MESSAGE_LIVE_IS_NEWER = "Using draft version but, version in live folder is newer then draft version";
-    public static final String MESSAGE_DRAFT_IS_NEWER = "Using draft version as it is newer then the version in the live folder";
-    public static final String MESSAGE_NO_CONFIGURATION_EXIST = "No configuration found";
-
-    public static final String MESSAGE_CODE_DRAFT_NOT_EXIST = "XMLEDITOR-101";
-    public static final String MESSAGE_CODE_LIVE_NOT_EXIST = "XMLEDITOR-102";
-    public static final String MESSAGE_CODE_LIVE_IS_NEWER = "XMLEDITOR-103";
-    public static final String MESSAGE_CODE_DRAFT_IS_NEWER = "XMLEDITOR-104";
-    public static final String CODE_NO_CONFIGURATION_EXIST = "XMLEDITOR-105";
-    public static final String CODE_OBJECT_TYPE_OTHER = "XMLEDITOR-106";
-
-    public static final String ERROR_CODE_JOBSCHEDULER_NOT_CONNECTED = "XMLEDITOR-401";
-    public static final String ERROR_CODE_WRONG_OBJECT_TYPE = "XMLEDITOR-402";
-    public static final String ERROR_CODE_PERMISSION_DENIED = "XMLEDITOR-403";
-    public static final String ERROR_CODE_CONFUGURATION_NOT_FOUND = "XMLEDITOR-404";
-    public static final String ERROR_CODE_VALIDATION_ERROR = "XMLEDITOR-405";
-    public static final String ERROR_CODE_DEPLOY_ERROR = "XMLEDITOR-406";
-    public static final String ERROR_CODE_UNSUPPORTED_OBJECT_TYPE = "XMLEDITOR-407";
-
     public static final String NEW_LINE = "\r\n";
 
+    public static final String CODE_NO_CONFIGURATION_EXIST = "XMLEDITOR-101";
+    public static final String ERROR_CODE_VALIDATION_ERROR = "XMLEDITOR-401";
+    public static final String ERROR_CODE_UNSUPPORTED_OBJECT_TYPE = "XMLEDITOR-402";
+
     private static Path realPath = null;
+
+    public static String getRootElementName(ObjectType type) {
+        if (type.equals(ObjectType.YADE)) {
+            return SCHEMA_ROOT_ELEMENT_NAME_YADE;
+        } else if (type.equals(ObjectType.NOTIFICATION)) {
+            return SCHEMA_ROOT_ELEMENT_NAME__NOTIFICATION;
+        }
+        return null;
+    }
 
     public static Document parseXml(String xml) throws Exception {
         if (SOSString.isEmpty(xml)) {
@@ -91,9 +88,9 @@ public class JocXmlEditor {
 
     public static String getStandardSchemaIdentifier(ObjectType type) throws Exception {
         if (type.equals(ObjectType.YADE)) {
-            return JobSchedulerXmlEditor.SCHEMA_FILENAME_YADE;
+            return SCHEMA_FILENAME_YADE;
         } else if (type.equals(ObjectType.NOTIFICATION)) {
-            return JobSchedulerXmlEditor.SCHEMA_FILENAME_NOTIFICATION;
+            return SCHEMA_FILENAME_NOTIFICATION;
         }
         return null;
     }
@@ -249,16 +246,16 @@ public class JocXmlEditor {
             return null;
         }
         if (type.equals(ObjectType.YADE)) {
-            return getYadeRelativeSchemaLocation().append("/").append(JobSchedulerXmlEditor.SCHEMA_FILENAME_YADE).toString();
+            return getYadeRelativeSchemaLocation().append("/").append(SCHEMA_FILENAME_YADE).toString();
         } else if (type.equals(ObjectType.NOTIFICATION)) {
-            return getNotificationRelativeSchemaLocation().append("/").append(JobSchedulerXmlEditor.SCHEMA_FILENAME_NOTIFICATION).toString();
+            return getNotificationRelativeSchemaLocation().append("/").append(SCHEMA_FILENAME_NOTIFICATION).toString();
         }
         return null;
     }
 
     public static String getYadeSchemaLocation4Db(String schemaIdentifier) {
         if (SOSString.isEmpty(schemaIdentifier)) {
-            return JobSchedulerXmlEditor.SCHEMA_FILENAME_YADE;
+            return SCHEMA_FILENAME_YADE;
         }
         return schemaIdentifier;
     }
@@ -331,27 +328,11 @@ public class JocXmlEditor {
             return null;
         }
         if (type.equals(ObjectType.YADE)) {
-            return JobSchedulerXmlEditor.CONFIGURATION_BASENAME_YADE;
+            return CONFIGURATION_BASENAME_YADE;
         } else if (type.equals(ObjectType.NOTIFICATION)) {
-            return JobSchedulerXmlEditor.CONFIGURATION_BASENAME_NOTIFICATION;
+            return CONFIGURATION_BASENAME_NOTIFICATION;
         }
         return null;
-    }
-
-    public static String getJobSchedulerLivePathXml(ObjectType type) {
-        if (type == null) {
-            return null;
-        }
-        if (type.equals(ObjectType.YADE)) {
-            return "/" + JobSchedulerXmlEditor.getLivePathYadeXml();
-        } else if (type.equals(ObjectType.NOTIFICATION)) {
-            return "/" + JobSchedulerXmlEditor.getLivePathNotificationXml();
-        }
-        return null;
-    }
-
-    public static String getJobSchedulerLivePathYadeIni() {
-        return "/" + JobSchedulerXmlEditor.getLivePathYadeIni();
     }
 
     public static List<Path> getFiles(Path dir, boolean recursiv, String extension) throws Exception {
