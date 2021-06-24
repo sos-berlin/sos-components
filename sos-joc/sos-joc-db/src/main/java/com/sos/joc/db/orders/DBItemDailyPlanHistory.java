@@ -56,7 +56,7 @@ public class DBItemDailyPlanHistory extends DBItem {
     @Column(name = "[MESSAGE]", nullable = false)
     private String message;
 
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.DATE)
     @Column(name = "[DAILY_PLAN_DATE]", nullable = false)
     private Date dailyPlanDate;
 

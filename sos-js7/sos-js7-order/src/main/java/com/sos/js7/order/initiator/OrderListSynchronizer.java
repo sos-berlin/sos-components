@@ -3,6 +3,7 @@ package com.sos.js7.order.initiator;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -180,27 +181,45 @@ public class OrderListSynchronizer {
             throws SOSHibernateException {
 
         List<DBItemDailyPlanHistory> listOfInsertHistoryEntries = new ArrayList<DBItemDailyPlanHistory>();
-        if (orderInitiatorSettings.getSubmissionTime() != null && orderInitiatorSettings.getDailyPlanDate() != null) {
+        Date submissionTime = null;
+        Date dailyPlanDate = null;
 
-            DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
-            for (PlannedOrder addedOrder : addedOrders) {
-                DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-                dbItemDailyPlanHistory.setSubmitted(false);
-                dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
-                dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanHistory.setDailyPlanDate(orderInitiatorSettings.getDailyPlanDate());
-                dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
-                dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
-                dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
-                if (dbItemDailyPlanHistory.getWorkflowPath() != null) {
-                    String folderName = Paths.get(dbItemDailyPlanHistory.getWorkflowPath()).getParent().toString().replace('\\', '/');
-                    dbItemDailyPlanHistory.setWorkflowFolder(folderName);
-                }
-                dbItemDailyPlanHistory.setSubmissionTime(orderInitiatorSettings.getSubmissionTime());
-                dbItemDailyPlanHistory.setUserAccount(orderInitiatorSettings.getUserAccount());
-                dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
-                listOfInsertHistoryEntries.add(dbItemDailyPlanHistory);
+        if (orderInitiatorSettings.getSubmissionTime() == null) {
+            submissionTime = new Date();
+        } else {
+            submissionTime = orderInitiatorSettings.getSubmissionTime();
+        }
+
+        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
+        for (PlannedOrder addedOrder : addedOrders) {
+            if (orderInitiatorSettings.getDailyPlanDate() == null) {
+                Calendar dp = Calendar.getInstance();
+                dp.setTimeInMillis(addedOrder.getFreshOrder().getScheduledFor());
+                dp.set(Calendar.MINUTE, 0);
+                dp.set(Calendar.SECOND, 0);
+                dp.set(Calendar.HOUR_OF_DAY, 0);
+                dailyPlanDate = dp.getTime();
+            } else {
+
+                dailyPlanDate = orderInitiatorSettings.getDailyPlanDate();
             }
+            DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
+            dbItemDailyPlanHistory.setSubmitted(false);
+            dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
+            dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
+            dbItemDailyPlanHistory.setDailyPlanDate(dailyPlanDate);
+            dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
+            dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
+            dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
+            if (dbItemDailyPlanHistory.getWorkflowPath() != null) {
+                String folderName = Paths.get(dbItemDailyPlanHistory.getWorkflowPath()).getParent().toString().replace('\\', '/');
+                dbItemDailyPlanHistory.setWorkflowFolder(folderName);
+            }
+            dbItemDailyPlanHistory.setSubmissionTime(submissionTime);
+            dbItemDailyPlanHistory.setUserAccount(orderInitiatorSettings.getUserAccount());
+            dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
+            listOfInsertHistoryEntries.add(dbItemDailyPlanHistory);
+
         }
         return listOfInsertHistoryEntries;
     }

@@ -26,6 +26,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionTimes;
 import com.sos.joc.model.dailyplan.DailyplanHistoryOrderItem;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
@@ -197,18 +198,29 @@ public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDaily
 
                 filter.setSubmitted(dailyPlanHistoryFilter.getFilter().getSubmitted());
                 if ((dailyPlanHistoryFilter.getFilter().getDateTo() != null) && (dailyPlanHistoryFilter.getFilter().getDateFrom() == null)) {
-                    Date date = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateTo(), dailyPlanHistoryFilter.getTimeZone());
+                    String d = dailyPlanHistoryFilter.getFilter().getDateTo();
+                    if (d.length() == 10) {
+                        d = d + "T00:00:00";
+                    }
+
+                    Date date = JobSchedulerDate.getDateFrom(d, dailyPlanHistoryFilter.getTimeZone());
                     filter.setDailyPlanDate(date);
                 } else {
 
                     if (dailyPlanHistoryFilter.getFilter().getDateTo() != null) {
-                        Date toDate = JobSchedulerDate.getDateTo(dailyPlanHistoryFilter.getFilter().getDateTo(), dailyPlanHistoryFilter
-                                .getTimeZone());
+                        String d = dailyPlanHistoryFilter.getFilter().getDateTo();
+                        if (d.length() == 10) {
+                            d = d + "T00:00:00";
+                        }
+                        Date toDate = JobSchedulerDate.getDateTo(d, dailyPlanHistoryFilter.getTimeZone());
                         filter.setDailyPlanDateTo(toDate);
                     }
                     if (dailyPlanHistoryFilter.getFilter().getDateFrom() != null) {
-                        Date fromDate = JobSchedulerDate.getDateFrom(dailyPlanHistoryFilter.getFilter().getDateFrom(), dailyPlanHistoryFilter
-                                .getTimeZone());
+                        String d = dailyPlanHistoryFilter.getFilter().getDateFrom();
+                        if (d.length() == 10) {
+                            d = d + "T00:00:00";
+                        }
+                        Date fromDate = JobSchedulerDate.getDateFrom(d, dailyPlanHistoryFilter.getTimeZone());
                         filter.setDailyPlanDateFrom(fromDate);
                     }
                 }
