@@ -1,6 +1,7 @@
 package com.sos.joc.order.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -116,7 +117,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             
             historyId = orderLog.getHistoryId();
             orderLog.setComplete(false);
-            orderLog.setLogEvents(null);
+            orderLog.setLogEvents(Collections.emptyList());
             
             RunningOrderLogs r = RunningOrderLogs.getInstance();
             RunningOrderLogs.Mode mode = r.hasEvents(orderLog.getEventId(), historyId);
@@ -124,7 +125,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             switch (mode) {
             case TRUE:
                 try {
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e1) {
                 }
             case COMPLETE:
@@ -161,7 +162,7 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
     }
     
     @Subscribe({ HistoryOrderLogArrived.class })
-    public void createHistoryTaskEvent(HistoryOrderLogArrived evt) {
+    public void createHistoryOrderEvent(HistoryOrderLogArrived evt) {
         LOGGER.debug("orderlog event received with historyId '" + evt.getHistoryOrderId() + "', expected historyId '" + historyId + "'");
         if (historyId != null && historyId.longValue() == evt.getHistoryOrderId()) {
             eventArrived.set(true);
