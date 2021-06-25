@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,7 +115,7 @@ public class RunningOrderLogs {
         });
         if (!evtIds.isEmpty()) {
             r.setEventId(evtIds.last());
-            r.setLogEvents(logEvents);
+            r.setLogEvents(logEvents.stream().map(item -> LogOrderContent.getMappedLogItem(item)).collect(Collectors.toList()));
         }
         return r;
     }

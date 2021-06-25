@@ -84,25 +84,6 @@ public class LogOrderContent {
         return String.format("sos-%s-%d.order.log", URLEncoder.encode(orderId, StandardCharsets.UTF_8.name()), historyId);
     }
 
-    private OrderLog getLogRollingFromHistoryService() {
-        // TODO
-        OrderLog orderLog = new OrderLog();
-        OrderLogEntry item = new OrderLogEntry();
-        item.setControllerDatetime(ZonedDateTime.now().format(formatter));
-        item.setLogEvent(EventType.OrderBroken);
-        item.setLogLevel("ERROR");
-        // item.setOrderId(orderId);
-        item.setPosition("...");
-        OrderLogEntryError err = new OrderLogEntryError();
-        err.setErrorText("Running log is not yet implemented");
-        err.setErrorState("failed");
-        err.setErrorCode("99");
-        item.setError(err);
-        orderLog.setComplete(true);
-        orderLog.setLogEvents(Arrays.asList(item));
-        return orderLog;
-    }
-
     private OrderLog getLogSnapshotFromHistoryService() {
         OrderLog orderLog = new OrderLog();
         orderLog.setHistoryId(historyId);
@@ -164,32 +145,6 @@ public class LogOrderContent {
         return orderLog;
     }
 
-    private DBItemHistoryOrder getDBItemOrder() throws JocConfigurationException, DBOpenSessionException,
-            SOSHibernateException, DBMissingDataException {
-        SOSHibernateSession connection = null;
-        try {
-            connection = Globals.createSosHibernateStatelessConnection("./order/log");
-            DBItemHistoryOrder historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
-            if (historyOrderItem == null) {
-                throw new DBMissingDataException(String.format("Order (Id:%d) not found", historyId));
-            }// else if (historyOrderItem.getMainParentId() != historyId) {
-             // historyId = historyOrderItem.getMainParentId();
-             // historyOrderItem = connection.get(DBItemHistoryOrder.class, historyId);
-             // if (historyOrderItem == null) {
-             // throw new DBMissingDataException(String.format("MainOrder (Id:%d) not found", historyId));
-             // }
-             // }
-            if (!folderPermissions.isPermittedForFolder(historyOrderItem.getWorkflowFolder())) {
-                throw new JocFolderPermissionsException("folder access denied: " + historyOrderItem.getWorkflowFolder());
-            }
-            mainParentHistoryId = historyOrderItem.getMainParentId();
-            orderId = historyOrderItem.getOrderId();
-            return historyOrderItem;
-        } finally {
-            Globals.disconnect(connection);
-        }
-    }
-
     private OrderLog getLogFromDb() throws JocConfigurationException, DBOpenSessionException, SOSHibernateException, DBMissingDataException,
             JsonParseException, JsonMappingException, IOException {
         SOSHibernateSession connection = null;
@@ -243,15 +198,9 @@ public class LogOrderContent {
         if (historyId == null) {
             throw new JocMissingRequiredParameterException("undefined 'historyId'");
         }
-        OrderLog orderLog = null;
-        if (eventId != null) {
-            getDBItemOrder();
-            orderLog = getLogRollingFromHistoryService();
-        } else {
-            orderLog = getLogFromDb();
-            if (orderLog == null) {
-                orderLog = getLogSnapshotFromHistoryService();
-            }
+        OrderLog orderLog = getLogFromDb();
+        if (orderLog == null) {
+            orderLog = getLogSnapshotFromHistoryService();
         }
         // TODO later part of Robert's history
         if (orderLog.getLogEvents() != null) {
@@ -421,7 +370,7 @@ public class LogOrderContent {
         return new ByteArrayInputStream(logline.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static OrderLogEntry getMappedLogItem(OrderLogEntry item) {
+    protected static OrderLogEntry getMappedLogItem(OrderLogEntry item) {
         if (item.getError() != null) {
             item.setLogLevel("ERROR");
         } else if (item.getLogEvent() == EventType.OrderProcessed) {
