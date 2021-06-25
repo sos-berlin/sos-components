@@ -33,20 +33,19 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
-import com.sos.joc.db.history.DBItemHistoryLog;
-import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.db.history.DBItemHistoryLog;
+import com.sos.joc.db.history.DBItemHistoryOrder;
+import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.history.order.OrderLogEntry;
 import com.sos.joc.model.history.order.OrderLogEntryError;
 import com.sos.joc.model.order.OrderLog;
-import com.sos.joc.model.order.OrderRunningLogFilter;
 
 public class LogOrderContent {
 
@@ -56,16 +55,9 @@ public class LogOrderContent {
     private static String newlineString = "\r\n";
     private Long historyId;
     private Long mainParentHistoryId;
-    private Long eventId = null;
     private String orderId;
     private Long unCompressedLength = null;
     private final SOSShiroFolderPermissions folderPermissions;
-
-    public LogOrderContent(OrderRunningLogFilter runningLog, SOSShiroFolderPermissions folderPermissions) {
-        this.historyId = runningLog.getHistoryId();
-        this.eventId = runningLog.getEventId();
-        this.folderPermissions = folderPermissions;
-    }
 
     public LogOrderContent(Long historyId, SOSShiroFolderPermissions folderPermissions) {
         this.historyId = historyId;
@@ -129,7 +121,7 @@ public class LogOrderContent {
         item.setControllerDatetime(ZonedDateTime.now().format(formatter));
         item.setLogEvent(EventType.OrderBroken);
         item.setLogLevel("INFO");
-        item.setPosition("...");
+        item.setPosition("0");
         OrderLogEntryError err = new OrderLogEntryError();
         err.setErrorReason(null);
         if (JocClusterService.getInstance().isRunning()) {
@@ -137,8 +129,8 @@ public class LogOrderContent {
         } else {
             err.setErrorText("Standby JOC Cockpit instance has no access to snapshot log");
         }
-        err.setErrorState("Failed");
-        err.setErrorCode("99");
+        //err.setErrorState("Failed");
+        //err.setErrorCode("99");
         item.setError(err);
         orderLog.setLogEvents(Arrays.asList(item));
         unCompressedLength = orderLog.toString().length() * 1L;

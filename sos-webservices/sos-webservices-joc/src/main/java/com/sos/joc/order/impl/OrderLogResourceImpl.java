@@ -158,6 +158,8 @@ public class OrderLogResourceImpl extends JOCResourceImpl implements IOrderLogRe
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            EventBus.getInstance().unRegister(this);
         }
     }
     
