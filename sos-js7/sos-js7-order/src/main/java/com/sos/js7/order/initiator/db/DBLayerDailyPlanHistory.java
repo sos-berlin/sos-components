@@ -46,7 +46,7 @@ public class DBLayerDailyPlanHistory {
         }
 
         if (filter.getDailyPlanDateTo() != null) {
-            where += and + " dailyPlanDate < :dailyPlanDateTo";
+            where += and + " dailyPlanDate <= :dailyPlanDateTo";
             and = " and ";
         }
 
