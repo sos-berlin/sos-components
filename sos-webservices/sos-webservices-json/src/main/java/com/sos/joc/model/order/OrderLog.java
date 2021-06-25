@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "complete",
     "eventId",
+    "historyId",
     "logEvents"
 })
 public class OrderLog {
@@ -42,6 +43,8 @@ public class OrderLog {
      */
     @JsonProperty("eventId")
     private Long eventId;
+    @JsonProperty("historyId")
+    private Long historyId;
     /**
      * 
      * (Required)
@@ -93,6 +96,16 @@ public class OrderLog {
     public void setEventId(Long eventId) {
         this.eventId = eventId;
     }
+    
+    @JsonProperty("historyId")
+    public Long getHistoryId() {
+        return eventId;
+    }
+    
+    @JsonProperty("historyId")
+    public void setHistoryId(Long historyId) {
+        this.historyId = historyId;
+    }
 
     /**
      * 
@@ -116,12 +129,12 @@ public class OrderLog {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("complete", complete).append("eventId", eventId).append("logEvents", logEvents).toString();
+        return new ToStringBuilder(this).append("complete", complete).append("eventId", eventId).append("historyId", historyId).append("logEvents", logEvents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(eventId).append(logEvents).append(complete).toHashCode();
+        return new HashCodeBuilder().append(eventId).append(historyId).append(logEvents).append(complete).toHashCode();
     }
 
     @Override
@@ -133,7 +146,7 @@ public class OrderLog {
             return false;
         }
         OrderLog rhs = ((OrderLog) other);
-        return new EqualsBuilder().append(eventId, rhs.eventId).append(logEvents, rhs.logEvents).append(complete, rhs.complete).isEquals();
+        return new EqualsBuilder().append(eventId, rhs.eventId).append(historyId, rhs.historyId).append(logEvents, rhs.logEvents).append(complete, rhs.complete).isEquals();
     }
 
 }

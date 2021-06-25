@@ -105,6 +105,7 @@ public class LogOrderContent {
 
     private OrderLog getLogSnapshotFromHistoryService() {
         OrderLog orderLog = new OrderLog();
+        orderLog.setHistoryId(historyId);
         orderLog.setComplete(true);
         orderLog.setEventId(null);
         try {
@@ -114,14 +115,11 @@ public class LogOrderContent {
                 orderLog.setLogEvents(Arrays.asList(Globals.objectMapper.readValue(SOSPath.readFile(logFile, Collectors.joining(",", "[", "]")),
                         OrderLogEntry[].class)));
                 unCompressedLength = Files.size(logFile);
-                // no running log if OrderFailed or OrderSuspended etc. (later with events)
                 int numOfLogEvents = orderLog.getLogEvents().size();
                 boolean isIncomplete = false;
                 if (numOfLogEvents > 0) {
-                    List<EventType> evts = Arrays.asList(EventType.OrderCancelled, EventType.OrderBroken, EventType.OrderFailed,
-                            EventType.OrderFailedinFork, EventType.OrderFinished, EventType.OrderSuspended);
                     EventType lastEvt = orderLog.getLogEvents().get(numOfLogEvents - 1).getLogEvent();
-                    if (!evts.contains(lastEvt)) {
+                    if (!RunningOrderLogs.completeTypes.contains(lastEvt)) {
                         isIncomplete = true;
                     }
                 } else {

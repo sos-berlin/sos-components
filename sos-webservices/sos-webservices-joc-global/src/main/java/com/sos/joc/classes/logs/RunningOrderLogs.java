@@ -32,7 +32,7 @@ public class RunningOrderLogs {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningOrderLogs.class);
     private static final long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(2);
-    private static final EnumSet<EventType> completeTypes = EnumSet.of(EventType.OrderBroken, EventType.OrderCancelled, EventType.OrderFinished);
+    protected static final EnumSet<EventType> completeTypes = EnumSet.of(EventType.OrderBroken, EventType.OrderCancelled, EventType.OrderFinished);
     private static RunningOrderLogs runningOrderLogs;
     private volatile Map<Long, CopyOnWriteArraySet<RunningOrderLogEvent>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
