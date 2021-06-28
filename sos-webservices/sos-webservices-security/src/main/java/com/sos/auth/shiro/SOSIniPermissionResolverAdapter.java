@@ -54,45 +54,47 @@ public class SOSIniPermissionResolverAdapter implements RolePermissionResolver {
             try {
                 securityConfiguration = sosSecurityConfiguration.readConfiguration();
                 if (securityConfiguration.getRoles().getAdditionalProperties().get(rolename) != null) {
-                    IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(rolename).getPermissions();
-                    for (IniPermission permission : permissions.getJoc()) {
-                        final Permission _permission;
-                        if (permission.getExcluded()) {
-                            _permission = new WildcardPermission("-" + permission.getPath());
-                        } else {
-                            _permission = new WildcardPermission(permission.getPath());
+                    if (securityConfiguration.getRoles().getAdditionalProperties().get(rolename) != null) {
+                        IniPermissions permissions = securityConfiguration.getRoles().getAdditionalProperties().get(rolename).getPermissions();
+                        for (IniPermission permission : permissions.getJoc()) {
+                            final Permission _permission;
+                            if (permission.getExcluded()) {
+                                _permission = new WildcardPermission("-" + permission.getPath());
+                            } else {
+                                _permission = new WildcardPermission(permission.getPath());
+                            }
+                            simpleRole.add(_permission);
                         }
-                        simpleRole.add(_permission);
-                    }
-                    for (IniPermission permission : permissions.getControllerDefaults()) {
-                        final Permission _permission;
-                        if (permission.getExcluded()) {
-                            _permission = new WildcardPermission("-" + permission.getPath());
-                        } else {
-                            _permission = new WildcardPermission(permission.getPath());
+                        for (IniPermission permission : permissions.getControllerDefaults()) {
+                            final Permission _permission;
+                            if (permission.getExcluded()) {
+                                _permission = new WildcardPermission("-" + permission.getPath());
+                            } else {
+                                _permission = new WildcardPermission(permission.getPath());
+                            }
+                            simpleRole.add(_permission);
+
                         }
-                        simpleRole.add(_permission);
+                        if (permissions.getControllers() != null && permissions.getControllers().getAdditionalProperties() != null && !permissions
+                                .getControllers().getAdditionalProperties().isEmpty()) {
+                            for (Map.Entry<String, List<IniPermission>> controllerPermissions : permissions.getControllers().getAdditionalProperties()
+                                    .entrySet()) {
+                                if (controllerPermissions.getValue() != null) {
+                                    for (IniPermission permission : controllerPermissions.getValue()) {
 
-                    }
-                    if (permissions.getControllers() != null && permissions.getControllers().getAdditionalProperties() != null && !permissions
-                            .getControllers().getAdditionalProperties().isEmpty()) {
-                        for (Map.Entry<String, List<IniPermission>> controllerPermissions : permissions.getControllers().getAdditionalProperties()
-                                .entrySet()) {
-                            if (controllerPermissions.getValue() != null) {
-                                for (IniPermission permission : controllerPermissions.getValue()) {
-
-                                    final Permission _permission;
-                                    if (permission.getExcluded()) {
-                                        _permission = new WildcardPermission("-" + permission.getPath());
-                                    } else {
-                                        _permission = new WildcardPermission(permission.getPath());
-                                    }
-
-                                    if (permission.getPath() != null) {
+                                        final Permission _permission;
                                         if (permission.getExcluded()) {
-                                            simpleRole.add(_permission);
+                                            _permission = new WildcardPermission("-" + permission.getPath());
                                         } else {
-                                            simpleRole.add(_permission);
+                                            _permission = new WildcardPermission(permission.getPath());
+                                        }
+
+                                        if (permission.getPath() != null) {
+                                            if (permission.getExcluded()) {
+                                                simpleRole.add(_permission);
+                                            } else {
+                                                simpleRole.add(_permission);
+                                            }
                                         }
                                     }
                                 }

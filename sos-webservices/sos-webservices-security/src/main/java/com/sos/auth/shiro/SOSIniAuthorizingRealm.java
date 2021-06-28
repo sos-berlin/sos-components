@@ -42,7 +42,7 @@ public class SOSIniAuthorizingRealm extends AuthorizingRealm {
             authzInfo = authorizing.setRoles(authzInfo, principalCollection);
             authzInfo = authorizing.setPermissions(authzInfo, principalCollection);
         }
-        return authzInfo;
+        return authzInfo; 
     }
 
     @Override
