@@ -21,7 +21,7 @@ import org.w3c.dom.Document;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.classes.xmleditor.exceptions.AssignSchemaException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSAssignSchemaException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
@@ -172,7 +172,7 @@ public class JocXmlEditor {
                 } catch (Throwable e) {
                     msg = String.format("[%s] Response code %s%s", uri, responseCode, add);
                 }
-                throw new AssignSchemaException(msg);
+                throw new SOSAssignSchemaException(msg);
             }
             try (InputStream inputStream = conn.getInputStream()) {
                 Path parent = target.getParent();
@@ -242,7 +242,7 @@ public class JocXmlEditor {
     }
 
     public static String getStandardRelativeSchemaLocation(final ObjectType type) {
-        if (type == null || SOSString.isEmpty(type.name())) {
+        if (type == null) {
             return null;
         }
         if (type.equals(ObjectType.YADE)) {
@@ -253,34 +253,44 @@ public class JocXmlEditor {
         return null;
     }
 
-    public static String getYadeSchemaLocation4Db(String schemaIdentifier) {
-        if (SOSString.isEmpty(schemaIdentifier)) {
-            return SCHEMA_FILENAME_YADE;
+    public static String getSchemaLocation4Db(ObjectType type, String schemaIdentifier) {
+        switch (type) {
+        case YADE:
+            if (SOSString.isEmpty(schemaIdentifier)) {
+                return SCHEMA_FILENAME_YADE;
+            }
+            return schemaIdentifier;
+        case OTHER:
+            return schemaIdentifier;
+        default:
+            if (SOSString.isEmpty(schemaIdentifier)) {
+                return SCHEMA_FILENAME_NOTIFICATION;
+            }
+            return schemaIdentifier;
         }
-        return schemaIdentifier;
     }
 
-    public static StringBuilder getYadeRelativeSchemaLocation() {
+    private static StringBuilder getYadeRelativeSchemaLocation() {
         return new StringBuilder(JOC_SCHEMA_LOCATION).append("/yade");
     }
 
-    public static StringBuilder getYadeRelativeHttpSchemaLocation() {
+    private static StringBuilder getYadeRelativeHttpSchemaLocation() {
         return getYadeRelativeSchemaLocation().append("/http");
     }
 
-    public static StringBuilder getNotificationRelativeSchemaLocation() {
+    private static StringBuilder getNotificationRelativeSchemaLocation() {
         return new StringBuilder(JOC_SCHEMA_LOCATION).append("/notification");
     }
 
-    public static StringBuilder getOthersRelativeSchemaLocation() {
+    private static StringBuilder getOthersRelativeSchemaLocation() {
         return new StringBuilder(JOC_SCHEMA_LOCATION).append("/others");
     }
 
-    public static StringBuilder getOthersRelativeHttpSchemaLocation() {
+    private static StringBuilder getOthersRelativeHttpSchemaLocation() {
         return getOthersRelativeSchemaLocation().append("/http");
     }
 
-    public static String getRelativeSchemaLocation(ObjectType type, final String name) {
+    private static String getRelativeSchemaLocation(ObjectType type, final String name) {
         switch (type) {
         case YADE:
             return getYadeRelativeSchemaLocation().append("/").append(name).toString();
@@ -289,7 +299,7 @@ public class JocXmlEditor {
         }
     }
 
-    public static String getRelativeHttpSchemaLocation(ObjectType type, final String name) {
+    private static String getRelativeHttpSchemaLocation(ObjectType type, final String name) {
         switch (type) {
         case YADE:
             return getYadeRelativeHttpSchemaLocation().append("/").append(name).toString();
@@ -323,7 +333,7 @@ public class JocXmlEditor {
         return true;
     }
 
-    public static String getStandardBaseName(ObjectType type) {
+    private static String getStandardBaseName(ObjectType type) {
         if (type == null) {
             return null;
         }
@@ -335,7 +345,7 @@ public class JocXmlEditor {
         return null;
     }
 
-    public static List<Path> getFiles(Path dir, boolean recursiv, String extension) throws Exception {
+    private static List<Path> getFiles(Path dir, boolean recursiv, String extension) throws Exception {
         if (recursiv) {
             return Files.walk(dir).filter(s -> s.toString().toLowerCase().endsWith("." + extension.toLowerCase())).map(Path::getFileName).sorted()
                     .collect(Collectors.toList());
@@ -345,7 +355,7 @@ public class JocXmlEditor {
         }
     }
 
-    public static String bytes2string(byte[] bytes) {
+    private static String bytes2string(byte[] bytes) {
         try {
             return new String(bytes, CHARSET);
         } catch (UnsupportedEncodingException e) {

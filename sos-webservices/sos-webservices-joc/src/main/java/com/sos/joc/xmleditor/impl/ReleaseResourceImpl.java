@@ -11,7 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
@@ -48,7 +48,7 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
             XsdValidator validator = new XsdValidator(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()));
             try {
                 validator.validate(in.getConfiguration());
-            } catch (XsdValidatorException e) {
+            } catch (SOSXsdValidatorException e) {
                 LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
             }
@@ -96,7 +96,7 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 item.setConfigurationDraftJson(null);
                 item.setConfigurationDeployed(in.getConfiguration());
                 item.setConfigurationDeployedJson(Utils.serialize(in.getConfigurationJson()));
-                item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
+                item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), null));
                 item.setAuditLogId(Long.valueOf(0));// TODO
                 item.setAccount(getAccount());
                 item.setCreated(new Date());

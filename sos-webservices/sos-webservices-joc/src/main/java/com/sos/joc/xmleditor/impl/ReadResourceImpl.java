@@ -16,7 +16,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
@@ -168,7 +168,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         try {
             validator.validate(content);
             validation = ValidateResourceImpl.getSuccess();
-        } catch (XsdValidatorException e) {
+        } catch (SOSXsdValidatorException e) {
             validation = ValidateResourceImpl.getError(e);
         }
         return validation;

@@ -15,7 +15,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 
 public class XsdValidatorHandler extends DefaultHandler {
 
@@ -116,13 +116,14 @@ public class XsdValidatorHandler extends DefaultHandler {
     }
 
     @Override
-    public void fatalError(SAXParseException e) throws XsdValidatorException {
+    public void fatalError(SAXParseException e) throws SOSXsdValidatorException {
         error = e;
         handleError();
     }
 
-    private void handleError() throws XsdValidatorException {
+    private void handleError() throws SOSXsdValidatorException {
         if (error != null) {
+            boolean fatal = false;
             if (error.getMessage() != null) {
                 String msg = error.getMessage().trim();
                 if (isDebugEnabled) {
@@ -143,7 +144,7 @@ public class XsdValidatorHandler extends DefaultHandler {
                             if (refElements.containsKey(key)) {
                                 String[] arr = refElements.get(key).split(REF_DELIMITER);
                                 String position = arr[1];
-                                throw new XsdValidatorException(error, arr[0], position, position.split(PATH_DELIMITER).length);
+                                throw new SOSXsdValidatorException(error, arr[0], position, position.split(PATH_DELIMITER).length, false);
                             }
                         }
                     }
@@ -168,6 +169,10 @@ public class XsdValidatorHandler extends DefaultHandler {
                     } catch (Throwable ex) {
                         LOGGER.warn(String.format("[exception on enum handling][%s]%s", msg, ex.toString()), ex);
                     }
+                } else if (msg.startsWith("cvc-elt.1") || msg.startsWith("cvc-complex-type.2.4.a")) {
+                    // cvc-elt.1 - cannot find the declaration of element
+                    // cvc-complex-type.2.4.a - Invalid content was found starting with element ...
+                    fatal = true;
                 }
             }
             String elementName = null;
@@ -182,7 +187,7 @@ public class XsdValidatorHandler extends DefaultHandler {
                 position = "1";
             }
 
-            throw new XsdValidatorException(error, elementName, position, depth);
+            throw new SOSXsdValidatorException(error, elementName, position, depth, fatal);
         }
     }
 

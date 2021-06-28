@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -51,7 +51,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
                 XsdValidator validator = new XsdValidator(schema);
                 try {
                     validator.validate(in.getConfiguration());
-                } catch (XsdValidatorException e) {
+                } catch (SOSXsdValidatorException e) {
                     LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
                     return JOCDefaultResponse.responseStatus200(getError(e));
                 }
@@ -80,14 +80,14 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
         }
     }
 
-    public static ValidateConfigurationAnswer getError(XsdValidatorException e) {
+    public static ValidateConfigurationAnswer getError(SOSXsdValidatorException e) {
         ValidateConfigurationAnswer answer = new ValidateConfigurationAnswer();
         answer.setValidated(null);
         answer.setValidationError(getErrorMessage(e));
         return answer;
     }
 
-    private static ErrorMessage getErrorMessage(XsdValidatorException e) {
+    public static ErrorMessage getErrorMessage(SOSXsdValidatorException e) {
         ErrorMessage m = new ErrorMessage();
         m.setCode(JocXmlEditor.ERROR_CODE_VALIDATION_ERROR);
         try {
@@ -100,6 +100,7 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
         m.setColumn(e.getColumnNumber());
         m.setElementName(e.getElementName());
         m.setElementPosition(e.getElementPosition());
+        m.setFatal(e.getFatal());
         return m;
     }
 

@@ -100,11 +100,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
-            item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
-        } else {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        }
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(),in.getSchemaIdentifier()));
         item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
         item.setCreated(new Date());
@@ -118,11 +114,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
-        if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
-            item.setSchemaLocation(JocXmlEditor.getStandardRelativeSchemaLocation(in.getObjectType()));
-        } else {
-            item.setSchemaLocation(in.getSchemaIdentifier());
-        }
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(),in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
         item.setModified(new Date());

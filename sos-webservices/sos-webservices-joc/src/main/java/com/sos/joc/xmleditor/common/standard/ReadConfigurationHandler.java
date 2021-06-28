@@ -1,6 +1,8 @@
 package com.sos.joc.xmleditor.common.standard;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXmlNotMatchSchemaException;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -41,11 +43,10 @@ public class ReadConfigurationHandler {
 
                 answer.setConfigurationDate(item.getDeployed());
                 answer.setConfiguration(xml);
-                if (json == null) {
-                    answer.setRecreateJson(true);
-                    answer.setConfigurationJson(convert(type, xml));
+                if (SOSString.isEmpty(json)) {
+                    recreateJson(xml);
                 } else {
-                    answer.setConfigurationJson(Utils.deserializeJson(json));
+                    deserializeJson(json, xml);
                 }
 
                 if (item.getConfigurationDraft() == null) {
@@ -68,11 +69,10 @@ public class ReadConfigurationHandler {
 
             answer.setConfigurationDate(item.getModified());
             answer.setConfiguration(xml);
-            if (json == null) {
-                answer.setRecreateJson(true);
-                answer.setConfigurationJson(convert(type, xml));
+            if (SOSString.isEmpty(json)) {
+                recreateJson(xml);
             } else {
-                answer.setConfigurationJson(Utils.deserializeJson(json));
+                deserializeJson(json, xml);
             }
 
             if (answer.getHasReleases()) {
@@ -84,6 +84,23 @@ public class ReadConfigurationHandler {
             } else {
                 answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
             }
+        }
+    }
+
+    private void recreateJson(String xml) throws Exception {
+        answer.setRecreateJson(true);
+        try {
+            answer.setConfigurationJson(convert(type, xml));
+        } catch (SOSXmlNotMatchSchemaException e) {
+            answer.setRecreateJson(false);
+        }
+    }
+
+    private void deserializeJson(String json, String xml) throws Exception {
+        try {
+            answer.setConfigurationJson(Utils.deserializeJson(json));
+        } catch (Throwable e) {
+            recreateJson(xml);
         }
     }
 

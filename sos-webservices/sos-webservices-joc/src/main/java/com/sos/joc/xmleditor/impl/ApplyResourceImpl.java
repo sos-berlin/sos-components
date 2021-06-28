@@ -12,7 +12,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
@@ -21,7 +21,6 @@ import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
 import com.sos.joc.model.xmleditor.apply.ApplyConfigurationAnswer;
 import com.sos.joc.model.xmleditor.common.ObjectType;
-import com.sos.joc.model.xmleditor.validate.ErrorMessage;
 import com.sos.joc.xmleditor.common.Xml2JsonConverter;
 import com.sos.joc.xmleditor.resource.IApplyResource;
 import com.sos.schema.JsonValidator;
@@ -108,7 +107,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
             XsdValidator validator = new XsdValidator(schema);
             try {
                 validator.validate(in.getConfiguration());
-            } catch (XsdValidatorException e) {
+            } catch (SOSXsdValidatorException e) {
                 LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(getError(e));
             }
@@ -164,26 +163,10 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         return converter.convert(in.getObjectType(), schema, in.getConfiguration());
     }
 
-    public static ApplyConfigurationAnswer getError(XsdValidatorException e) {
+    public static ApplyConfigurationAnswer getError(SOSXsdValidatorException e) {
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
-        answer.setValidationError(getErrorMessage(e));
+        answer.setValidationError(ValidateResourceImpl.getErrorMessage(e));
         return answer;
-    }
-
-    private static ErrorMessage getErrorMessage(XsdValidatorException e) {
-        ErrorMessage m = new ErrorMessage();
-        m.setCode(JocXmlEditor.ERROR_CODE_VALIDATION_ERROR);
-        try {
-            m.setMessage(String.format("'%s', line=%s, column=%s, %s", e.getElementName(), e.getLineNumber(), e.getColumnNumber(), e.getCause()
-                    .getMessage()));
-        } catch (Throwable ex) {
-            m.setMessage(ex.toString());
-        }
-        m.setLine(e.getLineNumber());
-        m.setColumn(e.getColumnNumber());
-        m.setElementName(e.getElementName());
-        m.setElementPosition(e.getElementPosition());
-        return m;
     }
 
     private void checkRequiredParameters(final ApplyConfiguration in) throws Exception {
@@ -222,7 +205,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
         item.setConfigurationDraftJson(null);
-        item.setSchemaLocation(getSchemaLocation(in.getObjectType(), in.getSchemaIdentifier()));
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
         item.setCreated(new Date());
@@ -236,23 +219,12 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
         item.setConfigurationDraftJson(null);
-        item.setSchemaLocation(getSchemaLocation(in.getObjectType(), in.getSchemaIdentifier()));
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
         item.setModified(new Date());
         session.update(item);
         return item;
-    }
-
-    private String getSchemaLocation(ObjectType type, String schemaIdentifier) {
-        switch (type) {
-        case YADE:
-            return JocXmlEditor.getYadeSchemaLocation4Db(schemaIdentifier);
-        case OTHER:
-            return schemaIdentifier;
-        default:
-            return JocXmlEditor.getStandardRelativeSchemaLocation(type);
-        }
     }
 
 }

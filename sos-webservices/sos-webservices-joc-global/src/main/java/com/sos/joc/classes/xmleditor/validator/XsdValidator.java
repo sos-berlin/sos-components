@@ -17,7 +17,7 @@ import org.xml.sax.SAXParseException;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLDoctypeException;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.XsdValidatorException;
+import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
 
 public class XsdValidator {
 
@@ -43,7 +43,7 @@ public class XsdValidator {
 
         if (SOSString.isEmpty(content)) {
             SAXParseException cause = new SAXParseException("Missing XML content", "publicId", "systemId", 1, 1);
-            throw new XsdValidatorException(cause, "XML", "1", 1);
+            throw new SOSXsdValidatorException(cause, "XML", "1", 1, true);
         }
 
         try {

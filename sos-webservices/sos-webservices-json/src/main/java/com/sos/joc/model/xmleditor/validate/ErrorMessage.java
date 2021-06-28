@@ -22,7 +22,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "line",
     "column",
     "elementName",
-    "elementPosition"
+    "elementPosition",
+    "fatal"
 })
 public class ErrorMessage {
 
@@ -38,6 +39,8 @@ public class ErrorMessage {
     private String elementName;
     @JsonProperty("elementPosition")
     private String elementPosition;
+    @JsonProperty("fatal")
+    private Boolean fatal;
 
     @JsonProperty("code")
     public String getCode() {
@@ -99,14 +102,24 @@ public class ErrorMessage {
         this.elementPosition = elementPosition;
     }
 
+    @JsonProperty("fatal")
+    public Boolean getFatal() {
+        return fatal;
+    }
+
+    @JsonProperty("fatal")
+    public void setFatal(Boolean fatal) {
+        this.fatal = fatal;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("code", code).append("message", message).append("line", line).append("column", column).append("elementName", elementName).append("elementPosition", elementPosition).toString();
+        return new ToStringBuilder(this).append("code", code).append("message", message).append("line", line).append("column", column).append("elementName", elementName).append("elementPosition", elementPosition).append("fatal", fatal).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(code).append(line).append(column).append(elementPosition).append(message).append(elementName).toHashCode();
+        return new HashCodeBuilder().append(code).append(line).append(column).append(elementPosition).append(message).append(elementName).append(fatal).toHashCode();
     }
 
     @Override
@@ -118,7 +131,7 @@ public class ErrorMessage {
             return false;
         }
         ErrorMessage rhs = ((ErrorMessage) other);
-        return new EqualsBuilder().append(code, rhs.code).append(line, rhs.line).append(column, rhs.column).append(elementPosition, rhs.elementPosition).append(message, rhs.message).append(elementName, rhs.elementName).isEquals();
+        return new EqualsBuilder().append(code, rhs.code).append(line, rhs.line).append(column, rhs.column).append(elementPosition, rhs.elementPosition).append(message, rhs.message).append(elementName, rhs.elementName).append(fatal, rhs.fatal).isEquals();
     }
 
 }
