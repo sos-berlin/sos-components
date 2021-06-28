@@ -1,4 +1,4 @@
-package com.sos.joc.notification.configuration.monitor;
+package com.sos.joc.monitoring.configuration.monitor;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -7,7 +7,7 @@ import org.w3c.dom.Node;
 import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
-import com.sos.joc.notification.configuration.AElement;
+import com.sos.joc.monitoring.configuration.AElement;
 
 public abstract class AMonitor extends AElement {
 

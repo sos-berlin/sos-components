@@ -100,10 +100,9 @@ import js7.data.value.Value;
 public class HistoryModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private static final boolean isTraceEnabled = LOGGER.isTraceEnabled();
 
     private static final String KEY_DELIMITER = "|||";
+
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
     private ControllerConfiguration controllerConfiguration;
@@ -116,6 +115,8 @@ public class HistoryModel {
     private long transactionCounter;
     private String controllerTimezone;
     private boolean cleanupLogFiles = true;
+    private boolean isDebugEnabled;
+    private boolean isTraceEnabled;
 
     private Map<String, CachedOrder> cachedOrders;
     private Map<String, CachedOrderStep> cachedOrderSteps;
@@ -189,6 +190,9 @@ public class HistoryModel {
 
         Counter counter = new Counter();
         counter.setTotal(list.size());
+
+        isDebugEnabled = LOGGER.isDebugEnabled();
+        isTraceEnabled = LOGGER.isTraceEnabled();
 
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][start][%s][%s]%s total", identifier, method, storedEventId, start, counter.getTotal()));

@@ -1,4 +1,4 @@
-package com.sos.joc.notification.configuration.monitor.jms;
+package com.sos.joc.monitoring.configuration.monitor.jms;
 
 import java.util.LinkedHashMap;
 
@@ -8,7 +8,7 @@ import org.w3c.dom.NodeList;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.notification.configuration.AElement;
+import com.sos.joc.monitoring.configuration.AElement;
 
 public class ConnectionFactory extends AElement {
 

@@ -1,4 +1,4 @@
-package com.sos.joc.notification.configuration.monitor;
+package com.sos.joc.monitoring.configuration.monitor;
 
 import java.nio.file.Paths;
 import java.util.List;

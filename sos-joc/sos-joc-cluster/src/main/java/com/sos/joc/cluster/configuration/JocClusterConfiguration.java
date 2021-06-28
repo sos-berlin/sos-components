@@ -25,11 +25,11 @@ public class JocClusterConfiguration {
         unknown, automatic, manual, automatic_switchover, manual_switchover, settings_changed;
     }
 
-    private static final String CLASS_NAME_HISTORY = "com.sos.js7.history.controller.HistoryService";
-    private static final String CLASS_NAME_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
-    private static final String CLASS_NAME_CLEANUP = "com.sos.joc.cleanup.CleanupService";
-    private static final String CLASS_NAME_MONITORING = "com.sos.joc.monitoring.MonitoringService";
-    private static final String CLASS_NAME_NOTIFICATION = "com.sos.joc.notification.NotificationService";
+    private static final String CLASS_NAME_SERVICE_HISTORY = "com.sos.js7.history.controller.HistoryService";
+    private static final String CLASS_NAME_SERVICE_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
+    private static final String CLASS_NAME_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
+    private static final String CLASS_NAME_SERVICE_MONITOR = "com.sos.joc.monitoring.MonitorService";
+
     private static final String CLASS_NAME_CLUSTER_MODE = "com.sos.js7.license.joc.ClusterLicenseCheck";
 
     private List<Class<?>> services;
@@ -62,11 +62,10 @@ public class JocClusterConfiguration {
 
     private void register() {
         services = new ArrayList<>();
-        addServiceClass(CLASS_NAME_HISTORY);
-        addServiceClass(CLASS_NAME_DAILYPLAN);
-        addServiceClass(CLASS_NAME_CLEANUP);
-        addServiceClass(CLASS_NAME_MONITORING);
-        addServiceClass(CLASS_NAME_NOTIFICATION);
+        addServiceClass(CLASS_NAME_SERVICE_HISTORY);
+        addServiceClass(CLASS_NAME_SERVICE_DAILYPLAN);
+        addServiceClass(CLASS_NAME_SERVICE_CLEANUP);
+        addServiceClass(CLASS_NAME_SERVICE_MONITOR);
     }
 
     private void addServiceClass(String className) {

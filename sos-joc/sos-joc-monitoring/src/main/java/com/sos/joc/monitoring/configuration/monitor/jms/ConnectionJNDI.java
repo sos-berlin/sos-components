@@ -1,8 +1,8 @@
-package com.sos.joc.notification.configuration.monitor.jms;
+package com.sos.joc.monitoring.configuration.monitor.jms;
 
 import org.w3c.dom.Node;
 
-import com.sos.joc.notification.configuration.AElement;
+import com.sos.joc.monitoring.configuration.AElement;
 
 public class ConnectionJNDI extends AElement {
 

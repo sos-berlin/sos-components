@@ -162,7 +162,7 @@ public class JocClusterService {
         }
         return answer;
     }
-    
+
     public boolean isRunning() {
         if (cluster == null) {
             return false;
@@ -333,8 +333,8 @@ public class JocClusterService {
         case notification:
             answer = cluster.getHandler().restartService(ClusterServices.notification.name(), mode, null);
             break;
-        case monitoring:
-            answer = cluster.getHandler().restartService(ClusterServices.monitoring.name(), mode, null);
+        case monitor:
+            answer = cluster.getHandler().restartService(ClusterServices.monitor.name(), mode, null);
             break;
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));

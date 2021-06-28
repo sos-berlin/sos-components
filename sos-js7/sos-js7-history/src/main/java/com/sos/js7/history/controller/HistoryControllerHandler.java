@@ -18,6 +18,7 @@ import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.ProxyUser;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.notifier.DefaultNotifier;
 import com.sos.joc.cluster.notifier.INotifier;
@@ -97,6 +98,7 @@ public class HistoryControllerHandler {
     private final ControllerConfiguration controllerConfig;
     private final INotifier notifier;
     private final String controllerId;
+    private final String serviceIdentifier;
 
     private JControllerApi api;
     private EventFluxStopper stopper = new EventFluxStopper();
@@ -114,12 +116,13 @@ public class HistoryControllerHandler {
     private AtomicLong lastActivityEnd = new AtomicLong();
 
     public HistoryControllerHandler(SOSHibernateFactory factory, HistoryConfiguration config, ControllerConfiguration controllerConfig,
-            Mailer notifier) {
+            Mailer notifier, String serviceIdentifier) {
         this.factory = factory;
         this.config = config;
         this.controllerConfig = controllerConfig;
         this.notifier = notifier == null ? new DefaultNotifier() : notifier;
         this.controllerId = controllerConfig.getCurrent().getId();
+        this.serviceIdentifier = serviceIdentifier;
         setIdentifier(controllerConfig.getCurrent().getType());
     }
 
@@ -494,23 +497,28 @@ public class HistoryControllerHandler {
     @SuppressWarnings("unused")
     private void fluxDoOnNext(JEventAndControllerState<Event> state) {
         // releaseEvents(model.getStoredEventId());
+        AJocClusterService.setLogger(serviceIdentifier);
         LOGGER.info(String.format("[%s][fluxDoOnNext]%s", controllerId, SOSString.toString(state)));
     }
 
     private void fluxDoOnCancel() {
+        AJocClusterService.setLogger(serviceIdentifier);
         LOGGER.debug(String.format("[%s][fluxDoOnCancel]", controllerId));
     }
 
     private Throwable fluxDoOnError(Throwable t) {
+        AJocClusterService.setLogger(serviceIdentifier);
         LOGGER.warn(String.format("[%s][fluxDoOnError]%s", controllerId, t.toString()));
         return t;
     }
 
     private void fluxDoOnComplete() {
+        AJocClusterService.setLogger(serviceIdentifier);
         LOGGER.info(String.format("[%s][fluxDoOnComplete]", controllerId));
     }
 
     private void fluxDoFinally(SignalType type) {
+        AJocClusterService.setLogger(serviceIdentifier);
         LOGGER.info(String.format("[%s][fluxDoFinally]SignalType=%s", controllerId, type));
     }
 

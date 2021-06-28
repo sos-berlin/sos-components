@@ -1,4 +1,4 @@
-package com.sos.joc.notification.configuration;
+package com.sos.joc.monitoring.configuration;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

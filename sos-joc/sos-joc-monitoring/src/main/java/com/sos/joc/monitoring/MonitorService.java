@@ -26,17 +26,17 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel;
 
-public class MonitoringService extends AJocClusterService {
+public class MonitorService extends AJocClusterService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MonitoringService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonitorService.class);
 
-    private static final String IDENTIFIER = ClusterServices.monitoring.name();
+    private static final String IDENTIFIER = ClusterServices.monitor.name();
 
     private JocClusterHibernateFactory factory;
     private HistoryMonitoringModel history = null;
     private AtomicBoolean closed = new AtomicBoolean(false);
 
-    public MonitoringService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
+    public MonitorService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
         AJocClusterService.setLogger(IDENTIFIER);
     }

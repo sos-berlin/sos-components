@@ -1,4 +1,4 @@
-package com.sos.joc.notification.configuration.monitor.jms;
+package com.sos.joc.monitoring.configuration.monitor.jms;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Session;
@@ -12,7 +12,7 @@ import org.w3c.dom.Node;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.notification.configuration.monitor.AMonitor;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 
 public class MonitorJMS extends AMonitor {
 

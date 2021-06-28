@@ -108,7 +108,7 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                                 task = new CleanupTaskDailyPlan(cleanupSchedule.getFactory(), service, batchSize);
                                 datetimes.add(datetime);
                             }
-                        } else if (service.getIdentifier().equals(ClusterServices.monitoring.name())) {
+                        } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
                             TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
                                     cleanupSchedule.getFirstStart());
                             if (datetime.getDatetime() == null) {

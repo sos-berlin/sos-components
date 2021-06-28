@@ -95,7 +95,7 @@ public class HistoryService extends AJocClusterService {
             AJocClusterService.clearLogger();
 
             for (ControllerConfiguration controllerConfig : controllers) {
-                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer);
+                HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer, IDENTIFIER);
                 activeHandlers.add(controllerHandler);
 
                 Runnable task = new Runnable() {
@@ -176,7 +176,7 @@ public class HistoryService extends AJocClusterService {
                 if (!action.equals(Action.REMOVED)) {
                     Optional<ControllerConfiguration> occ = controllers.stream().filter(c -> c.getCurrent().getId().equals(controllerId)).findAny();
                     if (occ.isPresent()) {
-                        h = new HistoryControllerHandler(factory, config, occ.get(), new Mailer(mailerConfig));
+                        h = new HistoryControllerHandler(factory, config, occ.get(), new Mailer(mailerConfig), IDENTIFIER);
                         activeHandlers.add(h);
                     } else {
                         LOGGER.error(String.format("[%s]counfiguration not found", controllerId));
