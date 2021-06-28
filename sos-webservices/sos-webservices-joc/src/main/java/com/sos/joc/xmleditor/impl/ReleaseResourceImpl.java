@@ -112,7 +112,7 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 item.setAccount(getAccount());
                 item.setModified(new Date());
                 item.setDeployed(item.getModified());
-                session.save(item);
+                session.update(item);
             }
 
             session.commit();
