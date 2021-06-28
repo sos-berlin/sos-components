@@ -15,6 +15,8 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.delete.DeleteConfiguration;
@@ -74,7 +76,12 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
         handler.readCurrent(item, in.getControllerId(), true);
+        postEvent(in);
         return handler.getAnswer();
+    }
+    
+    private void postEvent(RemoveConfiguration in) {
+        EventBus.getInstance().post(new NotificationConfigurationRemoved(in.getControllerId()));
     }
 
     private RemoveOtherAnswer handleMultipleConfigurations(RemoveConfiguration in) throws Exception {

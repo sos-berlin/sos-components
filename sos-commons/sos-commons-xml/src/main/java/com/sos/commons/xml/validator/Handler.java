@@ -1,4 +1,4 @@
-package com.sos.joc.classes.xmleditor.validator;
+package com.sos.commons.xml.validator;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,15 +15,15 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 
-public class XsdValidatorHandler extends DefaultHandler {
+public class Handler extends DefaultHandler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XsdValidatorHandler.class);
-    private final boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private final boolean isTraceEnabled = LOGGER.isTraceEnabled();
+    private static final Logger LOGGER = LoggerFactory.getLogger(Handler.class);
     private final String PATH_DELIMITER = "-";
     private final String REF_DELIMITER = ";";
+    private final boolean isDebugEnabled;
+    private final boolean isTraceEnabled;
 
     private int currentDepth;
     private int lastDepth;
@@ -34,6 +34,11 @@ public class XsdValidatorHandler extends DefaultHandler {
     // key - depth, value - count elements
     private Map<Integer, Integer> currentDepths = new LinkedHashMap<Integer, Integer>();
     private Map<String, String> refElements = new HashMap<String, String>();
+
+    protected Handler() {
+        isDebugEnabled = LOGGER.isDebugEnabled();
+        isTraceEnabled = LOGGER.isTraceEnabled();
+    }
 
     @Override
     public void startElement(String uri, String localName, String qname, Attributes attr) {
@@ -116,12 +121,12 @@ public class XsdValidatorHandler extends DefaultHandler {
     }
 
     @Override
-    public void fatalError(SAXParseException e) throws SOSXsdValidatorException {
+    public void fatalError(SAXParseException e) throws SOSXMLXSDValidatorException {
         error = e;
         handleError();
     }
 
-    private void handleError() throws SOSXsdValidatorException {
+    private void handleError() throws SOSXMLXSDValidatorException {
         if (error != null) {
             boolean fatal = false;
             if (error.getMessage() != null) {
@@ -144,7 +149,7 @@ public class XsdValidatorHandler extends DefaultHandler {
                             if (refElements.containsKey(key)) {
                                 String[] arr = refElements.get(key).split(REF_DELIMITER);
                                 String position = arr[1];
-                                throw new SOSXsdValidatorException(error, arr[0], position, position.split(PATH_DELIMITER).length, false);
+                                throw new SOSXMLXSDValidatorException(error, arr[0], position, position.split(PATH_DELIMITER).length, false);
                             }
                         }
                     }
@@ -186,8 +191,7 @@ public class XsdValidatorHandler extends DefaultHandler {
                 elementName = rootElement == null ? "XML" : rootElement;
                 position = "1";
             }
-
-            throw new SOSXsdValidatorException(error, elementName, position, depth, fatal);
+            throw new SOSXMLXSDValidatorException(error, elementName, position, depth, fatal);
         }
     }
 

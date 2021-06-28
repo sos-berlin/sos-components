@@ -15,7 +15,7 @@
 		<!-- SOS Dependencies -->
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-commons-exception</artifactId>
+			<artifactId>sos-commons-util</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

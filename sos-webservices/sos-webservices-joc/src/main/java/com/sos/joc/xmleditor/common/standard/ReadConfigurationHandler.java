@@ -1,8 +1,8 @@
 package com.sos.joc.xmleditor.common.standard;
 
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.exception.SOSXMLNotMatchSchemaException;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXmlNotMatchSchemaException;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -91,7 +91,7 @@ public class ReadConfigurationHandler {
         answer.setRecreateJson(true);
         try {
             answer.setConfigurationJson(convert(type, xml));
-        } catch (SOSXmlNotMatchSchemaException e) {
+        } catch (SOSXMLNotMatchSchemaException e) {
             answer.setRecreateJson(false);
         }
     }

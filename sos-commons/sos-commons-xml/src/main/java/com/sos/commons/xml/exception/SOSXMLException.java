@@ -9,7 +9,11 @@ public class SOSXMLException extends SOSException {
     public SOSXMLException(String message) {
         super(message);
     }
-    
+
+    public SOSXMLException(Throwable cause) {
+        super(cause);
+    }
+
     public SOSXMLException(String message, Throwable cause) {
         super(message, cause);
     }

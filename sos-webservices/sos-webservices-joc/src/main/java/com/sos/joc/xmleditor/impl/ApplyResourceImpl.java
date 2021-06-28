@@ -9,11 +9,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
+import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
-import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocException;
@@ -104,11 +104,10 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
                 break;
             }
             // check for vulnerabilities and validate
-            XsdValidator validator = new XsdValidator(schema);
             try {
-                validator.validate(in.getConfiguration());
-            } catch (SOSXsdValidatorException e) {
-                LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
+                SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+            } catch (SOSXMLXSDValidatorException e) {
+                LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(getError(e));
             }
         } else {
@@ -163,7 +162,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         return converter.convert(in.getObjectType(), schema, in.getConfiguration());
     }
 
-    public static ApplyConfigurationAnswer getError(SOSXsdValidatorException e) {
+    public static ApplyConfigurationAnswer getError(SOSXMLXSDValidatorException e) {
         ApplyConfigurationAnswer answer = new ApplyConfigurationAnswer();
         answer.setValidationError(ValidateResourceImpl.getErrorMessage(e));
         return answer;

@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
+import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
-import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
 import com.sos.joc.exceptions.JocError;
@@ -163,12 +163,11 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
     }
 
     private ValidateConfigurationAnswer getValidation(java.nio.file.Path schema, String content) throws Exception {
-        XsdValidator validator = new XsdValidator(schema);
         ValidateConfigurationAnswer validation = null;
         try {
-            validator.validate(content);
+            SOSXMLXSDValidator.validate(schema,content);
             validation = ValidateResourceImpl.getSuccess();
-        } catch (SOSXsdValidatorException e) {
+        } catch (SOSXMLXSDValidatorException e) {
             validation = ValidateResourceImpl.getError(e);
         }
         return validation;

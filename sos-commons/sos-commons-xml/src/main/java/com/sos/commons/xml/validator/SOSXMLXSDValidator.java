@@ -1,4 +1,4 @@
-package com.sos.joc.classes.xmleditor.validator;
+package com.sos.commons.xml.validator;
 
 import java.io.StringReader;
 import java.nio.file.Files;
@@ -15,47 +15,39 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
 
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLDoctypeException;
-import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 
-public class XsdValidator {
+public class SOSXMLXSDValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(XsdValidator.class);
-    private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSXMLXSDValidator.class);
 
-    private Path schema = null;
-
-    public XsdValidator(Path sourceSchema) {
-        schema = sourceSchema;
-    }
-
-    public void validate(String content) throws Exception {
+    public static void validate(Path schema, String xml) throws Exception {
         if (schema == null) {
             throw new Exception("missing schema");
         }
         if (!Files.exists(schema) || !Files.isReadable(schema)) {
             throw new Exception(String.format("[%s]schema not found or not readable", schema.toString()));
         }
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(String.format("[schema][use local file]%s", schema));
         }
 
-        if (SOSString.isEmpty(content)) {
+        if (SOSString.isEmpty(xml)) {
             SAXParseException cause = new SAXParseException("Missing XML content", "publicId", "systemId", 1, 1);
-            throw new SOSXsdValidatorException(cause, "XML", "1", 1, true);
+            throw new SOSXMLXSDValidatorException(cause, "XML", "1", 1, true);
         }
 
         try {
             // check for vulnerabilities
-            JocXmlEditor.parseXml(content);
+            SOSXML.parse(xml);
         } catch (SOSXMLDoctypeException e) {
             throw e;
         } catch (Throwable e) {
         }
 
         try {
-
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(false);
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
@@ -63,14 +55,10 @@ public class XsdValidator {
 
             SAXParser parser = factory.newSAXParser();
             // parser.parse(new InputSource(new StringReader(content.replaceAll(">\\s+<", "><").trim())), new XsdValidatorHandler());
-            parser.parse(new InputSource(new StringReader(content)), new XsdValidatorHandler());
+            parser.parse(new InputSource(new StringReader(xml)), new Handler());
         } catch (Throwable e) {
             throw e;
         }
-    }
-
-    public Path getSchema() {
-        return schema;
     }
 
 }

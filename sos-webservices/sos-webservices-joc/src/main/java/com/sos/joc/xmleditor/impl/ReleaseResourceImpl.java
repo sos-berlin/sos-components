@@ -8,13 +8,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
+import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
-import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -45,11 +47,11 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 return response;
             }
             // step 1 - check for vulnerabilities and validate
-            XsdValidator validator = new XsdValidator(JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType()));
+            java.nio.file.Path schema = JocXmlEditor.getStandardAbsoluteSchemaLocation(in.getObjectType());
             try {
-                validator.validate(in.getConfiguration());
-            } catch (SOSXsdValidatorException e) {
-                LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
+                SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+            } catch (SOSXMLXSDValidatorException e) {
+                LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                 return JOCDefaultResponse.responseStatus200(ValidateResourceImpl.getError(e));
             }
 
@@ -73,7 +75,12 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
         handler.readCurrent(item, in.getControllerId(), true);
+        postEvent(in);
         return handler.getAnswer();
+    }
+
+    private void postEvent(ReleaseConfiguration in) {
+        EventBus.getInstance().post(new NotificationConfigurationReleased(in.getControllerId()));
     }
 
     private DBItemXmlEditorConfiguration createOrUpdate(ReleaseConfiguration in) throws Exception {

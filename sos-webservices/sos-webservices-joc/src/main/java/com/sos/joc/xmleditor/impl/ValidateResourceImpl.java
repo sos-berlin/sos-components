@@ -7,11 +7,11 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
+import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
-import com.sos.joc.classes.xmleditor.exceptions.SOSXsdValidatorException;
-import com.sos.joc.classes.xmleditor.validator.XsdValidator;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.xmleditor.validate.ErrorMessage;
@@ -48,16 +48,15 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
                     break;
                 }
                 // check for vulnerabilities and validate
-                XsdValidator validator = new XsdValidator(schema);
                 try {
-                    validator.validate(in.getConfiguration());
-                } catch (SOSXsdValidatorException e) {
-                    LOGGER.error(String.format("[%s]%s", validator.getSchema(), e.toString()), e);
+                    SOSXMLXSDValidator.validate(schema, in.getConfiguration());
+                } catch (SOSXMLXSDValidatorException e) {
+                    LOGGER.error(String.format("[%s]%s", schema, e.toString()), e);
                     return JOCDefaultResponse.responseStatus200(getError(e));
                 }
 
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]validated", in.getControllerId(), in.getObjectType().name(), validator.getSchema()));
+                    LOGGER.debug(String.format("[%s][%s][%s]validated", in.getControllerId(), in.getObjectType().name(), schema));
                 }
                 response = JOCDefaultResponse.responseStatus200(getSuccess());
             }
@@ -80,14 +79,14 @@ public class ValidateResourceImpl extends ACommonResourceImpl implements IValida
         }
     }
 
-    public static ValidateConfigurationAnswer getError(SOSXsdValidatorException e) {
+    public static ValidateConfigurationAnswer getError(SOSXMLXSDValidatorException e) {
         ValidateConfigurationAnswer answer = new ValidateConfigurationAnswer();
         answer.setValidated(null);
         answer.setValidationError(getErrorMessage(e));
         return answer;
     }
 
-    public static ErrorMessage getErrorMessage(SOSXsdValidatorException e) {
+    public static ErrorMessage getErrorMessage(SOSXMLXSDValidatorException e) {
         ErrorMessage m = new ErrorMessage();
         m.setCode(JocXmlEditor.ERROR_CODE_VALIDATION_ERROR);
         try {

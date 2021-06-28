@@ -1,8 +1,8 @@
-package com.sos.joc.classes.xmleditor.exceptions;
+package com.sos.commons.xml.exception;
 
 import org.xml.sax.SAXParseException;
 
-public class SOSXsdValidatorException extends RuntimeException {
+public class SOSXMLXSDValidatorException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
@@ -14,7 +14,7 @@ public class SOSXsdValidatorException extends RuntimeException {
     private int lineNumber = 1;
     private int columnNumber = 1;
 
-    public SOSXsdValidatorException(SAXParseException cause, String name, String position, int depth, boolean fatal) {
+    public SOSXMLXSDValidatorException(SAXParseException cause, String name, String position, int depth, boolean fatal) {
         super(cause);
         this.elementName = name;
         this.elementPosition = position;
