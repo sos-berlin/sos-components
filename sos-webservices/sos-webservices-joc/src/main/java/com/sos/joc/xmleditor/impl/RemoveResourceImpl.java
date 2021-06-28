@@ -78,7 +78,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
     }
 
     private RemoveOtherAnswer handleMultipleConfigurations(RemoveConfiguration in) throws Exception {
-        boolean removed = remove(in.getObjectType(), in.getId());
+        boolean removed = removeMultiple(in.getObjectType(), in.getId());
         RemoveOtherAnswer answer = new RemoveOtherAnswer();
         if (removed) {
             answer.setRemoved(new Date());
@@ -88,14 +88,14 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         return answer;
     }
 
-    private boolean remove(ObjectType type, Integer id) throws Exception {
+    private boolean removeMultiple(ObjectType type, Integer id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.delete(type, id.longValue());
+            int deleted = dbLayer.deleteMultiple(type, id.longValue());
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));

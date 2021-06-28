@@ -43,7 +43,7 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
                 switch (type) {
                 case YADE:
                 case OTHER:
-                    delete(type, in.getControllerId());
+                    deleteAllMultiple(type, in.getControllerId());
                     response = JOCDefaultResponse.responseStatus200(getSuccess());
                     break;
                 default:
@@ -71,14 +71,14 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
         return answer;
     }
 
-    private boolean delete(ObjectType type, String controllerId) throws Exception {
+    private boolean deleteAllMultiple(ObjectType type, String controllerId) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteAll(type, controllerId);
+            int deleted = dbLayer.deleteAllMultiple(type, controllerId);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("deleted=%s", deleted));

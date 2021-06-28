@@ -18,7 +18,8 @@ public class DbLayerXmlEditor extends DBLayer {
         super(session);
     }
 
-    public int delete(ObjectType type, Long id) throws Exception {
+    // YADE, OTHER
+    public int deleteMultiple(ObjectType type, Long id) throws Exception {
         // JOC uses autoCommit=true, executeUpdate is not supported
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
         hql.append("where id=:id ");
@@ -35,14 +36,15 @@ public class DbLayerXmlEditor extends DBLayer {
         return 0;
     }
 
-    public int deleteAll(ObjectType type, String controllerId) throws Exception {
+    public int deleteAllMultiple(ObjectType type, String controllerId) throws Exception {
         // JOC uses autoCommit=true, executeUpdate is not supported
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and type=:type");
+        hql.append("where type=:type ");
+        // hql.append("and controllerId=:controllerId ");
+
         Query<DBItemXmlEditorConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
         query.setParameter("type", type.name());
+        // query.setParameter("controllerId", controllerId);
 
         List<DBItemXmlEditorConfiguration> items = getSession().getResultList(query);
         if (items != null) {
@@ -66,29 +68,29 @@ public class DbLayerXmlEditor extends DBLayer {
 
     public DBItemXmlEditorConfiguration getObject(String controllerId, String type, String name) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and type=:type ");
-        hql.append("and name=:name");
+        hql.append("where type=:type ");
+        hql.append("and name=:name ");
+        // hql.append("and controllerId=:controllerId ");
 
         Query<DBItemXmlEditorConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
         query.setParameter("type", type);
         query.setParameter("name", name);
+        // query.setParameter("controllerId", controllerId);
         return getSession().getSingleResult(query);
     }
 
     public List<Map<String, Object>> getObjectProperties(String controllerId, String type, String properties, String orderBy) throws Exception {
         StringBuilder hql = new StringBuilder("select new map(").append(properties).append(") from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(
                 " ");
-        hql.append("where controllerId=:controllerId ");
-        hql.append("and type=:type ");
+        hql.append("where type=:type ");
+        //hql.append("and controllerId=:controllerId ");
         if (!SOSString.isEmpty(orderBy)) {
             hql.append(orderBy);
         }
 
         Query<Map<String, Object>> query = getSession().createQuery(hql.toString());
-        query.setParameter("controllerId", controllerId);
         query.setParameter("type", type);
+        //query.setParameter("controllerId", controllerId);
         return getSession().getResultList(query);
     }
 

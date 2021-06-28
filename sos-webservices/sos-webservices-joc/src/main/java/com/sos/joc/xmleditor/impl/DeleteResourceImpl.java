@@ -77,7 +77,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
     }
 
     private DeleteOtherDraftAnswer handleMultipleConfigurations(DeleteConfiguration in) throws Exception {
-        boolean deleted = delete(in.getObjectType(), in.getId());
+        boolean deleted = deleteMultiple(in.getObjectType(), in.getId());
         DeleteOtherDraftAnswer answer = new DeleteOtherDraftAnswer();
         if (deleted) {
             answer.setDeleted(new Date());
@@ -87,14 +87,14 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
         return answer;
     }
 
-    private boolean delete(ObjectType type, Integer id) throws Exception {
+    private boolean deleteMultiple(ObjectType type, Integer id) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.delete(type, id.longValue());
+            int deleted = dbLayer.deleteMultiple(type, id.longValue());
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("[id=%s]deleted=%s", id, deleted));
