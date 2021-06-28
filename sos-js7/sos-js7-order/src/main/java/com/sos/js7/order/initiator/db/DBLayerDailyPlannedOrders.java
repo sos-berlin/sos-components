@@ -329,7 +329,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         return query;
-
+ 
     }
 
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
