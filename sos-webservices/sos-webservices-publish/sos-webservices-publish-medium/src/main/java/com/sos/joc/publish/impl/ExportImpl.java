@@ -53,7 +53,15 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             initLogging(API_CALL, exportFilter, xAccessToken);
             JsonValidator.validate(exportFilter, ExportFilter.class);
             ExportFilter filter = Globals.objectMapper.readValue(exportFilter, ExportFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getInventory().getManage());
+            
+            ExportForSigning forSigning = filter.getForSigning();
+            boolean permitted = false;
+            if (forSigning != null) {
+                permitted = getJocPermissions(xAccessToken).getInventory().getManage();
+            } else {
+                permitted = getJocPermissions(xAccessToken).getInventory().getView();
+            }
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -63,7 +71,6 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
 
-            ExportForSigning forSigning = filter.getForSigning();
             ExportShallowCopy shallowCopy = filter.getShallowCopy();
             
             Set<ControllerObject> deployablesForSigning = null;
