@@ -14,6 +14,10 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.Type;
+
+import com.sos.commons.hibernate.type.SOSHibernateJsonType;
 import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -49,8 +53,13 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
     @Column(name = "[TITLE]", nullable = true)
     private String title;
 
-    @Column(name = "[CONTENT]", nullable = true)
+    @Column(name = "[CONTENT]", nullable = false)
     private String content;
+
+    @Column(name = "[JSON_CONTENT]", nullable = false)
+    @Type(type = SOSHibernateJsonType.TYPE_NAME)
+    @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
+    private String jsonContent;
 
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
@@ -137,6 +146,11 @@ public class DBItemInventoryReleasedConfiguration extends DBItem {
 
     public void setContent(String val) {
         content = val;
+        jsonContent = val;
+    }
+
+    public String getJsonContent() {
+        return jsonContent;
     }
 
     public Long getAuditLogId() {

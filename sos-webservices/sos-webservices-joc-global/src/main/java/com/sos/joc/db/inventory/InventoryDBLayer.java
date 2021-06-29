@@ -1140,6 +1140,18 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowName(String workflowName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append("=:workflowName");
+
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameter("workflowName", workflowName);
+        return getSession().getResultList(query);
+    }
+
     public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowNames(List<String> workflowNames) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1147,6 +1159,19 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in :workflowNames");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameterList("workflowNames", workflowNames);
+        return getSession().getResultList(query);
+    }
+
+    public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowNames(List<String> workflowNames)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in :workflowNames");
+
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameterList("workflowNames", workflowNames);
         return getSession().getResultList(query);
