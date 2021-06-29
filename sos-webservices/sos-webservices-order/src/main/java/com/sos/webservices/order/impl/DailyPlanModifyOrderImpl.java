@@ -114,7 +114,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 for (String orderId : orderIds) {
-                    addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder);
+                    addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder.getControllerId());
                 }
 
                 for (String orderId : listOfOrderIds) {
@@ -137,17 +137,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     }
 
-    private void addCyclicOrderIds(List<String> orderIds, String orderId, DailyPlanModifyOrder dailyplanModifyOrder) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, dailyplanModifyOrder.getControllerId(), settings.getTimeZone(), settings
-                    .getPeriodBegin());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
-    }
 
     private void cancelOrdersFromController(FilterDailyPlannedOrders filter, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,

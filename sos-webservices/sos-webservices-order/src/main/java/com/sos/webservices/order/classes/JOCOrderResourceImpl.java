@@ -66,10 +66,23 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
         folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
+        List<String> listOfOrderIds = null;
         if (folderPermissionEvaluator.isHasPermission()) {
+            if (dailyPlanOrderFilter.getFilter().getOrderIds() != null && !dailyPlanOrderFilter.getFilter().getOrderIds().isEmpty()) {
+
+                listOfOrderIds = new ArrayList<String>();
+                for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
+                    listOfOrderIds.add(orderId);
+                }
+
+                for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
+                    addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
+                }
+            }            
+            
             filter.setControllerId(controllerId);
             filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
-            filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
+            filter.setListOfOrders(listOfOrderIds);
             filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
@@ -213,6 +226,18 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     listOfPlannedOrderItems.add(firstP);
                 }
             }
+        }
+    }
+    
+    protected void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYVLIC_ORDERS");
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings
+                    .getPeriodBegin());
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
     }
 }

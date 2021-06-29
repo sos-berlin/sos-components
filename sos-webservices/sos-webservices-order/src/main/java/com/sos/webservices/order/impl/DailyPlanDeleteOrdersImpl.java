@@ -16,6 +16,8 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -63,7 +65,11 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
             storeAuditLog(dailyPlanOrderFilter.getAuditLog(), dailyPlanOrderFilter.getControllerId(), CategoryType.DAILYPLAN);
             setSettings();
+
             deleteOrdersFromPlan(allowedControllers, dailyPlanOrderFilter);
+                 
+            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
+            
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -74,6 +80,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
+   
+    
     private void deleteOrdersFromPlan(Set<String> allowedControllers, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
