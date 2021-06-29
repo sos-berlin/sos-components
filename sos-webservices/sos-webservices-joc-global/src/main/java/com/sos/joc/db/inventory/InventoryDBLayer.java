@@ -1152,6 +1152,18 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowNames(List<String> workflowNames) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and ");
+        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in :workflowNames");
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        query.setParameterList("workflowNames", workflowNames);
+        return getSession().getResultList(query);
+    }
+
     public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
@@ -1197,7 +1209,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        
+
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.jobs", "$.documentationNames");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":docName"));
 

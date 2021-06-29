@@ -1,6 +1,7 @@
 package com.sos.joc.db.inventory;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -74,6 +75,15 @@ public class InventoryDBLayerUsedByTest {
 
             items = dbLayer.getUsedSchedulesByCalendarPath(calendarPath);
             LOGGER.info(String.format("[testUsedSchedules][calendarPath=%s]found=%s", calendarPath, items.size()));
+            for (DBItemInventoryConfiguration item : items) {
+                LOGGER.info("---" + SOSHibernate.toString(item));
+            }
+
+            List<String> wn = new ArrayList<>();
+            wn.add("workflow1");
+            wn.add("workflow2");
+            items = dbLayer.getUsedSchedulesByWorkflowNames(wn);
+            LOGGER.info(String.format("[getUsedSchedulesByWorkflowNames]found=%s", items.size()));
             for (DBItemInventoryConfiguration item : items) {
                 LOGGER.info("---" + SOSHibernate.toString(item));
             }
