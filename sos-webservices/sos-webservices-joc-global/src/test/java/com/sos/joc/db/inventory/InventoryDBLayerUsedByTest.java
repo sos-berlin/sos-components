@@ -59,7 +59,7 @@ public class InventoryDBLayerUsedByTest {
     public void testUsedSchedules() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
-        String workflowPath = "/workflow1";
+        String workflowName = "workflow1";
         String calendarPath = "/calendar1";
         try {
             factory = createFactory();
@@ -67,14 +67,14 @@ public class InventoryDBLayerUsedByTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<DBItemInventoryConfiguration> items = dbLayer.getUsedSchedulesByWorkflowPath(workflowPath);
-            LOGGER.info(String.format("[testUsedSchedules][workflowPath=%s]found=%s", workflowPath, items.size()));
+            List<DBItemInventoryConfiguration> items = dbLayer.getUsedSchedulesByWorkflowName(workflowName);
+            LOGGER.info(String.format("[getUsedSchedulesByWorkflowName][name=%s]found=%s", workflowName, items.size()));
             for (DBItemInventoryConfiguration item : items) {
                 LOGGER.info("---" + SOSHibernate.toString(item));
             }
 
             items = dbLayer.getUsedSchedulesByCalendarPath(calendarPath);
-            LOGGER.info(String.format("[testUsedSchedules][calendarPath=%s]found=%s", calendarPath, items.size()));
+            LOGGER.info(String.format("[getUsedSchedulesByCalendarPath][path=%s]found=%s", calendarPath, items.size()));
             for (DBItemInventoryConfiguration item : items) {
                 LOGGER.info("---" + SOSHibernate.toString(item));
             }
