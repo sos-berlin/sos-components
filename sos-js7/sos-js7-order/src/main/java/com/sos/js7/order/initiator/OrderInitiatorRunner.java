@@ -47,6 +47,8 @@ import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -130,6 +132,8 @@ public class OrderInitiatorRunner extends TimerTask {
 
         if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
             orderListSynchronizer.addPlannedOrderToControllerAndDB(controllerId, withSubmit);
+            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));            
+            
         }
          return orderListSynchronizer.getListOfPlannedOrders();
     }
