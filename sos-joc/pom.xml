@@ -18,6 +18,5 @@
 		<module>sos-joc-db</module>
 		<module>sos-joc-event</module>
 		<module>sos-joc-monitoring</module>
-		<module>sos-joc-notification</module>
 	</modules>
 </project>
