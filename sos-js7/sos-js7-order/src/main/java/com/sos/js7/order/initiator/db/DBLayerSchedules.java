@@ -21,6 +21,7 @@ import com.sos.inventory.model.Schedule;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
@@ -93,25 +94,10 @@ public class DBLayerSchedules {
         boolean selectedByWorkflowNames = (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0);
 
         if (selectedByWorkflowNames) {
-            FilterSchedules filterSelectByWorkflowNames = new FilterSchedules();
-
-            q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filterSelectByWorkflowNames) + filter.getOrderCriteria() + filter
-                    .getSortMode();
-            query = sosHibernateSession.createQuery(q);
-
-            if (limit > 0) {
-                query.setMaxResults(limit);
-            }
-            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowNames = sosHibernateSession.getResultList(query);
-            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultsetByWorkflowNames) {
-                Schedule schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
-
-                if (filter.getListOfWorkflowNames().contains(schedule.getWorkflowName())) {
-                    dbItemInventoryConfiguration.setSchedule(schedule);
-                    resultset.add(dbItemInventoryConfiguration);
-                }
-            }
-
+            InventoryDBLayer inventoryDBLayer = new InventoryDBLayer(sosHibernateSession);
+           
+            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowNames = inventoryDBLayer.getUsedReleasedSchedulesByWorkflowNames(filter.getListOfWorkflowNames());
+            resultset.addAll(resultsetByWorkflowNames);      
         }
 
         FilterInventoryConfigurations filterInventoryConfigurations = new FilterInventoryConfigurations();
