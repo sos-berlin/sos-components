@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
-import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
@@ -92,11 +92,10 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
             String name = JocXmlEditor.getConfigurationName(in.getObjectType());
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(in.getObjectType().name(), name);
 
             if (item == null) {
                 item = new DBItemXmlEditorConfiguration();
-                item.setControllerId(in.getControllerId());
                 item.setType(in.getObjectType().name());
                 item.setName(name);
                 item.setConfigurationDraft(null);

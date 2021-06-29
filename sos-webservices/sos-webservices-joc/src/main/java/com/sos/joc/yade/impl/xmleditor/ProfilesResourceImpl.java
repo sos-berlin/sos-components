@@ -50,7 +50,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
             }
 
             ProfilesAnswer answer = new ProfilesAnswer();
-            DBItemXmlEditorConfiguration item = getItem(in.getControllerId(), in.getName());
+            DBItemXmlEditorConfiguration item = getItem(in.getName());
             if (item != null) {
                 ArrayList<Profile> profiles = new ArrayList<Profile>();
                 List<String> draftProfiles = getProfiles(item.getConfigurationDraft());
@@ -125,14 +125,14 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
         checkRequiredParameter("name", in.getName());
     }
 
-    private DBItemXmlEditorConfiguration getItem(String controllerId, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
 
             session.beginTransaction();
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, ObjectType.YADE.name(), name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(ObjectType.YADE.name(), name);
             session.commit();
             return item;
         } catch (Throwable e) {

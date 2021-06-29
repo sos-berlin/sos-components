@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
-import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
@@ -193,13 +193,11 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
     }
 
     private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
-                .getName()));
+        return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setControllerId(in.getControllerId());
         item.setType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());

@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.xml.SOSXMLXSDValidator;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
-import com.sos.commons.xml.validator.SOSXMLXSDValidator;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
@@ -76,8 +76,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(ReadConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = getItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
-                .getObjectType()));
+        DBItemXmlEditorConfiguration item = getItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()));
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
         handler.readCurrent(item, in.getControllerId(), (in.getForceRelease() != null && in.getForceRelease()));
@@ -165,7 +164,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
     private ValidateConfigurationAnswer getValidation(java.nio.file.Path schema, String content) throws Exception {
         ValidateConfigurationAnswer validation = null;
         try {
-            SOSXMLXSDValidator.validate(schema,content);
+            SOSXMLXSDValidator.validate(schema, content);
             validation = ValidateResourceImpl.getSuccess();
         } catch (SOSXMLXSDValidatorException e) {
             validation = ValidateResourceImpl.getError(e);
@@ -196,18 +195,17 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
         }
     }
 
-    private DBItemXmlEditorConfiguration getItem(String controllerId, String objectType, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getItem(String objectType, String name) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             session.commit();
             if (isTraceEnabled) {
-                LOGGER.trace(String.format("[%s][%s][%s]%s", controllerId, objectType, name, SOSString.toString(item, Arrays.asList(
-                        "configuration"))));
+                LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList("configuration"))));
             }
             return item;
         } catch (Throwable e) {
@@ -225,7 +223,7 @@ public class ReadResourceImpl extends ACommonResourceImpl implements IReadResour
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getControllerId(), in.getObjectType().name(), properties, orderBy);
+            List<Map<String, Object>> items = dbLayer.getObjectProperties(in.getObjectType().name(), properties, orderBy);
             session.commit();
             return items;
         } catch (Throwable e) {

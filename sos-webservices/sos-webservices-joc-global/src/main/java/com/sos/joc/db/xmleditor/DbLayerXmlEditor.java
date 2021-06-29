@@ -36,15 +36,13 @@ public class DbLayerXmlEditor extends DBLayer {
         return 0;
     }
 
-    public int deleteAllMultiple(ObjectType type, String controllerId) throws Exception {
+    public int deleteAllMultiple(ObjectType type) throws Exception {
         // JOC uses autoCommit=true, executeUpdate is not supported
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
-        // hql.append("and controllerId=:controllerId ");
 
         Query<DBItemXmlEditorConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type.name());
-        // query.setParameter("controllerId", controllerId);
 
         List<DBItemXmlEditorConfiguration> items = getSession().getResultList(query);
         if (items != null) {
@@ -66,31 +64,27 @@ public class DbLayerXmlEditor extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemXmlEditorConfiguration getObject(String controllerId, String type, String name) throws Exception {
+    public DBItemXmlEditorConfiguration getObject(String type, String name) throws Exception {
         StringBuilder hql = new StringBuilder("from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
         hql.append("and name=:name ");
-        // hql.append("and controllerId=:controllerId ");
 
         Query<DBItemXmlEditorConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type);
         query.setParameter("name", name);
-        // query.setParameter("controllerId", controllerId);
         return getSession().getSingleResult(query);
     }
 
-    public List<Map<String, Object>> getObjectProperties(String controllerId, String type, String properties, String orderBy) throws Exception {
+    public List<Map<String, Object>> getObjectProperties(String type, String properties, String orderBy) throws Exception {
         StringBuilder hql = new StringBuilder("select new map(").append(properties).append(") from ").append(DBITEM_XML_EDITOR_CONFIGURATIONS).append(
                 " ");
         hql.append("where type=:type ");
-        //hql.append("and controllerId=:controllerId ");
         if (!SOSString.isEmpty(orderBy)) {
             hql.append(orderBy);
         }
 
         Query<Map<String, Object>> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type);
-        //query.setParameter("controllerId", controllerId);
         return getSession().getResultList(query);
     }
 

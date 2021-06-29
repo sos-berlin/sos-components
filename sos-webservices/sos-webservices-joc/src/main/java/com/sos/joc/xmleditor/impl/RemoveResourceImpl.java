@@ -71,15 +71,15 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
     }
 
     private ReadStandardConfigurationAnswer handleStandardConfiguration(RemoveConfiguration in) throws Exception {
-        DBItemXmlEditorConfiguration item = updateStandardItem(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in
-                .getObjectType()), in.getRelease() == null ? false : in.getRelease().booleanValue());
+        DBItemXmlEditorConfiguration item = updateStandardItem(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType()), in
+                .getRelease() == null ? false : in.getRelease().booleanValue());
 
         ReadConfigurationHandler handler = new ReadConfigurationHandler(in.getObjectType());
         handler.readCurrent(item, in.getControllerId(), true);
         postEvent(in);
         return handler.getAnswer();
     }
-    
+
     private void postEvent(RemoveConfiguration in) {
         EventBus.getInstance().post(new NotificationConfigurationRemoved(in.getControllerId()));
     }
@@ -116,17 +116,17 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         }
     }
 
-    private DBItemXmlEditorConfiguration updateStandardItem(String controllerId, String objectType, String name, boolean release) throws Exception {
+    private DBItemXmlEditorConfiguration updateStandardItem(String objectType, String name, boolean release) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             if (item == null) {
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]not found", controllerId, objectType, name));
+                    LOGGER.trace(String.format("[%s][%s]not found", objectType, name));
                 }
             } else {
                 if (release) {
@@ -142,8 +142,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
                 session.update(item);
 
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]%s", controllerId, objectType, name, SOSString.toString(item, Arrays.asList(
-                            "configuration"))));
+                    LOGGER.trace(String.format("[%s][%s]%s", objectType, name, SOSString.toString(item, Arrays.asList("configuration"))));
                 }
             }
             session.commit();

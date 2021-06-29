@@ -77,7 +77,6 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setControllerId(in.getControllerId());
         item.setType(in.getObjectType().name());
         item.setName(name);
         item.setConfigurationDraft(null);

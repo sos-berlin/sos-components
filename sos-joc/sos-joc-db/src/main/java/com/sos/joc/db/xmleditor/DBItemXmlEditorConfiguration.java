@@ -27,9 +27,6 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     private Long id;
 
     /** Others */
-    @Column(name = "[CONTROLLER_ID]", nullable = false)
-    private String controllerId;
-
     @Column(name = "[TYPE]", nullable = false)
     private String type;
 
@@ -72,14 +69,6 @@ public class DBItemXmlEditorConfiguration extends DBItem {
 
     public void setId(Long val) {
         id = val;
-    }
-
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String val) {
-        controllerId = val;
     }
 
     public String getType() {

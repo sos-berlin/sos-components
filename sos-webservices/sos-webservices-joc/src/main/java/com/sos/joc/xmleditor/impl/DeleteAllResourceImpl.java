@@ -21,7 +21,6 @@ import com.sos.joc.model.xmleditor.delete.all.DeleteAllAnswer;
 import com.sos.joc.xmleditor.resource.IDeleteAllResource;
 import com.sos.schema.JsonValidator;
 
-
 @Path(JocXmlEditor.APPLICATION_PATH)
 public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDeleteAllResource {
 
@@ -43,12 +42,13 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
                 switch (type) {
                 case YADE:
                 case OTHER:
-                    deleteAllMultiple(type, in.getControllerId());
+                    deleteAllMultiple(type);
                     response = JOCDefaultResponse.responseStatus200(getSuccess());
                     break;
                 default:
                     throw new JocException(new JocError(JocXmlEditor.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE, String.format(
-                            "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), in.getObjectTypes().stream().map(ObjectType::value).collect(Collectors.joining(",")))));
+                            "[%s][%s]unsupported object type(s) for delete all", in.getControllerId(), in.getObjectTypes().stream().map(
+                                    ObjectType::value).collect(Collectors.joining(",")))));
                 }
             }
             return response;
@@ -71,14 +71,14 @@ public class DeleteAllResourceImpl extends ACommonResourceImpl implements IDelet
         return answer;
     }
 
-    private boolean deleteAllMultiple(ObjectType type, String controllerId) throws Exception {
+    private boolean deleteAllMultiple(ObjectType type) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            int deleted = dbLayer.deleteAllMultiple(type, controllerId);
+            int deleted = dbLayer.deleteAllMultiple(type);
             session.commit();
             if (isTraceEnabled) {
                 LOGGER.trace(String.format("deleted=%s", deleted));

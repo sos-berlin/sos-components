@@ -89,18 +89,16 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
     }
 
     private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, StoreConfiguration in) throws Exception {
-        return dbLayer.getObject(in.getControllerId(), in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in
-                .getName()));
+        return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 
     private DBItemXmlEditorConfiguration create(SOSHibernateSession session, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
-        item.setControllerId(in.getControllerId());
         item.setType(in.getObjectType().name());
         item.setName(name.trim());
         item.setConfigurationDraft(in.getConfiguration());
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
-        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(),in.getSchemaIdentifier()));
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         item.setAuditLogId(Long.valueOf(0));// TODO
         item.setAccount(getAccount());
         item.setCreated(new Date());
@@ -114,7 +112,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         item.setName(name.trim());
         item.setConfigurationDraft(SOSString.isEmpty(in.getConfiguration()) ? null : in.getConfiguration());
         item.setConfigurationDraftJson(Utils.serialize(in.getConfigurationJson()));
-        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(),in.getSchemaIdentifier()));
+        item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), in.getSchemaIdentifier()));
         // item.setAuditLogId(new Long(0));// TODO
         item.setAccount(getAccount());
         item.setModified(new Date());

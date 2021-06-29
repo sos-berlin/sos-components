@@ -115,7 +115,7 @@ public class DeleteResourceImpl extends ACommonResourceImpl implements IDeleteRe
             DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
 
             session.beginTransaction();
-            DBItemXmlEditorConfiguration item = dbLayer.getObject(controllerId, objectType, name);
+            DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);
             if (item == null) {
                 if (isTraceEnabled) {
                     LOGGER.trace(String.format("[%s][%s][%s]not found", controllerId, objectType, name));
