@@ -21,6 +21,7 @@ import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
@@ -258,6 +259,16 @@ public class EventService {
         eventSnapshot.setEventId(evt.getEventId() / 1000);
         eventSnapshot.setEventType("JOCStateChanged");
         eventSnapshot.setObjectType(EventType.JOCCLUSTER);
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ DailyPlanEvent.class })
+    public void createEvent(DailyPlanEvent evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey());
+        eventSnapshot.setObjectType(EventType.DAILYPLAN);
+        eventSnapshot.setMessage(evt.getDailyPlanDate());
         addEvent(eventSnapshot);
     }
     
