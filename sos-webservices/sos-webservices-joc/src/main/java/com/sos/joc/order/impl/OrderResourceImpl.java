@@ -29,8 +29,8 @@ import js7.data_for_java.order.JOrder;
 public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource {
 
     private static final String API_CALL = "./order";
-    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
-            OrderStateText.SUSPENDED);
+    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.SCHEDULED,
+            OrderStateText.BLOCKED, OrderStateText.SUSPENDED);
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
