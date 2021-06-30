@@ -7,6 +7,7 @@ import java.util.GregorianCalendar;
 import com.sos.joc.model.order.OrderStateText;
 
 public class DBItemDailyPlanWithHistory {
+    private static final Long NEVER_MILLIS =  253402300799000L;
 
     private int tolerance = 1;
     private int toleranceUnit = Calendar.MINUTE;
@@ -54,7 +55,11 @@ public class DBItemDailyPlanWithHistory {
     public OrderStateText getStateText() {
         if (submitted) {
             if (orderHistoryId == null) {
-                return OrderStateText.SCHEDULED; // @Uwe: or OrderStateText.PENDING
+                if (NEVER_MILLIS.equals(plannedStart.getTime())) {
+                    return OrderStateText.PENDING; 
+                }else {
+                    return OrderStateText.SCHEDULED;  
+                }
             } else {
                 return OrderStateText.fromValue(this.getState());
             }

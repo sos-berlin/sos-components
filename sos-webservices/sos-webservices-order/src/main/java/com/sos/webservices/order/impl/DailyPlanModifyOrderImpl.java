@@ -138,13 +138,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
 
-    private void cancelOrdersFromController(FilterDailyPlannedOrders filter, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
+    private void cancelOrdersFromController(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JsonProcessingException, InterruptedException,
             ExecutionException {
 
         try {
-            OrderHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(), listOfPlannedOrdersWithHistory);
+            OrderHelper.removeFromJobSchedulerControllerWithHistory(controllerId, listOfPlannedOrdersWithHistory);
         } catch (ControllerObjectNotExistException e) {
             LOGGER.warn("Order unknown in JS7 Controller");
         }
@@ -274,14 +274,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 if (dbItemDailyPlanOrder.getSubmitted()) {
-                    filter.addState(OrderStateText.PENDING); //@Uwe: Why addState?? Where is it used??
-                    filter.addState(OrderStateText.SCHEDULED); //Why addState?? Where is it used??
+               
                     List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
                     DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
                     dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());
                     dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                     listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
-                    cancelOrdersFromController(filter, listOfDailyPlanItems);
+                    cancelOrdersFromController(filter.getControllerId(), listOfDailyPlanItems);
 
                     FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
                     filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
