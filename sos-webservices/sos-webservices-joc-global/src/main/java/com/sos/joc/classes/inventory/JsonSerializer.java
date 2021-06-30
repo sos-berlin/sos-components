@@ -113,7 +113,7 @@ public class JsonSerializer {
         if (jr == null) {
             return null;
         }
-        jr.setSettings(emptyEnvToNull(jr.getSettings()));
+        jr.setVariables(emptyEnvToNull(jr.getVariables()));
         jr.setEnv(emptyEnvToNull(jr.getEnv()));
         return jr;
     }

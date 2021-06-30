@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "path",
-    "settings",
+    "variables",
     "env"
 })
 public class JobResource implements IDeployObject
@@ -52,12 +52,13 @@ public class JobResource implements IDeployObject
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
+    @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     @JsonAlias({
+        "settings",
         "arguments"
     })
-    private Environment settings;
+    private Environment variables;
     /**
      * key-value pairs particularly to assign parameters to environment
      * <p>
@@ -83,11 +84,11 @@ public class JobResource implements IDeployObject
      * @param tYPE
      * @param env
      */
-    public JobResource(DeployType tYPE, String path, Environment settings, Environment env) {
+    public JobResource(DeployType tYPE, String path, Environment variables, Environment env) {
         super();
         this.tYPE = tYPE;
         this.path = path;
-        this.settings = settings;
+        this.variables = variables;
         this.env = env;
     }
 
@@ -143,18 +144,18 @@ public class JobResource implements IDeployObject
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
-    public Environment getSettings() {
-        return settings;
+    @JsonProperty("variables")
+    public Environment getVariables() {
+        return variables;
     }
 
     /**
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("settings")
-    public void setSettings(Environment settings) {
-        this.settings = settings;
+    @JsonProperty("variables")
+    public void setVariables(Environment variables) {
+        this.variables = variables;
     }
 
     /**
@@ -183,12 +184,12 @@ public class JobResource implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("settings", settings).append("env", env).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("variables", variables).append("env", env).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(settings).append(tYPE).append(env).toHashCode();
+        return new HashCodeBuilder().append(path).append(variables).append(tYPE).append(env).toHashCode();
     }
 
     @Override
@@ -200,7 +201,7 @@ public class JobResource implements IDeployObject
             return false;
         }
         JobResource rhs = ((JobResource) other);
-        return new EqualsBuilder().append(path, rhs.path).append(settings, rhs.settings).append(tYPE, rhs.tYPE).append(env, rhs.env).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(variables, rhs.variables).append(tYPE, rhs.tYPE).append(env, rhs.env).isEquals();
     }
 
 }

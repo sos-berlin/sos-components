@@ -58,7 +58,8 @@ public class JobResource implements IInventoryObject, IConfigurationObject, IDep
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     @JsonAlias({
-        "settings"
+        "settings",
+        "variables"
     })
     private Environment arguments;
     /**

@@ -13,7 +13,7 @@
   "propertyOrder": [
     "TYPE",
     "path",
-    "settings",
+    "variables",
     "env"
   ],
   
@@ -27,8 +27,8 @@
     "path": {
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
-    "settings": {
-      "alias": "arguments",
+    "variables": {
+      "alias": "arguments,settings",
       "description": "a map for arbitrary key-value pairs",
   	  "javaType": "com.sos.inventory.model.job.Environment",
       "type": "object",
