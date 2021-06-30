@@ -54,12 +54,12 @@ public class DBItemDailyPlanWithHistory {
     public OrderStateText getStateText() {
         if (submitted) {
             if (orderHistoryId == null) {
-                return OrderStateText.fromValue("PENDING");
+                return OrderStateText.SCHEDULED; // @Uwe: or OrderStateText.PENDING
             } else {
                 return OrderStateText.fromValue(this.getState());
             }
         } else {
-            return OrderStateText.fromValue("PLANNED");
+            return OrderStateText.PLANNED;
         }
     }
 

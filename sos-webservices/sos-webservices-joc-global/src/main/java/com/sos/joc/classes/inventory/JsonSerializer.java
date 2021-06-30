@@ -19,6 +19,7 @@ import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 
@@ -79,7 +80,7 @@ public class JsonSerializer {
             return null;
         }
         emptyStringCollectionsToNull(w.getJobResourcePaths());
-        w.setOrderRequirements(emptyRequirementsToNull(w.getOrderRequirements()));
+        w.setOrderPreparation(emptyRequirementsToNull(w.getOrderPreparation()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
         cleanSignedInstructions(w.getInstructions());
         return w;
@@ -91,7 +92,7 @@ public class JsonSerializer {
             return null;
         }
         emptyStringCollectionsToNull(w.getJobResourceNames());
-        w.setOrderRequirements(emptyRequirementsToNull(w.getOrderRequirements()));
+        w.setOrderPreparation(emptyRequirementsToNull(w.getOrderPreparation()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
         cleanInventoryInstructions(w.getInstructions());
         return w;
@@ -183,6 +184,14 @@ public class JsonSerializer {
         if (r != null && (r.getParameters() == null || (r.getParameters() != null && r.getParameters().getAdditionalProperties().isEmpty()))) {
             return null;
         }
+        r.getParameters().getAdditionalProperties().replaceAll((k, v) -> {
+            if (ParameterType.String == v.getType()) {
+                v.setDefault(quoteString((String) v.getDefault()));
+            }
+            v.setFinal(quoteString(v.getFinal()));
+            return v;
+        });
+        r.setAllowUndeclared(defaultToNull(r.getAllowUndeclared(), Boolean.FALSE));
         return r;
     }
     
@@ -252,6 +261,9 @@ public class JsonSerializer {
     }
     
     private static String quoteString(String str) {
+        if (str == null) {
+            return null;
+        }
         Either<Problem, JExpression> e = JExpression.parse(str);
         if (e.isLeft()) {
             str = JExpression.quoteString(str);
@@ -263,17 +275,9 @@ public class JsonSerializer {
         if (instructions != null) {
             for (Instruction inst : instructions) {
                 switch (inst.getTYPE()) {
-                case AWAIT:
-                case FINISH:
-                case PUBLISH:
-                case RETRY:
-                case IMPLICIT_END:
-                    break;
                 case FAIL:
                     Fail f = inst.cast();
-                    if (f.getMessage() != null) {
-                        f.setMessage(quoteString(f.getMessage()));
-                    }
+                    f.setMessage(quoteString(f.getMessage()));
                     if (f.getOutcome() == null) {
                         f.setOutcome(new Variables());
                     }
@@ -308,6 +312,8 @@ public class JsonSerializer {
                     Lock lock = inst.cast();
                     cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions());
                     break;
+                default:
+                    break;
                 }
             }
         }
@@ -317,17 +323,9 @@ public class JsonSerializer {
         if (instructions != null) {
             for (com.sos.sign.model.instruction.Instruction inst : instructions) {
                 switch (inst.getTYPE()) {
-                case AWAIT:
-                case FINISH:
-                case PUBLISH:
-                case RETRY:
-                case IMPLICIT_END:
-                    break;
                 case FAIL:
                     com.sos.sign.model.instruction.Fail f = inst.cast();
-                    if (f.getMessage() != null) {
-                        f.setMessage(quoteString(f.getMessage()));
-                    }
+                    f.setMessage(quoteString(f.getMessage()));
                     if (f.getNamedValues() == null) {
                         f.setNamedValues(new Variables());
                     }
@@ -361,6 +359,8 @@ public class JsonSerializer {
                 case LOCK:
                     com.sos.sign.model.instruction.Lock lock = inst.cast();
                     cleanSignedInstructions(lock.getLockedWorkflow().getInstructions());
+                    break;
+                default:
                     break;
                 }
             }

@@ -35,4 +35,9 @@ public interface IOrdersResourceModify {
     @Path("remove_when_terminated")
     @Produces({ "application/json" })
     public JOCDefaultResponse postOrdersRemoveWhenTerminated(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("confirm")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postOrdersConfirm(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

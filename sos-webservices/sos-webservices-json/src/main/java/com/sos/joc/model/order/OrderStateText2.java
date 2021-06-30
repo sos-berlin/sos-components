@@ -18,6 +18,7 @@ public enum OrderStateText2 {
     FailedInFork("FailedInFork"),
     FailedWhileFresh("FailedWhileFresh"),
     Ready("Ready"),
+    Prompting("Prompting"),
     Processed("Processed"),
     Processing("Processing"),
     Finished("Finished"),

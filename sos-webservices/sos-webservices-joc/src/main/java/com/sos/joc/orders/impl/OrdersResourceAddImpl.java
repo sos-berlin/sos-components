@@ -89,7 +89,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     Either<Problem, JWorkflow> e = currentState.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())));
                     ProblemHelper.throwProblemIfExist(e);
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
-                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderRequirements()));
+                    order.setArguments(OrdersHelper.checkArguments(order.getArguments(), workflow.getOrderPreparation()));
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd);
                     auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string()));
                     either = Either.right(o);

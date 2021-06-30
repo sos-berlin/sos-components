@@ -56,8 +56,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceImpl.class);
     private static final String API_CALL = "./orders";
-    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.BLOCKED,
-            OrderStateText.SUSPENDED);
+    private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.SCHEDULED,
+            OrderStateText.BLOCKED, OrderStateText.SUSPENDED);
 
     @Override
     public JOCDefaultResponse postOrders(String accessToken, byte[] filterBytes) {
@@ -86,10 +86,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
             List<OrderStateText> states = ordersFilter.getStates();
-            // BLOCKED is not a Controller state. It needs a special handling. These are PENDING with scheduledFor in the past
+            // BLOCKED is not a Controller state. It needs a special handling. These are SCHEDULED with scheduledFor in the past
             final boolean withStatesFilter = states != null && !states.isEmpty();
             final boolean lookingForBlocked = withStatesFilter && states.contains(OrderStateText.BLOCKED);
             final boolean lookingForPending = withStatesFilter && states.contains(OrderStateText.PENDING);
+            final boolean lookingForBlockedOrPending = lookingForBlocked || lookingForPending;
+            final boolean lookingForScheduled = withStatesFilter && states.contains(OrderStateText.SCHEDULED);
 
             JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
             Stream<JOrder> orderStream = Stream.empty();
@@ -147,9 +149,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     .getValue().stream());
 
             if (withStatesFilter) {
-                // special BLOCKED handling
-                if (lookingForBlocked && !lookingForPending) {
-                    states.add(OrderStateText.PENDING);
+                // special BLOCKED/PENDING handling
+                if (lookingForBlockedOrPending && !lookingForScheduled) {
+                    states.add(OrderStateText.SCHEDULED);
                 }
                 if (states.contains(OrderStateText.SUSPENDED)) {
                     orderStream = orderStream.filter(o -> o.asScala().isSuspended() || states.contains(OrdersHelper.getGroupedState(o.asScala()
@@ -164,11 +166,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             // OrderIds beat dateTo
             if (!withOrderIdFilter && ((ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty()) || ordersFilter.getScheduledNever() == Boolean.TRUE)) {
                 // only necessary if fresh orders in orderStream
-                if (!withStatesFilter || lookingForPending) {
+                if (!withStatesFilter || lookingForScheduled) {
                     
                     if (ordersFilter.getScheduledNever() == Boolean.TRUE) {
                         Predicate<JOrder> neverFilter = o -> {
-                            if (OrderStateText.PENDING.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                            if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                                 if (!o.scheduledFor().isPresent() || o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS) {
                                     return false;
                                 }
@@ -213,9 +215,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, surveyDateMillis);
                     // special BLOCKED handling
                     if (withStatesFilter) {
-                        if (lookingForBlocked && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
+                        if (lookingForBlockedOrPending && !lookingForScheduled && OrderStateText.SCHEDULED.equals(order.getState().get_text())) {
                             order = null;
-                        } else if (lookingForPending && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
+                        } else if (lookingForScheduled && !lookingForBlocked && OrderStateText.BLOCKED.equals(order.getState().get_text())) {
+                            order = null;
+                        } else if (lookingForScheduled && !lookingForPending && OrderStateText.PENDING.equals(order.getState().get_text())) {
                             order = null;
                         }
                     }

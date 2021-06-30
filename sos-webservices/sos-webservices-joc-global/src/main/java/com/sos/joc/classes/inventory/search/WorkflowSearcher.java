@@ -91,8 +91,8 @@ public class WorkflowSearcher {
 
     private void setAllOrderRequirementsParameters() {
         if (orderRequirementsParameters == null) {
-            if (workflow.getOrderRequirements() != null && workflow.getOrderRequirements().getParameters() != null) {
-                orderRequirementsParameters = workflow.getOrderRequirements().getParameters().getAdditionalProperties();
+            if (workflow.getOrderPreparation() != null && workflow.getOrderPreparation().getParameters() != null) {
+                orderRequirementsParameters = workflow.getOrderPreparation().getParameters().getAdditionalProperties();
             }
             if (orderRequirementsParameters == null) {
                 orderRequirementsParameters = new HashMap<String, Parameter>();

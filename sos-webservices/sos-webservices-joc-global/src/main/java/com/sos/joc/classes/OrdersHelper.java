@@ -92,7 +92,7 @@ public class OrdersHelper {
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh$.class, OrderStateText.PENDING);
+                    put(Order.Fresh$.class, OrderStateText.SCHEDULED);
                     put(Order.Awaiting.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
@@ -108,6 +108,7 @@ public class OrdersHelper {
                     put(Order.Finished$.class, OrderStateText.FINISHED);
                     put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);
+                    put(Order.Prompting.class, OrderStateText.PROMPTING);
                 }
             });
 
@@ -117,7 +118,8 @@ public class OrdersHelper {
 
         {
             put("Planned", OrderStateText.PLANNED);
-            put("Fresh", OrderStateText.PENDING);
+            put("Fresh", OrderStateText.SCHEDULED);
+            put("Pending", OrderStateText.PENDING);
             put("Awaiting", OrderStateText.WAITING);
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
@@ -137,6 +139,7 @@ public class OrdersHelper {
             put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
             put("Blocked", OrderStateText.BLOCKED);
             put("Calling", OrderStateText.CALLING);
+            put("Prompting", OrderStateText.PROMPTING);
         }
     });
 
@@ -148,6 +151,7 @@ public class OrdersHelper {
         {
             put(OrderStateText.PLANNED, 4);
             put(OrderStateText.PENDING, 1);
+            put(OrderStateText.SCHEDULED, 1);
             put(OrderStateText.WAITING, 8);
             put(OrderStateText.FAILED, 2);
             put(OrderStateText.SUSPENDED, 5);
@@ -158,6 +162,7 @@ public class OrdersHelper {
             put(OrderStateText.FINISHED, 6);
             put(OrderStateText.BLOCKED, 7);
             put(OrderStateText.CALLING, 9);
+            put(OrderStateText.PROMPTING, 9);
             put(OrderStateText.UNKNOWN, 2);
         }
     });
@@ -218,6 +223,10 @@ public class OrdersHelper {
             return true;
         }
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
+    }
+    
+    public static boolean isPrompting(JOrder order) {
+        return OrderStateText.PROMPTING.equals(getGroupedState(order.asScala().state().getClass()));
     }
 
     public static OrderState getState(String state, Boolean isSuspended) {
@@ -305,13 +314,21 @@ public class OrdersHelper {
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             o.setState(getState("Blocked", oItem.getIsSuspended()));
+        } else if (scheduledFor != null && JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor) && "Fresh".equals(oItem.getState().getTYPE())) {
+            o.setState(getState("Pending", oItem.getIsSuspended()));
         } else {
             o.setState(getState(oItem.getState().getTYPE(), oItem.getIsSuspended()));
         }
+        if ("Prompting".equals(oItem.getState().getTYPE())) {
+            o.setQuestion(((Order.Prompting) jOrder.asScala().state()).question().convertToString());
+        }
         o.setMarked(getMark(jOrder.asScala().mark()));
         o.setScheduledFor(scheduledFor);
+//        if (JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor)) {
+//            o.setScheduledNever(true); 
+//        }
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
-        if (scheduledFor == null && surveyDateMillis != null && OrderStateText.PENDING.equals(o.getState().get_text())) {
+        if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
         }
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
@@ -327,7 +344,7 @@ public class OrdersHelper {
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
-        return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderRequirements();
+        return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
 
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
@@ -437,7 +454,7 @@ public class OrdersHelper {
                             vars.getAdditionalProperties().remove(k);
                         });
                     }
-                    args = variablesToScalaValuedArguments(checkArguments(vars, workflow.getOrderRequirements()));
+                    args = variablesToScalaValuedArguments(checkArguments(vars, workflow.getOrderPreparation()));
                 }
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();

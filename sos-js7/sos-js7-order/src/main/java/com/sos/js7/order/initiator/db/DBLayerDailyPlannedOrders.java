@@ -204,7 +204,7 @@ public class DBLayerDailyPlannedOrders {
                 if (state.intValue() == OrderStateText.PLANNED.intValue()) {
                     where += " p.submitted=0 or";
                 } else {
-                    if (state.intValue() == OrderStateText.PENDING.intValue()) {
+                    if (state.intValue() == OrderStateText.PENDING.intValue()) { //@Uwe: consider OrderStateText.SCHEDULED
                         where += " (p.submitted=1 and  o.state=null)" + " or";
                     } else {
                         where += " o.state = " + state.intValue() + " or";

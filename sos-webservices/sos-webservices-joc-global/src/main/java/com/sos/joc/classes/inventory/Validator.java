@@ -130,9 +130,9 @@ public class Validator {
                         jobResources.addAll(workflow.getJobResourceNames());
                     }
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
-                    validateOrderRequirements(workflow.getOrderRequirements());
-                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderRequirements(), new HashMap<String, String>());
-                    // validateJobArguments(workflow.getJobs(), workflow.getOrderRequirements());
+                    validateOrderPreparation(workflow.getOrderPreparation());
+                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderPreparation(), new HashMap<String, String>());
+                    // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
@@ -143,7 +143,7 @@ public class Validator {
                     validateCalendarRefs(schedule, dbLayer);
                     // if (json != null) {
                     // Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
-                    // validateArguments(schedule.getVariables(), workflowOfSchedule.getOrderRequirements(), "$.variables");
+                    // validateArguments(schedule.getVariables(), workflowOfSchedule.getOrderPreparation(), "$.variables");
                     // }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
@@ -278,7 +278,7 @@ public class Validator {
         return jobResources;
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames, Requirements orderRequirements,
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames, Requirements orderPreparation,
             Map<String, String> labels) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
         if (instructions != null) {
             int index = 0;
@@ -292,13 +292,6 @@ public class Validator {
                     throw new SOSJsonSchemaException(msg);
                 }
                 switch (inst.getTYPE()) {
-                case AWAIT:
-                case FAIL:
-                case FINISH:
-                case PUBLISH:
-                case RETRY:
-                case IMPLICIT_END:
-                    break;
                 case EXECUTE_NAMED:
                     NamedJob nj = inst.cast();
                     if (!jobNames.contains(nj.getJobName())) {
@@ -310,7 +303,7 @@ public class Validator {
                     } else {
                         labels.put(nj.getLabel(), "$." + instPosition + "label");
                     }
-                    // validateArguments(nj.getDefaultArguments(), orderRequirements, "$." + instPosition + "defaultArguments");
+                    // validateArguments(nj.getDefaultArguments(), orderPreparation, "$." + instPosition + "defaultArguments");
                     // validateArgumentKeys(nj.getDefaultArguments(), "$." + instPosition + "defaultArguments");
                     break;
                 case FORK:
@@ -319,7 +312,7 @@ public class Validator {
                     String branchPosition = instPosition + "branches";
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderRequirements, labels);
+                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
                         branchIndex++;
                     }
                     break;
@@ -331,20 +324,22 @@ public class Validator {
                     } catch (Exception e) {
                         throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
                     }
-                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderRequirements, labels);
+                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation, labels);
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderRequirements, labels);
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation, labels);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderRequirements, labels);
-                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderRequirements, labels);
+                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderPreparation, labels);
+                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderPreparation, labels);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
-                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames, orderRequirements,
+                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames, orderPreparation,
                             labels);
+                    break;
+                default:
                     break;
                 }
                 index++;
@@ -352,7 +347,7 @@ public class Validator {
         }
     }
 
-    private static void validateOrderRequirements(Requirements orderRequirements) throws JocConfigurationException {
+    private static void validateOrderPreparation(Requirements orderRequirements) throws JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
 
@@ -368,6 +363,9 @@ public class Validator {
                 switch (value.getType()) {
                 case String:
                     invalid = (_default instanceof String) == false;
+                    if (!invalid) {
+                        validateExpression("$.orderPreparation.parameters['" + key + "'].default: ", (String) value.getDefault());
+                    }
                     break;
                 case Number:
                     invalid = (_default instanceof String) || (_default instanceof Boolean);
@@ -378,9 +376,12 @@ public class Validator {
                 }
                 if (invalid) {
                     throw new JocConfigurationException(String.format(
-                            "$.orderRequirements.parameters['%s'].default: Wrong data type %s (%s is expected).", key, _default.getClass()
+                            "$.orderPreparation.parameters['%s'].default: Wrong data type %s (%s is expected).", key, _default.getClass()
                                     .getSimpleName(), value.getType().value()));
                 }
+            }
+            if (value.getFinal() != null) {
+                validateExpression("$.orderPreparation.parameters['" + key + "'].final: ", value.getFinal());
             }
         });
     }
@@ -405,8 +406,8 @@ public class Validator {
         args.keySet().forEach(key -> validateKey(key, position));
     }
 
-    private static void validateArguments(Environment arguments, Requirements orderRequirements, String position) throws JocConfigurationException {
-        final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
+    private static void validateArguments(Environment arguments, Requirements orderPreparation, String position) throws JocConfigurationException {
+        final Map<String, Parameter> params = (orderPreparation != null && orderPreparation.getParameters() != null) ? orderPreparation
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
         final Map<String, String> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
 
@@ -427,7 +428,7 @@ public class Validator {
                 // throw new JocConfigurationException(String.format("%s['%s']: only characters 'a-zA-Z0-9_' are allowed in the variabe name.", position, key));
                 // }
                 boolean invalid = false;
-                // arguments in jobs and job instruction are not required caused of orderRequirements ??
+                // arguments in jobs and job instruction are not required caused of orderPreparation ??
                 if (value.getDefault() == null && !args.containsKey(key)) { // required
                     throw new JocConfigurationException("Variable '" + key + "' is missing but required");
                 }
@@ -453,10 +454,10 @@ public class Validator {
         }
     }
 
-    private static void validateJobArguments(Jobs jobs, Requirements orderRequirements) {
+    private static void validateJobArguments(Jobs jobs, Requirements orderPreparation) {
         if (jobs != null) {
             jobs.getAdditionalProperties().forEach((key, value) -> {
-                // validateArguments(value.getDefaultArguments(), orderRequirements, "$.jobs['" + key + "'].defaultArguments");
+                // validateArguments(value.getDefaultArguments(), orderPreparation, "$.jobs['" + key + "'].defaultArguments");
                 validateArgumentKeys(value.getDefaultArguments(), "$.jobs['" + key + "'].defaultArguments");
                 if (ExecutableType.ScriptExecutable.equals(value.getExecutable().getTYPE())) {
                     ExecutableScript script = value.getExecutable().cast();
@@ -476,6 +477,13 @@ public class Validator {
         Either<Problem, JExpression> e = JExpression.parse(value);
         if (e.isLeft()) {
             throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
+        }
+    }
+    
+    private static void validateExpression(String prefix, String value) throws JocConfigurationException {
+        Either<Problem, JExpression> e = JExpression.parse(value);
+        if (e.isLeft()) {
+            throw new JocConfigurationException(prefix + e.getLeft().message());
         }
     }
     

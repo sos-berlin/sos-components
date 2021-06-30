@@ -34,7 +34,7 @@
     "versionId": {
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
-    "orderRequirements": {
+    "orderPreparation": {
     	"$ref": "../../../inventory/schemas/workflow/orderRequirements-schema.json"
     },
     "jobResourcePaths": {

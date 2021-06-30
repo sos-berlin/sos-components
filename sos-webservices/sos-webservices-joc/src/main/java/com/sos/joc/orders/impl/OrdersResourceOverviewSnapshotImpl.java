@@ -136,6 +136,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             }
             
             int numOfBlockedOrders = 0;
+            int numOfPendingOrders = 0;
             int numOfFreshOrders = 0;
             if (freshOrders != null) {
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
@@ -162,19 +163,27 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 } else {
                     numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
                 }
+                
                 numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
                     Optional<Instant> scheduledFor = o.scheduledFor();
                     return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
+                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                
+                numOfPendingOrders = freshOrderSet.stream().filter(o -> {
+                    Optional<Instant> scheduledFor = o.scheduledFor();
+                    return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
                 }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
             }
             
             final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
                     entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
-            map.put(OrderStateText.PENDING, numOfFreshOrders - numOfBlockedOrders);
+            map.put(OrderStateText.PENDING, numOfPendingOrders);
+            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders - numOfPendingOrders);
             OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
             
             summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
+            summary.setScheduled(map.getOrDefault(OrderStateText.SCHEDULED, 0));
             summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0));
             summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
             summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));

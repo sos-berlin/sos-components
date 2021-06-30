@@ -70,7 +70,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
 
                 for (PlannedOrderItem p : listOfPlannedOrderItems) {
-                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value())) {
+                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value()) || OrderStateText.SCHEDULED.value().equals(p.getState().get_text().value())) {
                         if (p.getLate()) {
                             dailyPlanOrdersSummary.setPendingLate(dailyPlanOrdersSummary.getPendingLate() + 1);
                         } else {

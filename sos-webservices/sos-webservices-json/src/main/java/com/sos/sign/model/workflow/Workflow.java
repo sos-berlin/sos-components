@@ -26,7 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path",
     "versionId",
-    "orderRequirements",
+    "orderPreparation",
     "jobResourcePaths",
     "instructions",
     "jobs"
@@ -67,8 +67,11 @@ public class Workflow implements IDeployObject
      * 
      * 
      */
-    @JsonProperty("orderRequirements")
-    private Requirements orderRequirements;
+    @JsonProperty("orderPreparation")
+    @JsonAlias({
+        "orderRequirements"
+    })
+    private Requirements orderPreparation;
     @JsonProperty("jobResourcePaths")
     @JsonAlias({
         "jobResourceNames"
@@ -104,16 +107,16 @@ public class Workflow implements IDeployObject
      * @param instructions
      * @param versionId
      * @param jobResourcePaths
-     * @param orderRequirements
      * @param jobs
      * @param tYPE
+     * @param orderPreparation
      */
-    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderRequirements, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderPreparation, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
         super();
         this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
-        this.orderRequirements = orderRequirements;
+        this.orderPreparation = orderPreparation;
         this.jobResourcePaths = jobResourcePaths;
         this.instructions = instructions;
         this.jobs = jobs;
@@ -197,9 +200,9 @@ public class Workflow implements IDeployObject
      * 
      * 
      */
-    @JsonProperty("orderRequirements")
-    public Requirements getOrderRequirements() {
-        return orderRequirements;
+    @JsonProperty("orderPreparation")
+    public Requirements getOrderPreparation() {
+        return orderPreparation;
     }
 
     /**
@@ -208,9 +211,9 @@ public class Workflow implements IDeployObject
      * 
      * 
      */
-    @JsonProperty("orderRequirements")
-    public void setOrderRequirements(Requirements orderRequirements) {
-        this.orderRequirements = orderRequirements;
+    @JsonProperty("orderPreparation")
+    public void setOrderPreparation(Requirements orderPreparation) {
+        this.orderPreparation = orderPreparation;
     }
 
     @JsonProperty("jobResourcePaths")
@@ -269,12 +272,12 @@ public class Workflow implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderRequirements", orderRequirements).append("jobResourcePaths", jobResourcePaths).append("instructions", instructions).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderPreparation", orderPreparation).append("jobResourcePaths", jobResourcePaths).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(jobResourcePaths).append(orderRequirements).append(jobs).append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(jobResourcePaths).append(jobs).append(tYPE).append(orderPreparation).toHashCode();
     }
 
     @Override
@@ -286,7 +289,7 @@ public class Workflow implements IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourcePaths, rhs.jobResourcePaths).append(orderRequirements, rhs.orderRequirements).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourcePaths, rhs.jobResourcePaths).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(orderPreparation, rhs.orderPreparation).isEquals();
     }
 
 }

@@ -64,13 +64,13 @@ public class ProxyTest {
             new HashMap<Class<? extends Order.State>, String>() {
 
                 /*
-                 * +PENDING: Fresh +WAITING: Forked, Offering, Awaiting, DelayedAfterError -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
+                 * +SCHEDULED: Fresh +WAITING: Forked, Offering, Awaiting, DelayedAfterError -BLOCKED: Fresh late +RUNNING: Ready, Processing, Processed
                  * ---FAILED: Failed, FailedWhileFresh, FailedInFork, Broken --SUSPENDED any state+Suspended Annotation
                  */
                 private static final long serialVersionUID = 1L;
 
                 {
-                    put(Order.Fresh$.class, "pending");
+                    put(Order.Fresh$.class, "scheduled");
                     put(Order.Awaiting.class, "waiting");
                     put(Order.DelayedAfterError.class, "waiting");
                     put(Order.Forked.class, "waiting");

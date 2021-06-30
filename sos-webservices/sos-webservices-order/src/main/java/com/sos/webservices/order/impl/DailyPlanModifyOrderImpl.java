@@ -274,7 +274,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 if (dbItemDailyPlanOrder.getSubmitted()) {
-                    filter.addState(OrderStateText.PENDING);
+                    filter.addState(OrderStateText.PENDING); //@Uwe: Why addState?? Where is it used??
+                    filter.addState(OrderStateText.SCHEDULED); //Why addState?? Where is it used??
                     List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
                     DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
                     dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());

@@ -72,6 +72,8 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
+import js7.data.order.OrderEvent.OrderPrompted;
+import js7.data.order.OrderEvent.OrderPromptAnswered;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderRetrying;
@@ -97,8 +99,9 @@ public class EventService {
     private static List<Class<? extends Event>> eventsOfController = Arrays.asList(ControllerEvent.class, ClusterEvent.class,
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
-            OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class,  
-            OrderProcessingStarted$.class, OrderDeleted$.class, VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class,
+            OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
+            OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted$.class, OrderDeleted$.class, 
+            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();

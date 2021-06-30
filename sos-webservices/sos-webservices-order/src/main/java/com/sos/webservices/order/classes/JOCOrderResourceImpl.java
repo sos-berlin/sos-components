@@ -89,7 +89,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             stateFilterContainsPendingOrPlanned = false;
             if (dailyPlanOrderFilter.getFilter().getStates() != null) {
                 for (OrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
-                    if (state.equals(OrderStateText.PENDING) || state.equals(OrderStateText.PLANNED)) {
+                    if (state.equals(OrderStateText.PENDING) || state.equals(OrderStateText.SCHEDULED) || state.equals(OrderStateText.PLANNED)) {
                         stateFilterContainsPendingOrPlanned = true;
                     }
                     filter.addState(state);

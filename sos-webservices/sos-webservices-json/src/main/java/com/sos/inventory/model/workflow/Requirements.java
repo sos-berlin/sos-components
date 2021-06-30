@@ -17,7 +17,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "parameters"
+    "parameters",
+    "allowUndeclared"
 })
 public class Requirements {
 
@@ -29,6 +30,8 @@ public class Requirements {
      */
     @JsonProperty("parameters")
     private Parameters parameters;
+    @JsonProperty("allowUndeclared")
+    private Boolean allowUndeclared = false;
 
     /**
      * No args constructor for use in serialization
@@ -39,11 +42,13 @@ public class Requirements {
 
     /**
      * 
+     * @param allowUndeclared
      * @param parameters
      */
-    public Requirements(Parameters parameters) {
+    public Requirements(Parameters parameters, Boolean allowUndeclared) {
         super();
         this.parameters = parameters;
+        this.allowUndeclared = allowUndeclared;
     }
 
     /**
@@ -68,14 +73,24 @@ public class Requirements {
         this.parameters = parameters;
     }
 
+    @JsonProperty("allowUndeclared")
+    public Boolean getAllowUndeclared() {
+        return allowUndeclared;
+    }
+
+    @JsonProperty("allowUndeclared")
+    public void setAllowUndeclared(Boolean allowUndeclared) {
+        this.allowUndeclared = allowUndeclared;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("parameters", parameters).toString();
+        return new ToStringBuilder(this).append("parameters", parameters).append("allowUndeclared", allowUndeclared).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(parameters).toHashCode();
+        return new HashCodeBuilder().append(parameters).append(allowUndeclared).toHashCode();
     }
 
     @Override
@@ -87,7 +102,7 @@ public class Requirements {
             return false;
         }
         Requirements rhs = ((Requirements) other);
-        return new EqualsBuilder().append(parameters, rhs.parameters).isEquals();
+        return new EqualsBuilder().append(parameters, rhs.parameters).append(allowUndeclared, rhs.allowUndeclared).isEquals();
     }
 
 }

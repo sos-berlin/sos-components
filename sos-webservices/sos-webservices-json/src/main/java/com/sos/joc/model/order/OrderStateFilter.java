@@ -9,11 +9,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum OrderStateFilter {
 
     pending("pending"),
+    scheduled("scheduled"),
     running("running"),
     suspended("suspended"),
     failed("failed"),
     blocked("blocked"),
     waiting("waiting"),
+    prompting("prompting"),
     terminated("terminated");
     private final String value;
     private final static Map<String, OrderStateFilter> CONSTANTS = new HashMap<String, OrderStateFilter>();
