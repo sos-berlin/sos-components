@@ -78,7 +78,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                         if (p.getLate()) {
                             dailyPlanOrdersSummary.setScheduledLate(dailyPlanOrdersSummary.getScheduledLate() + 1);
                         } else {
-                            dailyPlanOrdersSummary.setScheduled(dailyPlanOrdersSummary.getPending() + 1);
+                            dailyPlanOrdersSummary.setScheduled(dailyPlanOrdersSummary.getScheduled() + 1);
                         }
                     }
                     if (OrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
