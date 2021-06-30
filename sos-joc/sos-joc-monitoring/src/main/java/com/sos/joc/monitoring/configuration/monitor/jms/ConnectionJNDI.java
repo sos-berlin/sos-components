@@ -17,8 +17,8 @@ public class ConnectionJNDI extends AElement {
     public ConnectionJNDI(Node node) {
         super(node);
 
-        file = getValue(getElement().getAttribute(ATTRIBUTE_NAME_FILE));
-        lookupName = getValue(getElement().getAttribute(ATTRIBUTE_NAME_LOOKUP_NAME), DEFAULT_LOOKUP_NAME);
+        file = getAttributeValue(ATTRIBUTE_NAME_FILE);
+        lookupName = getAttributeValue(ATTRIBUTE_NAME_LOOKUP_NAME, DEFAULT_LOOKUP_NAME);
     }
 
     public String getFile() {

@@ -15,6 +15,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
 
@@ -257,5 +258,15 @@ public class DBLayerMonitoring {
             item.setBinaryValue(val);
             session.update(item);
         }
+    }
+
+    public String getDeployedConfiguration() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select configurationDeployed ");
+        hql.append("from ").append(DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ObjectType.NOTIFICATION.name());
+        return getSession().getSingleValue(query);
     }
 }

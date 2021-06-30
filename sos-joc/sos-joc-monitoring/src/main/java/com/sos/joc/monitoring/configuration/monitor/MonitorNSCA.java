@@ -35,9 +35,9 @@ public class MonitorNSCA extends AMonitor {
         super(document, node);
 
         // from RefElement
-        serviceHost = getRefElement().getAttribute(ATTRIBUTE_NAME_SERVICE_HOST);
-        monitorHost = getRefElement().getAttribute(ATTRIBUTE_NAME_MONITOR_HOST);
-        monitorEncryption = getRefElement().getAttribute(ATTRIBUTE_NAME_MONITOR_ENCRYPTION);
+        serviceHost = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_SERVICE_HOST));
+        monitorHost = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_MONITOR_HOST));
+        monitorEncryption = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_MONITOR_ENCRYPTION));
         monitorPassword = getRefElement().getAttribute(ATTRIBUTE_NAME_MONITOR_PASSWORD);
 
         monitorPort = set(ATTRIBUTE_NAME_MONITOR_PORT, -1);
@@ -45,10 +45,10 @@ public class MonitorNSCA extends AMonitor {
         monitorResponseTimeout = set(ATTRIBUTE_NAME_MONITOR_RESPONSE_TIMEOUT, -1);
 
         // from Element
-        serviceNameOnError = getElement().getAttribute(ATTRIBUTE_NAME_SERVICE_NAME_ON_ERROR);
-        serviceStatusOnError = getElement().getAttribute(ATTRIBUTE_NAME_SERVICE_STATUS_ON_ERROR);
-        serviceNameOnSuccess = getElement().getAttribute(ATTRIBUTE_NAME_SERVICE_NAME_ON_SUCCESS);
-        serviceStatusOnSuccess = getElement().getAttribute(ATTRIBUTE_NAME_SERVICE_STATUS_ON_SUCCESS);
+        serviceNameOnError = getAttributeValue(ATTRIBUTE_NAME_SERVICE_NAME_ON_ERROR);
+        serviceStatusOnError = getAttributeValue(ATTRIBUTE_NAME_SERVICE_STATUS_ON_ERROR);
+        serviceNameOnSuccess = getAttributeValue(ATTRIBUTE_NAME_SERVICE_NAME_ON_SUCCESS);
+        serviceStatusOnSuccess = getAttributeValue(ATTRIBUTE_NAME_SERVICE_STATUS_ON_SUCCESS);
     }
 
     private int set(String attrName, int defaultValue) {

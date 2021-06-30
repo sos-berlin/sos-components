@@ -1,8 +1,6 @@
 package com.sos.commons.xml.exception;
 
-import com.sos.commons.exception.SOSException;
-
-public class SOSXMLNotMatchSchemaException extends SOSException {
+public class SOSXMLNotMatchSchemaException extends SOSXMLException {
 
     private static final long serialVersionUID = 1L;
 

@@ -30,9 +30,9 @@ public class ConnectionFactory extends AElement {
     public ConnectionFactory(Node node) throws Exception {
         super(node);
 
-        javaClass = getValue(getElement().getAttribute(ATTRIBUTE_NAME_JAVA_CLASS), DEFAULT_CONNECTION_FACTORY);
-        userName = getValue(getElement().getAttribute(ATTRIBUTE_NAME_USER_NAME));
-        password = getValue(getElement().getAttribute(ATTRIBUTE_NAME_PASSWORD));
+        javaClass = getAttributeValue(ATTRIBUTE_NAME_JAVA_CLASS, DEFAULT_CONNECTION_FACTORY);
+        userName = getAttributeValue(ATTRIBUTE_NAME_USER_NAME);
+        password = getAttributeValue(ATTRIBUTE_NAME_PASSWORD);
         constructorArguments = readConstructorArguments();
     }
 

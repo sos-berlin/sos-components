@@ -11,11 +11,6 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public abstract class AMonitor extends AElement {
 
-    public static final String ELEMENT_NAME_COMMAND_FRAGMENT_REF = "CommandFragmentRef";
-    public static final String ELEMENT_NAME_MAIL_FRAGMENT_REF = "MailFragmentRef";
-    public static final String ELEMENT_NAME_JMS_FRAGMENT_REF = "JMSFragmentRef";
-    public static final String ELEMENT_NAME_NSCA_FRAGMENT_REF = "NSCAFragmentRef";
-
     private static final String ELEMENT_NAME_MESSAGE_REF = "MessageRef";
 
     private final String refElementName;

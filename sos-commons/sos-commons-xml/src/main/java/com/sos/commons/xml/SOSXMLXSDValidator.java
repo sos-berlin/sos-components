@@ -1,6 +1,8 @@
 package com.sos.commons.xml;
 
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -12,6 +14,7 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 import javax.xml.XMLConstants;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Source;
@@ -28,13 +31,24 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.exception.SOSXMLDoctypeException;
+import com.sos.commons.xml.exception.SOSXMLException;
 import com.sos.commons.xml.exception.SOSXMLXSDValidatorException;
 
 public class SOSXMLXSDValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSXMLXSDValidator.class);
 
+    public static void validate(URL schema, String xml) throws Exception {
+        if (schema == null) {
+            throw new SOSXMLException("missing schema");
+        }
+        validate(new StreamSource(schema.toExternalForm()), xml);
+    }
+
     public static void validate(Path schema, String xml) throws Exception {
+        if (schema == null) {
+            throw new SOSXMLException("missing schema");
+        }
         if (!Files.exists(schema) || !Files.isReadable(schema)) {
             throw new Exception(String.format("[%s]schema not found or not readable", schema.toString()));
         }
@@ -44,11 +58,10 @@ public class SOSXMLXSDValidator {
         validate(new StreamSource(schema.toFile()), xml);
     }
 
-    public static void validate(Source schema, String xml) throws Exception {
+    public static void validate(Source schema, String xml) throws SOSXMLException, SOSXMLXSDValidatorException {
         if (schema == null) {
-            throw new Exception("missing schema");
+            throw new SOSXMLException("missing schema");
         }
-
         if (SOSString.isEmpty(xml)) {
             SAXParseException cause = new SAXParseException("Missing XML content", "publicId", "systemId", 1, 1);
             throw new SOSXMLXSDValidatorException(cause, "XML", "1", 1, true);
@@ -62,14 +75,17 @@ public class SOSXMLXSDValidator {
         } catch (Throwable e) {
         }
 
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(false);
-        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        factory.setSchema(schemaFactory.newSchema(schema));
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(false);
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            factory.setSchema(schemaFactory.newSchema(schema));
 
-        SAXParser parser = factory.newSAXParser();
-        // xml = xml.replaceAll(">\\s+<", "><").trim();
-        parser.parse(new InputSource(new StringReader(xml)), new SOSXMLXSDValidator().new Handler());
+            SAXParser parser = factory.newSAXParser();
+            parser.parse(new InputSource(new StringReader(xml)), new SOSXMLXSDValidator().new Handler());
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new SOSXMLException(e);
+        }
     }
 
     private class Handler extends DefaultHandler {

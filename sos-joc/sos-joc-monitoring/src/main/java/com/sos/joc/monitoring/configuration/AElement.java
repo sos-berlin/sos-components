@@ -7,6 +7,8 @@ import com.sos.commons.util.SOSString;
 
 public abstract class AElement {
 
+    public static final String ASTERISK = "*";
+
     private final Element element;
     private final String elementName;
 
@@ -21,6 +23,14 @@ public abstract class AElement {
 
     public String getElementName() {
         return elementName;
+    }
+
+    protected String getAttributeValue(String attr) {
+        return getValue(element.getAttribute(attr));
+    }
+
+    protected String getAttributeValue(String attr, String defaultValue) {
+        return getValue(element.getAttribute(attr), defaultValue);
     }
 
     protected static String getValue(String val) {

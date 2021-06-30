@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,10 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryEvent;
+import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
+import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 
 public class HistoryMonitoringModel {
@@ -47,6 +51,7 @@ public class HistoryMonitoringModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMonitoringModel.class);
 
     private static final String IDENTIFIER = ClusterServices.history.name();
+    private static final String NOTIFICATION_IDENTIFIER = "notification";
     private static final int THREAD_POOL_CORE_POOL_SIZE = 1;
     /** 1day */
     private static final int MAX_LONGER_THAN_SECONDS = 24 * 60 * 60;
@@ -61,6 +66,7 @@ public class HistoryMonitoringModel {
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
     private AtomicBoolean closed = new AtomicBoolean();
+    private AtomicReference<Configuration> configuration;
 
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
@@ -79,10 +85,20 @@ public class HistoryMonitoringModel {
         }
     }
 
+    @Subscribe({ MonitoringEvent.class })
+    public void handleMonitoringEvents(MonitoringEvent evt) {
+        if (configuration != null) {
+            AJocClusterService.setLogger(serviceIdentifier);
+            LOGGER.info(String.format("[%s][%s][configuration]%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass().getSimpleName()));
+            setConfiguration();
+        }
+    }
+
     public void start(ThreadGroup threadGroup) {
         closed.set(false);
 
         deserialize();
+        setConfiguration();
         schedule(threadGroup);
 
         AJocClusterService.setLogger(serviceIdentifier);
@@ -565,6 +581,39 @@ public class HistoryMonitoringModel {
             dbLayer.getSession().beginTransaction();
             dbLayer.deleteVariable();
             dbLayer.getSession().commit();
+        } catch (Exception e) {
+            dbLayer.rollback();
+            LOGGER.error(e.toString(), e);
+        } finally {
+            dbLayer.close();
+        }
+    }
+
+    private void setConfiguration() {
+        try {
+            AJocClusterService.setLogger(serviceIdentifier);
+
+            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+            dbLayer.getSession().beginTransaction();
+            String configXml = dbLayer.getDeployedConfiguration();
+            dbLayer.getSession().commit();
+
+            if (configuration == null) {
+                configuration = new AtomicReference<Configuration>();
+                configuration.set(new Configuration());
+            }
+            configuration.get().process(configXml);
+            Configuration conf = configuration.get();
+            if (conf.exists()) {
+                int all = conf.getTypeAll().size();
+                int onError = conf.getTypeOnError().size();
+                int onSuccess = conf.getTypeOnSuccess().size();
+                LOGGER.info(String.format("[%s][%s][configuration][total=%s][type %s=%s, %s=%s, %s=%s]", serviceIdentifier, NOTIFICATION_IDENTIFIER,
+                        (all + onError + onSuccess), NotificationType.ALL.name(), all, NotificationType.ON_ERROR.name(), onError,
+                        NotificationType.ON_SUCCESS.name(), onSuccess));
+            } else {
+                LOGGER.info(String.format("[%s][%s][configuration]exists=false", serviceIdentifier, NOTIFICATION_IDENTIFIER));
+            }
         } catch (Exception e) {
             dbLayer.rollback();
             LOGGER.error(e.toString(), e);

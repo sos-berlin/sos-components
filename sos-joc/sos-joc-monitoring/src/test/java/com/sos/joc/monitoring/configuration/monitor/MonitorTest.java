@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.configuration.monitor;
 
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -7,12 +8,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
+import com.google.common.base.Charsets;
 import com.sos.commons.util.SOSString;
-import com.sos.commons.xml.SOSXML;
+import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.Notification;
+import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
+import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
 
 public class MonitorTest {
 
@@ -22,28 +24,46 @@ public class MonitorTest {
     @Test
     public void test() throws Exception {
 
-        Document doc = SOSXML.parse(Paths.get("src/test/resources/Configurations.xml"));
+        Configuration c = new Configuration();
+        c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
-        Node notification = SOSXML.newXPath().selectNode(doc, "./Configurations/Notifications/Notification[1]/NotificationMonitors");
-        if (notification != null) {
-            List<Element> elements = SOSXML.getChildElemens(notification);
-            for (Element el : elements) {
-                LOGGER.info("EL: " + el.getNodeName());
-                switch (el.getNodeName()) {
-                case AMonitor.ELEMENT_NAME_COMMAND_FRAGMENT_REF:
-                    MonitorCommand mc = new MonitorCommand(doc, (Node) el);
-                    LOGGER.info("   " + SOSString.toString(mc));
-                    LOGGER.info("   " + mc.getMessage());
-                    LOGGER.info("   " + mc.getCommand());
-                    break;
-                case AMonitor.ELEMENT_NAME_MAIL_FRAGMENT_REF:
-                    MonitorMail mm = new MonitorMail(doc, (Node) el);
-                    LOGGER.info("   " + SOSString.toString(mm));
-                    LOGGER.info("   " + mm.getMessage());
-                    break;
-                }
-            }
-        }
+        LOGGER.info("---TYPE ALL---:" + c.getTypeAll().size());
+        showNotifications(c.getTypeAll());
+
+        LOGGER.info("---TYPE ON_ERROR---:" + c.getTypeOnError().size());
+        showNotifications(c.getTypeOnError());
+
+        LOGGER.info("---TYPE ON_SUCCESS---:" + c.getTypeOnSuccess().size());
+        showNotifications(c.getTypeOnSuccess());
 
     }
+
+    private void showNotifications(List<Notification> list) throws Exception {
+        for (Notification n : list) {
+            for (AMonitor monitor : n.getMonitors()) {
+                LOGGER.info("MONITOR: " + monitor.getElementName());
+                LOGGER.info("   " + SOSString.toString(monitor));
+                LOGGER.info("   " + monitor.getMessage());
+
+                if (monitor instanceof MonitorCommand) {
+                    MonitorCommand mc = (MonitorCommand) monitor;
+                    LOGGER.info("   " + mc.getCommand());
+                } else if (monitor instanceof MonitorMail) {
+                    // MonitorMail mm = (MonitorMail) monitor;
+                }
+            }
+
+            for (Workflow workflow : n.getWorkflows()) {
+                LOGGER.info("WORKFLOW: " + workflow.getElementName());
+                LOGGER.info("   " + SOSString.toString(workflow));
+                LOGGER.info("       JOBS: " + workflow.getJobs().size());
+                for (WorkflowJob wj : workflow.getJobs()) {
+                    LOGGER.info("                  " + SOSString.toString(wj));
+                }
+            }
+
+            LOGGER.info("-----------------------------------");
+        }
+    }
+
 }

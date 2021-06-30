@@ -13,11 +13,13 @@ public class MonitorMail extends AMonitor {
     private static String ELEMENT_NAME_BCC = "BCC";
     private static String ELEMENT_NAME_SUBJECT = "Subject";
 
+    private static String ATTRIBUTE_NAME_JOB_RESOURCE = "job_resource";
     private static String ATTRIBUTE_NAME_CONTENT_TYPE = "content_type";
     private static String ATTRIBUTE_NAME_CHARSET = "charset";
     private static String ATTRIBUTE_NAME_ENCODING = "encoding";
     private static String ATTRIBUTE_NAME_PRIORITY = "priority";
 
+    private final String jobResource;
     private final String contentType;
     private final String charset;
     private final String encoding;
@@ -32,6 +34,7 @@ public class MonitorMail extends AMonitor {
     public MonitorMail(Document document, Node node) throws Exception {
         super(document, node);
 
+        jobResource = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_JOB_RESOURCE));
         contentType = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CONTENT_TYPE));
         charset = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CHARSET));
         encoding = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_ENCODING));
@@ -54,6 +57,10 @@ public class MonitorMail extends AMonitor {
             node = SOSXML.getChildNode(getRefElement(), name);
         }
         return node == null ? null : SOSXML.getTrimmedValue(node);
+    }
+
+    public String getJobResource() {
+        return jobResource;
     }
 
     public String getContentType() {

@@ -4,7 +4,7 @@ import org.w3c.dom.Node;
 
 import com.sos.joc.monitoring.configuration.AElement;
 
-public class ElementWorkflowJob extends AElement {
+public class WorkflowJob extends AElement {
 
     private static String ATTRIBUTE_NAME_NAME = "name";
     private static String ATTRIBUTE_NAME_LABEL = "label";
@@ -15,13 +15,16 @@ public class ElementWorkflowJob extends AElement {
     private final String label;
     private final String returnCodeFrom;
     private final String returnCodeTo;
+    private final boolean global;
 
-    public ElementWorkflowJob(Node node) throws Exception {
+    public WorkflowJob(Node node) throws Exception {
         super(node);
-        name = getElement().getAttribute(ATTRIBUTE_NAME_NAME);
-        label = getElement().getAttribute(ATTRIBUTE_NAME_LABEL);
-        returnCodeFrom = getElement().getAttribute(ATTRIBUTE_NAME_RETURN_CODE_FROM);
-        returnCodeTo = getElement().getAttribute(ATTRIBUTE_NAME_RETURN_CODE_TO);
+        name = getAttributeValue(ATTRIBUTE_NAME_NAME, AElement.ASTERISK);
+        label = getAttributeValue(ATTRIBUTE_NAME_LABEL, AElement.ASTERISK);
+        returnCodeFrom = getAttributeValue(ATTRIBUTE_NAME_RETURN_CODE_FROM, AElement.ASTERISK);
+        returnCodeTo = getAttributeValue(ATTRIBUTE_NAME_RETURN_CODE_TO, AElement.ASTERISK);
+        global = name.equals(AElement.ASTERISK) && label.equals(AElement.ASTERISK) && returnCodeFrom.equals(AElement.ASTERISK) && returnCodeTo.equals(
+                AElement.ASTERISK);
     }
 
     public String getName() {
@@ -38,5 +41,9 @@ public class ElementWorkflowJob extends AElement {
 
     public String getReturnCodeTo() {
         return returnCodeTo;
+    }
+
+    public boolean isGlobal() {
+        return global;
     }
 }
