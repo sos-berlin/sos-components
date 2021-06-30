@@ -18,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "pending",
-    "pendingLate",
+    "scheduled",
+    "scheduledLate",
     "planned",
     "plannedLate",
     "finished"
@@ -39,8 +40,16 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pendingLate")
-    private Integer pendingLate;
+    @JsonProperty("scheduled")
+    private Integer scheduled;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduledLate")
+    private Integer scheduledLate;
     /**
      * non negative integer
      * <p>
@@ -94,9 +103,9 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pendingLate")
-    public Integer getPendingLate() {
-        return pendingLate;
+    @JsonProperty("scheduled")
+    public Integer getScheduled() {
+        return scheduled;
     }
 
     /**
@@ -105,9 +114,31 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pendingLate")
-    public void setPendingLate(Integer pendingLate) {
-        this.pendingLate = pendingLate;
+    @JsonProperty("scheduled")
+    public void setScheduled(Integer scheduled) {
+        this.scheduled = scheduled;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduledLate")
+    public Integer getScheduledLate() {
+        return scheduledLate;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("scheduledLate")
+    public void setScheduledLate(Integer scheduledLate) {
+        this.scheduledLate = scheduledLate;
     }
 
     /**
@@ -178,12 +209,12 @@ public class DailyPlanOrdersSummary {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("pendingLate", pendingLate).append("planned", planned).append("plannedLate", plannedLate).append("finished", finished).toString();
+        return new ToStringBuilder(this).append("pending", pending).append("scheduled", scheduled).append("scheduledLate", scheduledLate).append("planned", planned).append("plannedLate", plannedLate).append("finished", finished).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(pendingLate).append(finished).append(planned).append(pending).append(plannedLate).toHashCode();
+        return new HashCodeBuilder().append(scheduled).append(scheduledLate).append(pending).append(finished).append(planned).append(plannedLate).toHashCode();
     }
 
     @Override
@@ -195,7 +226,7 @@ public class DailyPlanOrdersSummary {
             return false;
         }
         DailyPlanOrdersSummary rhs = ((DailyPlanOrdersSummary) other);
-        return new EqualsBuilder().append(pendingLate, rhs.pendingLate).append(finished, rhs.finished).append(planned, rhs.planned).append(pending, rhs.pending).append(plannedLate, rhs.plannedLate).isEquals();
+        return new EqualsBuilder().append(scheduled, rhs.scheduled).append(scheduledLate, rhs.scheduledLate).append(pending, rhs.pending).append(finished, rhs.finished).append(planned, rhs.planned).append(plannedLate, rhs.plannedLate).isEquals();
     }
 
 }

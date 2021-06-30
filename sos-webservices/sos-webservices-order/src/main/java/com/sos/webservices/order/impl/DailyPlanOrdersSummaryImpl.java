@@ -59,7 +59,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             DailyPlanOrdersSummary dailyPlanOrdersSummary = new DailyPlanOrdersSummary();
             dailyPlanOrdersSummary.setFinished(0);
             dailyPlanOrdersSummary.setPending(0);
-            dailyPlanOrdersSummary.setPendingLate(0);
+            dailyPlanOrdersSummary.setScheduled(0);
+            dailyPlanOrdersSummary.setScheduledLate(0);
             dailyPlanOrdersSummary.setPlanned(0);
             dailyPlanOrdersSummary.setPlannedLate(0);
 
@@ -70,11 +71,14 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
 
                 for (PlannedOrderItem p : listOfPlannedOrderItems) {
-                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value()) || OrderStateText.SCHEDULED.value().equals(p.getState().get_text().value())) {
+                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value())) {
+                       dailyPlanOrdersSummary.setPending(dailyPlanOrdersSummary.getPending() + 1);
+                    }
+                    if (OrderStateText.SCHEDULED.value().equals(p.getState().get_text().value())) {
                         if (p.getLate()) {
-                            dailyPlanOrdersSummary.setPendingLate(dailyPlanOrdersSummary.getPendingLate() + 1);
+                            dailyPlanOrdersSummary.setScheduledLate(dailyPlanOrdersSummary.getScheduledLate() + 1);
                         } else {
-                            dailyPlanOrdersSummary.setPending(dailyPlanOrdersSummary.getPending() + 1);
+                            dailyPlanOrdersSummary.setScheduled(dailyPlanOrdersSummary.getPending() + 1);
                         }
                     }
                     if (OrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
