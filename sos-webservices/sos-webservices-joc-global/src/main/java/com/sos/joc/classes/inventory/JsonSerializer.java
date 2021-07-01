@@ -188,8 +188,8 @@ public class JsonSerializer {
             return null;
         }
         r.getParameters().getAdditionalProperties().replaceAll((k, v) -> {
-            if (ParameterType.String == v.getType()) {
-                v.setDefault(quoteString((String) v.getDefault()));
+            if (v.getDefault() != null) {
+                v.setDefault(quoteString(v.getDefault().toString()));
             }
             v.setFinal(quoteString(v.getFinal()));
             return v;
