@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Err;
-import com.sos.joc.model.order.OrderState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -178,13 +177,13 @@ public class PlannedOrderItem {
     @JsonProperty("submitted")
     private Boolean submitted;
     /**
-     * order state
+     * Daily Plan order state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    private OrderState state;
+    private DailyPlanOrderState state;
 
     /**
      * controllerId
@@ -547,24 +546,24 @@ public class PlannedOrderItem {
     }
 
     /**
-     * order state
+     * Daily Plan order state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public OrderState getState() {
+    public DailyPlanOrderState getState() {
         return state;
     }
 
     /**
-     * order state
+     * Daily Plan order state
      * <p>
      * 
      * 
      */
     @JsonProperty("state")
-    public void setState(OrderState state) {
+    public void setState(DailyPlanOrderState state) {
         this.state = state;
     }
 

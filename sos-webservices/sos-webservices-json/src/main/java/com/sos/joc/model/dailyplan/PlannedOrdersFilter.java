@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.OrderStateText;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -57,7 +56,7 @@ public class PlannedOrdersFilter {
     @JsonProperty("dailyPlanSubmissionHistoryIds")
     private List<Long> dailyPlanSubmissionHistoryIds = null;
     @JsonProperty("states")
-    private List<OrderStateText> states = null;
+    private List<DailyPlanOrderStateText> states = null;
     @JsonProperty("late")
     private Boolean late;
     /**
@@ -161,12 +160,12 @@ public class PlannedOrdersFilter {
     }
 
     @JsonProperty("states")
-    public List<OrderStateText> getStates() {
+    public List<DailyPlanOrderStateText> getStates() {
         return states;
     }
 
     @JsonProperty("states")
-    public void setStates(List<OrderStateText> states) {
+    public void setStates(List<DailyPlanOrderStateText> states) {
         this.states = states;
     }
 

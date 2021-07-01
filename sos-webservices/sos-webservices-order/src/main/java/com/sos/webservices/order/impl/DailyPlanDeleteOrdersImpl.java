@@ -29,7 +29,7 @@ import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
-import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
@@ -95,7 +95,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             for (String controllerId : allowedControllers) {
                 Globals.beginTransaction(sosHibernateSession);
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
-                filter.addState(OrderStateText.PLANNED);
+                filter.addState(DailyPlanOrderStateText.PLANNED);
                 dbLayerDailyPlannedOrders.deleteCascading(filter);
                 Globals.commit(sosHibernateSession);
             }

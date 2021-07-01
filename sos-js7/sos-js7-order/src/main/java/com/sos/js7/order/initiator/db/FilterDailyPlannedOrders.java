@@ -16,7 +16,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
@@ -40,7 +40,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Set<OrderId> setOfOrders;
     private Collection<String> listOfOrders;
 
-    private List<OrderStateText> states;
+    private List<DailyPlanOrderStateText> states;
     private Set<Folder> setOfWorkflowFolders;
     private Set<Folder> setOfScheduleFolders;
     private Date plannedStart;
@@ -171,7 +171,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         filterFolder.setRecursive(recursive);
         setOfScheduleFolders.add(filterFolder);
     }
-    public List<OrderStateText> getStates() {
+    public List<DailyPlanOrderStateText> getStates() {
         return states;
     }
 
@@ -195,9 +195,9 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.controllerId = controllerId;
     }
 
-    public void addState(OrderStateText state) {
+    public void addState(DailyPlanOrderStateText state) {
         if (states == null) {
-            states = new ArrayList<OrderStateText>();
+            states = new ArrayList<DailyPlanOrderStateText>();
         }
         states.add(state);
     }
@@ -265,7 +265,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfWorkflowNames.add(workflowName);
     }
 
-    public void setStates(List<OrderStateText> states) {
+    public void setStates(List<DailyPlanOrderStateText> states) {
         this.states = states;
     }
 

@@ -51,6 +51,7 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.order.AddOrder;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderMark;
@@ -166,6 +167,19 @@ public class OrdersHelper {
             put(OrderStateText.UNKNOWN, 2);
         }
     });
+    
+    public static final Map<DailyPlanOrderStateText, Integer> severityByGroupedDailyPlanStates = Collections.unmodifiableMap(new HashMap<DailyPlanOrderStateText, Integer>() {
+
+        // consider 'blocked' as further grouped state
+        private static final long serialVersionUID = 1L;
+
+        {
+            put(DailyPlanOrderStateText.PLANNED, 4);
+            put(DailyPlanOrderStateText.SUBMITTED, 1);
+            put(DailyPlanOrderStateText.FINISHED, 6);
+        }
+    });
+    
     
     public static final Map<Class<? extends js7.data.order.OrderMark>, OrderMarkText> groupByMarkClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends js7.data.order.OrderMark>, OrderMarkText>() {

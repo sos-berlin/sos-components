@@ -22,10 +22,10 @@ import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
+import com.sos.joc.model.dailyplan.DailyPlanOrderState;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
-import com.sos.joc.model.order.OrderState;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
@@ -37,7 +37,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     protected OrderInitiatorSettings settings;
     private static final Logger LOGGER = LoggerFactory.getLogger(CyclicOrdersImpl.class);
-    protected boolean stateFilterContainsPendingOrPlanned;
 
     protected void setSettings() {
         if (Globals.configurationGlobals == null) {
@@ -78,20 +77,16 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
                     addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
                 }
-            }            
-            
+            }
+
             filter.setControllerId(controllerId);
             filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
             filter.setListOfOrders(listOfOrderIds);
             filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 
-            stateFilterContainsPendingOrPlanned = false;
             if (dailyPlanOrderFilter.getFilter().getStates() != null) {
-                for (OrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
-                    if (state.equals(OrderStateText.PENDING) || state.equals(OrderStateText.SCHEDULED) || state.equals(OrderStateText.PLANNED)) {
-                        stateFilterContainsPendingOrPlanned = true;
-                    }
+                for (DailyPlanOrderStateText state : dailyPlanOrderFilter.getFilter().getStates()) {
                     filter.addState(state);
                 }
             }
@@ -152,13 +147,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
         p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
 
-        OrderState orderState = new OrderState();
+        DailyPlanOrderState orderState = new DailyPlanOrderState();
         if (dbItemDailyPlanWithHistory.isSubmitted()) {
             orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
-            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+            orderState.setSeverity(OrdersHelper.severityByGroupedDailyPlanStates.get(orderState.get_text()));
         } else {
-            orderState.set_text(OrderStateText.PLANNED);
-            orderState.setSeverity(OrdersHelper.severityByGroupedStates.get(orderState.get_text()));
+            orderState.set_text(DailyPlanOrderStateText.PLANNED);
+            orderState.setSeverity(OrdersHelper.severityByGroupedDailyPlanStates.get(orderState.get_text()));
         }
         p.setState(orderState);
 
@@ -183,33 +178,24 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
             for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
 
-                boolean add = true;
                 PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
                 p.setControllerId(controllerId);
 
-                if (dailyPlanOrderFilter.getFilter().getStates() != null && !stateFilterContainsPendingOrPlanned && dbItemDailyPlanWithHistory
-                        .getOrderHistoryId() == null) {
-                    add = false;
-                }
-
-                if (add) {
-
-                    if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
-                        CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                        cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
-                        cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
-                        cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
-                        cycleOrderKey.setSchedulePath(p.getSchedulePath());
-                        cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
-                        if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                            mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
-                        }
-
-                        mapOfCycledOrders.get(cycleOrderKey).add(p);
-
-                    } else {
-                        listOfPlannedOrderItems.add(p);
+                if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
+                    CycleOrderKey cycleOrderKey = new CycleOrderKey();
+                    cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
+                    cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
+                    cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
+                    cycleOrderKey.setSchedulePath(p.getSchedulePath());
+                    cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
+                    if (mapOfCycledOrders.get(cycleOrderKey) == null) {
+                        mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
                     }
+
+                    mapOfCycledOrders.get(cycleOrderKey).add(p);
+
+                } else {
+                    listOfPlannedOrderItems.add(p);
                 }
             }
 
@@ -228,14 +214,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             }
         }
     }
-    
+
     protected void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYVLIC_ORDERS");
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings
-                    .getPeriodBegin());
+            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

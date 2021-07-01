@@ -27,7 +27,7 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.VariableType;
-import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 
@@ -188,24 +188,23 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and + " (o.state is null and p.plannedStart < current_date()  or "
-                        + "o.state = "   + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date() or "
-                        + "o.state <> "  + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600)  ";
+                where += and + " (o.state is null and p.plannedStart < current_date()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED.intValue()
+                        + " and o.startTime - p.plannedStart > 600)  ";
             } else {
-                where += and + " not (o.state is null and p.plannedStart < current_date()  or "   
-                             + "o.state = "   + OrderStateText.PLANNED.intValue() + " and p.plannedStart < current_date() or "  
-                             + "o.state <> "  + OrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart > 600) ";
+                where += and + " (o.state is null and p.plannedStart > current_date() or " + "o.state is not null and o.state <> " + DailyPlanOrderStateText.PLANNED.intValue()
+                        + " and o.startTime - p.plannedStart < 600) ";
             }
+
             and = " and ";
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
-            for (OrderStateText state : filter.getStates()) {
-                if (state.intValue() == OrderStateText.PLANNED.intValue()) {
+            for (DailyPlanOrderStateText state : filter.getStates()) {
+                if (state.intValue() == DailyPlanOrderStateText.PLANNED.intValue()) {
                     where += " p.submitted=0 or";
                 } else {
-                    if ((state.intValue() == OrderStateText.PENDING.intValue()) || (state.intValue() == OrderStateText.SCHEDULED.intValue())) { 
-                        where += " (p.submitted=1 and  o.state=null)" + " or";
+                    if ((state.intValue() == DailyPlanOrderStateText.SUBMITTED.intValue())) {
+                        where += " (p.submitted=1)" + " or";
                     } else {
                         where += " o.state = " + state.intValue() + " or";
                     }
@@ -233,10 +232,11 @@ public class DBLayerDailyPlannedOrders {
             for (Folder filterFolder : filter.getSetOfScheduleFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder + "')";
+                    where += " (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder
+                            + "')";
                 } else {
-                    where += String.format("p.scheduleFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
-                            .getFolder()));
+                    where += String.format("p.scheduleFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
+                            filterFolder.getFolder()));
                 }
                 where += " or ";
             }
@@ -249,10 +249,11 @@ public class DBLayerDailyPlannedOrders {
             for (Folder filterFolder : filter.getSetOfWorkflowFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder + "')";
+                    where += " (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder
+                            + "')";
                 } else {
-                    where += String.format("p.workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
-                            .getFolder()));
+                    where += String.format("p.workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
+                            filterFolder.getFolder()));
                 }
                 where += " or ";
             }
@@ -329,7 +330,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         return query;
- 
+
     }
 
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
@@ -446,7 +447,7 @@ public class DBLayerDailyPlannedOrders {
             dbItemDailyPlannedOrders.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
             dbItemDailyPlannedOrders.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         }
-        
+
         String workflowFolder = Paths.get(plannedOrder.getSchedule().getWorkflowPath()).getParent().toString().replace('\\', '/');
         String scheduleFolder = Paths.get(plannedOrder.getSchedule().getPath()).getParent().toString().replace('\\', '/');
 

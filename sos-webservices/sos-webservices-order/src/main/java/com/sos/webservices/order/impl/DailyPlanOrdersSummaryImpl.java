@@ -17,9 +17,9 @@ import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
+import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.DailyPlanOrdersSummary;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanOrdersSummaryResource;
@@ -39,8 +39,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
             Set<String> allowedControllers = getAllowedControllersOrdersView(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getFilter()
-                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView())
-                    .collect(Collectors.toSet());
+                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
+                            accessToken).getOrders().getView()).collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
@@ -55,12 +55,11 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            
+
             DailyPlanOrdersSummary dailyPlanOrdersSummary = new DailyPlanOrdersSummary();
             dailyPlanOrdersSummary.setFinished(0);
-            dailyPlanOrdersSummary.setPending(0);
-            dailyPlanOrdersSummary.setScheduled(0);
-            dailyPlanOrdersSummary.setScheduledLate(0);
+            dailyPlanOrdersSummary.setSubmitted(0);
+            dailyPlanOrdersSummary.setSubmittedLate(0);
             dailyPlanOrdersSummary.setPlanned(0);
             dailyPlanOrdersSummary.setPlannedLate(0);
 
@@ -71,24 +70,23 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
 
                 for (PlannedOrderItem p : listOfPlannedOrderItems) {
-                    if (OrderStateText.PENDING.value().equals(p.getState().get_text().value())) {
-                       dailyPlanOrdersSummary.setPending(dailyPlanOrdersSummary.getPending() + 1);
-                    }
-                    if (OrderStateText.SCHEDULED.value().equals(p.getState().get_text().value())) {
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value())) {
+                        dailyPlanOrdersSummary.setSubmitted(dailyPlanOrdersSummary.getSubmitted() + 1);
+
                         if (p.getLate()) {
-                            dailyPlanOrdersSummary.setScheduledLate(dailyPlanOrdersSummary.getScheduledLate() + 1);
+                            dailyPlanOrdersSummary.setSubmittedLate(dailyPlanOrdersSummary.getSubmittedLate() + 1);
                         } else {
-                            dailyPlanOrdersSummary.setScheduled(dailyPlanOrdersSummary.getScheduled() + 1);
+                            dailyPlanOrdersSummary.setSubmitted(dailyPlanOrdersSummary.getSubmitted() + 1);
                         }
                     }
-                    if (OrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
+                    if (DailyPlanOrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
                         if (p.getLate()) {
                             dailyPlanOrdersSummary.setPlannedLate(dailyPlanOrdersSummary.getPlannedLate() + 1);
                         } else {
                             dailyPlanOrdersSummary.setPlanned(dailyPlanOrdersSummary.getPlanned() + 1);
                         }
                     }
-                    if (OrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
+                    if (DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
                         dailyPlanOrdersSummary.setFinished(dailyPlanOrdersSummary.getFinished() + 1);
                     }
                 }
