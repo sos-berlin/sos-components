@@ -1,6 +1,7 @@
 package com.sos.joc.classes.inventory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -369,9 +370,21 @@ public class Validator {
                     break;
                 case Number:
                     invalid = (_default instanceof String) || (_default instanceof Boolean);
+                    if (invalid && (_default instanceof String)) {
+                        try {
+                            new BigDecimal(_default.toString());
+                            invalid = false;
+                        } catch (Exception e) {
+                            throw new JocConfigurationException(String.format("$.orderPreparation.parameters['%s'].default: wrong number format %s.",
+                                    key, _default.toString()));
+                        }
+                    }
                     break;
                 case Boolean:
                     invalid = (_default instanceof Boolean) == false;
+                    if (invalid && (_default instanceof String)) {
+                        invalid = !"true".equals(_default.toString()) && !"false".equals(_default.toString());
+                    }
                     break;
                 }
                 if (invalid) {

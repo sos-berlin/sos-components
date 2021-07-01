@@ -181,7 +181,11 @@ public class EventService {
         if (evt.getControllerId() == null || evt.getControllerId().isEmpty() || evt.getControllerId().equals(controllerId)) {
             EventSnapshot eventSnapshot = new EventSnapshot();
             eventSnapshot.setEventId(evt.getEventId() / 1000);
-            eventSnapshot.setEventType("ProblemEvent");
+            if (evt.isOnlyHint()) {
+                eventSnapshot.setEventType("ProblemAsHintEvent");
+            } else {
+                eventSnapshot.setEventType("ProblemEvent");
+            }
             eventSnapshot.setObjectType(EventType.PROBLEM);
             eventSnapshot.setAccessToken(evt.getKey());
             eventSnapshot.setMessage(evt.getMessage());

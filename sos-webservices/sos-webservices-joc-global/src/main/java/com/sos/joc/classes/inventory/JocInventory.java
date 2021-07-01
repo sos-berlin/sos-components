@@ -113,6 +113,7 @@ public class JocInventory {
                     // TODO put(InstructionType.PUBLISH, "classpath:/raml/inventory/schemas/instruction/publish-schema.json");
                     put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
                     put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
+                    put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
                 }
             });
 
