@@ -140,14 +140,27 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             int numOfFreshOrders = 0;
             if (freshOrders != null) {
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
-                if (body.getScheduledNever() == Boolean.TRUE) {
-                    Predicate<JOrder> neverFilter = o -> {
-                        Optional<Instant> scheduledFor = o.scheduledFor();
-                        return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
-                    };
-                    numOfFreshOrders = freshOrderSet.stream().filter(neverFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
-                            e -> 1).sum();
-                } else if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
+                
+                numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
+                    Optional<Instant> scheduledFor = o.scheduledFor();
+                    return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
+                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                
+                numOfPendingOrders = freshOrderSet.stream().filter(o -> {
+                    Optional<Instant> scheduledFor = o.scheduledFor();
+                    return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                
+//              obsolete with introducing states: PENDING, SCHEDULED
+//                if (body.getScheduledNever() == Boolean.TRUE) {
+//                    Predicate<JOrder> neverFilter = o -> {
+//                        Optional<Instant> scheduledFor = o.scheduledFor();
+//                        return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+//                    };
+//                    numOfFreshOrders = freshOrderSet.stream().filter(neverFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
+//                            e -> 1).sum();
+//                } else 
+                if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
                     String dateTo = body.getDateTo();
                     if ("0d".equals(dateTo)) {
                         dateTo = "1d";
@@ -161,25 +174,17 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
                             e -> 1).sum();
                 } else {
-                    numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum();
+                    numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum()
+                            - numOfPendingOrders;
                 }
                 
-                numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
-                    Optional<Instant> scheduledFor = o.scheduledFor();
-                    return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
-                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
-                
-                numOfPendingOrders = freshOrderSet.stream().filter(o -> {
-                    Optional<Instant> scheduledFor = o.scheduledFor();
-                    return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
-                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
             }
             
             final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
                     entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
             map.put(OrderStateText.PENDING, numOfPendingOrders);
-            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders - numOfPendingOrders);
+            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders);
             OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
             
             summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
