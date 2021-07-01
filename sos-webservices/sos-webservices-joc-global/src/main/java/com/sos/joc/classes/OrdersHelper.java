@@ -239,7 +239,19 @@ public class OrdersHelper {
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
     
+    public static boolean isPendingOrScheduledOrBlocked(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        if (o.isSuspended()) {
+            return false;
+        }
+        return OrderStateText.SCHEDULED.equals(getGroupedState(order.asScala().state().getClass()));
+    }
+    
     public static boolean isPrompting(JOrder order) {
+        Order<Order.State> o = order.asScala();
+        if (o.isSuspended()) {
+            return false;
+        }
         return OrderStateText.PROMPTING.equals(getGroupedState(order.asScala().state().getClass()));
     }
 

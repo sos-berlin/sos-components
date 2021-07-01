@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -169,19 +170,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             
             addSubmittedOrderIdsFromDailyplanDate(cancelDailyPlanOrders);
             
-            // @Uwe: you have only pending orders then you don't need
-            // arguments, kill, position, orderType in CancelDailyPlanOrders schema
-//            ModifyOrders modifyOrders = new ModifyOrders();
-//            modifyOrders.setControllerId(cancelDailyPlanOrders.getControllerId());
-//            modifyOrders.setOrderIds(cancelDailyPlanOrders.getOrderIds());
-//            modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
-//            modifyOrders.setAuditLog(cancelDailyPlanOrders.getAuditLog());
-            
             ModifyOrders modifyOrders = new ModifyOrders();
             modifyOrders.setControllerId(cancelDailyPlanOrders.getControllerId());
-            modifyOrders.setKill(cancelDailyPlanOrders.getKill());
+            modifyOrders.setKill(false);
             modifyOrders.setOrderIds(cancelDailyPlanOrders.getOrderIds());
-            modifyOrders.setOrderType(cancelDailyPlanOrders.getOrderType());
+            modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
             modifyOrders.setAuditLog(cancelDailyPlanOrders.getAuditLog());
             
             postOrdersModify(Action.CANCEL_DAILYPLAN, modifyOrders);            
@@ -227,17 +220,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), category);
 
         Set<String> orders = modifyOrders.getOrderIds();
-
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
-        if (workflowIds != null && workflowIds.isEmpty()) {
-            modifyOrders.setWorkflowIds(null); // for AuditLog 
-        }
+        boolean withOrders = orders != null && !orders.isEmpty(); 
         
         String controllerId = modifyOrders.getControllerId();
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Stream<JOrder> orderStream = Stream.empty();
 
-        if (orders != null && !orders.isEmpty()) {
+        if (withOrders) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
             // determine possibly fresh cyclic orders in case of CANCEL
             if (Action.CANCEL.equals(action) || Action.CANCEL_DAILYPLAN.equals(action)) {
@@ -255,7 +245,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             orderStream = currentState.ordersBy(workflowFilter);
         }
         
-        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders());
+        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders(), withOrders);
         
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
@@ -281,37 +271,57 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         
     }
 
-    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId) {
-        if (Action.RESUME.equals(action)) {
+    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, boolean withPostProblem) {
+        switch (action) {
+        case RESUME:
             Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
                     Collectors.toSet()));
             if (suspendedOrFailedOrders.containsKey(Boolean.FALSE)) {
                 String msg = suspendedOrFailedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '",
                         "Orders '", "' not failed or suspended"));
-                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                // LOGGER.info(getJocError().printMetaInfo());
-                // LOGGER.warn(msg);
-                // getJocError().clearMetaInfo();
+                if (withPostProblem) {
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    // LOGGER.info(getJocError().printMetaInfo());
+                    // LOGGER.warn(msg);
+                    // getJocError().clearMetaInfo();
+                }
             }
             return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
-        } else if (Action.ANSWER_PROMPT.equals(action)) {
+        case ANSWER_PROMPT:
             Map<Boolean, Set<JOrder>> promptingOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isPrompting(o), Collectors
                     .toSet()));
             if (promptingOrders.containsKey(Boolean.FALSE)) {
                 String msg = promptingOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not prompting"));
-                ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                // LOGGER.info(getJocError().printMetaInfo());
-                // LOGGER.warn(msg);
-                // getJocError().clearMetaInfo();
+                if (withPostProblem) {
+                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    // LOGGER.info(getJocError().printMetaInfo());
+                    // LOGGER.warn(msg);
+                    // getJocError().clearMetaInfo();
+                }
             }
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        case CANCEL_DAILYPLAN:
+            Map<Boolean, Set<JOrder>> freshOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isPendingOrScheduledOrBlocked(o), Collectors
+                    .toSet()));
+            if (freshOrders.containsKey(Boolean.FALSE)) {
+                String msg = freshOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
+                        "' not pending, scheduled or blocked"));
+                if (withPostProblem) {
+                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                    // LOGGER.info(getJocError().printMetaInfo());
+                    // LOGGER.warn(msg);
+                    // getJocError().clearMetaInfo();
+                }
+            }
+            return freshOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
+        default:
+            return orderStream.collect(Collectors.toSet());
         }
-        return orderStream.collect(Collectors.toSet());
     }
     
-    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, Set<Folder> permittedFolders) {
-        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId);
+    private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, Set<Folder> permittedFolders, boolean withPostProblem) {
+        final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, withPostProblem);
         return jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId().path().string()), permittedFolders)).collect(Collectors.toSet());
     }
 
