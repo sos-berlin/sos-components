@@ -181,6 +181,9 @@ public class JsonSerializer {
     }
     
     private static Requirements emptyRequirementsToNull(Requirements r) {
+        if (r == null) {
+            return null;
+        }
         if (r != null && (r.getParameters() == null || (r.getParameters() != null && r.getParameters().getAdditionalProperties().isEmpty()))) {
             return null;
         }
