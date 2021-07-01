@@ -17,9 +17,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "pending",
-    "scheduled",
-    "scheduledLate",
+    "submitted",
+    "submittedLate",
     "planned",
     "plannedLate",
     "finished"
@@ -32,24 +31,16 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pending")
-    private Integer pending;
+    @JsonProperty("submitted")
+    private Integer submitted;
     /**
      * non negative integer
      * <p>
      * 
      * 
      */
-    @JsonProperty("scheduled")
-    private Integer scheduled;
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledLate")
-    private Integer scheduledLate;
+    @JsonProperty("submittedLate")
+    private Integer submittedLate;
     /**
      * non negative integer
      * <p>
@@ -81,9 +72,9 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pending")
-    public Integer getPending() {
-        return pending;
+    @JsonProperty("submitted")
+    public Integer getSubmitted() {
+        return submitted;
     }
 
     /**
@@ -92,9 +83,9 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("pending")
-    public void setPending(Integer pending) {
-        this.pending = pending;
+    @JsonProperty("submitted")
+    public void setSubmitted(Integer submitted) {
+        this.submitted = submitted;
     }
 
     /**
@@ -103,9 +94,9 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("scheduled")
-    public Integer getScheduled() {
-        return scheduled;
+    @JsonProperty("submittedLate")
+    public Integer getSubmittedLate() {
+        return submittedLate;
     }
 
     /**
@@ -114,31 +105,9 @@ public class DailyPlanOrdersSummary {
      * 
      * 
      */
-    @JsonProperty("scheduled")
-    public void setScheduled(Integer scheduled) {
-        this.scheduled = scheduled;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledLate")
-    public Integer getScheduledLate() {
-        return scheduledLate;
-    }
-
-    /**
-     * non negative integer
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("scheduledLate")
-    public void setScheduledLate(Integer scheduledLate) {
-        this.scheduledLate = scheduledLate;
+    @JsonProperty("submittedLate")
+    public void setSubmittedLate(Integer submittedLate) {
+        this.submittedLate = submittedLate;
     }
 
     /**
@@ -209,12 +178,12 @@ public class DailyPlanOrdersSummary {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("pending", pending).append("scheduled", scheduled).append("scheduledLate", scheduledLate).append("planned", planned).append("plannedLate", plannedLate).append("finished", finished).toString();
+        return new ToStringBuilder(this).append("submitted", submitted).append("submittedLate", submittedLate).append("planned", planned).append("plannedLate", plannedLate).append("finished", finished).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(scheduled).append(scheduledLate).append(pending).append(finished).append(planned).append(plannedLate).toHashCode();
+        return new HashCodeBuilder().append(submittedLate).append(finished).append(submitted).append(planned).append(plannedLate).toHashCode();
     }
 
     @Override
@@ -226,7 +195,7 @@ public class DailyPlanOrdersSummary {
             return false;
         }
         DailyPlanOrdersSummary rhs = ((DailyPlanOrdersSummary) other);
-        return new EqualsBuilder().append(scheduled, rhs.scheduled).append(scheduledLate, rhs.scheduledLate).append(pending, rhs.pending).append(finished, rhs.finished).append(planned, rhs.planned).append(plannedLate, rhs.plannedLate).isEquals();
+        return new EqualsBuilder().append(submittedLate, rhs.submittedLate).append(finished, rhs.finished).append(submitted, rhs.submitted).append(planned, rhs.planned).append(plannedLate, rhs.plannedLate).isEquals();
     }
 
 }
