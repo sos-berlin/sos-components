@@ -288,10 +288,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (suspendedOrFailedOrders.containsKey(Boolean.FALSE)) {
                 String msg = suspendedOrFailedOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '",
                         "Orders '", "' not failed or suspended"));
-                // ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                LOGGER.info(getJocError().printMetaInfo());
-                LOGGER.warn(msg);
-                getJocError().clearMetaInfo();
+                ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                // LOGGER.info(getJocError().printMetaInfo());
+                // LOGGER.warn(msg);
+                // getJocError().clearMetaInfo();
             }
             return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         } else if (Action.ANSWER_PROMPT.equals(action)) {
@@ -300,10 +300,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (promptingOrders.containsKey(Boolean.FALSE)) {
                 String msg = promptingOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not prompting"));
-                // ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                LOGGER.info(getJocError().printMetaInfo());
-                LOGGER.warn(msg);
-                getJocError().clearMetaInfo();
+                ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
+                // LOGGER.info(getJocError().printMetaInfo());
+                // LOGGER.warn(msg);
+                // getJocError().clearMetaInfo();
             }
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
         }

@@ -55,33 +55,14 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                 return jocDefaultResponse;
             }
             
-            try {
-                session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
-                long timeout = session.getTimeout();
-                // LOGGER.info("Session timeout: " + timeout);
-                if (timeout < 0L) {
-                    // unlimited session 
-                } else if (timeout == 0L) {
-                    throw new SessionNotExistException("Session has expired");
-                } else if (timeout - 1000L < 0L) {
-                    // doesn't send events in the last second of a session before it expires
-                    TimeUnit.SECONDS.sleep(1);
-                }
-            } catch (SessionNotExistException e) {
-                TimeUnit.SECONDS.sleep(1);
-                throw e;
-            } catch (Exception e) {
-                TimeUnit.SECONDS.sleep(1);
-                throw new SessionNotExistException(e);
-            }
-            
+            session = checkSession();
             boolean evtIdIsEmpty = in.getEventId() == null || in.getEventId() <= 0L;
             long eventId = evtIdIsEmpty ? Instant.now().getEpochSecond() : in.getEventId();
             entity.setEventId(eventId);
             entity.setControllerId(controllerId);
             entity.setEventSnapshots(Collections.emptyList());
             
-            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session), folderPermissions.getListOfFolders());
+            entity = processAfter(EventServiceFactory.getEvents(controllerId, eventId, accessToken, session), folderPermissions.getListOfFolders(), accessToken);
 
         } catch (ControllerConnectionRefusedException e) {
             e.addErrorMetaInfo(getJocError());
@@ -99,7 +80,39 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return JOCDefaultResponse.responseStatus200(entity);
     }
     
-    public static Event processAfter(Event evt, Set<Folder> permittedFolders) {
+    private Session checkSession() throws SessionNotExistException {
+        try {
+            Session session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
+            long timeout = session.getTimeout();
+            // LOGGER.info("Session timeout: " + timeout);
+            if (timeout < 0L) {
+                // unlimited session 
+            } else if (timeout == 0L) {
+                throw new SessionNotExistException("Session has expired");
+            } else if (timeout - 1000L < 0L) {
+                // doesn't send events in the last second of a session before it expires
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (Exception e) {
+                }
+            }
+            return session;
+        } catch (SessionNotExistException e) {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (Exception e1) {
+            }
+            throw e;
+        } catch (Exception e) {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (Exception e1) {
+            }
+            throw new SessionNotExistException(e);
+        }
+    }
+    
+    private static Event processAfter(Event evt, Set<Folder> permittedFolders, String accessToken) {
         SOSHibernateSession connection = null;
         try {
             if (EventServiceFactory.isClosed.get()) {
@@ -178,6 +191,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
                             return null;
                         }
                     }
+                }
+                if (e.getAccessToken() != null && !accessToken.equals(e.getAccessToken())) {
+                    return null;
                 }
                 return e;
             }).filter(Objects::nonNull).collect(Collectors.toList()));

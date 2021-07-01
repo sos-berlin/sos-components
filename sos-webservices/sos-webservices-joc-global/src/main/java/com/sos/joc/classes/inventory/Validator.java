@@ -375,7 +375,7 @@ public class Validator {
                             new BigDecimal(_default.toString());
                             invalid = false;
                         } catch (Exception e) {
-                            throw new JocConfigurationException(String.format("$.orderPreparation.parameters['%s'].default: wrong number format %s.",
+                            throw new JocConfigurationException(String.format("$.orderPreparation.parameters['%s'].default: wrong number format: '%s'.",
                                     key, _default.toString()));
                         }
                     }
