@@ -138,7 +138,7 @@ public class OrdersHelper {
             put("ProcessingKilled", OrderStateText.CANCELLED);
             put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
             put("Blocked", OrderStateText.BLOCKED);
-            put("Calling", OrderStateText.CALLING);
+            put("Calling", OrderStateText.CALLING); // obsolete?
             put("Prompting", OrderStateText.PROMPTING);
         }
     });
@@ -150,7 +150,7 @@ public class OrdersHelper {
 
         {
             put(OrderStateText.PLANNED, 4);
-            put(OrderStateText.PENDING, 1);
+            put(OrderStateText.PENDING, 10);
             put(OrderStateText.SCHEDULED, 1);
             put(OrderStateText.WAITING, 8);
             put(OrderStateText.FAILED, 2);
@@ -161,7 +161,7 @@ public class OrdersHelper {
             put(OrderStateText.INPROGRESS, 3);
             put(OrderStateText.FINISHED, 6);
             put(OrderStateText.BLOCKED, 7);
-            put(OrderStateText.CALLING, 9);
+            put(OrderStateText.CALLING, 9); // obsolete?
             put(OrderStateText.PROMPTING, 9);
             put(OrderStateText.UNKNOWN, 2);
         }
@@ -324,9 +324,6 @@ public class OrdersHelper {
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
         o.setScheduledFor(scheduledFor);
-//        if (JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor)) {
-//            o.setScheduledNever(true); 
-//        }
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
