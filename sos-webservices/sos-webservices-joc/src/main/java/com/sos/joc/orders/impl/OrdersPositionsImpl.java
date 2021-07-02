@@ -24,6 +24,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrdersPositions;
 import com.sos.joc.model.order.Positions;
@@ -57,15 +58,17 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             }
             
             Set<String> orders = ordersFilter.getOrderIds();
-            JControllerState currentState = Proxy.of(controllerId).currentState();
-            Stream<JOrder> orderStream = Stream.empty();
+            checkRequiredParameter("orderIds", orders);
             
-            if (orders != null && !orders.isEmpty()) {
-                orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
-            }
+            JControllerState currentState = Proxy.of(controllerId).currentState();
+            Stream<JOrder> orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
             
             Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
                     Collectors.toSet()));
+            
+            if (!suspendedOrFailedOrders.containsKey(Boolean.TRUE)) {
+                throw new JocBadRequestException("The orders are neither failed nor suspended");
+            }
             
             orderStream = suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet()).stream().filter(o -> canAdd(WorkflowPaths
                     .getPath(o.workflowId()), folderPermissions.getListOfFolders()));
@@ -73,45 +76,48 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             Map<JWorkflowId, Set<JOrder>> map = orderStream.collect(Collectors.groupingBy(o -> o.workflowId(), Collectors.toSet()));
             OrdersPositions entity = new OrdersPositions();
             
-            if (map.size() > 1) {
-               throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
-               
-            } else if (map.size() == 1) {
-                JWorkflowId workflowId = map.keySet().iterator().next();
-                Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
-                ProblemHelper.throwProblemIfExist(e);
-                WorkflowId w = new WorkflowId();
-                w.setPath(workflowId.path().string());
-                w.setVersionId(workflowId.versionId().string());
-                entity.setWorkflowId(w);
-                
-                final Map<String, Integer> counterPerPos = new HashMap<>();
-                final Set<Positions> pos = new HashSet<>();
-                final List<String> orderIds = new ArrayList<>();
-                map.get(workflowId).forEach(o -> {
-                    e.get().reachablePositions(o.workflowPosition().position()).stream().forEach(jPos -> {
-                        Positions p = new Positions();
-                        p.setPosition(jPos.toList());
-                        p.setPositionString(jPos.toString());
-                        pos.add(p);
-                        orderIds.add(o.id().string());
-                        counterPerPos.putIfAbsent(jPos.toString(), 0);
-                        counterPerPos.computeIfPresent(jPos.toString(), (key, value) -> value + 1);
-                    });
-                });
-                
-                entity.setOrderIds(orderIds);
-                
-                int countOrders = map.get(workflowId).size();
-                Set<String> commonPos = counterPerPos.entrySet().stream().filter(entry -> entry.getValue() == countOrders).map(Map.Entry::getKey)
-                        .collect(Collectors.toSet());
-                
-                entity.setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toList()));
-                if (entity.getPositions().isEmpty() && orderIds.size() > 1) {
-                    throw new JocBadRequestException("The orders " + orderIds.toString() + " don't have common allowed positions.");
-                }
+            if (map.isEmpty()) {
+                throw new JocFolderPermissionsException("access denied");
             }
             
+            if (map.size() > 1) {
+                throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
+            }
+            
+            JWorkflowId workflowId = map.keySet().iterator().next();
+            Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
+            ProblemHelper.throwProblemIfExist(e);
+            WorkflowId w = new WorkflowId();
+            w.setPath(workflowId.path().string());
+            w.setVersionId(workflowId.versionId().string());
+            entity.setWorkflowId(w);
+
+            final Map<String, Integer> counterPerPos = new HashMap<>();
+            final Set<Positions> pos = new HashSet<>();
+            final List<String> orderIds = new ArrayList<>();
+            map.get(workflowId).forEach(o -> {
+                e.get().reachablePositions(o.workflowPosition().position()).stream().forEach(jPos -> {
+                    Positions p = new Positions();
+                    p.setPosition(jPos.toList());
+                    p.setPositionString(jPos.toString());
+                    pos.add(p);
+                    orderIds.add(o.id().string());
+                    counterPerPos.putIfAbsent(jPos.toString(), 0);
+                    counterPerPos.computeIfPresent(jPos.toString(), (key, value) -> value + 1);
+                });
+            });
+
+            entity.setOrderIds(orderIds);
+
+            int countOrders = map.get(workflowId).size();
+            Set<String> commonPos = counterPerPos.entrySet().stream().filter(entry -> entry.getValue() == countOrders).map(Map.Entry::getKey).collect(
+                    Collectors.toSet());
+
+            entity.setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toList()));
+            if (entity.getPositions().isEmpty() && orderIds.size() > 1) {
+                throw new JocBadRequestException("The orders " + orderIds.toString() + " don't have common allowed positions.");
+            }
+
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setSurveyDate(Date.from(currentState.instant()));
             

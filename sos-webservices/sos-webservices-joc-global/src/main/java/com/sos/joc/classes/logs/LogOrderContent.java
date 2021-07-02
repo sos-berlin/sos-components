@@ -124,6 +124,7 @@ public class LogOrderContent {
         item.setPosition("0");
         OrderLogEntryError err = new OrderLogEntryError();
         err.setErrorReason(null);
+        err.setErrorState(".");
         if (JocClusterService.getInstance().isRunning()) {
             err.setErrorText("Snapshot log not found");
         } else {
