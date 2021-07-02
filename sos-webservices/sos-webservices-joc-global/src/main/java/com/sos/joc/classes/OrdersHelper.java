@@ -163,7 +163,7 @@ public class OrdersHelper {
             put(OrderStateText.FINISHED, 6);
             put(OrderStateText.BLOCKED, 7);
             put(OrderStateText.CALLING, 9); // obsolete?
-            put(OrderStateText.PROMPTING, 9);
+            put(OrderStateText.PROMPTING, 12);
             put(OrderStateText.UNKNOWN, 2);
         }
     });
@@ -376,16 +376,26 @@ public class OrdersHelper {
                 .getParameters().getAdditionalProperties() : Collections.emptyMap();
         Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
 
-        Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
-        if (!keys.isEmpty()) {
-            if (keys.size() == 1) {
-                throw new JocMissingRequiredParameterException("Variable " + keys.iterator().next() + " isn't declared in the workflow");
+        boolean allowUndeclared = false;
+        if (orderRequirements == null || params.isEmpty() || orderRequirements.getAllowUndeclared() == Boolean.TRUE) {
+            allowUndeclared = true; 
+        }
+        
+        if (!allowUndeclared) {
+            Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
+            if (!keys.isEmpty()) {
+                if (keys.size() == 1) {
+                    throw new JocMissingRequiredParameterException("Variable " + keys.iterator().next() + " isn't declared in the workflow");
+                }
+                throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
             }
-            throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
         }
 
         boolean invalid = false;
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
+            if (param.getValue().getFinal() != null) {
+                continue;
+            }
             if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
                 throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is missing but required");
             }

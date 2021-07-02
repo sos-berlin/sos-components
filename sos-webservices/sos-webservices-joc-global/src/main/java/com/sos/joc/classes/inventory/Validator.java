@@ -29,6 +29,7 @@ import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.Prompt;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableJava;
@@ -340,6 +341,9 @@ public class Validator {
                     validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames, orderPreparation,
                             labels);
                     break;
+                case PROMPT:
+                    Prompt prompt = inst.cast();
+                    validateExpression(prompt.getQuestion());
                 default:
                     break;
                 }

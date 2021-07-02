@@ -322,7 +322,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     
     private Set<JOrder> getJOrders(Action action, Stream<JOrder> orderStream, String controllerId, Set<Folder> permittedFolders, boolean withPostProblem) {
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, withPostProblem);
-        return jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId().path().string()), permittedFolders)).collect(Collectors.toSet());
+        return jOrders.stream().filter(o -> canAdd(WorkflowPaths.getPath(o.workflowId()), permittedFolders)).collect(Collectors.toSet());
     }
 
     private static Stream<JOrder> cyclicFreshOrderIds(Collection<String> orderIds, JControllerState currentState) {

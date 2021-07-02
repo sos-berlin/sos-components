@@ -45,17 +45,18 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             }
 
             JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
-            Long surveyDateMillis = currentState.eventId() / 1000;
+            Instant surveyDateInstant = currentState.instant();
             Optional<JOrder> optional = currentState.idToOrder(OrderId.of(orderFilter.getOrderId()));
 
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), surveyDateMillis);
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), surveyDateInstant
+                        .toEpochMilli());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));
                 }
-                o.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+                o.setSurveyDate(Date.from(surveyDateInstant));
                 o.setDeliveryDate(Date.from(Instant.now()));
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(o));
             } else {

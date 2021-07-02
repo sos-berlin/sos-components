@@ -106,15 +106,15 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                 try {
                     JControllerProxy proxy = Proxy.of(controllerId);
                     JControllerState currentState = proxy.currentState();
-                    Long surveyDateMillis = currentState.eventId() / 1000;
-                    Instant currentStateMoment = Instant.ofEpochMilli(surveyDateMillis);
+                    Instant currentStateMoment = currentState.instant();
+                    Long surveyDateMillis = currentStateMoment.toEpochMilli();
                     boolean olderThan30sec = currentStateMoment.isBefore(Instant.now().minusSeconds(30));
                     LOGGER.debug("current state older than 30sec? " + olderThan30sec + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
                     if (!Proxies.isCoupled(controllerId)) {
                         JControllerCommand noOpCommand = JControllerCommand.apply(new ControllerCommand.NoOperation(OptionConverters.toScala(Optional.empty())));
                         try {
                             Either<Problem, js7.data.controller.ControllerCommand.Response> anEither = proxy.api().executeCommand(noOpCommand).get(
-                                    500, TimeUnit.MILLISECONDS);
+                                    1, TimeUnit.SECONDS);
                             if (anEither.isRight()) {
                                 Proxies.setCoupled(controllerId, true);
                                 LOGGER.info("noOp answer: " + anEither.get().toString() + ",  Proxies.isCoupled? " + Proxies.isCoupled(controllerId));
@@ -145,7 +145,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         Either<Problem, JAgentRefState> either = currentState.pathToAgentRefState(AgentPath.of(dbAgent.getAgentId()));
                         AgentV agent = mapDbAgentToAgentV(dbAgent);
                         AgentStateText stateText = AgentStateText.UNKNOWN;
-                        //if (!olderThan30sec) {
+                        if (Proxies.isCoupled(controllerId)) {
                         //if (!olderThan30sec || Proxies.isCoupled(controllerId)) {
                             if (either.isRight()) {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
@@ -164,7 +164,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
                                 agent.setErrorMessage(ProblemHelper.getErrorMessage(either.getLeft()));
                             }
-                        //}
+                        }
                         if (withStateFilter && !agentsParam.getStates().contains(stateText)) {
                             return null;
                         }

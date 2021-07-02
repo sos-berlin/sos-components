@@ -53,7 +53,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
             entity.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
             if (currentstate != null) {
-                entity.setSurveyDate(Date.from(Instant.ofEpochMilli(currentstate.eventId() / 1000)));
+                entity.setSurveyDate(Date.from(currentstate.instant()));
             }
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);

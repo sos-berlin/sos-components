@@ -59,7 +59,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             answer.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(filter.getControllerId());
             if (currentstate != null) {
-                answer.setSurveyDate(Date.from(Instant.ofEpochMilli(currentstate.eventId() / 1000)));
+                answer.setSurveyDate(Date.from(currentstate.instant()));
             }
             
             session = Globals.createSosHibernateStatelessConnection(API_CALL);

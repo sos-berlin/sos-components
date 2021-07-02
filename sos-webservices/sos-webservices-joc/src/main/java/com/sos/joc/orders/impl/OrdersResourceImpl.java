@@ -204,9 +204,10 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
             }
 
-            Long surveyDateMillis = currentState.eventId() / 1000;
+            Instant surveyDateInstant = currentState.instant();
+            Long surveyDateMillis = surveyDateInstant.toEpochMilli();
             OrdersV entity = new OrdersV();
-            entity.setSurveyDate(Date.from(Instant.ofEpochMilli(surveyDateMillis)));
+            entity.setSurveyDate(Date.from(surveyDateInstant));
             //Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
             Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {

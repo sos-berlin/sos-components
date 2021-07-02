@@ -101,8 +101,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         
         try {
             JControllerState controllerState = Proxy.of(body.getControllerId()).currentState();
-            final long nowMillis = controllerState.eventId() / 1000;
-            final Instant now = Instant.ofEpochMilli(nowMillis);
+            final Instant now = controllerState.instant();
             Map<Class<? extends Order.State>, Integer> orderStates = null;
             int suspendedOrders = 0;
             Stream<JOrder> freshOrders = null;

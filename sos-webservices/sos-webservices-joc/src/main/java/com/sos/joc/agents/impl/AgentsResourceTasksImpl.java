@@ -64,7 +64,7 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
 
             if (dbAgents != null) {
                 JControllerState currentState = Proxy.of(controllerId).currentState();
-                agents.setSurveyDate(Date.from(Instant.ofEpochMilli(currentState.eventId() / 1000)));
+                agents.setSurveyDate(Date.from(currentState.instant()));
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
                 Map<String, List<String>> ordersPerAgent = new HashMap<>();
                 Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o

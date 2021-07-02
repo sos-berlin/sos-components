@@ -220,7 +220,7 @@ public class ProxyTest {
             if (order.isPresent()) {
                 LOGGER.info(order.get().toJson());
             }
-            final Instant now = Instant.ofEpochMilli(controllerState.eventId() / 1000);
+            final Instant now = controllerState.instant();
             Integer i = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class))
                 .map(o -> o.scheduledFor())
                 .filter(Optional::isPresent)

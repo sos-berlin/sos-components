@@ -74,7 +74,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
 
             List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer);
             if (currentstate != null) {
-                workflows.setSurveyDate(Date.from(Instant.ofEpochMilli(currentstate.eventId() / 1000)));
+                workflows.setSurveyDate(Date.from(currentstate.instant()));
                 contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer));
             }
             

@@ -97,7 +97,7 @@ public class LocksResourceImpl extends JOCResourceImpl implements ILocksResource
             LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
             final JControllerState controllerState = getCurrentState(filter.getControllerId());
             if (controllerState != null) {
-                answer.setSurveyDate(Date.from(Instant.ofEpochMilli(controllerState.eventId() / 1000)));
+                answer.setSurveyDate(Date.from(controllerState.instant()));
             }
             JocError jocError = getJocError();
             if (contents != null) {
