@@ -399,7 +399,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (modifyOrders.getKill() == Boolean.TRUE) {
                 suspendMode = JSuspensionMode.kill(true);
             } else {
-                suspendMode = JSuspensionMode.kill();
+                suspendMode = JSuspensionMode.kill(false);
             }
             return ControllerApi.of(controllerId).suspendOrders(oIds, suspendMode);
             

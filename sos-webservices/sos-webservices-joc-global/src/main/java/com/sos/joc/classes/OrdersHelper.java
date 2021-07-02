@@ -377,7 +377,7 @@ public class OrdersHelper {
         Map<String, Object> args = (arguments != null) ? arguments.getAdditionalProperties() : Collections.emptyMap();
 
         boolean allowUndeclared = false;
-        if (orderRequirements == null || params.isEmpty() || orderRequirements.getAllowUndeclared() == Boolean.TRUE) {
+        if (orderRequirements == null || orderRequirements.getAllowUndeclared() == Boolean.TRUE) {
             allowUndeclared = true; 
         }
         
@@ -555,7 +555,7 @@ public class OrdersHelper {
         } else if (modifyOrders.getKill() == Boolean.TRUE) {
             cancelMode = JCancellationMode.kill(true);
         } else {
-            cancelMode = JCancellationMode.kill();
+            cancelMode = JCancellationMode.kill(false);
         }
         return controllerApi.cancelOrders(oIds, cancelMode);
     }
