@@ -175,7 +175,7 @@ public class OrdersHelper {
 
         {
             put(DailyPlanOrderStateText.PLANNED, 4);
-            put(DailyPlanOrderStateText.SUBMITTED, 1);
+            put(DailyPlanOrderStateText.SUBMITTED, 5);
             put(DailyPlanOrderStateText.FINISHED, 6);
         }
     });

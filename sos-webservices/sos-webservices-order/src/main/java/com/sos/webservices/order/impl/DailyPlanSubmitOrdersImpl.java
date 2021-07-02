@@ -28,6 +28,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -127,6 +129,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                     Globals.commit(sosHibernateSession);
                     orderInitiatorRunner.submitOrders(controllerId, getJocError(), getAccessToken(), listOfPlannedOrders);
+
+                    EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
 
                     List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
