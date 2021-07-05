@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -26,6 +27,7 @@ import com.sos.commons.util.SOSDurations;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrderHelper;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
@@ -47,6 +49,8 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data_for_java.controller.JControllerState;
 
 public class OrderListSynchronizer {
@@ -277,7 +281,7 @@ public class OrderListSynchronizer {
             if (orderInitiatorSettings.isOverwrite()) {
                 LOGGER.debug("Overwrite orders");
                 for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                    FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
                             .getScheduledFor()));
@@ -285,12 +289,23 @@ public class OrderListSynchronizer {
                     String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
                     filter.addWorkflowName(workflowName);
                     List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                    try {
-                        OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);
-                    } catch (ControllerObjectNotExistException e) {
-                        LOGGER.warn("Order unknown in JS7 Controller");
-                    }
-                    dbLayerDailyPlannedOrders.deleteCascading(filter);
+                    //try {
+                        CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);
+                        c.thenAccept(either -> {
+                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), plannedOrder.getControllerId());
+                            if (either.isRight()) {
+                                try {
+                                    //open db session here
+                                    dbLayerDailyPlannedOrders.deleteCascading(filter);
+                                } catch (SOSHibernateException e) {
+                                    ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), plannedOrder.getControllerId());
+                                }
+                            }
+                        });
+//                    } catch (ControllerObjectNotExistException e) {
+//                        LOGGER.warn("Order unknown in JS7 Controller");
+//                    }
+//                    dbLayerDailyPlannedOrders.deleteCascading(filter);
                 }
             }
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {

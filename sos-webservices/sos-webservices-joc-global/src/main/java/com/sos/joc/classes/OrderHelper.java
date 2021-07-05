@@ -2,6 +2,7 @@ package com.sos.joc.classes;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -34,18 +35,16 @@ public class OrderHelper {
         super();
     }
 
-    public static void removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders)
-            throws JsonProcessingException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException,
-            ExecutionException {
+    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) {
 
-        try {
-            Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().filter(dbItem->dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
-                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()).get(99, TimeUnit.SECONDS);
-            ProblemHelper.throwProblemIfExist(response);
-        } catch (TimeoutException e1) {
-            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
-        }
+        //try {
+            //Either<Problem, Void> response = //
+            return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().filter(dbItem->dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
+                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()); //get(99, TimeUnit.SECONDS);
+            //ProblemHelper.throwProblemIfExist(response);
+//        } catch (TimeoutException e1) {
+//            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
+//        }
     }
 
     public static void removeFromJobSchedulerControllerWithHistory(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrders)
