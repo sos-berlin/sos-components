@@ -29,7 +29,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.googlecode.jsendnsca</groupId>
+			<groupId>com.github.jsendnsca</groupId>
 			<artifactId>jsendnsca</artifactId>
 		</dependency>
 		<!-- for tests -->
