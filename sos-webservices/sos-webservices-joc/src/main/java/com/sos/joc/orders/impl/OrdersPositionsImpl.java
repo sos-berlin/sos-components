@@ -1,12 +1,11 @@
 package com.sos.joc.orders.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,6 +13,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -22,6 +22,7 @@ import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
@@ -87,21 +88,25 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             JWorkflowId workflowId = map.keySet().iterator().next();
             Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
             ProblemHelper.throwProblemIfExist(e);
+            //System.out.print(e.get().withPositions().toJson());
+            Workflow workflow = Globals.objectMapper.readValue(e.get().withPositions().toJson(), Workflow.class);
+            Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(workflow.getInstructions());
+            
             WorkflowId w = new WorkflowId();
-            w.setPath(workflowId.path().string());
+            w.setPath(WorkflowPaths.getPath(workflowId));
             w.setVersionId(workflowId.versionId().string());
             entity.setWorkflowId(w);
 
             final Map<String, Integer> counterPerPos = new HashMap<>();
-            final Set<Positions> pos = new HashSet<>();
-            final List<String> orderIds = new ArrayList<>();
+            final Set<Positions> pos = new LinkedHashSet<>();
+            final Set<String> orderIds = new HashSet<>();
             map.get(workflowId).forEach(o -> {
-                e.get().reachablePositions(o.workflowPosition().position()).stream().forEach(jPos -> {
+                orderIds.add(o.id().string());
+                e.get().reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
                     Positions p = new Positions();
                     p.setPosition(jPos.toList());
                     p.setPositionString(jPos.toString());
                     pos.add(p);
-                    orderIds.add(o.id().string());
                     counterPerPos.putIfAbsent(jPos.toString(), 0);
                     counterPerPos.computeIfPresent(jPos.toString(), (key, value) -> value + 1);
                 });
@@ -113,10 +118,11 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
             Set<String> commonPos = counterPerPos.entrySet().stream().filter(entry -> entry.getValue() == countOrders).map(Map.Entry::getKey).collect(
                     Collectors.toSet());
 
-            entity.setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).collect(Collectors.toList()));
-            if (entity.getPositions().isEmpty() && orderIds.size() > 1) {
-                throw new JocBadRequestException("The orders " + orderIds.toString() + " don't have common allowed positions.");
-            }
+            entity.setPositions(pos.stream().filter(p -> commonPos.contains(p.getPositionString())).filter(p -> !implicitEnds.contains(p
+                    .getPositionString())).collect(Collectors.toCollection(LinkedHashSet::new)));
+//            if (entity.getPositions().isEmpty() && orderIds.size() > 1) {
+//                throw new JocBadRequestException("The orders " + orderIds.toString() + " don't have common allowed positions.");
+//            }
 
             entity.setDeliveryDate(Date.from(Instant.now()));
             entity.setSurveyDate(Date.from(currentState.instant()));
@@ -130,7 +136,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
                 //getJocError().clearMetaInfo();
             }
             
-            return JOCDefaultResponse.responseStatus200(entity);
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

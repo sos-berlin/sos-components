@@ -1,17 +1,20 @@
 
 package com.sos.joc.model.order;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.workflow.WorkflowId;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -50,7 +53,8 @@ public class OrdersPositions {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date surveyDate;
     @JsonProperty("orderIds")
-    private List<String> orderIds = new ArrayList<String>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> orderIds = new LinkedHashSet<String>();
     /**
      * workflowId
      * <p>
@@ -60,7 +64,8 @@ public class OrdersPositions {
     @JsonProperty("workflowId")
     private WorkflowId workflowId;
     @JsonProperty("positions")
-    private List<Positions> positions = new ArrayList<Positions>();
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<Positions> positions = new LinkedHashSet<Positions>();
 
     /**
      * timestamp
@@ -109,12 +114,12 @@ public class OrdersPositions {
     }
 
     @JsonProperty("orderIds")
-    public List<String> getOrderIds() {
+    public Set<String> getOrderIds() {
         return orderIds;
     }
 
     @JsonProperty("orderIds")
-    public void setOrderIds(List<String> orderIds) {
+    public void setOrderIds(Set<String> orderIds) {
         this.orderIds = orderIds;
     }
 
@@ -141,12 +146,12 @@ public class OrdersPositions {
     }
 
     @JsonProperty("positions")
-    public List<Positions> getPositions() {
+    public Set<Positions> getPositions() {
         return positions;
     }
 
     @JsonProperty("positions")
-    public void setPositions(List<Positions> positions) {
+    public void setPositions(Set<Positions> positions) {
         this.positions = positions;
     }
 
