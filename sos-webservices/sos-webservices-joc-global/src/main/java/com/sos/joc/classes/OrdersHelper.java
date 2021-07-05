@@ -549,15 +549,13 @@ public class OrdersHelper {
 
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(JControllerApi controllerApi, ModifyOrders modifyOrders,
             Collection<OrderId> oIds) {
-        JCancellationMode cancelMode = null;
         if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
-            cancelMode = JCancellationMode.freshOnly();
+            return controllerApi.cancelOrders(oIds, JCancellationMode.freshOnly());
         } else if (modifyOrders.getKill() == Boolean.TRUE) {
-            cancelMode = JCancellationMode.kill(true);
+            return controllerApi.cancelOrders(oIds, JCancellationMode.kill());
         } else {
-            cancelMode = JCancellationMode.kill(false);
+            return controllerApi.cancelOrders(oIds);
         }
-        return controllerApi.cancelOrders(oIds, cancelMode);
     }
 
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(ModifyOrders modifyOrders, Collection<OrderId> oIds) {

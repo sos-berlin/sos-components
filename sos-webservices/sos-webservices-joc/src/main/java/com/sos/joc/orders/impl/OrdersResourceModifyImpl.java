@@ -399,13 +399,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return ControllerApi.of(controllerId).resumeOrders(oIds);
 
         case SUSPEND:
-            JSuspensionMode suspendMode = null;
             if (modifyOrders.getKill() == Boolean.TRUE) {
-                suspendMode = JSuspensionMode.kill(true);
+                return ControllerApi.of(controllerId).suspendOrders(oIds, JSuspensionMode.kill());
             } else {
-                suspendMode = JSuspensionMode.kill(false);
+                return ControllerApi.of(controllerId).suspendOrders(oIds);
             }
-            return ControllerApi.of(controllerId).suspendOrders(oIds, suspendMode);
 
         case ANSWER_PROMPT:
             // No bulk operation in API
