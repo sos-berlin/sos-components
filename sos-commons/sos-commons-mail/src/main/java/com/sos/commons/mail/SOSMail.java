@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -1183,7 +1182,10 @@ public class SOSMail {
         } else {
             this.smtpProperties.put(key, value);
         }
+    }
 
+    public void setQueueMailOnError(boolean val) {
+        this.queueMailOnError = val;
     }
 
     public static void main(final String[] args) throws Exception {

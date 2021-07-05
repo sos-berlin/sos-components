@@ -25,6 +25,7 @@ public class JocConfiguration {
     private String title;
     private Integer ordering;
     private String hostname;
+    private String uri;
 
     public JocConfiguration(String jocDataDirectory, String jocTimeZone, Path jocHibernateConfig, Path jocResourceDir,
             JocSecurityLevel jocSecurityLevel, String jocTitle, Integer jocOrdering) {
@@ -93,5 +94,13 @@ public class JocConfiguration {
 
     public Path getDataDirectory() {
         return dataDirectory;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String val) {
+        uri = val;
     }
 }

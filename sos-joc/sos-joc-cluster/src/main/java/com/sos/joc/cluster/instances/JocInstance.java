@@ -42,10 +42,6 @@ public class JocInstance {
                 item.setHeartBeat(new Date());
                 dbLayer.getSession().save(item);
             } else {
-                // item.setTimezone(config.getTimeZone());
-                // item.setTitle(config.getTitle());
-                // item.setOrdering(config.getOrdering());
-                // item.setUri(null);
                 if (StartupMode.automatic.equals(mode)) {
                     item.setSecurityLevel(config.getSecurityLevel().name());
                     item.setStartedAt(startTime);
@@ -54,6 +50,7 @@ public class JocInstance {
                 }
                 config.setTimeZone(item.getTimezone());
                 config.setTitle(item.getTitle());
+                config.setUri(item.getUri());
             }
             dbLayer.getSession().commit();
             return item;

@@ -118,7 +118,7 @@ public class SSHServerInfo {
         StringBuilder result = new StringBuilder("Server ");
         result.append(String.join(", ", l));
 
-        if (commandResult.hasError()) {
+        if (commandResult.hasError(false)) {
             result.append(" (");
             result.append(commandResult.getCommand());
             if (commandResult.getExitCode() != null && commandResult.getExitCode() > 0) {

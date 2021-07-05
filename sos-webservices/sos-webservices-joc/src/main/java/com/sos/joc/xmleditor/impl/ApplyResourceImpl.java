@@ -136,7 +136,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         answer.setModified(item.getModified());
         if (in.getObjectType().equals(ObjectType.NOTIFICATION)) {
             answer.setReleased(false);
-            if (item.getDeployed() == null) {
+            if (item.getReleased() == null) {
                 answer.setHasReleases(true);
                 answer.setState(ItemStateEnum.RELEASE_NOT_EXIST);
             } else {

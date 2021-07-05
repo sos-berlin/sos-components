@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import com.sos.joc.cluster.bean.history.AHistoryBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
@@ -44,6 +46,7 @@ import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification.NotificationType;
+import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 
 public class HistoryMonitoringModel {
@@ -57,6 +60,7 @@ public class HistoryMonitoringModel {
     private static final int MAX_LONGER_THAN_SECONDS = 24 * 60 * 60;
 
     private final SOSHibernateFactory factory;
+    private final JocConfiguration jocConfiguration;
     private final DBLayerMonitoring dbLayer;
     private final String serviceIdentifier;
 
@@ -71,8 +75,9 @@ public class HistoryMonitoringModel {
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
 
-    public HistoryMonitoringModel(SOSHibernateFactory factory, String serviceIdentifier) {
+    public HistoryMonitoringModel(SOSHibernateFactory factory, JocConfiguration jocConfiguration, String serviceIdentifier) {
         this.factory = factory;
+        this.jocConfiguration = jocConfiguration;
         this.dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         this.serviceIdentifier = serviceIdentifier;
         EventBus.getInstance().register(this);
@@ -595,12 +600,12 @@ public class HistoryMonitoringModel {
 
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
-            String configXml = dbLayer.getDeployedConfiguration();
+            String configXml = dbLayer.getReleasedConfiguration();
             dbLayer.getSession().commit();
 
             if (configuration == null) {
                 configuration = new AtomicReference<Configuration>();
-                configuration.set(new Configuration());
+                configuration.set(new Configuration(jocConfiguration.getUri()));
             }
             configuration.get().process(configXml);
             Configuration conf = configuration.get();
@@ -608,9 +613,16 @@ public class HistoryMonitoringModel {
                 int all = conf.getTypeAll().size();
                 int onError = conf.getTypeOnError().size();
                 int onSuccess = conf.getTypeOnSuccess().size();
-                LOGGER.info(String.format("[%s][%s][configuration][total=%s][type %s=%s, %s=%s, %s=%s]", serviceIdentifier, NOTIFICATION_IDENTIFIER,
-                        (all + onError + onSuccess), NotificationType.ALL.name(), all, NotificationType.ON_ERROR.name(), onError,
-                        NotificationType.ON_SUCCESS.name(), onSuccess));
+                List<String> names = handleMailResources(conf);
+
+                LOGGER.info(String.format("[%s][%s][configuration][total=%s][type %s=%s, %s=%s, %s=%s][job_resources %s]", serviceIdentifier,
+                        NOTIFICATION_IDENTIFIER, (all + onError + onSuccess), NotificationType.ALL.name(), all, NotificationType.ON_ERROR.name(),
+                        onError, NotificationType.ON_SUCCESS.name(), onSuccess, String.join(", ", names)));
+
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("MailResources=" + SOSString.mapToString(conf.getMailResources(), true));
+                }
+
             } else {
                 LOGGER.info(String.format("[%s][%s][configuration]exists=false", serviceIdentifier, NOTIFICATION_IDENTIFIER));
             }
@@ -620,6 +632,30 @@ public class HistoryMonitoringModel {
         } finally {
             dbLayer.close();
         }
+    }
+
+    private List<String> handleMailResources(Configuration conf) throws Exception {
+        if (conf.getMailResources() == null || conf.getMailResources().size() == 0) {
+            return new ArrayList<>();
+        }
+
+        dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
+        dbLayer.getSession().beginTransaction();
+        List<String> names = conf.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+        // name,content
+        List<Object[]> resources = dbLayer.getDeployedJobResources(names);
+        dbLayer.getSession().commit();
+
+        if (resources != null) {
+            for (Object[] r : resources) {
+                String name = r[0].toString();
+
+                MailResource mr = conf.getMailResources().get(name);
+                mr.parse(r[1].toString());
+                conf.getMailResources().put(name, mr);
+            }
+        }
+        return names;
     }
 
     private void setLastActivityStart() {

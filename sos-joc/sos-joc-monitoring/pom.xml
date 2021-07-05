@@ -28,6 +28,10 @@
 			<artifactId>activemq-all</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.googlecode.jsendnsca</groupId>
+			<artifactId>jsendnsca</artifactId>
+		</dependency>
 		<!-- for tests -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

@@ -24,10 +24,11 @@ public class MonitorJMS extends AMonitor {
     private static long DEFAULT_TIME_TO_LIVE = Message.DEFAULT_TIME_TO_LIVE;
     private static String DEFAULT_DESTINATION = "Queue";
 
-    private static String ELEMENT_NAME_CONNECTION_FACTORY = "ConnectionFactory";
-    private static String ELEMENT_NAME_CONNECTION_JNDI = "ConnectionJNDI";
+    public static String ELEMENT_NAME_CONNECTION_FACTORY = "ConnectionFactory";
+    public static String ELEMENT_NAME_CONNECTION_JNDI = "ConnectionJNDI";
 
     private static String ATTRIBUTE_NAME_CLIENT_ID = "client_id";
+    private static String ATTRIBUTE_NAME_DESTINATION_NAME = "destination_name";
     private static String ATTRIBUTE_NAME_DESTINATION = "destination";
     private static String ATTRIBUTE_NAME_ACKNOWLEDGE_MODE = "acknowledge_mode";
     private static String ATTRIBUTE_NAME_DELIVERY_MODE = "delivery_mode";
@@ -38,6 +39,7 @@ public class MonitorJMS extends AMonitor {
     private ConnectionJNDI connectionJNDI;
 
     private final String clientId;
+    private final String destinationName;
     private final String destination;
     private final boolean isQueueDestination;
     private final int acknowledgeMode;
@@ -58,6 +60,7 @@ public class MonitorJMS extends AMonitor {
         }
 
         clientId = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CLIENT_ID));
+        destinationName = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_DESTINATION_NAME));
         destination = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_DESTINATION), DEFAULT_DESTINATION);
         isQueueDestination = destination.toLowerCase().equals(DEFAULT_DESTINATION.toLowerCase());
         acknowledgeMode = getAcknowledgeMode(getRefElement().getAttribute(ATTRIBUTE_NAME_ACKNOWLEDGE_MODE));
@@ -111,6 +114,10 @@ public class MonitorJMS extends AMonitor {
 
     public String getClientId() {
         return clientId;
+    }
+
+    public String getDestinationName() {
+        return destinationName;
     }
 
     public String getDestination() {

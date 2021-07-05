@@ -42,11 +42,11 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     @Column(name = "[CONFIGURATION_DRAFT_JSON]", nullable = true)
     private String configurationDraftJson;
 
-    @Column(name = "[CONFIGURATION_DEPLOYED]", nullable = true)
-    private String configurationDeployed;
+    @Column(name = "[CONFIGURATION_RELEASED]", nullable = true)
+    private String configurationReleased;
 
-    @Column(name = "[CONFIGURATION_DEPLOYED_JSON]", nullable = true)
-    private String configurationDeployedJson;
+    @Column(name = "[CONFIGURATION_RELEASED_JSON]", nullable = true)
+    private String configurationReleasedJson;
 
     @Column(name = "[AUDIT_LOG_ID]", nullable = false)
     private Long auditLogId;
@@ -54,8 +54,8 @@ public class DBItemXmlEditorConfiguration extends DBItem {
     @Column(name = "[ACCOUNT]", nullable = false)
     private String account;
 
-    @Column(name = "[DEPLOYED]", nullable = false)
-    private Date deployed;
+    @Column(name = "[RELEASED]", nullable = false)
+    private Date released;
 
     @Column(name = "[MODIFIED]", nullable = false)
     private Date modified;
@@ -111,20 +111,20 @@ public class DBItemXmlEditorConfiguration extends DBItem {
         configurationDraftJson = val;
     }
 
-    public String getConfigurationDeployed() {
-        return configurationDeployed;
+    public String getConfigurationReleased() {
+        return configurationReleased;
     }
 
-    public void setConfigurationDeployed(String val) {
-        configurationDeployed = val;
+    public void setConfigurationReleased(String val) {
+        configurationReleased = val;
     }
 
-    public String getConfigurationDeployedJson() {
-        return configurationDeployedJson;
+    public String getConfigurationReleasedJson() {
+        return configurationReleasedJson;
     }
 
-    public void setConfigurationDeployedJson(String val) {
-        configurationDeployedJson = val;
+    public void setConfigurationReleasedJson(String val) {
+        configurationReleasedJson = val;
     }
 
     public Long getAuditLogId() {
@@ -143,12 +143,12 @@ public class DBItemXmlEditorConfiguration extends DBItem {
         account = val;
     }
 
-    public Date getDeployed() {
-        return deployed;
+    public Date getReleased() {
+        return released;
     }
 
-    public void setDeployed(Date val) {
-        deployed = val;
+    public void setReleased(Date val) {
+        released = val;
     }
 
     public Date getModified() {

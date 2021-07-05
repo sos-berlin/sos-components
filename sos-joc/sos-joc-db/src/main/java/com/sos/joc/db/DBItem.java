@@ -5,8 +5,12 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
@@ -19,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 
 public abstract class DBItem implements Serializable {
 
@@ -71,6 +76,46 @@ public abstract class DBItem implements Serializable {
             val = val.substring(0, maxLen);
         }
         return val;
+    }
+
+    @Transient
+    public Map<String, String> toMap(boolean useSQLColumnNames) {
+        return toMap(useSQLColumnNames, null);
+    }
+
+    @Transient
+    public Map<String, String> toMap(boolean useSQLColumnNames, String prefix) {
+        List<Field> fields = Arrays.stream(this.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class)).collect(Collectors
+                .toList());
+        Map<String, String> map = new HashMap<>();
+        for (Field field : fields) {
+            String name;
+            if (useSQLColumnNames) {
+                name = field.getAnnotation(Column.class).name().replaceAll("\\[", "").replaceAll("\\]", "");
+            } else {
+                name = field.getName();
+            }
+            if (prefix != null) {
+                name = prefix + "_" + name;
+            }
+            field.setAccessible(true);
+            try {
+                String val = "";
+                Object oVal = field.get(this);
+                if (oVal != null) {
+                    if (oVal instanceof Date) {
+                        val = SOSDate.getDateTimeAsString((Date) oVal, SOSDate.dateTimeFormat);
+                    } else if (oVal instanceof Boolean) {
+                        val = (Boolean) oVal ? "1" : "0";
+                    } else {
+                        val = oVal.toString();
+                    }
+                }
+                map.put(name, val);
+            } catch (Throwable e) {
+            }
+        }
+        return map;
     }
 
     @Override

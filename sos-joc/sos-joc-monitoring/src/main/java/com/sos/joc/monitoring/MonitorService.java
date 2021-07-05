@@ -53,7 +53,7 @@ public class MonitorService extends AJocClusterService {
             if (factory == null) {
                 LOGGER.info(String.format("[%s][%s][skip]not implemented yet for %s", getIdentifier(), mode, dbms));
             } else {
-                history = new HistoryMonitoringModel(factory, IDENTIFIER);
+                history = new HistoryMonitoringModel(factory, getJocConfig(), IDENTIFIER);
                 history.start(getThreadGroup());
             }
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);

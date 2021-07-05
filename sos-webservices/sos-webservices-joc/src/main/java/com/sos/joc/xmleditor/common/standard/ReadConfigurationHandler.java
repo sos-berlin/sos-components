@@ -30,18 +30,18 @@ public class ReadConfigurationHandler {
         answer.setConfigurationJson(null);
         answer.setRecreateJson(false);
 
-        if (item == null || (item.getConfigurationDraft() == null && item.getConfigurationDeployed() == null)) {
+        if (item == null || (item.getConfigurationDraft() == null && item.getConfigurationReleased() == null)) {
             return;
         }
 
-        if (item.getConfigurationDeployed() != null) {
+        if (item.getConfigurationReleased() != null) {
             answer.setHasReleases(true);
 
             if (forceRelease || item.getConfigurationDraft() == null) {
-                String xml = item.getConfigurationDeployed();
-                String json = item.getConfigurationDeployedJson();
+                String xml = item.getConfigurationReleased();
+                String json = item.getConfigurationReleasedJson();
 
-                answer.setConfigurationDate(item.getDeployed());
+                answer.setConfigurationDate(item.getReleased());
                 answer.setConfiguration(xml);
                 if (SOSString.isEmpty(json)) {
                     recreateJson(xml);
@@ -53,7 +53,7 @@ public class ReadConfigurationHandler {
                     answer.setReleased(true);
                     answer.setState(ItemStateEnum.DRAFT_NOT_EXIST);
                 } else {
-                    if (item.getDeployed() != null && item.getDeployed().after(item.getModified())) {
+                    if (item.getReleased() != null && item.getReleased().after(item.getModified())) {
                         answer.setState(ItemStateEnum.RELEASE_IS_NEWER);
                     } else {
                         answer.setState(ItemStateEnum.DRAFT_IS_NEWER);
@@ -76,7 +76,7 @@ public class ReadConfigurationHandler {
             }
 
             if (answer.getHasReleases()) {
-                if (item.getDeployed() != null && item.getDeployed().after(item.getModified())) {
+                if (item.getReleased() != null && item.getReleased().after(item.getModified())) {
                     answer.setState(ItemStateEnum.RELEASE_IS_NEWER);
                 } else {
                     answer.setState(ItemStateEnum.DRAFT_IS_NEWER);

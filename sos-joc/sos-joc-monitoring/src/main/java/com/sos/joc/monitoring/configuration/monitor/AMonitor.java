@@ -12,8 +12,10 @@ import com.sos.joc.monitoring.configuration.AElement;
 public abstract class AMonitor extends AElement {
 
     private static final String ELEMENT_NAME_MESSAGE_REF = "MessageRef";
+    private static final String ATTRIBUTE_NAME_NAME = "name";
 
     private final String refElementName;
+    private final String monitorName;
 
     private Element refElement;
     private String message;
@@ -21,7 +23,7 @@ public abstract class AMonitor extends AElement {
     public AMonitor(Document document, Node node) throws Exception {
         super(node);
         // CommandFragmentRef (see above) -> CommandFragment
-        this.refElementName = getElementName().substring(0, getElementName().length() - 3);
+        refElementName = getElementName().substring(0, getElementName().length() - 3);
         resolveRefs(document);
 
         if (refElement == null) {
@@ -32,6 +34,7 @@ public abstract class AMonitor extends AElement {
         if (message == null) {
             throw new Exception(String.format("[%s ref=\"%s\"]missing message", getElementName(), getElement().getAttribute("ref"), refElementName));
         }
+        monitorName = getValue(refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }
 
     private void resolveRefs(Document document) throws SOSXMLXPathException {
@@ -63,7 +66,7 @@ public abstract class AMonitor extends AElement {
         }
     }
 
-    public Element getRefElement() {
+    protected Element getRefElement() {
         return refElement;
     }
 
@@ -71,4 +74,11 @@ public abstract class AMonitor extends AElement {
         return message;
     }
 
+    public String getRefElementName() {
+        return refElementName;
+    }
+
+    public String getMonitorName() {
+        return monitorName;
+    }
 }

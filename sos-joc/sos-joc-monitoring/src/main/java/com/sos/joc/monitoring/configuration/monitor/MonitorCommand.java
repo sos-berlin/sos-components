@@ -10,35 +10,35 @@ import com.sos.commons.xml.SOSXML;
 public class MonitorCommand extends AMonitor {
 
     private static final String ELEMENT_NAME_COMMAND = "Command";
-
-    private String command = null;
+    
+    private final String command;
 
     public MonitorCommand(Document doc, Node node) throws Exception {
         super(doc, node);
-
-        setCommand();
+        
+        this.command = resolveCommand();
     }
 
-    private void setCommand() throws Exception {
+    private String resolveCommand() throws Exception {
         Node cmd = SOSXML.getChildNode(getRefElement(), ELEMENT_NAME_COMMAND);
         if (cmd == null) {
             throw new Exception(String.format("[%s name=%s]missing child element \"%s\"", getElement().getNodeName(), getElement().getAttribute(
                     "name"), ELEMENT_NAME_COMMAND));
         }
-        command = SOSXML.getTrimmedValue(cmd);
+        String command = SOSXML.getTrimmedValue(cmd);
         if (SOSString.isEmpty(command)) {
             throw new Exception(String.format("[%s name=%s][%s]missing value", getElement().getNodeName(), getElement().getAttribute("name"),
                     ELEMENT_NAME_COMMAND));
         }
-        command = resolveMessage();
+        return resolveMessage(command);
     }
 
     public String getCommand() {
         return command;
     }
-
-    private String resolveMessage() {
-        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(true, "${", "}");
+  
+    private String resolveMessage(String command) {
+        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
         ps.addKey("MESSAGE", getMessage());
         return ps.replace(command);
     }

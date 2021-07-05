@@ -12,9 +12,9 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
-import com.sos.joc.monitoring.configuration.monitor.MonitorMail;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
+import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.exception.SOSMissingChildElementsException;
 
@@ -42,6 +42,7 @@ public class Notification extends AElement {
     private final NotificationType type;
     private final List<AMonitor> monitors;
     private final List<Workflow> workflows;
+    private final List<String> jobResources;
     private final String name;
 
     public Notification(Document doc, Node node) throws Exception {
@@ -50,6 +51,7 @@ public class Notification extends AElement {
         this.name = getAttributeValue(ATTRIBUTE_NAME_NAME);
         this.monitors = new ArrayList<>();
         this.workflows = new ArrayList<>();
+        this.jobResources = new ArrayList<>();
         process(doc);
     }
 
@@ -71,7 +73,11 @@ public class Notification extends AElement {
                         monitors.add(new MonitorCommand(doc, monitor));
                         break;
                     case ELEMENT_NAME_MAIL_FRAGMENT_REF:
-                        monitors.add(new MonitorMail(doc, monitor));
+                        MonitorMail mm = new MonitorMail(doc, monitor);
+                        monitors.add(mm);
+                        if (!SOSString.isEmpty(mm.getJobResource()) && !jobResources.contains(mm.getJobResource())) {
+                            jobResources.add(mm.getJobResource());
+                        }
                         break;
                     case ELEMENT_NAME_NSCA_FRAGMENT_REF:
                         monitors.add(new MonitorNSCA(doc, monitor));
@@ -152,5 +158,9 @@ public class Notification extends AElement {
 
     public String getName() {
         return name;
+    }
+
+    protected List<String> getJobResources() {
+        return jobResources;
     }
 }

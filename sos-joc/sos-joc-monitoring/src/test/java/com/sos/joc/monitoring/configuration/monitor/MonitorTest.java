@@ -13,6 +13,7 @@ import com.google.common.base.Charsets;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
+import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
 
@@ -24,7 +25,7 @@ public class MonitorTest {
     @Test
     public void test() throws Exception {
 
-        Configuration c = new Configuration();
+        Configuration c = new Configuration("http://localhost");
         c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
         LOGGER.info("---TYPE ALL---:" + c.getTypeAll().size());

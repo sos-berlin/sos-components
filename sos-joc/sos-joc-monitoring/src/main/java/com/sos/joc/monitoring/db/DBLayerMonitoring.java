@@ -1,12 +1,14 @@
 package com.sos.joc.monitoring.db;
 
 import java.util.Date;
+import java.util.List;
 
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.history.JobWarning;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.DBLayer;
@@ -260,13 +262,25 @@ public class DBLayerMonitoring {
         }
     }
 
-    public String getDeployedConfiguration() throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select configurationDeployed ");
+    public String getReleasedConfiguration() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select configurationReleased ");
         hql.append("from ").append(DBLayer.DBITEM_XML_EDITOR_CONFIGURATIONS).append(" ");
         hql.append("where type=:type ");
 
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ObjectType.NOTIFICATION.name());
         return getSession().getSingleValue(query);
+    }
+
+    public List<Object[]> getDeployedJobResources(List<String> names) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name, content ");
+        hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and name in :names ");
+
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", DeployType.JOBRESOURCE.intValue());
+        query.setParameterList("names", names);
+        return getSession().getResultList(query);
     }
 }

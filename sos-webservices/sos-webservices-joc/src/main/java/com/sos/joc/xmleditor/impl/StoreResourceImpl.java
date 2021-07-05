@@ -66,7 +66,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
 
             session.commit();
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getSuccess(in.getObjectType(), item.getId(), item
-                    .getModified(), item.getDeployed())));
+                    .getModified(), item.getReleased())));
 
         } catch (JocException e) {
             Globals.rollback(session);

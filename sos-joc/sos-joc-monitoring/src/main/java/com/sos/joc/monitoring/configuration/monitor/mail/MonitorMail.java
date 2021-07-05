@@ -1,23 +1,24 @@
-package com.sos.joc.monitoring.configuration.monitor;
+package com.sos.joc.monitoring.configuration.monitor.mail;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 
 public class MonitorMail extends AMonitor {
 
-    private static String ELEMENT_NAME_FROM = "From";
-    private static String ELEMENT_NAME_TO = "To";
-    private static String ELEMENT_NAME_CC = "CC";
-    private static String ELEMENT_NAME_BCC = "BCC";
-    private static String ELEMENT_NAME_SUBJECT = "Subject";
+    private static final String ELEMENT_NAME_FROM = "From";
+    private static final String ELEMENT_NAME_TO = "To";
+    private static final String ELEMENT_NAME_CC = "CC";
+    private static final String ELEMENT_NAME_BCC = "BCC";
+    private static final String ELEMENT_NAME_SUBJECT = "Subject";
 
-    private static String ATTRIBUTE_NAME_JOB_RESOURCE = "job_resource";
-    private static String ATTRIBUTE_NAME_CONTENT_TYPE = "content_type";
-    private static String ATTRIBUTE_NAME_CHARSET = "charset";
-    private static String ATTRIBUTE_NAME_ENCODING = "encoding";
-    private static String ATTRIBUTE_NAME_PRIORITY = "priority";
+    private static final String ATTRIBUTE_NAME_JOB_RESOURCE = "job_resource";
+    private static final String ATTRIBUTE_NAME_CONTENT_TYPE = "content_type";
+    private static final String ATTRIBUTE_NAME_CHARSET = "charset";
+    private static final String ATTRIBUTE_NAME_ENCODING = "encoding";
+    private static final String ATTRIBUTE_NAME_PRIORITY = "priority";
 
     private final String jobResource;
     private final String contentType;
@@ -98,4 +99,5 @@ public class MonitorMail extends AMonitor {
     public String getSubject() {
         return subject;
     }
+
 }

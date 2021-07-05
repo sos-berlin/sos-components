@@ -1785,7 +1785,7 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1806,7 +1806,7 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            write2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1863,20 +1863,10 @@ public class HistoryModel {
             postEventOrderLog(entry, orderEntry);
         }
 
-        try {
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file));
-            }
-            write2file(file, content, newLine);
-        } catch (NoSuchFileException e) {
-            if (!Files.exists(dir)) {
-                Files.createDirectory(dir);
-            }
-            write2file(file, content, newLine);
-        } catch (Exception e) {
-            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file, e.toString()), e);
-            throw e;
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file));
         }
+        log2file(file, content, newLine);
 
         if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
             write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine);
@@ -1896,11 +1886,26 @@ public class HistoryModel {
 
     private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine) throws Exception {
         Path file = getOrderLog(dir, entry.getHistoryOrderMainParentId());
+        log2file(file, content, newLine);
+    }
+
+    private void log2file(Path file, StringBuilder content, boolean newLine) {
         try {
             write2file(file, content, newLine);
-        } catch (Exception e) {
-            LOGGER.error(String.format("[%s][%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file, e.toString()), e);
-            throw e;
+        } catch (NoSuchFileException e) {// e.g. folders deleted
+            LOGGER.warn(String.format("[%s][NoSuchFileException][%s]create the parent directories if not exists and try again ...", identifier,
+                    file));
+            try {
+                Path parent = file.getParent();
+                if (!Files.exists(parent)) {
+                    Files.createDirectories(parent);
+                }
+                write2file(file, content, newLine);
+            } catch (Throwable ee) {
+                LOGGER.error(String.format("[%s][%s]%s", identifier, file, ee.toString()), ee);
+            }
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[%s][%s]%s", identifier, file, e.toString()), e);
         }
     }
 
@@ -1912,17 +1917,17 @@ public class HistoryModel {
             if (newLine) {
                 writer.write(HistoryUtil.NEW_LINE);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw e;
         } finally {
             if (writer != null) {
                 try {
                     writer.flush();
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                 }
                 try {
                     writer.close();
-                } catch (Exception ex) {
+                } catch (Throwable ex) {
                 }
             }
         }

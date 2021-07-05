@@ -39,12 +39,20 @@ public class SOSCommandResult {
         stdOut.append(val);
     }
 
+    public boolean hasStdOut() {
+        return stdOut.length() > 0;
+    }
+
     public String getStdErr() {
         return stdErr.toString();
     }
 
     public void setStdErr(String val) {
         stdErr.append(val);
+    }
+
+    public boolean hasStdErr() {
+        return stdErr.length() > 0;
     }
 
     public Throwable getException() {
@@ -56,7 +64,7 @@ public class SOSCommandResult {
     }
 
     public boolean hasError() {
-        return hasError(false);
+        return hasError(true);
     }
 
     public boolean hasError(boolean checkStdError) {

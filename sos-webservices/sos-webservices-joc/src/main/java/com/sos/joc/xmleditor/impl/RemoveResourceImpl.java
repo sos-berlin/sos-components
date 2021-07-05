@@ -130,9 +130,9 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
                 }
             } else {
                 if (release) {
-                    item.setConfigurationDeployed(null);
-                    item.setConfigurationDeployedJson(null);
-                    item.setDeployed(null);
+                    item.setConfigurationReleased(null);
+                    item.setConfigurationReleasedJson(null);
+                    item.setReleased(null);
                 } else {
                     item.setConfigurationDraft(null);
                     item.setConfigurationDraftJson(null);

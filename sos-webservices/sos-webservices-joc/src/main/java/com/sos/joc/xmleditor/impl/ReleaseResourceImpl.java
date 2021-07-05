@@ -100,24 +100,24 @@ public class ReleaseResourceImpl extends ACommonResourceImpl implements IRelease
                 item.setName(name);
                 item.setConfigurationDraft(null);
                 item.setConfigurationDraftJson(null);
-                item.setConfigurationDeployed(in.getConfiguration());
-                item.setConfigurationDeployedJson(Utils.serialize(in.getConfigurationJson()));
+                item.setConfigurationReleased(in.getConfiguration());
+                item.setConfigurationReleasedJson(Utils.serialize(in.getConfigurationJson()));
                 item.setSchemaLocation(JocXmlEditor.getSchemaLocation4Db(in.getObjectType(), null));
                 item.setAuditLogId(Long.valueOf(0));// TODO
                 item.setAccount(getAccount());
                 item.setCreated(new Date());
                 item.setModified(item.getCreated());
-                item.setDeployed(item.getCreated());
+                item.setReleased(item.getCreated());
                 session.save(item);
             } else {
                 item.setConfigurationDraft(null);
                 item.setConfigurationDraftJson(null);
-                item.setConfigurationDeployed(in.getConfiguration());
-                item.setConfigurationDeployedJson(Utils.serialize(in.getConfigurationJson()));
+                item.setConfigurationReleased(in.getConfiguration());
+                item.setConfigurationReleasedJson(Utils.serialize(in.getConfigurationJson()));
                 item.setAuditLogId(Long.valueOf(0));// TODO
                 item.setAccount(getAccount());
                 item.setModified(new Date());
-                item.setDeployed(item.getModified());
+                item.setReleased(item.getModified());
                 session.update(item);
             }
 

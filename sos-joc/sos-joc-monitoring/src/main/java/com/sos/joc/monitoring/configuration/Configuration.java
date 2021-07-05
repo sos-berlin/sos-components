@@ -1,7 +1,9 @@
 package com.sos.joc.monitoring.configuration;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,16 +13,28 @@ import org.w3c.dom.NodeList;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 
 public class Configuration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Configuration.class);
 
+    private static String JOC_URI;
+
     private List<Notification> typeAll;
     private List<Notification> typeOnError;
     private List<Notification> typeOnSuccess;
+    private Map<String, MailResource> mailResources;
 
     private boolean exists;
+
+    public Configuration(String jocUri) {
+        JOC_URI = jocUri;
+    }
+
+    public static String getJocUri() {
+        return JOC_URI;
+    }
 
     public void process(String xml) {
         init();
@@ -50,6 +64,7 @@ public class Configuration {
         typeAll = new ArrayList<>();
         typeOnError = new ArrayList<>();
         typeOnSuccess = new ArrayList<>();
+        mailResources = new HashMap<>();
         exists = false;
     }
 
@@ -65,6 +80,20 @@ public class Configuration {
             typeOnSuccess.add(n);
             break;
         }
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("notification=" + SOSString.toString(n));
+        }
+
+        handleMailResources(n.getJobResources());
+    }
+
+    private void handleMailResources(List<String> jobResources) {
+        for (String res : jobResources) {
+            if (!mailResources.containsKey(res)) {
+                mailResources.put(res, new MailResource());
+            }
+        }
     }
 
     public List<Notification> getTypeAll() {
@@ -77,6 +106,10 @@ public class Configuration {
 
     public List<Notification> getTypeOnSuccess() {
         return typeOnSuccess;
+    }
+
+    public Map<String, MailResource> getMailResources() {
+        return mailResources;
     }
 
     public boolean exists() {

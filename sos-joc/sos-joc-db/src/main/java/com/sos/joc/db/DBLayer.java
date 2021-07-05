@@ -286,6 +286,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemHistoryOrder.class);
         cl.add(DBItemJocVariable.class);
         cl.add(DBItemXmlEditorConfiguration.class);
+        cl.add(DBItemDepConfiguration.class);
         return cl;
     }
 
