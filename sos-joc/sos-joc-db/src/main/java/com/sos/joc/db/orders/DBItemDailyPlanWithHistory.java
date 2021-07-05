@@ -56,8 +56,15 @@ public class DBItemDailyPlanWithHistory {
     
 
     public DailyPlanOrderStateText getStateText() {
+        
+        DailyPlanOrderStateText state;
+        try {
+            state = DailyPlanOrderStateText.fromValue(this.getState()); 
+        }catch (IllegalArgumentException e) {
+            state = null;
+        }
         if (submitted) {
-            if (this.getState() != null && DailyPlanOrderStateText.fromValue(this.getState()).equals(DailyPlanOrderStateText.FINISHED)) {
+            if (this.getState() != null && state != null && DailyPlanOrderStateText.fromValue(this.getState()).equals(DailyPlanOrderStateText.FINISHED)) {
                 return DailyPlanOrderStateText.FINISHED;
             }else {
                 return DailyPlanOrderStateText.SUBMITTED;
