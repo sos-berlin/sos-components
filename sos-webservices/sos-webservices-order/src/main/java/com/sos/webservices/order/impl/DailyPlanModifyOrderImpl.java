@@ -2,6 +2,7 @@ package com.sos.webservices.order.impl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -53,6 +55,7 @@ import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -60,6 +63,9 @@ import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanModifyOrder;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 
 @Path("daily_plan")
 public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements IDailyPlanModifyOrder {
@@ -118,7 +124,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 for (String orderId : listOfOrderIds) {
-                    modifyOrder(orderId,accessToken, dailyplanModifyOrder, dbAuditlog);
+                    modifyOrder(orderId, accessToken, dailyplanModifyOrder, dbAuditlog);
                 }
             }
 
@@ -135,19 +141,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
 
-    }
-
-
-    private void cancelOrdersFromController(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrdersWithHistory)
-            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, JsonProcessingException, InterruptedException,
-            ExecutionException {
-
-        try {
-            OrderHelper.removeFromJobSchedulerControllerWithHistory(controllerId, listOfPlannedOrdersWithHistory);
-        } catch (ControllerObjectNotExistException e) {
-            LOGGER.warn("Order unknown in JS7 Controller");
-        }
     }
 
     private void submitOrdersToController(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
@@ -244,8 +237,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
-
+ 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(dailyplanModifyOrder.getControllerId());
             filter.setOrderId(orderId);
@@ -274,33 +266,53 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
 
                 if (dbItemDailyPlanOrder.getSubmitted()) {
-               
+
                     List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
                     DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
                     dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());
                     dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                     listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
-                    cancelOrdersFromController(filter.getControllerId(), listOfDailyPlanItems);
 
-                    FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
-                    filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                    dbLayerDailyPlannedOrders.delete(filterDailyPlannedOrders);
+                    CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(),
+                            listOfDailyPlanItems);
+                    c.thenAccept(either -> {
+                        ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
+                        if (either.isRight()) {
+                            SOSHibernateSession sosHibernateSession2 = null;
+                            try {
 
-                    DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders.insertFrom(dbItemDailyPlanOrder);
-                    dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
-                    listOfPlannedOrders.clear();
-                    listOfPlannedOrders.add(dbItemDailyPlanOrders);
-                    Globals.commit(sosHibernateSession);
-                    submitOrdersToController(listOfPlannedOrders);
+                                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders2 = new DBLayerDailyPlannedOrders(sosHibernateSession2);
+                                DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession2);
+
+                                FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
+                                filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                                dbLayerDailyPlannedOrders2.delete(filterDailyPlannedOrders);
+
+                                DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
+                                dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
+                                listOfPlannedOrders.clear();
+                                listOfPlannedOrders.add(dbItemDailyPlanOrders);
+                                Globals.commit(sosHibernateSession2);
+                                submitOrdersToController(listOfPlannedOrders);
+                            } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException
+                                    | ControllerConnectionRefusedException | DBMissingDataException | DBOpenSessionException | DBInvalidDataException
+                                    | IOException | ParseException | SOSException | URISyntaxException | InterruptedException | ExecutionException
+                                    | TimeoutException e) {
+                                ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), filter.getControllerId());
+                            } finally {
+                                Globals.disconnect(sosHibernateSession2);
+                            }
+                        }
+                    });
+
                 } else {
                     Globals.commit(sosHibernateSession);
                 }
-                
 
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
-                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either -> ProblemHelper
-                        .postExceptionEventIfExist(either, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
+                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
+                        either, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
 
             } else {
                 LOGGER.warn("Expected one record for order-id " + filter.getOrderId() + " found: " + listOfPlannedOrders.size());

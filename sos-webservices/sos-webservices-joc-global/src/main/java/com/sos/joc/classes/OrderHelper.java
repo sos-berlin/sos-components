@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,13 +11,12 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
+import com.sos.joc.exceptions.ControllerConnectionRefusedException;
+import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.ControllerConnectionRefusedException;
-import com.sos.joc.exceptions.ControllerConnectionResetException;
-import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import io.vavr.control.Either;
@@ -38,22 +35,18 @@ public class OrderHelper {
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
             List<DBItemDailyPlanOrders> listOfDailyPlanOrders) {
 
-        return ControllerApi.of(controllerId).cancelOrders(listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId
-                .of(dbItem.getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly());  
+        return ControllerApi.of(controllerId).cancelOrders(listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(
+                dbItem -> OrderId.of(dbItem.getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly());
     }
 
-    public static void removeFromJobSchedulerControllerWithHistory(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrders)
-            throws JsonProcessingException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException,
-            ExecutionException {
+    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
+            List<DBItemDailyPlanWithHistory> listOfPlannedOrders) throws JsonProcessingException, ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, InterruptedException, ExecutionException {
 
-        try {
-            Either<Problem, Void> response = ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem
-                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()).get(99, TimeUnit.SECONDS);
-            ProblemHelper.throwProblemIfExist(response);
-        } catch (TimeoutException e1) {
-            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
-        }
+        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
+                Collectors.toSet()), JCancellationMode.freshOnly());
+
     }
 
     public static Set<JOrder> getListOfJOrdersFromController(String controllerId) throws ControllerConnectionResetException,
