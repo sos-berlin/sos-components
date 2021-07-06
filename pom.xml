@@ -89,7 +89,7 @@
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.41.v20210516</jetty.version>
         <javax.jms-api.version>2.0.1</javax.jms-api.version>
-        <apache.activemq.version>5.16.2</apache.activemq.version>
+        <apache.activemq.version>5.7.0</apache.activemq.version>
         <jsendnsca.version>2.1.1</jsendnsca.version>
 		<!--<xerces.version>2.12.0</xerces.version> 
 			<xalan.version>2.7.1</xalan.version> <jcifs.version>1.3.17</jcifs.version> 
@@ -704,7 +704,7 @@
 			</dependency>
             <dependency>
 				<groupId>org.apache.activemq</groupId>
-				<artifactId>activemq-all</artifactId>
+				<artifactId>activemq-core</artifactId>
 				<version>${apache.activemq.version}</version>
 			</dependency>
             <dependency>

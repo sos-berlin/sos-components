@@ -25,8 +25,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-all</artifactId>
-			<scope>provided</scope>
+			<artifactId>activemq-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.github.jsendnsca</groupId>
