@@ -35,16 +35,11 @@ public class OrderHelper {
         super();
     }
 
-    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId, List<DBItemDailyPlanOrders> listOfPlannedOrders) {
+    public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
+            List<DBItemDailyPlanOrders> listOfDailyPlanOrders) {
 
-        //try {
-            //Either<Problem, Void> response = //
-            return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().filter(dbItem->dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
-                    .getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly()); //get(99, TimeUnit.SECONDS);
-            //ProblemHelper.throwProblemIfExist(response);
-//        } catch (TimeoutException e1) {
-//            throw new ControllerNoResponseException(String.format("No response from controller '%s' after %ds", controllerId, 99));
-//        }
+        return ControllerApi.of(controllerId).cancelOrders(listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId
+                .of(dbItem.getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly());  
     }
 
     public static void removeFromJobSchedulerControllerWithHistory(String controllerId, List<DBItemDailyPlanWithHistory> listOfPlannedOrders)

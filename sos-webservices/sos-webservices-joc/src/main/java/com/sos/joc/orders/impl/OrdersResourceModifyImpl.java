@@ -343,7 +343,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private CompletableFuture<Either<Problem, Void>> command(JControllerState currentState, Action action, ModifyOrders modifyOrders,
-            DBItemJocAuditLog dbAuditLog, Set<OrderId> oIds) {
+            DBItemJocAuditLog dbAuditLog, Set<OrderId> oIds) throws SOSHibernateException {
 
         String controllerId = modifyOrders.getControllerId();
 
@@ -352,13 +352,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             if (modifyOrders.getOrderIds() != null) {
                 Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet());
                 orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
-                try {
-                    updateDailyPlan(orders);
-                    // TODO @Uwe auditLog stuff for these orders
-                } catch (SOSHibernateException e1) {
-                    // TODO @Uwe Why catch with ProblemHelper.postExceptionEventIfExist instead of throw Exception
-                    ProblemHelper.postExceptionEventIfExist(Either.left(e1), getAccessToken(), getJocError(), controllerId);
-                }
+
+                updateDailyPlan(orders);
+
+                // TODO @Uwe auditLog stuff for these orders
+
             }
 
             if (oIds.isEmpty()) {

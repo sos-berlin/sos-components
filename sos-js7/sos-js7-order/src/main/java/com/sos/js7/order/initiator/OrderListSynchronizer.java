@@ -29,6 +29,7 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.db.DBItem;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
@@ -263,51 +264,15 @@ public class OrderListSynchronizer {
 
     }
 
-    public void addPlannedOrderToDB(String controllerId) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
-            ParseException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBOpenSessionException,
-            DBInvalidDataException, JsonProcessingException, InterruptedException, ExecutionException {
-        LOGGER.debug("... addPlannedOrderToDB");
-
-        calculateDurations();
+    private void executeStore() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException {
         SOSHibernateSession sosHibernateSession = null;
+
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
             DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
             sosHibernateSession.setAutoCommit(false);
-
             Globals.beginTransaction(sosHibernateSession);
 
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            if (orderInitiatorSettings.isOverwrite()) {
-                LOGGER.debug("Overwrite orders");
-                for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                    LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder()
-                            .getScheduledFor()));
-                    filter.setControllerId(controllerId);
-                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
-                    filter.addWorkflowName(workflowName);
-                    List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                    //try {
-                        CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerController(plannedOrder.getControllerId(), listOfPlannedOrders);
-                        c.thenAccept(either -> {
-                            ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), plannedOrder.getControllerId());
-                            if (either.isRight()) {
-                                try {
-                                    //open db session here
-                                    dbLayerDailyPlannedOrders.deleteCascading(filter);
-                                } catch (SOSHibernateException e) {
-                                    ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), plannedOrder.getControllerId());
-                                }
-                            }
-                        });
-//                    } catch (ControllerObjectNotExistException e) {
-//                        LOGGER.warn("Order unknown in JS7 Controller");
-//                    }
-//                    dbLayerDailyPlannedOrders.deleteCascading(filter);
-                }
-            }
             for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
                     DBItemDailyPlanOrders dbItemDailyPlan = null;
@@ -363,27 +328,89 @@ public class OrderListSynchronizer {
                     }
                 }
             }
-
             Globals.commit(sosHibernateSession);
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
+   
     public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException,
             ExecutionException, TimeoutException {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
 
-        addPlannedOrderToDB(controllerId);
+        LOGGER.debug("... addPlannedOrderToDB");
 
-        if (withSubmit == null || withSubmit) {
-            submitOrdersToController(controllerId);
-        } else {
-            LOGGER.debug("Orders will not be submitted to the controller");
+        calculateDurations();
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            if (orderInitiatorSettings.isOverwrite()) {
+                LOGGER.debug("Overwrite orders");
+                List<DBItemDailyPlanOrders> listOfDailyPlanOrders = new ArrayList<DBItemDailyPlanOrders>();
+                for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+
+                    filter.setControllerId(controllerId);
+                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
+                    filter.addWorkflowName(workflowName);
+                    List<DBItemDailyPlanOrders> l = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                    listOfDailyPlanOrders.addAll(l);
+                }
+                CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerController(controllerId, listOfDailyPlanOrders);
+                c.thenAccept(either -> {
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                    if (either.isRight()) {
+                        SOSHibernateSession sosHibernateSession2 = null;
+                        try {
+                            sosHibernateSession2 = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+                            sosHibernateSession2.setAutoCommit(false);
+                            Globals.beginTransaction(sosHibernateSession2);
+                            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders2 = new DBLayerDailyPlannedOrders(sosHibernateSession2);
+                            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+                                final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                                filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+                                LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder
+                                        .getFreshOrder().getScheduledFor()));
+                                filter.setControllerId(controllerId);
+                                String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
+                                filter.addWorkflowName(workflowName);
+                                dbLayerDailyPlannedOrders2.deleteCascading(filter);
+                            }
+                            Globals.commit(sosHibernateSession2);
+
+
+                            executeStore();
+                            if (withSubmit == null || withSubmit) {
+                                submitOrdersToController(controllerId);
+                            } else {
+                                LOGGER.debug("Orders will not be submitted to the controller");
+                            }
+                        } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+                        } finally {
+                            Globals.disconnect(sosHibernateSession2);
+                        }
+                    }
+                });
+
+            } else {
+                executeStore();
+                if (withSubmit == null || withSubmit) {
+                    submitOrdersToController(controllerId);
+                } else {
+                    LOGGER.debug("Orders will not be submitted to the controller");
+                }
+            }
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
+       
     }
 
     public Map<PlannedOrderKey, PlannedOrder> getListOfPlannedOrders() {
