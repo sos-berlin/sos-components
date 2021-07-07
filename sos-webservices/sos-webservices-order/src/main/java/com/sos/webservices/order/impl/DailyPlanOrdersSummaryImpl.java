@@ -70,8 +70,8 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
 
                 for (PlannedOrderItem p : listOfPlannedOrderItems) {
-                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value())) {
-                        dailyPlanOrdersSummary.setSubmitted(dailyPlanOrdersSummary.getSubmitted() + 1);
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value()) && !(DailyPlanOrderStateText.FINISHED
+                            .value().equals(p.getState().get_text().value()))) {
 
                         if (p.getLate()) {
                             dailyPlanOrdersSummary.setSubmittedLate(dailyPlanOrdersSummary.getSubmittedLate() + 1);

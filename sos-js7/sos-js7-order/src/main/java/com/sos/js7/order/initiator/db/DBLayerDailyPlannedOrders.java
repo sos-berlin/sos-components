@@ -188,11 +188,11 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and + " (o.state is null and p.plannedStart < current_date()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED.intValue()
-                        + " and o.startTime - p.plannedStart > 600)  ";
+                where += and + " (o.state is null and p.plannedStart < current_date()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED
+                        .intValue() + " and o.startTime - p.plannedStart > 600)  ";
             } else {
-                where += and + " (o.state is null and p.plannedStart > current_date() or " + "o.state is not null and o.state <> " + DailyPlanOrderStateText.PLANNED.intValue()
-                        + " and o.startTime - p.plannedStart < 600) ";
+                where += and + " (o.state is null and p.plannedStart > current_date() or " + "o.state is not null and o.state <> "
+                        + DailyPlanOrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart < 600) ";
             }
 
             and = " and ";
@@ -524,7 +524,7 @@ public class DBLayerDailyPlannedOrders {
         return dbItemDailyPlanOrders;
     }
 
-    public void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
+    public DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
             throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -539,6 +539,7 @@ public class DBLayerDailyPlannedOrders {
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
 
             if (listOfPlannedOrders.size() == 1) {
+
                 DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 if (dbItemDailyPlanOrder.getStartMode() == 1) {
 
@@ -559,6 +560,7 @@ public class DBLayerDailyPlannedOrders {
                     }
 
                 }
+                return dbItemDailyPlanOrder;
 
             } else {
                 LOGGER.warn("Expected one record for order-id " + filter.getOrderId());

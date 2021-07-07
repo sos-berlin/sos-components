@@ -64,20 +64,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfOrders = listOfOrders;
     }
 
-    public void addOrderId(OrderId orderId) {
-        if (setOfOrders == null) {
-            setOfOrders = new HashSet<OrderId>();
-        }
-        setOfOrders.add(orderId);
-    }
-
-    public void addOrderId(String orderId) {
-        if (listOfOrders == null) {
-            listOfOrders = new ArrayList<String>();
-        }
-        listOfOrders.add(orderId);
-    }
-
     public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
             this.dailyPlanDate = dailyPlanDate;

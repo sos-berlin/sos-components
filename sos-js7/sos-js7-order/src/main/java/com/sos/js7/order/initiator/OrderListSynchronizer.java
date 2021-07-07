@@ -26,7 +26,7 @@ import com.sos.commons.util.SOSDuration;
 import com.sos.commons.util.SOSDurations;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.classes.OrderHelper;
+import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
@@ -360,7 +360,7 @@ public class OrderListSynchronizer {
                     List<DBItemDailyPlanOrders> l = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                     listOfDailyPlanOrders.addAll(l);
                 }
-                CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerController(controllerId, listOfDailyPlanOrders);
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfDailyPlanOrders);
                 c.thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
