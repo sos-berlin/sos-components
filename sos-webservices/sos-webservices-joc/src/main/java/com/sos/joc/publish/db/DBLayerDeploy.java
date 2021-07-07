@@ -1934,24 +1934,14 @@ public class DBLayerDeploy {
     }
     
     public void createSubmissionForFailedDeployments(List<DBItemDeploymentHistory> failedDeployments) {
-        // TODO constraint violation
-        /*
-REQUEST: ./inventory/deployment/deploy
-PARAMS: {"controllerIds":["testsuite"],"store":{"draftConfigurations":[{"configuration":{"path":"/ProductDemo","objectType":"FOLDER","recursive":true}}],"deployConfigurations":[{"configuration":{"path":"/ProductDemo","objectType":"FOLDER","recursive":true}}]},"auditLog":{}}
-USER: root
-2021-06-17T16:02:55,043 ERROR JControllerProxy-55  c.s.j.c.ProblemHelper                        - 
-com.sos.joc.exceptions.JocSosHibernateException: could not execute statement: 1062 (conn=188225) Duplicate entry '/ProductDemo/DatabaseSQLExecution/dbSQLPlusExecution-testsuite-5' for key 'DEP_SUB_UNIQUE'
-    at com.sos.joc.publish.db.DBLayerDeploy.createSubmissionForFailedDeployments(DBLayerDeploy.java:1958) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
-    at com.sos.joc.publish.util.StoreDeployments.processAfterAdd(StoreDeployments.java:165) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
-    at com.sos.joc.publish.util.StoreDeployments.lambda$callUpdateItemsFor$7(StoreDeployments.java:217) ~[sos-webservices-joc-2.0.0-SNAPSHOT.jar:?]
-    at java.util.concurrent.CompletableFuture.uniAccept(CompletableFuture.java:670) ~[?:1.8.0_282]
-    at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:646) ~[?:1.8.0_282]
-    at java.util.concurrent.CompletableFuture.postComplete(CompletableFuture.java:488) ~[?:1.8.0_282]
-    at java.util.concurrent.CompletableFuture.complete(CompletableFuture.java:1975) ~[?:1.8.0_282]
-         */
         try {
             for (DBItemDeploymentHistory failedDeploy : failedDeployments) {
-                DBItemDeploymentSubmission submission = new DBItemDeploymentSubmission();
+                // check if item with same constraint exists
+                DBItemDeploymentSubmission submission = getDepSubmission(failedDeploy.getControllerId(), failedDeploy.getCommitId(), failedDeploy.getPath());
+                if (submission == null) {
+                    submission = new DBItemDeploymentSubmission();
+                    submission.setId(null);
+                }
                 submission.setAccount(failedDeploy.getAccount());
                 submission.setCommitId(failedDeploy.getCommitId());
                 submission.setContent(failedDeploy.getContent());
@@ -1967,13 +1957,33 @@ com.sos.joc.exceptions.JocSosHibernateException: could not execute statement: 10
                 submission.setSignedContent(failedDeploy.getSignedContent());
                 submission.setVersion(failedDeploy.getVersion());
                 submission.setCreated(Date.from(Instant.now()));
-                session.save(submission);
+                if (submission.getId() == null) {
+                    session.save(submission);
+                } else {
+                    session.update(submission);
+                }
             }
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
     }
 
+    public DBItemDeploymentSubmission getDepSubmission(String controllerId, String commitId, String path) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_SUBMISSIONS);
+            hql.append(" where controllerId = :controllerId");
+            hql.append(" and commitId = commitId");
+            hql.append(" and path = path");
+            Query<DBItemDeploymentSubmission> query = session.createQuery(hql.toString());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("commitId", commitId);
+            query.setParameter("path", path);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+    
     public void storeCommitIdForLaterUsage(DBItemInventoryConfiguration config, String commitId) {
         try {
             DBItemDepCommitIds dbCommitId = new DBItemDepCommitIds();

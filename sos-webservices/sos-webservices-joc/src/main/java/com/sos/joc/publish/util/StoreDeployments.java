@@ -162,9 +162,7 @@ public class StoreDeployments {
                 }
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
-                
-                // TODO contraint violation: At the moment DEP_SUBMISSIONS is not read 
-                //dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
+                dbLayer.createSubmissionForFailedDeployments(optimisticEntries);
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, null);
             }
         } catch (Exception e) {
