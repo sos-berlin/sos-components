@@ -19,7 +19,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.controller.model.order.OrderItem;
@@ -81,7 +80,6 @@ import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
-import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
@@ -556,9 +554,9 @@ public class OrdersHelper {
         if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
             return controllerApi.cancelOrders(oIds, JCancellationMode.freshOnly());
         } else if (modifyOrders.getKill() == Boolean.TRUE) {
-            return controllerApi.cancelOrders(oIds, JCancellationMode.kill());
+            return controllerApi.cancelOrders(oIds, JCancellationMode.kill(true));
         } else {
-            return controllerApi.cancelOrders(oIds);
+            return controllerApi.cancelOrders(oIds, JCancellationMode.kill(false));
         }
     }
 
@@ -624,7 +622,7 @@ public class OrdersHelper {
                 .string())).collect(Collectors.toList()), auditlogId);
     }
 
-    private static boolean canAdd(String path, Set<Folder> listOfFolders) {
+    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || !path.startsWith("/")) {
             return false;
         }
@@ -642,28 +640,14 @@ public class OrdersHelper {
     
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
             List<DBItemDailyPlanOrders> listOfDailyPlanOrders) {
-
         return ControllerApi.of(controllerId).cancelOrders(listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(
                 dbItem -> OrderId.of(dbItem.getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly());
     }
 
-    
-    
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
-            List<DBItemDailyPlanWithHistory> listOfPlannedOrders) throws JsonProcessingException, ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, InterruptedException, ExecutionException {
-
+            List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
         return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
                 Collectors.toSet()), JCancellationMode.freshOnly());
-
-    }
-
-    public static Set<JOrder> getListOfJOrdersFromController(String controllerId) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, ExecutionException {
-        // see com.sos.joc.orders.impl.OrdersResourceImpl
-        return Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).collect(Collectors.toSet());
-    }    
+    }   
 
 }

@@ -19,8 +19,8 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -44,7 +44,7 @@ import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
-import js7.proxy.javaapi.JControllerProxy;
+import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
 public class OrderApi {
@@ -104,14 +104,13 @@ public class OrderApi {
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
 
-            JControllerProxy jControllerProxy = Proxy.of(controllerId);
+            JControllerApi controllerApi = ControllerApi.of(controllerId);
             if (Proxies.isCoupled(controllerId)) {
                 LOGGER.debug("Controller " + controllerId + " is coupled with proxy");
             } else {
                 LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
             }
-
-            jControllerProxy.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+            controllerApi.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
                 if (either.isRight()) {
 
                     SOSHibernateSession sosHibernateSession = null;
@@ -122,11 +121,12 @@ public class OrderApi {
 
                         OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
                         OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                        jControllerProxy.api().deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
+                        controllerApi.deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
                                 .postProblemEventIfExist(e, accessToken, jocError, controllerId));
                         Globals.commit(sosHibernateSession);
 
                     } catch (Exception e) {
+                        Globals.rollback(sosHibernateSession);
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
                         Globals.disconnect(sosHibernateSession);

@@ -88,6 +88,7 @@ public class JsonValidator {
             put("OrderFilter", "order/orderFilter-schema.json");
             put("OrdersFilter", "order/ordersFilter-schema.json");
             put("OrdersFilterV", "order/ordersFilterV-schema.json");
+            put("OrderVariablesFilter", "order/orderVariablesFilter-schema.json");
             put("OrderHistoryFilter", "order/orderHistoryFilter-schema.json");
             put("OrderRunningLogFilter", "order/orderRunningLogFilter-schema.json");
             put("AddOrders", "order/addOrders-schema.json");

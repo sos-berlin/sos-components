@@ -46,6 +46,13 @@ public class Variables {
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
     }
+    
+    @JsonIgnore
+    public void setAdditionalProperties(Map<String, Object> vars) {
+        if (vars != null) {
+            this.additionalProperties.putAll(vars);
+        }
+    }
 
     @Override
     public String toString() {

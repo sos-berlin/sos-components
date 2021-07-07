@@ -4,17 +4,16 @@ package com.sos.joc.model.order;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.common.Variables;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -29,7 +28,9 @@ import com.sos.controller.model.workflow.WorkflowId;
     "surveyDate",
     "orderIds",
     "workflowId",
-    "positions"
+    "positions",
+    "disabledPositionChange",
+    "variables"
 })
 public class OrdersPositions {
 
@@ -66,6 +67,24 @@ public class OrdersPositions {
     @JsonProperty("positions")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<Positions> positions = new LinkedHashSet<Positions>();
+    /**
+     * error
+     * <p>
+     * reasons that disallow the position change
+     * 
+     */
+    @JsonProperty("disabledPositionChange")
+    @JsonPropertyDescription("reasons that disallow the position change")
+    private PositionChange disabledPositionChange;
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("variables")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Variables variables;
 
     /**
      * timestamp
@@ -155,14 +174,58 @@ public class OrdersPositions {
         this.positions = positions;
     }
 
+    /**
+     * error
+     * <p>
+     * reasons that disallow the position change
+     * 
+     */
+    @JsonProperty("disabledPositionChange")
+    public PositionChange getDisabledPositionChange() {
+        return disabledPositionChange;
+    }
+
+    /**
+     * error
+     * <p>
+     * reasons that disallow the position change
+     * 
+     */
+    @JsonProperty("disabledPositionChange")
+    public void setDisabledPositionChange(PositionChange disabledPositionChange) {
+        this.disabledPositionChange = disabledPositionChange;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("variables")
+    public Variables getVariables() {
+        return variables;
+    }
+
+    /**
+     * key-value pairs
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("variables")
+    public void setVariables(Variables variables) {
+        this.variables = variables;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderIds", orderIds).append("workflowId", workflowId).append("positions", positions).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderIds", orderIds).append("workflowId", workflowId).append("positions", positions).append("disabledPositionChange", disabledPositionChange).append("variables", variables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(positions).append(orderIds).append(deliveryDate).append(surveyDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(variables).append(surveyDate).append(positions).append(orderIds).append(disabledPositionChange).append(deliveryDate).append(workflowId).toHashCode();
     }
 
     @Override
@@ -174,7 +237,7 @@ public class OrdersPositions {
             return false;
         }
         OrdersPositions rhs = ((OrdersPositions) other);
-        return new EqualsBuilder().append(positions, rhs.positions).append(orderIds, rhs.orderIds).append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(surveyDate, rhs.surveyDate).append(positions, rhs.positions).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

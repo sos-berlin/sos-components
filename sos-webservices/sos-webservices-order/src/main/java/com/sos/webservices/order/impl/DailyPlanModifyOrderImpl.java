@@ -2,7 +2,6 @@ package com.sos.webservices.order.impl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -21,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -29,7 +26,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.classes.OrderHelper;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
@@ -40,7 +36,6 @@ import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
-import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -52,10 +47,8 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
-import com.sos.joc.model.order.OrderStateText;
 import com.sos.js7.order.initiator.OrderInitiatorRunner;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -65,7 +58,6 @@ import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanModifyOrder;
 
 import io.vavr.control.Either;
-import js7.base.problem.Problem;
 
 @Path("daily_plan")
 public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements IDailyPlanModifyOrder {
@@ -273,9 +265,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
                     listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
 
-                    CompletableFuture<Either<Problem, Void>> c = OrderHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(),
-                            listOfDailyPlanItems);
-                    c.thenAccept(either -> {
+                    OrdersHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(), listOfDailyPlanItems).thenAccept(either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
                         if (either.isRight()) {
                             SOSHibernateSession sosHibernateSession2 = null;
