@@ -12,7 +12,6 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
-import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierCommand extends ANotifier {
@@ -24,12 +23,12 @@ public class NotifierCommand extends ANotifier {
     private static final String VAR_SERVICE_COMMAND = "SERVICE_COMMAND";
     private static final boolean SET_HREF_ENVS = false;
 
-    public NotifierCommand(MonitorCommand monitor) throws Exception {
+    public NotifierCommand(MonitorCommand monitor) {
         this.monitor = monitor;
     }
 
     @Override
-    public void notify(DBLayerMonitoring dbLayer, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
             ServiceMessagePrefix prefix) throws SOSNotifierSendException {
 
         evaluate(mo, mos, status, prefix);

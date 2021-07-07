@@ -13,7 +13,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -62,6 +61,7 @@ public class HistoryMonitoringModel {
     private final SOSHibernateFactory factory;
     private final JocConfiguration jocConfiguration;
     private final DBLayerMonitoring dbLayer;
+    private final NotifierModel notifier;
     private final String serviceIdentifier;
 
     private ScheduledExecutorService threadPool;
@@ -70,7 +70,7 @@ public class HistoryMonitoringModel {
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
     private AtomicBoolean closed = new AtomicBoolean();
-    private AtomicReference<Configuration> configuration;
+    private Configuration configuration;
 
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
@@ -80,6 +80,7 @@ public class HistoryMonitoringModel {
         this.jocConfiguration = jocConfiguration;
         this.dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         this.serviceIdentifier = serviceIdentifier;
+        this.notifier = new NotifierModel(this.factory, this.serviceIdentifier);
         EventBus.getInstance().register(this);
     }
 
@@ -400,6 +401,7 @@ public class HistoryMonitoringModel {
 
     private void orderStepProcessed(HistoryOrderStepBean hosb) throws SOSHibernateException {
         dbLayer.setOrderStepEnd(analyzeExecutionTimeOnProcessed(hosb));
+        // notifier.notify(configuration, hosb);
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(HistoryOrderStepBean hosb) {
@@ -594,7 +596,7 @@ public class HistoryMonitoringModel {
         }
     }
 
-    private void setConfiguration() {
+    private synchronized void setConfiguration() {
         try {
             AJocClusterService.setLogger(serviceIdentifier);
 
@@ -604,23 +606,21 @@ public class HistoryMonitoringModel {
             dbLayer.getSession().commit();
 
             if (configuration == null) {
-                configuration = new AtomicReference<Configuration>();
-                configuration.set(new Configuration(jocConfiguration.getUri()));
+                configuration = new Configuration(jocConfiguration.getUri());
             }
-            configuration.get().process(configXml);
-            Configuration conf = configuration.get();
-            if (conf.exists()) {
-                int all = conf.getTypeAll().size();
-                int onError = conf.getTypeOnError().size();
-                int onSuccess = conf.getTypeOnSuccess().size();
-                List<String> names = handleMailResources(conf);
+            configuration.process(configXml);
+            if (configuration.exists()) {
+                int all = configuration.getCounterDefinedTypeAll();
+                int onError = configuration.getCounterDefinedTypeOnError();
+                int onSuccess = configuration.getCounterDefinedTypeOnError();
+                List<String> names = handleMailResources(configuration);
 
                 LOGGER.info(String.format("[%s][%s][configuration][total=%s][type %s=%s, %s=%s, %s=%s][job_resources %s]", serviceIdentifier,
                         NOTIFICATION_IDENTIFIER, (all + onError + onSuccess), NotificationType.ALL.name(), all, NotificationType.ON_ERROR.name(),
                         onError, NotificationType.ON_SUCCESS.name(), onSuccess, String.join(", ", names)));
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("MailResources=" + SOSString.mapToString(conf.getMailResources(), true));
+                    LOGGER.debug("MailResources=" + SOSString.mapToString(configuration.getMailResources(), true));
                 }
 
             } else {

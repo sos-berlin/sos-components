@@ -12,7 +12,9 @@ import org.w3c.dom.Node;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
+import com.sos.joc.monitoring.notification.notifier.NotifierJMS;
 
 public class MonitorJMS extends AMonitor {
 
@@ -67,6 +69,16 @@ public class MonitorJMS extends AMonitor {
         priority = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_PRIORITY), DEFAULT_PRIOPITY);
         deliveryMode = getDeliveryMode(getRefElement().getAttribute(ATTRIBUTE_NAME_DELIVERY_MODE));
         timeToLive = getTimeToLive(getRefElement().getAttribute(ATTRIBUTE_NAME_TIME_TO_LIVE));
+    }
+
+    @Override
+    public NotifierJMS createNotifier(Configuration conf) {
+        try {
+            return new NotifierJMS(this, conf);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
+            return null;
+        }
     }
 
     private long getTimeToLive(String val) {

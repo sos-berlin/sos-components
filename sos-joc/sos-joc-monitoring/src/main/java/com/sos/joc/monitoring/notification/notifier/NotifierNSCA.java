@@ -16,8 +16,8 @@ import com.googlecode.jsendnsca.encryption.Encryption;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
-import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 /** com.googlecode.jsendnsca.encryption.Encryption supports only 3 encryptions : NONE, XOR, TRIPLE_DES
@@ -51,11 +51,12 @@ public class NotifierNSCA extends ANotifier {
     private NagiosSettings settings = null;
     private String message;
 
-    public NotifierNSCA(MonitorNSCA monitor) {
+    public NotifierNSCA(MonitorNSCA monitor, Configuration conf) throws Exception {
         this.monitor = monitor;
+        init();
     }
 
-    public void init() throws Exception {
+    private void init() throws Exception {
         NagiosSettingsBuilder nb = new NagiosSettingsBuilder().withNagiosHost(monitor.getMonitorHost());
 
         if (monitor.getMonitorPort() > -1) {
@@ -84,7 +85,7 @@ public class NotifierNSCA extends ANotifier {
     }
 
     @Override
-    public void notify(DBLayerMonitoring dbLayer, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
             ServiceMessagePrefix prefix) throws SOSNotifierSendException {
 
         try {

@@ -14,6 +14,9 @@ import org.w3c.dom.NodeList;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
+import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
+import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
+import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob.CriticalityType;
 
 public class Configuration {
 
@@ -21,12 +24,12 @@ public class Configuration {
 
     private static String JOC_URI;
 
-    private List<Notification> typeAll;
     private List<Notification> typeOnError;
     private List<Notification> typeOnSuccess;
     private Map<String, MailResource> mailResources;
 
     private boolean exists;
+    private int counterTypeAll;
 
     public Configuration(String jocUri) {
         JOC_URI = jocUri;
@@ -51,7 +54,6 @@ public class Configuration {
             if (notifications != null) {
                 for (int i = 0; i < notifications.getLength(); i++) {
                     add2type(new Notification(doc, (Element) notifications.item(i)));
-                    exists = true;
                 }
             }
         } catch (Throwable e) {
@@ -60,18 +62,96 @@ public class Configuration {
         }
     }
 
+    public List<Notification> findMatchesAtEnd(List<Notification> source, String controllerId, String workflowName, String jobName, String jobLabel,
+            Integer criticality, Integer returnCode) {
+
+        boolean debug = LOGGER.isDebugEnabled();
+        if (debug) {
+            LOGGER.debug(String.format("[find]controllerId=%s,workflowName=%s,jobName=%s, jobLabel=%s, criticality=%s,returnCode=%s", controllerId,
+                    workflowName, jobName, jobLabel, criticality, returnCode));
+        }
+
+        List<Notification> result = new ArrayList<>();
+        for (Notification n : source) {
+            x: for (Workflow w : n.getWorkflows()) {
+                if (w.getName().equals(AElement.ASTERISK) || w.getName().matches(workflowName)) {
+                    if (w.getControllerId().equals(AElement.ASTERISK) || w.getControllerId().matches(controllerId)) {
+                        if (w.getJobs().size() == 0) {
+                            LOGGER.debug(String.format("[find][found][%s]workflowName=%s match and 0 jobs", toString(n), w.getName()));
+                            result.add(n);
+                            break x;
+                        } else {
+                            for (WorkflowJob j : w.getJobs()) {
+                                if (j.getName().equals(AElement.ASTERISK) || j.getName().matches(jobName)) {
+                                    if (j.getLabel().equals(AElement.ASTERISK) || j.getLabel().matches(jobLabel)) {
+                                        if (j.getCriticality().equals(CriticalityType.ALL) || j.getCriticality().equals(WorkflowJob.getCriticality(
+                                                criticality))) {
+                                            if (j.getReturnCodeFrom() == -1 || returnCode >= j.getReturnCodeFrom()) {
+                                                if (j.getReturnCodeTo() == -1 || returnCode <= j.getReturnCodeTo()) {
+                                                    LOGGER.debug(String.format("[find][found][%s]workflowName=%s, job match", toString(n), w
+                                                            .getName()));
+                                                    result.add(n);
+                                                    break x;
+                                                } else if (debug) {
+                                                    LOGGER.debug(String.format("[find][skip][%s][returnCodeTo not match]current=%s, configured=%s",
+                                                            toString(n), returnCode, j.getReturnCodeTo()));
+                                                }
+                                            } else if (debug) {
+                                                LOGGER.debug(String.format("[find][skip][%s][returnCodeFrom not match]current=%s, configured=%s",
+                                                        toString(n), returnCode, j.getReturnCodeFrom()));
+                                            }
+                                        } else if (debug) {
+                                            LOGGER.debug(String.format("[find][skip][%s][criticality not match]current=%s, configured=%s", toString(
+                                                    n), WorkflowJob.getCriticality(criticality), j.getCriticality()));
+                                        }
+                                    } else if (debug) {
+                                        LOGGER.debug(String.format("[find][skip][%s][jobLabel not match]current=%s, configured=%s", toString(n),
+                                                jobLabel, j.getLabel()));
+                                    }
+                                } else if (debug) {
+                                    LOGGER.debug(String.format("[find][skip][%s][jobName not match]current=%s, configured=%s", toString(n), jobName, j
+                                            .getName(), toString(n)));
+                                }
+                            }
+                        }
+                    } else if (debug) {
+                        LOGGER.debug(String.format("[find][skip][%s][controllerId not match]current=%s, configured=%s", toString(n), controllerId, w
+                                .getControllerId()));
+
+                    }
+                } else if (debug) {
+                    LOGGER.debug(String.format("[find][skip][%s][workflowName not match]current=%s, configured=%s", toString(n), workflowName, w
+                            .getName()));
+                }
+            }
+        }
+        return result;
+    }
+
+    private String toString(Notification n) {
+        StringBuilder sb = new StringBuilder("notification ");
+        sb.append("type=").append(n.getType().name());
+        sb.append(", name=");
+        sb.append(SOSString.isEmpty(n.getName()) ? "<empty>" : n.getName());
+        return sb.toString();
+    }
+
     private void init() {
-        typeAll = new ArrayList<>();
         typeOnError = new ArrayList<>();
         typeOnSuccess = new ArrayList<>();
         mailResources = new HashMap<>();
+        counterTypeAll = 0;
         exists = false;
     }
 
     private void add2type(Notification n) {
+        exists = true;
+
         switch (n.getType()) {
         case ALL:
-            typeAll.add(n);
+            typeOnError.add(n);
+            typeOnSuccess.add(n);
+            counterTypeAll++;
             break;
         case ON_ERROR:
             typeOnError.add(n);
@@ -96,10 +176,6 @@ public class Configuration {
         }
     }
 
-    public List<Notification> getTypeAll() {
-        return typeAll;
-    }
-
     public List<Notification> getTypeOnError() {
         return typeOnError;
     }
@@ -114,5 +190,25 @@ public class Configuration {
 
     public boolean exists() {
         return exists;
+    }
+
+    public int getCounterDefinedTypeAll() {
+        return counterTypeAll;
+    }
+
+    public int getCounterDefinedTypeOnError() {
+        return typeOnError.size() - counterTypeAll;
+    }
+
+    public int getCounterDefinedTypeOnSuccess() {
+        return typeOnSuccess.size() - counterTypeAll;
+    }
+
+    public boolean hasOnError() {
+        return typeOnError.size() > 0;
+    }
+
+    public boolean hasOnSuccess() {
+        return typeOnSuccess.size() > 0;
     }
 }

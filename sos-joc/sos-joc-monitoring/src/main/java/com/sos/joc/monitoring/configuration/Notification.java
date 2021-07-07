@@ -45,6 +45,8 @@ public class Notification extends AElement {
     private final List<String> jobResources;
     private final String name;
 
+    private boolean global;
+
     public Notification(Document doc, Node node) throws Exception {
         super(node);
         this.type = evaluateType();
@@ -97,6 +99,7 @@ public class Notification extends AElement {
     }
 
     private void handleWorkflows(Document doc, Element notificationObjects) throws Exception {
+        global = false;
         List<Element> elements = SOSXML.getChildElemens(notificationObjects, ELEMENT_NAME_WORKFLOWS_REF);
         if (elements == null) {
             throw new SOSMissingChildElementsException(getElementName() + "/" + notificationObjects.getNodeName());
@@ -129,6 +132,7 @@ public class Notification extends AElement {
         if (globalWorkflow != null) {
             workflows.clear();
             workflows.add(globalWorkflow);
+            global = true;
         }
     }
 
@@ -162,5 +166,9 @@ public class Notification extends AElement {
 
     protected List<String> getJobResources() {
         return jobResources;
+    }
+
+    public boolean isGlobal() {
+        return global;
     }
 }

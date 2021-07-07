@@ -8,6 +8,8 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.commons.xml.SOSXML.SOSXMLXPath;
 import com.sos.commons.xml.exception.SOSXMLXPathException;
 import com.sos.joc.monitoring.configuration.AElement;
+import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.notification.notifier.ANotifier;
 
 public abstract class AMonitor extends AElement {
 
@@ -36,6 +38,8 @@ public abstract class AMonitor extends AElement {
         }
         monitorName = getValue(refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }
+
+    public abstract ANotifier createNotifier(Configuration conf);
 
     private void resolveRefs(Document document) throws SOSXMLXPathException {
         SOSXMLXPath xpath = SOSXML.newXPath();

@@ -104,8 +104,8 @@ public class MonitorService extends AJocClusterService {
         // TMP - only MYSQL
         // see CleanupServiceSchedule,CleanupTaskMonitoring
         if (SOSHibernateFactory.Dbms.MYSQL.equals(dbms)) {
-            // 1-history monitoring, 2 - configuration thread
-            factory = new JocClusterHibernateFactory(configFile, 1, 2);
+            // 1-history monitoring, 2 - configuration thread , 3 - notifier
+            factory = new JocClusterHibernateFactory(configFile, 1, 3);
             factory.setIdentifier(IDENTIFIER);
             factory.setAutoCommit(false);
             factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

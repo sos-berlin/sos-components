@@ -18,10 +18,16 @@
 		</MonitorFragments>
 		<ObjectsFragments>
 			<Workflows name="set_1">
-				<Workflow name="x">
-					<WorkflowJob name="x" label="y"/>
+				<Workflow name="my_workflow">
+					<WorkflowJob name="my_job_name" />
 				</Workflow>
 				<Workflow name="y"/>
+			</Workflows>
+			<Workflows name="set_2">
+				<Workflow name="my_workflow_x">
+					<WorkflowJob name="my_job_namex" criticality="CRITICAL" />
+				</Workflow>
+				<Workflow name="z"/>
 			</Workflows>
 		</ObjectsFragments>
 	</Fragments>
@@ -48,8 +54,7 @@
 				</MailFragmentRef>
 			</NotificationMonitors>
 			<NotificationObjects>
-				<WorkflowsRef ref="set_1"/>
-				<WorkflowsRef ref="set_1"/>
+				<WorkflowsRef ref="set_2"/>
 			</NotificationObjects>
 		</Notification>
 	</Notifications>

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
@@ -28,14 +29,21 @@ public class MonitorTest {
         Configuration c = new Configuration("http://localhost");
         c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
-        LOGGER.info("---TYPE ALL---:" + c.getTypeAll().size());
-        showNotifications(c.getTypeAll());
+        LOGGER.info("---TYPE ALL DEFINED---:" + c.getCounterDefinedTypeAll());
 
-        LOGGER.info("---TYPE ON_ERROR---:" + c.getTypeOnError().size());
+        LOGGER.info("---TYPE ON_ERROR DEFINED---:" + c.getCounterDefinedTypeOnError());
         showNotifications(c.getTypeOnError());
 
-        LOGGER.info("---TYPE ON_SUCCESS---:" + c.getTypeOnSuccess().size());
+        LOGGER.info("---TYPE ON_SUCCESS DEFINED---:" + c.getCounterDefinedTypeOnSuccess());
         showNotifications(c.getTypeOnSuccess());
+
+        LOGGER.info("---MATCHES---:");
+        List<Notification> r = c.findMatchesAtEnd(c.getTypeOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
+                .intValue(), 0);
+        LOGGER.info("---               MATCHES---:" + r.size());
+        for (Notification n : r) {
+            LOGGER.info("                  " + SOSString.toString(n));
+        }
 
     }
 

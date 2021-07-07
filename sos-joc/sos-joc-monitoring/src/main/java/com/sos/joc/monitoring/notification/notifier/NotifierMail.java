@@ -9,9 +9,9 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
-import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierMail extends ANotifier {
@@ -23,25 +23,26 @@ public class NotifierMail extends ANotifier {
 
     private SOSMail mail = null;
 
-    public NotifierMail(MonitorMail monitor) {
+    public NotifierMail(MonitorMail monitor, Configuration conf) throws Exception {
         this.monitor = monitor;
+        init(conf.getMailResources().get(monitor.getJobResource()));
     }
 
-    public void init(MailResource resource) {
+    private void init(MailResource resource) throws Exception {
         try {
             if (resource == null) {
                 throw new Exception("missing job_resource=" + monitor.getJobResource());
             }
             createMail(resource);
-        } catch (Exception e) {
-            LOGGER.error(e.toString(), e);
+        } catch (Throwable e) {
             mail = null;
+            throw e;
         }
     }
 
     @Override
-    public void notify(DBLayerMonitoring dbLayer, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
-            ServiceMessagePrefix prefix) throws SOSNotifierSendException {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status, ServiceMessagePrefix prefix)
+            throws SOSNotifierSendException {
         if (mail == null) {
             LOGGER.warn(String.format("[%s name=\"%s\" job_resource=\"%s\"][skip]due to init error", monitor.getRefElementName(), monitor
                     .getMonitorName(), monitor.getJobResource()));

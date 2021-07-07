@@ -283,4 +283,22 @@ public class DBLayerMonitoring {
         query.setParameterList("names", names);
         return getSession().getResultList(query);
     }
+
+    public DBItemMonitoringOrder getMonitoringOrder(Long historyId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MONITORING_ORDER).append(" ");
+        hql.append("where historyId=:historyId");
+
+        Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
+        query.setParameter("historyId", historyId);
+        return getSession().getSingleResult(query);
+    }
+
+    public DBItemMonitoringOrderStep getMonitoringOrderStep(Long historyId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MONITORING_ORDER_STEP).append(" ");
+        hql.append("where historyId=:historyId");
+
+        Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
+        query.setParameter("historyId", historyId);
+        return getSession().getSingleResult(query);
+    }
 }

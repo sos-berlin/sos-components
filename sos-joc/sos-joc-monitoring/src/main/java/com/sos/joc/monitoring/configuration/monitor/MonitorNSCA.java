@@ -1,9 +1,16 @@
 package com.sos.joc.monitoring.configuration.monitor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.notification.notifier.NotifierNSCA;
+
 public class MonitorNSCA extends AMonitor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MonitorNSCA.class);
 
     private static String ATTRIBUTE_NAME_SERVICE_HOST = "service_host";
     private static String ATTRIBUTE_NAME_MONITOR_HOST = "monitor_host";
@@ -49,6 +56,16 @@ public class MonitorNSCA extends AMonitor {
         serviceStatusOnError = getAttributeValue(ATTRIBUTE_NAME_SERVICE_STATUS_ON_ERROR);
         serviceNameOnSuccess = getAttributeValue(ATTRIBUTE_NAME_SERVICE_NAME_ON_SUCCESS);
         serviceStatusOnSuccess = getAttributeValue(ATTRIBUTE_NAME_SERVICE_STATUS_ON_SUCCESS);
+    }
+
+    @Override
+    public NotifierNSCA createNotifier(Configuration conf) {
+        try {
+            return new NotifierNSCA(this, conf);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
+            return null;
+        }
     }
 
     private int set(String attrName, int defaultValue) {

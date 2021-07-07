@@ -1335,7 +1335,7 @@ public class HistoryModel {
         String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
-        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId());
+        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId(), workflowName);
         hosb.setEndParameters(endParameters);
         hosb.setError(le.isError());
         hosb.setErrorCode(le.getErrorCode());
@@ -1785,7 +1785,7 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1806,7 +1806,7 @@ public class HistoryModel {
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
             orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
             postEventOrderLog(entry, orderEntry);
-            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine);
+            log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
 
             // task log
             file = getOrderStepLog(dir, entry);
@@ -1845,6 +1845,7 @@ public class HistoryModel {
             content.append(entry.getChunk());
             postEventTaskLog(entry, content.toString(), newLine);
             break;
+        case OrderStarted:
         case OrderAdded:
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
@@ -1866,10 +1867,10 @@ public class HistoryModel {
         if (isDebugEnabled) {
             LOGGER.debug(String.format("[%s][%s][%s]%s", identifier, entry.getEventType().value(), entry.getOrderId(), file));
         }
-        log2file(file, content, newLine);
+        log2file(file, content, newLine, entry.getEventType());
 
         if (orderEntry != null && !entry.getHistoryOrderId().equals(entry.getHistoryOrderMainParentId())) {
-            write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine);
+            write2MainOrderLog(entry, dir, (orderEntryContent == null ? content : orderEntryContent), newLine, entry.getEventType());
         }
 
         return file;
@@ -1884,17 +1885,17 @@ public class HistoryModel {
         EventBus.getInstance().post(new HistoryOrderLog(entry.getEventType().value(), entry.getHistoryOrderId(), orderEntry));
     }
 
-    private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine) throws Exception {
+    private void write2MainOrderLog(LogEntry entry, Path dir, StringBuilder content, boolean newLine, EventType eventType) throws Exception {
         Path file = getOrderLog(dir, entry.getHistoryOrderMainParentId());
-        log2file(file, content, newLine);
+        log2file(file, content, newLine, eventType);
     }
 
-    private void log2file(Path file, StringBuilder content, boolean newLine) {
+    private void log2file(Path file, StringBuilder content, boolean newLine, EventType eventType) {
         try {
             write2file(file, content, newLine);
         } catch (NoSuchFileException e) {// e.g. folders deleted
-            LOGGER.warn(String.format("[%s][NoSuchFileException][%s]create the parent directories if not exists and try again ...", identifier,
-                    file));
+            LOGGER.warn(String.format("[%s][NoSuchFileException][%s][%s]create the parent directories if not exists and try again ...", identifier,
+                    eventType, file));
             try {
                 Path parent = file.getParent();
                 if (!Files.exists(parent)) {

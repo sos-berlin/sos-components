@@ -10,16 +10,15 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public abstract class ANotifier {
 
-    protected enum ServiceStatus {
+    public enum ServiceStatus {
         OK, CRITICAL;
     }
 
-    protected enum ServiceMessagePrefix {
+    public enum ServiceMessagePrefix {
         SUCCESS, ERROR, RECOVERED
     }
 
@@ -42,20 +41,10 @@ public abstract class ANotifier {
     private String jocHrefWorkflowOrder;
     private String jocHrefWorkflowJob;
 
-    public abstract void notify(DBLayerMonitoring dbLayer, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
-            ServiceMessagePrefix prefix) throws SOSNotifierSendException;
+    public abstract void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status, ServiceMessagePrefix prefix)
+            throws SOSNotifierSendException;
 
     public abstract void close();
-
-    protected void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
-        tableFields = new HashMap<String, String>();
-        if (mo != null) {
-            tableFields.putAll(mo.toMap(true, PREFIX_TABLE_ORDERS));
-        }
-        if (mos != null) {
-            tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS));
-        }
-    }
 
     protected Map<String, String> getTableFields() {
         return tableFields;
@@ -101,6 +90,16 @@ public abstract class ANotifier {
         return resolveEnv ? ps.replaceEnvVars(m) : m;
     }
 
+    private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        tableFields = new HashMap<String, String>();
+        if (mo != null) {
+            tableFields.putAll(mo.toMap(true, PREFIX_TABLE_ORDERS));
+        }
+        if (mos != null) {
+            tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS));
+        }
+    }
+
     private void setJocHrefWorkflowOrder(DBItemMonitoringOrder mo) {
         if (jocHrefWorkflowOrder == null) {
             StringBuilder sb = new StringBuilder(Configuration.getJocUri());
@@ -143,11 +142,11 @@ public abstract class ANotifier {
     protected String getServiceMessagePrefix() {
         return serviceMessagePrefix;
     }
-    
+
     protected String jocHrefWorkflowOrder() {
         return jocHrefWorkflowOrder;
     }
-    
+
     protected String jocHrefWorkflowJob() {
         return jocHrefWorkflowJob;
     }

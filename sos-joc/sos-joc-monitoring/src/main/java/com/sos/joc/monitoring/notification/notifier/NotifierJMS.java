@@ -18,9 +18,9 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
-import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierJMS extends ANotifier {
@@ -34,12 +34,14 @@ public class NotifierJMS extends ANotifier {
     private String userName;
     private String password;
 
-    public NotifierJMS(MonitorJMS monitor) {
+    public NotifierJMS(MonitorJMS monitor, Configuration conf) throws Exception {
         this.monitor = monitor;
-    }
-
-    public void init() throws Exception {
-        createConnection();
+        try {
+            createConnection();
+        } catch (Throwable e) {
+            closeConnection();
+            throw e;
+        }
     }
 
     @Override
@@ -48,7 +50,7 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public void notify(DBLayerMonitoring dbLayer, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
             ServiceMessagePrefix prefix) throws SOSNotifierSendException {
 
         MessageProducer producer = null;
@@ -94,7 +96,6 @@ public class NotifierJMS extends ANotifier {
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][exception occurred while trying to connect]%s", url4log, e.toString()), e);
             throw e;
-
         }
         try {
             session = connection.createSession(false, monitor.getAcknowledgeMode());
