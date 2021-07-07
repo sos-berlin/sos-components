@@ -19,9 +19,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierJMS extends ANotifier {
 
@@ -50,13 +50,12 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
-            ServiceMessagePrefix prefix) throws SOSNotifierSendException {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
 
         MessageProducer producer = null;
         try {
             producer = createProducer();
-            evaluate(mo, mos, status, prefix);
+            evaluate(mo, mos, notificationType);
 
             String message = resolve(monitor.getMessage(), true);
 
@@ -64,12 +63,14 @@ public class NotifierJMS extends ANotifier {
             producer.setDeliveryMode(monitor.getDeliveryMode());
             producer.setTimeToLive(monitor.getTimeToLive());
 
-            LOGGER.info(String.format("[%s-%s][jms][execute][destination %s(%s)]%s", getServiceStatus(), getServiceMessagePrefix(), monitor
-                    .getDestinationName(), monitor.getDestination(), message));
+            StringBuilder info = new StringBuilder();
+            info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
+            info.append(message);
+            LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+
             producer.send(session.createTextMessage(message));
         } catch (Throwable e) {
-            throw new SOSNotifierSendException(String.format("[%s name=\"%s\"]can't send notification", monitor.getRefElementName(), monitor
-                    .getMonitorName()), e);
+            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), e));
         } finally {
             if (producer != null) {
                 try {

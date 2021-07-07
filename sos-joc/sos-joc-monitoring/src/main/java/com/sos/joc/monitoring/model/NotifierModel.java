@@ -2,23 +2,26 @@ package com.sos.joc.monitoring.model;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
-import com.sos.joc.monitoring.notification.notifier.ANotifier.ServiceMessagePrefix;
-import com.sos.joc.monitoring.notification.notifier.ANotifier.ServiceStatus;
 
 public class NotifierModel {
 
-    private static final String IDENTIFIER = "notifier";
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(NotifierModel.class);
+
+    private static final String IDENTIFIER = "notificationr";
+
     private final SOSHibernateFactory factory;
     private final DBLayerMonitoring dbLayer;
 
@@ -40,7 +43,7 @@ public class NotifierModel {
             result = conf.findMatchesAtEnd(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
 
-            notify(conf, result, hosb, ServiceStatus.CRITICAL, ServiceMessagePrefix.ERROR);
+            notify(conf, result, hosb, NotificationType.ON_ERROR);
         } else {
             result = conf.findMatchesAtEnd(conf.getTypeOnSuccess(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
@@ -49,7 +52,7 @@ public class NotifierModel {
 
     }
 
-    private void notify(Configuration conf, List<Notification> list, HistoryOrderStepBean hosb, ServiceStatus status, ServiceMessagePrefix prefix) {
+    private void notify(Configuration conf, List<Notification> list, HistoryOrderStepBean hosb, NotificationType notificationType) {
         if (list.size() == 0) {
             return;
         }
@@ -58,14 +61,16 @@ public class NotifierModel {
         DBItemMonitoringOrderStep mos;
         try {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
-            dbLayer.getSession().beginTransaction();
+            // dbLayer.getSession().beginTransaction();
 
             mo = dbLayer.getMonitoringOrder(hosb.getHistoryOrderId());
             mos = dbLayer.getMonitoringOrderStep(hosb.getHistoryId());
-            dbLayer.getSession().commit();
+            // dbLayer.getSession().commit();
         } catch (Throwable e) {
-            dbLayer.rollback();
+            // dbLayer.rollback();
             return;
+        } finally {
+            dbLayer.close();
         }
 
         for (Notification notification : list) {
@@ -73,9 +78,9 @@ public class NotifierModel {
                 ANotifier n = m.createNotifier(conf);
                 if (n != null) {
                     try {
-                        n.notify(mo, mos, status, prefix);
-                    } catch (SOSNotifierSendException e) {
-
+                        n.notify(mo, mos, notificationType);
+                    } catch (Throwable e) {
+                        LOGGER.error(e.toString(), e);
                     } finally {
                         n.close();
                     }

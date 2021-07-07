@@ -10,7 +10,7 @@ import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 
 public abstract class ANotifier {
 
@@ -36,13 +36,13 @@ public abstract class ANotifier {
     protected static final String VAR_JOC_HREF_JOB = "JOC_HREF_JOB";
 
     private Map<String, String> tableFields;
+    private NotificationType notificationType;
     private String serviceStatus;
     private String serviceMessagePrefix;
     private String jocHrefWorkflowOrder;
     private String jocHrefWorkflowJob;
 
-    public abstract void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status, ServiceMessagePrefix prefix)
-            throws SOSNotifierSendException;
+    public abstract void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType);
 
     public abstract void close();
 
@@ -58,12 +58,22 @@ public abstract class ANotifier {
         return status == null ? "" : status.name();
     }
 
-    protected void evaluate(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status, ServiceMessagePrefix prefix) {
+    protected void evaluate(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
         setTableFields(mo, mos);
 
-        serviceStatus = getValue(status);
-        serviceMessagePrefix = getValue(prefix);
-
+        notificationType = type;
+        switch (notificationType) {
+        case ON_ERROR:
+            serviceStatus = ServiceStatus.CRITICAL.name();
+            serviceMessagePrefix = ServiceMessagePrefix.ERROR.name();
+            break;
+        case ON_SUCCESS:
+            serviceStatus = ServiceStatus.OK.name();
+            serviceMessagePrefix = ServiceMessagePrefix.SUCCESS.name();
+            break;
+        case ALL:
+            break;
+        }
         setJocHrefWorkflowOrder(mo);
         setJocHrefWorkflowJob(mo, mos);
     }
@@ -90,6 +100,48 @@ public abstract class ANotifier {
         return resolveEnv ? ps.replaceEnvVars(m) : m;
     }
 
+    protected String getInfo4execute(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, String addInfo) {
+        StringBuilder sb = new StringBuilder("[notification]");
+        sb.append(getInfo(mo, mos));
+        sb.append("[execute]");
+        if (addInfo != null) {
+            sb.append(addInfo);
+        }
+        return sb.toString();
+    }
+
+    protected String getInfo4executeException(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, String addInfo, Throwable e) {
+        StringBuilder sb = new StringBuilder("[notification][EXCEPTION]");
+        sb.append(getInfo(mo, mos));
+        if (addInfo != null) {
+            sb.append(addInfo);
+        }
+        if (e != null) {
+            sb.append(e.toString());
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    private StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(notificationType.name()).append("]");
+        sb.append("[").append(serviceStatus).append("-").append(serviceMessagePrefix).append("]");
+        sb.append("[");
+        if (mo != null) {
+            sb.append("controllerId=").append(mo.getControllerId());
+            sb.append(",workflow=").append(mo.getWorkflowName());
+            sb.append(",orderId=").append(mo.getOrderId());
+        }
+        if (mos != null) {
+            sb.append(",job=").append(mos.getJobName());
+            sb.append(",label=").append(mos.getJobLabel());
+            sb.append(",position=").append(mos.getPosition());
+        }
+        sb.append("]");
+        return sb;
+    }
+
     private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         tableFields = new HashMap<String, String>();
         if (mo != null) {
@@ -104,10 +156,12 @@ public abstract class ANotifier {
         if (jocHrefWorkflowOrder == null) {
             StringBuilder sb = new StringBuilder(Configuration.getJocUri());
             sb.append(JOC_URI_PART_LOG);
-            sb.append("controller_id=").append(encode(mo.getControllerId()));
-            sb.append("&orderId=").append(encode(mo.getOrderId()));
-            sb.append("&workflow=").append(encode(mo.getWorkflowName()));
-            sb.append("&historyId=").append(mo.getHistoryId());
+            if (mo != null) {
+                sb.append("controller_id=").append(encode(mo.getControllerId()));
+                sb.append("&orderId=").append(encode(mo.getOrderId()));
+                sb.append("&workflow=").append(encode(mo.getWorkflowName()));
+                sb.append("&historyId=").append(mo.getHistoryId());
+            }
             jocHrefWorkflowOrder = sb.toString();
         }
     }
@@ -116,9 +170,13 @@ public abstract class ANotifier {
         if (jocHrefWorkflowJob == null) {
             StringBuilder sb = new StringBuilder(Configuration.getJocUri());
             sb.append(JOC_URI_PART_LOG);
-            sb.append("controller_id=").append(encode(mo.getControllerId()));
-            sb.append("&job=").append(encode(mos.getJobName()));
-            sb.append("&taskId=").append(mos.getHistoryId());
+            if (mo != null) {
+                sb.append("controller_id=").append(encode(mo.getControllerId()));
+            }
+            if (mos != null) {
+                sb.append("&job=").append(encode(mos.getJobName()));
+                sb.append("&taskId=").append(mos.getHistoryId());
+            }
             jocHrefWorkflowJob = sb.toString();
         }
     }

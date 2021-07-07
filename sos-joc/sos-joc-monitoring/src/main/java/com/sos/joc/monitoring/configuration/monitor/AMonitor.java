@@ -70,6 +70,12 @@ public abstract class AMonitor extends AElement {
         }
     }
 
+    public StringBuilder getInfo() {
+        StringBuilder sb = new StringBuilder(refElementName);
+        sb.append(" name=").append(monitorName);
+        return sb;
+    }
+
     protected Element getRefElement() {
         return refElement;
     }

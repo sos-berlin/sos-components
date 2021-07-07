@@ -17,8 +17,8 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 /** com.googlecode.jsendnsca.encryption.Encryption supports only 3 encryptions : NONE, XOR, TRIPLE_DES
  * 
@@ -85,29 +85,31 @@ public class NotifierNSCA extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
-            ServiceMessagePrefix prefix) throws SOSNotifierSendException {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
 
         try {
-            evaluate(mo, mos, status, prefix);
+            evaluate(mo, mos, notificationType);
 
             Map<String, String> map = new HashMap<>();
             map.put(VAR_SERVICE_NAME, getServiceName());
             message = resolve(monitor.getMessage(), true, map);
-            setMessagePrefix(prefix);
+            setMessagePrefix(getServiceMessagePrefix());
 
-            MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(getLevel(status)).withServiceName(
-                    getServiceName()).withMessage(message).create();
+            MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(getLevel(getServiceStatus()))
+                    .withServiceName(getServiceName()).withMessage(message).create();
 
             NagiosPassiveCheckSender sender = new NagiosPassiveCheckSender(settings);
 
-            LOGGER.info(String.format("[%s-%s][nsca][execute][monitor host=%s:%s][service host=%s][level=%s]%s", getServiceStatus(),
-                    getServiceMessagePrefix(), settings.getNagiosHost(), settings.getPort(), payload.getHostname(), payload.getLevel(), payload
-                            .getMessage()));
+            StringBuilder info = new StringBuilder();
+            info.append("[monitor host=").append(settings.getNagiosHost()).append(":").append(settings.getPort()).append("]");
+            info.append("[service host=").append(payload.getHostname()).append("]");
+            info.append("[level=").append(payload.getLevel()).append("]");
+            info.append(payload.getMessage());
+            LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+
             sender.send(payload);
         } catch (Throwable e) {
-            throw new SOSNotifierSendException(String.format("[%s name=\"%s\"]can't send notification", monitor.getRefElementName(), monitor
-                    .getMonitorName()), e);
+            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), e));
         }
     }
 
@@ -116,7 +118,7 @@ public class NotifierNSCA extends ANotifier {
         return null;
     }
 
-    private void setMessagePrefix(ServiceMessagePrefix prefix) {
+    private void setMessagePrefix(String prefix) {
         if (message == null) {
             return;
         }
@@ -124,17 +126,17 @@ public class NotifierNSCA extends ANotifier {
             return;
         }
 
-        if (!prefix.equals(ServiceMessagePrefix.SUCCESS)) {
+        if (!prefix.equalsIgnoreCase(ServiceMessagePrefix.SUCCESS.name())) {
             String msg = message.trim().toLowerCase();
-            String prefixName = prefix.name().trim().toLowerCase();
+            String prefixName = prefix.trim().toLowerCase();
             if (!msg.startsWith(prefixName)) {
-                message = prefix.name() + " " + message;
+                message = prefix + " " + message;
             }
         }
     }
 
-    private Level getLevel(ServiceStatus status) {
-        if (status.equals(ServiceStatus.OK)) {
+    private Level getLevel(String status) {
+        if (status.equalsIgnoreCase(ServiceStatus.OK.name())) {
             Level level = status2level(monitor.getServiceStatusOnSuccess());
             return level == null ? Level.OK : level;
         } else {

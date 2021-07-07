@@ -43,7 +43,7 @@ public class MonitorCommand extends AMonitor {
     public String getCommand() {
         return command;
     }
-
+    
     private String resolveMessage(String command) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
         ps.addKey("MESSAGE", getMessage());

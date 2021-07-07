@@ -41,6 +41,8 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.history.HistoryEvent;
+import com.sos.joc.event.bean.history.HistoryOrderEvent;
+import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
@@ -84,7 +86,7 @@ public class HistoryMonitoringModel {
         EventBus.getInstance().register(this);
     }
 
-    @Subscribe({ HistoryEvent.class })
+    @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class })
     public void handleHistoryEvents(HistoryEvent evt) {
         if (evt.getPayload() != null) {
             payloads.add((AHistoryBean) evt.getPayload());
@@ -252,7 +254,13 @@ public class HistoryMonitoringModel {
     }
 
     private void orderStarted(HistoryOrderBean hob) throws SOSHibernateException {
-        DBItemMonitoringOrder item = new DBItemMonitoringOrder();
+
+        DBItemMonitoringOrder item = dbLayer.getMonitoringOrder(hob.getHistoryId());
+        if (item != null) {
+            return;
+        }
+
+        item = new DBItemMonitoringOrder();
         item.setHistoryId(hob.getHistoryId());
         item.setControllerId(hob.getControllerId());
         item.setOrderId(hob.getOrderId());

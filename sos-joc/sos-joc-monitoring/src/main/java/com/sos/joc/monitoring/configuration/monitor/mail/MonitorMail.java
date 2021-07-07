@@ -60,6 +60,12 @@ public class MonitorMail extends AMonitor {
         }
     }
 
+    public StringBuilder getInfo() {
+        StringBuilder sb = new StringBuilder(super.getInfo());
+        sb.append(" job_resource=").append(jobResource);
+        return sb;
+    }
+
     private void resolve() {
         from = resolveElement(ELEMENT_NAME_FROM);
         to = resolveElement(ELEMENT_NAME_TO);

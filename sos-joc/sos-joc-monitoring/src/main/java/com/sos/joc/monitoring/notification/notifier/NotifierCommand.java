@@ -11,8 +11,8 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierCommand extends ANotifier {
 
@@ -28,20 +28,22 @@ public class NotifierCommand extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status,
-            ServiceMessagePrefix prefix) throws SOSNotifierSendException {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
 
-        evaluate(mo, mos, status, prefix);
+        evaluate(mo, mos, notificationType);
         String cmd = resolve(monitor.getCommand(), false);
-        LOGGER.info(String.format("[%s-%s][command][execute]%s", getServiceStatus(), getServiceMessagePrefix(), cmd));
+        LOGGER.info(getInfo4execute(mo, mos, cmd));
 
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
         if (result.hasError()) {
-            throw new SOSNotifierSendException(String.format("[%s name=\"%s\"]%s", monitor.getRefElementName(), monitor.getMonitorName(), result
-                    .toString()), result.getException());
+            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), result.getException()));
+            return;
         }
-        LOGGER.info(String.format("[%s-%s][command][executed exitCode=%s]%s", getServiceStatus(), getServiceMessagePrefix(), result.getExitCode(),
-                result.getCommand()));
+
+        StringBuilder info = new StringBuilder();
+        info.append("[executed exitCode=").append(result.getExitCode()).append("]");
+        info.append(result.getCommand());
+        LOGGER.info(getInfo4execute(mo, mos, info.toString()));
     }
 
     @Override

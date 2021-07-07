@@ -10,9 +10,9 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
-import com.sos.joc.monitoring.exception.SOSNotifierSendException;
 
 public class NotifierMail extends ANotifier {
 
@@ -34,6 +34,9 @@ public class NotifierMail extends ANotifier {
                 throw new Exception("missing job_resource=" + monitor.getJobResource());
             }
             createMail(resource);
+            if (SOSString.isEmpty(mail.getHost())) {
+                throw new Exception(String.format("[%s]missing host", monitor.getInfo()));
+            }
         } catch (Throwable e) {
             mail = null;
             throw e;
@@ -41,31 +44,36 @@ public class NotifierMail extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, ServiceStatus status, ServiceMessagePrefix prefix)
-            throws SOSNotifierSendException {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
         if (mail == null) {
-            LOGGER.warn(String.format("[%s name=\"%s\" job_resource=\"%s\"][skip]due to init error", monitor.getRefElementName(), monitor
-                    .getMonitorName(), monitor.getJobResource()));
             return;
         }
-        evaluate(mo, mos, status, prefix);
+        evaluate(mo, mos, notificationType);
 
         mail.setSubject(resolve(monitor.getSubject(), true));
         mail.setBody(resolve(monitor.getMessage(), true));
 
         try {
-            LOGGER.info(String.format("[%s-%s][mail]execute", getServiceStatus(), getServiceMessagePrefix()));
+            StringBuilder info = new StringBuilder();
+            info.append("[subject=").append(mail.getSubject()).append("]");
+            LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    throw new Exception("failed");
+                    LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), null));
                 }
             }
         } catch (Throwable e) {
-            throw new SOSNotifierSendException(String.format("[%s name=\"%s\" job_resource=\"%s\"]can't send mail", monitor.getRefElementName(),
-                    monitor.getMonitorName(), monitor.getJobResource()), e);
+            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), e));
+            LOGGER.info(SOSString.toString(mail));
+        } finally {
+            try {
+                mail.clearRecipients();
+            } catch (Exception e) {
+            }
         }
     }
 
@@ -75,6 +83,7 @@ public class NotifierMail extends ANotifier {
 
     private void createMail(MailResource res) throws Exception {
         mail = new SOSMail(res.getProperties());
+        mail.init();
         mail.setQueueMailOnError(QUEUE_MAIL_ON_ERROR);
         setMailHeaders(res);
     }

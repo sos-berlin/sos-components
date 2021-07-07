@@ -3,6 +3,7 @@ package com.sos.joc.monitoring.configuration.monitor.mail;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class MailResource {
             }
             if (arguments != null) {
                 arguments.entrySet().stream().filter(e -> e.getKey().startsWith("mail.")).forEach(e -> {
-                    properties.put(e.getKey(), e.getValue());
+                    properties.put(e.getKey(), StringUtils.strip(StringUtils.strip(e.getValue(), "\""), "'"));
                 });
                 from = arguments.get(ARG_FROM);
                 fromName = arguments.get(ARG_FROM_NAME);
@@ -57,7 +58,7 @@ public class MailResource {
             }
 
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOGGER.error(e.toString(), e);
         }
     }
 
