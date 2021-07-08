@@ -53,7 +53,8 @@ public class ProblemHelper {
         postExceptionEventIfExist(either, accessToken, err, controller, true);
     }
     
-    private static void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller, boolean isOnlyHint) throws JocException {
+    private static synchronized void postEventIfExist(Either<Problem, ?> either, String accessToken, JocError err, String controller,
+            boolean isOnlyHint) throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {
                 LOGGER.info(err.printMetaInfo());
@@ -73,7 +74,7 @@ public class ProblemHelper {
         }
     }
     
-    private static void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller, boolean isOnlyHint)
+    private static synchronized void postExceptionEventIfExist(Either<Exception, ?> either, String accessToken, JocError err, String controller, boolean isOnlyHint)
             throws JocException {
         if (either == null || either.isLeft()) {
             if (err != null && !err.getMetaInfo().isEmpty()) {

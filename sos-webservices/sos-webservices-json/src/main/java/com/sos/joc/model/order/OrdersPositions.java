@@ -30,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflowId",
     "positions",
     "disabledPositionChange",
-    "variables"
+    "variables",
+    "variablesNotSettable"
 })
 public class OrdersPositions {
 
@@ -85,6 +86,13 @@ public class OrdersPositions {
     @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables variables;
+    /**
+     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
+     * 
+     */
+    @JsonProperty("variablesNotSettable")
+    @JsonPropertyDescription("only relevant for resuming a single order. Occurs if order starts from the beginning in its scope")
+    private Boolean variablesNotSettable;
 
     /**
      * timestamp
@@ -218,14 +226,32 @@ public class OrdersPositions {
         this.variables = variables;
     }
 
+    /**
+     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
+     * 
+     */
+    @JsonProperty("variablesNotSettable")
+    public Boolean getVariablesNotSettable() {
+        return variablesNotSettable;
+    }
+
+    /**
+     * only relevant for resuming a single order. Occurs if order starts from the beginning in its scope
+     * 
+     */
+    @JsonProperty("variablesNotSettable")
+    public void setVariablesNotSettable(Boolean variablesNotSettable) {
+        this.variablesNotSettable = variablesNotSettable;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderIds", orderIds).append("workflowId", workflowId).append("positions", positions).append("disabledPositionChange", disabledPositionChange).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderIds", orderIds).append("workflowId", workflowId).append("positions", positions).append("disabledPositionChange", disabledPositionChange).append("variables", variables).append("variablesNotSettable", variablesNotSettable).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(surveyDate).append(positions).append(orderIds).append(disabledPositionChange).append(deliveryDate).append(workflowId).toHashCode();
+        return new HashCodeBuilder().append(variables).append(surveyDate).append(variablesNotSettable).append(positions).append(orderIds).append(disabledPositionChange).append(deliveryDate).append(workflowId).toHashCode();
     }
 
     @Override
@@ -237,7 +263,7 @@ public class OrdersPositions {
             return false;
         }
         OrdersPositions rhs = ((OrdersPositions) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(surveyDate, rhs.surveyDate).append(positions, rhs.positions).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(surveyDate, rhs.surveyDate).append(variablesNotSettable, rhs.variablesNotSettable).append(positions, rhs.positions).append(orderIds, rhs.orderIds).append(disabledPositionChange, rhs.disabledPositionChange).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).isEquals();
     }
 
 }

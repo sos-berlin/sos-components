@@ -55,6 +55,12 @@ public class CheckedOrdersPositions extends OrdersPositions {
     @JsonIgnore
     private Set<JOrder> jOrders = Collections.emptySet();
     
+    @JsonIgnore
+    private List<HistoricOutcome> historicOutcomes = Collections.emptyList();
+    
+    @JsonIgnore
+    private JPosition currentPosition = null;
+    
     public CheckedOrdersPositions() {
         //
     }
@@ -83,7 +89,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         Map<JWorkflowId, Set<JOrder>> map = orderStream.collect(Collectors.groupingBy(o -> o.workflowId(), Collectors.toSet()));
 
         if (map.isEmpty()) {
-            throw new JocFolderPermissionsException("access denied");
+            throw new JocFolderPermissionsException("Access denied");
         }
         
         if (map.size() > 1) {
@@ -157,7 +163,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         }
         
         if (!OrdersHelper.canAdd(WorkflowPaths.getPath(jOrder.workflowId()), permittedFolders)) {
-            throw new JocFolderPermissionsException("access denied");
+            throw new JocFolderPermissionsException("Access denied");
         }
 
         JWorkflowId workflowId = jOrder.workflowId();
@@ -183,10 +189,14 @@ public class CheckedOrdersPositions extends OrdersPositions {
 
         setDeliveryDate(Date.from(Instant.now()));
         setSurveyDate(Date.from(currentState.instant()));
+        currentPosition = JPosition.apply(jOrder.asScala().position());
         if (position == null || position.isEmpty()) {
-            position = JPosition.apply(jOrder.asScala().position()).toString();
+            position = currentPosition.toString();
         }
-        setVariables(getVariables(jOrder, position));
+        String firstPos = pos.iterator().next().getPositionString();
+        setVariablesNotSettable(firstPos.equals(position));
+        
+        setVariables(getVariables(jOrder, position, implicitEnds));
         
         return this;
     }
@@ -216,6 +226,35 @@ public class CheckedOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
+    public JPosition getCurrentPosition() {
+        return currentPosition;
+    }
+    
+    public int currentPositionCompareTo(JPosition pos) {
+        // TODO that's wrong
+        List<Object> position = pos.toList();
+        List<Object> cPos = currentPosition.toList();
+        int result = 0;
+        for (int i = 0; i < cPos.size(); i += 2) {
+            Integer c = (Integer) cPos.get(i);
+            Integer p = (Integer) position.get(i);
+            result = c.compareTo(p);
+            if (result != 0) {
+                break;
+            }
+        }
+        return result;
+    }
+    
+    @JsonIgnore
+    public List<HistoricOutcome> getHistoricOutcomes() {
+        if (historicOutcomes == null) {
+            return Collections.emptyList();
+        }
+        return historicOutcomes;
+    }
+    
+    @JsonIgnore
     public String getNotSuspendedOrFailedOrdersMessage() {
         if (hasNotSuspendedOrFailedOrders()) {
             return notSuspendedOrFailedOrders.stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
@@ -225,42 +264,44 @@ public class CheckedOrdersPositions extends OrdersPositions {
     }
     
     @JsonIgnore
-    public Variables getVariables(JOrder jOrder, List<Object> position) throws JsonParseException, JsonMappingException, IOException,
-            JocBadRequestException {
+    public Variables getVariables(JOrder jOrder, List<Object> position, Set<String> implicitEnds) throws JsonParseException, JsonMappingException,
+            IOException, JocBadRequestException {
         Either<Problem, JPosition> posFromList = JPosition.fromList(position);
         if (posFromList.isLeft()) {
             new JocBadRequestException(ProblemHelper.getErrorMessage(posFromList.getLeft()));
         }
-        return getVariables(jOrder, posFromList.get().toString());
+        return getVariables(jOrder, posFromList.get().toString(), implicitEnds);
     }
     
     @JsonIgnore
-    public Variables getVariables(JOrder jOrder, String positionString) throws JsonParseException, JsonMappingException, IOException,
-            JocBadRequestException {
+    public Variables getVariables(JOrder jOrder, String positionString, Set<String> implicitEnds) throws JsonParseException, JsonMappingException,
+            IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        
+
         if (allowedPositions.contains(positionString)) {
             OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-            List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
-            for (HistoricOutcome outcome : outcomes) {
-                String outcomePositionString = JPosition.fromList(outcome.getPosition()).get().toString();
-                if (outcomePositionString.equals(positionString)) {
-                    break;
+            historicOutcomes = oItem.getHistoricOutcomes();
+            if (historicOutcomes != null) {
+                for (HistoricOutcome outcome : historicOutcomes) {
+                    String outcomePositionString = JPosition.fromList(outcome.getPosition()).get().toString();
+                    if (outcomePositionString.equals(positionString)) {
+                        break;
+                    }
+                    if (outcome.getOutcome() == null || outcome.getOutcome().getNamedValues() == null || outcome.getOutcome().getNamedValues()
+                            .getAdditionalProperties() == null) {
+                        continue;
+                    }
+                    if (!allowedPositions.contains(outcomePositionString)) {
+                        continue;
+                    }
+                    variables.setAdditionalProperties(outcome.getOutcome().getNamedValues().getAdditionalProperties());
                 }
-                if (outcome.getOutcome() == null || outcome.getOutcome().getNamedValues() == null || outcome.getOutcome().getNamedValues()
-                        .getAdditionalProperties() == null) {
-                    continue;
-                }
-                if (!allowedPositions.contains(outcomePositionString)) {
-                    continue;
-                }
-                variables.setAdditionalProperties(outcome.getOutcome().getNamedValues().getAdditionalProperties());
             }
-        } else {
+        } else if (!implicitEnds.contains(positionString)) {
             throw new JocBadRequestException("Disallowed position '" + positionString + "'. Allowed positions are: " + allowedPositions.toString());
         }
-        
+
         return variables;
     }
 

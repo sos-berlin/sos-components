@@ -23,8 +23,11 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.controller.model.common.Outcome;
 import com.sos.controller.model.order.OrderModeType;
+import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -67,6 +70,7 @@ import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.command.JSuspensionMode;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JHistoricOutcome;
 import js7.data_for_java.order.JHistoryOperation;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
@@ -267,17 +271,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         Set<String> orders = modifyOrders.getOrderIds();
         checkRequiredParameter("orderIds", orders);
-        List<Object> position = modifyOrders.getPosition();
-        if (position == null) {
-            position = Collections.emptyList();
-            modifyOrders.setPosition(position);
-        }
         
         Optional<JPosition> positionOpt = Optional.empty();
-        if (!position.isEmpty()) {
-            Either<Problem, JPosition> posFromList = JPosition.fromList(position);
+        if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
+            Either<Problem, JPosition> posFromList = JPosition.fromList(modifyOrders.getPosition());
             if (posFromList.isLeft()) {
-                new JocBadRequestException(ProblemHelper.getErrorMessage(posFromList.getLeft()));
+                ProblemHelper.throwProblemIfExist(posFromList);
             }
             positionOpt = Optional.of(posFromList.get());
         }
@@ -290,22 +289,25 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         CheckedOrdersPositions cop = new CheckedOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
         final Set<JOrder> jOrders = cop.getJOrders();
         List<JHistoryOperation> historyOperations = Collections.emptyList();
+        Set<String> allowedPositions = cop.getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         
         if (positionOpt.isPresent()) {
             if (!cop.isSingleOrder() && cop.getDisabledPositionChange() != null) {
                 throw new JocBadRequestException(cop.getDisabledPositionChange().getMessage());
             }
 
-            Set<String> allowedPositions = cop.getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(
-                    LinkedHashSet::new));
             if (!allowedPositions.contains(positionOpt.get().toString())) {
                 throw new JocBadRequestException("Disallowed position '" + positionOpt.get().toString() + "'. Allowed positions are: "
                         + allowedPositions.toString());
             }
         }
         
-        if (!cop.isSingleOrder() && withVariables) {
-            throw new JocBadRequestException("Variables can only be set for resuming a single order.");
+        if (withVariables) {
+            if (!cop.isSingleOrder()) {
+                throw new JocBadRequestException("Variables can only be set for resuming a single order.");
+            } else if (cop.getVariablesNotSettable() == Boolean.TRUE) {
+                throw new JocBadRequestException("Variables can only be set if the order starts from the beginning in its scope.");
+            }
         }
         
         if (!positionOpt.isPresent() && !withVariables) {
@@ -318,7 +320,57 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         }
                     });
         } else if (cop.isSingleOrder()) {
-            // TODO insert variables into historyOperations
+            
+            if (withVariables) {
+                final String positionString = positionOpt.isPresent() ? positionOpt.get().toString() : "";
+                boolean isNotFuturePosition = true;
+                if (positionOpt.isPresent()) {
+                    int posIndex = getIndex(allowedPositions, positionString);
+                    int curPosIndex = getIndex(allowedPositions, cop.getCurrentPosition().toString());
+                    isNotFuturePosition = posIndex <= curPosIndex;
+                }
+                
+                // TODO for the time being: quick and dirty solution by replacing historicOutcome of previous allowed position
+                List<Object> prevPos = null;
+                String prevPosString = null;
+                if (isNotFuturePosition) {
+                    Positions prevP = getPrevious(cop.getPositions(), positionString);
+                    if (prevP != null) {
+                        prevPos = prevP.getPosition();
+                        prevPosString = prevP.getPositionString();
+                    }
+                } else {
+                    prevPos = cop.getCurrentPosition().toList();
+                    prevPosString = cop.getCurrentPosition().toString();
+                }
+                if (prevPos != null) {
+                    final String prevPString = prevPosString;
+                    Optional<HistoricOutcome> hoOpt = cop.getHistoricOutcomes().stream().filter(ho -> JPosition.fromList(ho.getPosition()).get()
+                            .toString().equals(prevPString)).findFirst();
+                    if (hoOpt.isPresent()) {
+                        HistoricOutcome h = hoOpt.get();
+                        Variables v = h.getOutcome().getNamedValues();
+                        if (v == null) {
+                            v = new Variables();
+                        }
+                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+                        h.getOutcome().setNamedValues(v);
+                        
+                        String json = Globals.objectMapper.writeValueAsString(h);
+                        JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
+                        historyOperations = Collections.singletonList(JHistoryOperation.replace(jH.asScala()));
+                    } else {
+                        Variables v = new Variables();
+                        v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
+                        HistoricOutcome h = new HistoricOutcome(prevPos,new Outcome("Succeeded", v, null)); 
+                        
+                        String json = Globals.objectMapper.writeValueAsString(h);
+                        JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
+                        historyOperations = Collections.singletonList(JHistoryOperation.insert(JPosition.fromList(prevPos).get(), jH.asScala()));
+                    }
+                }
+            }
+            
             ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
@@ -343,6 +395,51 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
         }
     }
+    
+    private static int getIndex(Set<? extends Object> set, Object value) {
+        int result = 0;
+        for (Object entry : set) {
+            if (entry.equals(value)) {
+                return result;
+            }
+            result++;
+        }
+        return -1;
+    }
+    
+    private static Positions getPrevious(Set<Positions> set, String value) {
+        Positions result = null;
+        for (Positions entry : set) {
+            if (entry.getPositionString().equals(value)) {
+                break;
+            }
+            result = entry;
+        }
+        return result;
+    }
+
+//    private static List<HistoricOutcome> subList(List<HistoricOutcome> hOutcomes, String positionString, String curPositionString,
+//            Set<String> allowedPositions) {
+//        if (hOutcomes.isEmpty()) {
+//            return hOutcomes;
+//        }
+//        String posString = positionString;
+//        if (posString == null || posString.isEmpty()) {
+//            posString = curPositionString;
+//        }
+//        List<HistoricOutcome> subList = new ArrayList<>();
+//        for (HistoricOutcome hOutcome : hOutcomes) {
+//            String hOutcomePos = JPosition.fromList(hOutcome.getPosition()).get().toString();
+//            if (hOutcomePos.equals(posString)) {
+//                break;
+//            }
+//            if (!allowedPositions.contains(hOutcomePos)) {
+//                continue;
+//            }
+//            subList.add(hOutcome);
+//        }
+//        return subList;
+//    }
 
     private void throwControllerObjectNotExistException(Action action) throws ControllerObjectNotExistException {
         switch (action) {
@@ -366,9 +463,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                         "Orders '", "' not failed or suspended"));
                 if (withPostProblem) {
                     ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                    // LOGGER.info(getJocError().printMetaInfo());
-                    // LOGGER.warn(msg);
-                    // getJocError().clearMetaInfo();
                 }
             }
             return suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -379,10 +473,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 String msg = promptingOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not prompting"));
                 if (withPostProblem) {
-                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                    // LOGGER.info(getJocError().printMetaInfo());
-                    // LOGGER.warn(msg);
-                    // getJocError().clearMetaInfo();
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
                 }
             }
             return promptingOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
@@ -393,10 +484,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 String msg = freshOrders.get(Boolean.FALSE).stream().map(o -> o.id().string()).collect(Collectors.joining("', '", "Orders '",
                         "' not pending, scheduled or blocked"));
                 if (withPostProblem) {
-                    ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
-                    // LOGGER.info(getJocError().printMetaInfo());
-                    // LOGGER.warn(msg);
-                    // getJocError().clearMetaInfo();
+                    ProblemHelper.postProblemEventAsHintIfExist(Either.left(Problem.pure(msg)), getAccessToken(), getJocError(), controllerId);
                 }
             }
             return freshOrders.getOrDefault(Boolean.TRUE, Collections.emptySet());
