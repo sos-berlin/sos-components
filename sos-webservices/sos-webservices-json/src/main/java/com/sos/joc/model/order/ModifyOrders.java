@@ -33,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderType",
     "kill",
     "position",
-    "arguments",
+    "variables",
     "auditLog"
 })
 public class ModifyOrders {
@@ -83,9 +83,9 @@ public class ModifyOrders {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("arguments")
+    @JsonProperty("variables")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables arguments;
+    private Variables variables;
     /**
      * auditParams
      * <p>
@@ -209,9 +209,9 @@ public class ModifyOrders {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("arguments")
-    public Variables getArguments() {
-        return arguments;
+    @JsonProperty("variables")
+    public Variables getVariables() {
+        return variables;
     }
 
     /**
@@ -220,9 +220,9 @@ public class ModifyOrders {
      * a map for arbitrary key-value pairs
      * 
      */
-    @JsonProperty("arguments")
-    public void setArguments(Variables arguments) {
-        this.arguments = arguments;
+    @JsonProperty("variables")
+    public void setVariables(Variables variables) {
+        this.variables = variables;
     }
 
     /**
@@ -249,12 +249,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("arguments", arguments).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("orderType", orderType).append("kill", kill).append("position", position).append("variables", variables).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(controllerId).append(auditLog).append(arguments).append(orderIds).append(position).append(kill).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(controllerId).append(auditLog).append(variables).append(orderIds).append(position).append(kill).toHashCode();
     }
 
     @Override
@@ -266,7 +266,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(arguments, rhs.arguments).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(variables, rhs.variables).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
     }
 
 }

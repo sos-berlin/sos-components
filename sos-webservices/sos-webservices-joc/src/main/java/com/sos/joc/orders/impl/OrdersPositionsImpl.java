@@ -17,7 +17,6 @@ import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
-import js7.data_for_java.controller.JControllerState;
 
 @Path("orders")
 public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPositions {

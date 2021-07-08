@@ -181,7 +181,7 @@ public class JocAuditLog {
         storeAuditLogDetails(details, connection, dbAuditItem.getId(), dbAuditItem.getCreated());
     }
     
-    public static void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
+    public static synchronized void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
         if (details != null && !details.isEmpty() && auditlogId != null) {
             if (connection == null) {
                 try {

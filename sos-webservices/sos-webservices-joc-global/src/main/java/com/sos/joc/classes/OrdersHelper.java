@@ -621,6 +621,11 @@ public class OrdersHelper {
         return storeAuditLogDetails(jOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
                 .string())).collect(Collectors.toList()), auditlogId);
     }
+    
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId) {
+        return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(jOrder.workflowId().path().string()), jOrder.id()
+                .string())), auditlogId);
+    }
 
     public static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || !path.startsWith("/")) {

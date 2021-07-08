@@ -48,8 +48,12 @@ public class CheckedOrdersPositions extends OrdersPositions {
     
     @JsonIgnore
     private Set<JOrder> notSuspendedOrFailedOrders = Collections.emptySet();
+    
     @JsonIgnore
     private boolean singleOrder = false;
+    
+    @JsonIgnore
+    private Set<JOrder> jOrders = Collections.emptySet();
     
     public CheckedOrdersPositions() {
         //
@@ -102,7 +106,8 @@ public class CheckedOrdersPositions extends OrdersPositions {
             final Map<String, Integer> counterPerPos = new HashMap<>();
             final Set<Positions> pos = new LinkedHashSet<>();
             final Set<String> orderIds = new HashSet<>();
-            map.get(workflowId).forEach(o -> {
+            jOrders = map.get(workflowId);
+            jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
                 e.get().reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
                     String positionString = jPos.toString();
@@ -145,9 +150,10 @@ public class CheckedOrdersPositions extends OrdersPositions {
         ProblemHelper.throwProblemIfExist(orderE);
         
         JOrder jOrder = orderE.get();
+        jOrders = Collections.singleton(jOrder);
         boolean isSuspendedOrFailed = OrdersHelper.isSuspendedOrFailed(jOrder);
         if (withStatusCheck && !isSuspendedOrFailed) {
-            throw new JocBadRequestException("The orders are neither failed nor suspended"); 
+            throw new JocBadRequestException("The order are neither failed nor suspended"); 
         }
         
         if (!OrdersHelper.canAdd(WorkflowPaths.getPath(jOrder.workflowId()), permittedFolders)) {
@@ -202,6 +208,11 @@ public class CheckedOrdersPositions extends OrdersPositions {
     @JsonIgnore
     public boolean isSingleOrder() {
         return singleOrder;
+    }
+    
+    @JsonIgnore
+    public Set<JOrder> getJOrders() {
+        return jOrders;
     }
     
     @JsonIgnore
