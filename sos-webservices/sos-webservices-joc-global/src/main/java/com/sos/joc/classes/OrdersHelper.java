@@ -554,9 +554,10 @@ public class OrdersHelper {
         if (OrderModeType.FRESH_ONLY.equals(modifyOrders.getOrderType())) {
             return controllerApi.cancelOrders(oIds, JCancellationMode.freshOnly());
         } else if (modifyOrders.getKill() == Boolean.TRUE) {
-            return controllerApi.cancelOrders(oIds, JCancellationMode.kill(true));
-        } else {
             return controllerApi.cancelOrders(oIds, JCancellationMode.kill(false));
+        } else {
+            // JCancellationMode.freshOrStarted()
+            return controllerApi.cancelOrders(oIds);
         }
     }
 
