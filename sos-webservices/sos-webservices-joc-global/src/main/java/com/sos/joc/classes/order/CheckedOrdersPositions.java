@@ -279,7 +279,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
         Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
 
-        if (allowedPositions.contains(positionString)) {
+        if (allowedPositions.contains(positionString) || implicitEnds.contains(positionString)) {
             OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
             historicOutcomes = oItem.getHistoricOutcomes();
             if (historicOutcomes != null) {
@@ -298,7 +298,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
                     variables.setAdditionalProperties(outcome.getOutcome().getNamedValues().getAdditionalProperties());
                 }
             }
-        } else if (!implicitEnds.contains(positionString)) {
+        } else {
             throw new JocBadRequestException("Disallowed position '" + positionString + "'. Allowed positions are: " + allowedPositions.toString());
         }
 
