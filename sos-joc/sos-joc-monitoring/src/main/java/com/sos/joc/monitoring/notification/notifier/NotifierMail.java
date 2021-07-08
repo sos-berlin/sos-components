@@ -1,5 +1,8 @@
 package com.sos.joc.monitoring.notification.notifier;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.mail.MessagingException;
 
 import org.slf4j.Logger;
@@ -10,7 +13,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 
@@ -25,15 +27,12 @@ public class NotifierMail extends ANotifier {
 
     public NotifierMail(MonitorMail monitor, Configuration conf) throws Exception {
         this.monitor = monitor;
-        init(conf.getMailResources().get(monitor.getJobResource()));
+        init(conf);
     }
 
-    private void init(MailResource resource) throws Exception {
+    private void init(Configuration conf) throws Exception {
         try {
-            if (resource == null) {
-                throw new Exception("missing job_resource=" + monitor.getJobResource());
-            }
-            createMail(resource);
+            createMail(getMailResource(conf));
             if (SOSString.isEmpty(mail.getHost())) {
                 throw new Exception(String.format("[%s]missing host", monitor.getInfo()));
             }
@@ -43,31 +42,55 @@ public class NotifierMail extends ANotifier {
         }
     }
 
+    private MailResource getMailResource(Configuration conf) throws Exception {
+        MailResource resource = null;
+        if (monitor.getJobResources() != null) {
+            if (monitor.getJobResources().size() == 1) {
+                resource = conf.getMailResources().get(monitor.getJobResources().get(0));
+            } else {
+                List<MailResource> list = new ArrayList<>();
+                for (String res : monitor.getJobResources()) {
+                    MailResource r = conf.getMailResources().get(res);
+                    list.add(r);
+                }
+                if (list.size() > 0) {
+                    resource = new MailResource();
+                    resource.parse(list);
+                }
+            }
+        }
+        if (resource == null) {
+            throw new Exception("missing job_resources=" + monitor.getJobResources());
+        }
+        return resource;
+    }
+
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
         if (mail == null) {
             return;
         }
-        evaluate(mo, mos, notificationType);
+        set(mo, mos);
 
-        mail.setSubject(resolve(monitor.getSubject(), true));
-        mail.setBody(resolve(monitor.getMessage(), true));
+        mail.setSubject(resolve(monitor.getSubject(), status, true));
+        mail.setBody(resolve(monitor.getMessage(), status, true));
 
         try {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
-            LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+
+            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
 
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), null));
+                    LOGGER.error(getInfo4executeException(mo, mos, status, monitor.getInfo().toString(), null));
                 }
             }
         } catch (Throwable e) {
-            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), e));
+            LOGGER.error(getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e));
             LOGGER.info(SOSString.toString(mail));
         } finally {
             try {

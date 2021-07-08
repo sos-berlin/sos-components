@@ -6,7 +6,10 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -91,5 +94,12 @@ public class SOSString {
         } catch (Exception e) {
             return throwable.toString();
         }
+    }
+
+    public static List<String> toList(String val, String delimiter) {
+        if (val == null) {
+            return null;
+        }
+        return Stream.of(val.split(delimiter)).map(String::trim).collect(Collectors.toList());
     }
 }

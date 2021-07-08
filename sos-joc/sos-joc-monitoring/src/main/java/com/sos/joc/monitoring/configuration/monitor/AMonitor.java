@@ -13,6 +13,8 @@ import com.sos.joc.monitoring.notification.notifier.ANotifier;
 
 public abstract class AMonitor extends AElement {
 
+    public static final String ATTRIBUTE_NAME_REF = "ref";
+
     private static final String ELEMENT_NAME_MESSAGE_REF = "MessageRef";
     private static final String ATTRIBUTE_NAME_NAME = "name";
 
@@ -29,12 +31,13 @@ public abstract class AMonitor extends AElement {
         resolveRefs(document);
 
         if (refElement == null) {
-            String ref = getElement().getAttribute("ref");
-            throw new Exception(String.format("[%s ref=\"%s\"]missing refNode \"%s[@name=" + ref + "]\"", getElementName(), ref, refElementName,
-                    ref));
+            String ref = getElement().getAttribute(ATTRIBUTE_NAME_REF);
+            throw new Exception(String.format("[%s %s=\"%s\"]missing refNode \"%s[@name=" + ref + "]\"", getElementName(), ATTRIBUTE_NAME_REF, ref,
+                    refElementName, ref));
         }
         if (message == null) {
-            throw new Exception(String.format("[%s ref=\"%s\"]missing message", getElementName(), getElement().getAttribute("ref"), refElementName));
+            throw new Exception(String.format("[%s %s=\"%s\"]missing message", getElementName(), ATTRIBUTE_NAME_REF, getElement().getAttribute(
+                    ATTRIBUTE_NAME_REF), refElementName));
         }
         monitorName = getValue(refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }

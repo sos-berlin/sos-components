@@ -11,7 +11,6 @@ import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.common.SOSEnv;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
 
 public class NotifierCommand extends ANotifier {
@@ -28,41 +27,67 @@ public class NotifierCommand extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
 
-        evaluate(mo, mos, notificationType);
-        String cmd = resolve(monitor.getCommand(), false);
-        LOGGER.info(getInfo4execute(mo, mos, cmd));
+        set(mo, mos);
+        String cmd = resolve(monitor.getCommand(), status, false);
+        LOGGER.info(getInfo4execute(mo, mos, status, cmd));
 
-        SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
+        SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, status));
         if (result.hasError()) {
-            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), result.getException()));
+            StringBuilder info = new StringBuilder();
+            info.append("[").append(monitor.getInfo()).append("]");
+            info.append(result);
+            LOGGER.error(getInfo4executeException(mo, mos, status, info.toString(), null));
             return;
         }
 
         StringBuilder info = new StringBuilder();
         info.append("[executed exitCode=").append(result.getExitCode()).append("]");
         info.append(result.getCommand());
-        LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+        LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
     }
 
     @Override
     public void close() {
     }
 
-    private SOSEnv getEnvVariables(String cmd) {
+    private SOSEnv getEnvVariables(String cmd, Status status) {
         Map<String, String> map = new HashMap<>();
-        map.put(PREFIX_ENV_VAR + "_" + VAR_SERVICE_STATUS, getServiceStatus());
-        map.put(PREFIX_ENV_VAR + "_" + VAR_SERVICE_MESSAGE_PREFIX, getServiceMessagePrefix());
+        map.put(PREFIX_ENV_VAR + "_" + VAR_STATUS, status.name());
         map.put(PREFIX_ENV_VAR + "_" + VAR_SERVICE_COMMAND, cmd);
         if (SET_HREF_ENVS) {
+            map.put(PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_WORKFLOW, jocHrefWorkflow());
             map.put(PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER, jocHrefWorkflowOrder());
             map.put(PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_JOB, jocHrefWorkflowJob());
         }
         getTableFields().entrySet().forEach(e -> {
-            map.put(PREFIX_ENV_TABLE_FIELD_VAR + "_" + e.getKey(), nl2sp(e.getValue()));
+            // if (!e.getKey().endsWith("_PARAMETERS")) {
+            String val = e.getValue();
+            if (e.getKey().endsWith("ERROR_TEXT")) {// TITLE? ....
+                val = escape(val);
+            }
+            map.put(PREFIX_ENV_TABLE_FIELD_VAR + "_" + e.getKey(), nl2sp(val));
+            // }
         });
         return new SOSEnv(map);
+    }
+
+    private String nl2sp(String value) {
+        return value.replaceAll("\\r\\n|\\r|\\n", " ");
+    }
+
+    private String escape(String val) {
+        return SOSShell.IS_WINDOWS ? escape4Windows(val) : escape4Unix(val);
+    }
+
+    private String escape4Windows(String s) {
+        return s.replaceAll("<", "^<").replaceAll(">", "^>").replaceAll("%", "^%").replaceAll("&", "^&");
+    }
+
+    private String escape4Unix(String s) {
+        return s.replaceAll("\"", "\\\\\"").replaceAll("<", "\\\\<").replaceAll(">", "\\\\>").replaceAll("%", "\\\\%").replaceAll("&", "\\\\&")
+                .replaceAll(";", "\\\\;").replaceAll("'", "\\\\'");
     }
 
 }

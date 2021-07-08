@@ -11,10 +11,10 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
+import com.sos.joc.monitoring.notification.notifier.ANotifier.Status;
 
 public class NotifierModel {
 
@@ -40,19 +40,24 @@ public class NotifierModel {
             if (conf.getTypeOnError().size() == 0) {
                 return;
             }
-            result = conf.findMatchesAtEnd(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+            result = conf.findWorkflowJobMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-
-            notify(conf, result, hosb, NotificationType.ON_ERROR);
+            notify(conf, result, hosb, Status.ERROR);
         } else {
-            result = conf.findMatchesAtEnd(conf.getTypeOnSuccess(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+            result = conf.findWorkflowJobMatches(conf.getTypeOnSuccess(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            // TODO check for RECOVERY ????
-        }
+            notify(conf, result, hosb, Status.SUCCESS);
 
+            // TODO check for RECOVERY ????
+            result = conf.findWorkflowJobMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+                    .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
+            if (result.size() > 0) {
+                // check if was send to the same w, order, job position
+            }
+        }
     }
 
-    private void notify(Configuration conf, List<Notification> list, HistoryOrderStepBean hosb, NotificationType notificationType) {
+    private void notify(Configuration conf, List<Notification> list, HistoryOrderStepBean hosb, Status status) {
         if (list.size() == 0) {
             return;
         }
@@ -78,7 +83,7 @@ public class NotifierModel {
                 ANotifier n = m.createNotifier(conf);
                 if (n != null) {
                     try {
-                        n.notify(mo, mos, notificationType);
+                        n.notify(mo, mos, status);
                     } catch (Throwable e) {
                         LOGGER.error(e.toString(), e);
                     } finally {

@@ -409,7 +409,7 @@ public class HistoryMonitoringModel {
 
     private void orderStepProcessed(HistoryOrderStepBean hosb) throws SOSHibernateException {
         dbLayer.setOrderStepEnd(analyzeExecutionTimeOnProcessed(hosb));
-        // notifier.notify(configuration, hosb);
+        notifier.notify(configuration, hosb);
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(HistoryOrderStepBean hosb) {

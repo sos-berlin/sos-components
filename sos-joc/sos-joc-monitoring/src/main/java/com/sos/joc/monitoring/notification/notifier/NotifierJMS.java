@@ -19,7 +19,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
 
@@ -50,14 +49,14 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType notificationType) {
+    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
 
         MessageProducer producer = null;
         try {
             producer = createProducer();
-            evaluate(mo, mos, notificationType);
+            set(mo, mos);
 
-            String message = resolve(monitor.getMessage(), true);
+            String message = resolve(monitor.getMessage(), status, true);
 
             producer.setPriority(monitor.getPriority());
             producer.setDeliveryMode(monitor.getDeliveryMode());
@@ -66,11 +65,11 @@ public class NotifierJMS extends ANotifier {
             StringBuilder info = new StringBuilder();
             info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
             info.append(message);
-            LOGGER.info(getInfo4execute(mo, mos, info.toString()));
+            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
 
             producer.send(session.createTextMessage(message));
         } catch (Throwable e) {
-            LOGGER.error(getInfo4executeException(mo, mos, monitor.getInfo().toString(), e));
+            LOGGER.error(getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e));
         } finally {
             if (producer != null) {
                 try {

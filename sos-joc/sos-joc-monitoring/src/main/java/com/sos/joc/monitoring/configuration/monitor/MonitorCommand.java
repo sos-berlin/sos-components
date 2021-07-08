@@ -43,11 +43,16 @@ public class MonitorCommand extends AMonitor {
     public String getCommand() {
         return command;
     }
-    
-    private String resolveMessage(String command) {
-        SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
-        ps.addKey("MESSAGE", getMessage());
-        return ps.replace(command);
+
+    private String resolveMessage(String command) throws Exception {
+        try {
+            SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
+            ps.addKey("MESSAGE", getMessage());
+            return ps.replace(command);
+        } catch (Throwable e) {
+            throw new Exception(String.format("[\"{$MESSAGE}\" in \"command\" can't be substituted][message=%s][command=%s]%s", getMessage(), command,
+                    e.toString()), e);
+        }
     }
 
 }

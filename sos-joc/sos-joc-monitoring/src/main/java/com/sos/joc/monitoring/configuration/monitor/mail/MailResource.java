@@ -1,5 +1,6 @@
 package com.sos.joc.monitoring.configuration.monitor.mail;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -47,19 +48,52 @@ public class MailResource {
             }
             if (arguments != null) {
                 arguments.entrySet().stream().filter(e -> e.getKey().startsWith("mail.")).forEach(e -> {
-                    properties.put(e.getKey(), StringUtils.strip(StringUtils.strip(e.getValue(), "\""), "'"));
+                    properties.put(e.getKey(), strip(e.getValue()));
                 });
-                from = arguments.get(ARG_FROM);
-                fromName = arguments.get(ARG_FROM_NAME);
-                replayTo = arguments.get(ARG_REPLAY_TO);
-                to = arguments.get(ARG_TO);
-                cc = arguments.get(ARG_CC);
-                bcc = arguments.get(ARG_BCC);
+                from = strip(arguments.get(ARG_FROM));
+                fromName = strip(arguments.get(ARG_FROM_NAME));
+                replayTo = strip(arguments.get(ARG_REPLAY_TO));
+                to = strip(arguments.get(ARG_TO));
+                cc = strip(arguments.get(ARG_CC));
+                bcc = strip(arguments.get(ARG_BCC));
             }
 
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
+    }
+
+    public void parse(List<MailResource> list) {
+        init();
+        for (MailResource mr : list) {
+            mr.getProperties().entrySet().forEach(e -> {
+                if (properties.contains(e.getKey())) {
+                    properties.put(e.getKey(), e.getValue());
+                }
+            });
+            if (!SOSString.isEmpty(mr.getFrom())) {
+                from = mr.getFrom();
+            }
+            if (!SOSString.isEmpty(mr.getFromName())) {
+                fromName = mr.getFromName();
+            }
+            if (!SOSString.isEmpty(mr.getReplayTo())) {
+                replayTo = mr.getReplayTo();
+            }
+            if (!SOSString.isEmpty(mr.getTo())) {
+                to = mr.getTo();
+            }
+            if (!SOSString.isEmpty(mr.getCC())) {
+                cc = mr.getCC();
+            }
+            if (!SOSString.isEmpty(mr.getBCC())) {
+                bcc = mr.getBCC();
+            }
+        }
+    }
+
+    private String strip(String s) {
+        return StringUtils.strip(StringUtils.strip(s, "\""), "'");
     }
 
     private void init() {

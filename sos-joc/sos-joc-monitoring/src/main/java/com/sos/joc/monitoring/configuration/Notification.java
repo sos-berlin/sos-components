@@ -3,6 +3,8 @@ package com.sos.joc.monitoring.configuration;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -19,6 +21,8 @@ import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.exception.SOSMissingChildElementsException;
 
 public class Notification extends AElement {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
 
     public enum NotificationType {
         ALL, ON_ERROR, ON_SUCCESS
@@ -70,26 +74,38 @@ public class Notification extends AElement {
                     throw new SOSMissingChildElementsException(getElementName() + "/" + child.getNodeName());
                 }
                 for (Element monitor : elements) {
-                    switch (monitor.getNodeName()) {
-                    case ELEMENT_NAME_COMMAND_FRAGMENT_REF:
-                        monitors.add(new MonitorCommand(doc, monitor));
-                        break;
-                    case ELEMENT_NAME_MAIL_FRAGMENT_REF:
-                        MonitorMail mm = new MonitorMail(doc, monitor);
-                        monitors.add(mm);
-                        if (!SOSString.isEmpty(mm.getJobResource()) && !jobResources.contains(mm.getJobResource())) {
-                            jobResources.add(mm.getJobResource());
+                    try {
+                        switch (monitor.getNodeName()) {
+                        case ELEMENT_NAME_COMMAND_FRAGMENT_REF:
+                            monitors.add(new MonitorCommand(doc, monitor));
+                            break;
+                        case ELEMENT_NAME_MAIL_FRAGMENT_REF:
+                            MonitorMail mm = new MonitorMail(doc, monitor);
+                            monitors.add(mm);
+                            if (mm.getJobResources() != null) {
+                                for (String r : mm.getJobResources()) {
+                                    if (!jobResources.contains(r)) {
+                                        jobResources.add(r);
+                                    }
+                                }
+                            }
+                            break;
+                        case ELEMENT_NAME_NSCA_FRAGMENT_REF:
+                            monitors.add(new MonitorNSCA(doc, monitor));
+                            break;
+                        case ELEMENT_NAME_JMS_FRAGMENT_REF:
+                            monitors.add(new MonitorJMS(doc, monitor));
+                            break;
                         }
-                        break;
-                    case ELEMENT_NAME_NSCA_FRAGMENT_REF:
-                        monitors.add(new MonitorNSCA(doc, monitor));
-                        break;
-                    case ELEMENT_NAME_JMS_FRAGMENT_REF:
-                        monitors.add(new MonitorJMS(doc, monitor));
-                        break;
+                    } catch (Throwable e) {
+                        LOGGER.error(String.format("[%s ref=%s][skip]%s", monitor.getNodeName(), monitor.getAttribute(AMonitor.ATTRIBUTE_NAME_REF), e
+                                .toString()), e);
                     }
                 }
 
+                if (monitors.size() == 0) {
+                    throw new SOSMissingChildElementsException("[" + getElementName() + "/" + child.getNodeName() + "]all monitors skipped");
+                }
                 break;
             case ELEMENT_NAME_NOTIFICATION_OBJECTS:
                 handleWorkflows(doc, child);

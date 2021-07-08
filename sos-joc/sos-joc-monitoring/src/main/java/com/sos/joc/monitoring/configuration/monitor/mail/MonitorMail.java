@@ -1,10 +1,13 @@
 package com.sos.joc.monitoring.configuration.monitor.mail;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
@@ -20,13 +23,15 @@ public class MonitorMail extends AMonitor {
     private static final String ELEMENT_NAME_BCC = "BCC";
     private static final String ELEMENT_NAME_SUBJECT = "Subject";
 
-    private static final String ATTRIBUTE_NAME_JOB_RESOURCE = "job_resource";
+    private static final String ATTRIBUTE_NAME_JOB_RESOURCES = "job_resources";
     private static final String ATTRIBUTE_NAME_CONTENT_TYPE = "content_type";
     private static final String ATTRIBUTE_NAME_CHARSET = "charset";
     private static final String ATTRIBUTE_NAME_ENCODING = "encoding";
     private static final String ATTRIBUTE_NAME_PRIORITY = "priority";
 
-    private final String jobResource;
+    private static final String JOB_RESOURCES_DELIMITER = ",";
+
+    private final List<String> jobResources;
     private final String contentType;
     private final String charset;
     private final String encoding;
@@ -41,7 +46,7 @@ public class MonitorMail extends AMonitor {
     public MonitorMail(Document document, Node node) throws Exception {
         super(document, node);
 
-        jobResource = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_JOB_RESOURCE));
+        jobResources = SOSString.toList(getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_JOB_RESOURCES)), JOB_RESOURCES_DELIMITER);
         contentType = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CONTENT_TYPE));
         charset = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_CHARSET));
         encoding = getValue(getRefElement().getAttribute(ATTRIBUTE_NAME_ENCODING));
@@ -62,7 +67,7 @@ public class MonitorMail extends AMonitor {
 
     public StringBuilder getInfo() {
         StringBuilder sb = new StringBuilder(super.getInfo());
-        sb.append(" job_resource=").append(jobResource);
+        sb.append(" job_resources=").append(jobResources == null ? "" : String.join(",", jobResources));
         return sb;
     }
 
@@ -82,8 +87,8 @@ public class MonitorMail extends AMonitor {
         return node == null ? null : SOSXML.getTrimmedValue(node);
     }
 
-    public String getJobResource() {
-        return jobResource;
+    public List<String> getJobResources() {
+        return jobResources;
     }
 
     public String getContentType() {
