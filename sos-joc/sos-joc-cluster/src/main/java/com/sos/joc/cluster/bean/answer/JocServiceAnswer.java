@@ -13,11 +13,13 @@ public class JocServiceAnswer {
         UNKNOWN, BUSY, RELAX
     }
 
+    private static long RELAX = 30;// seconds
     private static boolean checkJocStartTime = true;
 
     private JocServiceAnswerState state;
     private ZonedDateTime lastActivityStart;
     private ZonedDateTime lastActivityEnd;
+    private long diff;
 
     public JocServiceAnswer() {
         this(null, null);
@@ -28,6 +30,7 @@ public class JocServiceAnswer {
     }
 
     public JocServiceAnswer(Instant start, Instant end) {
+        diff = 0;
         if (start == null || end == null) {
             state = JocServiceAnswerState.UNKNOWN;
             lastActivityStart = null;
@@ -37,9 +40,11 @@ public class JocServiceAnswer {
             lastActivityEnd = ZonedDateTime.ofInstant(end, ZoneId.of("UTC"));
             if (lastActivityStart.isAfter(lastActivityEnd)) {
                 state = JocServiceAnswerState.BUSY;
+                diff = -1; // work
             } else {
                 ZonedDateTime now = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC"));
-                if (Duration.between(now, lastActivityEnd).abs().toMinutes() >= 1) {
+                diff = Duration.between(now, lastActivityEnd).abs().getSeconds();
+                if (diff >= RELAX) {
                     state = JocServiceAnswerState.RELAX;
                 } else {
                     if (checkJocStartTime && JocCluster.getJocStartTime() != null) {
@@ -54,6 +59,10 @@ public class JocServiceAnswer {
                 }
             }
         }
+    }
+
+    public long getDiff() {
+        return diff;
     }
 
     public JocServiceAnswerState getState() {
