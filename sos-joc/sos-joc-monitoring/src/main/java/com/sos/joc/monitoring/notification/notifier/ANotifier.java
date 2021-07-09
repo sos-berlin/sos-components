@@ -37,9 +37,11 @@ public abstract class ANotifier {
     private String jocHrefWorkflowOrder;
     private String jocHrefWorkflowJob;
 
-    public abstract void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status);
+    public abstract NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status);
 
     public abstract void close();
+
+    public abstract StringBuilder getSendInfo();
 
     protected Map<String, String> getTableFields() {
         return tableFields;

@@ -58,36 +58,12 @@ public class NotifierNSCA extends ANotifier {
         init();
     }
 
-    private void init() throws Exception {
-        NagiosSettingsBuilder nb = new NagiosSettingsBuilder().withNagiosHost(monitor.getMonitorHost());
-
-        if (monitor.getMonitorPort() > -1) {
-            nb.withPort(monitor.getMonitorPort());
-        }
-        if (monitor.getMonitorConnectionTimeout() > -1) {
-            nb.withConnectionTimeout(monitor.getMonitorConnectionTimeout());
-        }
-        if (monitor.getMonitorResponseTimeout() > -1) {
-            nb.withResponseTimeout(monitor.getMonitorResponseTimeout());
-        }
-        if (monitor.getMonitorPort() > -1) {
-            nb.withPort(monitor.getMonitorPort());
-        }
-        if (!SOSString.isEmpty(monitor.getMonitorEncryption())) {
-            nb.withEncryption(Encryption.valueOf(monitor.getMonitorEncryption()));
-        }
-        if (!SOSString.isEmpty(monitor.getMonitorPassword())) {
-            nb.withPassword(monitor.getMonitorPassword());
-        }
-        settings = nb.create();
-    }
-
     @Override
     public void close() {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
 
         try {
             set(mo, mos);
@@ -110,9 +86,45 @@ public class NotifierNSCA extends ANotifier {
             LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
 
             sender.send(payload);
+            return new NotifyResult(payload.getMessage(), getSendInfo());
         } catch (Throwable e) {
-            LOGGER.error(getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e));
+            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            LOGGER.error(err);
+            return new NotifyResult(message, getSendInfo(), err);
         }
+    }
+
+    @Override
+    public StringBuilder getSendInfo() {
+        StringBuilder sb = new StringBuilder("[").append(monitor.getInfo()).append("]");
+
+        // TODO
+
+        return sb;
+    }
+
+    private void init() throws Exception {
+        NagiosSettingsBuilder nb = new NagiosSettingsBuilder().withNagiosHost(monitor.getMonitorHost());
+
+        if (monitor.getMonitorPort() > -1) {
+            nb.withPort(monitor.getMonitorPort());
+        }
+        if (monitor.getMonitorConnectionTimeout() > -1) {
+            nb.withConnectionTimeout(monitor.getMonitorConnectionTimeout());
+        }
+        if (monitor.getMonitorResponseTimeout() > -1) {
+            nb.withResponseTimeout(monitor.getMonitorResponseTimeout());
+        }
+        if (monitor.getMonitorPort() > -1) {
+            nb.withPort(monitor.getMonitorPort());
+        }
+        if (!SOSString.isEmpty(monitor.getMonitorEncryption())) {
+            nb.withEncryption(Encryption.valueOf(monitor.getMonitorEncryption()));
+        }
+        if (!SOSString.isEmpty(monitor.getMonitorPassword())) {
+            nb.withPassword(monitor.getMonitorPassword());
+        }
+        settings = nb.create();
     }
 
     private void set(Status status) {

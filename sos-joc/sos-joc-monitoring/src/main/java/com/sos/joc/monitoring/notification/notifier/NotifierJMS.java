@@ -49,14 +49,15 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
 
         MessageProducer producer = null;
+        String message = null;
         try {
             producer = createProducer();
             set(mo, mos);
 
-            String message = resolve(monitor.getMessage(), status, true);
+            message = resolve(monitor.getMessage(), status, true);
 
             producer.setPriority(monitor.getPriority());
             producer.setDeliveryMode(monitor.getDeliveryMode());
@@ -68,8 +69,11 @@ public class NotifierJMS extends ANotifier {
             LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
 
             producer.send(session.createTextMessage(message));
+            return new NotifyResult(message, getSendInfo());
         } catch (Throwable e) {
-            LOGGER.error(getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e));
+            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            LOGGER.error(err);
+            return new NotifyResult(message, getSendInfo(), err);
         } finally {
             if (producer != null) {
                 try {
@@ -78,6 +82,15 @@ public class NotifierJMS extends ANotifier {
                 }
             }
         }
+    }
+
+    @Override
+    public StringBuilder getSendInfo() {
+        StringBuilder sb = new StringBuilder("[").append(monitor.getInfo()).append("]");
+
+        // TODO
+
+        return sb;
     }
 
     private void createConnection() throws Exception {

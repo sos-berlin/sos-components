@@ -30,6 +30,58 @@ public class NotifierMail extends ANotifier {
         init(conf);
     }
 
+    @Override
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+        if (mail == null) {
+            return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
+        }
+        set(mo, mos);
+
+        mail.setSubject(resolve(monitor.getSubject(), status, true));
+        mail.setBody(resolve(monitor.getMessage(), status, true));
+
+        try {
+            StringBuilder info = new StringBuilder();
+            info.append("[subject=").append(mail.getSubject()).append("]");
+
+            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+
+            if (!mail.send()) {
+                if (QUEUE_MAIL_ON_ERROR) {
+                    // - mail will be stored to the mail queue directory
+                    // - a warning message will be logged by SOSMail
+                } else {
+                    LOGGER.error(getInfo4executeException(mo, mos, status, monitor.getInfo().toString(), null));
+                }
+            }
+            return new NotifyResult(mail.getBody(), getSendInfo());
+        } catch (Throwable e) {
+            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            LOGGER.error(err);
+            LOGGER.info(SOSString.toString(mail));
+            return new NotifyResult(mail.getBody(), getSendInfo(), err);
+        } finally {
+            try {
+                mail.clearRecipients();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public StringBuilder getSendInfo() {
+        StringBuilder sb = new StringBuilder("[").append(monitor.getInfo()).append("]");
+        if (mail != null) {
+            // TODO
+        }
+
+        return sb;
+    }
+
     private void init(Configuration conf) throws Exception {
         try {
             createMail(getMailResource(conf));
@@ -63,45 +115,6 @@ public class NotifierMail extends ANotifier {
             throw new Exception("missing job_resources=" + monitor.getJobResources());
         }
         return resource;
-    }
-
-    @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
-        if (mail == null) {
-            return;
-        }
-        set(mo, mos);
-
-        mail.setSubject(resolve(monitor.getSubject(), status, true));
-        mail.setBody(resolve(monitor.getMessage(), status, true));
-
-        try {
-            StringBuilder info = new StringBuilder();
-            info.append("[subject=").append(mail.getSubject()).append("]");
-
-            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
-
-            if (!mail.send()) {
-                if (QUEUE_MAIL_ON_ERROR) {
-                    // - mail will be stored to the mail queue directory
-                    // - a warning message will be logged by SOSMail
-                } else {
-                    LOGGER.error(getInfo4executeException(mo, mos, status, monitor.getInfo().toString(), null));
-                }
-            }
-        } catch (Throwable e) {
-            LOGGER.error(getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e));
-            LOGGER.info(SOSString.toString(mail));
-        } finally {
-            try {
-                mail.clearRecipients();
-            } catch (Exception e) {
-            }
-        }
-    }
-
-    @Override
-    public void close() {
     }
 
     private void createMail(MailResource res) throws Exception {

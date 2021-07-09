@@ -149,6 +149,7 @@ public class HistoryMonitoringModel {
             List<AHistoryBean> l = new ArrayList<>();
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
+            List<HistoryOrderStepBean> steps2notify = new ArrayList<>();
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
             for (AHistoryBean b : payloads) {
@@ -193,7 +194,9 @@ public class HistoryMonitoringModel {
                     orderStepStarted((HistoryOrderStepBean) b);
                     break;
                 case OrderProcessed:
-                    orderStepProcessed((HistoryOrderStepBean) b);
+                    HistoryOrderStepBean hosb = (HistoryOrderStepBean) b;
+                    orderStepProcessed(hosb);
+                    steps2notify.add(hosb);
                     break;
                 default:
                     break;
@@ -201,15 +204,22 @@ public class HistoryMonitoringModel {
                 l.add(b);
             }
             dbLayer.getSession().commit();
-
             LOGGER.info(String.format("[%s][%s][processed]%s", serviceIdentifier, IDENTIFIER, l.size()));
             payloads.removeAll(l);
+
+            notifySteps(steps2notify);
         } catch (Throwable e) {
             dbLayer.rollback();
             LOGGER.error(e.toString(), e);
         } finally {
             dbLayer.close();
             setLastActivityEnd();
+        }
+    }
+
+    private void notifySteps(List<HistoryOrderStepBean> steps) {
+        for (HistoryOrderStepBean step : steps) {
+            notifier.notify(configuration, step);
         }
     }
 
@@ -409,7 +419,6 @@ public class HistoryMonitoringModel {
 
     private void orderStepProcessed(HistoryOrderStepBean hosb) throws SOSHibernateException {
         dbLayer.setOrderStepEnd(analyzeExecutionTimeOnProcessed(hosb));
-        notifier.notify(configuration, hosb);
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(HistoryOrderStepBean hosb) {

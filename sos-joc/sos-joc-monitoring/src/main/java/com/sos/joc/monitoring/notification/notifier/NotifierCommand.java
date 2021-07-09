@@ -27,29 +27,37 @@ public class NotifierCommand extends ANotifier {
     }
 
     @Override
-    public void notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
 
         set(mo, mos);
         String cmd = resolve(monitor.getCommand(), status, false);
         LOGGER.info(getInfo4execute(mo, mos, status, cmd));
-
+        LOGGER.info("-----CMD="+cmd);
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, status));
         if (result.hasError()) {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
             info.append(result);
-            LOGGER.error(getInfo4executeException(mo, mos, status, info.toString(), null));
-            return;
+
+            String err = getInfo4executeException(mo, mos, status, info.toString(), null);
+            LOGGER.error(err);
+            return new NotifyResult(result.getCommand(), getSendInfo(), err);
         }
 
         StringBuilder info = new StringBuilder();
         info.append("[executed exitCode=").append(result.getExitCode()).append("]");
         info.append(result.getCommand());
         LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+        return new NotifyResult(result.getCommand(), getSendInfo());
     }
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public StringBuilder getSendInfo() {
+        return null;
     }
 
     private SOSEnv getEnvVariables(String cmd, Status status) {
