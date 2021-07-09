@@ -36,6 +36,7 @@ import js7.data.order.Outcome;
 import js7.data.order.Outcome.Completed;
 import js7.data.order.Outcome.Disrupted;
 import js7.data.order.Outcome.Failed;
+import js7.data.order.Outcome.Killed;
 import js7.data.value.Value;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
@@ -59,7 +60,7 @@ import scala.jdk.javaapi.OptionConverters;
 public class HistoryEventEntry {
 
     public static enum OutcomeType {
-        succeeded, failed, disrupted, broken
+        succeeded, failed, disrupted, broken, killed
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
@@ -387,6 +388,8 @@ public class HistoryEventEntry {
                     }
                 } else if (outcome instanceof Disrupted) {
                     handleDisrupted(outcome, (Disrupted) outcome);
+                } else if (outcome instanceof Killed) {
+                    handleKilled(outcome, (Killed) outcome);
                 }
             }
 
@@ -450,6 +453,21 @@ public class HistoryEventEntry {
 
                     if (SOSString.isEmpty(errorMessage) && outcome != null && outcome instanceof Failed) {
                         setError((Failed) outcome);
+                    }
+                }
+            }
+
+            private void handleKilled(Outcome outcome, Killed problem) {
+                returnCode = null;
+                isSucceeded = problem.isSucceeded();
+                isFailed = problem.isFailed();
+                type = OutcomeType.killed;
+
+                if (isFailed) {
+                    Completed o = problem.outcome();
+                    if (o != null && o instanceof Failed) {
+                        handleFailed((Failed) o);
+                        type = OutcomeType.killed;
                     }
                 }
             }
