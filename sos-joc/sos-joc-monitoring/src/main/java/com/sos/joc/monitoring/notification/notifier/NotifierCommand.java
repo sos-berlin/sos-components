@@ -32,7 +32,7 @@ public class NotifierCommand extends ANotifier {
         set(mo, mos);
         String cmd = resolve(monitor.getCommand(), status, false);
         LOGGER.info(getInfo4execute(mo, mos, status, cmd));
-        LOGGER.info("-----CMD="+cmd);
+        
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, status));
         if (result.hasError()) {
             StringBuilder info = new StringBuilder();
