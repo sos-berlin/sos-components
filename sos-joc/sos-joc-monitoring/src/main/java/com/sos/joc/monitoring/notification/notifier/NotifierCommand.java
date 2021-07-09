@@ -19,7 +19,7 @@ public class NotifierCommand extends ANotifier {
 
     private final MonitorCommand monitor;
 
-    private static final String VAR_SERVICE_COMMAND = "SERVICE_COMMAND";
+    private static final String VAR_COMMAND = "COMMAND";
     private static final boolean SET_HREF_ENVS = false;
 
     public NotifierCommand(MonitorCommand monitor) {
@@ -32,7 +32,7 @@ public class NotifierCommand extends ANotifier {
         set(mo, mos);
         String cmd = resolve(monitor.getCommand(), status, false);
         LOGGER.info(getInfo4execute(mo, mos, status, cmd));
-        
+
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, status));
         if (result.hasError()) {
             StringBuilder info = new StringBuilder();
@@ -63,7 +63,7 @@ public class NotifierCommand extends ANotifier {
     private SOSEnv getEnvVariables(String cmd, Status status) {
         Map<String, String> map = new HashMap<>();
         map.put(PREFIX_ENV_VAR + "_" + VAR_STATUS, status.name());
-        map.put(PREFIX_ENV_VAR + "_" + VAR_SERVICE_COMMAND, cmd);
+        map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd);
         if (SET_HREF_ENVS) {
             map.put(PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_WORKFLOW, jocHrefWorkflow());
             map.put(PREFIX_ENV_VAR + "_" + VAR_JOC_HREF_ORDER, jocHrefWorkflowOrder());
