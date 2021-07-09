@@ -105,6 +105,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                         }
                     }
                     AgentReport a = new AgentReport();
+                    a.setControllerId(dbAgent.getControllerId());
                     a.setAgentId(dbAgent.getAgentId());
                     a.setUrl(dbAgent.getUri());
                     a.setNumOfJobs(numOfJobs);
