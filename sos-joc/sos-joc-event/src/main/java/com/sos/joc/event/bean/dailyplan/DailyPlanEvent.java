@@ -12,11 +12,17 @@ public class DailyPlanEvent extends JOCEvent {
      
     public DailyPlanEvent(String dailyPlanDate) {
         super("DailyPlanUpdated", null, null);
+        if (dailyPlanDate == null) {
+            dailyPlanDate = "";
+        }
         putVariable("dailyPlanDate", dailyPlanDate);
     }
     
     public DailyPlanEvent(String key, String dailyPlanDate) {
         super(key, null, null);
+        if (dailyPlanDate == null) {
+            dailyPlanDate = "";
+        }
         putVariable("dailyPlanDate", dailyPlanDate);
     }
     

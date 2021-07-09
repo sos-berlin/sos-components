@@ -23,10 +23,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "scheduledFor",
+    "cycle",
     "timeZone",
     "variables",
     "removeVariables",
     "orderIds",
+    "dailyPlanDate",
     "auditLog"
 })
 public class DailyPlanModifyOrder {
@@ -48,6 +50,14 @@ public class DailyPlanModifyOrder {
     @JsonProperty("scheduledFor")
     @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
     private String scheduledFor;
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cycle")
+    private Cycle cycle;
     /**
      * string without < and >
      * <p>
@@ -76,6 +86,15 @@ public class DailyPlanModifyOrder {
     private Variables removeVariables;
     @JsonProperty("orderIds")
     private List<String> orderIds = null;
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    @JsonPropertyDescription("ISO date YYYY-MM-DD")
+    private String dailyPlanDate;
     /**
      * auditParams
      * <p>
@@ -127,6 +146,28 @@ public class DailyPlanModifyOrder {
     @JsonProperty("scheduledFor")
     public void setScheduledFor(String scheduledFor) {
         this.scheduledFor = scheduledFor;
+    }
+
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cycle")
+    public Cycle getCycle() {
+        return cycle;
+    }
+
+    /**
+     * Cyclic Order
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("cycle")
+    public void setCycle(Cycle cycle) {
+        this.cycle = cycle;
     }
 
     /**
@@ -206,6 +247,28 @@ public class DailyPlanModifyOrder {
     }
 
     /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    public String getDailyPlanDate() {
+        return dailyPlanDate;
+    }
+
+    /**
+     * date
+     * <p>
+     * ISO date YYYY-MM-DD
+     * 
+     */
+    @JsonProperty("dailyPlanDate")
+    public void setDailyPlanDate(String dailyPlanDate) {
+        this.dailyPlanDate = dailyPlanDate;
+    }
+
+    /**
      * auditParams
      * <p>
      * 
@@ -229,12 +292,12 @@ public class DailyPlanModifyOrder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("scheduledFor", scheduledFor).append("cycle", cycle).append("timeZone", timeZone).append("variables", variables).append("removeVariables", removeVariables).append("orderIds", orderIds).append("dailyPlanDate", dailyPlanDate).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(removeVariables).append(controllerId).append(auditLog).append(scheduledFor).append(timeZone).append(orderIds).toHashCode();
+        return new HashCodeBuilder().append(variables).append(removeVariables).append(dailyPlanDate).append(controllerId).append(auditLog).append(scheduledFor).append(timeZone).append(orderIds).append(cycle).toHashCode();
     }
 
     @Override
@@ -246,7 +309,7 @@ public class DailyPlanModifyOrder {
             return false;
         }
         DailyPlanModifyOrder rhs = ((DailyPlanModifyOrder) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).isEquals();
+        return new EqualsBuilder().append(variables, rhs.variables).append(removeVariables, rhs.removeVariables).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(scheduledFor, rhs.scheduledFor).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(cycle, rhs.cycle).isEquals();
     }
 
 }

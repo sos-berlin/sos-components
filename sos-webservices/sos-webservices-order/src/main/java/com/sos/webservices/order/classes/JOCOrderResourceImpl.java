@@ -19,6 +19,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
@@ -215,12 +216,12 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
     }
 
-    protected void addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+    protected DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYVLIC_ORDERS");
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
+            return dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

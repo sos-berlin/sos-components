@@ -2,6 +2,7 @@ package com.sos.joc2;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.TimeZone;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,6 +51,8 @@ public class Main {
   
     public static void main(String[] args) throws IOException {
     	setLogger();
+    	TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+
         final HttpServer server = startServer();
         //StaticHttpHandler staticHttpHandler = new StaticHttpHandler("src/main/resources");
         //server.getServerConfiguration().addHttpHandler(staticHttpHandler, "/");

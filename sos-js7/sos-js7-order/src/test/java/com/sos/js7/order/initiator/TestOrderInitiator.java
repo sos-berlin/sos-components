@@ -12,10 +12,11 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 
 //Test fails in nightly build
-@Ignore
+
 public class TestOrderInitiator {
 
     @Test
+    @Ignore
     public void testOrderInitatorGo() throws Exception {
         if (Globals.sosCockpitProperties == null) {
             Globals.sosCockpitProperties = new JocCockpitProperties("/dailyplan.properties");
