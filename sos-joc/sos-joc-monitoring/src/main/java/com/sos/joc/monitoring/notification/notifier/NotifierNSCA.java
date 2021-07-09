@@ -83,7 +83,7 @@ public class NotifierNSCA extends ANotifier {
             info.append("[service host=").append(payload.getHostname()).append("]");
             info.append("[level=").append(payload.getLevel()).append("]");
             info.append(payload.getMessage());
-            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true,mo, mos, status, info.toString()));
 
             sender.send(payload);
             return new NotifyResult(payload.getMessage(), getSendInfo());

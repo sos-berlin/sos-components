@@ -66,7 +66,7 @@ public class NotifierJMS extends ANotifier {
             StringBuilder info = new StringBuilder();
             info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
             info.append(message);
-            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true, mo, mos, status, info.toString()));
 
             producer.send(session.createTextMessage(message));
             return new NotifyResult(message, getSendInfo());

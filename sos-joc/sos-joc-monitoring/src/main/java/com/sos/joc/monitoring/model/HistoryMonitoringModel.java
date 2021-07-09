@@ -49,6 +49,7 @@ import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
+import com.sos.joc.monitoring.notification.notifier.ANotifier.Status;
 
 public class HistoryMonitoringModel {
 
@@ -150,8 +151,13 @@ public class HistoryMonitoringModel {
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
 
             List<HistoryOrderStepBean> steps2notify = new ArrayList<>();
+            List<HistoryOrderBean> errorOrders2notify = new ArrayList<>();
+            List<HistoryOrderBean> successOrders2notify = new ArrayList<>();
+
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
+
+            HistoryOrderBean hob;
             for (AHistoryBean b : payloads) {
                 if (isDebugEnabled) {
                     LOGGER.debug(b.getEventType() + "=" + SOSString.toString(b));
@@ -175,7 +181,9 @@ public class HistoryMonitoringModel {
                     orderJoined((HistoryOrderBean) b);
                     break;
                 case OrderFailed:
-                    orderFailed((HistoryOrderBean) b);
+                    hob = (HistoryOrderBean) b;
+                    orderFailed(hob);
+                    errorOrders2notify.add(hob);
                     break;
                 case OrderSuspended:
                     orderSuspended((HistoryOrderBean) b);
@@ -184,10 +192,14 @@ public class HistoryMonitoringModel {
                     orderCancelled((HistoryOrderBean) b);
                     break;
                 case OrderBroken:
-                    orderBroken((HistoryOrderBean) b);
+                    hob = (HistoryOrderBean) b;
+                    orderBroken(hob);
+                    errorOrders2notify.add(hob);
                     break;
                 case OrderFinished:
-                    orderFinished((HistoryOrderBean) b);
+                    hob = (HistoryOrderBean) b;
+                    orderFinished(hob);
+                    successOrders2notify.add(hob);
                     break;
                 // OrderStep
                 case OrderProcessingStarted:
@@ -207,7 +219,7 @@ public class HistoryMonitoringModel {
             LOGGER.info(String.format("[%s][%s][processed]%s", serviceIdentifier, IDENTIFIER, l.size()));
             payloads.removeAll(l);
 
-            notifySteps(steps2notify);
+            notify(errorOrders2notify, successOrders2notify, steps2notify);
         } catch (Throwable e) {
             dbLayer.rollback();
             LOGGER.error(e.toString(), e);
@@ -217,9 +229,26 @@ public class HistoryMonitoringModel {
         }
     }
 
+    private void notify(List<HistoryOrderBean> error, List<HistoryOrderBean> success, List<HistoryOrderStepBean> steps) {
+        if (!configuration.exists()) {
+            return;
+        }
+        notifySteps(steps);
+        notifyOrders(error, success);
+    }
+
     private void notifySteps(List<HistoryOrderStepBean> steps) {
         for (HistoryOrderStepBean step : steps) {
             notifier.notify(configuration, step);
+        }
+    }
+
+    private void notifyOrders(List<HistoryOrderBean> error, List<HistoryOrderBean> success) {
+        for (HistoryOrderBean order : error) {
+            notifier.notify(configuration, order, Status.ERROR);
+        }
+        for (HistoryOrderBean order : success) {
+            notifier.notify(configuration, order, Status.SUCCESS);
         }
     }
 

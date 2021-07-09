@@ -44,7 +44,7 @@ public class NotifierMail extends ANotifier {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
 
-            LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true, mo, mos, status, info.toString()));
 
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {

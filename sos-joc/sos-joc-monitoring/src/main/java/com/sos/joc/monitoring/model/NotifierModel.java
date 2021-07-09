@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
@@ -31,25 +32,21 @@ public class NotifierModel {
     }
 
     protected void notify(Configuration conf, HistoryOrderStepBean hosb) {
-        if (!conf.exists()) {
-            return;
-        }
-
         List<Notification> result;
         if (hosb.getError()) {
             if (conf.getTypeOnError().size() == 0) {
                 return;
             }
-            result = conf.findWorkflowJobMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, hosb, Status.ERROR);
+            notify(conf, result, null, hosb, Status.ERROR);
         } else {
-            result = conf.findWorkflowJobMatches(conf.getTypeOnSuccess(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(conf.getTypeOnSuccess(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            notify(conf, result, hosb, Status.SUCCESS);
+            notify(conf, result, null, hosb, Status.SUCCESS);
 
             // TODO check for RECOVERY ????
-            result = conf.findWorkflowJobMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
+            result = conf.findWorkflowMatches(conf.getTypeOnError(), hosb.getControllerId(), hosb.getWorkflowName(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
             if (result.size() > 0) {
                 // check if was send to the same w, order, job position
@@ -57,7 +54,33 @@ public class NotifierModel {
         }
     }
 
-    private void notify(Configuration conf, List<Notification> list, HistoryOrderStepBean hosb, Status status) {
+    protected void notify(Configuration conf, HistoryOrderBean hob, Status status) {
+        List<Notification> result;
+        switch (status) {
+        case ERROR:
+            if (conf.getTypeOnError().size() == 0) {
+                return;
+            }
+            result = conf.findWorkflowMatches(conf.getTypeOnError(), hob.getControllerId(), hob.getWorkflowName());
+            notify(conf, result, hob, null, Status.ERROR);
+            break;
+        case SUCCESS:
+            // see above notify steps
+            result = conf.findWorkflowMatches(conf.getTypeOnSuccess(), hob.getControllerId(), hob.getWorkflowName());
+            notify(conf, result, hob, null, Status.SUCCESS);
+
+            // TODO check for RECOVERY ????
+            result = conf.findWorkflowMatches(conf.getTypeOnError(), hob.getControllerId(), hob.getWorkflowName());
+            if (result.size() > 0) {
+                // check if was send to the same w, order, job position
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    private void notify(Configuration conf, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb, Status status) {
         if (list.size() == 0) {
             return;
         }
@@ -67,9 +90,13 @@ public class NotifierModel {
         try {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             // dbLayer.getSession().beginTransaction();
-
-            mo = dbLayer.getMonitoringOrder(hosb.getHistoryOrderId());
-            mos = dbLayer.getMonitoringOrderStep(hosb.getHistoryId());
+            if (hob == null) {
+                mo = dbLayer.getMonitoringOrder(hosb.getHistoryOrderId());
+                mos = dbLayer.getMonitoringOrderStep(hosb.getHistoryId());
+            } else {
+                mo = dbLayer.getMonitoringOrder(hob.getHistoryId());
+                mos = dbLayer.getMonitoringOrderStep(hob.getCurrentHistoryOrderStepId());
+            }
             // dbLayer.getSession().commit();
         } catch (Throwable e) {
             // dbLayer.rollback();

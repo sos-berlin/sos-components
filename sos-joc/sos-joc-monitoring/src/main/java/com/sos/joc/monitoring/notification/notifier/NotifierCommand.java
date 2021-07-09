@@ -31,7 +31,7 @@ public class NotifierCommand extends ANotifier {
 
         set(mo, mos);
         String cmd = resolve(monitor.getCommand(), status, false);
-        LOGGER.info(getInfo4execute(mo, mos, status, cmd));
+        LOGGER.info(getInfo4execute(true, mo, mos, status, cmd));
 
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, status));
         if (result.hasError()) {
@@ -44,10 +44,7 @@ public class NotifierCommand extends ANotifier {
             return new NotifyResult(result.getCommand(), getSendInfo(), err);
         }
 
-        StringBuilder info = new StringBuilder();
-        info.append("[executed exitCode=").append(result.getExitCode()).append("]");
-        info.append(result.getCommand());
-        LOGGER.info(getInfo4execute(mo, mos, status, info.toString()));
+        LOGGER.info(getInfo4execute(false, mo, mos, status, result.getCommand()));
         return new NotifyResult(result.getCommand(), getSendInfo());
     }
 

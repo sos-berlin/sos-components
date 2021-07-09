@@ -38,7 +38,7 @@ public class MonitorTest {
         showNotifications(c.getTypeOnSuccess());
 
         LOGGER.info("---MATCHES---:");
-        List<Notification> r = c.findWorkflowJobMatches(c.getTypeOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
+        List<Notification> r = c.findWorkflowMatches(c.getTypeOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
                 .intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {

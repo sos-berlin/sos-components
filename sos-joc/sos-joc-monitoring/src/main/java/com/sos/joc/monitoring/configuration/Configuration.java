@@ -62,7 +62,11 @@ public class Configuration {
         }
     }
 
-    public List<Notification> findWorkflowJobMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName) {
+        return findWorkflowMatches(source, controllerId, workflowName, null, null, null, null);
+    }
+
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
             String jobLabel, Integer criticality, Integer returnCode) {
 
         boolean debug = LOGGER.isDebugEnabled();
@@ -71,6 +75,7 @@ public class Configuration {
                     workflowName, jobName, jobLabel, criticality, returnCode));
         }
 
+        boolean analyzeJobs = jobName != null;
         List<Notification> result = new ArrayList<>();
         for (Notification n : source) {
             x: for (Workflow w : n.getWorkflows()) {
@@ -80,9 +85,11 @@ public class Configuration {
                             if (debug) {
                                 LOGGER.debug(String.format("[find][found][%s]workflowName=%s match and 0 jobs", toString(n), w.getName()));
                             }
-                            result.add(n);
+                            if (!analyzeJobs) {
+                                result.add(n);
+                            }
                             break x;
-                        } else {
+                        } else if (analyzeJobs) {
                             for (WorkflowJob j : w.getJobs()) {
                                 if (j.getName().equals(AElement.ASTERISK) || j.getName().matches(jobName)) {
                                     if (j.getLabel().equals(AElement.ASTERISK) || j.getLabel().matches(jobLabel)) {

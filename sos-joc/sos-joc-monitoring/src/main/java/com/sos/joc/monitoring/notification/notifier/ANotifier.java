@@ -78,10 +78,10 @@ public abstract class ANotifier {
         return resolveEnv ? ps.replaceEnvVars(m) : m;
     }
 
-    protected String getInfo4execute(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status, String addInfo) {
+    protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status, String addInfo) {
         StringBuilder sb = new StringBuilder("[notification]");
+        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
         sb.append(getInfo(mo, mos, status));
-        sb.append("[execute]");
         if (addInfo != null) {
             sb.append(addInfo);
         }
@@ -103,7 +103,7 @@ public abstract class ANotifier {
 
     private StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(status.name()).append("]");
+        sb.append("[ON_").append(status.name()).append("]");
         sb.append("[");
         if (mo != null) {
             sb.append("controllerId=").append(mo.getControllerId());
