@@ -25,7 +25,7 @@ public class Notification extends AElement {
     private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
 
     public enum NotificationType {
-        ALL, ON_ERROR, ON_SUCCESS
+        ON_ERROR, ON_WARNING, ON_SUCCESS
     }
 
     private static final String ELEMENT_NAME_NOTIFICATION_MONITORS = "NotificationMonitors";
@@ -43,7 +43,7 @@ public class Notification extends AElement {
     private static String ATTRIBUTE_NAME_NAME = "name";
     private static String ATTRIBUTE_NAME_TYPE = "type";
 
-    private final NotificationType type;
+    private final List<NotificationType> types;
     private final List<AMonitor> monitors;
     private final List<Workflow> workflows;
     private final List<String> jobResources;
@@ -53,7 +53,7 @@ public class Notification extends AElement {
 
     public Notification(Document doc, Node node) throws Exception {
         super(node);
-        this.type = evaluateType();
+        this.types = evaluateTypes();
         this.name = getAttributeValue(ATTRIBUTE_NAME_NAME);
         this.monitors = new ArrayList<>();
         this.workflows = new ArrayList<>();
@@ -156,16 +156,29 @@ public class Notification extends AElement {
         return (Node) SOSXML.newXPath().selectNode(document.getDocumentElement(), "./Fragments/ObjectsFragments/Workflows[@name='" + ref + "']");
     }
 
-    private NotificationType evaluateType() {
+    private List<NotificationType> evaluateTypes() {
+        List<NotificationType> result = new ArrayList<>();
         try {
-            return NotificationType.valueOf(getElement().getAttribute(ATTRIBUTE_NAME_TYPE));
+            String[] values = getElement().getAttribute(ATTRIBUTE_NAME_TYPE).split(" ");
+            for (String val : values) {
+                if (val.trim().length() == 0) {
+                    continue;
+                }
+                NotificationType nt = NotificationType.valueOf(val);
+                if (!result.contains(nt)) {
+                    result.add(nt);
+                }
+            }
         } catch (Throwable e) {
-            return NotificationType.ON_ERROR;
+            result = new ArrayList<>();
+            result.add(NotificationType.ON_ERROR);
+            result.add(NotificationType.ON_WARNING);
         }
+        return result;
     }
 
-    public NotificationType getType() {
-        return type;
+    public List<NotificationType> getTypes() {
+        return types;
     }
 
     public List<AMonitor> getMonitors() {

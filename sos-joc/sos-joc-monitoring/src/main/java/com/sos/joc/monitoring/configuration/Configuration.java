@@ -13,6 +13,7 @@ import org.w3c.dom.NodeList;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
@@ -24,12 +25,12 @@ public class Configuration {
 
     private static String JOC_URI;
 
-    private List<Notification> typeOnError;
-    private List<Notification> typeOnSuccess;
+    private List<Notification> onError;
+    private List<Notification> onWarning;
+    private List<Notification> onSuccess;
     private Map<String, MailResource> mailResources;
 
     private boolean exists;
-    private int counterTypeAll;
 
     public Configuration(String jocUri) {
         JOC_URI = jocUri;
@@ -63,11 +64,16 @@ public class Configuration {
     }
 
     public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName) {
-        return findWorkflowMatches(source, controllerId, workflowName, null, null, null, null);
+        return findWorkflowMatches(source, controllerId, workflowName, null, null, null, null, true);
     }
 
     public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
             String jobLabel, Integer criticality, Integer returnCode) {
+        return findWorkflowMatches(source, controllerId, workflowName, jobName, jobLabel, criticality, returnCode, false);
+    }
+
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
+            String jobLabel, Integer criticality, Integer returnCode, boolean includeEmptyWorkflows) {
 
         boolean debug = LOGGER.isDebugEnabled();
         if (debug) {
@@ -85,7 +91,7 @@ public class Configuration {
                             if (debug) {
                                 LOGGER.debug(String.format("[find][found][%s]workflowName=%s match and 0 jobs", toString(n), w.getName()));
                             }
-                            if (!analyzeJobs) {
+                            if (includeEmptyWorkflows) {
                                 result.add(n);
                             }
                             break x;
@@ -139,35 +145,35 @@ public class Configuration {
 
     private String toString(Notification n) {
         StringBuilder sb = new StringBuilder("notification ");
-        sb.append("type=").append(n.getType().name());
+        sb.append("type=").append(n.getTypes());
         sb.append(", name=");
         sb.append(SOSString.isEmpty(n.getName()) ? "<empty>" : n.getName());
         return sb.toString();
     }
 
     private void init() {
-        typeOnError = new ArrayList<>();
-        typeOnSuccess = new ArrayList<>();
+        onError = new ArrayList<>();
+        onWarning = new ArrayList<>();
+        onSuccess = new ArrayList<>();
         mailResources = new HashMap<>();
-        counterTypeAll = 0;
         exists = false;
     }
 
     private void add2type(Notification n) {
         exists = true;
 
-        switch (n.getType()) {
-        case ALL:
-            typeOnError.add(n);
-            typeOnSuccess.add(n);
-            counterTypeAll++;
-            break;
-        case ON_ERROR:
-            typeOnError.add(n);
-            break;
-        case ON_SUCCESS:
-            typeOnSuccess.add(n);
-            break;
+        for (NotificationType nt : n.getTypes()) {
+            switch (nt) {
+            case ON_ERROR:
+                onError.add(n);
+                break;
+            case ON_WARNING:
+                onWarning.add(n);
+                break;
+            case ON_SUCCESS:
+                onSuccess.add(n);
+                break;
+            }
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -185,12 +191,16 @@ public class Configuration {
         }
     }
 
-    public List<Notification> getTypeOnError() {
-        return typeOnError;
+    public List<Notification> getOnError() {
+        return onError;
     }
 
-    public List<Notification> getTypeOnSuccess() {
-        return typeOnSuccess;
+    public List<Notification> getOnWarning() {
+        return onWarning;
+    }
+
+    public List<Notification> getOnSuccess() {
+        return onSuccess;
     }
 
     public Map<String, MailResource> getMailResources() {
@@ -201,23 +211,15 @@ public class Configuration {
         return exists;
     }
 
-    public int getCounterDefinedTypeAll() {
-        return counterTypeAll;
-    }
-
-    public int getCounterDefinedTypeOnError() {
-        return typeOnError.size() - counterTypeAll;
-    }
-
-    public int getCounterDefinedTypeOnSuccess() {
-        return typeOnSuccess.size() - counterTypeAll;
-    }
-
     public boolean hasOnError() {
-        return typeOnError.size() > 0;
+        return onError.size() > 0;
+    }
+
+    public boolean hasOnWarning() {
+        return onWarning.size() > 0;
     }
 
     public boolean hasOnSuccess() {
-        return typeOnSuccess.size() > 0;
+        return onSuccess.size() > 0;
     }
 }

@@ -288,4 +288,5 @@ public class HistoryOrderStepBean extends AHistoryBean {
     public Integer getWarnIfShorter() {
         return warnIfShorter;
     }
+
 }

@@ -44,7 +44,7 @@ public class NotifierCommand extends ANotifier {
             return new NotifyResult(result.getCommand(), getSendInfo(), err);
         }
 
-        LOGGER.info(getInfo4execute(false, mo, mos, status, result.getCommand()));
+        LOGGER.info("    " + getInfo4execute(false, mo, mos, status, result.getCommand()));
         return new NotifyResult(result.getCommand(), getSendInfo());
     }
 

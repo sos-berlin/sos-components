@@ -29,16 +29,17 @@ public class MonitorTest {
         Configuration c = new Configuration("http://localhost");
         c.process(new String(Files.readAllBytes(Paths.get("src/test/resources/Configurations.xml")), Charsets.UTF_8));
 
-        LOGGER.info("---TYPE ALL DEFINED---:" + c.getCounterDefinedTypeAll());
+        LOGGER.info("---TYPE ON_ERROR---:" + c.getOnError().size());
+        showNotifications(c.getOnError());
 
-        LOGGER.info("---TYPE ON_ERROR DEFINED---:" + c.getCounterDefinedTypeOnError());
-        showNotifications(c.getTypeOnError());
+        LOGGER.info("---TYPE ON_WARNING---:" + c.getOnWarning().size());
+        showNotifications(c.getOnWarning());
 
-        LOGGER.info("---TYPE ON_SUCCESS DEFINED---:" + c.getCounterDefinedTypeOnSuccess());
-        showNotifications(c.getTypeOnSuccess());
+        LOGGER.info("---TYPE ON_SUCCESS---:" + c.getOnSuccess().size());
+        showNotifications(c.getOnSuccess());
 
         LOGGER.info("---MATCHES---:");
-        List<Notification> r = c.findWorkflowMatches(c.getTypeOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
+        List<Notification> r = c.findWorkflowMatches(c.getOnError(), "js7.x", "my_workflow", "my_job_name", "my_job_label", JobCriticality.NORMAL
                 .intValue(), 0);
         LOGGER.info("---               MATCHES---:" + r.size());
         for (Notification n : r) {

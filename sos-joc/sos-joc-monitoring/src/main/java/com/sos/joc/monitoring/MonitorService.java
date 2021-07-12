@@ -53,7 +53,7 @@ public class MonitorService extends AJocClusterService {
             if (factory == null) {
                 LOGGER.info(String.format("[%s][%s][skip]not implemented yet for %s", getIdentifier(), mode, dbms));
             } else {
-                history = new HistoryMonitoringModel(factory, getJocConfig(), IDENTIFIER);
+                history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig(), IDENTIFIER);
                 history.start(getThreadGroup());
             }
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
@@ -94,7 +94,7 @@ public class MonitorService extends AJocClusterService {
 
     private void close(StartupMode mode) {
         if (history != null) {
-            history.close();
+            history.close(mode);
         }
         closeFactory();
     }
@@ -104,8 +104,8 @@ public class MonitorService extends AJocClusterService {
         // TMP - only MYSQL
         // see CleanupServiceSchedule,CleanupTaskMonitoring
         if (SOSHibernateFactory.Dbms.MYSQL.equals(dbms)) {
-            // 1-history monitoring, 2 - configuration thread , 3 - notifier
-            factory = new JocClusterHibernateFactory(configFile, 1, 3);
+            // 1-history monitoring, 2 - configuration thread
+            factory = new JocClusterHibernateFactory(configFile, 1, 2);
             factory.setIdentifier(IDENTIFIER);
             factory.setAutoCommit(false);
             factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

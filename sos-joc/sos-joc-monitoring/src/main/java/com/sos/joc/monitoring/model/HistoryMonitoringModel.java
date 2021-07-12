@@ -49,7 +49,6 @@ import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
-import com.sos.joc.monitoring.notification.notifier.ANotifier.Status;
 
 public class HistoryMonitoringModel {
 
@@ -69,7 +68,7 @@ public class HistoryMonitoringModel {
 
     private ScheduledExecutorService threadPool;
     private CopyOnWriteArraySet<AHistoryBean> payloads = new CopyOnWriteArraySet<>();
-    private Map<Long, LongerThan> longerThan = new HashMap<>();// new ConcurrentHashMap<>();
+    private Map<Long, HistoryOrderStepBean> longerThan = new HashMap<>();// new ConcurrentHashMap<>();
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
     private AtomicBoolean closed = new AtomicBoolean();
@@ -78,17 +77,18 @@ public class HistoryMonitoringModel {
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
 
-    public HistoryMonitoringModel(SOSHibernateFactory factory, JocConfiguration jocConfiguration, String serviceIdentifier) {
+    public HistoryMonitoringModel(ThreadGroup threadGroup, SOSHibernateFactory factory, JocConfiguration jocConfiguration, String serviceIdentifier) {
         this.factory = factory;
         this.jocConfiguration = jocConfiguration;
         this.dbLayer = new DBLayerMonitoring(serviceIdentifier + "_" + IDENTIFIER, serviceIdentifier);
         this.serviceIdentifier = serviceIdentifier;
-        this.notifier = new NotifierModel(this.factory, this.serviceIdentifier);
+        this.notifier = new NotifierModel(threadGroup, factory.getConfigFile().get(), this.serviceIdentifier);
         EventBus.getInstance().register(this);
     }
 
     @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class })
     public void handleHistoryEvents(HistoryEvent evt) {
+        AJocClusterService.setLogger(serviceIdentifier);
         if (evt.getPayload() != null) {
             payloads.add((AHistoryBean) evt.getPayload());
         }
@@ -114,12 +114,16 @@ public class HistoryMonitoringModel {
         LOGGER.info(String.format("[%s][%s]start..", serviceIdentifier, IDENTIFIER));
     }
 
-    public void close() {
+    public void close(StartupMode mode) {
         closed.set(true);
+
+        if (notifier != null) {
+            notifier.close(mode);
+        }
 
         if (threadPool != null) {
             AJocClusterService.setLogger(serviceIdentifier);
-            JocCluster.shutdownThreadPool(StartupMode.automatic, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
             serialize();
         }
@@ -132,27 +136,27 @@ public class HistoryMonitoringModel {
 
             @Override
             public void run() {
-                handlePayloads();
-                handleLongerThan();
+                AJocClusterService.setLogger(serviceIdentifier);
+
+                boolean isDebugEnabled = LOGGER.isDebugEnabled();
+                ToNotify toNotifyPayloads = handlePayloads(isDebugEnabled);
+                ToNotify toNotifyLongerThan = handleLongerThan();
+
+                notifier.notify(configuration, toNotifyPayloads, toNotifyLongerThan);
             }
         }, 0 /* start delay */, 2 /* duration */, TimeUnit.SECONDS);
 
     }
 
-    private void handlePayloads() {
+    private ToNotify handlePayloads(boolean isDebugEnabled) {
+        ToNotify toNotify = new ToNotify();
         if (payloads.size() == 0) {
-            return;
+            return toNotify;
         }
 
-        AJocClusterService.setLogger(serviceIdentifier);
         setLastActivityStart();
         try {
             List<AHistoryBean> l = new ArrayList<>();
-            boolean isDebugEnabled = LOGGER.isDebugEnabled();
-
-            List<HistoryOrderStepBean> steps2notify = new ArrayList<>();
-            List<HistoryOrderBean> errorOrders2notify = new ArrayList<>();
-            List<HistoryOrderBean> successOrders2notify = new ArrayList<>();
 
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
@@ -183,7 +187,7 @@ public class HistoryMonitoringModel {
                 case OrderFailed:
                     hob = (HistoryOrderBean) b;
                     orderFailed(hob);
-                    errorOrders2notify.add(hob);
+                    toNotify.getErrorOrders().add(hob);
                     break;
                 case OrderSuspended:
                     orderSuspended((HistoryOrderBean) b);
@@ -194,21 +198,19 @@ public class HistoryMonitoringModel {
                 case OrderBroken:
                     hob = (HistoryOrderBean) b;
                     orderBroken(hob);
-                    errorOrders2notify.add(hob);
+                    toNotify.getErrorOrders().add(hob);
                     break;
                 case OrderFinished:
                     hob = (HistoryOrderBean) b;
                     orderFinished(hob);
-                    successOrders2notify.add(hob);
+                    toNotify.getSuccessOrders().add(hob);
                     break;
                 // OrderStep
                 case OrderProcessingStarted:
                     orderStepStarted((HistoryOrderStepBean) b);
                     break;
                 case OrderProcessed:
-                    HistoryOrderStepBean hosb = (HistoryOrderStepBean) b;
-                    orderStepProcessed(hosb);
-                    steps2notify.add(hosb);
+                    toNotify.getSteps().add(orderStepProcessed((HistoryOrderStepBean) b));
                     break;
                 default:
                     break;
@@ -218,8 +220,6 @@ public class HistoryMonitoringModel {
             dbLayer.getSession().commit();
             LOGGER.info(String.format("[%s][%s][processed]%s", serviceIdentifier, IDENTIFIER, l.size()));
             payloads.removeAll(l);
-
-            notify(errorOrders2notify, successOrders2notify, steps2notify);
         } catch (Throwable e) {
             dbLayer.rollback();
             LOGGER.error(e.toString(), e);
@@ -227,47 +227,27 @@ public class HistoryMonitoringModel {
             dbLayer.close();
             setLastActivityEnd();
         }
+        return toNotify;
     }
 
-    private void notify(List<HistoryOrderBean> error, List<HistoryOrderBean> success, List<HistoryOrderStepBean> steps) {
-        if (!configuration.exists()) {
-            return;
-        }
-        notifySteps(steps);
-        notifyOrders(error, success);
-    }
-
-    private void notifySteps(List<HistoryOrderStepBean> steps) {
-        for (HistoryOrderStepBean step : steps) {
-            notifier.notify(configuration, step);
-        }
-    }
-
-    private void notifyOrders(List<HistoryOrderBean> error, List<HistoryOrderBean> success) {
-        for (HistoryOrderBean order : error) {
-            notifier.notify(configuration, order, Status.ERROR);
-        }
-        for (HistoryOrderBean order : success) {
-            notifier.notify(configuration, order, Status.SUCCESS);
-        }
-    }
-
-    private void handleLongerThan() {
+    private ToNotify handleLongerThan() {
+        ToNotify toNotify = new ToNotify();
         if (longerThan.size() == 0) {
-            return;
+            return toNotify;
         }
 
         AJocClusterService.setLogger(serviceIdentifier);
-        Map<Long, HistoryOrderStepResultWarn> w = new HashMap<>();
-        longerThan.entrySet().stream().forEach(e -> {
-            LongerThan lt = e.getValue();
-            HistoryOrderStepResultWarn warn = analyzeLongerThan(lt.getDefinition(), lt.getStartTime(), new Date(), e.getKey(), false);
+        Map<Long, HistoryOrderStepResult> w = new HashMap<>();
+        longerThan.entrySet().stream().forEach(entry -> {
+            HistoryOrderStepBean hosb = entry.getValue();
+            HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb.getWarnIfLonger(), hosb.getStartTime(), new Date(), entry.getKey(), false);
             if (warn != null) {
-                w.put(e.getKey(), warn);
+                HistoryOrderStepResult r = new HistoryOrderStepResult(hosb, warn);
+                w.put(entry.getKey(), r);
             }
         });
         if (w.size() == 0) {
-            return;
+            return toNotify;
         }
 
         try {
@@ -275,10 +255,14 @@ public class HistoryMonitoringModel {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
-            for (Map.Entry<Long, HistoryOrderStepResultWarn> entry : w.entrySet()) {
-                dbLayer.updateOrderStepOnLongerThan(entry.getKey(), entry.getValue());
+            for (Map.Entry<Long, HistoryOrderStepResult> entry : w.entrySet()) {
+                HistoryOrderStepResult sr = entry.getValue();
+                int r = dbLayer.updateOrderStepOnLongerThan(entry.getKey(), sr.getWarn());
                 if (longerThan.containsKey(entry.getKey())) {
                     longerThan.remove(entry.getKey());
+                }
+                if (r != 0) {
+                    toNotify.getSteps().add(sr);
                 }
             }
             dbLayer.getSession().commit();
@@ -290,6 +274,7 @@ public class HistoryMonitoringModel {
             dbLayer.close();
             setLastActivityEnd();
         }
+        return toNotify;
     }
 
     private void orderStarted(HistoryOrderBean hob) throws SOSHibernateException {
@@ -436,7 +421,7 @@ public class HistoryMonitoringModel {
                 insert(hosb.getOrderId(), item.getHistoryOrderId());
             }
             if (hosb.getWarnIfLonger() != null) {
-                longerThan.put(hosb.getHistoryId(), new LongerThan(hosb.getWarnIfLonger(), hosb.getStartTime()));
+                longerThan.put(hosb.getHistoryId(), hosb);
             }
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -446,8 +431,10 @@ public class HistoryMonitoringModel {
         }
     }
 
-    private void orderStepProcessed(HistoryOrderStepBean hosb) throws SOSHibernateException {
-        dbLayer.setOrderStepEnd(analyzeExecutionTimeOnProcessed(hosb));
+    private HistoryOrderStepResult orderStepProcessed(HistoryOrderStepBean hosb) throws SOSHibernateException {
+        HistoryOrderStepResult r = analyzeExecutionTimeOnProcessed(hosb);
+        dbLayer.setOrderStepEnd(r);
+        return r;
     }
 
     private HistoryOrderStepResult analyzeExecutionTimeOnProcessed(HistoryOrderStepBean hosb) {
@@ -656,14 +643,12 @@ public class HistoryMonitoringModel {
             }
             configuration.process(configXml);
             if (configuration.exists()) {
-                int all = configuration.getCounterDefinedTypeAll();
-                int onError = configuration.getCounterDefinedTypeOnError();
-                int onSuccess = configuration.getCounterDefinedTypeOnError();
                 List<String> names = handleMailResources(configuration);
 
-                LOGGER.info(String.format("[%s][%s][configuration][total=%s][type %s=%s, %s=%s, %s=%s][job_resources %s]", serviceIdentifier,
-                        NOTIFICATION_IDENTIFIER, (all + onError + onSuccess), NotificationType.ALL.name(), all, NotificationType.ON_ERROR.name(),
-                        onError, NotificationType.ON_SUCCESS.name(), onSuccess, String.join(", ", names)));
+                LOGGER.info(String.format("[%s][%s][configuration][type %s=%s, %s=%s, %s=%s][job_resources %s]", serviceIdentifier,
+                        NOTIFICATION_IDENTIFIER, NotificationType.ON_ERROR.name(), configuration.getOnError().size(), NotificationType.ON_WARNING
+                                .name(), configuration.getOnWarning().size(), NotificationType.ON_SUCCESS.name(), configuration.getOnSuccess().size(),
+                        String.join(", ", names)));
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("MailResources=" + SOSString.mapToString(configuration.getMailResources(), true));
@@ -725,9 +710,9 @@ public class HistoryMonitoringModel {
         private static final long serialVersionUID = 1L;
 
         private final Collection<AHistoryBean> payloads;
-        private final Map<Long, LongerThan> longerThan;
+        private final Map<Long, HistoryOrderStepBean> longerThan;
 
-        protected SerializedResult(Collection<AHistoryBean> payloads, Map<Long, LongerThan> longerThan) {
+        protected SerializedResult(Collection<AHistoryBean> payloads, Map<Long, HistoryOrderStepBean> longerThan) {
             this.payloads = payloads;
             this.longerThan = longerThan;
         }
@@ -736,27 +721,33 @@ public class HistoryMonitoringModel {
             return payloads;
         }
 
-        protected Map<Long, LongerThan> getLongerThan() {
+        protected Map<Long, HistoryOrderStepBean> getLongerThan() {
             return longerThan;
         }
     }
 
-    protected class LongerThan {
+    protected class ToNotify {
 
-        private final Integer definition;
-        private final Date startTime;
+        private final List<HistoryOrderStepResult> steps;
+        private final List<HistoryOrderBean> errorOrders;
+        private final List<HistoryOrderBean> successOrders;
 
-        protected LongerThan(Integer definition, Date startTime) {
-            this.definition = definition;
-            this.startTime = startTime;
+        protected ToNotify() {
+            steps = new ArrayList<>();
+            errorOrders = new ArrayList<>();
+            successOrders = new ArrayList<>();
         }
 
-        protected Integer getDefinition() {
-            return definition;
+        protected List<HistoryOrderStepResult> getSteps() {
+            return steps;
         }
 
-        protected Date getStartTime() {
-            return startTime;
+        protected List<HistoryOrderBean> getErrorOrders() {
+            return errorOrders;
+        }
+
+        protected List<HistoryOrderBean> getSuccessOrders() {
+            return successOrders;
         }
     }
 

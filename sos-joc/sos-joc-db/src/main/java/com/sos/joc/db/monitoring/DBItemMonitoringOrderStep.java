@@ -340,7 +340,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Transient
     public JobWarning getWarnAsEnum() {
         try {
-            return JobWarning.fromValue(criticality);
+            return JobWarning.fromValue(warn);
         } catch (IllegalArgumentException e) {
             return JobWarning.NONE;
         }

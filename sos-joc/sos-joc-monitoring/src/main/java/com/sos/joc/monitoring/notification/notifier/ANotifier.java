@@ -14,7 +14,7 @@ import com.sos.joc.monitoring.configuration.Configuration;
 public abstract class ANotifier {
 
     public enum Status {
-        SUCCESS, ERROR, RECOVERED
+        SUCCESS, ERROR, WARNING, RECOVERED
     }
 
     protected static final String PREFIX_ENV_VAR = "JS7_MON";
