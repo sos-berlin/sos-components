@@ -35,9 +35,12 @@
     "timeout": {
       "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
     },
-    "graceTimeout": {
-      "$ref": "../../../inventory/schemas/common/nonNegativeInteger-schema.json"
-    },
+	"sigkillDelay": {
+		"alias": "graceTimeout",
+		"description": "in seconds",
+		"type": "integer",
+  		"minimum": 0
+	},
     "failOnErrWritten": {
     	"type": "boolean",
     	"default": false
