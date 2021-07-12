@@ -39,7 +39,8 @@
 		"alias": "graceTimeout",
 		"description": "in seconds",
 		"type": "integer",
-  		"minimum": 0
+  		"minimum": 0,
+  		"default": 15
 	},
     "failOnErrWritten": {
     	"type": "boolean",

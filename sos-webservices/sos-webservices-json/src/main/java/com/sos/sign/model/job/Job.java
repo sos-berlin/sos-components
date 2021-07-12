@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "returnCodeMeaning",
     "parallelism",
     "timeout",
-    "graceTimeout",
+    "sigkillDelay",
     "failOnErrWritten",
     "jobClass",
     "defaultArguments",
@@ -76,13 +76,15 @@ public class Job {
     @JsonProperty("timeout")
     private Integer timeout;
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
-    @JsonProperty("graceTimeout")
-    private Integer graceTimeout;
+    @JsonProperty("sigkillDelay")
+    @JsonPropertyDescription("in seconds")
+    @JsonAlias({
+        "graceTimeout"
+    })
+    private Integer sigkillDelay = 15;
     @JsonProperty("failOnErrWritten")
     private Boolean failOnErrWritten = false;
     /**
@@ -120,7 +122,7 @@ public class Job {
      * 
      * @param agentPath
      * @param returnCodeMeaning
-     * @param graceTimeout
+     * @param sigkillDelay
      * @param defaultArguments
      * @param jobResourcePaths
      * @param jobClass
@@ -129,14 +131,14 @@ public class Job {
      * @param executable
      * @param timeout
      */
-    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
+    public Job(String agentPath, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer sigkillDelay, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourcePaths) {
         super();
         this.agentPath = agentPath;
         this.executable = executable;
         this.returnCodeMeaning = returnCodeMeaning;
         this.parallelism = parallelism;
         this.timeout = timeout;
-        this.graceTimeout = graceTimeout;
+        this.sigkillDelay = sigkillDelay;
         this.failOnErrWritten = failOnErrWritten;
         this.jobClass = jobClass;
         this.defaultArguments = defaultArguments;
@@ -238,25 +240,21 @@ public class Job {
     }
 
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
-    @JsonProperty("graceTimeout")
-    public Integer getGraceTimeout() {
-        return graceTimeout;
+    @JsonProperty("sigkillDelay")
+    public Integer getSigkillDelay() {
+        return sigkillDelay;
     }
 
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
-    @JsonProperty("graceTimeout")
-    public void setGraceTimeout(Integer graceTimeout) {
-        this.graceTimeout = graceTimeout;
+    @JsonProperty("sigkillDelay")
+    public void setSigkillDelay(Integer sigkillDelay) {
+        this.sigkillDelay = sigkillDelay;
     }
 
     @JsonProperty("failOnErrWritten")
@@ -325,12 +323,12 @@ public class Job {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
+        return new ToStringBuilder(this).append("agentPath", agentPath).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("sigkillDelay", sigkillDelay).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourcePaths", jobResourcePaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(returnCodeMeaning).append(sigkillDelay).append(defaultArguments).append(jobResourcePaths).append(jobClass).append(parallelism).append(failOnErrWritten).append(executable).append(timeout).toHashCode();
     }
 
     @Override
@@ -342,7 +340,7 @@ public class Job {
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(returnCodeMeaning, rhs.returnCodeMeaning).append(sigkillDelay, rhs.sigkillDelay).append(defaultArguments, rhs.defaultArguments).append(jobResourcePaths, rhs.jobResourcePaths).append(jobClass, rhs.jobClass).append(parallelism, rhs.parallelism).append(failOnErrWritten, rhs.failOnErrWritten).append(executable, rhs.executable).append(timeout, rhs.timeout).isEquals();
     }
 
 }

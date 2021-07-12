@@ -19,7 +19,6 @@ import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Branch;
-import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 
@@ -130,6 +129,7 @@ public class JsonSerializer {
                     emptyStringCollectionsToNull(job.getJobResourcePaths());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
+                    job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
                 });
             }
         }
@@ -148,6 +148,7 @@ public class JsonSerializer {
                     emptyStringCollectionsToNull(job.getJobResourceNames());
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
+                    job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
                 });
             }
         }

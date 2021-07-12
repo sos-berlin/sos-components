@@ -80,13 +80,15 @@ public class Job implements IConfigurationObject
     @JsonProperty("timeout")
     private Integer timeout;
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
     @JsonProperty("graceTimeout")
-    private Integer graceTimeout;
+    @JsonPropertyDescription("in seconds")
+    @JsonAlias({
+        "sigkillDelay"
+    })
+    private Integer graceTimeout = 15;
     @JsonProperty("failOnErrWritten")
     private Boolean failOnErrWritten = false;
     /**
@@ -292,9 +294,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
     @JsonProperty("graceTimeout")
@@ -303,9 +303,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
-     * <p>
-     * 
+     * in seconds
      * 
      */
     @JsonProperty("graceTimeout")
