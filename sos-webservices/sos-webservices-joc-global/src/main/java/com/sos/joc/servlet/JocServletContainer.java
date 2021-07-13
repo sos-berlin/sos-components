@@ -60,7 +60,7 @@ public class JocServletContainer extends ServletContainer {
         try {
             cleanupOldDeployedFolders(false);
         } catch (Exception e) {
-            LOGGER.warn("cleanup deployed files: ", e);
+            LOGGER.warn("cleanup deployed files: ", e.toString());
         }
     }
 
@@ -98,7 +98,9 @@ public class JocServletContainer extends ServletContainer {
 
     private Set<Path> getDeployedFolders() throws IOException {
         final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
-        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
+        //final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
+        // ...with version 9.4.41.v20210516
+        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc[._]war-.+-any-\\d+$").asPredicate();
         return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
     }
 
