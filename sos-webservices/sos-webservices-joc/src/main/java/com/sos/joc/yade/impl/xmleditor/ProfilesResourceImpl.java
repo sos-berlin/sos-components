@@ -20,7 +20,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.model.yade.FileFilter;
@@ -131,7 +131,7 @@ public class ProfilesResourceImpl extends JOCResourceImpl implements IProfilesRe
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
 
             session.beginTransaction();
-            DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
             DBItemXmlEditorConfiguration item = dbLayer.getObject(ObjectType.YADE.name(), name);
             session.commit();
             return item;

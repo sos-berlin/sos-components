@@ -10,7 +10,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -41,7 +41,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             session.beginTransaction();
-            DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             DBItemXmlEditorConfiguration item = null;
             String name = null;
@@ -80,7 +80,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         }
     }
 
-    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, StoreConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, StoreConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
@@ -88,7 +88,7 @@ public class StoreResourceImpl extends ACommonResourceImpl implements IStoreReso
         return item;
     }
 
-    private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, StoreConfiguration in) throws Exception {
+    private DBItemXmlEditorConfiguration getStandardObject(XmlEditorDbLayer dbLayer, StoreConfiguration in) throws Exception {
         return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 

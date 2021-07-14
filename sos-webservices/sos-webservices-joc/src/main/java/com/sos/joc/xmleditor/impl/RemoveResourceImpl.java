@@ -14,7 +14,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.exceptions.JocException;
@@ -99,7 +99,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             session.beginTransaction();
             int deleted = dbLayer.deleteMultiple(type, id.longValue());
@@ -120,7 +120,7 @@ public class RemoveResourceImpl extends ACommonResourceImpl implements IRemoveRe
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-            DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+            XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
             session.beginTransaction();
             DBItemXmlEditorConfiguration item = dbLayer.getObject(objectType, name);

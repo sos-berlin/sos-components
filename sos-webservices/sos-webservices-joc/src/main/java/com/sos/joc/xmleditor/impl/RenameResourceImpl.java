@@ -9,7 +9,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.xmleditor.common.ObjectType;
@@ -39,7 +39,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
             if (response == null) {
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 session.beginTransaction();
-                DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+                XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
                 String name = in.getName().replaceAll("<br>", "");
                 DBItemXmlEditorConfiguration item = getObject(dbLayer, in, name);
@@ -67,7 +67,7 @@ public class RenameResourceImpl extends ACommonResourceImpl implements IRenameRe
         }
     }
 
-    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, RenameConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, RenameConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());

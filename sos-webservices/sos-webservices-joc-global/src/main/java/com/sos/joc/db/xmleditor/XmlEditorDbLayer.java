@@ -10,11 +10,11 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 
-public class DbLayerXmlEditor extends DBLayer {
+public class XmlEditorDbLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
 
-    public DbLayerXmlEditor(SOSHibernateSession session) {
+    public XmlEditorDbLayer(SOSHibernateSession session) {
         super(session);
     }
 

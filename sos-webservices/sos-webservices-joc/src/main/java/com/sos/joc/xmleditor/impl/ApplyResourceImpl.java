@@ -15,7 +15,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.xmleditor.JocXmlEditor;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
-import com.sos.joc.db.xmleditor.DbLayerXmlEditor;
+import com.sos.joc.db.xmleditor.XmlEditorDbLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.xmleditor.apply.ApplyConfiguration;
@@ -53,7 +53,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
 
                 // step 3 - store in the database TODO same code as in store
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                DbLayerXmlEditor dbLayer = new DbLayerXmlEditor(session);
+                XmlEditorDbLayer dbLayer = new XmlEditorDbLayer(session);
 
                 DBItemXmlEditorConfiguration item = null;
                 String name = null;
@@ -184,7 +184,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         }
     }
 
-    private DBItemXmlEditorConfiguration getObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in, String name) throws Exception {
+    private DBItemXmlEditorConfiguration getObject(XmlEditorDbLayer dbLayer, ApplyConfiguration in, String name) throws Exception {
         DBItemXmlEditorConfiguration item = null;
         if (in.getId() != null && in.getId() > 0) {
             item = dbLayer.getObject(in.getId().longValue());
@@ -192,7 +192,7 @@ public class ApplyResourceImpl extends ACommonResourceImpl implements IApplyReso
         return item;
     }
 
-    private DBItemXmlEditorConfiguration getStandardObject(DbLayerXmlEditor dbLayer, ApplyConfiguration in) throws Exception {
+    private DBItemXmlEditorConfiguration getStandardObject(XmlEditorDbLayer dbLayer, ApplyConfiguration in) throws Exception {
         return dbLayer.getObject(in.getObjectType().name(), JocXmlEditor.getConfigurationName(in.getObjectType(), in.getName()));
     }
 
