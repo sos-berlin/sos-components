@@ -8,6 +8,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.notification.notifier.NotifierCommand;
+import com.sos.monitoring.MonitorType;
 
 public class MonitorCommand extends AMonitor {
 
@@ -24,6 +25,11 @@ public class MonitorCommand extends AMonitor {
     @Override
     public NotifierCommand createNotifier(Configuration conf) {
         return new NotifierCommand(this);
+    }
+
+    @Override
+    public MonitorType getType() {
+        return MonitorType.COMMAND;
     }
 
     private String resolveCommand() throws Exception {

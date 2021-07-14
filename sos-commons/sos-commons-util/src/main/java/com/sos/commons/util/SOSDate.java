@@ -142,6 +142,10 @@ public class SOSDate {
         }
     }
 
+    public static Date getDateFromISOString(String dateStr) throws Exception {
+        return getDate(dateStr, dateTimeFormat);
+    }
+
     public static String getDateAsString(Date date, String dateFormat) throws Exception {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         formatter.setLenient(lenient);

@@ -5,8 +5,11 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
+import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
@@ -17,9 +20,15 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
+import com.sos.joc.monitoring.notification.notifier.NotifyResult;
+import com.sos.monitoring.notification.NotificationRange;
+import com.sos.monitoring.notification.NotificationType;
 
 public class DBLayerMonitoring {
 
@@ -68,6 +77,15 @@ public class DBLayerMonitoring {
         hql.append("where id=:historyId");
 
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
+        query.setParameter("historyId", historyId);
+        return session.getSingleResult(query);
+    }
+
+    private DBItemHistoryOrderStep getHistoryOrderStep(Long historyId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where id=:historyId");
+
+        Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
         query.setParameter("historyId", historyId);
         return session.getSingleResult(query);
     }
@@ -284,21 +302,185 @@ public class DBLayerMonitoring {
         return getSession().getResultList(query);
     }
 
-    public DBItemMonitoringOrder getMonitoringOrder(Long historyId) throws SOSHibernateException {
+    public DBItemMonitoringOrder getMonitoringOrder(Long historyId, boolean forceHistory) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MONITORING_ORDER).append(" ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
         query.setParameter("historyId", historyId);
-        return getSession().getSingleResult(query);
+        DBItemMonitoringOrder item = getSession().getSingleResult(query);
+        if (item == null && forceHistory) {
+            item = convert(getHistoryOrder(historyId));
+        }
+        return item;
     }
 
-    public DBItemMonitoringOrderStep getMonitoringOrderStep(Long historyId) throws SOSHibernateException {
+    public DBItemMonitoringOrderStep getMonitoringOrderStep(Long historyId, boolean forceHistory) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MONITORING_ORDER_STEP).append(" ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
         query.setParameter("historyId", historyId);
+        DBItemMonitoringOrderStep item = getSession().getSingleResult(query);
+        if (item == null && forceHistory) {
+            item = convert(getHistoryOrderStep(historyId));
+        }
+        return item;
+    }
+
+    public DBItemNotification getNotification(NotificationType type, NotificationRange range, Long orderId, Long stepId)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and range=:range ");
+        hql.append("and orderId=:orderId ");
+        hql.append("and stepId=:stepId");
+
+        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", type.intValue());
+        query.setParameter("range", range.intValue());
+        query.setParameter("orderId", orderId);
+        query.setParameter("stepId", stepId);
+
         return getSession().getSingleResult(query);
+    }
+
+    public DBItemNotification getLastNotification(NotificationRange range, Long orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where id=(");
+        hql.append("select max(id) from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where range=:range ");
+        hql.append("and orderId=:orderId ");
+        hql.append(")");
+
+        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
+        query.setParameter("range", range.intValue());
+        query.setParameter("orderId", orderId);
+        return getSession().getSingleResult(query);
+    }
+
+    public DBItemNotification saveNotification(NotificationType type, NotificationRange range, Long orderId, Long stepId, String workflowPosition,
+            Long notificationId) throws SOSHibernateException {
+        DBItemNotification item = new DBItemNotification();
+        item.setType(type);
+        item.setRange(range);
+        item.setOrderId(orderId);
+        item.setStepId(stepId);
+        item.setWorkflowPosition(workflowPosition);
+        item.setRecoveredId(notificationId);
+        item.setCreated(new Date());
+
+        try {
+            session.save(item);
+        } catch (SOSHibernateObjectOperationException e) {
+            Exception cve = SOSHibernate.findConstraintViolationException(e);
+            if (cve == null) {
+                throw e;
+            }
+            item = getNotification(type, range, orderId, stepId);
+        }
+        return item;
+    }
+
+    public DBItemNotificationMonitor saveNotificationMonitor(DBItemNotification notification, AMonitor monitor, NotifyResult notifyResult)
+            throws SOSHibernateException {
+        DBItemNotificationMonitor item = new DBItemNotificationMonitor();
+        item.setNotificationId(notification.getId());
+        item.setType(monitor.getType());
+        item.setName(monitor.getMonitorName());
+        item.setMessage(notifyResult.getMessage());
+        item.setConfiguration(monitor.getInfo().toString());
+        if (!SOSString.isEmpty(notifyResult.getError())) {
+            item.setError(true);
+            item.setErrorText(notifyResult.getError());
+        }
+        item.setCreated(new Date());
+
+        session.save(item);
+        return item;
+    }
+
+    public DBItemMonitoringOrder convert(DBItemHistoryOrder history) {
+        if (history == null) {
+            return null;
+        }
+        DBItemMonitoringOrder item = new DBItemMonitoringOrder();
+        item.setHistoryId(history.getId());
+        item.setControllerId(history.getControllerId());
+        item.setOrderId(history.getOrderId());
+        item.setWorkflowPath(history.getWorkflowPath());
+        item.setWorkflowVersionId(history.getWorkflowVersionId());
+        item.setWorkflowPosition(history.getWorkflowPosition());
+        item.setWorkflowFolder(history.getWorkflowFolder());
+        item.setWorkflowName(history.getWorkflowName());
+        item.setWorkflowTitle(history.getWorkflowTitle());
+        item.setMainParentId(history.getMainParentId());
+        item.setParentId(history.getParentId());
+        item.setParentOrderId(history.getParentOrderId());
+        item.setHasChildren(history.getHasChildren());
+        item.setName(history.getName());
+        item.setTitle(history.getTitle());
+        item.setStartCause(history.getStartCause());
+        item.setStartTimePlanned(history.getStartTimePlanned());
+        item.setStartTime(history.getStartTime());
+        item.setStartWorkflowPosition(history.getStartWorkflowPosition());
+        item.setStartParameters(history.getStartParameters());
+        item.setCurrentHistoryOrderStepId(history.getCurrentHistoryOrderStepId());
+        item.setEndTime(history.getEndTime());
+        item.setEndWorkflowPosition(history.getEndWorkflowPosition());
+        item.setEndHistoryOrderStepId(history.getEndHistoryOrderStepId());
+        item.setSeverity(history.getSeverity());
+        item.setState(history.getState());
+        item.setStateTime(history.getStateTime());
+        item.setError(history.getError());
+        item.setErrorState(history.getErrorState());
+        item.setErrorReason(history.getErrorReason());
+        item.setErrorReturnCode(history.getErrorReturnCode());
+        item.setErrorCode(history.getErrorCode());
+        item.setErrorText(history.getErrorText());
+        item.setLogId(history.getLogId());
+
+        item.setCreated(new Date());
+        item.setModified(item.getCreated());
+
+        return item;
+    }
+
+    public DBItemMonitoringOrderStep convert(DBItemHistoryOrderStep history) {
+        if (history == null) {
+            return null;
+        }
+        DBItemMonitoringOrderStep item = new DBItemMonitoringOrderStep();
+        item.setHistoryId(history.getId());
+        item.setWorkflowPosition(history.getWorkflowPosition());
+        item.setHistoryOrderMainParentId(history.getHistoryOrderMainParentId());
+        item.setHistoryOrderId(history.getHistoryOrderId());
+        item.setPosition(history.getPosition());
+        item.setJobName(history.getJobName());
+        item.setJobLabel(history.getJobLabel());
+        item.setJobTitle(history.getJobTitle());
+        item.setJobCriticality(history.getCriticality());
+        item.setAgentId(history.getAgentId());
+        item.setAgentUri(history.getAgentUri());
+        item.setStartCause(history.getStartCause());
+        item.setStartTime(history.getStartTime());
+        item.setStartParameters(history.getStartParameters());
+        item.setEndTime(history.getEndTime());
+        item.setEndParameters(history.getEndParameters());
+        item.setReturnCode(history.getReturnCode());
+        item.setSeverity(history.getSeverity());
+        item.setError(history.getError());
+        item.setErrorState(history.getErrorState());
+        item.setErrorReason(history.getErrorReason());
+        item.setErrorCode(history.getErrorCode());
+        item.setErrorText(history.getErrorText());
+        item.setWarn(JobWarning.NONE);
+        item.setWarnText(null);
+        item.setLogId(history.getLogId());
+
+        item.setCreated(new Date());
+        item.setModified(item.getCreated());
+
+        return item;
     }
 }

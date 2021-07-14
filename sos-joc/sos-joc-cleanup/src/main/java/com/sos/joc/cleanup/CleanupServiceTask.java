@@ -109,13 +109,16 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
                                 datetimes.add(datetime);
                             }
                         } else if (service.getIdentifier().equals(ClusterServices.monitor.name())) {
-                            TaskDateTime datetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
+                            TaskDateTime monitoringDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getMonitoringHistoryAge(),
                                     cleanupSchedule.getFirstStart());
-                            if (datetime.getDatetime() == null) {
+                            TaskDateTime notificationDatetime = new TaskDateTime(cleanupSchedule.getService().getConfig().getNotificationHistoryAge(),
+                                    cleanupSchedule.getFirstStart());
+                            if (monitoringDatetime.getDatetime() == null && notificationDatetime.getDatetime() == null) {
                                 disabled = true;
                             } else {
                                 task = new CleanupTaskMonitoring(cleanupSchedule.getFactory(), service, batchSize);
-                                datetimes.add(datetime);
+                                datetimes.add(monitoringDatetime);
+                                datetimes.add(notificationDatetime);
                             }
                         }
 

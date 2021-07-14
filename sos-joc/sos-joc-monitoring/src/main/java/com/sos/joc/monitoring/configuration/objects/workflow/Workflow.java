@@ -11,20 +11,21 @@ import com.sos.joc.monitoring.configuration.AElement;
 
 public class Workflow extends AElement {
 
-    private static String ATTRIBUTE_NAME_NAME = "name";
-    private static String ATTRIBUTE_NAME_CONTROLLER_ID = "controller_id";
-
-    private final String name;
+    private static String ATTRIBUTE_NAME_PATH = "path";
+    
     private final String controllerId;
+    private final String path;
     private final boolean global;
 
     private List<WorkflowJob> jobs;
 
-    public Workflow(Node node) throws Exception {
+    public Workflow(Node node, String controllerId) throws Exception {
         super(node);
-        name = getAttributeValue(ATTRIBUTE_NAME_NAME, AElement.ASTERISK);
-        controllerId = getAttributeValue(ATTRIBUTE_NAME_CONTROLLER_ID, AElement.ASTERISK);
-        global = name.equals(AElement.ASTERISK) && controllerId.equals(AElement.ASTERISK);
+        this.controllerId = controllerId;
+
+        path = getAttributeValue(ATTRIBUTE_NAME_PATH, AElement.ASTERISK);
+        // controllerId = getAttributeValue(ATTRIBUTE_NAME_CONTROLLER_ID, AElement.ASTERISK);
+        global = path.equals(AElement.ASTERISK) && controllerId.equals(AElement.ASTERISK);
         jobs = new ArrayList<>();
         process();
     }
@@ -54,8 +55,8 @@ public class Workflow extends AElement {
         }
     }
 
-    public String getName() {
-        return name;
+    public String getPath() {
+        return path;
     }
 
     public String getControllerId() {

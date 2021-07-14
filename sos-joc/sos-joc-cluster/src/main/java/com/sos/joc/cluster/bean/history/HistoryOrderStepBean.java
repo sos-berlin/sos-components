@@ -8,7 +8,7 @@ import com.sos.joc.db.history.DBItemHistoryOrderStep;
 public class HistoryOrderStepBean extends AHistoryBean {
 
     private String workflowPosition;
-    private String workflowName;
+    private String workflowPath;
     private Long historyOrderMainParentId;
     private Long historyOrderId;
     private String orderId;
@@ -44,7 +44,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
         super(eventType, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
-        this.workflowName = item.getWorkflowName();
+        this.workflowPath = item.getWorkflowPath();
         this.historyOrderMainParentId = item.getHistoryOrderMainParentId();
         this.historyOrderId = item.getHistoryOrderId();
         this.orderId = item.getOrderId();
@@ -81,12 +81,12 @@ public class HistoryOrderStepBean extends AHistoryBean {
         workflowPosition = val;
     }
 
-    public String getWorkflowName() {
-        return workflowName;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
-    public void setWorkflowName(String val) {
-        workflowName = val;
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
     }
 
     public Long getHistoryOrderMainParentId() {

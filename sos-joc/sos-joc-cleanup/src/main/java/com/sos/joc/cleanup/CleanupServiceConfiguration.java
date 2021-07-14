@@ -108,6 +108,10 @@ public class CleanupServiceConfiguration {
         return monitoringHistoryAge;
     }
 
+    public Age getNotificationHistoryAge() {
+        return notificationHistoryAge;
+    }
+    
     public int getDeploymentHistoryVersions() {
         return deploymentHistoryVersions;
     }

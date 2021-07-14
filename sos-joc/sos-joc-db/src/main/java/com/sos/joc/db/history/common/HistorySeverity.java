@@ -29,4 +29,20 @@ public class HistorySeverity {
             return map2DbSeverity(OrderStateText.UNKNOWN);
         }
     }
+
+    public static String getName(Integer severity) {
+        if (severity == null) {
+            return "";
+        }
+        switch (severity) {
+        case 0:
+            return "SUCCESSFUL";
+        case 1:
+            return "INCOMPLETE";
+        case 2:
+            return "FAILED";
+        default:
+            return "";
+        }
+    }
 }

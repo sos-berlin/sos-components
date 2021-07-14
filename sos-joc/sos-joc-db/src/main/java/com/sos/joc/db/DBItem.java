@@ -106,7 +106,7 @@ public abstract class DBItem implements Serializable {
                     if (oVal instanceof Date) {
                         val = SOSDate.getDateTimeAsString((Date) oVal, SOSDate.dateTimeFormat);
                     } else if (oVal instanceof Boolean) {
-                        val = (Boolean) oVal ? "1" : "0";
+                        val = (Boolean) oVal ? "true" : "false";
                     } else {
                         val = oVal.toString();
                     }
@@ -114,6 +114,25 @@ public abstract class DBItem implements Serializable {
                 map.put(name, val);
             } catch (Throwable e) {
             }
+        }
+        return map;
+    }
+
+    @Transient
+    public static Map<String, String> toEmptyValuesMap(Class<? extends DBItem> clazz, boolean useSQLColumnNames, String prefix) {
+        List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class)).collect(Collectors.toList());
+        Map<String, String> map = new HashMap<>();
+        for (Field field : fields) {
+            String name;
+            if (useSQLColumnNames) {
+                name = field.getAnnotation(Column.class).name().replaceAll("\\[", "").replaceAll("\\]", "");
+            } else {
+                name = field.getName();
+            }
+            if (prefix != null) {
+                name = prefix + "_" + name;
+            }
+            map.put(name, "");
         }
         return map;
     }

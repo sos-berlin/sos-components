@@ -40,6 +40,8 @@ import com.sos.joc.db.joc.DBItemJocLock;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
@@ -58,7 +60,7 @@ public class DBLayer implements Serializable {
     /** JOC Tables */
     public static final String DBITEM_JOC_VARIABLE = DBItemJocVariable.class.getSimpleName();
     public static final String TABLE_JOC_VARIABLES = "JOC_VARIABLES";
- 
+
     public static final String DBITEM_JOC_INSTANCES = DBItemJocInstance.class.getSimpleName();
     public static final String TABLE_JOC_INSTANCES = "JOC_INSTANCES";
     public static final String TABLE_JOC_INSTANCES_SEQUENCE = "SEQ_JOC_I";
@@ -114,6 +116,14 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_MONITORING_ORDER_STEP = DBItemMonitoringOrderStep.class.getSimpleName();
     public static final String TABLE_MONITORING_ORDER_STEPS = "MON_ORDER_STEPS";
+
+    public static final String DBITEM_NOTIFICATION = DBItemNotification.class.getSimpleName();
+    public static final String TABLE_NOTIFICATIONS = "MON_NOTIFICATIONS";
+    public static final String TABLE_NOTIFICATIONS_SEQUENCE = "SEQ_MON_N";
+
+    public static final String DBITEM_NOTIFICATION_MONITOR = DBItemNotificationMonitor.class.getSimpleName();
+    public static final String TABLE_NOTIFICATION_MONITORS = "MON_NOT_MONITORS";
+    public static final String TABLE_NOTIFICATION_MONITORS_SEQUENCE = "SEQ_MON_NM";
 
     /** Daily plan tables */
     public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";
@@ -282,8 +292,11 @@ public class DBLayer implements Serializable {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemMonitoringOrder.class);
         cl.add(DBItemMonitoringOrderStep.class);
+        cl.add(DBItemNotification.class);
+        cl.add(DBItemNotificationMonitor.class);
 
         cl.add(DBItemHistoryOrder.class);
+        cl.add(DBItemHistoryOrderStep.class);
         cl.add(DBItemJocVariable.class);
         cl.add(DBItemXmlEditorConfiguration.class);
         cl.add(DBItemDepConfiguration.class);
@@ -336,7 +349,7 @@ public class DBLayer implements Serializable {
         cl.add(SOSUser2RoleDBItem.class);
         cl.add(SOSUserPermissionDBItem.class);
         cl.add(SOSUserRoleDBItem.class);
- 
+
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());
 

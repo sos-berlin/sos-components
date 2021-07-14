@@ -34,7 +34,6 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.JocConfiguration;
-import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
@@ -46,9 +45,9 @@ import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringEvent;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
+import com.sos.monitoring.notification.NotificationType;
 
 public class HistoryMonitoringModel {
 
@@ -166,6 +165,7 @@ public class HistoryMonitoringModel {
                 if (isDebugEnabled) {
                     LOGGER.debug(b.getEventType() + "=" + SOSString.toString(b));
                 }
+                // LOGGER.info(b.getEventType() + "=" + SOSString.toString(b));
                 if (closed.get()) {
                     break;
                 }
@@ -279,7 +279,7 @@ public class HistoryMonitoringModel {
 
     private void orderStarted(HistoryOrderBean hob) throws SOSHibernateException {
 
-        DBItemMonitoringOrder item = dbLayer.getMonitoringOrder(hob.getHistoryId());
+        DBItemMonitoringOrder item = dbLayer.getMonitoringOrder(hob.getHistoryId(), false);
         if (item != null) {
             return;
         }
@@ -399,7 +399,7 @@ public class HistoryMonitoringModel {
         item.setJobLabel(hosb.getJobLabel());
         item.setJobTitle(hosb.getJobTitle());
 
-        item.setCriticality(hosb.getCriticality());
+        item.setJobCriticality(hosb.getCriticality());
         item.setSeverity(hosb.getSeverity());
 
         item.setAgentId(hosb.getAgentId());
@@ -490,7 +490,7 @@ public class HistoryMonitoringModel {
             LOGGER.info(String.format("[%s][%s][order not found=%s, id=%s]read from history orders...", serviceIdentifier, IDENTIFIER, orderId,
                     historyId));
 
-            DBItemMonitoringOrder item = convert(dbLayer.getHistoryOrder(historyId));
+            DBItemMonitoringOrder item = dbLayer.convert(dbLayer.getHistoryOrder(historyId));
             if (item != null) {
                 try {
                     dbLayer.getSession().save(item);
@@ -503,52 +503,6 @@ public class HistoryMonitoringModel {
             LOGGER.error(String.format("[%s][get]%s", historyId, e.toString()), e);
         }
         return false;
-    }
-
-    private DBItemMonitoringOrder convert(DBItemHistoryOrder history) {
-        if (history == null) {
-            return null;
-        }
-        DBItemMonitoringOrder item = new DBItemMonitoringOrder();
-        item.setHistoryId(history.getId());
-        item.setControllerId(history.getControllerId());
-        item.setOrderId(history.getOrderId());
-        item.setWorkflowPath(history.getWorkflowPath());
-        item.setWorkflowVersionId(history.getWorkflowVersionId());
-        item.setWorkflowPosition(history.getWorkflowPosition());
-        item.setWorkflowFolder(history.getWorkflowFolder());
-        item.setWorkflowName(history.getWorkflowName());
-        item.setWorkflowTitle(history.getWorkflowTitle());
-        item.setMainParentId(history.getMainParentId());
-        item.setParentId(history.getParentId());
-        item.setParentOrderId(history.getParentOrderId());
-        item.setHasChildren(history.getHasChildren());
-        item.setName(history.getName());
-        item.setTitle(history.getTitle());
-        item.setStartCause(history.getStartCause());
-        item.setStartTimePlanned(history.getStartTimePlanned());
-        item.setStartTime(history.getStartTime());
-        item.setStartWorkflowPosition(history.getStartWorkflowPosition());
-        item.setStartParameters(history.getStartParameters());
-        item.setCurrentHistoryOrderStepId(history.getCurrentHistoryOrderStepId());
-        item.setEndTime(history.getEndTime());
-        item.setEndWorkflowPosition(history.getEndWorkflowPosition());
-        item.setEndHistoryOrderStepId(history.getEndHistoryOrderStepId());
-        item.setSeverity(history.getSeverity());
-        item.setState(history.getState());
-        item.setStateTime(history.getStateTime());
-        item.setError(history.getError());
-        item.setErrorState(history.getErrorState());
-        item.setErrorReason(history.getErrorReason());
-        item.setErrorReturnCode(history.getErrorReturnCode());
-        item.setErrorCode(history.getErrorCode());
-        item.setErrorText(history.getErrorText());
-        item.setLogId(history.getLogId());
-
-        item.setCreated(new Date());
-        item.setModified(item.getCreated());
-
-        return item;
     }
 
     private void serialize() {
@@ -646,9 +600,9 @@ public class HistoryMonitoringModel {
                 List<String> names = handleMailResources(configuration);
 
                 LOGGER.info(String.format("[%s][%s][configuration][type %s=%s, %s=%s, %s=%s][job_resources %s]", serviceIdentifier,
-                        NOTIFICATION_IDENTIFIER, NotificationType.ON_ERROR.name(), configuration.getOnError().size(), NotificationType.ON_WARNING
-                                .name(), configuration.getOnWarning().size(), NotificationType.ON_SUCCESS.name(), configuration.getOnSuccess().size(),
-                        String.join(", ", names)));
+                        NOTIFICATION_IDENTIFIER, NotificationType.ERROR.name(), configuration.getOnError().size(), NotificationType.WARNING.name(),
+                        configuration.getOnWarning().size(), NotificationType.SUCCESS.name(), configuration.getOnSuccess().size(), String.join(", ",
+                                names)));
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("MailResources=" + SOSString.mapToString(configuration.getMailResources(), true));

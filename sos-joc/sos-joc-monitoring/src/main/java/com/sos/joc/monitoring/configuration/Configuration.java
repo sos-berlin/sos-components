@@ -13,11 +13,11 @@ import org.w3c.dom.NodeList;
 
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
-import com.sos.joc.monitoring.configuration.Notification.NotificationType;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob.CriticalityType;
+import com.sos.monitoring.notification.NotificationType;
 
 public class Configuration {
 
@@ -63,33 +63,33 @@ public class Configuration {
         }
     }
 
-    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName) {
-        return findWorkflowMatches(source, controllerId, workflowName, null, null, null, null, true);
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowPath) {
+        return findWorkflowMatches(source, controllerId, workflowPath, null, null, null, null, true);
     }
 
-    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowPath, String jobName,
             String jobLabel, Integer criticality, Integer returnCode) {
-        return findWorkflowMatches(source, controllerId, workflowName, jobName, jobLabel, criticality, returnCode, false);
+        return findWorkflowMatches(source, controllerId, workflowPath, jobName, jobLabel, criticality, returnCode, false);
     }
 
-    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowName, String jobName,
+    public List<Notification> findWorkflowMatches(List<Notification> source, String controllerId, String workflowPath, String jobName,
             String jobLabel, Integer criticality, Integer returnCode, boolean includeEmptyWorkflows) {
 
         boolean debug = LOGGER.isDebugEnabled();
         if (debug) {
-            LOGGER.debug(String.format("[find]controllerId=%s,workflowName=%s,jobName=%s, jobLabel=%s, criticality=%s,returnCode=%s", controllerId,
-                    workflowName, jobName, jobLabel, criticality, returnCode));
+            LOGGER.debug(String.format("[find]controllerId=%s,workflowPath=%s,jobName=%s, jobLabel=%s, criticality=%s,returnCode=%s", controllerId,
+                    workflowPath, jobName, jobLabel, criticality, returnCode));
         }
 
         boolean analyzeJobs = jobName != null;
         List<Notification> result = new ArrayList<>();
         for (Notification n : source) {
             x: for (Workflow w : n.getWorkflows()) {
-                if (w.getName().equals(AElement.ASTERISK) || w.getName().matches(workflowName)) {
+                if (w.getPath().equals(AElement.ASTERISK) || w.getPath().matches(workflowPath)) {
                     if (w.getControllerId().equals(AElement.ASTERISK) || w.getControllerId().matches(controllerId)) {
                         if (w.getJobs().size() == 0) {
                             if (debug) {
-                                LOGGER.debug(String.format("[find][found][%s]workflowName=%s match and 0 jobs", toString(n), w.getName()));
+                                LOGGER.debug(String.format("[find][found][%s]workflowPath=%s match and 0 jobs", toString(n), w.getPath()));
                             }
                             if (includeEmptyWorkflows) {
                                 result.add(n);
@@ -103,8 +103,8 @@ public class Configuration {
                                                 criticality))) {
                                             if (j.getReturnCodeFrom() == -1 || returnCode >= j.getReturnCodeFrom()) {
                                                 if (j.getReturnCodeTo() == -1 || returnCode <= j.getReturnCodeTo()) {
-                                                    LOGGER.debug(String.format("[find][found][%s]workflowName=%s, job match", toString(n), w
-                                                            .getName()));
+                                                    LOGGER.debug(String.format("[find][found][%s]workflowPath=%s, job match", toString(n), w
+                                                            .getPath()));
                                                     result.add(n);
                                                     break x;
                                                 } else if (debug) {
@@ -135,8 +135,8 @@ public class Configuration {
 
                     }
                 } else if (debug) {
-                    LOGGER.debug(String.format("[find][skip][%s][workflowName not match]current=%s, configured=%s", toString(n), workflowName, w
-                            .getName()));
+                    LOGGER.debug(String.format("[find][skip][%s][workflowPath not match]current=%s, configured=%s", toString(n), workflowPath, w
+                            .getPath()));
                 }
             }
         }
@@ -164,14 +164,16 @@ public class Configuration {
 
         for (NotificationType nt : n.getTypes()) {
             switch (nt) {
-            case ON_ERROR:
+            case ERROR:
                 onError.add(n);
                 break;
-            case ON_WARNING:
+            case WARNING:
                 onWarning.add(n);
                 break;
-            case ON_SUCCESS:
+            case SUCCESS:
                 onSuccess.add(n);
+                break;
+            default:
                 break;
             }
         }

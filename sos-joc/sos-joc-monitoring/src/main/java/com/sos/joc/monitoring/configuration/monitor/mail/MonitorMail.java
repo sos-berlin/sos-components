@@ -12,6 +12,7 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.notification.notifier.NotifierMail;
+import com.sos.monitoring.MonitorType;
 
 public class MonitorMail extends AMonitor {
 
@@ -63,6 +64,11 @@ public class MonitorMail extends AMonitor {
             LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
             return null;
         }
+    }
+
+    @Override
+    public MonitorType getType() {
+        return MonitorType.MAIL;
     }
 
     public StringBuilder getInfo() {

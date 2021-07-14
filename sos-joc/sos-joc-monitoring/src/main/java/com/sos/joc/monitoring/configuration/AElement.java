@@ -33,6 +33,10 @@ public abstract class AElement {
         return getValue(element.getAttribute(attr), defaultValue);
     }
 
+    protected String getAttributeValue(Node node, String attr, String defaultValue) {
+        return getValue(((Element) node).getAttribute(attr), defaultValue);
+    }
+
     protected static String getValue(String val) {
         if (SOSString.isEmpty(val)) {
             return val;

@@ -21,6 +21,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
+import com.sos.monitoring.notification.NotificationType;
 
 public class NotifierJMS extends ANotifier {
 
@@ -49,7 +50,7 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
 
         MessageProducer producer = null;
         String message = null;
@@ -57,7 +58,7 @@ public class NotifierJMS extends ANotifier {
             producer = createProducer();
             set(mo, mos);
 
-            message = resolve(monitor.getMessage(), status, true);
+            message = resolve(monitor.getMessage(), type, true);
 
             producer.setPriority(monitor.getPriority());
             producer.setDeliveryMode(monitor.getDeliveryMode());
@@ -66,12 +67,12 @@ public class NotifierJMS extends ANotifier {
             StringBuilder info = new StringBuilder();
             info.append("[destination ").append(monitor.getDestinationName()).append("(").append(monitor.getDestination()).append(")]");
             info.append(message);
-            LOGGER.info(getInfo4execute(true, mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true, mo, mos, type, info.toString()));
 
             producer.send(session.createTextMessage(message));
             return new NotifyResult(message, getSendInfo());
         } catch (Throwable e) {
-            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            String err = getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e);
             LOGGER.error(err);
             return new NotifyResult(message, getSendInfo(), err);
         } finally {

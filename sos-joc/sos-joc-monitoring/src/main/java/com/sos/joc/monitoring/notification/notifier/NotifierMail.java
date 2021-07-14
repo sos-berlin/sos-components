@@ -15,6 +15,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
+import com.sos.monitoring.notification.NotificationType;
 
 public class NotifierMail extends ANotifier {
 
@@ -31,32 +32,32 @@ public class NotifierMail extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
         if (mail == null) {
             return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
         }
         set(mo, mos);
 
-        mail.setSubject(resolve(monitor.getSubject(), status, true));
-        mail.setBody(resolve(monitor.getMessage(), status, true));
+        mail.setSubject(resolve(monitor.getSubject(), type, true));
+        mail.setBody(resolve(monitor.getMessage(), type, true));
 
         try {
             StringBuilder info = new StringBuilder();
             info.append("[subject=").append(mail.getSubject()).append("]");
 
-            LOGGER.info(getInfo4execute(true, mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true, mo, mos, type, info.toString()));
 
             if (!mail.send()) {
                 if (QUEUE_MAIL_ON_ERROR) {
                     // - mail will be stored to the mail queue directory
                     // - a warning message will be logged by SOSMail
                 } else {
-                    LOGGER.error(getInfo4executeException(mo, mos, status, monitor.getInfo().toString(), null));
+                    LOGGER.error(getInfo4executeException(mo, mos, type, monitor.getInfo().toString(), null));
                 }
             }
             return new NotifyResult(mail.getBody(), getSendInfo());
         } catch (Throwable e) {
-            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            String err = getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e);
             LOGGER.error(err);
             LOGGER.info(SOSString.toString(mail));
             return new NotifyResult(mail.getBody(), getSendInfo(), err);

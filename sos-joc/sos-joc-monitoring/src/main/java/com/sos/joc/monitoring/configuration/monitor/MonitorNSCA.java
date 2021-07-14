@@ -7,6 +7,7 @@ import org.w3c.dom.Node;
 
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.notification.notifier.NotifierNSCA;
+import com.sos.monitoring.MonitorType;
 
 public class MonitorNSCA extends AMonitor {
 
@@ -66,6 +67,11 @@ public class MonitorNSCA extends AMonitor {
             LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
             return null;
         }
+    }
+
+    @Override
+    public MonitorType getType() {
+        return MonitorType.NSCA;
     }
 
     private int set(String attrName, int defaultValue) {

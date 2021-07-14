@@ -44,6 +44,7 @@ public class CachedOrder {
         b.setParentId(parentId);
         b.setWorkflowPath(workflowPath);
         b.setWorkflowVersionId(workflowVersionId);
+        b.setWorkflowPosition(workflowPosition);
         b.setState(state);
         if (state != null) {
             b.setSeverity(HistorySeverity.map2DbSeverity(state));

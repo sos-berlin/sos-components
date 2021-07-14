@@ -47,8 +47,8 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;
 
-    @Column(name = "[CRITICALITY]", nullable = false)
-    private Integer criticality;
+    @Column(name = "[JOB_CRITICALITY]", nullable = false)
+    private Integer jobCriticality;
 
     @Column(name = "[AGENT_ID]", nullable = false)
     private String agentId;
@@ -182,21 +182,21 @@ public class DBItemMonitoringOrderStep extends DBItem {
         jobTitle = val;
     }
 
-    public Integer getCriticality() {
-        return criticality;
+    public Integer getJobCriticality() {
+        return jobCriticality;
     }
 
     @Transient
-    public JobCriticality getCriticalityAsEnum() {
+    public JobCriticality getJobCriticalityAsEnum() {
         try {
-            return JobCriticality.fromValue(criticality);
+            return JobCriticality.fromValue(jobCriticality);
         } catch (IllegalArgumentException e) {
             return JobCriticality.NORMAL;
         }
     }
 
-    public void setCriticality(Integer val) {
-        criticality = val;
+    public void setJobCriticality(Integer val) {
+        jobCriticality = val;
     }
 
     public String getAgentId() {

@@ -1,11 +1,14 @@
 package com.sos.joc.cleanup.model;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
@@ -20,6 +23,8 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
     private int totalOrders = 0;
     private int totalOrderSteps = 0;
+    private int totalNotifications = 0;
+    private int totalNotificationMonitors = 0;
 
     public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
@@ -28,17 +33,34 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     @Override
     public JocServiceTaskAnswerState cleanup(List<TaskDateTime> datetimes) throws Exception {
         try {
-            TaskDateTime datetime = datetimes.get(0);
+            TaskDateTime monitoringDatetime = datetimes.get(0);
+            TaskDateTime notificationDatetime = datetimes.get(1);
+
             // TMP - only MYSQL, see MonitoringService
             if (!SOSHibernateFactory.Dbms.MYSQL.equals(getFactory().getDbms())) {
-                LOGGER.info(String.format("[%s][%s][%s][skip]not implemented yet for %s", getIdentifier(), datetime.getAge().getConfigured(), datetime
-                        .getZonedDatetime(), getFactory().getDbms()));
+                LOGGER.info(String.format("[%s][%s][%s][skip]not implemented yet for %s", getIdentifier(), monitoringDatetime.getAge()
+                        .getConfigured(), monitoringDatetime.getZonedDatetime(), getFactory().getDbms()));
                 return JocServiceTaskAnswerState.COMPLETED;
             }
 
-            LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
+            JocServiceTaskAnswerState state = null;
+            if (notificationDatetime.getDatetime() != null) {
+                LOGGER.info(String.format("[%s][notifications][%s][%s]start cleanup", getIdentifier(), notificationDatetime.getAge().getConfigured(),
+                        notificationDatetime.getZonedDatetime()));
+                state = cleanupNotifications(notificationDatetime);
+            } else {
+                LOGGER.info(String.format("[%s][notifications][%s]skip", getIdentifier(), notificationDatetime.getAge().getConfigured()));
+            }
 
-            return cleanupOrders(datetime);
+            if (monitoringDatetime.getDatetime() != null && (state == null || state.equals(JocServiceTaskAnswerState.COMPLETED))) {
+                LOGGER.info(String.format("[%s][monitoring][%s][%s]start cleanup", getIdentifier(), monitoringDatetime.getAge().getConfigured(),
+                        monitoringDatetime.getZonedDatetime()));
+                state = cleanupMonitoring(monitoringDatetime);
+            } else {
+                LOGGER.info(String.format("[%s][monitoring][%s]skip", getIdentifier(), monitoringDatetime.getAge().getConfigured()));
+            }
+
+            return state;
         } catch (Throwable e) {
             getDbLayer().rollback();
             throw e;
@@ -47,7 +69,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         }
     }
 
-    private JocServiceTaskAnswerState cleanupOrders(TaskDateTime datetime) throws SOSHibernateException {
+    private JocServiceTaskAnswerState cleanupMonitoring(TaskDateTime datetime) throws SOSHibernateException {
         boolean runm = true;
         while (runm) {
             getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
@@ -85,6 +107,44 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             if (!cleanupOrders(datetime, "main", rm)) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
+            getDbLayer().close();
+        }
+        return JocServiceTaskAnswerState.COMPLETED;
+    }
+
+    private JocServiceTaskAnswerState cleanupNotifications(TaskDateTime datetime) throws SOSHibernateException {
+        getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+        List<Long> ids = getNotificationIds(datetime);
+        getDbLayer().close();
+
+        if (ids == null || ids.size() == 0) {
+            return JocServiceTaskAnswerState.COMPLETED;
+        }
+
+        try {
+            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            int size = ids.size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                ArrayList<Long> copy = (ArrayList<Long>) ids.stream().collect(Collectors.toList());
+
+                JocServiceTaskAnswerState state = null;
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    List<Long> subList;
+                    if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+                        subList = copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE));
+                    } else {
+                        subList = copy.subList(i, size);
+                    }
+                    deleteNotifications(datetime, subList);
+                }
+                return state;
+
+            } else {
+                deleteNotifications(datetime, ids);
+            }
+        } catch (Throwable e) {
+            throw e;
+        } finally {
             getDbLayer().close();
         }
         return JocServiceTaskAnswerState.COMPLETED;
@@ -170,4 +230,53 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         LOGGER.info(log.toString());
         return true;
     }
+
+    private StringBuilder deleteNotifications(TaskDateTime datetime, List<Long> notificationIds) throws SOSHibernateException {
+        StringBuilder log = new StringBuilder();
+        log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
+
+        getDbLayer().getSession().beginTransaction();
+
+        StringBuilder hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_NOTIFICATION_MONITOR).append(" ");
+        hql.append("where notificationId in (:notificationIds)");
+        Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        int r = getDbLayer().getSession().executeUpdate(query);
+        totalNotificationMonitors += r;
+        log.append(getDeleted(DBLayer.TABLE_NOTIFICATION_MONITORS, r, totalNotificationMonitors));
+
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where id in (:notificationIds) ");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        r = getDbLayer().getSession().executeUpdate(query);
+        totalNotifications += r;
+        log.append(getDeleted(DBLayer.TABLE_NOTIFICATIONS, r, totalNotifications));
+
+        getDbLayer().getSession().commit();
+        LOGGER.info(log.toString());
+        return log;
+    }
+
+    private List<Long> getNotificationIds(TaskDateTime datetime) throws SOSHibernateException {
+        getDbLayer().getSession().beginTransaction();
+        StringBuilder hql = new StringBuilder("select id from ");
+        hql.append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where created < :startTime ");
+
+        Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameter("startTime", datetime.getDatetime());
+        query.setMaxResults(getBatchSize());
+        List<Long> r = getDbLayer().getSession().getResultList(query);
+        getDbLayer().getSession().commit();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s][%s]found=%s", getIdentifier(), datetime.getAge().getConfigured(), DBLayer.TABLE_NOTIFICATIONS, r
+                    .size()));
+        }
+        return r;
+    }
+
 }

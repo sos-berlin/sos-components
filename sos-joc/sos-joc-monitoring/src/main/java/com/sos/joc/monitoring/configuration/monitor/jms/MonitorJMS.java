@@ -15,6 +15,7 @@ import com.sos.commons.xml.SOSXML;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.notification.notifier.NotifierJMS;
+import com.sos.monitoring.MonitorType;
 
 public class MonitorJMS extends AMonitor {
 
@@ -79,6 +80,11 @@ public class MonitorJMS extends AMonitor {
             LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
             return null;
         }
+    }
+
+    @Override
+    public MonitorType getType() {
+        return MonitorType.JMS;
     }
 
     private long getTimeToLive(String val) {

@@ -18,6 +18,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
+import com.sos.monitoring.notification.NotificationType;
 
 /** com.googlecode.jsendnsca.encryption.Encryption supports only 3 encryptions : NONE, XOR, TRIPLE_DES
  * 
@@ -63,15 +64,15 @@ public class NotifierNSCA extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, Status status) {
+    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
 
         try {
             set(mo, mos);
-            set(status);
+            set(type);
 
             Map<String, String> map = new HashMap<>();
             map.put(VAR_SERVICE_NAME, serviceName);
-            message = resolve(monitor.getMessage(), status, true, map);
+            message = resolve(monitor.getMessage(), type, true, map);
 
             MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(level).withServiceName(serviceName)
                     .withMessage(message).create();
@@ -83,12 +84,12 @@ public class NotifierNSCA extends ANotifier {
             info.append("[service host=").append(payload.getHostname()).append("]");
             info.append("[level=").append(payload.getLevel()).append("]");
             info.append(payload.getMessage());
-            LOGGER.info(getInfo4execute(true,mo, mos, status, info.toString()));
+            LOGGER.info(getInfo4execute(true, mo, mos, type, info.toString()));
 
             sender.send(payload);
             return new NotifyResult(payload.getMessage(), getSendInfo());
         } catch (Throwable e) {
-            String err = getInfo4executeException(mo, mos, status, "[" + monitor.getInfo().toString() + "]", e);
+            String err = getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e);
             LOGGER.error(err);
             return new NotifyResult(message, getSendInfo(), err);
         }
@@ -127,8 +128,8 @@ public class NotifierNSCA extends ANotifier {
         settings = nb.create();
     }
 
-    private void set(Status status) {
-        switch (status) {
+    private void set(NotificationType type) {
+        switch (type) {
         case SUCCESS:
             serviceName = monitor.getServiceNameOnSuccess();
             level = status2level(monitor.getServiceStatusOnSuccess(), Level.OK);

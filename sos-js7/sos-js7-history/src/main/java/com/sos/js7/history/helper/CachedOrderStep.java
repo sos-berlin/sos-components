@@ -43,7 +43,7 @@ public class CachedOrderStep {
         endTime = item.getEndTime();
     }
 
-    public HistoryOrderStepBean convert(EventType eventType, String controllerId, String workflowName) {
+    public HistoryOrderStepBean convert(EventType eventType, String controllerId, String workflowPath) {
         HistoryOrderStepBean b = new HistoryOrderStepBean(eventType, controllerId, id);
         b.setHistoryOrderMainParentId(historyOrderMainParentId);
         b.setHistoryOrderId(historyOrderId);
@@ -52,7 +52,7 @@ public class CachedOrderStep {
         b.setAgentId(agentId);
         b.setAgentUri(agentUri);
         b.setWorkflowPosition(workflowPosition);
-        b.setWorkflowName(workflowName);
+        b.setWorkflowPath(workflowPath);
         b.setSeverity(severity);
         b.setReturnCode(returnCode);
         b.setStartTime(startTime);

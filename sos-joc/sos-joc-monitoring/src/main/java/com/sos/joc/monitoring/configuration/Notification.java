@@ -19,14 +19,11 @@ import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.exception.SOSMissingChildElementsException;
+import com.sos.monitoring.notification.NotificationType;
 
 public class Notification extends AElement {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Notification.class);
-
-    public enum NotificationType {
-        ON_ERROR, ON_WARNING, ON_SUCCESS
-    }
 
     private static final String ELEMENT_NAME_NOTIFICATION_MONITORS = "NotificationMonitors";
     private static final String ELEMENT_NAME_NOTIFICATION_OBJECTS = "NotificationObjects";
@@ -42,6 +39,7 @@ public class Notification extends AElement {
 
     private static String ATTRIBUTE_NAME_NAME = "name";
     private static String ATTRIBUTE_NAME_TYPE = "type";
+    private static String ATTRIBUTE_NAME_CONTROLLER_ID = "controller_id";
 
     private final List<NotificationType> types;
     private final List<AMonitor> monitors;
@@ -124,15 +122,16 @@ public class Notification extends AElement {
         Workflow globalWorkflow = null;
 
         addWorkflows: for (Element object : elements) {
-            String ref = object.getAttribute("ref");
+            String ref = object.getAttribute(AMonitor.ATTRIBUTE_NAME_REF);
             if (!SOSString.isEmpty(ref)) {
                 if (!refs.contains(ref)) {
                     Node n = resolveWorkflowRef(doc, ref);
                     if (n != null) {
+                        String controllerId = getAttributeValue(n, ATTRIBUTE_NAME_CONTROLLER_ID, AElement.ASTERISK);
                         List<Element> ws = SOSXML.getChildElemens(n, ELEMENT_NAME_WORKFLOW);
                         if (ws != null) {
                             for (Element ew : ws) {
-                                Workflow w = new Workflow(ew);
+                                Workflow w = new Workflow(ew, controllerId);
                                 if (w.isGlobal()) {
                                     globalWorkflow = w;
                                     break addWorkflows;
@@ -171,8 +170,8 @@ public class Notification extends AElement {
             }
         } catch (Throwable e) {
             result = new ArrayList<>();
-            result.add(NotificationType.ON_ERROR);
-            result.add(NotificationType.ON_WARNING);
+            result.add(NotificationType.ERROR);
+            result.add(NotificationType.WARNING);
         }
         return result;
     }

@@ -102,6 +102,7 @@ public class HistoryModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryModel.class);
 
     private static final String KEY_DELIMITER = "|||";
+    private static final String RETURN_CODE_KEY = "returnCode";
 
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
@@ -918,7 +919,7 @@ public class HistoryModel {
             le.setReturnCode(outcome.getReturnCode());
             if (outcome.isFailed()) {
                 boolean setError = true;
-                if (eventType.equals(EventType.OrderJoined))
+                if (eventType.equals(EventType.OrderJoined)) {// TODO check this ..
                     if (stepHasError) {
                         if (le.getReturnCode() != null && le.getReturnCode().equals(0)) {
                             le.setReturnCode(cos.getReturnCode());
@@ -926,6 +927,11 @@ public class HistoryModel {
                     } else {
                         setError = false;
                     }
+                } else {
+                    if (le.getReturnCode() == null || le.getReturnCode().equals(0)) {
+                        le.setReturnCode(cos.getReturnCode());
+                    }
+                }
                 if (setError) {
                     le.setError(OrderStateText.FAILED.value(), outcome);
                 }
@@ -1335,7 +1341,7 @@ public class HistoryModel {
         String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
-        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId(), workflowName);
+        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId(), co.getWorkflowPath());
         hosb.setEndParameters(endParameters);
         hosb.setError(le.isError());
         hosb.setErrorCode(le.getErrorCode());
@@ -1358,6 +1364,9 @@ public class HistoryModel {
 
                 yadeHandler.process(dbFactory, yadeTransfer, co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
                         .getWorkflowPosition());
+            }
+            if (namedValues.containsKey(RETURN_CODE_KEY)) {
+                namedValues.remove(RETURN_CODE_KEY);
             }
         }
         return namedValues;
