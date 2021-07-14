@@ -36,6 +36,9 @@ public class DBItemNotification extends DBItem {
     @Column(name = "[RANGE]", nullable = false)
     private Integer range;
 
+    @Column(name = "[CONTROLLER_ID]", nullable = false)
+    private String controllerId;
+
     @Column(name = "[MON_ORDER_ID]", nullable = false)
     private Long orderId;
 
@@ -110,6 +113,14 @@ public class DBItemNotification extends DBItem {
     @Transient
     public void setRange(NotificationRange val) {
         setRange(val == null ? null : val.intValue());
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public Long getOrderId() {

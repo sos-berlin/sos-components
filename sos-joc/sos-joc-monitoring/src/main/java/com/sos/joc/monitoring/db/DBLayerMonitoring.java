@@ -359,11 +359,12 @@ public class DBLayerMonitoring {
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(NotificationType type, NotificationRange range, Long orderId, Long stepId, String workflowPosition,
-            Long notificationId) throws SOSHibernateException {
+    public DBItemNotification saveNotification(NotificationType type, NotificationRange range, String controllerId, Long orderId, Long stepId,
+            String workflowPosition, Long notificationId) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
         item.setRange(range);
+        item.setControllerId(controllerId);
         item.setOrderId(orderId);
         item.setStepId(stepId);
         item.setWorkflowPosition(workflowPosition);

@@ -150,17 +150,20 @@ public class NotifierModel {
         }
 
         NotificationRange range;
+        String controllerId;
         Long orderId;
         Long stepId;
         String workflowPosition;
         Long recoveredId = null;
         if (hob == null) {
             range = NotificationRange.WORKFLOW_JOB;
+            controllerId = hosb.getControllerId();
             orderId = hosb.getHistoryOrderId();
             stepId = hosb.getHistoryId();
             workflowPosition = hosb.getWorkflowPosition();
         } else {
             range = NotificationRange.WORKFLOW;
+            controllerId = hob.getControllerId();
             orderId = hob.getHistoryId();
             stepId = hob.getCurrentHistoryOrderStepId();
             workflowPosition = hob.getWorkflowPosition();
@@ -232,7 +235,7 @@ public class NotifierModel {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
-            DBItemNotification mn = dbLayer.saveNotification(type, range, orderId, stepId, workflowPosition, recoveredId);
+            DBItemNotification mn = dbLayer.saveNotification(type, range, controllerId, orderId, stepId, workflowPosition, recoveredId);
             if (mn == null) {
                 LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]", type
                         .value(), range.value(), orderId, stepId, workflowPosition, recoveredId));
