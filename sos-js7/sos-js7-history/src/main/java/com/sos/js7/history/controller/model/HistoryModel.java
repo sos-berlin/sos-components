@@ -1365,9 +1365,9 @@ public class HistoryModel {
                 yadeHandler.process(dbFactory, yadeTransfer, co.getWorkflowPath(), co.getOrderId(), cos.getId(), cos.getJobName(), cos
                         .getWorkflowPosition());
             }
-            if (namedValues.containsKey(RETURN_CODE_KEY)) {
-                namedValues.remove(RETURN_CODE_KEY);
-            }
+            // copy without returnCode
+            namedValues = namedValues.entrySet().stream().filter(e -> !e.getKey().equals(RETURN_CODE_KEY)).collect(Collectors.toMap(Map.Entry::getKey,
+                    Map.Entry::getValue));
         }
         return namedValues;
     }
