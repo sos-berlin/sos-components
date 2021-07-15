@@ -136,10 +136,6 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                 }
                 dbFilter.setLimit(in.getLimit());
 
-                if (dbFilter.getExecutedFrom() == null) {
-                    dbFilter.setExecutedFrom(WebserviceConstants.HISTORY_DEFAULT_EXECUTED_FROM);
-                }
-
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
 
