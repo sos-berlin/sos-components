@@ -54,7 +54,7 @@ public class Configuration {
             NodeList notifications = SOSXML.newXPath().selectNodes(doc, "./Configurations/Notifications/Notification");
             if (notifications != null) {
                 for (int i = 0; i < notifications.getLength(); i++) {
-                    add2type(new Notification(doc, (Element) notifications.item(i)));
+                    add2type(new Notification(doc, (Element) notifications.item(i), (i + 1)));
                 }
             }
         } catch (Throwable e) {

@@ -2,7 +2,9 @@ package com.sos.joc.monitoring.model;
 
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -11,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.history.JobWarning;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -22,7 +23,6 @@ import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
@@ -33,7 +33,6 @@ import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResul
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
-import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
 public class NotifierModel {
@@ -116,9 +115,7 @@ public class NotifierModel {
             if (!notify(conf, result, null, hosb, NotificationType.SUCCESS)) {
                 result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                         .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-                if (result.size() > 0) {
-                    notify(conf, result, null, hosb, NotificationType.RECOVERED);
-                }
+                notify(conf, result, null, hosb, NotificationType.RECOVERED);
             }
         }
     }
@@ -134,9 +131,7 @@ public class NotifierModel {
             result = conf.findWorkflowMatches(conf.getOnSuccess(), hob.getControllerId(), hob.getWorkflowPath());
             if (!notify(conf, result, hob, null, NotificationType.SUCCESS)) {
                 result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-                if (result.size() > 0) {
-                    notify(conf, result, hob, null, NotificationType.RECOVERED);
-                }
+                notify(conf, result, hob, null, NotificationType.RECOVERED);
             }
             break;
         default:
@@ -149,120 +144,92 @@ public class NotifierModel {
             return false;
         }
 
-        NotificationRange range;
-        Long orderId;
-        Long stepId;
-        String workflowPosition;
-        Long recoveredId = null;
-        if (hob == null) {
-            range = NotificationRange.WORKFLOW_JOB;
-            orderId = hosb.getHistoryOrderId();
-            stepId = hosb.getHistoryId();
-            workflowPosition = hosb.getWorkflowPosition();
-        } else {
-            range = NotificationRange.WORKFLOW;
-            orderId = hob.getHistoryId();
-            stepId = hob.getCurrentHistoryOrderStepId();
-            workflowPosition = hob.getWorkflowPosition();
-        }
-
-        DBItemMonitoringOrder mo = null;
-        DBItemMonitoringOrderStep mos = null;
-        boolean committed = false;
+        NotifyAnalyzer analyzer = new NotifyAnalyzer();
         try {
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
-            if (type.equals(NotificationType.RECOVERED)) {
-                DBItemNotification nr = dbLayer.getLastNotification(range, orderId);
-                if (nr != null && nr.getType().equals(NotificationType.ERROR.intValue())) {
-                    // ??? TODO check the same position ?
-                    // if (range.equals(NotificationRange.WORKFLOW_JOB) && !workflowPosition.equals(nr.getWorkflowPosition())) {
-                    // return;
-                    // }
-                    recoveredId = nr.getId();
-                    mo = dbLayer.getMonitoringOrder(nr.getOrderId(), true);
-                    mos = dbLayer.getMonitoringOrderStep(nr.getStepId(), true);
-                } else {
-                    return false;
-                }
-            }
-            if (mo == null && mos == null) {
-                mo = dbLayer.getMonitoringOrder(orderId, true);
-                mos = dbLayer.getMonitoringOrderStep(stepId, true);
-            }
-            if (mo == null && mos == null) {
+            if (!analyzer.analyze(dbLayer, list, hob, hosb, type)) {
                 return false;
             }
 
-            if (type.equals(NotificationType.WARNING)) {
-                if (mos == null || mos.getWarnAsEnum().equals(JobWarning.NONE)) {
-                    return false;
-                }
-                DBItemNotification nw = dbLayer.getNotification(type, range, orderId, stepId);
-                if (nw != null) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[%s][skip][orderId=%s][stepId=%s]already sent", NotificationType.WARNING.value(), orderId,
-                                stepId));
-                    }
-                    return false;
+            Map<Long, DBItemMonitoringOrderStep> steps = new HashMap<>();
+            boolean notified = false;
+            for (Notification notification : list) {
+                if (notify(conf, analyzer, notification, type, steps)) {
+                    notified = true;
                 }
             }
             dbLayer.getSession().commit();
-            committed = true;
+            return notified;
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
             dbLayer.rollback();
-            committed = true;
             return false;
         } finally {
-            if (!committed) {
-                try {
-                    dbLayer.getSession().commit();
-                } catch (SOSHibernateException e) {
+            dbLayer.close();
+        }
+    }
+
+    private boolean notify(Configuration conf, NotifyAnalyzer analyzer, Notification notification, NotificationType type,
+            Map<Long, DBItemMonitoringOrderStep> steps) throws Exception {
+
+        DBItemMonitoringOrderStep os = analyzer.getOrderStep();
+        Long recoveredId = null;
+        switch (type) {
+        case ERROR:
+        case SUCCESS:
+            break;
+        case RECOVERED:
+            if (analyzer.getToRecovery() != null) {
+                DBItemNotification r = analyzer.getToRecovery().get(notification.getName());
+                if (r == null) {
+                    return false;
+                }
+                recoveredId = r.getId();
+                if (steps.containsKey(r.getStepId())) {
+                    os = steps.get(r.getStepId());
+                } else {
+                    os = dbLayer.getMonitoringOrderStep(r.getStepId(), true);
+                    if (os == null) {
+                        return false;
+                    }
+                    steps.put((r.getStepId()), os);
                 }
             }
-            dbLayer.close();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[finally][%s][%s][orderId=%s][stepId=%s]", type.value(), range.value(), orderId, stepId));
+            break;
+        case WARNING:
+            if (type.equals(NotificationType.WARNING)) {
+                if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().contains(notification.getName())) {
+                    return false;
+                }
             }
+            break;
         }
 
-        try {
-            dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
-            dbLayer.getSession().beginTransaction();
+        DBItemNotification mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
+        if (mn == null) {
+            LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]", type
+                    .value(), analyzer.getRange().value(), analyzer.getOrderId(), analyzer.getStepId(), analyzer.getWorkflowPosition(), recoveredId));
+        }
 
-            DBItemNotification mn = dbLayer.saveNotification(type, range, orderId, stepId, workflowPosition, recoveredId);
-            if (mn == null) {
-                LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]", type
-                        .value(), range.value(), orderId, stepId, workflowPosition, recoveredId));
-            }
-            for (Notification notification : list) {
-                for (AMonitor m : notification.getMonitors()) {
-                    ANotifier n = m.createNotifier(conf);
-                    if (n != null) {
-                        try {
-                            NotifyResult nr = n.notify(mo, mos, type);
-                            if (mn == null) {
-                                LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType()
-                                        .value(), m.getMonitorName()));
-                            } else {
-                                dbLayer.saveNotificationMonitor(mn, m, nr);
-                            }
-                        } catch (Throwable e) {
-                            LOGGER.error(e.toString(), e);
-                        } finally {
-                            n.close();
-                        }
+        for (AMonitor m : notification.getMonitors()) {
+            ANotifier n = m.createNotifier(conf);
+            if (n != null) {
+                try {
+                    NotifyResult nr = n.notify(analyzer.getOrder(), os, type);
+                    if (mn == null) {
+                        LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType().value(), m
+                                .getMonitorName()));
+                    } else {
+                        dbLayer.saveNotificationMonitor(mn, m, nr);
                     }
+                } catch (Throwable e) {
+                    LOGGER.error(e.toString(), e);
+                } finally {
+                    n.close();
                 }
             }
-            dbLayer.getSession().commit();
-        } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
-            dbLayer.rollback();
-        } finally {
-            dbLayer.close();
         }
         return true;
     }

@@ -10,7 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
+
+import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
@@ -18,8 +19,7 @@ import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
 @Entity
-@Table(name = DBLayer.TABLE_NOTIFICATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TYPE]", "[RANGE]", "[MON_ORDER_ID]",
-        "[MON_ORDER_STEP_ID]" }) })
+@Table(name = DBLayer.TABLE_NOTIFICATIONS)
 @SequenceGenerator(name = DBLayer.TABLE_NOTIFICATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_NOTIFICATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemNotification extends DBItem {
 
@@ -42,11 +42,18 @@ public class DBItemNotification extends DBItem {
     @Column(name = "[MON_ORDER_STEP_ID]", nullable = false)
     private Long stepId;
 
+    @Column(name = "[NAME]", nullable = false)
+    private String name;
+
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition;
 
     @Column(name = "[RECOVERED_ID]", nullable = false)
     private Long recoveredId;// reference ID
+
+    @Column(name = "[HAS_MONITORS]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean hasMonitors;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -131,6 +138,14 @@ public class DBItemNotification extends DBItem {
         stepId = val;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String val) {
+        name = val;
+    }
+
     public String getWorkflowPosition() {
         return workflowPosition;
     }
@@ -148,6 +163,14 @@ public class DBItemNotification extends DBItem {
             val = 0L;
         }
         recoveredId = val;
+    }
+
+    public void setHasMonitors(boolean val) {
+        hasMonitors = val;
+    }
+
+    public boolean getHasMonitors() {
+        return hasMonitors;
     }
 
     public void setCreated(Date val) {

@@ -33,6 +33,7 @@ public class JocHref {
         setWorkflowOrder(mo);
         setWorkflowOrderLog(mo);
         setWorkflowJob(mo, mos);
+        setWorkflowJobLog(mo, mos);
     }
 
     protected void addKeys(SOSParameterSubstitutor ps) {
@@ -97,6 +98,23 @@ public class JocHref {
     }
 
     private void setWorkflowJob(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+        if (workflowJob == null) {
+            StringBuilder sb = new StringBuilder(Configuration.getJocUri());
+            sb.append(JOC_URI_PART);
+            sb.append("history/task?");
+            if (mo != null) {
+                sb.append("controllerId=").append(encode(mo.getControllerId()));
+                // sb.append("&workflow=").append(encode(mo.getWorkflowName()));
+            }
+            if (mos != null) {
+                // sb.append("&job=").append(encode(mos.getJobName()));
+                sb.append("&taskId=").append(mos.getHistoryId());
+            }
+            workflowJob = sb.toString();
+        }
+    }
+
+    private void setWorkflowJobLog(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
         if (workflowJobLog == null) {
             StringBuilder sb = new StringBuilder(Configuration.getJocUri());
             sb.append(JOC_URI_PART);
@@ -109,7 +127,6 @@ public class JocHref {
                 sb.append("&taskId=").append(mos.getHistoryId());
             }
             workflowJobLog = sb.toString();
-            workflowJob = workflowJobLog.replace("/log?", "/task?");
         }
     }
 

@@ -49,10 +49,10 @@ public class Notification extends AElement {
 
     private boolean global;
 
-    public Notification(Document doc, Node node) throws Exception {
+    public Notification(Document doc, Node node, int position) throws Exception {
         super(node);
         this.types = evaluateTypes();
-        this.name = getAttributeValue(ATTRIBUTE_NAME_NAME);
+        this.name = getAttributeValue(ATTRIBUTE_NAME_NAME, String.valueOf(position));
         this.monitors = new ArrayList<>();
         this.workflows = new ArrayList<>();
         this.jobResources = new ArrayList<>();
@@ -101,9 +101,9 @@ public class Notification extends AElement {
                     }
                 }
 
-                if (monitors.size() == 0) {
-                    throw new SOSMissingChildElementsException("[" + getElementName() + "/" + child.getNodeName() + "]all monitors skipped");
-                }
+                // if (monitors.size() == 0) {
+                // throw new SOSMissingChildElementsException("[" + getElementName() + "/" + child.getNodeName() + "]all monitors skipped");
+                // }
                 break;
             case ELEMENT_NAME_NOTIFICATION_OBJECTS:
                 handleWorkflows(doc, child);

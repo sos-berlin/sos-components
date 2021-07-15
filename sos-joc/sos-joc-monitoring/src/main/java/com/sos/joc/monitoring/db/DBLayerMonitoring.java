@@ -5,10 +5,8 @@ import java.util.List;
 
 import org.hibernate.query.Query;
 
-import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.inventory.model.deploy.DeployType;
@@ -23,9 +21,11 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.model.xmleditor.common.ObjectType;
+import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResultWarn;
+import com.sos.joc.monitoring.model.NotifyAnalyzer;
 import com.sos.joc.monitoring.notification.notifier.NotifyResult;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
@@ -328,7 +328,7 @@ public class DBLayerMonitoring {
         return item;
     }
 
-    public DBItemNotification getNotification(NotificationType type, NotificationRange range, Long orderId, Long stepId)
+    public List<DBItemNotification> getNotifications(NotificationType type, NotificationRange range, Long orderId, Long stepId)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
         hql.append("where type=:type ");
@@ -342,43 +342,39 @@ public class DBLayerMonitoring {
         query.setParameter("orderId", orderId);
         query.setParameter("stepId", stepId);
 
-        return getSession().getSingleResult(query);
+        return getSession().getResultList(query);
     }
 
-    public DBItemNotification getLastNotification(NotificationRange range, Long orderId) throws SOSHibernateException {
+    public DBItemNotification getLastNotification(String name, NotificationRange range, Long orderId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
-        hql.append("where id=(");
+        hql.append("where id = (");
         hql.append("select max(id) from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
         hql.append("where range=:range ");
         hql.append("and orderId=:orderId ");
+        hql.append("and name = :name");
         hql.append(")");
 
         Query<DBItemNotification> query = getSession().createQuery(hql.toString());
         query.setParameter("range", range.intValue());
         query.setParameter("orderId", orderId);
+        query.setParameter("name", name);
         return getSession().getSingleResult(query);
     }
 
-    public DBItemNotification saveNotification(NotificationType type, NotificationRange range, Long orderId, Long stepId, String workflowPosition,
-            Long notificationId) throws SOSHibernateException {
+    public DBItemNotification saveNotification(Notification notification, NotifyAnalyzer analyzer, NotificationType type,
+            Long recoveredNotificationId) throws SOSHibernateException {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
-        item.setRange(range);
-        item.setOrderId(orderId);
-        item.setStepId(stepId);
-        item.setWorkflowPosition(workflowPosition);
-        item.setRecoveredId(notificationId);
+        item.setRange(analyzer.getRange());
+        item.setOrderId(analyzer.getOrderId());
+        item.setStepId(analyzer.getStepId());
+        item.setName(notification.getName());
+        item.setWorkflowPosition(analyzer.getWorkflowPosition());
+        item.setRecoveredId(recoveredNotificationId);
+        item.setHasMonitors(notification.getMonitors().size() > 0);
         item.setCreated(new Date());
 
-        try {
-            session.save(item);
-        } catch (SOSHibernateObjectOperationException e) {
-            Exception cve = SOSHibernate.findConstraintViolationException(e);
-            if (cve == null) {
-                throw e;
-            }
-            item = getNotification(type, range, orderId, stepId);
-        }
+        session.save(item);
         return item;
     }
 
