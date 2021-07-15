@@ -47,7 +47,11 @@ public class JocServletContainer extends ServletContainer {
         cleanupOldLogFiles(0);
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
-        DbInstaller.createTables();
+        try {
+            DbInstaller.createTables();
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         Globals.readUnmodifiables();
         Globals.setProperties();
@@ -102,7 +106,7 @@ public class JocServletContainer extends ServletContainer {
         final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
         //final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
         // ...with version 9.4.41.v20210516
-        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc[._]war-.+-any-\\d+$").asPredicate();
+        final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc[._]war-.+-any-\\d+$").asPredicate();
         return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
     }
 

@@ -16,8 +16,10 @@ import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateFileProcessor;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.exceptions.JocConfigurationException;
 
 public class DbInstaller {
     
@@ -28,7 +30,7 @@ public class DbInstaller {
     private static final EnumSet<Dbms> supportedDbms = EnumSet.of(Dbms.ORACLE, Dbms.MSSQL, Dbms.MYSQL, Dbms.PGSQL, Dbms.H2);
     
     
-    public static void createTables() {
+    public static void createTables() throws JocConfigurationException, SOSHibernateException {
         
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
@@ -40,7 +42,7 @@ public class DbInstaller {
                 
                 Path sqlsFolderParent = Paths.get(System.getProperty("user.dir"), "db");
                 if (!Files.isDirectory(sqlsFolderParent)) {
-                    throw new IOException("Folder '" + sqlsFolderParent.toString() + "' doesn't exist.");
+                    throw new SOSHibernateConfigurationException("Folder '" + sqlsFolderParent.toString() + "' doesn't exist.");
                 }
 
                 factory = new SOSHibernateFactory(Globals.getHibernateConfFile());
@@ -58,10 +60,15 @@ public class DbInstaller {
 //                if (missingAnyTable(sosClassList, session)) {
                 create(session, dbms.name(), sqlsFolderParent);
 //                }
+                try {
+                    Globals.sosCockpitProperties.updateProperty("create_db_tables", "false");
+                } catch (IOException e) {
+                    LOGGER.warn("Problem updating the joc.properties file", e);
+                }
             }
             
-        } catch (Exception e) {
-            LOGGER.error("Error during database table creation: ", e);
+//        } catch (Exception e) {
+//            LOGGER.error("Error during database table creation: ", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -72,24 +79,38 @@ public class DbInstaller {
         }
     }
     
-    private static void create(SOSHibernateSession session, String dbms, Path sqlsFolderParent) throws IOException {
+    private static void create(SOSHibernateSession session, String dbms, Path sqlsFolderParent) throws SOSHibernateException {
         Path inputDir = sqlsFolderParent.resolve(dbms.toLowerCase());
         if (Files.isDirectory(inputDir)) {
+            boolean hasError = false;
             SOSHibernateFileProcessor processor = new SOSHibernateFileProcessor();
             LOGGER.info("...installing tables in SQL database which not exist");
             for (String sqlFileSpec : sqlFileSpecs) {
                 processor.clearResult();
                 processor.setFileSpec(sqlFileSpec);
                 processor.process(session, inputDir);
+                if (!hasError) {
+                    hasError = processor.hasError(); 
+                }
             }
-            LOGGER.info("...insert initial rows into tables in SQL database");
-            for (String sqlFileSpec : sqlFileSpecsInsert) {
-                processor.clearResult();
-                processor.setFileSpec(sqlFileSpec);
-                processor.process(session, inputDir);
+            if (!hasError) {
+                LOGGER.info("...insert initial rows into tables in SQL database");
+                for (String sqlFileSpec : sqlFileSpecsInsert) {
+                    processor.clearResult();
+                    processor.setFileSpec(sqlFileSpec);
+                    processor.process(session, inputDir);
+                    if (!hasError) {
+                        hasError = processor.hasError();
+                    }
+                }
+            } else {
+                LOGGER.info("...insert initial rows into tables in SQL database is skipped because of previous error");
+            }
+            if (hasError) {
+                throw new SOSHibernateException("Error occurred while creating the database tables."); 
             }
         } else {
-            throw new IOException("Folder with SQL scripts not found: " + inputDir.toString());
+            throw new SOSHibernateConfigurationException("Folder with SQL scripts not found: " + inputDir.toString());
         }
     }
 

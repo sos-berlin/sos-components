@@ -7,8 +7,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.core.config.Configurator;
 import org.slf4j.Logger;
@@ -82,7 +86,7 @@ public class JocCockpitProperties {
 	
 	public long getProperty(String property, long defaultValue) {
         String s = getProperty(property);
-        if (s == null){
+        if (s == null) {
             return defaultValue;
         } else {
             try{
@@ -123,6 +127,23 @@ public class JocCockpitProperties {
 				return defaultValue;
 			}
 		}
+	}
+	
+	public void updateProperty(String property, String value) throws IOException {
+	    if (value != null && propertiesPath != null) {
+	        String s = getProperty(property);
+	        if (s != null && !s.equals(value)) {
+	            Predicate<String> p = Pattern.compile("^" + property + "\\s*=\\s*" + s).asPredicate();
+	            
+	            Files.write(propertiesPath, Files.lines(propertiesPath).map(line -> {
+	                if (p.test(line)) {
+	                    return line.replaceFirst("^(" + property + "\\s*=).*", "$1 " + value);
+	                }
+	                return line;
+	                
+	            }).collect(Collectors.toList()), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+	        }
+	    }
 	}
 
 	public Path resolvePath(String path) {

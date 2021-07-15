@@ -119,6 +119,10 @@ public class SOSHibernateFileProcessor {
         successFiles.clear();
         errorFiles.clear();
     }
+    
+    public boolean hasError() {
+        return !errorFiles.isEmpty();
+    }
 
     public static void main(String args[]) throws Exception {
         if (args.length < 2) {
