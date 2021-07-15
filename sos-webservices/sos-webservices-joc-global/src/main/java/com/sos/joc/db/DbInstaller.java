@@ -78,11 +78,13 @@ public class DbInstaller {
             SOSHibernateFileProcessor processor = new SOSHibernateFileProcessor();
             LOGGER.info("...installing tables in SQL database which not exist");
             for (String sqlFileSpec : sqlFileSpecs) {
+                processor.clearResult();
                 processor.setFileSpec(sqlFileSpec);
                 processor.process(session, inputDir);
             }
             LOGGER.info("...insert initial rows into tables in SQL database");
             for (String sqlFileSpec : sqlFileSpecsInsert) {
+                processor.clearResult();
                 processor.setFileSpec(sqlFileSpec);
                 processor.process(session, inputDir);
             }

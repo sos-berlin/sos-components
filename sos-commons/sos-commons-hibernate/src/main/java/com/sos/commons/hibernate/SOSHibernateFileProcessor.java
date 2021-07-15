@@ -114,6 +114,11 @@ public class SOSHibernateFileProcessor {
     public void setCommitAtEnd(boolean commitAtEnd) {
         this.commitAtEnd = commitAtEnd;
     }
+    
+    public void clearResult() {
+        successFiles.clear();
+        errorFiles.clear();
+    }
 
     public static void main(String args[]) throws Exception {
         if (args.length < 2) {
