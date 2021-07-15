@@ -28,6 +28,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.db.DbInstaller;
 
 public class JocServletContainer extends ServletContainer {
 
@@ -46,6 +47,7 @@ public class JocServletContainer extends ServletContainer {
         cleanupOldLogFiles(0);
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
+        DbInstaller.createTables();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         Globals.readUnmodifiables();
         Globals.setProperties();

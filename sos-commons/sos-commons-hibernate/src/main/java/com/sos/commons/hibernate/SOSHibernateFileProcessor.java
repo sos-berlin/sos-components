@@ -36,7 +36,7 @@ public class SOSHibernateFileProcessor {
         successFiles = new ArrayList<String>();
     }
 
-    public void process(SOSHibernateSession session, Path inputFile) throws Exception {
+    public void process(SOSHibernateSession session, Path inputFile) {
         final String method = "process";
         boolean isEnd = false;
         try {
