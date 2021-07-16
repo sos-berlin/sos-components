@@ -21,6 +21,62 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public ScrollableResults getNotifications(Date dateFrom, String controllerId, Integer limit) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
+        List<String> where = new ArrayList<>();
+        if (dateFrom != null) {
+            where.add("n.created >= :dateFrom");
+        }
+        if (!SOSString.isEmpty(controllerId)) {
+            where.add("o.controllerId=:controllerId");
+        }
+        if (where.size() > 0) {
+            hql.append("where ").append(String.join(" and ", where)).append(" ");
+        }
+        hql.append("order by n.id desc");
+
+        Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
+        if (dateFrom != null) {
+            query.setParameter("dateFrom", dateFrom);
+        }
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
+        if (limit != null && limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return getSession().scroll(query);
+    }
+
+    public ScrollableResults getNotifications(List<Long> notificationIds) throws SOSHibernateException {
+        int size = notificationIds.size();
+
+        StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
+        if (size == 1) {
+            hql.append("where n.id=:notificationId");
+        } else {
+            hql.append("where n.id in :notificationIds ");
+            hql.append("order by n.id desc");
+        }
+        Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
+        if (size == 1) {
+            query.setParameter("notificationId", notificationIds.get(0));
+        } else {
+            query.setParameterList("notificationIds", notificationIds);
+        }
+        return getSession().scroll(query);
+    }
+
+    public List<DBItemNotificationMonitor> getNotificationMonitors(Long notificationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION_MONITOR).append(" ");
+        hql.append("where notificationId=:notificationId");
+
+        Query<DBItemNotificationMonitor> query = getSession().createQuery(hql.toString());
+        query.setParameter("notificationId", notificationId);
+
+        return getSession().getResultList(query);
+    }
+
+    private StringBuilder getNotificationsMainHQL() {
         StringBuilder hql = new StringBuilder("select n.id as notificationId"); // set aliases for all properties
         hql.append(",n.type as type");
         hql.append(",n.recoveredId as recoveredNotificationId");
@@ -50,38 +106,6 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append("from ").append(DBITEM_NOTIFICATION).append(" n ");
         hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on n.orderId=o.historyId ");
         hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on n.stepId=os.historyId ");
-        List<String> where = new ArrayList<>();
-        if (dateFrom != null) {
-            where.add("n.created >= :dateFrom");
-        }
-        if (!SOSString.isEmpty(controllerId)) {
-            where.add("o.controllerId=:controllerId");
-        }
-        if (where.size() > 0) {
-            hql.append("where ").append(String.join(" and ", where)).append(" ");
-        }
-        hql.append("order by n.id desc");
-
-        Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
-        if (dateFrom != null) {
-            query.setParameter("dateFrom", dateFrom);
-        }
-        if (!SOSString.isEmpty(controllerId)) {
-            query.setParameter("controllerId", controllerId);
-        }
-        if (limit != null && limit > 0) {
-            query.setMaxResults(limit);
-        }
-        return getSession().scroll(query);
-    }
-
-    public List<DBItemNotificationMonitor> getNotificationMonitors(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION_MONITOR).append(" ");
-        hql.append("where notificationId=:notificationId");
-
-        Query<DBItemNotificationMonitor> query = getSession().createQuery(hql.toString());
-        query.setParameter("notificationId", notificationId);
-
-        return getSession().getResultList(query);
+        return hql;
     }
 }

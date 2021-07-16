@@ -21,6 +21,7 @@ public class NotifyAnalyzer {
     private Long orderId;
     private Long stepId;
     private String workflowPosition;
+    private String controllerId;
 
     private DBItemMonitoringOrder order;
     private DBItemMonitoringOrderStep orderStep;
@@ -35,11 +36,13 @@ public class NotifyAnalyzer {
             orderId = hosb.getHistoryOrderId();
             stepId = hosb.getHistoryId();
             workflowPosition = hosb.getWorkflowPosition();
+            controllerId = hosb.getControllerId();
         } else {
             range = NotificationRange.WORKFLOW;
             orderId = hob.getHistoryId();
             stepId = hob.getCurrentHistoryOrderStepId();
             workflowPosition = hob.getWorkflowPosition();
+            controllerId = hob.getControllerId();
         }
 
         switch (type) {
@@ -91,6 +94,10 @@ public class NotifyAnalyzer {
 
     public String getWorkflowPosition() {
         return workflowPosition;
+    }
+
+    public String getControllerId() {
+        return controllerId;
     }
 
     public Map<String, DBItemNotification> getToRecovery() {

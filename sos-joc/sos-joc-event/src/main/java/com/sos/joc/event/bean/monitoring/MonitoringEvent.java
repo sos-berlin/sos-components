@@ -9,7 +9,8 @@ import com.sos.joc.event.bean.JOCEvent;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "TYPE", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(NotificationConfigurationReleased.class), @JsonSubTypes.Type(NotificationConfigurationRemoved.class) })
+@JsonSubTypes({ @JsonSubTypes.Type(NotificationConfigurationReleased.class), @JsonSubTypes.Type(NotificationConfigurationRemoved.class),
+        @JsonSubTypes.Type(NotificationCreated.class) })
 
 public abstract class MonitoringEvent extends JOCEvent {
 

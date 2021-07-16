@@ -25,6 +25,8 @@ import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.monitoring.NotificationCreated;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
@@ -231,7 +233,15 @@ public class NotifierModel {
                 }
             }
         }
+        postEvent(mn, analyzer);
         return true;
+    }
+
+    private void postEvent(DBItemNotification mn, NotifyAnalyzer analyzer) {
+        if (mn == null || analyzer == null) {
+            return;
+        }
+        EventBus.getInstance().post(new NotificationCreated(analyzer.getControllerId(), mn.getId()));
     }
 
     private void notifyStepWarning(Configuration conf, HistoryOrderStepResult r) {

@@ -59,7 +59,12 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
 
             ScrollableResults sr = null;
             try {
-                sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), in.getLimit());
+                if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
+                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), in
+                            .getLimit());
+                } else {
+                    sr = dbLayer.getNotifications(in.getNotificationIds());
+                }
                 while (sr.next()) {
                     notifications.add(convert((NotificationDBItemEntity) sr.get(0)));
                 }

@@ -25,7 +25,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dateFrom",
     "timeZone",
     "limit",
-    "types"
+    "types",
+    "notificationIds"
 })
 public class NotificationsFilter {
 
@@ -62,6 +63,8 @@ public class NotificationsFilter {
     private Integer limit = 10000;
     @JsonProperty("types")
     private List<MonitoringNotificationTypeText> types = new ArrayList<MonitoringNotificationTypeText>();
+    @JsonProperty("notificationIds")
+    private List<Long> notificationIds = new ArrayList<Long>();
 
     /**
      * controllerId
@@ -153,14 +156,24 @@ public class NotificationsFilter {
         this.types = types;
     }
 
+    @JsonProperty("notificationIds")
+    public List<Long> getNotificationIds() {
+        return notificationIds;
+    }
+
+    @JsonProperty("notificationIds")
+    public void setNotificationIds(List<Long> notificationIds) {
+        this.notificationIds = notificationIds;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("dateFrom", dateFrom).append("timeZone", timeZone).append("limit", limit).append("types", types).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dateFrom", dateFrom).append("timeZone", timeZone).append("limit", limit).append("types", types).append("notificationIds", notificationIds).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(limit).append(timeZone).append(types).append(controllerId).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(types).append(controllerId).append(limit).append(timeZone).append(notificationIds).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -172,7 +185,7 @@ public class NotificationsFilter {
             return false;
         }
         NotificationsFilter rhs = ((NotificationsFilter) other);
-        return new EqualsBuilder().append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(types, rhs.types).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(types, rhs.types).append(controllerId, rhs.controllerId).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(notificationIds, rhs.notificationIds).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

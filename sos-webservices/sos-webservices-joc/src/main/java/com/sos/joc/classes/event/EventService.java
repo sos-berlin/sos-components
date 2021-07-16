@@ -27,6 +27,7 @@ import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.inventory.InventoryEvent;
 import com.sos.joc.event.bean.inventory.InventoryTrashEvent;
+import com.sos.joc.event.bean.monitoring.NotificationCreated;
 import com.sos.joc.event.bean.problem.ProblemEvent;
 import com.sos.joc.event.bean.proxy.ProxyClosed;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
@@ -273,6 +274,16 @@ public class EventService {
         eventSnapshot.setEventType(evt.getKey());
         eventSnapshot.setObjectType(EventType.DAILYPLAN);
         eventSnapshot.setMessage(evt.getDailyPlanDate());
+        addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ NotificationCreated.class })
+    public void createEvent(NotificationCreated evt) {
+        EventSnapshot eventSnapshot = new EventSnapshot();
+        eventSnapshot.setEventId(evt.getEventId() / 1000);
+        eventSnapshot.setEventType(evt.getKey());
+        eventSnapshot.setObjectType(EventType.MONITORINGNOTIFICATION);
+        eventSnapshot.setMessage(evt.getNotificationId().toString());
         addEvent(eventSnapshot);
     }
     
