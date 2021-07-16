@@ -314,7 +314,9 @@ public class Validator {
                     String branchPosition = instPosition + "branches";
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
-                        validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
+                        if (branch.getWorkflow() != null) {
+                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
+                        }
                         branchIndex++;
                     }
                     break;
@@ -326,7 +328,9 @@ public class Validator {
                     } catch (Exception e) {
                         throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
                     }
-                    validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation, labels);
+                    if (ifElse.getThen() != null) {
+                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation, labels);
+                    }
                     if (ifElse.getElse() != null) {
                         validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation, labels);
                     }

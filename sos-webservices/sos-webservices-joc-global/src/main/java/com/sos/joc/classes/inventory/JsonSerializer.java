@@ -297,12 +297,16 @@ public class JsonSerializer {
                 case FORK:
                     ForkJoin fj = inst.cast();
                     for (Branch branch : fj.getBranches()) {
-                        cleanInventoryInstructions(branch.getWorkflow().getInstructions());
+                        if (branch.getWorkflow() != null) {
+                            cleanInventoryInstructions(branch.getWorkflow().getInstructions());
+                        }
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
-                    cleanInventoryInstructions(ifElse.getThen().getInstructions());
+                    if (ifElse.getThen() != null) {
+                        cleanInventoryInstructions(ifElse.getThen().getInstructions());
+                    }
                     if (ifElse.getElse() != null) {
                         cleanInventoryInstructions(ifElse.getElse().getInstructions());
                     }
@@ -345,12 +349,16 @@ public class JsonSerializer {
                 case FORK:
                     com.sos.sign.model.instruction.ForkJoin fj = inst.cast();
                     for (com.sos.sign.model.workflow.Branch branch : fj.getBranches()) {
-                        cleanSignedInstructions(branch.getWorkflow().getInstructions());
+                        if (branch.getWorkflow() != null) {
+                            cleanSignedInstructions(branch.getWorkflow().getInstructions());
+                        }
                     }
                     break;
                 case IF:
                     com.sos.sign.model.instruction.IfElse ifElse = inst.cast();
-                    cleanSignedInstructions(ifElse.getThen().getInstructions());
+                    if (ifElse.getThen() != null) {
+                        cleanSignedInstructions(ifElse.getThen().getInstructions());
+                    }
                     if (ifElse.getElse() != null) {
                         cleanSignedInstructions(ifElse.getElse().getInstructions());
                     }
