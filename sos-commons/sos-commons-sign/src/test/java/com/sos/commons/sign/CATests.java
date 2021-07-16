@@ -318,6 +318,7 @@ public class CATests {
     }
     
     
+    @Ignore
     @Test 
     public void test03CheckCA () throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         LOGGER.info("");
