@@ -89,9 +89,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
             folderPermissionEvaluator.setListOfWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
             folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
-            folderPermissionEvaluator.setListOfScheduleNames(dailyPlanOrderFilter.getFilter().getScheduleNames());
             folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowNames(dailyPlanOrderFilter.getFilter().getWorkflowNames());
             folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
 
             for (String controllerId : allowedControllers) {

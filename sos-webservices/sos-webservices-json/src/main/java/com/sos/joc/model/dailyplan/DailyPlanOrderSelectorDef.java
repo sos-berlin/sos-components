@@ -21,9 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "folders",
     "schedulePaths",
-    "workflowPaths",
-    "scheduleNames",
-    "workflowNames"
+    "workflowPaths"
 })
 public class DailyPlanOrderSelectorDef {
 
@@ -39,10 +37,6 @@ public class DailyPlanOrderSelectorDef {
     private List<String> schedulePaths = null;
     @JsonProperty("workflowPaths")
     private List<String> workflowPaths = null;
-    @JsonProperty("scheduleNames")
-    private List<String> scheduleNames = null;
-    @JsonProperty("workflowNames")
-    private List<String> workflowNames = null;
 
     /**
      * folders
@@ -86,34 +80,14 @@ public class DailyPlanOrderSelectorDef {
         this.workflowPaths = workflowPaths;
     }
 
-    @JsonProperty("scheduleNames")
-    public List<String> getScheduleNames() {
-        return scheduleNames;
-    }
-
-    @JsonProperty("scheduleNames")
-    public void setScheduleNames(List<String> scheduleNames) {
-        this.scheduleNames = scheduleNames;
-    }
-
-    @JsonProperty("workflowNames")
-    public List<String> getWorkflowNames() {
-        return workflowNames;
-    }
-
-    @JsonProperty("workflowNames")
-    public void setWorkflowNames(List<String> workflowNames) {
-        this.workflowNames = workflowNames;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("scheduleNames", scheduleNames).append("workflowNames", workflowNames).toString();
+        return new ToStringBuilder(this).append("folders", folders).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(scheduleNames).append(workflowNames).append(schedulePaths).append(workflowPaths).append(folders).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowPaths).append(folders).toHashCode();
     }
 
     @Override
@@ -125,7 +99,7 @@ public class DailyPlanOrderSelectorDef {
             return false;
         }
         DailyPlanOrderSelectorDef rhs = ((DailyPlanOrderSelectorDef) other);
-        return new EqualsBuilder().append(scheduleNames, rhs.scheduleNames).append(workflowNames, rhs.workflowNames).append(schedulePaths, rhs.schedulePaths).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).isEquals();
     }
 
 }

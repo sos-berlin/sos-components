@@ -3,7 +3,10 @@ package com.sos.js7.order.initiator;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -24,13 +27,11 @@ public class ScheduleSourceDB extends ScheduleSource {
     public ScheduleSourceDB(String controllerId) {
         dailyPlanOrderSelector = new DailyPlanOrderSelector();
         dailyPlanOrderSelector.setSelector(new DailyPlanOrderSelectorDef());
-        dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
         Folder f = new Folder();
         f.setFolder("/");
         f.setRecursive(true);
-        dailyPlanOrderSelector.getSelector().getFolders().add(f);
-        dailyPlanOrderSelector.setControllerIds(new ArrayList<String>());
-        dailyPlanOrderSelector.getControllerIds().add(controllerId);
+        dailyPlanOrderSelector.getSelector().setFolders(Collections.singletonList(f));
+        dailyPlanOrderSelector.setControllerIds(Collections.singletonList(controllerId));
         fromService = false;
     }
 
@@ -42,26 +43,7 @@ public class ScheduleSourceDB extends ScheduleSource {
     @Override
     public List<Schedule> fillListOfSchedules() throws IOException, SOSHibernateException {
         FilterSchedules filterSchedules = new FilterSchedules();
-
-        if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
-            if (dailyPlanOrderSelector.getSelector().getScheduleNames() == null) {
-                dailyPlanOrderSelector.getSelector().setScheduleNames(new ArrayList<String>());
-            }
-            for (String path : dailyPlanOrderSelector.getSelector().getSchedulePaths()) {
-                String name = Paths.get(path).getFileName().toString();
-                dailyPlanOrderSelector.getSelector().getScheduleNames().add(name);
-            }
-        }
-        if (dailyPlanOrderSelector.getSelector().getWorkflowPaths() != null) {
-            if (dailyPlanOrderSelector.getSelector().getWorkflowNames() == null) {
-                dailyPlanOrderSelector.getSelector().setWorkflowNames(new ArrayList<String>());
-            }
-
-            for (String path : dailyPlanOrderSelector.getSelector().getWorkflowPaths()) {
-                String name = Paths.get(path).getFileName().toString();
-                dailyPlanOrderSelector.getSelector().getWorkflowNames().add(name);
-            }
-        }
+        Function<String, String> pathToName = s -> Paths.get(s).getFileName().toString();
 
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -71,8 +53,14 @@ public class ScheduleSourceDB extends ScheduleSource {
 
             filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
             filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
-            filterSchedules.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowNames());
-            filterSchedules.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getScheduleNames());
+            if (dailyPlanOrderSelector.getSelector().getWorkflowPaths() != null) {
+                filterSchedules.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowPaths().stream().map(pathToName).distinct()
+                        .collect(Collectors.toList()));
+            }
+            if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
+                filterSchedules.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getSchedulePaths().stream().map(pathToName).distinct()
+                        .collect(Collectors.toList()));
+            }
 
             List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
             for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {

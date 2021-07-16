@@ -2,13 +2,14 @@ package com.sos.js7.order.initiator.db;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -18,6 +19,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.Schedule;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
@@ -27,11 +29,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 
 public class DBLayerSchedules {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerSchedules.class);
-
-    private static final String DBItemInventoryReleasedConfiguration = com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration.class
-            .getSimpleName();
 
     private final SOSHibernateSession sosHibernateSession;
 
@@ -81,7 +78,7 @@ public class DBLayerSchedules {
     public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
             JsonParseException, JsonMappingException, IOException {
 
-        String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "from " + DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
 
         if (limit > 0) {
@@ -144,24 +141,41 @@ public class DBLayerSchedules {
 
         return filteredResultset;
     }
+    
+    public Map<String, String> getSchedulePathNameMap(Collection<String> scheduleNamesOrPaths) throws SOSHibernateException {
 
-    public String getSchedulePath(String scheduleName) throws SOSHibernateException {
+        if (scheduleNamesOrPaths == null || scheduleNamesOrPaths.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Boolean, List<String>> namesAndPaths = scheduleNamesOrPaths.stream().filter(s -> s != null && !s.isEmpty()).collect(Collectors.groupingBy(
+                s -> s.startsWith("/")));
 
-        FilterSchedules filter = new FilterSchedules();
-        filter.addScheduleName(scheduleName);
-
-        String q = "from " + DBItemInventoryReleasedConfiguration + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
-        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
-
-        query.setMaxResults(1);
-
-        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
-
-        if (resultset.size() > 0) {
-            return resultset.get(0).getFolder();
+        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where");
+        if (namesAndPaths.containsKey(true)) { // paths
+            sql.append(" path in (:paths)");
+        }
+        if (namesAndPaths.containsKey(true) && namesAndPaths.containsKey(false)) { // paths and names
+            sql.append(" or");
+        }
+        if (namesAndPaths.containsKey(false)) { // names
+            sql.append(" name in (:names)");
         }
 
-        return null;
+        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(sql);
+        if (namesAndPaths.containsKey(true)) { // paths
+            query.setParameterList("paths", namesAndPaths.get(true));
+        }
+        if (namesAndPaths.containsKey(false)) { // names
+            query.setParameterList("names", namesAndPaths.get(false));
+        }
+
+        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
+        if (resultset == null || resultset.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return resultset.stream().distinct().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getPath,
+                DBItemInventoryReleasedConfiguration::getName));
     }
 
 }

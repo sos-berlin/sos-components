@@ -66,9 +66,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
 
             FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
             folderPermissionEvaluator.setListOfScheduleFolders(scheduleSelector.getSelector().getFolders());
-            folderPermissionEvaluator.setListOfScheduleNames(scheduleSelector.getSelector().getScheduleNames());
             folderPermissionEvaluator.setListOfSchedulePaths(scheduleSelector.getSelector().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowNames(scheduleSelector.getSelector().getWorkflowNames());
             folderPermissionEvaluator.setListOfWorkflowPaths(scheduleSelector.getSelector().getWorkflowPaths());
 
             SchedulesList schedulesList = new SchedulesList();

@@ -60,18 +60,12 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
                 dailyPlanOrderSelector.getSelector().getFolders().add(root);
             }
-
+            // TODO @uwe: why lists with names and paths. We wanted only paths in which include also names  
             if (dailyPlanOrderSelector.getSelector().getFolders() == null) {
                 dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
             }
-            if (dailyPlanOrderSelector.getSelector().getScheduleNames() == null) {
-                dailyPlanOrderSelector.getSelector().setScheduleNames(new ArrayList<String>());
-            }
             if (dailyPlanOrderSelector.getSelector().getSchedulePaths() == null) {
                 dailyPlanOrderSelector.getSelector().setSchedulePaths(new ArrayList<String>());
-            }
-            if (dailyPlanOrderSelector.getSelector().getWorkflowNames() == null) {
-                dailyPlanOrderSelector.getSelector().setWorkflowNames(new ArrayList<String>());
             }
             if (dailyPlanOrderSelector.getSelector().getWorkflowPaths() == null) {
                 dailyPlanOrderSelector.getSelector().setWorkflowPaths(new ArrayList<String>());
@@ -107,9 +101,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
             FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
             folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderSelector.getSelector().getFolders());
-            folderPermissionEvaluator.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getScheduleNames());
             folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderSelector.getSelector().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowNames());
             folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
 
             for (String controllerId : allowedControllers) {
@@ -120,8 +112,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 folderPermissions.setSchedulerId(controllerId);
                 folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
-                folderPermissions.setSchedulerId(controllerId);
-
                 if (folderPermissionEvaluator.isHasPermission()) {
 
                     dailyPlanOrderSelector.getSelector().getFolders().clear();
@@ -131,13 +121,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     }
                     dailyPlanOrderSelector.getSelector().getSchedulePaths().clear();
                     dailyPlanOrderSelector.getSelector().getWorkflowPaths().clear();
-                    dailyPlanOrderSelector.getSelector().getScheduleNames().clear();
-                    dailyPlanOrderSelector.getSelector().getWorkflowNames().clear();
                     if (folderPermissionEvaluator.getListOfPermittedScheduleNames() != null) {
-                        dailyPlanOrderSelector.getSelector().getScheduleNames().addAll(folderPermissionEvaluator.getListOfPermittedScheduleNames());
+                        dailyPlanOrderSelector.getSelector().getSchedulePaths().addAll(folderPermissionEvaluator.getListOfPermittedScheduleNames());
                     }
                     if (folderPermissionEvaluator.getListOfPermittedWorkflowNames() != null) {
-                        dailyPlanOrderSelector.getSelector().getWorkflowNames().addAll(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
+                        dailyPlanOrderSelector.getSelector().getWorkflowPaths().addAll(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
                     }
 
                     ScheduleSource scheduleSource = null;

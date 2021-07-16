@@ -20,9 +20,7 @@ public class TestSchedules {
     @Test
     public void testIsFillListOfSchedules() throws IOException, SOSHibernateException{
         ScheduleSource orderTemplateSource = new ScheduleSourceFile("src/test/resources/schedules");
-        Schedules orderTemplates = new Schedules();
-        orderTemplates.fillListOfSchedules(orderTemplateSource);
-        List<Schedule> listOfSchedules = orderTemplates.getListOfSchedules();
+        List<Schedule> listOfSchedules = orderTemplateSource.fillListOfSchedules();
         Schedule order = listOfSchedules.get(0);
         
         assertEquals("testIsFillListOfSchedules", "testorder", order.getPath());

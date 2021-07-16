@@ -403,9 +403,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
     public void readSchedules(ScheduleSource scheduleSource) throws IOException, SOSHibernateException {
         LOGGER.debug("... readTemplates " + scheduleSource.fromSource());
-        Schedules schedules = new Schedules();
-        schedules.fillListOfSchedules(scheduleSource);
-        listOfSchedules = schedules.getListOfSchedules();
+        listOfSchedules = scheduleSource.fillListOfSchedules();
     }
 
     public void addSchedule(Schedule schedule) {

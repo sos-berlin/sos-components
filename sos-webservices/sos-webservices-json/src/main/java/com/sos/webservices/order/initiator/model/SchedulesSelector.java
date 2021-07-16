@@ -20,8 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerIds",
-    "scheduleNames",
-    "workflowNames",
     "schedulePaths",
     "workflowPaths",
     "folders"
@@ -30,10 +28,6 @@ public class SchedulesSelector {
 
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
-    @JsonProperty("scheduleNames")
-    private List<String> scheduleNames = null;
-    @JsonProperty("workflowNames")
-    private List<String> workflowNames = null;
     @JsonProperty("schedulePaths")
     private List<String> schedulePaths = null;
     @JsonProperty("workflowPaths")
@@ -55,26 +49,6 @@ public class SchedulesSelector {
     @JsonProperty("controllerIds")
     public void setControllerIds(List<String> controllerIds) {
         this.controllerIds = controllerIds;
-    }
-
-    @JsonProperty("scheduleNames")
-    public List<String> getScheduleNames() {
-        return scheduleNames;
-    }
-
-    @JsonProperty("scheduleNames")
-    public void setScheduleNames(List<String> scheduleNames) {
-        this.scheduleNames = scheduleNames;
-    }
-
-    @JsonProperty("workflowNames")
-    public List<String> getWorkflowNames() {
-        return workflowNames;
-    }
-
-    @JsonProperty("workflowNames")
-    public void setWorkflowNames(List<String> workflowNames) {
-        this.workflowNames = workflowNames;
     }
 
     @JsonProperty("schedulePaths")
@@ -121,12 +95,12 @@ public class SchedulesSelector {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("scheduleNames", scheduleNames).append("workflowNames", workflowNames).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerIds", controllerIds).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("folders", folders).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowNames).append(schedulePaths).append(folders).append(controllerIds).append(scheduleNames).append(workflowPaths).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(folders).append(controllerIds).append(workflowPaths).toHashCode();
     }
 
     @Override
@@ -138,7 +112,7 @@ public class SchedulesSelector {
             return false;
         }
         SchedulesSelector rhs = ((SchedulesSelector) other);
-        return new EqualsBuilder().append(workflowNames, rhs.workflowNames).append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(controllerIds, rhs.controllerIds).append(scheduleNames, rhs.scheduleNames).append(workflowPaths, rhs.workflowPaths).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).isEquals();
     }
 
 }
