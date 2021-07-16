@@ -61,7 +61,7 @@ public abstract class KeyStoreUtil {
         try {
         	trustStoreStream = Files.newInputStream(trustStorePath);
             KeyStore trustStore = KeyStore.getInstance(trustStoreType.value()); // "PKCS12" or "JKS"
-            if (trustStorePassword == null) {
+            if (trustStorePassword == null || trustStorePassword.isEmpty()) {
             	trustStore.load(trustStoreStream, "".toCharArray());
             } else {
             	trustStore.load(trustStoreStream, trustStorePassword.toCharArray());

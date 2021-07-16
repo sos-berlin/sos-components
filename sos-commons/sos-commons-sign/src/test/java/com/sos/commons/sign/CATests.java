@@ -4,7 +4,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,9 +16,11 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
@@ -106,7 +110,7 @@ public class CATests {
         } 
         // create a user KeyPair
         KeyPair userKeyPair = KeyUtil.createRSAKeyPair();
-        String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "IT", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
         LOGGER.info("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.RSA_SIGNER_ALGORITHM, userKeyPair, userSubjectDN);
@@ -238,7 +242,7 @@ public class CATests {
                 SOSKeyConstants.PRIVATE_EC_KEY_HEADER, SOSKeyConstants.PRIVATE_EC_KEY_FOOTER);
         LOGGER.info("************************************  User Private Key:  **********************************************");
         LOGGER.info("\n" + userPrivateKeyString);
-        String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "IT", "SOS GmbH", "Berlin", "Berlin", "DE"); 
+        String userSubjectDN = CAUtils.createUserSubjectDN("SP", "www.sos-berlin.com", "SOS GmbH", "Berlin", "Berlin", "DE"); 
         LOGGER.info("************************************  User SubjectDN  *************************************************");
         LOGGER.info("user subjectDN: " + userSubjectDN);
         // create a CSR based on the users KeyPair
@@ -311,6 +315,38 @@ public class CATests {
                 filename);
         assertTrue(Files.exists(Paths.get("target").resolve("created_test_files").resolve(filename)));
         LOGGER.info("************************************  Test create rootCertificate, CSR and userCertificate finished ***");
+    }
+    
+    
+    @Test 
+    public void test03CheckCA () throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        LOGGER.info("");
+        LOGGER.info("************************************  Test ECDSA: check certificates  *********************************");
+    	String rootCaCrtPath = "C:/sp/devel/js7/keys/sosCa/root-ca.crt";
+    	String intermediateCaCrtPath = "C:/sp/devel/js7/keys/sosCa/intermediate-ca.crt";
+    	String intermediateCaKeyPath = "C:/sp/devel/js7/keys/sosCa/intermediate-ca.key";
+		CertificateFactory cf = CertificateFactory.getInstance("X.509");
+		X509Certificate rootCaCert = (X509Certificate)cf.generateCertificate(Files.newInputStream(Paths.get(rootCaCrtPath)));
+		X509Certificate intermediateCaCert = (X509Certificate)cf.generateCertificate(Files.newInputStream(Paths.get(intermediateCaCrtPath)));
+		boolean intermediateCaCrtValid = false;
+		try {
+			intermediateCaCert.verify(rootCaCert.getPublicKey());
+			intermediateCaCrtValid = true;
+			LOGGER.info("intermediate CA certificate succesfully validated against root ca certificate.");
+		} catch (InvalidKeyException | CertificateException | NoSuchAlgorithmException | NoSuchProviderException
+				| SignatureException e) {
+			LOGGER.info("intermediate CA certificate not valid.");
+		}
+		InputStream in = Files.newInputStream(Paths.get(intermediateCaKeyPath));
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        inputStream2OutputStream(in, outStream);
+        if (in != null) {
+            in.close();
+        }
+        String key = outStream.toString();
+
+		PrivateKey intermediateCaKey = KeyUtil.getPrivateEncryptedRSAKeyFromString(key ,"the brawlers fibs far from an unsteady muralist");
+        LOGGER.info("************************************  Test ECDSA: check certificates  finished ************************");
     }
     
     @Ignore
@@ -399,4 +435,14 @@ public class CATests {
 //        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
 //    }
     
+    private static void inputStream2OutputStream(InputStream inStream, OutputStream outStream) throws IOException {
+        int bytesRead;
+        byte[] buf = new byte[1024];
+        while ((bytesRead = inStream.read(buf)) > 0) {
+            outStream.write(buf, 0, bytesRead);
+        }
+        inStream.close();
+        outStream.close();
+    }
+
 }

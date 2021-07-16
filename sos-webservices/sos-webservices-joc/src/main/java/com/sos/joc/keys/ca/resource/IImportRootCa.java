@@ -1,4 +1,4 @@
-package com.sos.joc.keys.resource;
+package com.sos.joc.keys.ca.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
@@ -12,17 +12,16 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IImportKey {
+public interface IImportRootCa {
 
     @Path("import")
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON) 
-    public JOCDefaultResponse postImportKey(
+    public JOCDefaultResponse postImportRootCa (
             @HeaderParam("X-Access-Token") String xAccessToken, 
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
-            @FormDataParam("comment") String comment,
-            @FormDataParam("importKeyFilter") String importKeyFilter) throws Exception;
-}
+            @FormDataParam("comment") String comment) throws Exception;
+    }

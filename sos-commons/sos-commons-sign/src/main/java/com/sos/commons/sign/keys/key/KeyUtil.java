@@ -35,6 +35,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -84,8 +85,11 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBu
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
+import org.bouncycastle.openssl.PEMDecryptorProvider;
+import org.bouncycastle.openssl.PEMEncryptedKeyPair;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.bc.BcPEMDecryptorProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.util.encoders.Base64;
@@ -154,22 +158,34 @@ public abstract class KeyUtil {
     }
     
     public static JocKeyPair createECDSAJOCKeyPair(String curveName) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        Provider bcProvider = new BouncyCastleProvider();
-        Security.addProvider(bcProvider);
-        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(curveName);
-        KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
-        kpg.initialize(ecSpec, new SecureRandom());
-        KeyPair kp = kpg.generateKeyPair();
-        JocKeyPair keyPair = new JocKeyPair();
-        byte[] encodedPrivate = kp.getPrivate().getEncoded();
-        String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
-        byte[] encodedPublic = kp.getPublic().getEncoded();
-        String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
-        keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
-        keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
-        return keyPair;
-    }
-    
+//      Provider bcProvider = new BouncyCastleProvider();
+//      Security.addProvider(bcProvider);
+//      ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(curveName);
+//      KeyPairGenerator kpg = KeyPairGenerator.getInstance(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+//      kpg.initialize(ecSpec, new SecureRandom());
+//      KeyPair kp = kpg.generateKeyPair();
+      KeyPair kp = createECDSAKeyPair(curveName);
+      JocKeyPair keyPair = new JocKeyPair();
+      byte[] encodedPrivate = kp.getPrivate().getEncoded();
+      String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+      byte[] encodedPublic = kp.getPublic().getEncoded();
+      String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+      keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
+      keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
+      return keyPair;
+  }
+  
+    public static JocKeyPair createECDSAJOCKeyPair(KeyPair kp) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+      JocKeyPair keyPair = new JocKeyPair();
+      byte[] encodedPrivate = kp.getPrivate().getEncoded();
+      String encodedPrivateToString = DatatypeConverter.printBase64Binary(encodedPrivate);
+      byte[] encodedPublic = kp.getPublic().getEncoded();
+      String encodedPublicToString = DatatypeConverter.printBase64Binary(encodedPublic);
+      keyPair.setPrivateKey(formatPrivateECDSAKey(encodedPrivateToString));
+      keyPair.setPublicKey(formatPublicECDSAKey(encodedPublicToString));
+      return keyPair;
+  }
+  
     public static KeyPair createRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
         return createRSAKeyPair(SOSKeyConstants.DEFAULT_RSA_ALGORITHM_BIT_LENGTH);
     }
@@ -450,6 +466,32 @@ public abstract class KeyUtil {
             }
         }
         return false;
+    }
+    
+    public static boolean isECDSARootKeyPairValid(JocKeyPair keyPair) {
+        boolean privateKeyValid = false;
+        boolean certificateVaild = false;
+        try {
+            KeyPair kp = getKeyPairFromECDSAPrivatKeyString(keyPair.getPrivateKey());
+            if (kp != null && kp.getPrivate() != null) {
+                privateKeyValid = true;
+            } else {
+                privateKeyValid = false;
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+            privateKeyValid = false;
+        }
+        try {
+            X509Certificate cert = getX509Certificate(keyPair.getCertificate());
+            if (cert != null) {
+                certificateVaild = true;
+            } else {
+                certificateVaild = false;
+            }
+        } catch (CertificateException | UnsupportedEncodingException e) {
+            certificateVaild = false;
+        }
+        return privateKeyValid && certificateVaild;
     }
     
     // checks if the provided String contains an ASCII representation of a X.509 Certificate
@@ -947,7 +989,20 @@ public abstract class KeyUtil {
         return secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider(
                 BouncyCastleProvider.PROVIDER_NAME).build("".toCharArray()));
     }
-    
+    public static PrivateKey getPrivateEncryptedRSAKeyFromString (String privateKey, String keyPasswd)
+            throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
+        Security.addProvider(new BouncyCastleProvider());
+        PrivateKey privKey = null;
+        KeyFactory kf = KeyFactory.getInstance(SOSKeyConstants.RSA_ALGORITHM_NAME);
+        PEMParser pemParser = new PEMParser(new StringReader(privateKey));
+        Object readObject = pemParser.readObject();
+    	PEMEncryptedKeyPair pemEncryptedKeyPair = (PEMEncryptedKeyPair)readObject;
+        PEMDecryptorProvider keyDecryptorProvider = new BcPEMDecryptorProvider(keyPasswd.toCharArray());
+        PEMKeyPair pemKeyPair = pemEncryptedKeyPair.decryptKeyPair(keyDecryptorProvider);
+        final byte[] privateEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
+        privKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateEncoded));
+        return privKey;
+    }
     public static PrivateKey getPrivateRSAKeyFromString (String privateKey)
             throws NoSuchAlgorithmException, InvalidKeySpecException, IOException {
         Security.addProvider(new BouncyCastleProvider());

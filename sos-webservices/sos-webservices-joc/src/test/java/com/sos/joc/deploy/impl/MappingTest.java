@@ -325,4 +325,16 @@ public class MappingTest {
         LOGGER.trace("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createExamplePathResponse()));
     }
 
+    @Test
+    public void test18GenerateRootCAFilter () throws JsonProcessingException {
+        LOGGER.info("GenerateRootCaFilter Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createGenerateCaFilter()));
+    }
+
+    @Test
+    public void test18SetRootCAFilter () throws JsonProcessingException {
+        LOGGER.info("SetRootCaFilter Example");
+        LOGGER.info("\n" + Globals.prettyPrintObjectMapper.writeValueAsString(DeploymentTestUtils.createSetRootCaFilter()));
+    }
+
 }
