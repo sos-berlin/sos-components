@@ -165,6 +165,9 @@ public class JsonValidator {
             put("com.sos.joc.model.yade.FileFilter","yade/fileFilter-schema.json");
             put("com.sos.joc.model.yade.FilesFilter","yade/filesFilter-schema.json");
             
+            put("com.sos.joc.model.monitoring.NotificationsFilter","monitoring/notifications-filter-schema.json");
+            put("com.sos.joc.model.monitoring.NotificationFilter","monitoring/notification-filter-schema.json");
+            
             //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
