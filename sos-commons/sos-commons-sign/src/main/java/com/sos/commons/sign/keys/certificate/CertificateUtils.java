@@ -1,16 +1,16 @@
 package com.sos.commons.sign.keys.certificate;
 
 import java.io.IOException;
-import java.io.StringWriter;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,10 +189,12 @@ public abstract class CertificateUtils {
 		}
 	}
 
-	public static String asPEMString(X509Certificate cert) throws IOException {
-	    StringWriter writer = new StringWriter();
-	    JcaPEMWriter pemWriter = new JcaPEMWriter(writer);
-	    pemWriter.writeObject(cert);
-	    return writer.toString();
+	public static String asPEMString(X509Certificate cert) throws IOException, CertificateEncodingException {
+	    String lineSeparator = "\n";
+	    Base64.Encoder encoder = Base64.getMimeEncoder(64, lineSeparator.getBytes());
+	    String encodedCert = new String(encoder.encode(cert.getEncoded()));
+	    // prettify certificate string
+	    return SOSKeyConstants.CERTIFICATE_HEADER + lineSeparator + encodedCert + lineSeparator + SOSKeyConstants.CERTIFICATE_FOOTER;
 	}
+	
 }

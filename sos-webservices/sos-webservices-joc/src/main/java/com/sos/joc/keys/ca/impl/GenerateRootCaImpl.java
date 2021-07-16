@@ -16,11 +16,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.ca.resource.IGenerateRootCa;
-import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.GenerateCaFilter;
 import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
+import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 
@@ -45,16 +45,17 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             
             KeyPair keyPair = KeyUtil.createECDSAKeyPair();
             String subjectDN = CAUtils.createRootSubjectDN(filter.getCommonName(), filter.getOrganizationUnit(), filter.getOrganization(), filter.getCountryCode());
-            Certificate cert = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_ALGORITHM_NAME, keyPair, subjectDN, true, false);
+            Certificate cert = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair, subjectDN, true, false);
             JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(keyPair);
             jocKeyPair.setCertificate(CertificateUtils.asPEMString((X509Certificate)cert));
             jocKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            jocKeyPair.setKeyType(JocKeyType.CA.name());
+            X509Certificate x509Cert = (X509Certificate)cert;
+            jocKeyPair.setKeyID(x509Cert.getSubjectDN().getName());
+            jocKeyPair.setValidUntil(x509Cert.getNotAfter());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
-            dbLayerKeys.saveOrUpdateGeneratedKey(jocKeyPair, 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername(),
-                    JocSecurityLevel.LOW);
+            PublishUtils.storeCA(jocKeyPair, hibernateSession);
             return JOCDefaultResponse.responseStatus200(jocKeyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

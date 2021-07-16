@@ -1,5 +1,6 @@
 package com.sos.joc.keys.ca.impl;
 
+import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
 
@@ -45,6 +46,9 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             JocKeyPair keyPair = new JocKeyPair();
             keyPair.setPrivateKey(setRootCaFilter.getPrivateKey());
             keyPair.setCertificate(setRootCaFilter.getCertificate());
+            X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
+            keyPair.setKeyID(cert.getSubjectDN().getName());
+            keyPair.setValidUntil(cert.getNotAfter());
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             keyPair.setKeyType(JocKeyType.CA.name());
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
