@@ -46,24 +46,23 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, JobsFilter.class);
             JobsFilter in = Globals.objectMapper.readValue(inBytes, JobsFilter.class);
-            
+
             String controllerId = in.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
-                                Collectors.toSet());
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
+                    allowedControllers = Collections.emptySet();
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
-            
+
             JOCDefaultResponse response = initPermissions(controllerId, permitted);
             if (response != null) {
                 return response;
@@ -102,9 +101,9 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     }
 
                     if (in.getJobs() != null && !in.getJobs().isEmpty()) {
-                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(WorkflowPaths.getPath(
-                                job.getWorkflowPath()))).filter(job -> canAdd(job.getWorkflowPath(), permittedFolders)).collect(
-                                Collectors.groupingBy(JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
+                        dbFilter.setJobs(in.getJobs().stream().filter(Objects::nonNull).peek(job -> job.setWorkflowPath(WorkflowPaths.getPath(job
+                                .getWorkflowPath()))).filter(job -> canAdd(job.getWorkflowPath(), permittedFolders)).collect(Collectors.groupingBy(
+                                        JobPath::getWorkflowPath, Collectors.mapping(JobPath::getJob, Collectors.toSet()))));
                         folderPermissionsAreChecked = true;
                     } else {
 
@@ -121,7 +120,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                     .collect(Collectors.toSet()));
                             folderPermissionsAreChecked = true;
                         }
-                        
+
                         // TODO consider these parameter in DB
                         dbFilter.setJobName(in.getJobName());
                         dbFilter.setWorkflowPath(in.getWorkflowPath());
@@ -148,7 +147,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     } else {
                         sr = dbLayer.getJobs();
                     }
-                    
+
                     if (sr != null) {
                         // tmp outputs to check performance...
                         // int i = 0;
