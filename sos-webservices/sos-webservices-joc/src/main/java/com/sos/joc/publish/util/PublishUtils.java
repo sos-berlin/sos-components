@@ -125,6 +125,7 @@ import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
+import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.model.sign.Signature;
@@ -205,6 +206,14 @@ public abstract class PublishUtils {
                     dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
                 }
             }
+        }
+    }
+
+    public static void storeCA(JocKeyPair keyPair, SOSHibernateSession hibernateSession)
+            throws SOSHibernateException {
+        DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
+        if (keyPair != null) {
+            dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), "", JocSecurityLevel.LOW, SOSKeyConstants.ECDSA_ALGORITHM_NAME);
         }
     }
 

@@ -36,9 +36,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, SetKeyFilter.class);
             SetKeyFilter setKeyFilter = Globals.objectMapper.readValue(filter, SetKeyFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("",
-//                    getPermissonsJocCockpit(null, xAccessToken).getInventory().getConfigurations().getPublish().isSetKey()
-                    true);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(null, true);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }

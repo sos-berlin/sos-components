@@ -35,10 +35,10 @@ public class DBItemDepKeys extends DBItem {
     @Column(name = "[KEY]", nullable = true)
     private String key;
 
-    @Column(name = "[CERTIFICATE]", nullable = false)
+    @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
 
-    @Column(name = "[ACCOUNT]", nullable = false)
+    @Column(name = "[ACCOUNT]", nullable = true)
     private String account;
 
     /* 0=LOW, 1=MEDIUM, 2=HIGH */

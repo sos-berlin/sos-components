@@ -30,9 +30,11 @@ import com.sos.joc.model.publish.ExportFile;
 import com.sos.joc.model.publish.ExportFilter;
 import com.sos.joc.model.publish.ExportForSigning;
 import com.sos.joc.model.publish.ExportShallowCopy;
+import com.sos.joc.model.publish.GenerateCaFilter;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.RedeployFilter;
 import com.sos.joc.model.publish.ReleasablesFilter;
+import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
@@ -659,6 +661,29 @@ public class DeploymentTestUtils {
         response.setPath("/_2021_01_18/test_wf");
         response.setDeliveryDate(Date.from(Instant.now()));
         return response;
+    }
+
+    public static GenerateCaFilter createGenerateCaFilter () {
+        GenerateCaFilter filter = new GenerateCaFilter();
+        filter.setCommonName("sp");
+        filter.setOrganizationUnit("devel");
+        filter.setOrganization("SOS");
+        filter.setCountryCode("DE");
+        return filter;
+    }
+
+    public static SetRootCaFilter createSetRootCaFilter () {
+        SetRootCaFilter filter = new SetRootCaFilter();
+        filter.setPrivateKey("-----BEGIN EC PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgTDpNzcltg9AKs48Q\n"
+                + "SIM79EsKYr75u/4FUFqisAPn3NCgCgYIKoZIzj0DAQehRANCAASXodrfRFak9V8E\ndbvjjtGZbXd9JgEN8ua6PAubf7i4HPLyXMzhE2lpq3sqD68RBgSx2hx548zNfsMT\n"
+                + "PDvGPMiL\n-----END EC PRIVATE KEY-----");
+        filter.setCertificate("-----BEGIN CERTIFICATE-----\nMIIBqTCCAVCgAwIBAgIGAXquQGFrMAoGCCqGSM49BAMEMFMxFDASBgNVBAMMC1NP\n"
+                + "UyByb290IENBMRswGQYDVQQLDBJ3d3cuc29zLWJlcmxpbi5jb20xETAPBgNVBAoM\nCFNPUyBHbWJIMQswCQYDVQQGEwJERTAeFw0yMTA3MTYwNzM4MTJaFw0yNjA3MTYw\n"
+                + "NzM4MTJaMFMxFDASBgNVBAMMC1NPUyByb290IENBMRswGQYDVQQLDBJ3d3cuc29z\nLWJlcmxpbi5jb20xETAPBgNVBAoMCFNPUyBHbWJIMQswCQYDVQQGEwJERTBZMBMG\n"
+                + "ByqGSM49AgEGCCqGSM49AwEHA0IABJeh2t9EVqT1XwR1u+OO0Zltd30mAQ3y5ro8\nC5t/uLgc8vJczOETaWmreyoPrxEGBLHaHHnjzM1+wxM8O8Y8yIujEDAOMAwGA1Ud\n"
+                + "EwQFMAMBAf8wCgYIKoZIzj0EAwQDRwAwRAIgLMwzASeb5rj658bVLYEd7EGa0r5+\ndMdOLvCIbx7GiyYCIBRRTGRIzEZYeJMohVnVFeE9qQg7ZoJrzduqc+AEGZ1f\n"
+                + "-----END CERTIFICATE-----");
+        return filter;
     }
 
 }

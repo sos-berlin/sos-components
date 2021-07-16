@@ -10,7 +10,8 @@ public enum JocKeyType {
 
     PRIVATE(0),
     PUBLIC(1),
-    X509(2);
+    X509(2),
+    CA(3);
     private final Integer value;
     private final static Map<Integer, JocKeyType> CONSTANTS = new HashMap<Integer, JocKeyType>();
 

@@ -203,6 +203,24 @@ public class DBLayerKeys {
         return null;
     }
 
+    public JocKeyPair getRootCaKeyPair() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_DEP_KEYS);
+        hql.append(" where keyType = 3");
+        Query<DBItemDepKeys> query = session.createQuery(hql.toString());
+        query.setMaxResults(1);
+        DBItemDepKeys key = session.getSingleResult(query);
+        if (key != null) {
+            JocKeyPair keyPair = new JocKeyPair();
+            keyPair.setPrivateKey(key.getKey());
+            keyPair.setCertificate(key.getCertificate());
+            keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            keyPair.setKeyType(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            return keyPair;
+        }
+        return null;
+    }
+
     public JocKeyPair getDefaultKeyPair(String defaultAccount) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
