@@ -82,7 +82,7 @@ public class HistoryEventEntry {
         keyedEvent = stampedEvent.value();
         event = keyedEvent.event();
         eventId = stampedEvent.eventId();
-        eventDate = Date.from(stampedEvent.timestamp().toInstant());
+        eventDate = Date.from(Instant.ofEpochMilli(stampedEvent.timestampMillis()));
 
         eventType = HistoryEventType.fromValue(event.getClass().getSimpleName());
     }

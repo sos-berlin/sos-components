@@ -45,6 +45,8 @@ import com.sos.inventory.model.common.ClassHelper;
 		@JsonSubTypes.Type(value = Fail.class, name = "Fail"),
 		@JsonSubTypes.Type(value = Lock.class, name = "Lock"),
 		@JsonSubTypes.Type(value = Prompt.class, name = "Prompt"),
+		@JsonSubTypes.Type(value = PostNotice.class, name = "PostNotice"),
+		@JsonSubTypes.Type(value = ReadNotice.class, name = "ReadNotice"),
         @JsonSubTypes.Type(value = ImplicitEnd.class, name = "ImplicitEnd")})
 public abstract class Instruction
     extends ClassHelper

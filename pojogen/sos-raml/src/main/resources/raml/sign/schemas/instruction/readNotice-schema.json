@@ -1,0 +1,28 @@
+{
+  "title": "ReadNotice",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.ReadNotice",
+  "type": "object",
+  "required": [
+  	"boardPath"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'ReadNotice'",
+  "propertyOrder": [
+  	"TYPE",
+    "boardPath"
+  ],
+  "properties": {
+    "boardPath": {
+    	"alias": "boardName",
+    	"type": "string",
+    	"pattern": "^[^<>]*$",
+  		"maxLength": 255,
+  		"minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

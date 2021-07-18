@@ -74,8 +74,8 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
-import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderPromptAnswered;
+import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderRetrying;
@@ -365,6 +365,8 @@ public class EventService {
 //                } else if (itemId instanceof OrderWatchPath) {
 //                 // We don't need an Item event for FileOrderSource
 //                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
+//                } else if (itemId instanceof BoardPath) {
+//                     We don't need an Item event for Board
                 } else {
                     // TODO other simple objects
                 }
@@ -386,7 +388,7 @@ public class EventService {
                     addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
-                } // JobResourcePath, OrderWatchPath
+                } // JobResourcePath, OrderWatchPath, BoardPath
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));

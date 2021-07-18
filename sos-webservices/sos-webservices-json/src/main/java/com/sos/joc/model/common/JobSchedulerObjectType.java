@@ -16,6 +16,7 @@ public enum JobSchedulerObjectType {
     LOCK("LOCK"),
     JUNCTION("JUNCTION"),
     FILEORDERSOURCE("FILEORDERSOURCE"),
+    BOARD("BOARD"),
     ORDER("ORDER"),
     CALENDAR("CALENDAR"),
     CONTROLLER("CONTROLLER"),

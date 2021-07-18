@@ -1,11 +1,11 @@
 
 package com.sos.controller.model.common;
 
-import com.sos.inventory.model.common.Variables;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -26,12 +26,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class Outcome {
 
     /**
-     * Succeeded, Failed, Disrupted, Cancelled, Killed
+     * Succeeded, Failed, Disrupted, Cancelled, Killed, TimedOut
      * (Required)
      * 
      */
     @JsonProperty("TYPE")
-    @JsonPropertyDescription("Succeeded, Failed, Disrupted, Cancelled, Killed")
+    @JsonPropertyDescription("Succeeded, Failed, Disrupted, Cancelled, Killed, TimedOut")
     private String tYPE;
     /**
      * key-value pairs
@@ -72,7 +72,7 @@ public class Outcome {
     }
 
     /**
-     * Succeeded, Failed, Disrupted, Cancelled, Killed
+     * Succeeded, Failed, Disrupted, Cancelled, Killed, TimedOut
      * (Required)
      * 
      */
@@ -82,7 +82,7 @@ public class Outcome {
     }
 
     /**
-     * Succeeded, Failed, Disrupted, Cancelled, Killed
+     * Succeeded, Failed, Disrupted, Cancelled, Killed, TimedOut
      * (Required)
      * 
      */

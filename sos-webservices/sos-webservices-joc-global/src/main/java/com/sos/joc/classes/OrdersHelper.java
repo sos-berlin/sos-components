@@ -96,10 +96,10 @@ public class OrdersHelper {
 
                 {
                     put(Order.Fresh$.class, OrderStateText.SCHEDULED);
-                    put(Order.Awaiting.class, OrderStateText.WAITING);
+                    put(Order.WaitingForNotice.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
-                    put(Order.Offering.class, OrderStateText.WAITING);
+                    //put(Order.Offering.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
@@ -123,10 +123,11 @@ public class OrdersHelper {
             put("Planned", OrderStateText.PLANNED);
             put("Fresh", OrderStateText.SCHEDULED);
             put("Pending", OrderStateText.PENDING);
-            put("Awaiting", OrderStateText.WAITING);
+            put("Awaiting", OrderStateText.WAITING); // obsolete?
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
-            put("Offering", OrderStateText.WAITING);
+            put("Offering", OrderStateText.WAITING); // obsolete?
+            put("WaitingForNotice", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);

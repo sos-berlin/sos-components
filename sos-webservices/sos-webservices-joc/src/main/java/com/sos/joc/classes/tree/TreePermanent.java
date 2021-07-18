@@ -61,6 +61,7 @@ public class TreePermanent {
                     types.add(TreeType.LOCK);
                     types.add(TreeType.JUNCTION);
                     types.add(TreeType.FILEORDERSOURCE);
+                    types.add(TreeType.BOARD);
                     types.add(TreeType.SCHEDULE);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
@@ -117,6 +118,13 @@ public class TreePermanent {
                 }
                 break;
             case FILEORDERSOURCE:
+                if (treeForInventory || treeForInventoryTrash) {
+                    if (inventoryPermission) {
+                        types.add(type);
+                    }
+                }
+                break;
+            case BOARD:
                 if (treeForInventory || treeForInventoryTrash) {
                     if (inventoryPermission) {
                         types.add(type);

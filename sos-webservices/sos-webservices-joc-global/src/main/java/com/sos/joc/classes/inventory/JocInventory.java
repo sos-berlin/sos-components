@@ -30,6 +30,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
@@ -93,6 +94,7 @@ public class JocInventory {
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
+            put(ConfigurationType.BOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
         }
     });
@@ -114,6 +116,8 @@ public class JocInventory {
                     put(InstructionType.RETRY, "classpath:/raml/inventory/schemas/instruction/retryInCatch-schema.json");
                     put(InstructionType.TRY, "classpath:/raml/inventory/schemas/instruction/retry-schema.json");
                     put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
+                    put(InstructionType.POST_NOTICE, "classpath:/raml/inventory/schemas/instruction/postNotice-schema.json");
+                    put(InstructionType.READ_NOTICE, "classpath:/raml/inventory/schemas/instruction/readNotice-schema.json");
                 }
             });
 
@@ -132,13 +136,14 @@ public class JocInventory {
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.SCHEDULE, Schedule.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
+            put(ConfigurationType.BOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
         }
     });
 
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
             ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
-            ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE)));
+            ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE, ConfigurationType.BOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));

@@ -1,0 +1,46 @@
+{
+  "title": "Board",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.board.Board",
+  "type": "object",
+  "javaInterfaces" : [
+    "com.sos.joc.model.common.IDeployObject"
+  ],
+  "required": [
+    "TYPE",
+    "path",
+    "toNotice",
+    "readingOrderToNoticeId"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "toNotice",
+    "endOfLife",
+    "readingOrderToNoticeId"
+  ],
+  
+  "description": "deploy object with fixed property 'TYPE':'Board'",
+  "properties": {
+    "TYPE": {
+    	"$ref": "../../../inventory/schemas/deploy/deployType-schema.json",
+    	"default": "Board" 
+    },
+    "path": {
+    	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
+    },
+    "toNotice": {
+        "description": "Expression that returns a NoticeId for the PostNotice statement.",
+    	"type": "string"
+    },
+    "endOfLife": {
+		"description": "Expression that returns for the PostNotice statement the time until when the note should be valid, expressed as number of milliseconds since 1970-01-01, 0 o'clock, UTC. Then JS7 will delete the note.",
+    	"type": "string"
+	},
+    "readingOrderToNoticeId": {
+    	"description": "Expression that returns a NoticeId for the ReadNotice statement.",
+    	"type": "string"
+    }
+  },
+  "additionalProperties": false
+}

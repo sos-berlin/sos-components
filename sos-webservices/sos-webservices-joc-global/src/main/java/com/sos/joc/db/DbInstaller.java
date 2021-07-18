@@ -84,7 +84,7 @@ public class DbInstaller {
         if (Files.isDirectory(inputDir)) {
             boolean hasError = false;
             SOSHibernateFileProcessor processor = new SOSHibernateFileProcessor();
-            LOGGER.info("...installing tables in SQL database which not exist");
+            LOGGER.info("...installing tables in " + dbms + " database which not exist");
             for (String sqlFileSpec : sqlFileSpecs) {
                 processor.clearResult();
                 processor.setFileSpec(sqlFileSpec);
@@ -94,7 +94,7 @@ public class DbInstaller {
                 }
             }
             if (!hasError) {
-                LOGGER.info("...insert initial rows into tables in SQL database");
+                LOGGER.info("...insert initial rows into tables in " + dbms + " database");
                 for (String sqlFileSpec : sqlFileSpecsInsert) {
                     processor.clearResult();
                     processor.setFileSpec(sqlFileSpec);

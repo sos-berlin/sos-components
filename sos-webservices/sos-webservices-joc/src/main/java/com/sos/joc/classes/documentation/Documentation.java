@@ -14,8 +14,7 @@ import com.sos.joc.model.common.JobSchedulerObjectType;
 
 public class Documentation {
 
-	public static void assignDocu(String jsObjectPath, String docPath,
-			JobSchedulerObjectType objType, String apiCall)
+	public static void assignDocu(String jsObjectPath, String docPath, JobSchedulerObjectType objType, String apiCall)
 			throws JocMissingRequiredParameterException, JocConfigurationException, DBConnectionRefusedException,
 			DBInvalidDataException, SOSHibernateException, DBOpenSessionException {
 		SOSHibernateSession connection = null;

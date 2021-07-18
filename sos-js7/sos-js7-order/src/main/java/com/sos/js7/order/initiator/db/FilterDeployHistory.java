@@ -2,16 +2,12 @@ package com.sos.js7.order.initiator.db;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.db.SOSFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 
 public class FilterDeployHistory extends SOSFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FilterDeployHistory.class);
     private ConfigurationType  type;
     private String name;
     private Long inventoryId;

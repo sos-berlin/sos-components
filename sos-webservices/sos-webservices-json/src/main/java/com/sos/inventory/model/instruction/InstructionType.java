@@ -15,10 +15,10 @@ public enum InstructionType {
     FINISH("Finish"),
     FAIL("Fail"),
     RETRY("Retry"),
-    PUBLISH("Publish"),
-    AWAIT("Await"),
     LOCK("Lock"),
     PROMPT("Prompt"),
+    POST_NOTICE("PostNotice"),
+    READ_NOTICE("ReadNotice"),
     IMPLICIT_END("ImplicitEnd");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
