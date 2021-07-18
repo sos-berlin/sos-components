@@ -13,7 +13,8 @@ public enum DeployType {
     LOCK("Lock", 4),
     JUNCTION("Junction", 5),
     FILEORDERSOURCE("FileWatch", 9),
-    JOBRESOURCE("JobResource", 10);
+    JOBRESOURCE("JobResource", 10),
+    BOARD("Board", 11);
     private final String value;
     private final Integer intValue;
     private final static Map<String, DeployType> CONSTANTS = new HashMap<String, DeployType>();

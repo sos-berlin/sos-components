@@ -26,6 +26,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "toNotice",
     "endOfLife",
     "readingOrderToNoticeId",
+    "version",
     "title",
     "documentationName"
 })
@@ -64,6 +65,15 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     @JsonPropertyDescription("Expression that returns a NoticeId for the ReadNotice statement.")
     private String readingOrderToNoticeId;
     /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("inventory repository version")
+    private String version = "1.0.0";
+    /**
      * string without < and >
      * <p>
      * 
@@ -94,13 +104,15 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
      * 
      * @param readingOrderToNoticeId
      * @param title
+     * @param version
      * @param endOfLife
      */
-    public Board(String toNotice, String endOfLife, String readingOrderToNoticeId, String title, String documentationName) {
+    public Board(String toNotice, String endOfLife, String readingOrderToNoticeId, String version, String title, String documentationName) {
         super();
         this.toNotice = toNotice;
         this.endOfLife = endOfLife;
         this.readingOrderToNoticeId = readingOrderToNoticeId;
+        this.version = version;
         this.title = title;
         this.documentationName = documentationName;
     }
@@ -175,6 +187,28 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     }
 
     /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public String getVersion() {
+        return version;
+    }
+
+    /**
+     * inventory repository version
+     * <p>
+     * inventory repository version
+     * 
+     */
+    @JsonProperty("version")
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    /**
      * string without < and >
      * <p>
      * 
@@ -220,12 +254,12 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("toNotice", toNotice).append("endOfLife", endOfLife).append("readingOrderToNoticeId", readingOrderToNoticeId).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("toNotice", toNotice).append("endOfLife", endOfLife).append("readingOrderToNoticeId", readingOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(toNotice).append(documentationName).append(tYPE).append(readingOrderToNoticeId).append(title).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(toNotice).append(documentationName).append(tYPE).append(readingOrderToNoticeId).append(title).append(version).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -237,7 +271,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(toNotice, rhs.toNotice).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(readingOrderToNoticeId, rhs.readingOrderToNoticeId).append(title, rhs.title).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(toNotice, rhs.toNotice).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(readingOrderToNoticeId, rhs.readingOrderToNoticeId).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }
