@@ -219,7 +219,7 @@ public class NotifierModel {
             ANotifier n = m.createNotifier(conf);
             if (n != null) {
                 try {
-                    NotifyResult nr = n.notify(analyzer.getOrder(), os, type);
+                    NotifyResult nr = n.notify(type, analyzer.getOrder(), os, mn);
                     if (mn == null) {
                         LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType().value(), m
                                 .getMonitorName()));

@@ -336,7 +336,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setStartParameters(String val) {
-        startParameters = val;
+        startParameters = normalizeValue(val, 2_000);
     }
 
     public Date getEndTime() {

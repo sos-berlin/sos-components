@@ -415,7 +415,6 @@ public class DBLayerMonitoring {
         item.setParentOrderId(history.getParentOrderId());
         item.setHasChildren(history.getHasChildren());
         item.setName(history.getName());
-        item.setTitle(history.getTitle());
         item.setStartCause(history.getStartCause());
         item.setStartTimePlanned(history.getStartTimePlanned());
         item.setStartTime(history.getStartTime());

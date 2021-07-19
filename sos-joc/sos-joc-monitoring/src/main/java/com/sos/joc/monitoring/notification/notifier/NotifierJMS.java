@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
@@ -50,13 +51,13 @@ public class NotifierJMS extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
+    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
 
         MessageProducer producer = null;
         String message = null;
         try {
             producer = createProducer();
-            set(mo, mos);
+            set(mo, mos, mn);
 
             message = resolve(monitor.getMessage(), type, true);
 

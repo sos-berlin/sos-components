@@ -66,9 +66,6 @@ public class DBItemMonitoringOrder extends DBItem {
     @Column(name = "[NAME]", nullable = false)
     private String name;
 
-    @Column(name = "[TITLE]", nullable = true)
-    private String title;
-
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;
 
@@ -252,14 +249,6 @@ public class DBItemMonitoringOrder extends DBItem {
         name = val;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String val) {
-        title = val;
-    }
-
     public String getStartCause() {
         return startCause;
     }
@@ -297,7 +286,7 @@ public class DBItemMonitoringOrder extends DBItem {
     }
 
     public void setStartParameters(String val) {
-        startParameters = val;
+        startParameters = normalizeValue(val, 2_000);
     }
 
     public Long getCurrentHistoryOrderStepId() {

@@ -16,6 +16,7 @@ import com.googlecode.jsendnsca.encryption.Encryption;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
 import com.sos.monitoring.notification.NotificationType;
@@ -64,10 +65,10 @@ public class NotifierNSCA extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
+    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
 
         try {
-            set(mo, mos);
+            set(mo, mos, mn);
             set(type);
 
             Map<String, String> map = new HashMap<>();

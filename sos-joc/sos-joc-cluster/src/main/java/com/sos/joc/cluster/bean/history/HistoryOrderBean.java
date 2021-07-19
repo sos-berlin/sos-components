@@ -19,7 +19,6 @@ public class HistoryOrderBean extends AHistoryBean {
     private Long parentId;
     private String parentOrderId;
     private String name;
-    private String title;
     private String startCause;
     private Date startTimePlanned;
     private Date startTime;
@@ -60,7 +59,6 @@ public class HistoryOrderBean extends AHistoryBean {
         this.parentId = item.getParentId();
         this.parentOrderId = item.getParentOrderId();
         this.name = item.getName();
-        this.title = item.getTitle();
         this.startCause = item.getStartCause();
         this.startTimePlanned = item.getStartTimePlanned();
         this.startTime = item.getStartTime();
@@ -169,14 +167,6 @@ public class HistoryOrderBean extends AHistoryBean {
 
     public void setName(String val) {
         name = val;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String val) {
-        title = val;
     }
 
     public String getStartCause() {

@@ -13,7 +13,9 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
 public abstract class ANotifier {
@@ -25,11 +27,12 @@ public abstract class ANotifier {
 
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
+    private static final String PREFIX_TABLE_NOTIFICATIONS = "MON_N";
 
     private JocHref jocHref;
     private Map<String, String> tableFields;
 
-    public abstract NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type);
+    public abstract NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn);
 
     public abstract void close();
 
@@ -43,8 +46,8 @@ public abstract class ANotifier {
         return type == null ? "" : type.name();
     }
 
-    protected void set(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
-        setTableFields(mo, mos);
+    protected void set(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+        setTableFields(mo, mos, mn);
         jocHref = new JocHref(mo, mos);
     }
 
@@ -113,7 +116,7 @@ public abstract class ANotifier {
         return sb;
     }
 
-    private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos) {
+    private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         tableFields = new HashMap<String, String>();
         if (mo == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrder.class, true, PREFIX_TABLE_ORDERS));
@@ -127,6 +130,12 @@ public abstract class ANotifier {
             tableFields.putAll(mos.toMap(true, PREFIX_TABLE_ORDER_STEPS));
             adjustFields(PREFIX_TABLE_ORDER_STEPS);
         }
+        if (mn == null) {
+            tableFields.putAll(DBItem.toEmptyValuesMap(DBItemNotification.class, true, PREFIX_TABLE_NOTIFICATIONS));
+        } else {
+            tableFields.putAll(mn.toMap(true, PREFIX_TABLE_NOTIFICATIONS));
+            adjustFields(PREFIX_TABLE_NOTIFICATIONS);
+        }
     }
 
     private void adjustFields(String tablePrefix) {
@@ -135,22 +144,33 @@ public abstract class ANotifier {
 
         switch (tablePrefix) {
         case PREFIX_TABLE_ORDERS:
-            String state = tableFields.get(PREFIX_TABLE_ORDERS + "_STATE");
+            String state = tableFields.get(tablePrefix + "_STATE");
             try {
-                tableFields.put(PREFIX_TABLE_ORDERS + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value().toLowerCase());
             } catch (Throwable e) {
             }
             break;
         case PREFIX_TABLE_ORDER_STEPS:
-            String criticality = tableFields.get(PREFIX_TABLE_ORDER_STEPS + "_JOB_CRITICALITY");
+            String criticality = tableFields.get(tablePrefix + "_JOB_CRITICALITY");
             try {
-                tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value()
-                        .toLowerCase());
+                tableFields.put(tablePrefix + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value().toLowerCase());
             } catch (Throwable e) {
             }
-            String warn = tableFields.get(PREFIX_TABLE_ORDER_STEPS + "_WARN");
+            String warn = tableFields.get(tablePrefix + "_WARN");
             try {
-                tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value().toLowerCase());
+            } catch (Throwable e) {
+            }
+            break;
+        case PREFIX_TABLE_NOTIFICATIONS:
+            String type = tableFields.get(tablePrefix + "_TYPE");
+            try {
+                tableFields.put(tablePrefix + "_TYPE", NotificationType.fromValue(Integer.valueOf(type)).value().toLowerCase());
+            } catch (Throwable e) {
+            }
+            String range = tableFields.get(tablePrefix + "_RANGE");
+            try {
+                tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value().toLowerCase());
             } catch (Throwable e) {
             }
             break;
