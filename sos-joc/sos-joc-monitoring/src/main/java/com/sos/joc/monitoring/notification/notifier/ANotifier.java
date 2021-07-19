@@ -24,16 +24,12 @@ public abstract class ANotifier {
     protected static final String PREFIX_ENV_VAR = "JS7_MON";
     protected static final String PREFIX_ENV_TABLE_FIELD_VAR = PREFIX_ENV_VAR + "_TABLE";
 
-    protected static final String VAR_TYPE = "TYPE";
-    protected static final String VAR_STATUS = "STATUS";
-
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
     private static final String PREFIX_TABLE_NOTIFICATIONS = "MON_N";
 
     private JocHref jocHref;
     private Map<String, String> tableFields;
-    private NotificationType type;
     private NotificationStatus status;
 
     public abstract NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn);
@@ -51,7 +47,7 @@ public abstract class ANotifier {
     }
 
     protected void set(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
-        setTypeStatus(type);
+        setStatus(type);
         setTableFields(mo, mos, mn);
         jocHref = new JocHref(mo, mos);
     }
@@ -63,8 +59,6 @@ public abstract class ANotifier {
     protected String resolve(String msg, boolean resolveEnv, Map<String, String> map) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
         jocHref.addKeys(ps);
-        ps.addKey(VAR_TYPE, type.value());
-        ps.addKey(VAR_STATUS, status.intValue().toString());
 
         getTableFields().entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue());
@@ -79,8 +73,7 @@ public abstract class ANotifier {
         return resolveEnv ? ps.replaceEnvVars(m) : m;
     }
 
-    protected void setTypeStatus(NotificationType type) {
-        this.type = type;
+    protected void setStatus(NotificationType type) {
         switch (type) {
         case SUCCESS:
         case RECOVERED:
@@ -122,7 +115,7 @@ public abstract class ANotifier {
 
     private StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[ON_").append(type.value()).append("]");
+        sb.append("[").append(type.value()).append("]");
         sb.append("[");
         if (mo != null) {
             sb.append("controllerId=").append(mo.getControllerId());
@@ -140,6 +133,11 @@ public abstract class ANotifier {
 
     private void setTableFields(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         tableFields = new HashMap<String, String>();
+        // additional fields
+        tableFields.put(PREFIX_TABLE_ORDERS + "_TIME_ELAPSED", "");
+        tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_TIME_ELAPSED", "");
+        tableFields.put(PREFIX_TABLE_NOTIFICATIONS + "_STATUS", status.name());
+
         if (mo == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrder.class, true, PREFIX_TABLE_ORDERS));
         } else {
@@ -168,31 +166,31 @@ public abstract class ANotifier {
         case PREFIX_TABLE_ORDERS:
             String state = tableFields.get(tablePrefix + "_STATE");
             try {
-                tableFields.put(tablePrefix + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_STATE", OrderStateText.fromValue(Integer.valueOf(state)).value());
             } catch (Throwable e) {
             }
             break;
         case PREFIX_TABLE_ORDER_STEPS:
             String criticality = tableFields.get(tablePrefix + "_JOB_CRITICALITY");
             try {
-                tableFields.put(tablePrefix + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_JOB_CRITICALITY", JobCriticality.fromValue(Integer.valueOf(criticality)).value());
             } catch (Throwable e) {
             }
             String warn = tableFields.get(tablePrefix + "_WARN");
             try {
-                tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_WARN", JobWarning.fromValue(Integer.valueOf(warn)).value());
             } catch (Throwable e) {
             }
             break;
         case PREFIX_TABLE_NOTIFICATIONS:
             String type = tableFields.get(tablePrefix + "_TYPE");
             try {
-                tableFields.put(tablePrefix + "_TYPE", NotificationType.fromValue(Integer.valueOf(type)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_TYPE", NotificationType.fromValue(Integer.valueOf(type)).value());
             } catch (Throwable e) {
             }
             String range = tableFields.get(tablePrefix + "_RANGE");
             try {
-                tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value().toLowerCase());
+                tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value());
             } catch (Throwable e) {
             }
             String recoveredId = tableFields.get(tablePrefix + "_RECOVERED_ID");
@@ -229,7 +227,7 @@ public abstract class ANotifier {
     private void setSeverity(String tablePrefix) {
         String severity = tableFields.get(tablePrefix + "_SEVERITY");
         try {
-            tableFields.put(tablePrefix + "_SEVERITY", HistorySeverity.getName(Integer.valueOf(severity)).toLowerCase());
+            tableFields.put(tablePrefix + "_SEVERITY", HistorySeverity.getName(Integer.valueOf(severity)));
         } catch (Throwable e) {
         }
     }
@@ -238,11 +236,4 @@ public abstract class ANotifier {
         return jocHref;
     }
 
-    protected NotificationType getType() {
-        return type;
-    }
-
-    protected NotificationStatus getStatus() {
-        return status;
-    }
 }

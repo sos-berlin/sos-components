@@ -32,7 +32,7 @@ public class NotifierCommand extends ANotifier {
 
         set(type, mo, mos, mn);
         String cmd = resolve(monitor.getCommand(), false);
-        LOGGER.info(getInfo4execute(true, mo, mos, getType(), cmd));
+        LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
 
         SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
         if (result.hasError()) {
@@ -60,8 +60,6 @@ public class NotifierCommand extends ANotifier {
 
     private SOSEnv getEnvVariables(String cmd) {
         Map<String, String> map = new HashMap<>();
-        map.put(PREFIX_ENV_VAR + "_" + VAR_TYPE, getType().value());
-        map.put(PREFIX_ENV_VAR + "_" + VAR_STATUS, getStatus().intValue().toString());
         map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd);
 
         getJocHref().addEnvs(map);
