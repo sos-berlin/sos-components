@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -162,6 +163,17 @@ public class Validator {
             }
             if (jobResource.getArguments() != null) {
                 validateExpression("$.arguments", jobResource.getArguments().getAdditionalProperties());
+            }
+        } else if (ConfigurationType.BOARD.equals(type)) {
+            Board board = (Board) config;
+            if (board.getToNotice() != null) {
+                validateExpression("$.toNotice: ", board.getToNotice());
+            }
+            if (board.getReadingOrderToNoticeId() != null) {
+                validateExpression("$.readingOrderToNotice: ", board.getReadingOrderToNoticeId());
+            }
+            if (board.getEndOfLife() != null) {
+                validateExpression("$.endOfLife: ", board.getEndOfLife());
             }
         }
     }

@@ -45,6 +45,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(custerSettings));
             entity.setCopy(ClusterSettings.getCopyPasteSuffixPrefix(custerSettings));
             entity.setRestore(ClusterSettings.getRestoreSuffixPrefix(custerSettings));
+            entity.setImport(ClusterSettings.getImportSuffixPrefix(custerSettings));
             entity.setShowViews(ClusterSettings.getShowViews(custerSettings, true));
             entity.setDeliveryDate(Date.from(Instant.now()));
             
