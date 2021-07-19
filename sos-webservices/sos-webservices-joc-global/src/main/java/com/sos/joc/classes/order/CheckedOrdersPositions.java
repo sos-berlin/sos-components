@@ -61,6 +61,9 @@ public class CheckedOrdersPositions extends OrdersPositions {
     @JsonIgnore
     private JPosition currentPosition = null;
     
+    @JsonIgnore
+    private Set<Positions> positionsWithImplicitEnds = new LinkedHashSet<>();
+    
     public CheckedOrdersPositions() {
         //
     }
@@ -120,6 +123,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
                     Positions p = new Positions();
                     p.setPosition(jPos.toList());
                     p.setPositionString(positionString);
+                    //positionsWithImplicitEnds.add(p);
                     if (!implicitEnds.contains(p.getPositionString())) {
                         pos.add(p);
                         counterPerPos.putIfAbsent(positionString, 0);
@@ -179,6 +183,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             Positions p = new Positions();
             p.setPosition(jPos.toList());
             p.setPositionString(jPos.toString());
+            positionsWithImplicitEnds.add(p);
             if (!implicitEnds.contains(p.getPositionString())) {
                 pos.add(p);
             }
@@ -218,6 +223,11 @@ public class CheckedOrdersPositions extends OrdersPositions {
     @JsonIgnore
     public boolean isSingleOrder() {
         return singleOrder;
+    }
+    
+    @JsonIgnore
+    public Set<Positions> getPositionsWithImplicitEnds() {
+        return positionsWithImplicitEnds;
     }
     
     @JsonIgnore

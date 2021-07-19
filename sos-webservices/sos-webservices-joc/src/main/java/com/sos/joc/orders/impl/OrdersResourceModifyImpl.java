@@ -322,11 +322,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         } else if (cop.isSingleOrder()) {
             
             if (withVariables) {
+                Set<String> allowedPositionsWithImplicitEnds = cop.getPositionsWithImplicitEnds().stream().map(Positions::getPositionString).collect(
+                        Collectors.toCollection(LinkedHashSet::new));
                 final String positionString = positionOpt.isPresent() ? positionOpt.get().toString() : "";
                 boolean isNotFuturePosition = true;
                 if (positionOpt.isPresent()) {
-                    int posIndex = getIndex(allowedPositions, positionString);
-                    int curPosIndex = getIndex(allowedPositions, cop.getCurrentPosition().toString());
+                    int posIndex = getIndex(allowedPositionsWithImplicitEnds, positionString);
+                    int curPosIndex = getIndex(allowedPositionsWithImplicitEnds, cop.getCurrentPosition().toString());
                     isNotFuturePosition = posIndex <= curPosIndex;
                 }
                 
@@ -334,7 +336,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 List<Object> prevPos = null;
                 String prevPosString = null;
                 if (isNotFuturePosition) {
-                    Positions prevP = getPrevious(cop.getPositions(), positionString);
+                    Positions prevP = getPrevious(cop.getPositionsWithImplicitEnds(), positionString);
                     if (prevP != null) {
                         prevPos = prevP.getPosition();
                         prevPosString = prevP.getPositionString();
@@ -404,7 +406,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             result++;
         }
-        return -1;
+        return result;
     }
     
     private static Positions getPrevious(Set<Positions> set, String value) {
