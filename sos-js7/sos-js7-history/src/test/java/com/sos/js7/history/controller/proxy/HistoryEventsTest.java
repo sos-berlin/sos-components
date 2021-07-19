@@ -83,7 +83,7 @@ public class HistoryEventsTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int CHECKER_REFRESH_INTERVAL = 10; // seconds
-    private static final Long START_EVENT_ID = 1625839049560002L;
+    private static final Long START_EVENT_ID = 1626690343147000L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
     private AtomicBoolean stopped = new AtomicBoolean();

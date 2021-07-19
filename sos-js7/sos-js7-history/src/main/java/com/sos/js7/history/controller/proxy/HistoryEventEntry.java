@@ -37,6 +37,7 @@ import js7.data.order.Outcome.Completed;
 import js7.data.order.Outcome.Disrupted;
 import js7.data.order.Outcome.Failed;
 import js7.data.order.Outcome.Killed;
+import js7.data.order.Outcome.TimedOut;
 import js7.data.value.Value;
 import js7.data.workflow.instructions.executable.WorkflowJob.Name;
 import js7.data_for_java.agent.JAgentRef;
@@ -60,7 +61,7 @@ import scala.jdk.javaapi.OptionConverters;
 public class HistoryEventEntry {
 
     public static enum OutcomeType {
-        succeeded, failed, disrupted, broken, killed
+        succeeded, failed, disrupted, broken, killed, timedout
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryEventEntry.class);
@@ -390,6 +391,8 @@ public class HistoryEventEntry {
                     handleDisrupted(outcome, (Disrupted) outcome);
                 } else if (outcome instanceof Killed) {
                     handleKilled(outcome, (Killed) outcome);
+                } else if (outcome instanceof TimedOut) {
+                    handleTimedOut(outcome, (TimedOut) outcome);
                 }
             }
 
@@ -468,6 +471,21 @@ public class HistoryEventEntry {
                     if (o != null && o instanceof Failed) {
                         handleFailed((Failed) o);
                         type = OutcomeType.killed;
+                    }
+                }
+            }
+
+            private void handleTimedOut(Outcome outcome, TimedOut problem) {
+                returnCode = null;
+                isSucceeded = problem.isSucceeded();
+                isFailed = problem.isFailed();
+                type = OutcomeType.timedout;
+
+                if (isFailed) {
+                    Completed o = problem.outcome();
+                    if (o != null && o instanceof Failed) {
+                        handleFailed((Failed) o);
+                        type = OutcomeType.timedout;
                     }
                 }
             }
