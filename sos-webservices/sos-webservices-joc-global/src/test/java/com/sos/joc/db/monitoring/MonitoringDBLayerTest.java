@@ -34,7 +34,7 @@ public class MonitoringDBLayerTest {
             Integer limit = null;
 
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            sr = dbLayer.getNotifications(dateFrom, controllerId, limit);
+            sr = dbLayer.getNotifications(dateFrom, controllerId, null, limit);
             int size = 0;
             while (sr.next()) {
                 NotificationDBItemEntity item = (NotificationDBItemEntity) sr.get(0);

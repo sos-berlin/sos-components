@@ -57,9 +57,9 @@ public class NotifierJMS extends ANotifier {
         String message = null;
         try {
             producer = createProducer();
-            set(mo, mos, mn);
+            set(type, mo, mos, mn);
 
-            message = resolve(monitor.getMessage(), type, true);
+            message = resolve(monitor.getMessage(), true);
 
             producer.setPriority(monitor.getPriority());
             producer.setDeliveryMode(monitor.getDeliveryMode());

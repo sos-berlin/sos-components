@@ -20,7 +20,7 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getNotifications(Date dateFrom, String controllerId, Integer limit) throws SOSHibernateException {
+    public ScrollableResults getNotifications(Date dateFrom, String controllerId, List<Integer> types, Integer limit) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
         List<String> where = new ArrayList<>();
         if (dateFrom != null) {
@@ -28,6 +28,13 @@ public class MonitoringDBLayer extends DBLayer {
         }
         if (!SOSString.isEmpty(controllerId)) {
             where.add("o.controllerId=:controllerId");
+        }
+        if (types != null && types.size() > 0) {
+            if (types.size() == 1) {
+                where.add("n.type = :type");
+            } else {
+                where.add("n.type in :types");
+            }
         }
         if (where.size() > 0) {
             hql.append("where ").append(String.join(" and ", where)).append(" ");
@@ -40,6 +47,13 @@ public class MonitoringDBLayer extends DBLayer {
         }
         if (!SOSString.isEmpty(controllerId)) {
             query.setParameter("controllerId", controllerId);
+        }
+        if (types != null && types.size() > 0) {
+            if (types.size() == 1) {
+                query.setParameter("type", types.get(0));
+            } else {
+                query.setParameterList("types", types);
+            }
         }
         if (limit != null && limit > 0) {
             query.setMaxResults(limit);

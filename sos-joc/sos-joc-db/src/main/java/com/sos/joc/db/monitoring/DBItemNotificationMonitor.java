@@ -111,7 +111,7 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setConfiguration(String val) {
-        configuration = normalizeText(val);
+        configuration = normalizeValue(val, 500);
     }
 
     public String getMessage() {
@@ -119,7 +119,7 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setMessage(String val) {
-        message = normalizeText(val);
+        message = normalizeValue(val, 5_000);
     }
 
     public void setError(boolean val) {
@@ -132,11 +132,6 @@ public class DBItemNotificationMonitor extends DBItem {
 
     public void setErrorText(String val) {
         errorText = normalizeErrorText(val);
-    }
-
-    @Transient
-    public static String normalizeText(String val) {
-        return normalizeValue(val, 500);
     }
 
     @Transient

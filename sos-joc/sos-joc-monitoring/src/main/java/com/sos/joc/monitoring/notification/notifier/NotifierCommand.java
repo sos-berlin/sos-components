@@ -30,11 +30,11 @@ public class NotifierCommand extends ANotifier {
     @Override
     public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
 
-        set(mo, mos, mn);
-        String cmd = resolve(monitor.getCommand(), type, false);
-        LOGGER.info(getInfo4execute(true, mo, mos, type, cmd));
+        set(type, mo, mos, mn);
+        String cmd = resolve(monitor.getCommand(), false);
+        LOGGER.info(getInfo4execute(true, mo, mos, getType(), cmd));
 
-        SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd, type));
+        SOSCommandResult result = SOSShell.executeCommand(cmd, getEnvVariables(cmd));
         if (result.hasError()) {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
@@ -58,9 +58,10 @@ public class NotifierCommand extends ANotifier {
         return null;
     }
 
-    private SOSEnv getEnvVariables(String cmd, NotificationType type) {
+    private SOSEnv getEnvVariables(String cmd) {
         Map<String, String> map = new HashMap<>();
-        map.put(PREFIX_ENV_VAR + "_" + VAR_TYPE, type.value());
+        map.put(PREFIX_ENV_VAR + "_" + VAR_TYPE, getType().value());
+        map.put(PREFIX_ENV_VAR + "_" + VAR_STATUS, getStatus().intValue().toString());
         map.put(PREFIX_ENV_VAR + "_" + VAR_COMMAND, cmd);
 
         getJocHref().addEnvs(map);

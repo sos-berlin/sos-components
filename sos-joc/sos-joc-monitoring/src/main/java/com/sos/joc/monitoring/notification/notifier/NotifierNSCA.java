@@ -46,7 +46,7 @@ public class NotifierNSCA extends ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierNSCA.class);
 
-    public static final String VAR_SERVICE_NAME = "SERVICE_NAME";
+    private static final String VAR_SERVICE_NAME = "SERVICE_NAME";
 
     private final MonitorNSCA monitor;
     private NagiosSettings settings = null;
@@ -68,12 +68,12 @@ public class NotifierNSCA extends ANotifier {
     public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
 
         try {
-            set(mo, mos, mn);
+            set(type, mo, mos, mn);
             set(type);
 
             Map<String, String> map = new HashMap<>();
             map.put(VAR_SERVICE_NAME, serviceName);
-            message = resolve(monitor.getMessage(), type, true, map);
+            message = resolve(monitor.getMessage(), true, map);
 
             MessagePayload payload = new MessagePayloadBuilder().withHostname(monitor.getServiceHost()).withLevel(level).withServiceName(serviceName)
                     .withMessage(message).create();
