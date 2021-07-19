@@ -32,6 +32,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "comments",
     "copy",
     "restore",
+    "import",
     "showViews"
 })
 public class Properties {
@@ -108,6 +109,14 @@ public class Properties {
      */
     @JsonProperty("restore")
     private SuffixPrefix restore;
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("import")
+    private SuffixPrefix _import;
     /**
      * 
      * (Required)
@@ -319,6 +328,28 @@ public class Properties {
     }
 
     /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("import")
+    public SuffixPrefix getImport() {
+        return _import;
+    }
+
+    /**
+     * suffix/prefix properties
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("import")
+    public void setImport(SuffixPrefix _import) {
+        this._import = _import;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -340,12 +371,12 @@ public class Properties {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("showViews", showViews).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(comments).append(restore).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).append(title).append(defaultProfileAccount).toHashCode();
+        return new HashCodeBuilder().append(comments).append(restore).append(title).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -357,7 +388,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(comments, rhs.comments).append(restore, rhs.restore).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).isEquals();
+        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }
