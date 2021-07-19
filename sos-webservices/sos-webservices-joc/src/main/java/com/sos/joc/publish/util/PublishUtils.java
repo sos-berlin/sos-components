@@ -125,7 +125,6 @@ import com.sos.joc.model.publish.DeployablesValidFilter;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
-import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.model.sign.Signature;
@@ -620,7 +619,21 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            // junctions
+            // Board
+//            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
+//                    .map(item -> {
+//                        try {
+//                            Board board = (Board)item.readUpdateableContent();
+//                            if (board.getPath() == null) {
+//                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+//                            }
+//                            return JUpdateItemOperation.addOrChangeSimple(board);
+//                        } catch (JocDeployException e) {
+//                            throw e;
+//                        } catch (Exception e) {
+//                            throw new JocDeployException(e);
+//                        }
+//                    }).collect(Collectors.toSet()));
             // TODO: when implemented in controller
             // job classes
             // TODO: when implemented in controller
@@ -981,8 +994,7 @@ public abstract class PublishUtils {
                     if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.BOARD.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD
-                                .intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1474,7 +1486,7 @@ public abstract class PublishUtils {
                 throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""))));
             }
-            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(),
                     "")));
             boardPublish.setObjectType(DeployType.BOARD);
             return boardPublish;
@@ -1487,7 +1499,7 @@ public abstract class PublishUtils {
                 throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
             }
-            jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+            jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(),
                     "")));
             jobClassPublish.setObjectType(DeployType.JOBCLASS);
             return jobClassPublish;
@@ -2820,8 +2832,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Board board) {
-        if (board != null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null && board.getToNotice() == null && board
-                .getTYPE() == null) {
+        if (board != null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null && board.getToNotice() == null
+                && board.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3009,7 +3021,7 @@ public abstract class PublishUtils {
             return fileWatch.get();
         }
     }
-    
+        
     private static JLock getJLock(Lock lock) {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }

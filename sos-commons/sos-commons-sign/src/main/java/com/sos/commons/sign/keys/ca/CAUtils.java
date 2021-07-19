@@ -17,8 +17,10 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -100,9 +102,14 @@ public abstract class CAUtils {
               new X509v3CertificateBuilder(issuer, certSerialNumber, startDate, endDate, csr.getSubject(), csr.getSubjectPublicKeyInfo());
       // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
       // new ASN1ObjectIdentifier("2.5.29.17")
-      GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
-      GeneralNames san = new GeneralNames(altName);
-      certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+      if (subjectAlternativeName != null && !subjectAlternativeName.isEmpty()) {
+          GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+          GeneralNames san = new GeneralNames(altName);
+          certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+      }
+      // client and server authentication
+      certgen.addExtension(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.1"), true, new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth));
+      certgen.addExtension(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.2"), true, new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
       ContentSigner signer = null;
       if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
           signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));

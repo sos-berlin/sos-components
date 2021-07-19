@@ -1,4 +1,4 @@
-package com.sos.joc.keys.resource;
+package com.sos.joc.keys.sign.resource;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;

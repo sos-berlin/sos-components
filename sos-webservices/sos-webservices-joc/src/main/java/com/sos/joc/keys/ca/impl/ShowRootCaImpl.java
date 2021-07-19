@@ -26,7 +26,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.keys.resource.IShowKey;
+import com.sos.joc.keys.sign.resource.IShowKey;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;

@@ -1,4 +1,4 @@
-package com.sos.joc.keys.impl;
+package com.sos.joc.keys.sign.impl;
 
 import java.util.Date;
 
@@ -10,10 +10,9 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.keys.resource.IGenerateKey;
+import com.sos.joc.keys.sign.resource.IGenerateKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.GenerateKeyFilter;
@@ -49,11 +48,10 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null,
-                            secondsToExpire);
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
                 } else {
-                    keyPair = KeyUtil.createKeyPair(ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc()), null, null);
-                }
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
+                }                
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
                 //default
@@ -66,9 +64,9 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             // store private key to the db
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
                     jobschedulerUser.getSosShiroCurrentUser().getUsername(),
-                    JocSecurityLevel.LOW);
+                    JocSecurityLevel.MEDIUM);
 //            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
-//                    String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));
+//                    String.format("new Private Key generated for profile - %1$s -", jobschedulerUser.getSosShiroCurrentUser().getUsername()));
 //            logAuditMessage(audit);
 //            storeAuditLogEntry(audit);
             return JOCDefaultResponse.responseStatus200(keyPair);
