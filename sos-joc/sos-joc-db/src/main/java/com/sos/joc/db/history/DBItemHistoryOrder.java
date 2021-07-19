@@ -76,9 +76,6 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[NAME]", nullable = false)
     private String name;// TODO
 
-    @Column(name = "[TITLE]", nullable = true)
-    private String title;// TODO
-
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;// event. implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ...
 
@@ -286,14 +283,6 @@ public class DBItemHistoryOrder extends DBItem {
         name = val;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String val) {
-        title = val;
-    }
-
     public String getStartCause() {
         return startCause;
     }
@@ -339,7 +328,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setStartParameters(String val) {
-        startParameters = val;
+        startParameters = normalizeValue(val, 2_000);
     }
 
     public Long getCurrentHistoryOrderStepId() {

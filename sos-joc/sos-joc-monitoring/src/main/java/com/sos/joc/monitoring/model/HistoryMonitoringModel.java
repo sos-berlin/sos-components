@@ -301,7 +301,6 @@ public class HistoryMonitoringModel {
         item.setParentOrderId(hob.getParentOrderId());
         item.setHasChildren(false);
         item.setName(hob.getName());
-        item.setTitle(hob.getTitle());
         item.setCurrentHistoryOrderStepId(hob.getCurrentHistoryOrderStepId());
 
         item.setStartCause(hob.getStartCause());

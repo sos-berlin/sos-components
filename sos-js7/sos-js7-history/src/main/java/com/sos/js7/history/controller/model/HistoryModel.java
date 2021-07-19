@@ -676,8 +676,6 @@ public class HistoryModel {
             item.setRetryCounter(HistoryPosition.getRetry(entry.getPosition()));
 
             item.setName(entry.getOrderId());
-            item.setTitle(null);// TODO
-
             item.setStartCause(OrderStartCause.order.name());// TODO
 
             item.setStartTimePlanned(entry.getPlanned() == null ? entry.getEventDatetime() : entry.getPlanned());
@@ -1085,8 +1083,6 @@ public class HistoryModel {
             item.setRetryCounter(HistoryPosition.getRetry(entry.getPosition()));
 
             item.setName(forkOrder.getBranchId());// TODO
-            item.setTitle(null);// TODO
-
             item.setStartCause(OrderStartCause.fork.name());// TODO
             item.setStartTimePlanned(entry.getEventDatetime());
             item.setStartTime(entry.getEventDatetime());

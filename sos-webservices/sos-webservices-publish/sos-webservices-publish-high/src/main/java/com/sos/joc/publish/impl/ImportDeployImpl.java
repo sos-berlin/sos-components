@@ -25,7 +25,6 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.jobclass.JobClass;
-import com.sos.inventory.model.junction.Junction;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -46,11 +45,11 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
+import com.sos.joc.model.inventory.board.BoardPublish;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
-import com.sos.joc.model.inventory.junction.JunctionPublish;
 import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
@@ -65,6 +64,7 @@ import com.sos.joc.publish.util.DeleteDeployments;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.jobresource.JobResource;
 
@@ -152,8 +152,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case LOCK:
                     break;
-                case JUNCTION:
-                    //commitId = ((Junction) config.getContent()).getVersionId();
+                case BOARD:
                     break;
                 case JOBCLASS:
                     break;
@@ -209,13 +208,13 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 	objectsToCheckPathRenaming.add(fosDbItem);
                 	fosPublish.setObjectType(DeployType.FILEORDERSOURCE);
                 	importedObjects.put(fosPublish, null);
-                case JUNCTION:
-                    JunctionPublish junctionPublish = new JunctionPublish();
-                    junctionPublish.setContent((Junction) config.getContent());
-                    DBItemInventoryConfiguration junctionDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JUNCTION);
-                    objectsToCheckPathRenaming.add(junctionDbItem);
-                    junctionPublish.setObjectType(DeployType.JUNCTION);
-                    importedObjects.put(junctionPublish, null);
+                case BOARD:
+                    BoardPublish boardPublish = new BoardPublish();
+                    boardPublish.setContent((Board) config.getContent());
+                    DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.BOARD);
+                    objectsToCheckPathRenaming.add(boardDbItem);
+                    boardPublish.setObjectType(DeployType.BOARD);
+                    importedObjects.put(boardPublish, null);
                     break;
                 case JOBCLASS:
                     JobClassPublish jobClassPublish = new JobClassPublish();

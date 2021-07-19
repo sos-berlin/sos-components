@@ -11,7 +11,6 @@ public enum DeployType {
     WORKFLOW("Workflow", 1),
     JOBCLASS("JobClass", 2),
     LOCK("Lock", 4),
-    JUNCTION("Junction", 5),
     FILEORDERSOURCE("FileWatch", 9),
     JOBRESOURCE("JobResource", 10),
     BOARD("Board", 11);

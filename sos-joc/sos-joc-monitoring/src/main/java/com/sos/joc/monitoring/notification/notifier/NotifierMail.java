@@ -12,6 +12,7 @@ import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.monitor.mail.MonitorMail;
@@ -32,11 +33,11 @@ public class NotifierMail extends ANotifier {
     }
 
     @Override
-    public NotifyResult notify(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
+    public NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
         if (mail == null) {
             return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
         }
-        set(mo, mos);
+        set(mo, mos, mn);
 
         mail.setSubject(resolve(monitor.getSubject(), type, true));
         mail.setBody(resolve(monitor.getMessage(), type, true));

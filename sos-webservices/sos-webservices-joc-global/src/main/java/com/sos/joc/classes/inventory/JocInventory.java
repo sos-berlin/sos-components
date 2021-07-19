@@ -37,7 +37,6 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.jobresource.JobResource;
-import com.sos.inventory.model.junction.Junction;
 import com.sos.inventory.model.lock.Lock;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -89,7 +88,6 @@ public class JocInventory {
             put(ConfigurationType.JOB, "classpath:/raml/inventory/schemas/job/job-schema.json");
             put(ConfigurationType.JOBCLASS, "classpath:/raml/inventory/schemas/jobClass/jobClass-schema.json");
             put(ConfigurationType.JOBRESOURCE, "classpath:/raml/inventory/schemas/jobresource/jobResource-schema.json");
-            put(ConfigurationType.JUNCTION, "classpath:/raml/inventory/schemas/junction/junction-schema.json");
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
@@ -129,7 +127,6 @@ public class JocInventory {
             put(ConfigurationType.JOB, Job.class);
             put(ConfigurationType.JOBCLASS, JobClass.class);
             put(ConfigurationType.JOBRESOURCE, JobResource.class);
-            put(ConfigurationType.JUNCTION, Junction.class);
             put(ConfigurationType.LOCK, Lock.class);
             put(ConfigurationType.FILEORDERSOURCE, FileOrderSource.class);
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
@@ -142,8 +139,8 @@ public class JocInventory {
     });
 
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
-            ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.JUNCTION, ConfigurationType.LOCK,
-            ConfigurationType.WORKFLOW, ConfigurationType.JOBRESOURCE, ConfigurationType.BOARD)));
+            ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW,
+            ConfigurationType.JOBRESOURCE, ConfigurationType.BOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));

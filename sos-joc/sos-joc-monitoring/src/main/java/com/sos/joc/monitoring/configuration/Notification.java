@@ -152,7 +152,7 @@ public class Notification extends AElement {
     }
 
     private Node resolveWorkflowRef(Document document, String ref) throws SOSXMLXPathException {
-        return (Node) SOSXML.newXPath().selectNode(document.getDocumentElement(), "./Fragments/ObjectsFragments/Workflows[@name='" + ref + "']");
+        return (Node) SOSXML.newXPath().selectNode(document.getDocumentElement(), "./Fragments/ObjectFragments/Workflows[@name='" + ref + "']");
     }
 
     private List<NotificationType> evaluateTypes() {

@@ -103,6 +103,8 @@ import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
+import com.sos.joc.model.inventory.board.BoardEdit;
+import com.sos.joc.model.inventory.board.BoardPublish;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
@@ -110,8 +112,6 @@ import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
 import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
-import com.sos.joc.model.inventory.junction.JunctionEdit;
-import com.sos.joc.model.inventory.junction.JunctionPublish;
 import com.sos.joc.model.inventory.lock.LockEdit;
 import com.sos.joc.model.inventory.lock.LockPublish;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
@@ -135,11 +135,11 @@ import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableFileOrderSourceAgentName;
 import com.sos.joc.publish.mapper.UpdateableWorkflowJobAgentName;
+import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.job.Job;
 import com.sos.sign.model.jobclass.JobClass;
 import com.sos.sign.model.jobresource.JobResource;
-import com.sos.sign.model.junction.Junction;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
 import com.sos.webservices.order.initiator.model.ScheduleEdit;
@@ -975,13 +975,13 @@ public abstract class PublishUtils {
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
-                case JUNCTION:
-                    String junction = Globals.objectMapper.writeValueAsString(((JunctionPublish) draft).getContent());
-                    newDeployedObject.setContent(junction);
+                case BOARD:
+                    String board = Globals.objectMapper.writeValueAsString(((BoardPublish) draft).getContent());
+                    newDeployedObject.setContent(board);
                     if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JUNCTION.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.BOARD.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((JunctionPublish) draft).getContent().getPath(), ConfigurationType.JUNCTION
+                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD
                                 .intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
@@ -1465,19 +1465,19 @@ public abstract class PublishUtils {
                     "")));
             lockPublish.setObjectType(DeployType.LOCK);
             return lockPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-            JunctionPublish junctionPublish = new JunctionPublish();
-            Junction junction = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Junction.class);
-            if (checkObjectNotEmpty(junction)) {
-                junctionPublish.setContent(junction);
+        } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
+            BoardPublish boardPublish = new BoardPublish();
+            Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Board.class);
+            if (checkObjectNotEmpty(board)) {
+                boardPublish.setContent(board);
             } else {
-                throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), ""))));
+                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""))));
             }
-            junctionPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
+            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
                     "")));
-            junctionPublish.setObjectType(DeployType.JUNCTION);
-            return junctionPublish;
+            boardPublish.setObjectType(DeployType.BOARD);
+            return boardPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             JobClassPublish jobClassPublish = new JobClassPublish();
             JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), JobClass.class);
@@ -1593,24 +1593,24 @@ public abstract class PublishUtils {
             lockEdit.setPath(normalizedPath);
             lockEdit.setObjectType(ConfigurationType.LOCK);
             return lockEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.value(), "")); 
+        } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
             	normalizedPath = normalizedPath.substring(1);
             }
-            JunctionEdit junctionEdit = new JunctionEdit();
-            com.sos.inventory.model.junction.Junction junction = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.junction.Junction.class);
-            if (checkObjectNotEmpty(junction)) {
-                junctionEdit.setConfiguration(junction);
+            BoardEdit boardEdit = new BoardEdit();
+            com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+            		com.sos.inventory.model.board.Board.class);
+            if (checkObjectNotEmpty(board)) {
+                boardEdit.setConfiguration(board);
             } else {
-                throw new JocImportException(String.format("Junction with path %1$s not imported. Object values could not be mapped.",
+                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.",
                         normalizedPath));
             }
-            junctionEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            junctionEdit.setPath(normalizedPath);
-            junctionEdit.setObjectType(ConfigurationType.JUNCTION);
-            return junctionEdit;
+            boardEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            boardEdit.setPath(normalizedPath);
+            boardEdit.setObjectType(ConfigurationType.BOARD);
+            return boardEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
             if (normalizedPath.startsWith("//")) {
@@ -1732,11 +1732,11 @@ public abstract class PublishUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
-                            case JUNCTION:
-                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
-                                Junction junction = (Junction) deployable.getContent();
-                                junction.setVersionId(commitId);
-                                contentBytes = JsonSerializer.serializeAsBytes(junction);
+                            case BOARD:
+                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                                Board board = (Board) deployable.getContent();
+                                board.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                contentBytes = JsonSerializer.serializeAsBytes(board);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -1830,8 +1830,8 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 break;
-                            case JUNCTION:
-                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            case BOARD:
+                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -1941,11 +1941,11 @@ public abstract class PublishUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
-                            case JUNCTION:
-                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
-                                Junction junction = (Junction) deployable.getContent();
-                                junction.setVersionId(commitId);
-                                contentBytes = JsonSerializer.serializeAsBytes(junction);
+                            case BOARD:
+                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                                Board board = (Board) deployable.getContent();
+                                board.setPath(Paths.get(deployable.getPath()).getFileName().toString());
+                                contentBytes = JsonSerializer.serializeAsBytes(board);
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -2064,8 +2064,8 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 break;
-                            case JUNCTION:
-                                extension = ControllerObjectFileExtension.JUNCTION_FILE_EXTENSION.toString();
+                            case BOARD:
+                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -2592,12 +2592,9 @@ public abstract class PublishUtils {
                 Lock lock = Globals.objectMapper.readValue(item.getContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
-            case JUNCTION:
-                Junction junction = Globals.objectMapper.readValue(item.getContent().getBytes(), Junction.class);
-                if (commitId != null) {
-                    junction.setVersionId(commitId);
-                }
-                jsObject.setContent(junction);
+            case BOARD:
+                Board board = Globals.objectMapper.readValue(item.getContent().getBytes(), Board.class);
+                jsObject.setContent(board);
                 break;
             case JOBCLASS:
                 JobClass jobClass = Globals.objectMapper.readValue(item.getContent().getBytes(), JobClass.class);
@@ -2643,12 +2640,9 @@ public abstract class PublishUtils {
                 Lock lock = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
-            case JUNCTION:
-                Junction junction = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Junction.class);
-                if (commitId != null) {
-                    junction.setVersionId(commitId);
-                }
-                jsObject.setContent(junction);
+            case BOARD:
+                Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Board.class);
+                jsObject.setContent(board);
                 break;
             case FILEORDERSOURCE:
                 FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getInvContent().getBytes(), FileOrderSource.class);
@@ -2691,10 +2685,10 @@ public abstract class PublishUtils {
                     Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
                 configurationObject.setConfiguration(lock);
                 break;
-            case JUNCTION:
-                com.sos.inventory.model.junction.Junction junction = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
-                configurationObject.setConfiguration(junction);
+            case BOARD:
+                com.sos.inventory.model.board.Board board = 
+                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.board.Board.class);
+                configurationObject.setConfiguration(board);
                 break;
             case FILEORDERSOURCE:
                 com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
@@ -2753,10 +2747,10 @@ public abstract class PublishUtils {
                     Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
                 configuration.setConfiguration(jobClass);
                 break;
-            case JUNCTION:
-                com.sos.inventory.model.junction.Junction junction = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.junction.Junction.class);
-                configuration.setConfiguration(junction);
+            case BOARD:
+                com.sos.inventory.model.board.Board board = 
+                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.board.Board.class);
+                configuration.setConfiguration(board);
                 break;
             default:
             	break;
@@ -2825,17 +2819,18 @@ public abstract class PublishUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(Junction junction) {
-        if (junction != null && junction.getLifetime() == null && junction.getOrderId() == null && junction.getTYPE() == null) {
+    private static boolean checkObjectNotEmpty(Board board) {
+        if (board != null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null && board.getToNotice() == null && board
+                .getTYPE() == null) {
             return false;
         } else {
             return true;
         }
     }
 
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.junction.Junction junction) {
-        if (junction != null && junction.getDocumentationName() == null && junction.getLifetime() == null && junction.getOrderId() == null 
-        		&& junction.getTYPE() == null) {
+    private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
+        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null
+                && board.getToNotice() == null && board.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3091,8 +3086,8 @@ public abstract class PublishUtils {
 				((Lock)deployed.readUpdateableContent()).setPath(deployed.getName());
 			} else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
 				((FileOrderSource)deployed.readUpdateableContent()).setPath(deployed.getName());
-			} else if (deployed.getType() == DeployType.JUNCTION.intValue()) {
-				((Junction)deployed.readUpdateableContent()).setPath(deployed.getName());
+			} else if (deployed.getType() == DeployType.BOARD.intValue()) {
+				((Board)deployed.readUpdateableContent()).setPath(deployed.getName());
 			} else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
 				((JobClass)deployed.readUpdateableContent()).setPath(deployed.getName());
 			}

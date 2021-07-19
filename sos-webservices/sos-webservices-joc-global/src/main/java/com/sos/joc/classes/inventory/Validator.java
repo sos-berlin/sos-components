@@ -136,6 +136,7 @@ public class Validator {
                     validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderPreparation(), new HashMap<String, String>());
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
+                    validateBoardRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
@@ -246,6 +247,27 @@ public class Validator {
         }
     }
     
+    private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
+        Matcher m = Pattern.compile("\"boardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Set<String> boards = new HashSet<>();
+        while (m.find()) {
+            if (m.group(1) != null && !m.group(1).isEmpty()) {
+                boards.add(m.group(1));
+            }
+        }
+        if (!boards.isEmpty()) {
+            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream(), ConfigurationType.BOARD.intValue());
+            if (dbBoards == null || dbBoards.isEmpty()) {
+                throw new JocConfigurationException("Missing assigned Boards: " + boards.toString());
+            } else {
+                boards.removeAll(dbBoards.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
+                if (!boards.isEmpty()) {
+                    throw new JocConfigurationException("Missing assigned Boards: " + boards.toString());
+                }
+            }
+        }
+    }
+    
     private static List<String> validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
         List<String> jobResources = new ArrayList<>();
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
@@ -348,6 +370,7 @@ public class Validator {
                 case PROMPT:
                     Prompt prompt = inst.cast();
                     validateExpression(prompt.getQuestion());
+                    break;
                 default:
                     break;
                 }
