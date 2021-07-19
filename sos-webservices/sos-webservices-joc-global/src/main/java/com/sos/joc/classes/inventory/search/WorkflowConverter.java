@@ -16,6 +16,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.JobCriticality;
@@ -242,6 +243,7 @@ public class WorkflowConverter {
         private List<String> jobNames;
         private List<String> jobLabels;
         private List<String> lockIds;
+        private List<String> boardNames;
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
@@ -255,6 +257,7 @@ public class WorkflowConverter {
             jobLabels = new ArrayList<String>();
             lockIds = new ArrayList<String>();
             locks = new HashMap<String, Integer>();
+            boardNames = new ArrayList<String>();
 
             jobArgNames = new ArrayList<String>();
             jobArgValues = new ArrayList<String>();
@@ -277,6 +280,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "jobNames", jobNames);
             jsonAddStringValues(builder, "jobLabels", jobLabels);
             jsonAddStringValues(builder, "lockIds", lockIds);
+            jsonAddStringValues(builder, "boardNames", boardNames);
             if (locks.size() > 0) {
                 builder.add("locks", getJsonObject(locks));
             }
@@ -312,6 +316,10 @@ public class WorkflowConverter {
 
         public Map<String, Integer> getLocks() {
             return locks;
+        }
+
+        public List<String> getBoardNames() {
+            return boardNames;
         }
 
         public List<String> getJobArgNames() {
@@ -365,6 +373,14 @@ public class WorkflowConverter {
                         if (previousCount == null || currentCount > previousCount) {
                             this.locks.put(lock.getInstruction().getLockName(), currentCount);
                         }
+                    }
+                }
+            }
+            List<WorkflowInstruction<PostNotice>> notices = searcher.getNoticeInstructions();
+            if (notices != null) {
+                for (WorkflowInstruction<PostNotice> notice : notices) {
+                    if (!SOSString.isEmpty(notice.getInstruction().getBoardName())) {
+                        boardNames.add(notice.getInstruction().getBoardName());
                     }
                 }
             }

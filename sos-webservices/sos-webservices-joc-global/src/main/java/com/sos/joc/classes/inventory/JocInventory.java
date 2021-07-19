@@ -871,6 +871,25 @@ public class JocInventory {
             }
             break;
         
+        case BOARD: // determine Workflows with PostNotice or ReadNotice reference
+            // TODO
+            List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
+            if (workflow3 != null && !workflow3.isEmpty()) {
+                for (DBItemInventoryConfiguration workflow : workflow3) {
+                    workflow.setContent(workflow.getContent().replaceAll("(\"boardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
+                    workflow.setDeployed(false);
+                    int i = items.indexOf(workflow);
+                    if (i != -1) {
+                        items.get(i).setContent(workflow.getContent());
+                        items.get(i).setDeployed(false);
+                    } else{
+                        JocInventory.updateConfiguration(dbLayer, workflow);
+                        events.add(workflow.getFolder());
+                    }
+                }
+            }
+            break;
+            
         case WORKFLOW: // determine Schedules and FileOrderSources with Workflow reference
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {

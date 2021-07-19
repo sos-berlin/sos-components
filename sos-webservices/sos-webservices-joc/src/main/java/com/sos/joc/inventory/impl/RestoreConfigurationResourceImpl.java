@@ -94,7 +94,7 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     throw new JocFolderPermissionsException("Access denied for folder: " + newPathWithoutFix);
                 }
                 
-                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.JOBRESOURCE,
+                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.BOARD, ConfigurationType.JOBRESOURCE,
                         ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW,
                         ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
 

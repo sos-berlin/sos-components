@@ -1107,6 +1107,23 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
+    
+    public List<DBItemInventoryConfiguration> getUsedWorkflowsByBoardName(String boardName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+        hql.append("on ic.id=sw.inventoryConfigurationId ");
+        hql.append("where ic.type=:type ");
+        hql.append("and ic.deployed=sw.deployed ");
+        hql.append("and ");
+        
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.boardNames");
+        hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
+
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameter("boardName", "\"" + boardName + "\"");
+        return getSession().getResultList(query);
+    }
 
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByJobResource(String jobResourceName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");

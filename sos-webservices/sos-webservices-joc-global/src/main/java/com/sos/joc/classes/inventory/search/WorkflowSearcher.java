@@ -17,6 +17,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
+import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -246,6 +247,13 @@ public class WorkflowSearcher {
     public List<WorkflowInstruction<Lock>> getLockInstructions() {
         return getInstructions(InstructionType.LOCK).stream().map(l -> {
             return (WorkflowInstruction<Lock>) l;
+        }).collect(Collectors.toList());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<PostNotice>> getNoticeInstructions() {
+        return getInstructions(InstructionType.POST_NOTICE, InstructionType.READ_NOTICE).stream().map(l -> {
+            return (WorkflowInstruction<PostNotice>) l;
         }).collect(Collectors.toList());
     }
 
