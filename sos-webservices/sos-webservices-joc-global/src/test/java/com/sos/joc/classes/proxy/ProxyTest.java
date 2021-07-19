@@ -71,10 +71,9 @@ public class ProxyTest {
 
                 {
                     put(Order.Fresh$.class, "scheduled");
-                    put(Order.Awaiting.class, "waiting");
                     put(Order.DelayedAfterError.class, "waiting");
                     put(Order.Forked.class, "waiting");
-                    put(Order.Offering.class, "waiting");
+                    put(Order.WaitingForNotice.class, "waiting");
                     put(Order.WaitingForLock$.class, "waiting");
                     put(Order.Broken.class, "failed");
                     put(Order.Failed$.class, "failed");
@@ -319,7 +318,7 @@ public class ProxyTest {
     }
 
     private String orderEventToString(Stamped<KeyedEvent<Event>> stamped) {
-        Instant timestamp = stamped.timestamp().toInstant();
+        Instant timestamp = Instant.ofEpochMilli(stamped.timestampMillis());
         KeyedEvent<Event> event = stamped.value();
         Event evt = event.event();
         if (evt instanceof ClusterCoupled) {

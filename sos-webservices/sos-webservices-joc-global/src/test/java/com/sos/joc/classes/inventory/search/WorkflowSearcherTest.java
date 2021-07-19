@@ -159,9 +159,9 @@ public class WorkflowSearcherTest {
             LOGGER.info("  INSTRUCTION: " + SOSString.toString(i));
         }
 
-        instructions = ws.getInstructions(InstructionType.PUBLISH, InstructionType.AWAIT, InstructionType.FORK);
+        instructions = ws.getInstructions(InstructionType.POST_NOTICE, InstructionType.READ_NOTICE, InstructionType.FORK);
         LOGGER.info(" ");
-        LOGGER.info("[getInstructions(PUBLISH,AWAIT,FORK)][size] " + instructions.size());
+        LOGGER.info("[getInstructions(POST_NOTICE,READ_NOTICE,FORK)][size] " + instructions.size());
         for (WorkflowInstruction<?> i : instructions) {
             LOGGER.info("  INSTRUCTION: " + SOSString.toString(i));
         }
