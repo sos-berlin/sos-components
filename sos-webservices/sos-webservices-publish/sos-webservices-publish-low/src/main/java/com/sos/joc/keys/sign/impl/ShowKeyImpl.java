@@ -1,4 +1,4 @@
-package com.sos.joc.keys.impl;
+package com.sos.joc.keys.sign.impl;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +27,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.keys.resource.IShowKey;
+import com.sos.joc.keys.sign.resource.IShowKey;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;

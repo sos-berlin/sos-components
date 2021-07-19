@@ -6,11 +6,18 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,4 +204,65 @@ public abstract class CertificateUtils {
 	    return SOSKeyConstants.CERTIFICATE_HEADER + lineSeparator + encodedCert + lineSeparator + SOSKeyConstants.CERTIFICATE_FOOTER;
 	}
 	
+    public static String extractFirstCommonName (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.CN)[0].getFirst().getValue());
+    }
+
+    public static List<String> extractCommonNames (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        String rootCN = IETFUtils.valueToString(x500name.getRDNs(BCStyle.CN)[0].getFirst().getValue());
+        RDN cn = x500name.getRDNs(BCStyle.CN)[0];
+        List<String> cns = new ArrayList<String>();
+        if (cn.size() > 1) {
+            AttributeTypeAndValue[] values = cn.getTypesAndValues();
+            for(int i = 0; i < values.length; i++) {
+                cns.add(IETFUtils.valueToString(values[i].getValue()));
+            }
+        } else {
+            cns.add(IETFUtils.valueToString(cn.getFirst().getValue()));
+        }
+        return cns;
+    }
+
+    public static String extractFirstOrganizationUnit (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.OU)[0].getFirst().getValue());
+    }
+
+    public static List<String> extractOrganizationUnits (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        RDN ou = x500name.getRDNs(BCStyle.OU)[0];
+        List<String> ous = new ArrayList<String>();
+        if (ou.size() > 1) {
+            AttributeTypeAndValue[] values = ou.getTypesAndValues();
+            for(int i = 0; i < values.length; i++) {
+                ous.add(IETFUtils.valueToString(values[i].getValue()));
+            }
+        } else {
+            ous.add(IETFUtils.valueToString(ou.getFirst().getValue()));
+        }
+        return ous;
+    }
+
+    public static String extractOrganization (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.O)[0].getFirst().getValue());
+    }
+
+    public static String extractCountryCode (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.C)[0].getFirst().getValue());
+    }
+
+    public static String extractLocation (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.L)[0].getFirst().getValue());
+    }
+
+    public static String extractState (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.ST)[0].getFirst().getValue());
+    }
+
 }

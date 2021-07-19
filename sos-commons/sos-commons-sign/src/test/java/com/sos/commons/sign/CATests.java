@@ -414,26 +414,6 @@ public class CATests {
 //        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
 //        LOGGER.info(String.format("X509Certificate.getSigAlgOID() = %1$s", userCertificate.getSigAlgOID()));
 //        LOGGER.info(String.format("X509Certificate.getType() = %1$s", userCertificate.getType()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
-//        LOGGER.info(String.format("X509Certificate.getSigAlgName() = %1$s", userCertificate.getSigAlgName()));
 //    }
     
     private static void inputStream2OutputStream(InputStream inStream, OutputStream outStream) throws IOException {

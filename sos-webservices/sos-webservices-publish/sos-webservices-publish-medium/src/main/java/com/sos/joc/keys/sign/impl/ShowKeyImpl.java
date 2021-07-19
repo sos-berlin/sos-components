@@ -1,4 +1,4 @@
-package com.sos.joc.keys.impl;
+package com.sos.joc.keys.sign.impl;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
-import com.sos.joc.keys.resource.IShowKey;
+import com.sos.joc.keys.sign.resource.IShowKey;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -52,7 +52,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.HIGH);
+            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.MEDIUM);
             if (!PublishUtils.jocKeyPairNotEmpty(jocKeyPair)) {
                 jocKeyPair = new JocKeyPair();
             } else {
@@ -115,9 +115,9 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
                     if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
                         publicPGPKey = KeyUtil.getPGPPublicKeyFromString(jocKeyPair.getPublicKey());                          
                     } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
-                        publicKey = KeyUtil.getPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+                        publicKey = (PublicKey)KeyUtil.getSubjectPublicKeyInfo(jocKeyPair.getPublicKey());
                     } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(jocKeyPair.getKeyAlgorithm())) {
-                        publicKey = KeyUtil.getECPublicKeyFromString(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
+                        publicKey = KeyUtil.convertToRSAPublicKey(KeyUtil.decodePublicKeyString(jocKeyPair.getPublicKey()));
                     }
                 }
                 if(publicPGPKey != null) {

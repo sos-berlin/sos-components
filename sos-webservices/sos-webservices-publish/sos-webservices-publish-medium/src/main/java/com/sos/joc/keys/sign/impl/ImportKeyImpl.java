@@ -1,4 +1,4 @@
-package com.sos.joc.keys.impl;
+package com.sos.joc.keys.sign.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,7 +20,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
@@ -29,7 +28,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
-import com.sos.joc.keys.resource.IImportKey;
+import com.sos.joc.keys.sign.resource.IImportKey;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -57,7 +56,8 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
         return postImportKey(xAccessToken, body, auditLog, importKeyFilter);
     }
 
-    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter) throws Exception {
+    private JOCDefaultResponse postImportKey(String xAccessToken, FormDataBodyPart body, AuditParams auditLog, String importKeyFilter)
+            throws Exception {
         InputStream stream = null;
         SOSHibernateSession hibernateSession = null;
         try {
@@ -77,7 +77,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
+            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             String publicKey = null;
             String reason = null;
             if (keyFromFile != null) {
@@ -110,7 +110,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                             throw new JocKeyNotValidException("The provided file does not contain a valid private RSA key!");
                         }
                     }
-                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())
+                } else if (SOSKeyConstants.ECDSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm()) 
                         && !keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
                     try {
                         KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyFromFile);
@@ -143,7 +143,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
                 }
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.LOW);
+            PublishUtils.storeKey(keyPair, hibernateSession, account, JocSecurityLevel.MEDIUM);
 //            DeployAudit importAudit = new DeployAudit(filter.getAuditLog(), reason);
 //            logAuditMessage(importAudit);
 //            storeAuditLogEntry(importAudit);

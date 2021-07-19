@@ -117,9 +117,10 @@ public class StoreDeployments {
                 long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
                 long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
                 long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
+                long countBoards = deployedObjects.stream().filter(item -> ConfigurationType.BOARD.intValue() == item.getType()).count();
                 LOGGER.info(String.format(
-                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s) and %5$d JobResource(s).", 
-                        controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
+                        "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).", 
+                        controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
                  JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
         } catch (Exception e) {

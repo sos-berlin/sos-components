@@ -1,4 +1,4 @@
-package com.sos.joc.keys.resource;
+package com.sos.joc.keys.auth.resource;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -8,10 +8,10 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface IGenerateKey {
+public interface IAgentClientServerCert {
 
     @POST
-    @Path("generate")
+    @Path("certificate")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postGenerateKey(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
+    public JOCDefaultResponse postCreateAgentClientServerCert(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
 }

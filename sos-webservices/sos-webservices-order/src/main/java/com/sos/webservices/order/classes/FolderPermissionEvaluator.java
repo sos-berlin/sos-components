@@ -34,6 +34,9 @@ public class FolderPermissionEvaluator {
             filter = new FilterDailyPlannedOrders();
         }
 
+        boolean withSchedulePathFilter = listOfSchedulePaths != null && !listOfSchedulePaths.isEmpty();
+        boolean withWorkflowPathFilter = listOfWorkflowPaths != null && !listOfWorkflowPaths.isEmpty();
+        
         listOfPermittedWorkflowNames = new ArrayList<String>();
         listOfPermittedScheduleNames = new ArrayList<String>();
 
@@ -82,13 +85,13 @@ public class FolderPermissionEvaluator {
             }
         }
 
-        if (listOfPermittedScheduleNames.isEmpty()) {
+        if (withSchedulePathFilter && listOfPermittedScheduleNames.isEmpty()) {
             hasPermission = false;
         } else {
             filter.setListOfScheduleNames(listOfPermittedScheduleNames);
         }
 
-        if (listOfPermittedWorkflowNames.isEmpty()) {
+        if (withWorkflowPathFilter && listOfPermittedWorkflowNames.isEmpty()) {
             hasPermission = false;
         } else {
             filter.setListOfWorkflowNames(listOfPermittedWorkflowNames);

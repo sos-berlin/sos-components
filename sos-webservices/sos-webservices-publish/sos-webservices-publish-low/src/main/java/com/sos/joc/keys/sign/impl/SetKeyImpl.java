@@ -1,4 +1,4 @@
-package com.sos.joc.keys.impl;
+package com.sos.joc.keys.sign.impl;
 
 import java.time.Instant;
 import java.util.Date;
@@ -15,7 +15,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocUnsupportedKeyTypeException;
-import com.sos.joc.keys.resource.ISetKey;
+import com.sos.joc.keys.sign.resource.ISetKey;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.publish.SetKeyFilter;
