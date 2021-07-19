@@ -16,6 +16,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.monitoring.notification.NotificationRange;
+import com.sos.monitoring.notification.NotificationStatus;
 import com.sos.monitoring.notification.NotificationType;
 
 public abstract class ANotifier {
@@ -24,6 +25,7 @@ public abstract class ANotifier {
     protected static final String PREFIX_ENV_TABLE_FIELD_VAR = PREFIX_ENV_VAR + "_TABLE";
 
     protected static final String VAR_TYPE = "TYPE";
+    protected static final String VAR_STATUS = "STATUS";
 
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
@@ -31,6 +33,8 @@ public abstract class ANotifier {
 
     private JocHref jocHref;
     private Map<String, String> tableFields;
+    private NotificationType type;
+    private NotificationStatus status;
 
     public abstract NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn);
 
@@ -46,19 +50,21 @@ public abstract class ANotifier {
         return type == null ? "" : type.name();
     }
 
-    protected void set(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+    protected void set(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn) {
+        setTypeStatus(type);
         setTableFields(mo, mos, mn);
         jocHref = new JocHref(mo, mos);
     }
 
-    protected String resolve(String msg, NotificationType type, boolean resolveEnv) {
-        return resolve(msg, type, resolveEnv, null);
+    protected String resolve(String msg, boolean resolveEnv) {
+        return resolve(msg, resolveEnv, null);
     }
 
-    protected String resolve(String msg, NotificationType type, boolean resolveEnv, Map<String, String> map) {
+    protected String resolve(String msg, boolean resolveEnv, Map<String, String> map) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor(false, "${", "}");
         jocHref.addKeys(ps);
         ps.addKey(VAR_TYPE, type.value());
+        ps.addKey(VAR_STATUS, status.intValue().toString());
 
         getTableFields().entrySet().forEach(e -> {
             ps.addKey(e.getKey(), e.getValue());
@@ -71,6 +77,22 @@ public abstract class ANotifier {
         }
         String m = ps.replace(msg);
         return resolveEnv ? ps.replaceEnvVars(m) : m;
+    }
+
+    protected void setTypeStatus(NotificationType type) {
+        this.type = type;
+        switch (type) {
+        case SUCCESS:
+        case RECOVERED:
+            status = NotificationStatus.OK;
+            break;
+        case WARNING:
+            status = NotificationStatus.WARNING;
+            break;
+        case ERROR:
+            status = NotificationStatus.CRITICAL;
+            break;
+        }
     }
 
     protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type,
@@ -173,11 +195,21 @@ public abstract class ANotifier {
                 tableFields.put(tablePrefix + "_RANGE", NotificationRange.fromValue(Integer.valueOf(range)).value().toLowerCase());
             } catch (Throwable e) {
             }
+            String recoveredId = tableFields.get(tablePrefix + "_RECOVERED_ID");
+            try {
+                if (recoveredId.equals("0")) {
+                    tableFields.put(tablePrefix + "_RECOVERED_ID", "");
+                }
+            } catch (Throwable e) {
+            }
             break;
         }
     }
 
     private void setElapsed(String tablePrefix) {
+        if (tablePrefix.equals(PREFIX_TABLE_NOTIFICATIONS)) {
+            return;
+        }
         String newField = tablePrefix + "_TIME_ELAPSED";
         tableFields.put(newField, "");
 
@@ -204,5 +236,13 @@ public abstract class ANotifier {
 
     protected JocHref getJocHref() {
         return jocHref;
+    }
+
+    protected NotificationType getType() {
+        return type;
+    }
+
+    protected NotificationStatus getStatus() {
+        return status;
     }
 }

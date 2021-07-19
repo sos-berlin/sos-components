@@ -37,10 +37,10 @@ public class NotifierMail extends ANotifier {
         if (mail == null) {
             return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
         }
-        set(mo, mos, mn);
+        set(type, mo, mos, mn);
 
-        mail.setSubject(resolve(monitor.getSubject(), type, true));
-        mail.setBody(resolve(monitor.getMessage(), type, true));
+        mail.setSubject(resolve(monitor.getSubject(), true));
+        mail.setBody(resolve(monitor.getMessage(), true));
 
         try {
             StringBuilder info = new StringBuilder();

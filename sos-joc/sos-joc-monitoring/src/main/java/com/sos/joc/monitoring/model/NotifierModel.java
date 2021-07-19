@@ -112,13 +112,15 @@ public class NotifierModel {
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
             notify(conf, result, null, hosb, NotificationType.ERROR);
         } else {
+            // RECOVERY
+            result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
+                    .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
+            notify(conf, result, null, hosb, NotificationType.RECOVERED);
+            // SUCCESS
             result = conf.findWorkflowMatches(conf.getOnSuccess(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
                     .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-            if (!notify(conf, result, null, hosb, NotificationType.SUCCESS)) {
-                result = conf.findWorkflowMatches(conf.getOnError(), hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), hosb
-                        .getJobLabel(), hosb.getCriticality(), hosb.getReturnCode());
-                notify(conf, result, null, hosb, NotificationType.RECOVERED);
-            }
+            notify(conf, result, null, hosb, NotificationType.SUCCESS);
+
         }
     }
 
@@ -130,11 +132,13 @@ public class NotifierModel {
             notify(conf, result, hob, null, NotificationType.ERROR);
             break;
         case SUCCESS:
+            // RECOVERY
+            result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
+            notify(conf, result, hob, null, NotificationType.RECOVERED);
+            // SUCCESS
             result = conf.findWorkflowMatches(conf.getOnSuccess(), hob.getControllerId(), hob.getWorkflowPath());
-            if (!notify(conf, result, hob, null, NotificationType.SUCCESS)) {
-                result = conf.findWorkflowMatches(conf.getOnError(), hob.getControllerId(), hob.getWorkflowPath());
-                notify(conf, result, hob, null, NotificationType.RECOVERED);
-            }
+            notify(conf, result, hob, null, NotificationType.SUCCESS);
+
             break;
         default:
             break;

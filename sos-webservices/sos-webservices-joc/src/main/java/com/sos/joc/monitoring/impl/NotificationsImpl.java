@@ -53,14 +53,15 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
                 in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
             }
 
+            List<Integer> types = getTypes(in);
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             List<NotificationItem> notifications = new ArrayList<NotificationItem>();
-
             ScrollableResults sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
-                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), in
+                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), types, in
                             .getLimit());
                 } else {
                     sr = dbLayer.getNotifications(in.getNotificationIds());
@@ -88,6 +89,19 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private List<Integer> getTypes(NotificationsFilter in) {
+        if (in.getTypes() == null || in.getTypes().size() == 0) {
+            return null;
+        }
+        return in.getTypes().stream().map(e -> {
+            try {
+                return NotificationType.fromValue(e.value()).intValue();
+            } catch (Throwable ex) {
+                return NotificationType.ERROR.intValue();
+            }
+        }).collect(Collectors.toList());
     }
 
     private NotificationItem convert(NotificationDBItemEntity entity) {
