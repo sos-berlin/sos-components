@@ -1,5 +1,5 @@
 
-package com.sos.controller.model.junction;
+package com.sos.controller.model.board;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,9 +12,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * delete junction
+ * delete board
  * <p>
- * delete object with fixed property 'TYPE':'JunctionPath'
+ * delete object with fixed property 'TYPE':'BoardPath'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path"
 })
-public class DeleteJunction implements IDeleteObject
+public class DeleteBoard implements IDeleteObject
 {
 
     /**
@@ -32,7 +32,7 @@ public class DeleteJunction implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.JUNCTION;
+    private DeleteType tYPE = DeleteType.BOARD;
     /**
      * string without < and >
      * <p>
@@ -47,7 +47,7 @@ public class DeleteJunction implements IDeleteObject
      * No args constructor for use in serialization
      * 
      */
-    public DeleteJunction() {
+    public DeleteBoard() {
     }
 
     /**
@@ -55,7 +55,7 @@ public class DeleteJunction implements IDeleteObject
      * @param path
      * 
      */
-    public DeleteJunction(String path) {
+    public DeleteBoard(String path) {
         super();
         this.path = path;
     }
@@ -110,10 +110,10 @@ public class DeleteJunction implements IDeleteObject
         if (other == this) {
             return true;
         }
-        if ((other instanceof DeleteJunction) == false) {
+        if ((other instanceof DeleteBoard) == false) {
             return false;
         }
-        DeleteJunction rhs = ((DeleteJunction) other);
+        DeleteBoard rhs = ((DeleteBoard) other);
         return new EqualsBuilder().append(tYPE, rhs.tYPE).append(path, rhs.path).isEquals();
     }
 

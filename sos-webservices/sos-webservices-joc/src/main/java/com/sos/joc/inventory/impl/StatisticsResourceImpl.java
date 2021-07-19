@@ -48,7 +48,7 @@ public class StatisticsResourceImpl extends JOCResourceImpl implements IStatisti
             entity.setNumOfWorkflows(numOfDeployed.getOrDefault(ConfigurationType.WORKFLOW, 0L));
             entity.setNumOfJobs(dbLayer.getNumOfDeployedJobs(controllerId, permittedFolders));
             entity.setNumOfLocks(numOfDeployed.getOrDefault(ConfigurationType.LOCK, 0L));
-            entity.setNumOfJunctions(numOfDeployed.getOrDefault(ConfigurationType.JUNCTION, 0L));
+            entity.setNumOfBoards(numOfDeployed.getOrDefault(ConfigurationType.BOARD, 0L));
             entity.setNumOfJobResources(numOfDeployed.getOrDefault(ConfigurationType.JOBRESOURCE, 0L));
             entity.setNumOfFileOrderSources(numOfDeployed.getOrDefault(ConfigurationType.FILEORDERSOURCE, 0L));
             entity.setNumOfSchedules(numOfReleased.getOrDefault(ConfigurationType.SCHEDULE, 0L));

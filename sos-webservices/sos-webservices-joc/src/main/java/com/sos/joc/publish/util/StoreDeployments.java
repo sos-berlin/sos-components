@@ -36,10 +36,10 @@ import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.SignedItemsSpec;
+import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.jobclass.JobClass;
 import com.sos.sign.model.jobresource.JobResource;
-import com.sos.sign.model.junction.Junction;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
 
@@ -57,7 +57,7 @@ public class StoreDeployments {
         {
             put(DeployType.JOBCLASS.intValue(), JobClass.class);
             put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
-            put(DeployType.JUNCTION.intValue(), Junction.class);
+            put(DeployType.BOARD.intValue(), Board.class);
             put(DeployType.LOCK.intValue(), Lock.class);
             put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
             put(DeployType.WORKFLOW.intValue(), Workflow.class);

@@ -14,7 +14,7 @@ public enum ControllerObjectFileExtension {
     JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION(".jobresource.json.asc"),
     JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION(".jobresource.json.sig"),
     LOCK_FILE_EXTENSION(".lock.json"),
-    JUNCTION_FILE_EXTENSION(".junction.json"),
+    BOARD_FILE_EXTENSION(".board.json"),
     JOBCLASS_FILE_EXTENSION(".jobclass.json"),
     FILEORDERSOURCE_FILE_EXTENSION(".fileordersource.json");
 

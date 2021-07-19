@@ -18,7 +18,6 @@ public enum EventType {
     ORDER("ORDER"),
     LOCK("LOCK"),
     JOB("JOB"),
-    JUNCTION("JUNCTION"),
     FILEORDERSOURCE("FILEORDERSOURCE"),
     BOARD("BOARD"),
     JOBCLASS("JOBCLASS"),

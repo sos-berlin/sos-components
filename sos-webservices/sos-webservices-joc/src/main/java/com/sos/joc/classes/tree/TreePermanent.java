@@ -59,7 +59,6 @@ public class TreePermanent {
                     types.add(TreeType.JOB);
                     types.add(TreeType.JOBCLASS);
                     types.add(TreeType.LOCK);
-                    types.add(TreeType.JUNCTION);
                     types.add(TreeType.FILEORDERSOURCE);
                     types.add(TreeType.BOARD);
                     types.add(TreeType.SCHEDULE);
@@ -106,13 +105,6 @@ public class TreePermanent {
                     }
                 } else {
                     if (controllerPermission.getLocks().getView()) {
-                        types.add(type);
-                    }
-                }
-                break;
-            case JUNCTION:
-                if (treeForInventory || treeForInventoryTrash) {
-                    if (inventoryPermission) {
                         types.add(type);
                     }
                 }
@@ -185,12 +177,12 @@ public class TreePermanent {
             session = Globals.createSosHibernateStatelessConnection("initTreeForInventory");
             Globals.beginTransaction(session);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
+            //DocumentationDBLayer dbDocLayer = new DocumentationDBLayer(session);
 
             Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
             SortedSet<Tree> folders = new TreeSet<Tree>(comparator);
             Set<Tree> results = null;
-            Set<Tree> docResults = null;
+            //Set<Tree> docResults = null;
             if (treeBody.getFolders() != null && !treeBody.getFolders().isEmpty()) {
                 for (Folder folder : treeBody.getFolders()) {
                     String normalizedFolder = ("/" + folder.getFolder()).replaceAll("//+", "/");
