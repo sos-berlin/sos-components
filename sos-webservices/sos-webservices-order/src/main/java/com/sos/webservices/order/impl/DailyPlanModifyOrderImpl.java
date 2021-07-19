@@ -471,6 +471,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             SOSHibernateSession sosHibernateSession2 = null;
                             try {
                                 sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+                                sosHibernateSession2.setAutoCommit(false);
+                                Globals.beginTransaction(sosHibernateSession2);                                
                                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders2 = new DBLayerDailyPlannedOrders(sosHibernateSession2);
                                 DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession2);
 
