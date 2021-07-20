@@ -19,7 +19,7 @@ public class NotifierCommand extends ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierCommand.class);
 
-    private static final String VAR_COMMAND = "COMMAND";
+    private static final String VAR_COMMAND = "MON_COMMAND";
 
     private final MonitorCommand monitor;
 
@@ -70,7 +70,7 @@ public class NotifierCommand extends ANotifier {
             if (e.getKey().endsWith("ERROR_TEXT")) {// TITLE? ....
                 val = escape(val);
             }
-            map.put(PREFIX_ENV_TABLE_FIELD_VAR + "_" + e.getKey(), nl2sp(val));
+            map.put(PREFIX_ENV_VAR + "_" + e.getKey(), nl2sp(val));
             // }
         });
         return new SOSEnv(map);

@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "notificationId",
+    "recoveredNotificationId",
     "type",
     "created",
     "hasMonitors",
@@ -41,6 +42,14 @@ public class NotificationItem {
      */
     @JsonProperty("notificationId")
     private Long notificationId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("recoveredNotificationId")
+    private Long recoveredNotificationId;
     /**
      * notification type text
      * <p>
@@ -124,6 +133,28 @@ public class NotificationItem {
     @JsonProperty("notificationId")
     public void setNotificationId(Long notificationId) {
         this.notificationId = notificationId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("recoveredNotificationId")
+    public Long getRecoveredNotificationId() {
+        return recoveredNotificationId;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("recoveredNotificationId")
+    public void setRecoveredNotificationId(Long recoveredNotificationId) {
+        this.recoveredNotificationId = recoveredNotificationId;
     }
 
     /**
@@ -292,12 +323,12 @@ public class NotificationItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("notificationId", notificationId).append("type", type).append("created", created).append("hasMonitors", hasMonitors).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("message", message).append("job", job).toString();
+        return new ToStringBuilder(this).append("notificationId", notificationId).append("recoveredNotificationId", recoveredNotificationId).append("type", type).append("created", created).append("hasMonitors", hasMonitors).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("message", message).append("job", job).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(workflow).append(orderId).append(created).append(hasMonitors).append(notificationId).append(type).append(message).append(job).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(workflow).append(recoveredNotificationId).append(orderId).append(created).append(hasMonitors).append(notificationId).append(type).append(message).append(job).toHashCode();
     }
 
     @Override
@@ -309,7 +340,7 @@ public class NotificationItem {
             return false;
         }
         NotificationItem rhs = ((NotificationItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(orderId, rhs.orderId).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(type, rhs.type).append(message, rhs.message).append(job, rhs.job).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(recoveredNotificationId, rhs.recoveredNotificationId).append(orderId, rhs.orderId).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(type, rhs.type).append(message, rhs.message).append(job, rhs.job).isEquals();
     }
 
 }

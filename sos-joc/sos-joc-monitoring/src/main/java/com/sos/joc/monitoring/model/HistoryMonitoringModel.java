@@ -43,6 +43,8 @@ import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
 import com.sos.joc.event.bean.monitoring.MonitoringEvent;
+import com.sos.joc.event.bean.monitoring.NotificationConfigurationReleased;
+import com.sos.joc.event.bean.monitoring.NotificationConfigurationRemoved;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
@@ -93,7 +95,7 @@ public class HistoryMonitoringModel {
         }
     }
 
-    @Subscribe({ MonitoringEvent.class })
+    @Subscribe({ NotificationConfigurationReleased.class, NotificationConfigurationRemoved.class })
     public void handleMonitoringEvents(MonitoringEvent evt) {
         if (configuration != null) {
             AJocClusterService.setLogger(serviceIdentifier);

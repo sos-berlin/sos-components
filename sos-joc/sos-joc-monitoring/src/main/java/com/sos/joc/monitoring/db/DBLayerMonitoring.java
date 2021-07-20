@@ -20,6 +20,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
+import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.model.xmleditor.common.ObjectType;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
@@ -330,11 +331,13 @@ public class DBLayerMonitoring {
 
     public List<DBItemNotification> getNotifications(NotificationType type, NotificationRange range, Long orderId, Long stepId)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and range=:range ");
-        hql.append("and orderId=:orderId ");
-        hql.append("and stepId=:stepId");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
+        hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
+        hql.append("where n.id=w.notificationId ");
+        hql.append("and n.type=:type ");
+        hql.append("and n.range=:range ");
+        hql.append("and w.orderId=:orderId ");
+        hql.append("and w.stepId=:stepId");
 
         Query<DBItemNotification> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type.intValue());
@@ -345,16 +348,21 @@ public class DBLayerMonitoring {
         return getSession().getResultList(query);
     }
 
-    public DBItemNotification getLastNotification(String name, NotificationRange range, Long orderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
-        hql.append("where id = (");
-        hql.append("select max(id) from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
-        hql.append("where range=:range ");
-        hql.append("and orderId=:orderId ");
-        hql.append("and name = :name");
+    public LastWorkflowNotificationDBItemEntity getLastNotification(String name, NotificationRange range, Long orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select n.id as id, n.type as type, n.name as name, w.stepId as stepId ");
+        hql.append("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
+        hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
+        hql.append("where n.id=w.notificationId ");
+        hql.append("and n.id = (");
+        hql.append("select max(n2.id) from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n2 ");
+        hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w2 ");
+        hql.append("where n2.id=w2.notificationId ");
+        hql.append("and n2.range=:range ");
+        hql.append("and n2.name = :name ");
+        hql.append("and w2.orderId=:orderId");
         hql.append(")");
 
-        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
+        Query<LastWorkflowNotificationDBItemEntity> query = getSession().createQuery(hql.toString(), LastWorkflowNotificationDBItemEntity.class);
         query.setParameter("range", range.intValue());
         query.setParameter("orderId", orderId);
         query.setParameter("name", name);
@@ -366,15 +374,19 @@ public class DBLayerMonitoring {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
         item.setRange(analyzer.getRange());
-        item.setOrderId(analyzer.getOrderId());
-        item.setStepId(analyzer.getStepId());
         item.setName(notification.getName());
-        item.setWorkflowPosition(analyzer.getWorkflowPosition());
         item.setRecoveredId(recoveredNotificationId);
         item.setHasMonitors(notification.getMonitors().size() > 0);
         item.setCreated(new Date());
-
         session.save(item);
+
+        DBItemNotificationWorkflow wItem = new DBItemNotificationWorkflow();
+        wItem.setNotificationId(item.getId());
+        wItem.setOrderId(analyzer.getOrderId());
+        wItem.setStepId(analyzer.getStepId());
+        wItem.setWorkflowPosition(analyzer.getWorkflowPosition());
+        session.save(wItem);
+
         return item;
     }
 

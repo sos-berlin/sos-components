@@ -31,6 +31,7 @@ import com.sos.joc.monitoring.configuration.Configuration;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
+import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.HistoryOrderStepResult;
 import com.sos.joc.monitoring.model.HistoryMonitoringModel.ToNotify;
 import com.sos.joc.monitoring.notification.notifier.ANotifier;
@@ -188,7 +189,7 @@ public class NotifierModel {
             break;
         case RECOVERED:
             if (analyzer.getToRecovery() != null) {
-                DBItemNotification r = analyzer.getToRecovery().get(notification.getName());
+                LastWorkflowNotificationDBItemEntity r = analyzer.getToRecovery().get(notification.getName());
                 if (r == null) {
                     return false;
                 }

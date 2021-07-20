@@ -12,6 +12,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
+import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -26,7 +27,7 @@ public class NotifyAnalyzer {
     private DBItemMonitoringOrder order;
     private DBItemMonitoringOrderStep orderStep;
 
-    private Map<String, DBItemNotification> toRecovery;
+    private Map<String, LastWorkflowNotificationDBItemEntity> toRecovery;
     private List<String> sendedWarnings;
 
     protected boolean analyze(DBLayerMonitoring dbLayer, List<Notification> list, HistoryOrderBean hob, HistoryOrderStepBean hosb,
@@ -49,11 +50,11 @@ public class NotifyAnalyzer {
         case RECOVERED:
             toRecovery = new HashMap<>();
             for (Notification n : list) {
-                DBItemNotification last = dbLayer.getLastNotification(n.getName(), range, orderId);
+                LastWorkflowNotificationDBItemEntity last = dbLayer.getLastNotification(n.getName(), range, orderId);
                 if (last == null || !last.getType().equals(NotificationType.ERROR.intValue())) {
                     continue;
                 }
-                toRecovery.put(n.getName(), last);
+                toRecovery.put(last.getName(), last);
             }
             if (toRecovery.size() == 0) {
                 return false;
@@ -100,7 +101,7 @@ public class NotifyAnalyzer {
         return controllerId;
     }
 
-    public Map<String, DBItemNotification> getToRecovery() {
+    public Map<String, LastWorkflowNotificationDBItemEntity> getToRecovery() {
         return toRecovery;
     }
 

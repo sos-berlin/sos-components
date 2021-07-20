@@ -110,6 +110,9 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         item.setType(getType(entity.getType()));
         item.setCreated(entity.getCreated());
         item.setHasMonitors(entity.getHasMonitors());
+        if (entity.getRecoveredNotificationId() != null && entity.getRecoveredNotificationId() > 0L) {
+            item.setRecoveredNotificationId(entity.getRecoveredNotificationId());
+        }
 
         item.setControllerId(entity.getControllerId());
         item.setOrderId(entity.getOrderId());

@@ -36,17 +36,8 @@ public class DBItemNotification extends DBItem {
     @Column(name = "[RANGE]", nullable = false)
     private Integer range;
 
-    @Column(name = "[MON_ORDER_ID]", nullable = false)
-    private Long orderId;
-
-    @Column(name = "[MON_ORDER_STEP_ID]", nullable = false)
-    private Long stepId;
-
     @Column(name = "[NAME]", nullable = false)
     private String name;
-
-    @Column(name = "[WORKFLOW_POSITION]", nullable = false)
-    private String workflowPosition;
 
     @Column(name = "[RECOVERED_ID]", nullable = false)
     private Long recoveredId;// reference ID
@@ -119,39 +110,12 @@ public class DBItemNotification extends DBItem {
         setRange(val == null ? null : val.intValue());
     }
 
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(Long val) {
-        orderId = val;
-    }
-
-    public Long getStepId() {
-        return stepId;
-    }
-
-    public void setStepId(Long val) {
-        if (val == null) {
-            val = 0L;
-        }
-        stepId = val;
-    }
-
     public String getName() {
         return name;
     }
 
     public void setName(String val) {
         name = val;
-    }
-
-    public String getWorkflowPosition() {
-        return workflowPosition;
-    }
-
-    public void setWorkflowPosition(String val) {
-        workflowPosition = val;
     }
 
     public Long getRecoveredId() {

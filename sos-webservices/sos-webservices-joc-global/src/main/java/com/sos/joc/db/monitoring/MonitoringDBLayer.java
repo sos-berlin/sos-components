@@ -37,7 +37,8 @@ public class MonitoringDBLayer extends DBLayer {
             }
         }
         if (where.size() > 0) {
-            hql.append("where ").append(String.join(" and ", where)).append(" ");
+            // hql.append("where ").append(String.join(" and ", where)).append(" ");
+            hql.append("and ").append(String.join(" and ", where)).append(" ");
         }
         hql.append("order by n.id desc");
 
@@ -66,9 +67,9 @@ public class MonitoringDBLayer extends DBLayer {
 
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
         if (size == 1) {
-            hql.append("where n.id=:notificationId");
+            hql.append("and n.id=:notificationId");
         } else {
-            hql.append("where n.id in :notificationIds ");
+            hql.append("and n.id in :notificationIds ");
             hql.append("order by n.id desc");
         }
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
@@ -118,8 +119,10 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",os.warn as orderStepWarn");
         hql.append(",os.warnText as orderStepWarnText ");
         hql.append("from ").append(DBITEM_NOTIFICATION).append(" n ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on n.orderId=o.historyId ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on n.stepId=os.historyId ");
+        hql.append(",").append(DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
+        hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on w.orderId=o.historyId ");
+        hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.stepId=os.historyId ");
+        hql.append("where n.id=w.notificationId ");
         return hql;
     }
 }

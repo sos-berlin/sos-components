@@ -21,9 +21,8 @@ import com.sos.monitoring.notification.NotificationType;
 
 public abstract class ANotifier {
 
-    protected static final String PREFIX_ENV_VAR = "JS7_MON";
-    protected static final String PREFIX_ENV_TABLE_FIELD_VAR = PREFIX_ENV_VAR + "_TABLE";
-
+    protected static final String PREFIX_ENV_VAR = "JS7";
+    
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
     private static final String PREFIX_TABLE_NOTIFICATIONS = "MON_N";
@@ -136,7 +135,7 @@ public abstract class ANotifier {
         // additional fields
         tableFields.put(PREFIX_TABLE_ORDERS + "_TIME_ELAPSED", "");
         tableFields.put(PREFIX_TABLE_ORDER_STEPS + "_TIME_ELAPSED", "");
-        tableFields.put(PREFIX_TABLE_NOTIFICATIONS + "_STATUS", status.name());
+        tableFields.put(PREFIX_TABLE_NOTIFICATIONS + "_STATUS", status.intValue().toString());
 
         if (mo == null) {
             tableFields.putAll(DBItem.toEmptyValuesMap(DBItemMonitoringOrder.class, true, PREFIX_TABLE_ORDERS));
