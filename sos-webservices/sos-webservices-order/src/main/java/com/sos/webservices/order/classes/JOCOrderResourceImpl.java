@@ -66,7 +66,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         if (folderPermissionEvaluator.isHasPermission()) {
             if (dailyPlanOrderFilter.getFilter().getOrderIds() != null && !dailyPlanOrderFilter.getFilter().getOrderIds().isEmpty()) {
 
-                List<String> listOfOrderIds = dailyPlanOrderFilter.getFilter().getOrderIds();
+                List<String> listOfOrderIds = new ArrayList<String>();
+                listOfOrderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
                 for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
                     addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
                 }
@@ -95,6 +96,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         sosHibernateSession.setAutoCommit(false);
         Globals.beginTransaction(sosHibernateSession);
         FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
+        filter.setOrderCriteria("plannedStart");
+        
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
 
