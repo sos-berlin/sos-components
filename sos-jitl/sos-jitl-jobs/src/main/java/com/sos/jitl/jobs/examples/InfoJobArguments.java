@@ -8,8 +8,8 @@ import com.sos.jitl.jobs.common.JobArguments;
 
 public class InfoJobArguments extends JobArguments {
 
-    private JobArgument<Boolean> showEnv = new JobArgument<>("show_env", false);
-    private JobArgument<Boolean> redefineShowEnv = new JobArgument<>("redefine_show_env", false);
+    private JobArgument<Boolean> showEnv = new JobArgument<>("show_env", false, false);
+    private JobArgument<Boolean> redefineShowEnv = new JobArgument<>("redefine_show_env", false, false);
     private JobArgument<String> stringArgument = new JobArgument<>("string_argument", false);
     private JobArgument<String> returnVariables = new JobArgument<>("return_variables", false);
     private JobArgument<String> password = new JobArgument<>("password", false, DisplayMode.MASKED);

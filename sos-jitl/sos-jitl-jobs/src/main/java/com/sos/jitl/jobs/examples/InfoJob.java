@@ -127,7 +127,7 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
                     .getValue()));
         });
 
-        if (step.getArguments().getShowEnv().getValue()) {
+        if (args.getShowEnv().getValue()) {
             printEnvs(step.getLogger());
         }
 

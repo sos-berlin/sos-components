@@ -333,9 +333,8 @@ public class DBLayerMonitoring {
         return item;
     }
 
-    public List<DBItemNotification> getNotifications(NotificationType type, NotificationRange range, Long orderId, Long stepId)
-            throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
+    public List<String> getNotificationNames(NotificationType type, NotificationRange range, Long orderId, Long stepId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select n.name from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("where n.id=w.notificationId ");
         hql.append("and n.type=:type ");
@@ -343,7 +342,7 @@ public class DBLayerMonitoring {
         hql.append("and w.orderId=:orderId ");
         hql.append("and w.stepId=:stepId");
 
-        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
+        Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type.intValue());
         query.setParameter("range", range.intValue());
         query.setParameter("orderId", orderId);

@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSSerializer;
 import com.sos.commons.util.SOSString;
+import com.sos.controller.model.event.EventType;
 import com.sos.history.JobWarning;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
@@ -336,13 +337,13 @@ public class HistoryMonitoringModel {
 
     private void orderResumed(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrderOnResumed(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderForked(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrderOnForked(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
 
         for (HistoryOrderBean child : hob.getChildren()) {
@@ -353,38 +354,38 @@ public class HistoryMonitoringModel {
     private void orderJoined(HistoryOrderBean hob) throws SOSHibernateException {
         for (HistoryOrderBean child : hob.getChildren()) {
             if (!dbLayer.updateOrder(child)) {
-                insert(child.getOrderId(), child.getHistoryId());
+                insert(hob.getEventType(), child.getOrderId(), child.getHistoryId());
             }
         }
     }
 
     private void orderFailed(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderSuspended(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderCancelled(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderBroken(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
     private void orderFinished(HistoryOrderBean hob) throws SOSHibernateException {
         if (!dbLayer.updateOrder(hob)) {
-            insert(hob.getOrderId(), hob.getHistoryId());
+            insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
     }
 
@@ -419,7 +420,7 @@ public class HistoryMonitoringModel {
         try {
             dbLayer.getSession().save(item);
             if (!dbLayer.updateOrderOnOrderStep(item.getHistoryOrderId(), item.getHistoryId())) {
-                insert(hosb.getOrderId(), item.getHistoryOrderId());
+                insert(hosb.getEventType(), hosb.getOrderId(), item.getHistoryOrderId());
             }
             if (hosb.getWarnIfLonger() != null) {
                 longerThan.put(hosb.getHistoryId(), hosb);
@@ -486,10 +487,10 @@ public class HistoryMonitoringModel {
         return null;
     }
 
-    private boolean insert(String orderId, Long historyId) {
+    private boolean insert(EventType eventType, String orderId, Long historyId) {
         try {
-            LOGGER.info(String.format("[%s][%s][order not found=%s, id=%s]read from history orders...", serviceIdentifier, IDENTIFIER, orderId,
-                    historyId));
+            LOGGER.info(String.format("[%s][%s][%s][order not found=%s, id=%s]read from history orders...", serviceIdentifier, IDENTIFIER, eventType
+                    .name(), orderId, historyId));
 
             DBItemMonitoringOrder item = dbLayer.convert(dbLayer.getHistoryOrder(historyId));
             if (item != null) {

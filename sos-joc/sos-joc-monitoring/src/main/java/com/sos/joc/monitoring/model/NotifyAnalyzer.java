@@ -3,13 +3,11 @@ package com.sos.joc.monitoring.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.sos.joc.cluster.bean.history.HistoryOrderBean;
 import com.sos.joc.cluster.bean.history.HistoryOrderStepBean;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
-import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Notification;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.joc.monitoring.db.LastWorkflowNotificationDBItemEntity;
@@ -61,11 +59,9 @@ public class NotifyAnalyzer {
             }
             break;
         case WARNING:
-            List<DBItemNotification> ws = dbLayer.getNotifications(type, range, orderId, stepId);
+            List<String> ws = dbLayer.getNotificationNames(type, range, orderId, stepId);
             if (ws != null && ws.size() > 0) {
-                sendedWarnings = ws.stream().map(e -> {
-                    return e.getName();
-                }).collect(Collectors.toList());
+                sendedWarnings = ws;
             }
             break;
         default:

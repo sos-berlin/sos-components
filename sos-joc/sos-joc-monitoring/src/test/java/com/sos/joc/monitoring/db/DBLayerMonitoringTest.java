@@ -1,6 +1,7 @@
 package com.sos.joc.monitoring.db;
 
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.monitoring.notification.NotificationRange;
+import com.sos.monitoring.notification.NotificationType;
 
 public class DBLayerMonitoringTest {
 
@@ -31,6 +33,12 @@ public class DBLayerMonitoringTest {
             dbLayer.setSession(session);
 
             LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", NotificationRange.WORKFLOW, 663L)));
+
+            List<String> result = dbLayer.getNotificationNames(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
+            LOGGER.info("RESULT SIZE= " + result.size());
+            for (String n : result) {
+                LOGGER.info(" " + n);
+            }
 
         } catch (Exception e) {
             throw e;
