@@ -199,12 +199,12 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
-            for (DailyPlanOrderStateText state : filter.getStates()) {
+             for (DailyPlanOrderStateText state : filter.getStates()) {
                 if (state.intValue() == DailyPlanOrderStateText.PLANNED.intValue()) {
                     where += " p.submitted=0 or";
                 } else {
                     if ((state.intValue() == DailyPlanOrderStateText.SUBMITTED.intValue())) {
-                        where += " (p.submitted=1)" + " or";
+                        where += " ((o.state is null or o.state <> " +  DailyPlanOrderStateText.FINISHED.intValue() +  ") and (p.submitted=1))" + " or";
                     } else {
                         where += " o.state = " + state.intValue() + " or";
                     }
