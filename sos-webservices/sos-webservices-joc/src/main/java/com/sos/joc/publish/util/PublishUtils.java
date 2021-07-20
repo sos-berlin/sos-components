@@ -148,13 +148,16 @@ import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
+import js7.data.board.BoardPath;
 import js7.data.item.VersionId;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
+import js7.data_for_java.board.JBoard;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
+import js7.data_for_java.value.JExpression;
 import reactor.core.publisher.Flux;
 
 public abstract class PublishUtils {
@@ -506,6 +509,21 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // Board
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.readUpdateableContent();
+                            if (board.getPath() == null) {
+                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsSigned)));
@@ -561,6 +579,21 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
     		        }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // Board
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.getContent();
+                            if (board.getPath() == null) {
+                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
@@ -620,20 +653,20 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-//            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
-//                    .map(item -> {
-//                        try {
-//                            Board board = (Board)item.readUpdateableContent();
-//                            if (board.getPath() == null) {
-//                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-//                            }
-//                            return JUpdateItemOperation.addOrChangeSimple(board);
-//                        } catch (JocDeployException e) {
-//                            throw e;
-//                        } catch (Exception e) {
-//                            throw new JocDeployException(e);
-//                        }
-//                    }).collect(Collectors.toSet()));
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.readUpdateableContent();
+                            if (board.getPath() == null) {
+                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
             // TODO: when implemented in controller
             // job classes
             // TODO: when implemented in controller
@@ -670,7 +703,7 @@ public abstract class PublishUtils {
 							}
             			}).filter(Objects::nonNull).collect(Collectors.toSet()));
             // locks
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.LOCK.intValue()).map(
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
                     item -> {
                         try {
                             Lock lock = (Lock)item.readUpdateableContent();
@@ -681,7 +714,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // file order sources
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() != DeployType.FILEORDERSOURCE.intValue()).map(
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue()).map(
                     item -> {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource)item.readUpdateableContent();
@@ -693,8 +726,21 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            // junctions
-            // TODO: when implemented in controller
+            // Board
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.readUpdateableContent();
+                            if (board.getPath() == null) {
+                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
             // job classes
             // TODO: when implemented in controller
         }
@@ -729,7 +775,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(ConfigurationType.LOCK))
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.LOCK))
                 	.map(item -> {
                         try {
                             Lock lock = (Lock)item.getContent();
@@ -740,7 +786,7 @@ public abstract class PublishUtils {
                         }
                 	}).collect(Collectors.toSet()));
             // file order sources
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> !item.getObjectType().equals(ConfigurationType.FILEORDERSOURCE))
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.FILEORDERSOURCE))
                 	.map(item -> {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
@@ -752,8 +798,19 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                 	}).collect(Collectors.toSet()));
-            // junctions
-            // TODO: when implemented in controller
+            // Board
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.getContent();
+                            board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
             // job classes
             // TODO: when implemented in controller
         }
@@ -814,8 +871,21 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // junctions
-            // TODO: when implemented in controller
+            // Board
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
+                    .map(item -> {
+                        try {
+                            Board board = (Board)item.getContent();
+                            if (board.getPath() == null) {
+                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            }
+                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                        } catch (JocDeployException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // job classes
             // TODO: when implemented in controller
         }
@@ -851,6 +921,16 @@ public abstract class PublishUtils {
                         	FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.deleteSimple(OrderWatchPath.of(fileOrderSource.getPath()));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
+                    .map(item -> {
+                        try {
+                            Board board = Globals.objectMapper.readValue(item.getContent(), Board.class);
+                            board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.deleteSimple(BoardPath.of(board.getPath()));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
@@ -3026,7 +3106,31 @@ public abstract class PublishUtils {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
     
-    
+    private static JBoard getJBoard (Board board) {
+//        JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
+        JExpression toNoticeExpression = null;
+        JExpression readingOrderToNoticeIdExpression = null;
+        JExpression endOfLifeExpression = null;
+        Either<Problem, JExpression> toNoticeEither = JExpression.parse(board.getToNotice());
+        if(toNoticeEither.isLeft()) {
+            throw new JocDeployException(toNoticeEither.getLeft().toString());            
+        } else {
+            toNoticeExpression = toNoticeEither.get();
+        }
+        Either<Problem, JExpression> readingOrderToNoticeIdEither = JExpression.parse(board.getReadingOrderToNoticeId());
+        if(readingOrderToNoticeIdEither.isLeft()) {
+            throw new JocDeployException(readingOrderToNoticeIdEither.getLeft().toString());            
+        } else {
+            readingOrderToNoticeIdExpression = readingOrderToNoticeIdEither.get();
+        }
+        Either<Problem, JExpression> endOfLifeEither = JExpression.parse(board.getEndOfLife());
+        if(endOfLifeEither.isLeft()) {
+            throw new JocDeployException(endOfLifeEither.getLeft().toString());            
+        } else {
+            endOfLifeExpression = endOfLifeEither.get();
+        }
+        return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
+    }
     
     private static SignedString getSignedStringWithCertificate (String jsonContent, String signature, String signatureAlgorithm, String certificate) {
 		LOGGER.debug("JSON send to controller: ");
