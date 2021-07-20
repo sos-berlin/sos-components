@@ -73,6 +73,10 @@ public class DBLayerMonitoring {
         return identifier;
     }
 
+    public String getJocVariableName() {
+        return jocVariableName;
+    }
+
     public DBItemHistoryOrder getHistoryOrder(Long historyId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
         hql.append("where id=:historyId");

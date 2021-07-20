@@ -585,6 +585,7 @@ public class HistoryMonitoringModel {
     }
 
     private synchronized void setConfiguration() {
+        DBLayerMonitoring dbLayer = new DBLayerMonitoring(this.dbLayer.getIdentifier(), this.dbLayer.getJocVariableName());
         try {
             AJocClusterService.setLogger(serviceIdentifier);
 
