@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
+import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
 
@@ -108,6 +109,17 @@ public class MailResource {
 
     public Properties getProperties() {
         return properties;
+    }
+
+    public Properties getMaskedProperties() {
+        if (properties == null) {
+            return null;
+        }
+        Properties p = new Properties(properties);
+        if (p.contains("mail.smtp.password")) {
+            p.put("mail.smtp.password", DisplayMode.MASKED.getValue());
+        }
+        return p;
     }
 
     public String getFrom() {

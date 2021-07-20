@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import javax.mail.MessagingException;
 
@@ -86,8 +87,17 @@ public class NotifierMail extends ANotifier {
 
     private void init(Configuration conf) throws Exception {
         try {
-            createMail(getMailResource(conf));
+            MailResource mr = getMailResource(conf);
+            createMail(mr);
             if (SOSString.isEmpty(mail.getHost())) {
+                if (mr != null) {
+                    Properties p = mr.getMaskedProperties();
+                    if (p == null) {
+                        LOGGER.error(String.format("[%s]missing mail properties", monitor.getInfo()));
+                    } else {
+                        LOGGER.info(String.format("[%s][properties]%s", monitor.getInfo(), p));
+                    }
+                }
                 throw new Exception(String.format("[%s]missing host", monitor.getInfo()));
             }
         } catch (Throwable e) {
