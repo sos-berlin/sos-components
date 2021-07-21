@@ -37,6 +37,8 @@ public class DBLayerDailyPlannedOrders {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
 
+    private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
+
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
     private static final String DBItemHistoryOrder = DBItemHistoryOrder.class.getSimpleName();
@@ -189,10 +191,10 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
                 where += and + " (o.state is null and p.plannedStart < current_date()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED
-                        .intValue() + " and o.startTime - p.plannedStart > 600)  ";
+                        .intValue() + " and o.startTime - p.plannedStart >= " + DAILY_PLAN_LATE_TOLERANCE + ")  ";
             } else {
                 where += and + " (o.state is null and p.plannedStart > current_date() or " + "o.state is not null and o.state <> "
-                        + DailyPlanOrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart < 600) ";
+                        + DailyPlanOrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart < " + DAILY_PLAN_LATE_TOLERANCE + ") ";
             }
 
             and = " and ";

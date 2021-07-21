@@ -10,8 +10,8 @@ import com.sos.joc.model.order.OrderStateText;
 
 public class DBItemDailyPlanWithHistory {
 
-    private int tolerance = 1;
-    private int toleranceUnit = Calendar.MINUTE;
+    private final int toleranceUnit = Calendar.SECOND;
+    private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
 
     private Long plannedOrderId;
     private Long submissionHistoryId;
@@ -47,7 +47,7 @@ public class DBItemDailyPlanWithHistory {
         } else {
             Calendar calendar = new GregorianCalendar();
             calendar.setTime(planned);
-            calendar.add(toleranceUnit, tolerance);
+            calendar.add(toleranceUnit, DAILY_PLAN_LATE_TOLERANCE);
             Date scheduleToleranz = calendar.getTime();
             return start.after(scheduleToleranz);
         }
