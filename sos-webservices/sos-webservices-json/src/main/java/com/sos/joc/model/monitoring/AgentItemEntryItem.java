@@ -19,21 +19,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "totalRunningTime",
     "readyTime",
-    "shutdownTime"
+    "couplingFailedTime",
+    "couplingFailedMessage"
 })
-public class ControllerItemEntryItem {
+public class AgentItemEntryItem {
 
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("totalRunningTime")
-    private Long totalRunningTime;
     /**
      * timestamp
      * <p>
@@ -50,33 +41,11 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
+    @JsonProperty("couplingFailedTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date shutdownTime;
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("totalRunningTime")
-    public Long getTotalRunningTime() {
-        return totalRunningTime;
-    }
-
-    /**
-     * non negative long
-     * <p>
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("totalRunningTime")
-    public void setTotalRunningTime(Long totalRunningTime) {
-        this.totalRunningTime = totalRunningTime;
-    }
+    private Date couplingFailedTime;
+    @JsonProperty("couplingFailedMessage")
+    private String couplingFailedMessage;
 
     /**
      * timestamp
@@ -108,9 +77,9 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
-    public Date getShutdownTime() {
-        return shutdownTime;
+    @JsonProperty("couplingFailedTime")
+    public Date getCouplingFailedTime() {
+        return couplingFailedTime;
     }
 
     /**
@@ -119,19 +88,29 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
-    public void setShutdownTime(Date shutdownTime) {
-        this.shutdownTime = shutdownTime;
+    @JsonProperty("couplingFailedTime")
+    public void setCouplingFailedTime(Date couplingFailedTime) {
+        this.couplingFailedTime = couplingFailedTime;
+    }
+
+    @JsonProperty("couplingFailedMessage")
+    public String getCouplingFailedMessage() {
+        return couplingFailedMessage;
+    }
+
+    @JsonProperty("couplingFailedMessage")
+    public void setCouplingFailedMessage(String couplingFailedMessage) {
+        this.couplingFailedMessage = couplingFailedMessage;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("shutdownTime", shutdownTime).toString();
+        return new ToStringBuilder(this).append("readyTime", readyTime).append("couplingFailedTime", couplingFailedTime).append("couplingFailedMessage", couplingFailedMessage).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(readyTime).append(totalRunningTime).append(shutdownTime).toHashCode();
+        return new HashCodeBuilder().append(readyTime).append(couplingFailedTime).append(couplingFailedMessage).toHashCode();
     }
 
     @Override
@@ -139,11 +118,11 @@ public class ControllerItemEntryItem {
         if (other == this) {
             return true;
         }
-        if ((other instanceof ControllerItemEntryItem) == false) {
+        if ((other instanceof AgentItemEntryItem) == false) {
             return false;
         }
-        ControllerItemEntryItem rhs = ((ControllerItemEntryItem) other);
-        return new EqualsBuilder().append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).append(shutdownTime, rhs.shutdownTime).isEquals();
+        AgentItemEntryItem rhs = ((AgentItemEntryItem) other);
+        return new EqualsBuilder().append(readyTime, rhs.readyTime).append(couplingFailedTime, rhs.couplingFailedTime).append(couplingFailedMessage, rhs.couplingFailedMessage).isEquals();
     }
 
 }

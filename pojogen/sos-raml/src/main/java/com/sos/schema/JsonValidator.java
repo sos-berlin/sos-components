@@ -169,6 +169,8 @@ public class JsonValidator {
             
             put("com.sos.joc.model.monitoring.NotificationsFilter","monitoring/notifications-filter-schema.json");
             put("com.sos.joc.model.monitoring.NotificationFilter","monitoring/notification-filter-schema.json");
+            put("com.sos.joc.model.monitoring.ControllersFilter","monitoring/controllers-filter-schema.json");
+            put("com.sos.joc.model.monitoring.AgentsFilter","monitoring/agents-filter-schema.json");
             
             //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
