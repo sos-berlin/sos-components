@@ -1,7 +1,12 @@
 package com.sos.joc.db.monitoring;
 
 import java.nio.file.Paths;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.ScrollableResults;
 import org.junit.Ignore;
@@ -12,7 +17,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.DBItemHistoryAgent;
+import com.sos.joc.db.history.DBItemHistoryController;
 
 public class MonitoringDBLayerTest {
 
@@ -58,9 +67,79 @@ public class MonitoringDBLayerTest {
 
     }
 
+    @Ignore
+    @Test
+    public void testControllers() throws Exception {
+
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        ScrollableResults sr = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+
+            MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
+            sr = dbLayer.getControllers();
+            int size = 0;
+
+            Map<String, List<DBItemHistoryController>> map = new HashMap<>();
+            while (sr.next()) {
+                DBItemHistoryController item = (DBItemHistoryController) sr.get(0);
+                List<DBItemHistoryController> l = map.containsKey(item.getControllerId()) ? map.get(item.getControllerId()) : new ArrayList<>();
+
+                l.add(item);
+                map.put(item.getControllerId(), l);
+                size++;
+            }
+
+            map.entrySet().stream().forEach(e -> {
+                LOGGER.info("controllerId=" + e.getKey());
+                int lSize = e.getValue().size();
+                for (int i = 0; i < lSize; i++) {
+                    boolean isLast = i == lSize - 1;
+                    DBItemHistoryController item = e.getValue().get(i);
+                    if (item.getShutdownTime() == null) {
+                        if (!isLast) {
+                            DBItemHistoryController nextItem = e.getValue().get(i + 1);
+                            Long trt = nextItem.getTotalRunningTime() - item.getTotalRunningTime();
+                            item.setTotalRunningTime(trt);
+                            item.setShutdownTime(SOSDate.add(item.getReadyTime(), trt, ChronoUnit.MILLIS));
+                        }
+
+                    } else {
+                        long diff = item.getShutdownTime().getTime() - item.getReadyTime().getTime();
+                        // LOGGER.info(" ---t=" + item.getTotalRunningTime() + "+ diff=" + diff);
+                        item.setTotalRunningTime(item.getTotalRunningTime() + diff);
+                    }
+                    LOGGER.info("   " + SOSString.toString(item));
+                    if (isLast) {
+                        LOGGER.info("LAST------------");
+                    }
+                }
+            });
+
+            LOGGER.info("SIZE=" + size);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (sr != null) {
+                sr.close();
+            }
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+
+    }
+
     private SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getMonitoringClassMapping());
+        factory.addClassMapping(DBItemHistoryController.class);
+        factory.addClassMapping(DBItemHistoryAgent.class);
         factory.build();
         return factory;
     }

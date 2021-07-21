@@ -77,7 +77,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(p.toString().replace('\\', '/'));
             String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : p.getParent().toString().replace('\\', '/');
             String newPath = p.toString().replace('\\', '/');
-            boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
+            //boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             
             Set<String> events = Collections.emptySet();
             Set<String> folderEvents = Collections.emptySet();

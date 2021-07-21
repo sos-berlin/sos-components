@@ -77,16 +77,16 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
             boolean newFolderIsRootFolder = JocInventory.ROOT_FOLDER.equals(pWithoutFix.toString().replace('\\', '/'));
             String newFolder = newFolderIsRootFolder ? JocInventory.ROOT_FOLDER : pWithoutFix.getParent().toString().replace('\\', '/');
             String newPathWithoutFix = pWithoutFix.toString().replace('\\', '/');
+            String newFilename = newFolderIsRootFolder ? "" : pWithoutFix.getFileName().toString();
             
             // folder copy or (object copy where target and source name are the same)
-            boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(pWithoutFix
-                    .getFileName().toString()));
+            boolean fixMustUsed = JocInventory.isFolder(type) || (!JocInventory.isFolder(type) && oldPath.getFileName().toString().equals(newFilename));
             
             ConfigurationGlobalsJoc clusterSettings = Globals.getConfigurationGlobalsJoc();
             SuffixPrefix suffixPrefix = new SuffixPrefix(); 
             if (fixMustUsed) {
                 suffixPrefix = JocInventory.getSuffixPrefix(in.getSuffix(), in.getPrefix(), ClusterSettings.getCopyPasteSuffixPrefix(clusterSettings),
-                        clusterSettings.getCopyPasteSuffix().getDefault(), pWithoutFix.getFileName().toString(), type, dbLayer);
+                        clusterSettings.getCopyPasteSuffix().getDefault(), newFilename, type, dbLayer);
             } else {
                 suffixPrefix.setPrefix("");
                 suffixPrefix.setSuffix("");
@@ -167,12 +167,17 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (!JocInventory.ROOT_FOLDER.equals(config.getPath())) {
                     DBItemInventoryConfiguration newItem = dbLayer.getConfiguration(newPathWithoutFix, ConfigurationType.FOLDER.intValue());
                     if (newItem == null) {
-                        DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
-                        newDbItem.setAuditLogId(dbAuditLog.getId());
-                        JocInventory.insertConfiguration(dbLayer, newDbItem);
-                        JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
-                        response.setId(newDbItem.getId());
-                        response.setPath(newDbItem.getPath());
+                        if (!newFolderIsRootFolder) {
+                            DBItemInventoryConfiguration newDbItem = createItem(config, pWithoutFix);
+                            newDbItem.setAuditLogId(dbAuditLog.getId());
+                            JocInventory.insertConfiguration(dbLayer, newDbItem);
+                            JocInventory.makeParentDirs(dbLayer, pWithoutFix.getParent(), newDbItem.getAuditLogId());
+                            response.setId(newDbItem.getId());
+                            response.setPath(newDbItem.getPath());
+                        } else {
+                            response.setId(0L);
+                            response.setPath("/");
+                        }
                     } else if (!oldDBFolderContent.isEmpty()) {
                         response.setId(newItem.getId());
                         response.setPath(newItem.getPath());

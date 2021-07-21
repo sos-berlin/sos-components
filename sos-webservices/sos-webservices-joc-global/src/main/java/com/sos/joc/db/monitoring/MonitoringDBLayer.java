@@ -11,6 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.DBItemHistoryController;
 
 public class MonitoringDBLayer extends DBLayer {
 
@@ -124,5 +125,13 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.stepId=os.historyId ");
         hql.append("where n.id=w.notificationId ");
         return hql;
+    }
+
+    public ScrollableResults getControllers() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("order by readyEventId asc");
+
+        Query<DBItemHistoryController> query = getSession().createQuery(hql.toString());
+        return getSession().scroll(query);
     }
 }
