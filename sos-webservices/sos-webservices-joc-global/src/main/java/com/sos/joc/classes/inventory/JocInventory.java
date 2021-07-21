@@ -490,6 +490,7 @@ public class JocInventory {
                     config = new DBItemInventoryConfiguration();
                     config.setId(0L);
                     config.setPath(path);
+                    config.setName("");
                     config.setType(type);
                     config.setFolder(path);
                     config.setDeleted(false);
@@ -988,7 +989,8 @@ public class JocInventory {
     }
     
     public static List<String> getSearchReplace(SuffixPrefix suffixPrefix) {
-        return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix() + "[0-9]*-)?(.*)$", suffixPrefix.getPrefix()
-                + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix() + "[0-9]*)?$", "$1-" + suffixPrefix.getSuffix());
+        return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix().replaceFirst("[0-9]*$", "") + "[0-9]*-)?(.*)$",
+                suffixPrefix.getPrefix() + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix().replaceFirst("[0-9]*$", "") + "[0-9]*)?$",
+                        "$1-" + suffixPrefix.getSuffix());
     }
 }

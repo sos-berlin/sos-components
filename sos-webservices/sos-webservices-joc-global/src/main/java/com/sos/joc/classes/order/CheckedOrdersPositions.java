@@ -183,9 +183,12 @@ public class CheckedOrdersPositions extends OrdersPositions {
             Positions p = new Positions();
             p.setPosition(jPos.toList());
             p.setPositionString(jPos.toString());
-            positionsWithImplicitEnds.add(p);
-            if (!implicitEnds.contains(p.getPositionString())) {
-                pos.add(p);
+            boolean notImplicitEnd = !implicitEnds.contains(p.getPositionString());
+            if (notImplicitEnd || jOrder.workflowPosition().position().toString().equals(jPos.toString())) {
+                positionsWithImplicitEnds.add(p);
+                if (notImplicitEnd) {
+                    pos.add(p);
+                }
             }
         });
         

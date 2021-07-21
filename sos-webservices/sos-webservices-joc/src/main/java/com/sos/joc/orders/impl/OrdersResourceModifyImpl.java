@@ -78,6 +78,7 @@ import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import scala.Function1;
+import scala.collection.JavaConverters;
 
 @Path("orders")
 public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrdersResourceModify {
@@ -297,8 +298,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
             if (!allowedPositions.contains(positionOpt.get().toString())) {
-                throw new JocBadRequestException("Disallowed position '" + positionOpt.get().toString() + "'. Allowed positions are: "
-                        + allowedPositions.toString());
+                if (cop.isSingleOrder() && cop.getCurrentPosition().toString().equals(positionOpt.get().toString())) {
+                    positionOpt = Optional.empty();
+                } else {
+                    throw new JocBadRequestException("Disallowed position '" + positionOpt.get().toString() + "'. Allowed positions are: "
+                            + allowedPositions.toString());
+                }
             }
         }
         
@@ -336,7 +341,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 List<Object> prevPos = null;
                 String prevPosString = null;
                 if (isNotFuturePosition) {
-                    Positions prevP = getPrevious(cop.getPositionsWithImplicitEnds(), positionString);
+                    JOrder currentJOrder = jOrders.iterator().next();
+                    Set<String> historicPositions = JavaConverters.asJava(currentJOrder.asScala().historicOutcomes()).stream().map(h -> JPosition
+                            .apply(h.position())).map(p -> p.toString()).collect(Collectors.toCollection(LinkedHashSet::new));
+                    Positions prevP = getPrevious(historicPositions, cop.getPositionsWithImplicitEnds(), positionString);
                     if (prevP != null) {
                         prevPos = prevP.getPosition();
                         prevPosString = prevP.getPositionString();
@@ -364,7 +372,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     } else {
                         Variables v = new Variables();
                         v.setAdditionalProperties(modifyOrders.getVariables().getAdditionalProperties());
-                        HistoricOutcome h = new HistoricOutcome(prevPos,new Outcome("Succeeded", v, null)); 
+                        HistoricOutcome h = new HistoricOutcome(prevPos, new Outcome("Succeeded", v, null)); 
                         
                         String json = Globals.objectMapper.writeValueAsString(h);
                         JHistoricOutcome jH = JHistoricOutcome.fromJson(json).get();
@@ -409,13 +417,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return result;
     }
     
-    private static Positions getPrevious(Set<Positions> set, String value) {
+    private static Positions getPrevious(Set<String> historicPositions, Set<Positions> allowedPositions, String value) {
         Positions result = null;
-        for (Positions entry : set) {
+        for (Positions entry : allowedPositions) {
             if (entry.getPositionString().equals(value)) {
                 break;
             }
-            result = entry;
+            if (historicPositions.contains(entry.getPositionString())) {
+                result = entry;
+            }
         }
         return result;
     }
