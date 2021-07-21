@@ -445,7 +445,11 @@ public class SOSDate {
     }
 
     // TODO Weeks, Years not supported...
-    public static Date add(Instant input, int amountToAdd, TemporalUnit unit) {
+    public static Date add(Date input, long amountToAdd, TemporalUnit unit) {
+        return add(input.toInstant(), amountToAdd, unit);
+    }
+
+    public static Date add(Instant input, long amountToAdd, TemporalUnit unit) {
         if (input == null) {
             return null;
         }
