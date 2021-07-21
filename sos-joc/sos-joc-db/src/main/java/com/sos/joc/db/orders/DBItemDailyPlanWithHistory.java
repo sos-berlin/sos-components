@@ -83,21 +83,7 @@ public class DBItemDailyPlanWithHistory {
         }
     }
 
-    public int getTolerance() {
-        return tolerance;
-    }
-
-    public void setTolerance(int tolerance) {
-        this.tolerance = tolerance;
-    }
-
-    public int getToleranceUnit() {
-        return toleranceUnit;
-    }
-
-    public void setToleranceUnit(int toleranceUnit) {
-        this.toleranceUnit = toleranceUnit;
-    }
+   
 
     public Long getPlannedOrderId() {
         return plannedOrderId;
