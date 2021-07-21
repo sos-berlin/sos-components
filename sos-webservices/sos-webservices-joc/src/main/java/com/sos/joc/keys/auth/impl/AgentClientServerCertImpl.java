@@ -25,8 +25,7 @@ public class AgentClientServerCertImpl extends JOCResourceImpl implements IAgent
             initLogging(API_CALL, filter, xAccessToken);
             JsonValidator.validateFailFast(filter, CreateCSRFilter.class);
             CreateCSRFilter createCsrFilter = Globals.objectMapper.readValue(filter, CreateCSRFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates()
-                    .getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
