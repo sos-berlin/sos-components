@@ -41,12 +41,12 @@ public class HistoryOrderBean extends AHistoryBean {
     private Long logId;
     private List<HistoryOrderBean> children;
 
-    public HistoryOrderBean(EventType eventType, String controllerId, Long historyId) {
-        super(eventType, controllerId, historyId);
+    public HistoryOrderBean(EventType eventType, Long eventId, String controllerId, Long historyId) {
+        super(eventType, eventId, controllerId, historyId);
     }
 
-    public HistoryOrderBean(EventType eventType, DBItemHistoryOrder item) {
-        super(eventType, item.getControllerId(), item.getId());
+    public HistoryOrderBean(EventType eventType, Long eventId, DBItemHistoryOrder item) {
+        super(eventType, eventId, item.getControllerId(), item.getId());
 
         this.orderId = item.getOrderId();
         this.workflowPath = item.getWorkflowPath();

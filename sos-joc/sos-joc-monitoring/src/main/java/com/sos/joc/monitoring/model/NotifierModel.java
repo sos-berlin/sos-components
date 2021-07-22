@@ -189,7 +189,7 @@ public class NotifierModel {
             break;
         case RECOVERED:
             if (analyzer.getToRecovery() != null) {
-                LastWorkflowNotificationDBItemEntity r = analyzer.getToRecovery().get(notification.getName());
+                LastWorkflowNotificationDBItemEntity r = analyzer.getToRecovery().get(notification.getNotificationId());
                 if (r == null) {
                     return false;
                 }
@@ -207,7 +207,7 @@ public class NotifierModel {
             break;
         case WARNING:
             if (type.equals(NotificationType.WARNING)) {
-                if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().contains(notification.getName())) {
+                if (analyzer.getSendedWarnings() != null && analyzer.getSendedWarnings().contains(notification.getNotificationId())) {
                     return false;
                 }
             }

@@ -36,8 +36,8 @@ public class DBItemNotification extends DBItem {
     @Column(name = "[RANGE]", nullable = false)
     private Integer range;
 
-    @Column(name = "[NAME]", nullable = false)
-    private String name;
+    @Column(name = "[NOTIFICATION_ID]", nullable = false)
+    private String notificationId;
 
     @Column(name = "[RECOVERED_ID]", nullable = false)
     private Long recoveredId;// reference ID
@@ -110,12 +110,12 @@ public class DBItemNotification extends DBItem {
         setRange(val == null ? null : val.intValue());
     }
 
-    public String getName() {
-        return name;
+    public String getNotificationId() {
+        return notificationId;
     }
 
-    public void setName(String val) {
-        name = val;
+    public void setNotificationId(String val) {
+        notificationId = val;
     }
 
     public Long getRecoveredId() {

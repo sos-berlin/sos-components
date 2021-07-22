@@ -106,7 +106,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
 
     private NotificationItem convert(NotificationDBItemEntity entity) {
         NotificationItem item = new NotificationItem();
-        item.setNotificationId(entity.getNotificationId());
+        item.setNotificationId(entity.getId());
         item.setType(getType(entity.getType()));
         item.setCreated(entity.getCreated());
         item.setHasMonitors(entity.getHasMonitors());

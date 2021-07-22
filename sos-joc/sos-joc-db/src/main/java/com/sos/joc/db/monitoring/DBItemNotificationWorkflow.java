@@ -18,11 +18,11 @@ public class DBItemNotificationWorkflow extends DBItem {
     @Column(name = "[NOT_ID]", nullable = false)
     private Long notificationId;
 
-    @Column(name = "[MON_ORDER_ID]", nullable = false)
-    private Long orderId;
+    @Column(name = "[MON_O_HISTORY_ID]", nullable = false)
+    private Long orderHistoryId;
 
-    @Column(name = "[MON_ORDER_STEP_ID]", nullable = false)
-    private Long stepId;
+    @Column(name = "[MON_OS_HISTORY_ID]", nullable = false)
+    private Long orderStepHistoryId;
 
     @Column(name = "[WORKFLOW_POSITION]", nullable = false)
     private String workflowPosition;
@@ -38,23 +38,23 @@ public class DBItemNotificationWorkflow extends DBItem {
         notificationId = val;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Long getOrderHistoryId() {
+        return orderHistoryId;
     }
 
-    public void setOrderId(Long val) {
-        orderId = val;
+    public void setOrderHistoryId(Long val) {
+        orderHistoryId = val;
     }
 
-    public Long getStepId() {
-        return stepId;
+    public Long getOrderStepHistoryId() {
+        return orderStepHistoryId;
     }
 
-    public void setStepId(Long val) {
+    public void setOrderStepHistoryId(Long val) {
         if (val == null) {
             val = 0L;
         }
-        stepId = val;
+        orderStepHistoryId = val;
     }
 
     public String getWorkflowPosition() {

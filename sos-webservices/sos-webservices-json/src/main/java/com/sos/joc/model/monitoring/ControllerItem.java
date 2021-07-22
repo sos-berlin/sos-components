@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
+    "url",
     "entries"
 })
 public class ControllerItem {
@@ -33,6 +34,14 @@ public class ControllerItem {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("url")
+    private String url;
     /**
      * 
      * (Required)
@@ -66,6 +75,28 @@ public class ControllerItem {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("url")
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -87,12 +118,12 @@ public class ControllerItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("entries", entries).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("entries", entries).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(entries).toHashCode();
+        return new HashCodeBuilder().append(entries).append(controllerId).append(url).toHashCode();
     }
 
     @Override
@@ -104,7 +135,7 @@ public class ControllerItem {
             return false;
         }
         ControllerItem rhs = ((ControllerItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(entries, rhs.entries).isEquals();
+        return new EqualsBuilder().append(entries, rhs.entries).append(controllerId, rhs.controllerId).append(url, rhs.url).isEquals();
     }
 
 }

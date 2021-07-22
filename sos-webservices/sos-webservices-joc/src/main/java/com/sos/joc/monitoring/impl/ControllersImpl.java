@@ -90,12 +90,14 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
 
             int size = e.getValue().size();
             for (int i = 0; i < size; i++) {
-                boolean isLast = i == size - 1;
                 DBItemHistoryController item = e.getValue().get(i);
-
+                if (i == 0) {
+                    controller.setUrl(item.getUri());
+                }
                 ControllerItemEntryItem entry = new ControllerItemEntryItem();
                 entry.setReadyTime(item.getReadyTime());
 
+                boolean isLast = i == size - 1;
                 if (item.getShutdownTime() == null) {
                     if (isLast) {
                         entry.setTotalRunningTime(item.getTotalRunningTime());

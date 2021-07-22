@@ -22,7 +22,7 @@ import com.sos.monitoring.notification.NotificationType;
 public abstract class ANotifier {
 
     protected static final String PREFIX_ENV_VAR = "JS7";
-    
+
     private static final String PREFIX_TABLE_ORDERS = "MON_O";
     private static final String PREFIX_TABLE_ORDER_STEPS = "MON_OS";
     private static final String PREFIX_TABLE_NOTIFICATIONS = "MON_N";
@@ -193,11 +193,11 @@ public abstract class ANotifier {
             } catch (Throwable e) {
             }
             String recoveredId = tableFields.get(tablePrefix + "_RECOVERED_ID");
-            try {
-                if (recoveredId.equals("0")) {
-                    tableFields.put(tablePrefix + "_RECOVERED_ID", "");
-                }
-            } catch (Throwable e) {
+            if (recoveredId.equals("0")) {
+                tableFields.put(tablePrefix + "_RECOVERED_ID", "");
+            }
+            if (tableFields.containsKey(tablePrefix + "_HAS_MONITORS")) {
+                tableFields.remove(tablePrefix + "_HAS_MONITORS");
             }
             break;
         }

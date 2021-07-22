@@ -4,9 +4,9 @@ import java.util.Date;
 
 public class NotificationDBItemEntity {
 
-    private Long notificationId;
+    private Long id;
     private Integer type;
-    private String name;
+    private String notificationId;
     private boolean hasMonitors;
     private Long recoveredNotificationId;
     private Date created;
@@ -33,12 +33,12 @@ public class NotificationDBItemEntity {
     private Integer orderStepWarn;
     private String orderStepWarnText;
 
-    public Long getNotificationId() {
-        return notificationId;
+    public Long getId() {
+        return id;
     }
 
-    public void setNotificationId(Long val) {
-        notificationId = val;
+    public void setId(Long val) {
+        id = val;
     }
 
     public Integer getType() {
@@ -49,12 +49,12 @@ public class NotificationDBItemEntity {
         type = val;
     }
 
-    public String getName() {
-        return name;
+    public String getNotificationId() {
+        return notificationId;
     }
 
-    public void setName(String val) {
-        name = val;
+    public void setNotificationId(String val) {
+        notificationId = val;
     }
 
     public boolean getHasMonitors() {

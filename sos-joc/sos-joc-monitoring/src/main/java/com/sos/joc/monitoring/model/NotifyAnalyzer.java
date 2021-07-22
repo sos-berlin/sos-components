@@ -48,18 +48,18 @@ public class NotifyAnalyzer {
         case RECOVERED:
             toRecovery = new HashMap<>();
             for (Notification n : list) {
-                LastWorkflowNotificationDBItemEntity last = dbLayer.getLastNotification(n.getName(), range, orderId);
+                LastWorkflowNotificationDBItemEntity last = dbLayer.getLastNotification(n.getNotificationId(), range, orderId);
                 if (last == null || !last.getType().equals(NotificationType.ERROR.intValue())) {
                     continue;
                 }
-                toRecovery.put(last.getName(), last);
+                toRecovery.put(last.getNotificationId(), last);
             }
             if (toRecovery.size() == 0) {
                 return false;
             }
             break;
         case WARNING:
-            List<String> ws = dbLayer.getNotificationNames(type, range, orderId, stepId);
+            List<String> ws = dbLayer.getNotificationNotificationIds(type, range, orderId, stepId);
             if (ws != null && ws.size() > 0) {
                 sendedWarnings = ws;
             }

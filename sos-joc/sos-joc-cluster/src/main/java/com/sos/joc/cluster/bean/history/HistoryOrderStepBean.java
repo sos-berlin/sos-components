@@ -36,12 +36,12 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private Integer warnIfLonger;
     private Integer warnIfShorter;
 
-    public HistoryOrderStepBean(EventType eventType, String controllerId, Long historyId) {
-        super(eventType, controllerId, historyId);
+    public HistoryOrderStepBean(EventType eventType, Long eventId, String controllerId, Long historyId) {
+        super(eventType, eventId, controllerId, historyId);
     }
 
-    public HistoryOrderStepBean(EventType eventType, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter) {
-        super(eventType, item.getControllerId(), item.getId());
+    public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter) {
+        super(eventType, eventId, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
         this.workflowPath = item.getWorkflowPath();

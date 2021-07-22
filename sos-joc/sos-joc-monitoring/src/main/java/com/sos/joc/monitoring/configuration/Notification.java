@@ -37,7 +37,7 @@ public class Notification extends AElement {
 
     private static final String ELEMENT_NAME_WORKFLOWS_REF = "WorkflowsRef";
 
-    private static String ATTRIBUTE_NAME_NAME = "name";
+    private static String ATTRIBUTE_NAME_NOTIFICATION_ID = "notification_id";
     private static String ATTRIBUTE_NAME_TYPE = "type";
     private static String ATTRIBUTE_NAME_CONTROLLER_ID = "controller_id";
 
@@ -45,14 +45,14 @@ public class Notification extends AElement {
     private final List<AMonitor> monitors;
     private final List<Workflow> workflows;
     private final List<String> jobResources;
-    private final String name;
+    private final String notificationId;
 
     private boolean global;
 
     public Notification(Document doc, Node node, int position) throws Exception {
         super(node);
         this.types = evaluateTypes();
-        this.name = getAttributeValue(ATTRIBUTE_NAME_NAME, String.valueOf(position));
+        this.notificationId = getAttributeValue(ATTRIBUTE_NAME_NOTIFICATION_ID, String.valueOf(position));
         this.monitors = new ArrayList<>();
         this.workflows = new ArrayList<>();
         this.jobResources = new ArrayList<>();
@@ -188,8 +188,8 @@ public class Notification extends AElement {
         return workflows;
     }
 
-    public String getName() {
-        return name;
+    public String getNotificationId() {
+        return notificationId;
     }
 
     protected List<String> getJobResources() {

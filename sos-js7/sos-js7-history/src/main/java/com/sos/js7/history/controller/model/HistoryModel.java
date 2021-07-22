@@ -724,7 +724,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderBean(EventType.OrderStarted, item);
+            return new HistoryOrderBean(EventType.OrderStarted, entry.getEventId(), item);
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -833,7 +833,7 @@ public class HistoryModel {
                 saveOrderState(dbLayer, co, le.getState(), eventDate, eventId, le.getErrorCode(), stateErrorText);
             }
 
-            hob = co.convert(eventType, controllerConfiguration.getCurrent().getId());
+            hob = co.convert(eventType, eventId, controllerConfiguration.getCurrent().getId());
             hob.setCurrentHistoryOrderStepId(currentHistoryOrderStepId);
             hob.setEndTime(endTime);
             hob.setEndWorkflowPosition(endWorkflowPosition);
@@ -1008,7 +1008,7 @@ public class HistoryModel {
         le.onOrder(co, null);
         storeLog2File(le);
 
-        HistoryOrderBean hob = co.convert(EventType.OrderResumed, controllerConfiguration.getCurrent().getId());
+        HistoryOrderBean hob = co.convert(EventType.OrderResumed, entry.getEventId(), controllerConfiguration.getCurrent().getId());
         hob.setStateTime(entry.getEventDatetime());
         return hob;
     }
@@ -1050,7 +1050,7 @@ public class HistoryModel {
             children.add(orderForkedStarted(dbLayer, entry, co, fc));
         }
 
-        HistoryOrderBean hob = co.convert(EventType.OrderForked, controllerConfiguration.getCurrent().getId());
+        HistoryOrderBean hob = co.convert(EventType.OrderForked, entry.getEventId(), controllerConfiguration.getCurrent().getId());
         hob.setStateTime(entry.getEventDatetime());
         hob.setChildren(children);
         return hob;
@@ -1125,7 +1125,7 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderBean(EventType.OrderStarted, item);
+            return new HistoryOrderBean(EventType.OrderStarted, entry.getEventId(), item);
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1162,7 +1162,7 @@ public class HistoryModel {
                 .getOutcome());
         storeLog2File(le);
 
-        HistoryOrderBean hob = co.convert(EventType.OrderJoined, controllerConfiguration.getCurrent().getId());
+        HistoryOrderBean hob = co.convert(EventType.OrderJoined, entry.getEventId(), controllerConfiguration.getCurrent().getId());
         hob.setChildren(children);
         return hob;
     }
@@ -1243,7 +1243,8 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, item, job.getWarnIfLonger(), job.getWarnIfShorter());
+            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, entry.getEventId(), item, job.getWarnIfLonger(), job
+                    .getWarnIfShorter());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1308,7 +1309,7 @@ public class HistoryModel {
             dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endParameters, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
-            hosb = onOrderStepProcessed(dbLayer, co, cos, le, endParameters);
+            hosb = onOrderStepProcessed(dbLayer, entry.getEventId(), co, cos, le, endParameters);
 
             Path log = storeLog2File(le);
             DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, cos.getHistoryOrderMainParentId(), cos.getHistoryOrderId(), cos.getId(), true, log);
@@ -1332,12 +1333,13 @@ public class HistoryModel {
         return hosb;
     }
 
-    private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, CachedOrder co, CachedOrderStep cos, LogEntry le, String endParameters)
-            throws Exception {
+    private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, Long eventId, CachedOrder co, CachedOrderStep cos, LogEntry le,
+            String endParameters) throws Exception {
         String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
-        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, controllerConfiguration.getCurrent().getId(), co.getWorkflowPath());
+        HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, eventId, controllerConfiguration.getCurrent().getId(), co
+                .getWorkflowPath());
         hosb.setEndParameters(endParameters);
         hosb.setError(le.isError());
         hosb.setErrorCode(le.getErrorCode());

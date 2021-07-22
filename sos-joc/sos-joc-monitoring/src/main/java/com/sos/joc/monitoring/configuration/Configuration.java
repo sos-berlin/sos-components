@@ -146,8 +146,8 @@ public class Configuration {
     private String toString(Notification n) {
         StringBuilder sb = new StringBuilder("notification ");
         sb.append("type=").append(n.getTypes());
-        sb.append(", name=");
-        sb.append(SOSString.isEmpty(n.getName()) ? "<empty>" : n.getName());
+        sb.append(", notification_id=");
+        sb.append(n.getNotificationId());
         return sb.toString();
     }
 

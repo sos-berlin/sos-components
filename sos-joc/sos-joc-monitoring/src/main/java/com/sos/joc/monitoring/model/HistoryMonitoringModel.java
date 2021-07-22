@@ -1,8 +1,11 @@
 package com.sos.joc.monitoring.model;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +93,9 @@ public class HistoryMonitoringModel {
 
     @Subscribe({ HistoryOrderEvent.class, HistoryTaskEvent.class })
     public void handleHistoryEvents(HistoryEvent evt) {
+        // AJocClusterService.setLogger(serviceIdentifier);
+        // LOGGER.info("[EV]" + SOSString.toString(evt));
+
         AJocClusterService.setLogger(serviceIdentifier);
         if (evt.getPayload() != null) {
             payloads.add((AHistoryBean) evt.getPayload());
@@ -157,18 +163,20 @@ public class HistoryMonitoringModel {
         }
 
         setLastActivityStart();
+        List<AHistoryBean> toRemove = new ArrayList<>();
         try {
-            List<AHistoryBean> l = new ArrayList<>();
+            Instant start = Instant.now();
+            List<AHistoryBean> copy = new ArrayList<>(payloads);
+            copy.sort(Comparator.comparing(AHistoryBean::getEventId));
 
             dbLayer.setSession(factory.openStatelessSession(dbLayer.getIdentifier()));
             dbLayer.getSession().beginTransaction();
 
             HistoryOrderBean hob;
-            for (AHistoryBean b : payloads) {
+            for (AHistoryBean b : copy) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(b.getEventType() + "=" + SOSString.toString(b));
+                    LOGGER.debug("[PAYLOADS]" + b.getEventType() + "=" + SOSString.toString(b));
                 }
-                // LOGGER.info(b.getEventType() + "=" + SOSString.toString(b));
                 if (closed.get()) {
                     break;
                 }
@@ -218,16 +226,19 @@ public class HistoryMonitoringModel {
                 default:
                     break;
                 }
-                l.add(b);
+                toRemove.add(b);
             }
             dbLayer.getSession().commit();
-            LOGGER.info(String.format("[%s][%s][processed]%s", serviceIdentifier, IDENTIFIER, l.size()));
-            payloads.removeAll(l);
+
+            LOGGER.info(String.format(
+                    "[%s][%s][processed][%s]%s", serviceIdentifier, IDENTIFIER, SOSDate.getDuration(Duration.between(start, Instant
+                    .now())), toRemove.size()));
         } catch (Throwable e) {
             dbLayer.rollback();
             LOGGER.error(e.toString(), e);
         } finally {
             dbLayer.close();
+            payloads.removeAll(toRemove);
             setLastActivityEnd();
         }
         return toNotify;

@@ -34,7 +34,7 @@ public class DBLayerMonitoringTest {
 
             LOGGER.info(SOSString.toString(dbLayer.getLastNotification("1", NotificationRange.WORKFLOW, 663L)));
 
-            List<String> result = dbLayer.getNotificationNames(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
+            List<String> result = dbLayer.getNotificationNotificationIds(NotificationType.SUCCESS, NotificationRange.WORKFLOW, 711L, 1014L);
             LOGGER.info("RESULT SIZE= " + result.size());
             for (String n : result) {
                 LOGGER.info(" " + n);

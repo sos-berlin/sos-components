@@ -4,7 +4,7 @@ public class LastWorkflowNotificationDBItemEntity {
 
     private Long id;
     private Integer type;
-    private String name;
+    private String notificationId;
     private Long stepId;
 
     public Long getId() {
@@ -23,12 +23,12 @@ public class LastWorkflowNotificationDBItemEntity {
         type = val;
     }
 
-    public String getName() {
-        return name;
+    public String getNotificationId() {
+        return notificationId;
     }
 
-    public void setName(String val) {
-        name = val;
+    public void setNotificationId(String val) {
+        notificationId = val;
     }
 
     public Long getStepId() {

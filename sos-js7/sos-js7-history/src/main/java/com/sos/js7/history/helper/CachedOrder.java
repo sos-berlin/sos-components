@@ -37,8 +37,8 @@ public class CachedOrder {
         endTime = item.getEndTime();
     }
 
-    public HistoryOrderBean convert(EventType eventType, String controllerId) {
-        HistoryOrderBean b = new HistoryOrderBean(eventType, controllerId, id);
+    public HistoryOrderBean convert(EventType eventType, Long eventId, String controllerId) {
+        HistoryOrderBean b = new HistoryOrderBean(eventType, eventId, controllerId, id);
         b.setOrderId(orderId);
         b.setMainParentId(mainParentId);
         b.setParentId(parentId);

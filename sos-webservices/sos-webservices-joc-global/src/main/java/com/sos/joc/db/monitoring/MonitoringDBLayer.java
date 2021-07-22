@@ -89,11 +89,11 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     private StringBuilder getNotificationsMainHQL() {
-        StringBuilder hql = new StringBuilder("select n.id as notificationId"); // set aliases for all properties
+        StringBuilder hql = new StringBuilder("select n.id as id"); // set aliases for all properties
         hql.append(",n.type as type");
         hql.append(",n.recoveredId as recoveredNotificationId");
         hql.append(",n.created as created");
-        hql.append(",n.name as name");
+        hql.append(",n.notificationId as notificationId");
         hql.append(",n.hasMonitors as hasMonitors");
         hql.append(",o.historyId as orderHistoryId");
         hql.append(",o.controllerId as controllerId");
@@ -117,8 +117,8 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",os.warnText as orderStepWarnText ");
         hql.append("from ").append(DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on w.orderId=o.historyId ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.stepId=os.historyId ");
+        hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on w.orderHistoryId=o.historyId ");
+        hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.orderStepHistoryId=os.historyId ");
         hql.append("where n.id=w.notificationId ");
         return hql;
     }

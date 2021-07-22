@@ -333,14 +333,14 @@ public class DBLayerMonitoring {
         return item;
     }
 
-    public List<String> getNotificationNames(NotificationType type, NotificationRange range, Long orderId, Long stepId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select n.name from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
+    public List<String> getNotificationNotificationIds(NotificationType type, NotificationRange range, Long orderId, Long stepId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select n.notificationId from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("where n.id=w.notificationId ");
         hql.append("and n.type=:type ");
         hql.append("and n.range=:range ");
-        hql.append("and w.orderId=:orderId ");
-        hql.append("and w.stepId=:stepId");
+        hql.append("and w.orderHistoryId=:orderId ");
+        hql.append("and w.orderStepHistoryId=:stepId");
 
         Query<String> query = getSession().createQuery(hql.toString());
         query.setParameter("type", type.intValue());
@@ -351,8 +351,8 @@ public class DBLayerMonitoring {
         return getSession().getResultList(query);
     }
 
-    public LastWorkflowNotificationDBItemEntity getLastNotification(String name, NotificationRange range, Long orderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select n.id as id, n.type as type, n.name as name, w.stepId as stepId ");
+    public LastWorkflowNotificationDBItemEntity getLastNotification(String notificationId, NotificationRange range, Long orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select n.id as id, n.type as type, n.notificationId as notificationId, w.orderStepHistoryId as stepId ");
         hql.append("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("where n.id=w.notificationId ");
@@ -361,14 +361,14 @@ public class DBLayerMonitoring {
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w2 ");
         hql.append("where n2.id=w2.notificationId ");
         hql.append("and n2.range=:range ");
-        hql.append("and n2.name = :name ");
-        hql.append("and w2.orderId=:orderId");
+        hql.append("and n2.notificationId = :notificationId ");
+        hql.append("and w2.orderHistoryId=:orderId");
         hql.append(")");
 
         Query<LastWorkflowNotificationDBItemEntity> query = getSession().createQuery(hql.toString(), LastWorkflowNotificationDBItemEntity.class);
         query.setParameter("range", range.intValue());
         query.setParameter("orderId", orderId);
-        query.setParameter("name", name);
+        query.setParameter("notificationId", notificationId);
         return getSession().getSingleResult(query);
     }
 
@@ -377,7 +377,7 @@ public class DBLayerMonitoring {
         DBItemNotification item = new DBItemNotification();
         item.setType(type);
         item.setRange(analyzer.getRange());
-        item.setName(notification.getName());
+        item.setNotificationId(notification.getNotificationId());
         item.setRecoveredId(recoveredNotificationId);
         item.setHasMonitors(notification.getMonitors().size() > 0);
         item.setCreated(new Date());
@@ -385,8 +385,8 @@ public class DBLayerMonitoring {
 
         DBItemNotificationWorkflow wItem = new DBItemNotificationWorkflow();
         wItem.setNotificationId(item.getId());
-        wItem.setOrderId(analyzer.getOrderId());
-        wItem.setStepId(analyzer.getStepId());
+        wItem.setOrderHistoryId(analyzer.getOrderId());
+        wItem.setOrderStepHistoryId(analyzer.getStepId());
         wItem.setWorkflowPosition(analyzer.getWorkflowPosition());
         session.save(wItem);
 
