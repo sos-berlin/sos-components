@@ -166,11 +166,11 @@ public class Validator {
             }
         } else if (ConfigurationType.BOARD.equals(type)) {
             Board board = (Board) config;
-            if (board.getToNotice() != null) {
-                validateExpression("$.toNotice: ", board.getToNotice());
+            if (board.getPostOrderToNoticeId() != null) {
+                validateExpression("$.postOrderToNotice: ", board.getPostOrderToNoticeId());
             }
-            if (board.getReadingOrderToNoticeId() != null) {
-                validateExpression("$.readingOrderToNotice: ", board.getReadingOrderToNoticeId());
+            if (board.getExpectOrderToNoticeId() != null) {
+                validateExpression("$.expectOrderToNotice: ", board.getExpectOrderToNoticeId());
             }
             if (board.getEndOfLife() != null) {
                 validateExpression("$.endOfLife: ", board.getEndOfLife());

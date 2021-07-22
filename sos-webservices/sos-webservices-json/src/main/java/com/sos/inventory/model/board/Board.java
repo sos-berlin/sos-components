@@ -1,6 +1,7 @@
 
 package com.sos.inventory.model.board;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -23,9 +24,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "TYPE",
-    "toNotice",
+    "postOrderToNoticeId ",
     "endOfLife",
-    "readingOrderToNoticeId",
+    "expectOrderToNoticeId",
     "version",
     "title",
     "documentationName"
@@ -43,12 +44,14 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     private DeployType tYPE = DeployType.BOARD;
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
+    @JsonProperty("postOrderToNoticeId")
     @JsonPropertyDescription("Expression that returns a NoticeId for the PostNotice statement.")
-    private String toNotice;
+    @JsonAlias({
+        "toNotice"
+    })
+    private String postOrderToNoticeId;
     /**
      * Expression that returns for the PostNotice statement the time until when the note should be valid, expressed as number of milliseconds since 1970-01-01, 0 o'clock, UTC. Then JS7 will delete the note.
      * 
@@ -58,12 +61,14 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
     private String endOfLife;
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
+    @JsonProperty("expectOrderToNoticeId")
     @JsonPropertyDescription("Expression that returns a NoticeId for the ReadNotice statement.")
-    private String readingOrderToNoticeId;
+    @JsonAlias({
+        "readingOrderToNoticeId"
+    })
+    private String expectOrderToNoticeId;
     /**
      * inventory repository version
      * <p>
@@ -99,19 +104,19 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     /**
      * 
-     * @param toNotice
+     * @param expectOrderToNoticeId
+     * @param postOrderToNoticeId
      * @param documentationName
      * 
-     * @param readingOrderToNoticeId
      * @param title
      * @param version
      * @param endOfLife
      */
-    public Board(String toNotice, String endOfLife, String readingOrderToNoticeId, String version, String title, String documentationName) {
+    public Board(String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super();
-        this.toNotice = toNotice;
+        this.postOrderToNoticeId = postOrderToNoticeId;
         this.endOfLife = endOfLife;
-        this.readingOrderToNoticeId = readingOrderToNoticeId;
+        this.expectOrderToNoticeId = expectOrderToNoticeId;
         this.version = version;
         this.title = title;
         this.documentationName = documentationName;
@@ -130,22 +135,20 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
-    public String getToNotice() {
-        return toNotice;
+    @JsonProperty("postOrderToNoticeId")
+    public String getPostOrderToNoticeId() {
+        return postOrderToNoticeId;
     }
 
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
-    public void setToNotice(String toNotice) {
-        this.toNotice = toNotice;
+    @JsonProperty("postOrderToNoticeId")
+    public void setPostOrderToNoticeId(String postOrderToNoticeId) {
+        this.postOrderToNoticeId = postOrderToNoticeId;
     }
 
     /**
@@ -168,22 +171,20 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
-    public String getReadingOrderToNoticeId() {
-        return readingOrderToNoticeId;
+    @JsonProperty("expectOrderToNoticeId")
+    public String getExpectOrderToNoticeId() {
+        return expectOrderToNoticeId;
     }
 
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
-    public void setReadingOrderToNoticeId(String readingOrderToNoticeId) {
-        this.readingOrderToNoticeId = readingOrderToNoticeId;
+    @JsonProperty("expectOrderToNoticeId")
+    public void setExpectOrderToNoticeId(String expectOrderToNoticeId) {
+        this.expectOrderToNoticeId = expectOrderToNoticeId;
     }
 
     /**
@@ -254,12 +255,12 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("toNotice", toNotice).append("endOfLife", endOfLife).append("readingOrderToNoticeId", readingOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("postOrderToNoticeId_", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).append("version", version).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(toNotice).append(documentationName).append(tYPE).append(readingOrderToNoticeId).append(title).append(version).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(expectOrderToNoticeId).append(postOrderToNoticeId).append(documentationName).append(tYPE).append(title).append(version).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -271,7 +272,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(toNotice, rhs.toNotice).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(readingOrderToNoticeId, rhs.readingOrderToNoticeId).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

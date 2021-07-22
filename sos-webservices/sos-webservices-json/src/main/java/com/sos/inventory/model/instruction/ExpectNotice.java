@@ -1,27 +1,26 @@
 
-package com.sos.sign.model.instruction;
+package com.sos.inventory.model.instruction;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.instruction.InstructionType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * ReadNotice
+ * ExpectNotice
  * <p>
- * instruction with fixed property 'TYPE':'ReadNotice'
+ * instruction with fixed property 'TYPE':'ExpectNotice'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "boardPath"
+    "boardName"
 })
-public class ReadNotice
+public class ExpectNotice
     extends Instruction
 {
 
@@ -30,37 +29,26 @@ public class ReadNotice
      * (Required)
      * 
      */
-    @JsonProperty("boardPath")
+    @JsonProperty("boardName")
     @JsonAlias({
-        "boardName"
+        "boardPath"
     })
-    private String boardPath;
+    private String boardName;
 
     /**
      * No args constructor for use in serialization
      * 
      */
-    public ReadNotice() {
+    public ExpectNotice() {
     }
 
     /**
      * 
-     * @param boardPath
-     * @param tYPE
+     * @param boardName
      */
-    public ReadNotice(String boardPath, InstructionType tYPE) {
-        super(tYPE);
-        this.boardPath = boardPath;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("boardPath")
-    public String getBoardPath() {
-        return boardPath;
+    public ExpectNotice(String boardName) {
+        super();
+        this.boardName = boardName;
     }
 
     /**
@@ -68,19 +56,29 @@ public class ReadNotice
      * (Required)
      * 
      */
-    @JsonProperty("boardPath")
-    public void setBoardPath(String boardPath) {
-        this.boardPath = boardPath;
+    @JsonProperty("boardName")
+    public String getBoardName() {
+        return boardName;
+    }
+
+    /**
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("boardName")
+    public void setBoardName(String boardName) {
+        this.boardName = boardName;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardPath", boardPath).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("boardName", boardName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(boardPath).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(boardName).toHashCode();
     }
 
     @Override
@@ -88,11 +86,11 @@ public class ReadNotice
         if (other == this) {
             return true;
         }
-        if ((other instanceof ReadNotice) == false) {
+        if ((other instanceof ExpectNotice) == false) {
             return false;
         }
-        ReadNotice rhs = ((ReadNotice) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(boardPath, rhs.boardPath).isEquals();
+        ExpectNotice rhs = ((ExpectNotice) other);
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(boardName, rhs.boardName).isEquals();
     }
 
 }

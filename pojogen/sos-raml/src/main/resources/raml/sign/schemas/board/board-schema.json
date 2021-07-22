@@ -29,16 +29,18 @@
     "path": {
     	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
     },
-    "toNotice": {
+    "postOrderToNoticeId": {
         "description": "Expression that returns a NoticeId for the PostNotice statement.",
+        "alias": "toNotice",
     	"type": "string"
     },
     "endOfLife": {
 		"description": "Expression that returns for the PostNotice statement the time until when the note should be valid, expressed as number of milliseconds since 1970-01-01, 0 o'clock, UTC. Then JS7 will delete the note.",
     	"type": "string"
 	},
-    "readingOrderToNoticeId": {
+    "expectOrderToNoticeId": {
     	"description": "Expression that returns a NoticeId for the ReadNotice statement.",
+    	"alias": "readingOrderToNoticeId",
     	"type": "string"
     }
   },
