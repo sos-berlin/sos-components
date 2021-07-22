@@ -78,7 +78,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
     				try { // temp. for compatibility PostNotice -> ExpectNotice
                         if (DeployType.WORKFLOW.intValue().equals(item.getType())) {
                             item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent().replaceAll(
-                                    "(\"TYPE\"\\s*:\\s*)\"PostNotice\"", "$1\"ExpectNotice\""), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                    "(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\""), StoreDeployments.CLASS_MAPPING.get(item.getType())));
                         } else {
                             item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent(),
                                     StoreDeployments.CLASS_MAPPING.get(item.getType())));

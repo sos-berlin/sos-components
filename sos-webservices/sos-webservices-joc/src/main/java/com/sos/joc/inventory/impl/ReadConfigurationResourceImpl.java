@@ -95,7 +95,7 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             item.setHasReleases(false);
             if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
                 // temp. for compatibility PostNotice -> ExpectNotice
-                item.setConfiguration(JocInventory.content2IJSObject(config.getContent().replaceAll("(\"TYPE\"\\s*:\\s*)\"PostNotice\"", "$1\"ExpectNotice\""), config.getType()));
+                item.setConfiguration(JocInventory.content2IJSObject(config.getContent().replaceAll("(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\""), config.getType()));
             } else {
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             }
