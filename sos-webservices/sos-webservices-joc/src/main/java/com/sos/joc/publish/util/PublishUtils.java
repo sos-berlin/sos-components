@@ -1134,7 +1134,7 @@ public abstract class PublishUtils {
 	        if (depHistoryItem.getId() != null) {
 				if (depSignatureItem == null) {
 					// simple item
-					depHistoryItem.setSignedContent("");
+					depHistoryItem.setSignedContent(".");
 				} else {
 					// signed item
 					depHistoryItem.setSignedContent(depSignatureItem.getSignature());
