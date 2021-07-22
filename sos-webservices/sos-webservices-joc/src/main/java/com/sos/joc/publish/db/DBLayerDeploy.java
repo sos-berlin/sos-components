@@ -1972,8 +1972,8 @@ public class DBLayerDeploy {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_SUBMISSIONS);
             hql.append(" where controllerId = :controllerId");
-            hql.append(" and commitId = commitId");
-            hql.append(" and path = path");
+            hql.append(" and commitId = :commitId");
+            hql.append(" and path = :path");
             Query<DBItemDeploymentSubmission> query = session.createQuery(hql.toString());
             query.setParameter("controllerId", controllerId);
             query.setParameter("commitId", commitId);
