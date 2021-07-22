@@ -96,7 +96,7 @@ public class OrdersHelper {
 
                 {
                     put(Order.Fresh$.class, OrderStateText.SCHEDULED);
-                    put(Order.WaitingForNotice.class, OrderStateText.WAITING);
+                    put(Order.ExpectingNotice.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     //put(Order.Offering.class, OrderStateText.WAITING);

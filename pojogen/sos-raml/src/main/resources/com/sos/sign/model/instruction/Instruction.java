@@ -41,8 +41,9 @@ import com.sos.inventory.model.instruction.InstructionType;
 		@JsonSubTypes.Type(value = Finish.class, name = "Finish"),
 		@JsonSubTypes.Type(value = Fail.class, name = "Fail"),
 		@JsonSubTypes.Type(value = Lock.class, name = "Lock"),
-		@JsonSubTypes.Type(value = ReadNotice.class, name = "ReadNotice"),
-        @JsonSubTypes.Type(value = PostNotice.class, name = "PostNotice"),
+		@JsonSubTypes.Type(value = PostNotice.class, name = "PostNotice"),
+        @JsonSubTypes.Type(value = ExpectNotice.class, name = "ExpectNotice"),
+        @JsonSubTypes.Type(value = ExpectNotice.class, name = "ReadNotice"),
         @JsonSubTypes.Type(value = Prompt.class, name = "Prompt")})
 public abstract class Instruction
     extends ClassHelper

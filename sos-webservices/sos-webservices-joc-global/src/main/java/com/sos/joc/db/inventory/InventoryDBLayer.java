@@ -534,7 +534,7 @@ public class InventoryDBLayer extends DBLayer {
         if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
             name = "%";
         } else {
-            name = name.toLowerCase();
+            name = name.toLowerCase().replaceFirst("-" + suffix + "[0-9]*$", "");
         }
         StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where lower(name) like :likename");
@@ -583,7 +583,7 @@ public class InventoryDBLayer extends DBLayer {
         if (name == null || name.isEmpty() || type == ConfigurationType.FOLDER.intValue()) {
             query.setParameter("likename", prefix.toLowerCase() + "%");
         } else {
-            query.setParameter("likename", prefix.toLowerCase() + "%-" + name.toLowerCase());
+            query.setParameter("likename", prefix.toLowerCase() + "%-" + name.toLowerCase().replaceFirst("^" + prefix + "[0-9]*-", ""));
         }
         if (type == null || type == ConfigurationType.FOLDER.intValue()) {
             query.setParameter("type", ConfigurationType.FOLDER.intValue());

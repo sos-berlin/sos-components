@@ -2912,7 +2912,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Board board) {
-        if (board != null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null && board.getToNotice() == null
+        if (board != null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board.getPostOrderToNoticeId() == null
                 && board.getTYPE() == null) {
             return false;
         } else {
@@ -2921,8 +2921,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getReadingOrderToNoticeId() == null
-                && board.getToNotice() == null && board.getTYPE() == null) {
+        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null
+                && board.getPostOrderToNoticeId() == null && board.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -3111,13 +3111,13 @@ public abstract class PublishUtils {
         JExpression toNoticeExpression = null;
         JExpression readingOrderToNoticeIdExpression = null;
         JExpression endOfLifeExpression = null;
-        Either<Problem, JExpression> toNoticeEither = JExpression.parse(board.getToNotice());
+        Either<Problem, JExpression> toNoticeEither = JExpression.parse(board.getPostOrderToNoticeId());
         if(toNoticeEither.isLeft()) {
             throw new JocDeployException(toNoticeEither.getLeft().toString());            
         } else {
             toNoticeExpression = toNoticeEither.get();
         }
-        Either<Problem, JExpression> readingOrderToNoticeIdEither = JExpression.parse(board.getReadingOrderToNoticeId());
+        Either<Problem, JExpression> readingOrderToNoticeIdEither = JExpression.parse(board.getExpectOrderToNoticeId());
         if(readingOrderToNoticeIdEither.isLeft()) {
             throw new JocDeployException(readingOrderToNoticeIdEither.getLeft().toString());            
         } else {

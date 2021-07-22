@@ -1,6 +1,7 @@
 
 package com.sos.sign.model.board;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -22,9 +23,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "path",
-    "toNotice",
+    "postOrderToNoticeId",
     "endOfLife",
-    "readingOrderToNoticeId"
+    "expectOrderToNoticeId"
 })
 public class Board implements IDeployObject
 {
@@ -49,12 +50,14 @@ public class Board implements IDeployObject
     private String path;
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
+    @JsonProperty("postOrderToNoticeId")
     @JsonPropertyDescription("Expression that returns a NoticeId for the PostNotice statement.")
-    private String toNotice;
+    @JsonAlias({
+        "toNotice"
+    })
+    private String postOrderToNoticeId;
     /**
      * Expression that returns for the PostNotice statement the time until when the note should be valid, expressed as number of milliseconds since 1970-01-01, 0 o'clock, UTC. Then JS7 will delete the note.
      * 
@@ -64,12 +67,14 @@ public class Board implements IDeployObject
     private String endOfLife;
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
+    @JsonProperty("expectOrderToNoticeId")
     @JsonPropertyDescription("Expression that returns a NoticeId for the ReadNotice statement.")
-    private String readingOrderToNoticeId;
+    @JsonAlias({
+        "readingOrderToNoticeId"
+    })
+    private String expectOrderToNoticeId;
 
     /**
      * No args constructor for use in serialization
@@ -81,18 +86,18 @@ public class Board implements IDeployObject
     /**
      * 
      * @param path
-     * @param toNotice
+     * @param postOrderToNoticeId
+     * @param expectOrderToNoticeId
      * @param tYPE
-     * @param readingOrderToNoticeId
      * @param endOfLife
      */
-    public Board(DeployType tYPE, String path, String toNotice, String endOfLife, String readingOrderToNoticeId) {
+    public Board(DeployType tYPE, String path, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId) {
         super();
         this.tYPE = tYPE;
         this.path = path;
-        this.toNotice = toNotice;
+        this.postOrderToNoticeId = postOrderToNoticeId;
         this.endOfLife = endOfLife;
-        this.readingOrderToNoticeId = readingOrderToNoticeId;
+        this.expectOrderToNoticeId = expectOrderToNoticeId;
     }
 
     /**
@@ -145,22 +150,20 @@ public class Board implements IDeployObject
 
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
-    public String getToNotice() {
-        return toNotice;
+    @JsonProperty("postOrderToNoticeId")
+    public String getPostOrderToNoticeId() {
+        return postOrderToNoticeId;
     }
 
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("toNotice")
-    public void setToNotice(String toNotice) {
-        this.toNotice = toNotice;
+    @JsonProperty("postOrderToNoticeId")
+    public void setPostOrderToNoticeId(String postOrderToNoticeId) {
+        this.postOrderToNoticeId = postOrderToNoticeId;
     }
 
     /**
@@ -183,32 +186,30 @@ public class Board implements IDeployObject
 
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
-    public String getReadingOrderToNoticeId() {
-        return readingOrderToNoticeId;
+    @JsonProperty("expectOrderToNoticeId")
+    public String getExpectOrderToNoticeId() {
+        return expectOrderToNoticeId;
     }
 
     /**
      * Expression that returns a NoticeId for the ReadNotice statement.
-     * (Required)
      * 
      */
-    @JsonProperty("readingOrderToNoticeId")
-    public void setReadingOrderToNoticeId(String readingOrderToNoticeId) {
-        this.readingOrderToNoticeId = readingOrderToNoticeId;
+    @JsonProperty("expectOrderToNoticeId")
+    public void setExpectOrderToNoticeId(String expectOrderToNoticeId) {
+        this.expectOrderToNoticeId = expectOrderToNoticeId;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("toNotice", toNotice).append("endOfLife", endOfLife).append("readingOrderToNoticeId", readingOrderToNoticeId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("postOrderToNoticeId", postOrderToNoticeId).append("endOfLife", endOfLife).append("expectOrderToNoticeId", expectOrderToNoticeId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(toNotice).append(tYPE).append(readingOrderToNoticeId).append(endOfLife).toHashCode();
+        return new HashCodeBuilder().append(path).append(postOrderToNoticeId).append(expectOrderToNoticeId).append(tYPE).append(endOfLife).toHashCode();
     }
 
     @Override
@@ -220,7 +221,7 @@ public class Board implements IDeployObject
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().append(path, rhs.path).append(toNotice, rhs.toNotice).append(tYPE, rhs.tYPE).append(readingOrderToNoticeId, rhs.readingOrderToNoticeId).append(endOfLife, rhs.endOfLife).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(postOrderToNoticeId, rhs.postOrderToNoticeId).append(expectOrderToNoticeId, rhs.expectOrderToNoticeId).append(tYPE, rhs.tYPE).append(endOfLife, rhs.endOfLife).isEquals();
     }
 
 }

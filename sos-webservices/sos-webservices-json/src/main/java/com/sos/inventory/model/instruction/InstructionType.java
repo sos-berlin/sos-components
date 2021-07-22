@@ -18,6 +18,7 @@ public enum InstructionType {
     LOCK("Lock"),
     PROMPT("Prompt"),
     POST_NOTICE("PostNotice"),
+    EXPECT_NOTICE("ExpectNotice"),
     READ_NOTICE("ReadNotice"),
     IMPLICIT_END("ImplicitEnd");
     private final String value;

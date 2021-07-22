@@ -1,7 +1,7 @@
 {
-  "title": "ReadNotice",
+  "title": "ExpectNotice",
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "javaType": "com.sos.sign.model.instruction.ReadNotice",
+  "javaType": "com.sos.sign.model.instruction.ExpectNotice",
   "type": "object",
   "required": [
   	"boardPath"
@@ -10,7 +10,7 @@
     "$ref": "instruction-schema.json"
   },
   
-  "description": "instruction with fixed property 'TYPE':'ReadNotice'",
+  "description": "instruction with fixed property 'TYPE':'ExpectNotice'",
   "propertyOrder": [
   	"TYPE",
     "boardPath"

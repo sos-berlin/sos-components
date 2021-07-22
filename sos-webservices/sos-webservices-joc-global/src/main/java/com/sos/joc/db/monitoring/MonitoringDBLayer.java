@@ -11,6 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 
 public class MonitoringDBLayer extends DBLayer {
@@ -23,23 +24,18 @@ public class MonitoringDBLayer extends DBLayer {
 
     public ScrollableResults getNotifications(Date dateFrom, String controllerId, List<Integer> types, Integer limit) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
-        List<String> where = new ArrayList<>();
         if (dateFrom != null) {
-            where.add("n.created >= :dateFrom");
+            hql.append("and n.created >= :dateFrom ");
         }
         if (!SOSString.isEmpty(controllerId)) {
-            where.add("o.controllerId=:controllerId");
+            hql.append("and o.controllerId=:controllerId ");
         }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
-                where.add("n.type = :type");
+                hql.append("and n.type=:type ");
             } else {
-                where.add("n.type in :types");
+                hql.append("and n.type in :types ");
             }
-        }
-        if (where.size() > 0) {
-            // hql.append("where ").append(String.join(" and ", where)).append(" ");
-            hql.append("and ").append(String.join(" and ", where)).append(" ");
         }
         hql.append("order by n.id desc");
 
@@ -133,5 +129,39 @@ public class MonitoringDBLayer extends DBLayer {
 
         Query<DBItemHistoryController> query = getSession().createQuery(hql.toString());
         return getSession().scroll(query);
+    }
+
+    public ScrollableResults getAgents(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        List<String> where = new ArrayList<>();
+        if (!SOSString.isEmpty(controllerId)) {
+            where.add("controllerId=:controllerId");
+        }
+        if (dateFrom != null) {
+            where.add("readyEventId >= :dateFrom");
+        }
+        if (dateTo != null) {
+            where.add("readyEventId <= :dateTo");
+        }
+        if (where.size() > 0) {
+            hql.append("where ").append(String.join(" and ", where)).append(" ");
+        }
+        hql.append("order by readyEventId asc");
+
+        Query<DBItemHistoryAgent> query = getSession().createQuery(hql.toString());
+        if (dateFrom != null) {
+            query.setParameter("dateFrom", getDateAsEventId(dateFrom));
+        }
+        if (dateTo != null) {
+            query.setParameter("dateTo", getDateAsEventId(dateTo));
+        }
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
+        return getSession().scroll(query);
+    }
+
+    private Long getDateAsEventId(Date date) {
+        return date == null ? null : date.getTime() * 1_000;
     }
 }
