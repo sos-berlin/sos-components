@@ -46,6 +46,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             List<String> agentIds = createOnetimeTokenFilter.getAgentIds();
             Date validUntil = JobSchedulerDate.getDateFrom(createOnetimeTokenFilter.getValidUntil(), createOnetimeTokenFilter.getTimezone());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_CREATE);
+            OnetimeTokensResponse response = new OnetimeTokensResponse();
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
             if(controllerId != null && !controllerId.isEmpty()) {
                 OnetimeToken token = new OnetimeToken();
@@ -53,6 +54,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                 token.setControllerId(controllerId);
                 token.setUUID(UUID.randomUUID().toString());
                 onetimeTokens.getTokens().add(token);
+                response.getTokens().add(token);
             }
             if (agentIds != null && !agentIds.isEmpty()) {
                 agentIds.stream().forEach(agentId -> {
@@ -61,9 +63,10 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                     token.setAgentId(agentId);
                     token.setUUID(UUID.randomUUID().toString());
                     onetimeTokens.getTokens().add(token);
+                    response.getTokens().add(token);
                 });
             }
-            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+            return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -91,19 +94,23 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             cleanupInvalidatedTokens();
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
             OnetimeTokensResponse response = new OnetimeTokensResponse();
-            if (!onetimeTokens.getTokens().isEmpty() && controllerId != null && !controllerId.isEmpty()) {
-                OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> controllerId.equals(item.getControllerId())).collect(Collectors.toList()).get(0);
-                if (token != null) {
-                    response.getTokens().add(token);
-                }
-            }
-            if(!onetimeTokens.getTokens().isEmpty() && agentIds != null && !agentIds.isEmpty()) {
-                agentIds.stream().forEach(agentId -> {
-                    OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> agentId.equals(item.getAgentId())).collect(Collectors.toList()).get(0);
-                    if(token != null) {
+            if (!onetimeTokens.getTokens().isEmpty() && controllerId == null && (agentIds == null || agentIds.isEmpty())) {
+               response.setTokens(onetimeTokens.getTokens().stream().collect(Collectors.toList())); 
+            } else {
+                if (!onetimeTokens.getTokens().isEmpty() && controllerId != null && !controllerId.isEmpty()) {
+                    OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> controllerId.equals(item.getControllerId())).collect(Collectors.toList()).get(0);
+                    if (token != null) {
                         response.getTokens().add(token);
                     }
-                });
+                }
+                if(!onetimeTokens.getTokens().isEmpty() && agentIds != null && !agentIds.isEmpty()) {
+                    agentIds.stream().forEach(agentId -> {
+                        OnetimeToken token = onetimeTokens.getTokens().stream().filter(item -> agentId.equals(item.getAgentId())).collect(Collectors.toList()).get(0);
+                        if(token != null) {
+                            response.getTokens().add(token);
+                        }
+                    });
+                }
             }
             return JOCDefaultResponse.responseStatus200(response);
         } catch (JocException e) {
