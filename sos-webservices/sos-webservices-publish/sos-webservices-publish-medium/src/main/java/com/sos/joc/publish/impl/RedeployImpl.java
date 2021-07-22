@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -73,9 +74,14 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
                 unsignedRedeployables = latest.stream().peek(item -> {
-    				try {
-						item.writeUpdateableContent(
-								(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+    				try { // temp. for compatibility PostNotice -> ExpectNotice
+    				    if (DeployType.WORKFLOW.intValue().equals(item.getType())) {
+                            item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent().replaceAll(
+                                    "(\"TYPE\"\\s*:\\s*)\"PostNotice\"", "$1\"ExpectNotice\""), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                        } else {
+                            item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent(),
+                                    StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                        }
 					} catch (IOException e) {
 						throw new JocException(e);
 					}
