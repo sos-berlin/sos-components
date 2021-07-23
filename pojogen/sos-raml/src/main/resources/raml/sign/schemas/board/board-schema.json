@@ -9,15 +9,15 @@
   "required": [
     "TYPE",
     "path",
-    "toNotice",
-    "readingOrderToNoticeId"
+    "postOrderToNoticeId",
+    "expectOrderToNoticeId"
   ],
   "propertyOrder": [
     "TYPE",
     "path",
-    "toNotice",
+    "postOrderToNoticeId",
     "endOfLife",
-    "readingOrderToNoticeId"
+    "expectOrderToNoticeId"
   ],
   
   "description": "deploy object with fixed property 'TYPE':'Board'",
