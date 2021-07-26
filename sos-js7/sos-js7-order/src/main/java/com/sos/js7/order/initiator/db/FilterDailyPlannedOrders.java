@@ -35,9 +35,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
 
     private String orderId;
     private Boolean submitted;
-    private Set<PlannedOrder> setOfPlannedOrder;
-
-    private Set<OrderId> setOfOrders;
     private Collection<String> listOfOrders;
 
     private List<DailyPlanOrderStateText> states;
@@ -79,8 +76,6 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     }
 
     private void setOrderPlanDateInterval(String timeZone, String periodBegin) {
-        // String timeZone = Globals.sosCockpitProperties.getProperty("daily_plan_timezone", Globals.DEFAULT_TIMEZONE_DAILY_PLAN);
-        // String periodBegin = Globals.sosCockpitProperties.getProperty("daily_plan_period_begin", Globals.DEFAULT_PERIOD_DAILY_PLAN);
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
         Optional<Instant> oInstant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZone);
@@ -219,13 +214,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setSubmitted(Boolean submitted) {
         this.submitted = submitted;
     }
-
-    public Set<OrderId> getSetOfOrders() {
-        return setOfOrders;
-    }
-
+ 
     public void setSetOfOrders(Set<OrderId> setOfOrders) {
-        this.setOfOrders = setOfOrders;
+        if (this.listOfOrders == null) {
+            this.listOfOrders = new ArrayList<String>();
+        }
+        for (OrderId orderId: setOfOrders) {
+            this.listOfOrders.add(orderId.string());
+        }
     }
 
     public Date getSubmitTime() {
@@ -235,14 +231,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     public void setSubmitTime(Date submitTime) {
         this.submitTime = submitTime;
     }
-
-    public Set<PlannedOrder> getSetOfPlannedOrder() {
-        return setOfPlannedOrder;
-    }
-
-    public void setSetOfPlannedOrder(Set<PlannedOrder> setOfPlannedOrder) {
-        this.setOfPlannedOrder = setOfPlannedOrder;
-    }
+ 
 
     public void addWorkflowName(String workflowName) {
         if (this.listOfWorkflowNames == null) {

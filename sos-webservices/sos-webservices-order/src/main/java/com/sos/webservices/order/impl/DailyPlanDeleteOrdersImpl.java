@@ -94,6 +94,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             sosHibernateSession.setAutoCommit(false);
             for (String controllerId : allowedControllers) {
                 Globals.beginTransaction(sosHibernateSession);
+ 
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
                 filter.addState(DailyPlanOrderStateText.PLANNED);
                 dbLayerDailyPlannedOrders.deleteCascading(filter);

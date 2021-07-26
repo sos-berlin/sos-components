@@ -97,7 +97,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         Globals.beginTransaction(sosHibernateSession);
         FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
         filter.setOrderCriteria("plannedStart");
-        
+
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
 
@@ -188,7 +188,9 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                         mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
                     }
 
-                    mapOfCycledOrders.get(cycleOrderKey).add(p);
+                    if (!DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
+                        mapOfCycledOrders.get(cycleOrderKey).add(p);
+                    }
 
                 } else {
                     listOfPlannedOrderItems.add(p);

@@ -66,6 +66,19 @@ public class DailyPlanDate {
         this.setIsoDate();
     }
     
+    public void setPeriod(Date start,String schedule) throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat(dateFormatOnlyDay);
+        String d = formatter.format(start);
+        formatter = new SimpleDateFormat(dateFormat);
+        schedule = "2000-01-01" + " " + schedule;
+        if ("now".equals(schedule)) {
+            this.schedule = new Date();
+        } else {
+            this.schedule = formatter.parse(schedule);
+        }
+        this.setIsoDate();
+    }
+    
     public Date getSchedule() {
         return schedule;
     }

@@ -204,7 +204,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 schedule.setVariables(variables);
 
                 FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime(), dbItemDailyPlanOrders
-                        .getStartMode());
+                        .getStartMode(),orderInitiatorSettings.getTimeZone(),orderInitiatorSettings.getPeriodBegin());
                 freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
                 p.setSchedule(schedule);
                 p.setFreshOrder(freshOrder);
@@ -267,7 +267,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 currentstate = getCurrentState(controllerConfiguration.getCurrent().getId());
 
                 for (int day = 0; day < orderInitiatorSettings.getDayAheadPlan(); day++) {
-                    String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime());
+                    String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime(),orderInitiatorSettings.getTimeZone());
                     List<DBItemDailyPlanSubmissions> l = getSubmissionsForDate(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
                     if ((l.size() == 0)) {
                         if (logDailyPlan) {
@@ -442,9 +442,9 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(Schedule o, Long startTime, Integer startMode) {
+    private FreshOrder buildFreshOrder(Schedule o, Long startTime, Integer startMode, String timeZone, String periodBegin) {
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime, startMode));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime, startMode,timeZone,periodBegin));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(o.getVariables());
         freshOrder.setWorkflowPath(o.getWorkflowName());
@@ -466,8 +466,8 @@ public class OrderInitiatorRunner extends TimerTask {
                         ConfigurationType.NONWORKINGDAYSCALENDAR);
                 CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
 
-                calendarFilter.setDateFrom(DailyPlanHelper.dateAsString(dailyPlanDate));
-                calendarFilter.setDateTo(DailyPlanHelper.dateAsString(nextDate));
+                calendarFilter.setDateFrom(DailyPlanHelper.dateAsString(dailyPlanDate,orderInitiatorSettings.getTimeZone()));
+                calendarFilter.setDateTo(DailyPlanHelper.dateAsString(nextDate,orderInitiatorSettings.getTimeZone()));
                 calendarFilter.setCalendar(calendar);
                 fr.resolve(calendarFilter);
             }
@@ -539,9 +539,9 @@ public class OrderInitiatorRunner extends TimerTask {
                         FrequencyResolver fr = new FrequencyResolver();
                         LOGGER.debug("Generate dates for:" + assignedCalendar.getCalendarName());
                         CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
-                        String actDateAsString = DailyPlanHelper.dateAsString(actDate);
-                        String nextDateAsString = DailyPlanHelper.dateAsString(nextDate);
-                        String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate);
+                        String actDateAsString = DailyPlanHelper.dateAsString(actDate,orderInitiatorSettings.getTimeZone());
+                        String nextDateAsString = DailyPlanHelper.dateAsString(nextDate,orderInitiatorSettings.getTimeZone());
+                        String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate,orderInitiatorSettings.getTimeZone());
 
                         if (calendarCacheItem == null) {
                             calendarCacheItem = new CalendarCacheItem();
@@ -589,7 +589,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                         startMode = 0;
                                     }
 
-                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(), startMode);
+                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(), startMode,this.orderInitiatorSettings.getTimeZone(),this.orderInitiatorSettings.getPeriodBegin());
 
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setControllerId(controllerId);

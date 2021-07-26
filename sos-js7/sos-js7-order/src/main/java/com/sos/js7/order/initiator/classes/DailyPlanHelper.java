@@ -33,16 +33,17 @@ public class DailyPlanHelper {
         return d;
     }
 
-    public static String dateAsString(Date date) {
+    public static String dateAsString(Date date,String timeZone) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        formatter.setTimeZone(TimeZone.getTimeZone(timeZone));
         String dateS = formatter.format(date);
         return dateS;
     }
 
-    public static String getDailyPlanDateAsString(Long startTime) {
+    public static String getDailyPlanDateAsString(Long startTime, String timeZone, String periodBegin) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         calendar.setTime(new Date(startTime));
-        return DailyPlanHelper.dateAsString(calendar.getTime());
+        return DailyPlanHelper.dateAsString(calendar.getTime(),timeZone);
     }
 
     public static Date getDailyPlanDateAsDate(Long startTime) {
@@ -195,14 +196,14 @@ public class DailyPlanHelper {
         return date;
     }
 
-    private static String buildOrderId(Path path, Long startTime, Integer startMode) {
+    private static String buildOrderId(Path path, Long startTime, Integer startMode, String timeZone, String periodBegin) {
         String shortScheduleName = path.getFileName().toString();
         if (shortScheduleName.length() > 30) {
             shortScheduleName = shortScheduleName.substring(0, 30);
         }
 
         String orderId = "";
-        String dailyPlanDate = getDailyPlanDateAsString(startTime);
+        String dailyPlanDate = getDailyPlanDateAsString(startTime,timeZone,periodBegin);
         if (startMode == 0) {
             orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + shortScheduleName;
         } else {
@@ -211,13 +212,13 @@ public class DailyPlanHelper {
         return orderId;
     }
 
-    public static String buildOrderId(Schedule o, Long startTime, Integer startMode) {
-        return buildOrderId(Paths.get(o.getPath()), startTime, startMode);
+    public static String buildOrderId(Schedule o, Long startTime, Integer startMode, String timeZone, String periodBegin) {
+        return buildOrderId(Paths.get(o.getPath()), startTime, startMode,timeZone,periodBegin);
     }
 
-    public static String buildOrderId(DBItemDailyPlanOrders dbItemDailyPlanOrders) {
+    public static String buildOrderId(DBItemDailyPlanOrders dbItemDailyPlanOrders, String timeZone, String periodBegin) {
         return buildOrderId(Paths.get(dbItemDailyPlanOrders.getSchedulePath()), dbItemDailyPlanOrders.getPlannedStart().getTime(),
-                dbItemDailyPlanOrders.getStartMode());
+                dbItemDailyPlanOrders.getStartMode(),timeZone,periodBegin);
     }
 
     public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings orderInitiatorSettings) throws ParseException {

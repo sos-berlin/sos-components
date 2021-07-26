@@ -88,7 +88,7 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(settings.getTimeZone()), settings.getTimeZone(), settings.getPeriodBegin());
 
                     List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
                     for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {

@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,11 +19,13 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.orders.classes.DailyPlanDate;
-
+ 
 @Entity
 @Table(name = DBLayer.DAILY_PLAN_ORDERS_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_PATH]",
         "[ORDER_ID]" }) })
@@ -31,6 +34,7 @@ import com.sos.joc.db.orders.classes.DailyPlanDate;
 public class DBItemDailyPlanOrders extends DBItem {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBItemDailyPlanOrders.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE)
@@ -263,14 +267,14 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Transient
     public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule(start, periodBegin);
+        daysScheduleDate.setPeriod(start, periodBegin);
         this.setPeriodBegin(daysScheduleDate.getSchedule());
     }
 
     @Transient
     public void setPeriodEnd(Date start, String periodEnd) throws ParseException {
         DailyPlanDate daysScheduleDate = new DailyPlanDate();
-        daysScheduleDate.setSchedule(start, periodEnd);
+        daysScheduleDate.setPeriod(start, periodEnd);
         this.setPeriodEnd(daysScheduleDate.getSchedule());
     }
 
@@ -288,8 +292,12 @@ public class DBItemDailyPlanOrders extends DBItem {
     }
 
     @Transient
-    public String getDailyPlanDate() {
+    public String getDailyPlanDate(String timeZone) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        LOGGER.debug("plannedStart:" + plannedStart);
+        LOGGER.debug("timeZone: " + timeZone);
+        LOGGER.debug("dailyPlanDate:" + format.format(plannedStart));
         return format.format(plannedStart);
     }
 

@@ -594,6 +594,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         SOSHibernateSession sosHibernateSession = null;
         if (!orderIds.isEmpty()) {
             try {
+                GlobalSettingsReader reader = new GlobalSettingsReader();
+                OrderInitiatorSettings settings;
+                if (Globals.configurationGlobals != null) {
+
+                    AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
+                    settings = reader.getSettings(configuration);
+                } else {
+                    settings = new OrderInitiatorSettings();
+                    settings.setTimeZone("Europe/Berlin");
+                    settings.setPeriodBegin("00:00");
+                }
+                
+                
+                
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
                 sosHibernateSession.setAutoCommit(false);
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
@@ -606,7 +620,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 List<DBItemDailyPlanOrders> listOfOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 Set<String> dailyPlanDays = new HashSet<String>();
                 for (DBItemDailyPlanOrders order : listOfOrders) {
-                    String dailyPlanDate = order.getDailyPlanDate();
+                    String dailyPlanDate = order.getDailyPlanDate(settings.getTimeZone());
                     if (!dailyPlanDays.contains(dailyPlanDate)) {
                         dailyPlanDays.add(dailyPlanDate);
                         EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));

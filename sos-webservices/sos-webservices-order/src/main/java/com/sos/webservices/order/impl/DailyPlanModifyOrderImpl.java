@@ -243,7 +243,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         orderInitiatorSettings.setTimeZone(settings.getTimeZone());
                         orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
 
-                        orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.stringAsDate(finalPlannedOrder.getDailyPlanDate()));
+                        orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dailyPlanDate));
                         orderInitiatorSettings.setSubmissionTime(new Date());
 
                         OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
@@ -303,7 +303,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         orderInitiatorRunner.addSchedule(schedule);
 
                         Map<PlannedOrderKey, PlannedOrder> generatedOrders = orderInitiatorRunner.generateDailyPlan(controllerId, getJocError(),
-                                getAccessToken(), finalPlannedOrder.getDailyPlanDate(), finalPlannedOrder.getSubmitted());
+                                getAccessToken(), finalPlannedOrder.getDailyPlanDate(settings.getTimeZone()), finalPlannedOrder.getSubmitted());
                         TimeZone.setDefault(savT);
 
                         List<AuditLogDetail> auditLogDetails = new ArrayList<>();

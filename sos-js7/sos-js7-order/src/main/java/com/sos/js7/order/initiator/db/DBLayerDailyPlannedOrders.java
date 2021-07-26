@@ -2,15 +2,19 @@ package com.sos.js7.order.initiator.db;
 
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -115,6 +119,19 @@ public class DBLayerDailyPlannedOrders {
         return row;
     }
 
+    public String getOrderListSql(Collection<String> list) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("p.orderId in (");
+        for (String s : list) {
+            sql.append("'" + s + "',");
+        }
+        String s = sql.toString();
+        s = s.substring(0, s.length() - 1);
+        s = s + ")";
+
+        return " (" + s + ") ";
+    }
+
     public String getWhere(FilterDailyPlannedOrders filter) {
         return getWhere(filter, "");
     }
@@ -190,10 +207,10 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getIsLate() != null) {
             if (filter.isLate()) {
-                where += and + " (o.state is null and p.plannedStart < current_date()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED
+                where += and + " (o.state is null and p.plannedStart < current_time()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED
                         .intValue() + " and o.startTime - p.plannedStart >= " + DAILY_PLAN_LATE_TOLERANCE + ")  ";
             } else {
-                where += and + " (o.state is null and p.plannedStart > current_date() or " + "o.state is not null and o.state <> "
+                where += and + " (o.state is null and p.plannedStart > current_time() or " + "o.state is not null and o.state <> "
                         + DailyPlanOrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart < " + DAILY_PLAN_LATE_TOLERANCE + ") ";
             }
 
@@ -201,12 +218,12 @@ public class DBLayerDailyPlannedOrders {
         }
         if (filter.getStates() != null && filter.getStates().size() > 0) {
             where += and + "(";
-             for (DailyPlanOrderStateText state : filter.getStates()) {
+            for (DailyPlanOrderStateText state : filter.getStates()) {
                 if (state.intValue() == DailyPlanOrderStateText.PLANNED.intValue()) {
                     where += " p.submitted=0 or";
                 } else {
                     if ((state.intValue() == DailyPlanOrderStateText.SUBMITTED.intValue())) {
-                        where += " ((o.state is null or o.state <> " +  DailyPlanOrderStateText.FINISHED.intValue() +  ") and (p.submitted=1))" + " or";
+                        where += " ((o.state is null or o.state <> " + DailyPlanOrderStateText.FINISHED.intValue() + ") and (p.submitted=1))" + " or";
                     } else {
                         where += " o.state = " + state.intValue() + " or";
                     }
@@ -219,14 +236,6 @@ public class DBLayerDailyPlannedOrders {
         if (filter.getListOfSubmissionIds() != null && filter.getListOfSubmissionIds().size() > 0) {
             where += and + SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId");
             and = " and ";
-        }
-
-        if (filter.getSetOfPlannedOrder() != null && filter.getSetOfPlannedOrder().size() > 0) {
-            where += and + "(";
-            for (PlannedOrder plannedOrder : filter.getSetOfPlannedOrder()) {
-                where += " p.orderId = '" + plannedOrder.getFreshOrder().getId() + "' or";
-            }
-            where += " 1=0)";
         }
 
         if (!"".equals(pathField) && filter.getSetOfScheduleFolders() != null && filter.getSetOfScheduleFolders().size() > 0) {
@@ -263,19 +272,9 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (filter.getSetOfOrders() != null && filter.getSetOfOrders().size() > 0) {
-            where += and + "(";
-            for (OrderId orderId : filter.getSetOfOrders()) {
-                where += " p.orderId = '" + orderId.string() + "' or";
-            }
-            where += " 1=0)";
-        }
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
-            where += and + "(";
-            for (String orderId : filter.getListOfOrders()) {
-                where += " p.orderId = '" + orderId + "' or";
-            }
-            where += " 1=0)";
+            where += and + getOrderListSql(filter.getListOfOrders());
+            and = " and ";
         }
 
         if (!"".equals(where.trim())) {
@@ -335,7 +334,7 @@ public class DBLayerDailyPlannedOrders {
 
     }
 
-    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryListExecute(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
         String q =
                 "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
@@ -358,7 +357,32 @@ public class DBLayerDailyPlannedOrders {
         return sosHibernateSession.getResultList(query);
     }
 
-    public List<DBItemDailyPlanOrders> getDailyPlanList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException{
+
+        if (filter.getListOfOrders() != null) {
+            List<DBItemDailyPlanWithHistory> resultList = new ArrayList<DBItemDailyPlanWithHistory>();
+            int size = filter.getListOfOrders().size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                ArrayList<String> copy = (ArrayList<String>) filter.getListOfOrders().stream().collect(Collectors.toList());
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+                        filter.setListOfOrders(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
+                    } else {
+                        filter.setListOfOrders(copy.subList(i, size));
+                    }
+                    resultList.addAll(getDailyPlanWithHistoryListExecute(filter, limit));
+                }
+                return resultList;
+            } else {
+                return getDailyPlanWithHistoryListExecute(filter, limit);
+            }
+        } else {
+            return getDailyPlanWithHistoryListExecute(filter, limit);
+        }
+    }
+    
+    
+    public List<DBItemDailyPlanOrders> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath") + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
@@ -367,6 +391,30 @@ public class DBLayerDailyPlannedOrders {
             query.setMaxResults(limit);
         }
         return sosHibernateSession.getResultList(query);
+    }
+
+    public List<DBItemDailyPlanOrders> getDailyPlanList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
+
+        if (filter.getListOfOrders() != null) {
+            List<DBItemDailyPlanOrders> resultList = new ArrayList<DBItemDailyPlanOrders>();
+            int size = filter.getListOfOrders().size();
+            if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+                ArrayList<String> copy = (ArrayList<String>) filter.getListOfOrders().stream().collect(Collectors.toList());
+                for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+                        filter.setListOfOrders(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
+                    } else {
+                        filter.setListOfOrders(copy.subList(i, size));
+                    }
+                    resultList.addAll(getDailyPlanListExecute(filter, limit));
+                }
+                return resultList;
+            } else {
+                return getDailyPlanListExecute(filter, limit);
+            }
+        } else {
+            return getDailyPlanListExecute(filter, limit);
+        }
     }
 
     public DBItemDailyPlanOrders getUniqueDailyPlan(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -552,7 +600,7 @@ public class DBLayerDailyPlannedOrders {
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(), timeZone, periodBegin);
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(timeZone), timeZone, periodBegin);
 
                     List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
                     for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
