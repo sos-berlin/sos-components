@@ -1,11 +1,20 @@
 package com.sos.auth.client;
 
 import java.io.IOException;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +28,11 @@ public class ClientCertificateHandler {
     private String clientCN;
     private String sslSessionIdHex;
     
-    public ClientCertificateHandler(HttpServletRequest req) throws IOException {
+    public ClientCertificateHandler(HttpServletRequest req) throws IOException, CertificateEncodingException, InvalidNameException {
         readClientCertificateInfo(req);
     }
     
-    private void readClientCertificateInfo (HttpServletRequest request) throws IOException {
+    private void readClientCertificateInfo (HttpServletRequest request) throws IOException, CertificateEncodingException, InvalidNameException {
         /*
          * With the SecureRequestCustomizer in place you can access various pieces about the SSL connection from 
          *     HttpServletRequest.getAttribute(String) calls using the following attribute names. 
@@ -55,7 +64,21 @@ public class ClientCertificateHandler {
             this.clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
                 this.subjectDN = clientCertificate.getSubjectDN().getName();
-                this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+                
+                // deprecated usage of all sun.* class in Javas rt.jar
+                // the rt.jar is  present in Javas JRE 1.8, not present in Javas JDK 11, 15, 17
+//                this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+//                LOGGER.debug("sun.security.x509.X500Name: CN=" + clientCN);
+                // same with bouncy castle
+//                X500Name x500Name = new JcaX509CertificateHolder(clientCertificate).getSubject();
+//                RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+//                this.clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
+//                LOGGER.debug("bouncycastle: CN=" + clientCN);
+                
+                // same with LDAP
+                LdapName ldapName = new LdapName(subjectDN);
+                this.clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
+//                LOGGER.debug("LdapName: CN=" + clientCN);
                 LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
                 LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
             }

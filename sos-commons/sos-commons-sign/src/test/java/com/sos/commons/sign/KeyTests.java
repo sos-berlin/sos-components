@@ -25,7 +25,15 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.Date;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+
 import org.apache.commons.io.IOUtils;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -1179,7 +1187,7 @@ public class KeyTests {
 
     @Test
     public void test28ExtECDSAKeyAndCertificate () throws IOException {
-        LOGGER.info("*********  Test 27: use OpenSSL generated ECDSA Key and X.509 certificate  *********************");
+        LOGGER.info("*********  Test 28: use OpenSSL generated ECDSA Key and X.509 certificate  *********************");
         String privateKeyString = new String(Files.readAllBytes(
                 Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
         String certificateString = new String(Files.readAllBytes(
@@ -1214,6 +1222,31 @@ public class KeyTests {
                 NoSuchProviderException e) {
             LOGGER.error(e.getMessage(), e);
         }
+    }
+
+    @Test
+    public void test29ExtractCNFromX509Certificate () throws IOException, CertificateException, InvalidNameException {
+        LOGGER.info("*********  Test 29: extract CN from client X.509 certificate  **********************************");
+        String certificateString = new String(Files.readAllBytes(
+                Paths.get("src/test/resources/sp.crt")), StandardCharsets.UTF_8);
+        LOGGER.info("*********  create X.509 certifcate Object from File  *******************************************");
+        X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+        assertNotNull(certificate);
+        String subjectDN = certificate.getSubjectDN().getName();
+        // deprecated usage of all sun.* class in Javas rt.jar
+        String clientCN = ((sun.security.x509.X500Name)certificate.getSubjectDN()).getCommonName();
+        LOGGER.debug("sun.security.x509.X500Name: CN=" + clientCN);
+        // same with bouncy castle
+        X500Name x500Name = new JcaX509CertificateHolder(certificate).getSubject();
+        RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
+        clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
+        LOGGER.debug("bouncycastle: CN=" + clientCN);
+        
+        // same with LDAP
+        LdapName ldapName = new LdapName(subjectDN);
+        clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
+        LOGGER.debug("LdapName: CN=" + clientCN);
+            
     }
 
     @SuppressWarnings("unused")
