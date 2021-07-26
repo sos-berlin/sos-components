@@ -600,9 +600,9 @@ public class HistoryControllerHandler {
         String identifier = controllerConfig.getCurrent().getId();
         if (controllerConfig.getSecondary() != null) {
             identifier = "cluster][" + identifier;
-            if (!SOSString.isEmpty(type)) {
-                identifier = identifier + "][" + type;
-            }
+            // if (!SOSString.isEmpty(type)) {
+            // identifier = identifier + "][" + type;
+            // }
         }
         this.identifier = identifier;
         if (model != null) {
