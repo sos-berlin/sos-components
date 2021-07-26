@@ -927,7 +927,9 @@ public class HistoryModel {
                     }
                 } else {
                     if (le.getReturnCode() == null || le.getReturnCode().equals(0)) {
-                        le.setReturnCode(cos.getReturnCode());
+                        if (cos != null) {
+                            le.setReturnCode(cos.getReturnCode());
+                        }
                     }
                 }
                 if (setError) {
