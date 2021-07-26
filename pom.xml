@@ -55,9 +55,9 @@
 		<json.version>1.0.4</json.version>
 		<servlet.version>3.1.0</servlet.version>
 
-		<hibernate.version>5.3.1.Final</hibernate.version>
-		<hibernate.commons.annotation.version>5.0.3.Final</hibernate.commons.annotation.version>
-		<hibernate.jpa.version>1.0.0.Final</hibernate.jpa.version>
+		<hibernate.version>5.5.4.Final</hibernate.version>
+		<hibernate.commons.annotation.version>5.1.2.Final</hibernate.commons.annotation.version>
+		<hibernate.jpa.version>1.0.2.Final</hibernate.jpa.version>
 		<c3p0.version>0.9.5.4</c3p0.version>
 		<hikari.version>3.2.0</hikari.version>
 		<mchange.commons.version>0.2.15</mchange.commons.version>
