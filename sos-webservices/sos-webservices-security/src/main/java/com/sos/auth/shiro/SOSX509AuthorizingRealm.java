@@ -1,8 +1,10 @@
 package com.sos.auth.shiro;
 
 import java.io.IOException;
+import java.security.cert.CertificateEncodingException;
 import java.util.Date;
 
+import javax.naming.InvalidNameException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.shiro.authc.AuthenticationException;
@@ -92,7 +94,7 @@ public class SOSX509AuthorizingRealm extends AuthorizingRealm {
                     myAuthToken.setUsername(clientCertCN);
                 }
 
-            } catch (IOException e) {
+            } catch (IOException | CertificateEncodingException | InvalidNameException e) {
                 LOGGER.debug("AuthenticationToken does not have a client certificate.");
             }
         }
