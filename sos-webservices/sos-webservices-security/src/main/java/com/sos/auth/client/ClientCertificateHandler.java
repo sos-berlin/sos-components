@@ -7,14 +7,8 @@ import java.util.Enumeration;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
 import javax.servlet.http.HttpServletRequest;
 
-import org.bouncycastle.asn1.x500.RDN;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x500.style.IETFUtils;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +69,7 @@ public class ClientCertificateHandler {
 //                this.clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
 //                LOGGER.debug("bouncycastle: CN=" + clientCN);
                 
-                // same with LDAP
+                // same with LDAP (preferred implementation, no third party jar needed)
                 LdapName ldapName = new LdapName(subjectDN);
                 this.clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
 //                LOGGER.debug("LdapName: CN=" + clientCN);
