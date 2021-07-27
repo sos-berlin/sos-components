@@ -52,7 +52,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             Map<String, List<DBItemHistoryController>> map = new HashMap<>();
             ScrollableResults sr = null;
             try {
-                sr = dbLayer.getControllers();
+                sr = dbLayer.getControllers(in.getControllerId());
                 while (sr.next()) {
                     DBItemHistoryController item = (DBItemHistoryController) sr.get(0);
                     List<DBItemHistoryController> l = map.containsKey(item.getControllerId()) ? map.get(item.getControllerId()) : new ArrayList<>();

@@ -123,11 +123,17 @@ public class MonitoringDBLayer extends DBLayer {
         return hql;
     }
 
-    public ScrollableResults getControllers() throws SOSHibernateException {
+    public ScrollableResults getControllers(String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        if (!SOSString.isEmpty(controllerId)) {
+            hql.append("where controllerId=:controllerId ");
+        }
         hql.append("order by readyEventId asc");
 
         Query<DBItemHistoryController> query = getSession().createQuery(hql.toString());
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
         return getSession().scroll(query);
     }
 
