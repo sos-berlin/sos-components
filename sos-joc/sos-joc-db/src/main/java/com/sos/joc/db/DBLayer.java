@@ -41,6 +41,7 @@ import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
@@ -128,6 +129,9 @@ public class DBLayer implements Serializable {
 
     public static final String DBITEM_NOTIFICATION_WORKFLOW = DBItemNotificationWorkflow.class.getSimpleName();
     public static final String TABLE_NOTIFICATION_WORKFLOWS = "MON_NOT_WORKFLOWS";
+
+    public static final String DBITEM_NOTIFICATION_ACKNOWLEDGEMENT = DBItemNotificationAcknowledgement.class.getSimpleName();
+    public static final String TABLE_NOTIFICATION_ACKNOWLEDGEMENTS = "MON_NOT_ACKNOWLEDGEMENTS";
 
     /** Daily plan tables */
     public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";
@@ -299,6 +303,7 @@ public class DBLayer implements Serializable {
         cl.add(DBItemNotification.class);
         cl.add(DBItemNotificationMonitor.class);
         cl.add(DBItemNotificationWorkflow.class);
+        cl.add(DBItemNotificationAcknowledgement.class);
 
         cl.add(DBItemHistoryOrder.class);
         cl.add(DBItemHistoryOrderStep.class);

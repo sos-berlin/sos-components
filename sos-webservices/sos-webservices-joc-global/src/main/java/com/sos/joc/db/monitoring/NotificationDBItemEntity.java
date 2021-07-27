@@ -33,6 +33,10 @@ public class NotificationDBItemEntity {
     private Integer orderStepWarn;
     private String orderStepWarnText;
 
+    private String acknowledgementAccount;
+    private String acknowledgementComment;
+    private Date acknowledgementCreated;
+
     public Long getId() {
         return id;
     }
@@ -241,4 +245,27 @@ public class NotificationDBItemEntity {
         orderStepWarnText = val;
     }
 
+    public String getAcknowledgementAccount() {
+        return acknowledgementAccount;
+    }
+
+    public void setAcknowledgementAccount(String val) {
+        acknowledgementAccount = val;
+    }
+
+    public String getAcknowledgementComment() {
+        return acknowledgementComment;
+    }
+
+    public void setAcknowledgementComment(String val) {
+        acknowledgementComment = val;
+    }
+
+    public Date getAcknowledgementCreated() {
+        return acknowledgementCreated;
+    }
+
+    public void setAcknowledgementCreated(Date val) {
+        acknowledgementCreated = val;
+    }
 }

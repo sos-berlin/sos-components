@@ -27,6 +27,7 @@ import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.MonitoringNotificationTypeText;
 import com.sos.joc.model.monitoring.NotificationItem;
+import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
 import com.sos.joc.model.monitoring.NotificationItemJobItem;
 import com.sos.joc.model.monitoring.NotificationsAnswer;
 import com.sos.joc.model.monitoring.NotificationsFilter;
@@ -132,6 +133,14 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
             job.setExitCode(entity.getOrderStepReturnCode());
 
             item.setJob(job);
+        }
+        if (!SOSString.isEmpty(entity.getAcknowledgementAccount())) {
+            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
+            ac.setAccount(entity.getAcknowledgementAccount());
+            ac.setComment(entity.getAcknowledgementComment());
+            ac.setCreated(entity.getAcknowledgementCreated());
+
+            item.setAcknowledgement(ac);
         }
         return item;
     }

@@ -29,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderId",
     "workflow",
     "message",
-    "job"
+    "job",
+    "acknowledgement"
 })
 public class NotificationItem {
 
@@ -110,6 +111,14 @@ public class NotificationItem {
      */
     @JsonProperty("job")
     private NotificationItemJobItem job;
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("acknowledgement")
+    private NotificationItemAcknowledgementItem acknowledgement;
 
     /**
      * non negative long
@@ -321,14 +330,36 @@ public class NotificationItem {
         this.job = job;
     }
 
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("acknowledgement")
+    public NotificationItemAcknowledgementItem getAcknowledgement() {
+        return acknowledgement;
+    }
+
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("acknowledgement")
+    public void setAcknowledgement(NotificationItemAcknowledgementItem acknowledgement) {
+        this.acknowledgement = acknowledgement;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("notificationId", notificationId).append("recoveredNotificationId", recoveredNotificationId).append("type", type).append("created", created).append("hasMonitors", hasMonitors).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("message", message).append("job", job).toString();
+        return new ToStringBuilder(this).append("notificationId", notificationId).append("recoveredNotificationId", recoveredNotificationId).append("type", type).append("created", created).append("hasMonitors", hasMonitors).append("controllerId", controllerId).append("orderId", orderId).append("workflow", workflow).append("message", message).append("job", job).append("acknowledgement", acknowledgement).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(workflow).append(recoveredNotificationId).append(orderId).append(created).append(hasMonitors).append(notificationId).append(type).append(message).append(job).toHashCode();
+        return new HashCodeBuilder().append(acknowledgement).append(controllerId).append(workflow).append(recoveredNotificationId).append(orderId).append(created).append(hasMonitors).append(notificationId).append(type).append(message).append(job).toHashCode();
     }
 
     @Override
@@ -340,7 +371,7 @@ public class NotificationItem {
             return false;
         }
         NotificationItem rhs = ((NotificationItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(recoveredNotificationId, rhs.recoveredNotificationId).append(orderId, rhs.orderId).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(type, rhs.type).append(message, rhs.message).append(job, rhs.job).isEquals();
+        return new EqualsBuilder().append(acknowledgement, rhs.acknowledgement).append(controllerId, rhs.controllerId).append(workflow, rhs.workflow).append(recoveredNotificationId, rhs.recoveredNotificationId).append(orderId, rhs.orderId).append(created, rhs.created).append(hasMonitors, rhs.hasMonitors).append(notificationId, rhs.notificationId).append(type, rhs.type).append(message, rhs.message).append(job, rhs.job).isEquals();
     }
 
 }

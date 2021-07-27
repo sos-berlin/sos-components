@@ -88,6 +88,16 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public DBItemNotificationAcknowledgement getNotificationAcknowledgement(Long notificationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION_ACKNOWLEDGEMENT).append(" ");
+        hql.append("where notificationId=:notificationId");
+
+        Query<DBItemNotificationAcknowledgement> query = getSession().createQuery(hql.toString());
+        query.setParameter("notificationId", notificationId);
+
+        return getSession().getSingleResult(query);
+    }
+
     private StringBuilder getNotificationsMainHQL() {
         StringBuilder hql = new StringBuilder("select n.id as id"); // set aliases for all properties
         hql.append(",n.type as type");
@@ -114,11 +124,15 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",os.error as orderStepError");
         hql.append(",os.errorText as orderStepErrorText");
         hql.append(",os.warn as orderStepWarn");
-        hql.append(",os.warnText as orderStepWarnText ");
+        hql.append(",os.warnText as orderStepWarnText");
+        hql.append(",a.account as acknowledgementAccount");
+        hql.append(",a.comment as acknowledgementComment");
+        hql.append(",a.created as acknowledgementCreated ");
         hql.append("from ").append(DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on w.orderHistoryId=o.historyId ");
         hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.orderStepHistoryId=os.historyId ");
+        hql.append("left join ").append(DBITEM_NOTIFICATION_ACKNOWLEDGEMENT).append(" a on n.id=a.notificationId ");
         hql.append("where n.id=w.notificationId ");
         return hql;
     }
