@@ -127,7 +127,7 @@ public class OrdersHelper {
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
             put("Offering", OrderStateText.WAITING); // obsolete?
-            put("WaitingForNotice", OrderStateText.WAITING);
+            put("ExpectingNotice", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);
