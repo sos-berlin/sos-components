@@ -13,6 +13,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -20,6 +21,7 @@ import com.sos.joc.model.monitoring.NotificationAcknowledgeAnswer;
 import com.sos.joc.model.monitoring.NotificationAcknowledgeFilter;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
 import com.sos.joc.monitoring.resource.INotificationAcknowledge;
+import com.sos.monitoring.notification.NotificationType;
 import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.MONITORING)
@@ -40,23 +42,30 @@ public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INot
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
+            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
 
             session.beginTransaction();
-            DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(in.getNotificationId());
-            if (result == null) {
-                result = new DBItemNotificationAcknowledgement();
-                result.setNotificationId(in.getNotificationId());
-                result.setAccount(getAccount());
-                result.setComment(in.getComment());
-                result.setCreated(new Date());
-                session.save(result);
+            DBItemNotification notification = dbLayer.getNotification(in.getNotificationId());
+            if (notification != null) {
+
+                DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(in.getNotificationId());
+                if (result == null) {
+                    result = new DBItemNotificationAcknowledgement();
+                    result.setNotificationId(in.getNotificationId());
+                    result.setAccount(getAccount());
+                    result.setComment(in.getComment());
+                    result.setCreated(new Date());
+                    session.save(result);
+
+                    notification.setType(NotificationType.ACKNOWLEDGED);
+                    session.update(notification);
+                }
+
+                ac.setAccount(result.getAccount());
+                ac.setComment(result.getComment());
+                ac.setCreated(result.getCreated());
             }
             session.commit();
-
-            NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
-            ac.setAccount(result.getAccount());
-            ac.setComment(result.getComment());
-            ac.setCreated(result.getCreated());
 
             NotificationAcknowledgeAnswer answer = new NotificationAcknowledgeAnswer();
             answer.setDeliveryDate(new Date());

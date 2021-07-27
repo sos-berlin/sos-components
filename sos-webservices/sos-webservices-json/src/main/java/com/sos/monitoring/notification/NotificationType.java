@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum NotificationType {
 
-    SUCCESS(0), ERROR(1), WARNING(2), RECOVERED(3);
+    SUCCESS(0), ERROR(1), WARNING(2), RECOVERED(3), ACKNOWLEDGED(4);
 
     private final Integer intValue;
     private final static Map<String, NotificationType> CONSTANTS = new HashMap<String, NotificationType>();

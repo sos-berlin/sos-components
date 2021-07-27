@@ -98,6 +98,16 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
+    public DBItemNotification getNotification(Long notificationId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        hql.append("where id=:notificationId");
+
+        Query<DBItemNotification> query = getSession().createQuery(hql.toString());
+        query.setParameter("notificationId", notificationId);
+
+        return getSession().getSingleResult(query);
+    }
+
     private StringBuilder getNotificationsMainHQL() {
         StringBuilder hql = new StringBuilder("select n.id as id"); // set aliases for all properties
         hql.append(",n.type as type");

@@ -11,7 +11,8 @@ public enum MonitoringNotificationTypeText {
     SUCCESS("SUCCESS"),
     ERROR("ERROR"),
     WARNING("WARNING"),
-    RECOVERED("RECOVERED");
+    RECOVERED("RECOVERED"),
+    ACKNOWLEDGED("ACKNOWLEDGED");
     private final String value;
     private final static Map<String, MonitoringNotificationTypeText> CONSTANTS = new HashMap<String, MonitoringNotificationTypeText>();
 

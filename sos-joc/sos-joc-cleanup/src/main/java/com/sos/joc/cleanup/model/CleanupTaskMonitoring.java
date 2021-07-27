@@ -26,6 +26,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private int totalNotifications = 0;
     private int totalNotificationWorkflows = 0;
     private int totalNotificationMonitors = 0;
+    private int totalNotificationAcknowledgements = 0;
 
     public CleanupTaskMonitoring(JocClusterHibernateFactory factory, IJocClusterService service, int batchSize) {
         super(factory, service, batchSize);
@@ -255,6 +256,15 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         r = getDbLayer().getSession().executeUpdate(query);
         totalNotificationWorkflows += r;
         log.append(getDeleted(DBLayer.TABLE_NOTIFICATION_WORKFLOWS, r, totalNotificationWorkflows));
+
+        hql = new StringBuilder("delete from ");
+        hql.append(DBLayer.DBITEM_NOTIFICATION_ACKNOWLEDGEMENT).append(" ");
+        hql.append("where notificationId in (:notificationIds)");
+        query = getDbLayer().getSession().createQuery(hql.toString());
+        query.setParameterList("notificationIds", notificationIds);
+        r = getDbLayer().getSession().executeUpdate(query);
+        totalNotificationAcknowledgements += r;
+        log.append(getDeleted(DBLayer.TABLE_NOTIFICATION_ACKNOWLEDGEMENTS, r, totalNotificationAcknowledgements));
 
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_NOTIFICATION).append(" ");
