@@ -37,6 +37,9 @@ public class Configuration {
     }
 
     public static String getJocUri() {
+        if (JOC_URI == null) {
+            return "";
+        }
         return JOC_URI;
     }
 
