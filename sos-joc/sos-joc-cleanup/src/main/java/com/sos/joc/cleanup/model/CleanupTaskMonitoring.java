@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.IJocClusterService;
@@ -37,13 +36,6 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         try {
             TaskDateTime monitoringDatetime = datetimes.get(0);
             TaskDateTime notificationDatetime = datetimes.get(1);
-
-            // TMP - only MYSQL, see MonitoringService
-            if (!SOSHibernateFactory.Dbms.MYSQL.equals(getFactory().getDbms())) {
-                LOGGER.info(String.format("[%s][%s][%s][skip]not implemented yet for %s", getIdentifier(), monitoringDatetime.getAge()
-                        .getConfigured(), monitoringDatetime.getZonedDatetime(), getFactory().getDbms()));
-                return JocServiceTaskAnswerState.COMPLETED;
-            }
 
             JocServiceTaskAnswerState state = null;
             if (notificationDatetime.getDatetime() != null) {

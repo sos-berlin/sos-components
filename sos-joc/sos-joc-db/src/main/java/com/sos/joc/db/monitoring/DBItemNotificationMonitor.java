@@ -119,7 +119,7 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setMessage(String val) {
-        message = normalizeValue(val, 5_000);
+        message = normalizeValue(val, 4_000);
     }
 
     public void setError(boolean val) {

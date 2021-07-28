@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -48,14 +47,10 @@ public class MonitorService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]start...", getIdentifier(), mode));
 
-            Enum<SOSHibernateFactory.Dbms> dbms = createFactory(getJocConfig().getHibernateConfiguration());
-            // TMP - only MYSQL, see createFactory
-            if (factory == null) {
-                LOGGER.info(String.format("[%s][%s][skip]not implemented yet for %s", getIdentifier(), mode, dbms));
-            } else {
-                history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig(), IDENTIFIER);
-                history.start(getThreadGroup());
-            }
+            createFactory(getJocConfig().getHibernateConfiguration());
+            history = new HistoryMonitoringModel(getThreadGroup(), factory, getJocConfig(), IDENTIFIER);
+            history.start(getThreadGroup());
+
             return JocCluster.getOKAnswer(JocClusterAnswerState.STARTED);
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
@@ -99,20 +94,14 @@ public class MonitorService extends AJocClusterService {
         closeFactory();
     }
 
-    private Enum<SOSHibernateFactory.Dbms> createFactory(Path configFile) throws Exception {
-        Enum<SOSHibernateFactory.Dbms> dbms = SOSHibernateFactory.getDbms(configFile);
-        // TMP - only MYSQL
-        // see CleanupServiceSchedule,CleanupTaskMonitoring
-        if (SOSHibernateFactory.Dbms.MYSQL.equals(dbms)) {
-            // 1-history monitoring, 2 - configuration thread
-            factory = new JocClusterHibernateFactory(configFile, 1, 2);
-            factory.setIdentifier(IDENTIFIER);
-            factory.setAutoCommit(false);
-            factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
-            factory.addClassMapping(DBLayer.getMonitoringClassMapping());
-            factory.build();
-        }
-        return dbms;
+    private void createFactory(Path configFile) throws Exception {
+        // 1-history monitoring, 2 - configuration thread
+        factory = new JocClusterHibernateFactory(configFile, 1, 2);
+        factory.setIdentifier(IDENTIFIER);
+        factory.setAutoCommit(false);
+        factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+        factory.addClassMapping(DBLayer.getMonitoringClassMapping());
+        factory.build();
     }
 
     private void closeFactory() {
