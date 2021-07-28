@@ -11,8 +11,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import com.sos.commons.util.SOSShell;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
+import com.sos.joc.Globals;
 import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.configuration.objects.workflow.Workflow;
 import com.sos.joc.monitoring.configuration.objects.workflow.WorkflowJob;
@@ -37,10 +39,26 @@ public class Configuration {
     }
 
     public static String getJocUri() {
-        if (JOC_URI == null) {
-            return "";
+        if (SOSString.isEmpty(JOC_URI)) {
+            JOC_URI = getJocBaseUri();
         }
         return JOC_URI;
+    }
+
+    private static String getJocBaseUri() {
+        try {
+            if (Globals.servletBaseUri != null) {
+                String hostname = SOSShell.getHostname();
+                String baseUri = Globals.servletBaseUri.normalize().toString().replaceFirst("/joc/api(/.*)?$", "");
+                if (baseUri.matches("https?://localhost:.*") && hostname != null) {
+                    baseUri = baseUri.replaceFirst("^(https?://)localhost:", "$1" + hostname + ":");
+                }
+                return baseUri;
+            }
+        } catch (Throwable e) {
+
+        }
+        return "";
     }
 
     public void process(String xml) {
