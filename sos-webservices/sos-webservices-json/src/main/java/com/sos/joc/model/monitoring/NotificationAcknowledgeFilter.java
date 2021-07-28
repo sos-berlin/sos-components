@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.monitoring;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "notificationId",
+    "notificationIds",
     "comment"
 })
 public class NotificationAcknowledgeFilter {
@@ -33,14 +35,12 @@ public class NotificationAcknowledgeFilter {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notificationId")
-    private Long notificationId;
+    @JsonProperty("notificationIds")
+    private List<Long> notificationIds = new ArrayList<Long>();
     @JsonProperty("comment")
     private String comment;
 
@@ -69,27 +69,23 @@ public class NotificationAcknowledgeFilter {
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notificationId")
-    public Long getNotificationId() {
-        return notificationId;
+    @JsonProperty("notificationIds")
+    public List<Long> getNotificationIds() {
+        return notificationIds;
     }
 
     /**
-     * non negative long
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("notificationId")
-    public void setNotificationId(Long notificationId) {
-        this.notificationId = notificationId;
+    @JsonProperty("notificationIds")
+    public void setNotificationIds(List<Long> notificationIds) {
+        this.notificationIds = notificationIds;
     }
 
     @JsonProperty("comment")
@@ -104,12 +100,12 @@ public class NotificationAcknowledgeFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("notificationId", notificationId).append("comment", comment).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("notificationIds", notificationIds).append("comment", comment).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(notificationId).append(comment).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(notificationIds).append(comment).append(controllerId).toHashCode();
     }
 
     @Override
@@ -121,7 +117,7 @@ public class NotificationAcknowledgeFilter {
             return false;
         }
         NotificationAcknowledgeFilter rhs = ((NotificationAcknowledgeFilter) other);
-        return new EqualsBuilder().append(notificationId, rhs.notificationId).append(comment, rhs.comment).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(notificationIds, rhs.notificationIds).append(comment, rhs.comment).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

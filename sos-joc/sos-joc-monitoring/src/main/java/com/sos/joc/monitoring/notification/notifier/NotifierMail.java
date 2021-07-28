@@ -155,14 +155,6 @@ public class NotifierMail extends ANotifier {
 
     }
 
-    private void setMailRecipients(MailResource res) throws Exception {
-        mail.clearRecipients();
-
-        addTo(res);
-        addCC(res);
-        addBCC(res);
-    }
-
     private void addFrom(MailResource res) throws Exception {
         if (SOSString.isEmpty(monitor.getFrom())) {
             mail.setFrom(res.getFrom());
@@ -181,30 +173,36 @@ public class NotifierMail extends ANotifier {
         // }
     }
 
-    private void addTo(MailResource res) throws Exception {
-        if (SOSString.isEmpty(monitor.getTo())) {
-            mail.addRecipient(res.getTo());
-        } else {
+    private void setMailRecipients(MailResource res) throws Exception {
+        mail.clearRecipients();
+
+        // Element TO is not empty - set TO,CC,BCC from Element
+        if (!SOSString.isEmpty(monitor.getTo())) {
             mail.addRecipient(monitor.getTo());
-        }
-    }
-
-    private void addCC(MailResource res) throws Exception {
-        if (SOSString.isEmpty(monitor.getCC())) {
-            if (!SOSString.isEmpty(res.getCC())) {
-                mail.addCC(res.getCC());
+            if (!SOSString.isEmpty(monitor.getCC())) {
+                mail.addCC(monitor.getCC());
             }
-        } else {
+            if (!SOSString.isEmpty(monitor.getBCC())) {
+                mail.addBCC(monitor.getBCC());
+            }
+        }// Element TO is empty - set TO from JobResource and CC,BCC from Element
+        else if (!SOSString.isEmpty(monitor.getCC())) {
+            if (!SOSString.isEmpty(res.getTo())) {
+                mail.addRecipient(res.getTo());
+            }
             mail.addCC(monitor.getCC());
-        }
-    }
-
-    private void addBCC(MailResource res) throws Exception {
-        if (SOSString.isEmpty(monitor.getBCC())) {
-            if (!SOSString.isEmpty(res.getBCC())) {
-                mail.addBCC(res.getBCC());
+            if (!SOSString.isEmpty(monitor.getBCC())) {
+                mail.addBCC(monitor.getBCC());
             }
-        } else {
+        }
+        // Elements TO,CC are empty - set TO,CC from JobResource and BCC from Element
+        else if (!SOSString.isEmpty(monitor.getBCC())) {
+            if (!SOSString.isEmpty(res.getTo())) {
+                mail.addRecipient(res.getTo());
+            }
+            if (!SOSString.isEmpty(res.getCC())) {
+                mail.addRecipient(res.getCC());
+            }
             mail.addBCC(monitor.getBCC());
         }
     }

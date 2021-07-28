@@ -44,28 +44,35 @@ public class NotificationAcknowledgeImpl extends JOCResourceImpl implements INot
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             NotificationItemAcknowledgementItem ac = new NotificationItemAcknowledgementItem();
 
-            session.beginTransaction();
-            DBItemNotification notification = dbLayer.getNotification(in.getNotificationId());
-            if (notification != null) {
+            if (in.getNotificationIds() != null && in.getNotificationIds().size() > 0) {
+                session.beginTransaction();
 
-                DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(in.getNotificationId());
-                if (result == null) {
-                    result = new DBItemNotificationAcknowledgement();
-                    result.setNotificationId(in.getNotificationId());
-                    result.setAccount(getAccount());
-                    result.setComment(in.getComment());
-                    result.setCreated(new Date());
-                    session.save(result);
+                Date created = new Date();
+                String account = getAccount();
+                for (Long notificationId : in.getNotificationIds()) {
+                    DBItemNotification notification = dbLayer.getNotification(notificationId);
+                    if (notification != null) {
+                        DBItemNotificationAcknowledgement result = dbLayer.getNotificationAcknowledgement(notificationId);
+                        if (result == null) {
+                            result = new DBItemNotificationAcknowledgement();
+                            result.setNotificationId(notificationId);
+                            result.setAccount(account);
+                            result.setComment(in.getComment());
+                            result.setCreated(created);
+                            session.save(result);
 
-                    notification.setType(NotificationType.ACKNOWLEDGED);
-                    session.update(notification);
+                            notification.setType(NotificationType.ACKNOWLEDGED);
+                            session.update(notification);
+                        }
+
+                        ac.setAccount(result.getAccount());
+                        ac.setComment(result.getComment());
+                        ac.setCreated(result.getCreated());
+                    }
                 }
 
-                ac.setAccount(result.getAccount());
-                ac.setComment(result.getComment());
-                ac.setCreated(result.getCreated());
+                session.commit();
             }
-            session.commit();
 
             NotificationAcknowledgeAnswer answer = new NotificationAcknowledgeAnswer();
             answer.setDeliveryDate(new Date());
