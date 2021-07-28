@@ -330,9 +330,6 @@ public class JocClusterService {
             answer = cluster.getHandler().restartService(ClusterServices.cleanup.name(), mode, Globals.configurationGlobals.getConfigurationSection(
                     DefaultSections.cleanup));
             break;
-        case notification:
-            answer = cluster.getHandler().restartService(ClusterServices.notification.name(), mode, null);
-            break;
         case monitor:
             answer = cluster.getHandler().restartService(ClusterServices.monitor.name(), mode, null);
             break;
