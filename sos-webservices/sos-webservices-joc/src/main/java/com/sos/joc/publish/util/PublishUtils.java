@@ -81,6 +81,7 @@ import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
 import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -211,11 +212,11 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void storeCA(JocKeyPair keyPair, SOSHibernateSession hibernateSession)
-            throws SOSHibernateException {
+    public static void storeCA(JocKeyPair keyPair, SOSHibernateSession hibernateSession) throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), "", JocSecurityLevel.LOW, SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), "", JocSecurityLevel.LOW,
+                    SOSKeyConstants.ECDSA_ALGORITHM_NAME);
         }
     }
 
@@ -459,48 +460,50 @@ public abstract class PublishUtils {
         return verifiedDeployment;
     }
 
-    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId, 
-    		Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGP(String commitId,
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer) throws SOSException,
+            IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployed != null) {
-            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
-                    .map(item -> { 
-            			LOGGER.debug("JSON send to controller: ");
-						try {
-							String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
-	            			LOGGER.debug(json);
-	                    	return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
-						} catch (JsonProcessingException e) {
-							return null;
-						}
+            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
+                    .intValue()).map(item -> {
+                        LOGGER.debug("JSON send to controller: ");
+                        try {
+                            String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
+                            LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                    .getSignature()));
+                        } catch (JsonProcessingException e) {
+                            return null;
+                        }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE.intValue())
-                    .map(item -> { 
-            			LOGGER.debug("JSON send to controller: ");
-						try {
-							String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
-	            			LOGGER.debug(json);
-	                    	return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
-						} catch (JsonProcessingException e) {
-							return null;
-						}
+            updateItemOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
+                    .intValue()).map(item -> {
+                        LOGGER.debug("JSON send to controller: ");
+                        try {
+                            String json = JsonSerializer.serializeAsString(item.getKey().readUpdateableContent());
+                            LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                    .getSignature()));
+                        } catch (JsonProcessingException e) {
+                            return null;
+                        }
                     }).collect(Collectors.toSet()));
             updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.LOCK.intValue())
-            		.map(item -> {
+                    .map(item -> {
                         try {
-                            Lock lock = (Lock)item.readUpdateableContent();
+                            Lock lock = (Lock) item.readUpdateableContent();
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
-            		.map(item -> {
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE
+                    .intValue()).map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = (FileOrderSource)item.readUpdateableContent();
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -510,10 +513,10 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // Board
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
-                    .map(item -> {
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+                    item -> {
                         try {
-                            Board board = (Board)item.readUpdateableContent();
+                            Board board = (Board) item.readUpdateableContent();
                             if (board.getPath() == null) {
                                 board.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -530,45 +533,48 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdatePGPFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer)
-            		throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer) throws SOSException, IOException,
+            InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW)).map(item -> {
-                try {
-        			LOGGER.debug("JSON send to controller: ");
-        			String json = JsonSerializer.serializeAsString(item.getKey().getContent());
-        			LOGGER.debug(json);
-                    return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
-                } catch (JsonProcessingException e1) {
-                    throw new JocDeployException(e1);
-                }
-            }).collect(Collectors.toSet()));
-            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.JOBRESOURCE)).map(item -> {
-                try {
-        			LOGGER.debug("JSON send to controller: ");
-        			String json = JsonSerializer.serializeAsString(item.getKey().getContent());
-        			LOGGER.debug(json);
-                    return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue().getSignature()));
-                } catch (JsonProcessingException e1) {
-                    throw new JocDeployException(e1);
-                }
-            }).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK))
-            		.map(item -> {
-    		            try {
-    		                Lock lock = (Lock) item.getContent();
-    		                lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-    		                return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-    		            } catch (Exception e) {
-    		                throw new JocDeployException(e);
-    		            }
-    		        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
-            		.map(item -> {
+            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
+                    .map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                            LOGGER.debug("JSON send to controller: ");
+                            String json = JsonSerializer.serializeAsString(item.getKey().getContent());
+                            LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                    .getSignature()));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.JOBRESOURCE))
+                    .map(item -> {
+                        try {
+                            LOGGER.debug("JSON send to controller: ");
+                            String json = JsonSerializer.serializeAsString(item.getKey().getContent());
+                            LOGGER.debug(json);
+                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                    .getSignature()));
+                        } catch (JsonProcessingException e1) {
+                            throw new JocDeployException(e1);
+                        }
+                    }).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
+                try {
+                    Lock lock = (Lock) item.getContent();
+                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE)).map(
+                    item -> {
+                        try {
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
                             if (fileOrderSource.getPath() == null) {
                                 fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -578,59 +584,57 @@ public abstract class PublishUtils {
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
-    		        }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
-                    .map(item -> {
-                        try {
-                            Board board = (Board)item.getContent();
-                            if (board.getPath() == null) {
-                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // Board
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+                try {
+                    Board board = (Board) item.getContent();
+                    if (board.getPath() == null) {
+                        board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                } catch (JocDeployException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509Certificate(String commitId,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate) throws SOSException, IOException,
-            InterruptedException, ExecutionException, TimeoutException {
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
+            String certificate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployed != null) {
-        	// workflows
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
-            		.map(item -> {
-						try {
-							return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
-									JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
-						} catch (IOException e) {
-							return null;
-						}
-            		}).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // job resources
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE.intValue())
-            		.map(item -> {
-						try {
-	            			return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
-	            					JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
-						} catch (IOException e) {
-							return null;
-						}
-            		}).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // locks
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
-            		.map(item -> {
+            // workflows
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
+                    .intValue()).map(item -> {
                         try {
-                            Lock lock = (Lock)item.readUpdateableContent();
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
+                                    .getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // job resources
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
+                    .intValue()).map(item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
+                                    .getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // locks
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
+                    item -> {
+                        try {
+                            Lock lock = (Lock) item.readUpdateableContent();
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -638,10 +642,10 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // file order sources
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
-            		.map(item -> {
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE
+                    .intValue()).map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = (FileOrderSource)item.readUpdateableContent();
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
                             if (fileOrderSource.getPath() == null) {
                                 fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -653,10 +657,10 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
-                    .map(item -> {
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+                    item -> {
                         try {
-                            Board board = (Board)item.readUpdateableContent();
+                            Board board = (Board) item.readUpdateableContent();
                             if (board.getPath() == null) {
                                 board.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -676,37 +680,36 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDN(String commitId,
-            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed,
-            String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException,
-            InterruptedException, ExecutionException, TimeoutException {
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> alreadyDeployed, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
+            String signerDN) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateRepoOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateRepoOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployed != null) {
-        	// workflows
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW.intValue())
-            		.map(item -> {
-							try {
-		            			return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
-		            					JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-							} catch (IOException e) {
-								return null;
-							}
-            			}).filter(Objects::nonNull).collect(Collectors.toSet()));
+            // workflows
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.WORKFLOW
+                    .intValue()).map(item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
+                                    .readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // job resources
-            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE.intValue())
-            		.map(item -> {
-							try {
-		            			return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
-		            					JsonSerializer.serializeAsString(item.getKey().readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-							} catch (IOException e) {
-								return null;
-							}
-            			}).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateRepoOperationsSigned.addAll(alreadyDeployed.entrySet().stream().filter(item -> item.getKey().getType() == DeployType.JOBRESOURCE
+                    .intValue()).map(item -> {
+                        try {
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
+                                    .readUpdateableContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // locks
             updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
                     item -> {
                         try {
-                            Lock lock = (Lock)item.readUpdateableContent();
+                            Lock lock = (Lock) item.readUpdateableContent();
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
@@ -714,10 +717,10 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // file order sources
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue()).map(
-                    item -> {
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE
+                    .intValue()).map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = (FileOrderSource)item.readUpdateableContent();
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.readUpdateableContent();
                             fileOrderSource.setPath(item.getName());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -727,10 +730,10 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
-                    .map(item -> {
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+                    item -> {
                         try {
-                            Board board = (Board)item.readUpdateableContent();
+                            Board board = (Board) item.readUpdateableContent();
                             if (board.getPath() == null) {
                                 board.setPath(Paths.get(item.getPath()).getFileName().toString());
                             }
@@ -749,47 +752,47 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509CertificateFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String certificate)
-            		throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
+            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm,
+            String certificate) throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-        	// workflows
+            // workflows
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
-            		.map(item -> {
+                    .map(item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
-                            		JsonSerializer.serializeAsString(item.getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
+                                    .getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
                         } catch (IOException e) {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
             // job resources
-            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE))
-            		.map(item -> {
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
+                    item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(
-                            		JsonSerializer.serializeAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
+                                    .getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
             // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.LOCK))
-                	.map(item -> {
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.LOCK)).map(
+                    item -> {
                         try {
-                            Lock lock = (Lock)item.getContent();
+                            Lock lock = (Lock) item.getContent();
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
-                	}).collect(Collectors.toSet()));
+                    }).collect(Collectors.toSet()));
             // file order sources
             updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.FILEORDERSOURCE))
-                	.map(item -> {
+                    .map(item -> {
                         try {
-                            FileOrderSource fileOrderSource = (FileOrderSource)item.getContent();
+                            FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.addOrChangeSimple(getJFileWatch(fileOrderSource));
                         } catch (JocDeployException e) {
@@ -797,20 +800,19 @@ public abstract class PublishUtils {
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
-                	}).collect(Collectors.toSet()));
-            // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
-                    .map(item -> {
-                        try {
-                            Board board = (Board)item.getContent();
-                            board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
                     }).collect(Collectors.toSet()));
+            // Board
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+                try {
+                    Board board = (Board) item.getContent();
+                    board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                } catch (JocDeployException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).collect(Collectors.toSet()));
             // job classes
             // TODO: when implemented in controller
         }
@@ -819,46 +821,44 @@ public abstract class PublishUtils {
     }
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsAddOrUpdateWithX509SignerDNFromImport(String commitId,
-            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId,
-            DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN) throws SOSException, IOException, InterruptedException,
-            ExecutionException, TimeoutException {
+            Map<ControllerObject, DBItemDepSignatures> drafts, String controllerId, DBLayerDeploy dbLayer, String signatureAlgorithm, String signerDN)
+            throws SOSException, IOException, InterruptedException, ExecutionException, TimeoutException {
         Set<JUpdateItemOperation> updateItemsOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemsOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (drafts != null) {
-        	// workflows
+            // workflows
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
-            		.map(item -> {
+                    .map(item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
-                            		JsonSerializer.serializeAsString(item.getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
+                                    .getContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
             // job resources
-            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE))
-            		.map(item -> {
+            updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
+                    item -> {
                         try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(
-                            		JsonSerializer.serializeAsString(item.getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
+                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item
+                                    .getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
                         } catch (JsonProcessingException e) {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
             // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK))
-            		.map(item -> {
-                        try {
-                            Lock lock = (Lock) item.getContent();
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
+                try {
+                    Lock lock = (Lock) item.getContent();
+                    lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                    return JUpdateItemOperation.addOrChangeSimple(getJLock(lock));
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // file order sources
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
-            		.map(item -> {
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE)).map(
+                    item -> {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
                             if (fileOrderSource.getPath() == null) {
@@ -872,20 +872,19 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD))
-                    .map(item -> {
-                        try {
-                            Board board = (Board)item.getContent();
-                            if (board.getPath() == null) {
-                                board.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            }
-                            return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
-                        } catch (JocDeployException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).filter(Objects::nonNull).collect(Collectors.toSet()));
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+                try {
+                    Board board = (Board) item.getContent();
+                    if (board.getPath() == null) {
+                        board.setPath(Paths.get(item.getPath()).getFileName().toString());
+                    }
+                    return JUpdateItemOperation.addOrChangeSimple(getJBoard(board));
+                } catch (JocDeployException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new JocDeployException(e);
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // job classes
             // TODO: when implemented in controller
         }
@@ -899,16 +898,16 @@ public abstract class PublishUtils {
         Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
-            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue())
-                    .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
+            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
                             .toSet()));
             updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
                     .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
                             .toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue())
-            		.map(item -> {
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
+                    item -> {
                         try {
-                        	Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
+                            Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
                             lock.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
                         } catch (Exception e) {
@@ -916,17 +915,17 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
-            		.map(item -> {
+                    .map(item -> {
                         try {
-                        	FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
+                            FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
                             fileOrderSource.setPath(Paths.get(item.getPath()).getFileName().toString());
                             return JUpdateItemOperation.deleteSimple(OrderWatchPath.of(fileOrderSource.getPath()));
                         } catch (Exception e) {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.BOARD.intValue())
-                    .map(item -> {
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+                    item -> {
                         try {
                             Board board = Globals.objectMapper.readValue(item.getContent(), Board.class);
                             board.setPath(Paths.get(item.getPath()).getFileName().toString());
@@ -941,22 +940,21 @@ public abstract class PublishUtils {
     }
 
     private static void updateVersionId(DBItemDeploymentHistory draft, String commitId) {
-    	if (ConfigurationType.WORKFLOW.intValue() == draft.getType()) {
-            ((Workflow)draft.readUpdateableContent()).setVersionId(commitId);
-    	}
+        if (ConfigurationType.WORKFLOW.intValue() == draft.getType()) {
+            ((Workflow) draft.readUpdateableContent()).setVersionId(commitId);
+        }
     }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item, String controllerId,
             DBLayerDeploy dbLayer) {
-        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.readUpdateableContent(), item.getType(), controllerId,
-                dbLayer);
+        return getUpdateableAgentRefInWorkflowJobs(item.getPath(), item.readUpdateableContent(), item.getType(), controllerId, dbLayer);
     }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(String path, IDeployObject deployObject, Integer type,
             String controllerId, DBLayerDeploy dbLayer) {
         Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
         if (ConfigurationType.WORKFLOW.intValue() == type) {
-            Workflow workflow = (Workflow)deployObject;
+            Workflow workflow = (Workflow) deployObject;
             workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                 Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                 String agentNameOrAlias = job.getAgentPath();
@@ -972,10 +970,10 @@ public abstract class PublishUtils {
         return getUpdateableAgentRefInFileOrderSource(item.getName(), item.readUpdateableContent(), controllerId, dbLayer);
     }
 
-    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, IDeployObject deployObject, String controllerId, 
-            DBLayerDeploy dbLayer) {
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(String fileOrderSourceId, IDeployObject deployObject,
+            String controllerId, DBLayerDeploy dbLayer) {
         UpdateableFileOrderSourceAgentName update = null;
-        FileOrderSource fileOrderSource = (FileOrderSource)deployObject;
+        FileOrderSource fileOrderSource = (FileOrderSource) deployObject;
         String agentNameOrAlias = fileOrderSource.getAgentPath();
         String agentId = dbLayer.getAgentIdFromAgentName(agentNameOrAlias, controllerId);
         update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId, controllerId);
@@ -983,8 +981,8 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> cloneInvConfigurationsToDepHistoryItems(Map<ControllerObject, DBItemDepSignatures> draftsWithSignature,
-            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) throws JsonParseException,
-            JsonMappingException, IOException {
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId)
+            throws JsonParseException, JsonMappingException, IOException {
         Set<DBItemDeploymentHistory> deployedObjects;
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
@@ -1035,7 +1033,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setFolder(original.getFolder());
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
-                	break;
+                    break;
                 case LOCK:
                     String lock = Globals.objectMapper.writeValueAsString(((LockPublish) draft).getContent());
                     newDeployedObject.setContent(lock);
@@ -1074,7 +1072,8 @@ public abstract class PublishUtils {
                     if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.BOARD.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD
+                                .intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1113,7 +1112,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setOperation(OperationType.UPDATE.value());
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
-                postDeployHistoryWorkflowEvent(newDeployedObject);
+                postDeployHistoryEvent(newDeployedObject);
                 DBItemDepSignatures signature = draftsWithSignature.get(draft);
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
@@ -1127,55 +1126,54 @@ public abstract class PublishUtils {
         return deployedObjects;
     }
 
-    public static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(
-            DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem, String account, DBLayerDeploy dbLayerDeploy, String commitId,
-            String controllerId, Date deploymentDate, Long auditlogId) {
-    	try {
-	        if (depHistoryItem.getId() != null) {
-				if (depSignatureItem == null) {
-					// simple item
-					depHistoryItem.setSignedContent(".");
-				} else {
-					// signed item
-					depHistoryItem.setSignedContent(depSignatureItem.getSignature());
-				}
-				
-				//Metode tries to change commitId and ControllerId but it can face into Constraint Violation
+    public static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+        try {
+            if (depHistoryItem.getId() != null) {
+                if (depSignatureItem == null) {
+                    // simple item
+                    depHistoryItem.setSignedContent(".");
+                } else {
+                    // signed item
+                    depHistoryItem.setSignedContent(depSignatureItem.getSignature());
+                }
+
+                // Metode tries to change commitId and ControllerId but it can face into Constraint Violation
                 boolean constraintViolation = new EqualsBuilder().append(commitId, depHistoryItem.getCommitId()).append(controllerId, depHistoryItem
                         .getControllerId()).isEquals();
 
-				if (!constraintViolation) {
-				    depHistoryItem.setId(null);
-				}
-				depHistoryItem.setAccount(account);
-				// TODO: get Version to set here
-				depHistoryItem.setVersion(null);
-				depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
-				depHistoryItem.setCommitId(commitId);
-				depHistoryItem.setControllerId(controllerId);
-	            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
-				depHistoryItem.setControllerInstanceId(controllerInstance.getId());
-				depHistoryItem.setDeploymentDate(deploymentDate);
-				depHistoryItem.setOperation(OperationType.UPDATE.value());
-				depHistoryItem.setState(DeploymentState.DEPLOYED.value());
-				depHistoryItem.setAuditlogId(auditlogId);
-				if (!constraintViolation) {
-				    dbLayerDeploy.getSession().save(depHistoryItem);
-				} else {
-				    dbLayerDeploy.getSession().update(depHistoryItem);
-				}
-				postDeployHistoryWorkflowEvent(depHistoryItem);
-				if (depSignatureItem != null) {
-					depSignatureItem.setDepHistoryId(depHistoryItem.getId());
-					dbLayerDeploy.getSession().update(depSignatureItem);
-				}
-			}
-    	} catch(IOException e) {
-        	throw new JocException(e);
+                if (!constraintViolation) {
+                    depHistoryItem.setId(null);
+                }
+                depHistoryItem.setAccount(account);
+                // TODO: get Version to set here
+                depHistoryItem.setVersion(null);
+                depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
+                depHistoryItem.setCommitId(commitId);
+                depHistoryItem.setControllerId(controllerId);
+                DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
+                depHistoryItem.setControllerInstanceId(controllerInstance.getId());
+                depHistoryItem.setDeploymentDate(deploymentDate);
+                depHistoryItem.setOperation(OperationType.UPDATE.value());
+                depHistoryItem.setState(DeploymentState.DEPLOYED.value());
+                depHistoryItem.setAuditlogId(auditlogId);
+                if (!constraintViolation) {
+                    dbLayerDeploy.getSession().save(depHistoryItem);
+                } else {
+                    dbLayerDeploy.getSession().update(depHistoryItem);
+                }
+                postDeployHistoryEvent(depHistoryItem);
+                if (depSignatureItem != null) {
+                    depSignatureItem.setDepHistoryId(depHistoryItem.getId());
+                    dbLayerDeploy.getSession().update(depSignatureItem);
+                }
+            }
+        } catch (IOException e) {
+            throw new JocException(e);
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
-    	return depHistoryItem;
+        return depHistoryItem;
     }
 
     public static Set<DBItemDeploymentHistory> cloneDepHistoryItemsToNewEntries(
@@ -1184,10 +1182,10 @@ public abstract class PublishUtils {
         Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
         for (DBItemDeploymentHistory deployed : deployedWithSignature.keySet()) {
             if (deployed.getId() != null) {
-				DBItemDepSignatures signature = deployedWithSignature.get(deployed);
-				deployedObjects.add(
-						cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId, deploymentDate, auditlogId));
-			}
+                DBItemDepSignatures signature = deployedWithSignature.get(deployed);
+                deployedObjects.add(cloneDepHistoryItemsToNewEntry(deployed, signature, account, dbLayerDeploy, commitId, controllerId,
+                        deploymentDate, auditlogId));
+            }
         }
         return deployedObjects;
     }
@@ -1207,7 +1205,7 @@ public abstract class PublishUtils {
                 redeployed.setOperation(OperationType.UPDATE.value());
                 redeployed.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(redeployed);
-                postDeployHistoryWorkflowEvent(redeployed);
+                postDeployHistoryEvent(redeployed);
                 deployedObjects.add(redeployed);
             }
         } catch (SOSHibernateException e) {
@@ -1517,19 +1515,20 @@ public abstract class PublishUtils {
         }
         return objects;
     }
-    
-    private static ControllerObject createControllerObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
+
+    private static ControllerObject createControllerObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
             throws JsonParseException, JsonMappingException, IOException {
-    	if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
             WorkflowPublish workflowPublish = new WorkflowPublish();
             Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowPublish.setContent(workflow);
             } else {
-                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", 
-                		Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
+                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
             }
-            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")));
+            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
+                    "")));
             workflowPublish.setObjectType(DeployType.WORKFLOW);
             return workflowPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
@@ -1538,10 +1537,11 @@ public abstract class PublishUtils {
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourcePublish.setContent(jobResource);
             } else {
-                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.", 
-                		Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), ""))));
+                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.", Globals
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), ""))));
             }
-            jobResourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), "")));
+            jobResourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(),
+                    "")));
             jobResourcePublish.setObjectType(DeployType.JOBRESOURCE);
             return jobResourcePublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
@@ -1553,8 +1553,7 @@ public abstract class PublishUtils {
                 throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
             }
-            lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(),
-                    "")));
+            lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
             lockPublish.setObjectType(DeployType.LOCK);
             return lockPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
@@ -1566,8 +1565,7 @@ public abstract class PublishUtils {
                 throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""))));
             }
-            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(),
-                    "")));
+            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), "")));
             boardPublish.setObjectType(DeployType.BOARD);
             return boardPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
@@ -1585,60 +1583,65 @@ public abstract class PublishUtils {
             return jobClassPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
             FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
-            FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), FileOrderSource.class);
+            FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+                    FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourcePublish.setContent(fileOrderSource);
             } else {
                 throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
                         .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
             }
-            fileOrderSourcePublish.setPath(
-                    Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")));
+            fileOrderSourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION
+                    .value(), "")));
             fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
             return fileOrderSourcePublish;
         }
         return null;
     }
-    
-    private static SignaturePath createSignatureFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
-            throws JsonParseException, JsonMappingException, IOException {
+
+    private static SignaturePath createSignatureFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName) throws JsonParseException,
+            JsonMappingException, IOException {
         SignaturePath signaturePath = new SignaturePath();
         Signature signature = new Signature();
         if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
         }
         return null;
     }
-    
-    private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry (ByteArrayOutputStream outBuffer, String entryName) 
+
+    private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
             throws JsonParseException, JsonMappingException, IOException {
         // process deployables and releaseables
-    	if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), "")); 
+        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.workflow.Workflow.class);
+            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
+                    .displayName()), com.sos.inventory.model.workflow.Workflow.class);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
@@ -1650,13 +1653,14 @@ public abstract class PublishUtils {
             workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
             return workflowEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(),
+                    ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             JobResourceEdit jobResourceEdit = new JobResourceEdit();
-            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.jobresource.JobResource.class);
+            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
+                    .displayName()), com.sos.inventory.model.jobresource.JobResource.class);
             if (checkObjectNotEmpty(jobResource)) {
                 jobResourceEdit.setConfiguration(jobResource);
             } else {
@@ -1668,49 +1672,47 @@ public abstract class PublishUtils {
             jobResourceEdit.setObjectType(ConfigurationType.JOBRESOURCE);
             return jobResourceEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             LockEdit lockEdit = new LockEdit();
             com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.lock.Lock.class);
+                    com.sos.inventory.model.lock.Lock.class);
             if (checkObjectNotEmpty(lock)) {
                 lockEdit.setConfiguration(lock);
             } else {
-                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", 
-                        normalizedPath));
+                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", normalizedPath));
             }
             lockEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             lockEdit.setPath(normalizedPath);
             lockEdit.setObjectType(ConfigurationType.LOCK);
             return lockEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             BoardEdit boardEdit = new BoardEdit();
             com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.board.Board.class);
+                    com.sos.inventory.model.board.Board.class);
             if (checkObjectNotEmpty(board)) {
                 boardEdit.setConfiguration(board);
             } else {
-                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
+                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", normalizedPath));
             }
             boardEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             boardEdit.setPath(normalizedPath);
             boardEdit.setObjectType(ConfigurationType.BOARD);
             return boardEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-            		com.sos.inventory.model.jobclass.JobClass.class);
+            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
+                    .displayName()), com.sos.inventory.model.jobclass.JobClass.class);
             if (checkObjectNotEmpty(jobClass)) {
                 jobClassEdit.setConfiguration(jobClass);
             } else {
@@ -1722,17 +1724,18 @@ public abstract class PublishUtils {
             jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
             return jobClassEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION
+                    .value(), ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(
-            		outBuffer.toString(StandardCharsets.UTF_8.displayName()), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(
+                    StandardCharsets.UTF_8.displayName()), com.sos.inventory.model.fileordersource.FileOrderSource.class);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
-                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", 
+                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.",
                         normalizedPath));
             }
             fileOrderSourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
@@ -1740,16 +1743,17 @@ public abstract class PublishUtils {
             fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
             return fileOrderSourceEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(),
+                    ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             ScheduleEdit scheduleEdit = new ScheduleEdit();
             Schedule schedule = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Schedule.class);
             if (checkObjectNotEmpty(schedule)) {
                 scheduleEdit.setConfiguration(schedule);
             } else {
-                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.", 
+                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.",
                         normalizedPath));
             }
             scheduleEdit.setName(Paths.get(normalizedPath).getFileName().toString());
@@ -1757,9 +1761,10 @@ public abstract class PublishUtils {
             scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
             return scheduleEdit;
         } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")); 
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),
+                    ""));
             if (normalizedPath.startsWith("//")) {
-            	normalizedPath = normalizedPath.substring(1);
+                normalizedPath = normalizedPath.substring(1);
             }
             Calendar cal = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Calendar.class);
             if (checkObjectNotEmpty(cal)) {
@@ -1787,8 +1792,8 @@ public abstract class PublishUtils {
     }
 
     public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
-            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames, String commitId,
-            String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
+            Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
+            String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -1899,8 +1904,8 @@ public abstract class PublishUtils {
         return streamingOutput;
     }
 
-    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables, DBLayerDeploy dbLayer,
-            Version jocVersion, Version apiVersion, Version inventoryVersion) {
+    public static StreamingOutput writeZipFileShallow(Set<ConfigurationObject> deployables, Set<ConfigurationObject> releasables,
+            DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
         StreamingOutput streamingOutput = new StreamingOutput() {
 
             @Override
@@ -1931,7 +1936,7 @@ public abstract class PublishUtils {
                             case FILEORDERSOURCE:
                                 extension = ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.toString();
                                 break;
-                            default: 
+                            default:
                                 break;
                             }
                             if (extension != null) {
@@ -2303,7 +2308,7 @@ public abstract class PublishUtils {
 
     private static void replaceAgentNameWithAgentId(DBItemDeploymentHistory deployed, Set<UpdateableWorkflowJobAgentName> updateableAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Workflow workflow = (Workflow)deployed.readUpdateableContent();
+        Workflow workflow = (Workflow) deployed.readUpdateableContent();
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(deployed
                 .getPath())).collect(Collectors.toSet());
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
@@ -2326,9 +2331,10 @@ public abstract class PublishUtils {
 
     private static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
-        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream()
-                .filter(item -> item.getFileOrderSourceId().equals(fileOrderSource.getPath())).collect(Collectors.toSet());
-        fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get().getAgentId());
+        Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> item.getFileOrderSourceId()
+                .equals(fileOrderSource.getPath())).collect(Collectors.toSet());
+        fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get()
+                .getAgentId());
     }
 
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
@@ -2445,7 +2451,8 @@ public abstract class PublishUtils {
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
         folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-        return entries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull).collect(Collectors.toSet());
+        return entries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
@@ -2548,7 +2555,7 @@ public abstract class PublishUtils {
         }
         return allObjects;
     }
-    
+
     public static Set<ConfigurationObject> getDeployableConfigurationObjectsFromDB(DeployablesFilter filter, DBLayerDeploy dbLayer)
             throws DBConnectionRefusedException, DBInvalidDataException, JocMissingRequiredParameterException, DBMissingDataException, IOException,
             SOSHibernateException {
@@ -2593,19 +2600,19 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
-                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER))
-                    	.forEach(item -> {
-                    		boolean alreadyPresent = false;
-                    		for (ConfigurationObject config : configurations) {
-                    			if(item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
-                    				alreadyPresent = true;
-                    				break;
-                    			}
-                    		}
-                    		if (!alreadyPresent) {
-                    			configurations.add(getConfigurationObjectFromDBItem(item));
-                    		}
-                    	});
+                    allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
+                            item -> {
+                                boolean alreadyPresent = false;
+                                for (ConfigurationObject config : configurations) {
+                                    if (item.getName().equals(config.getName()) && item.getTypeAsEnum().equals(config.getObjectType())) {
+                                        alreadyPresent = true;
+                                        break;
+                                    }
+                                }
+                                if (!alreadyPresent) {
+                                    configurations.add(getConfigurationObjectFromDBItem(item));
+                                }
+                            });
                 }
             }
         }
@@ -2647,7 +2654,7 @@ public abstract class PublishUtils {
                 if (!allItems.isEmpty()) {
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
                             item -> {
-                                if(!allObjectsMap.containsKey(item.getName())) {
+                                if (!allObjectsMap.containsKey(item.getName())) {
                                     allObjectsMap.put(item.getName(), getConfigurationObjectFromDBItem(item));
                                 }
                             });
@@ -2758,40 +2765,40 @@ public abstract class PublishUtils {
             configurationObject.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configurationObject.getObjectType()) {
             case WORKFLOW:
-                com.sos.inventory.model.workflow.Workflow workflow = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
+                        com.sos.inventory.model.workflow.Workflow.class);
                 configurationObject.setConfiguration(workflow);
                 break;
             case JOBRESOURCE:
-                com.sos.inventory.model.jobresource.JobResource jobResource = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
+                        com.sos.inventory.model.jobresource.JobResource.class);
                 configurationObject.setConfiguration(jobResource);
                 break;
             case JOBCLASS:
-                com.sos.inventory.model.jobclass.JobClass jobClass = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
+                        com.sos.inventory.model.jobclass.JobClass.class);
                 configurationObject.setConfiguration(jobClass);
                 break;
             case LOCK:
-                com.sos.inventory.model.lock.Lock lock = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
+                        com.sos.inventory.model.lock.Lock.class);
                 configurationObject.setConfiguration(lock);
                 break;
             case BOARD:
-                com.sos.inventory.model.board.Board board = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.board.Board.class);
+                com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
+                        com.sos.inventory.model.board.Board.class);
                 configurationObject.setConfiguration(board);
                 break;
             case FILEORDERSOURCE:
-                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                    Globals.objectMapper.readValue(item.getInvContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getInvContent()
+                        .getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configurationObject.setConfiguration(fileOrderSource);
                 break;
             default:
-            	break;
+                break;
             }
-//            configurationObject.setVersion(item.getVersion());
-//            configurationObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
+            // configurationObject.setVersion(item.getVersion());
+            // configurationObject.setAccount(Globals.getConfigurationGlobalsJoc().getDefaultProfileAccount().getValue());
             return configurationObject;
         } catch (IOException e) {
             throw new JocException(e);
@@ -2806,23 +2813,23 @@ public abstract class PublishUtils {
             configuration.setObjectType(ConfigurationType.fromValue(item.getType()));
             switch (configuration.getObjectType()) {
             case WORKFLOW:
-                com.sos.inventory.model.workflow.Workflow workflow = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.workflow.Workflow.class);
+                com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.workflow.Workflow.class);
                 configuration.setConfiguration(workflow);
                 break;
             case JOBRESOURCE:
-                com.sos.inventory.model.jobresource.JobResource jobResource = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobresource.JobResource.class);
+                com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.jobresource.JobResource.class);
                 configuration.setConfiguration(jobResource);
                 break;
             case LOCK:
-                com.sos.inventory.model.lock.Lock lock = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.lock.Lock.class);
+                com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.lock.Lock.class);
                 configuration.setConfiguration(lock);
                 break;
             case FILEORDERSOURCE:
-                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.fileordersource.FileOrderSource.class);
                 configuration.setConfiguration(fileOrderSource);
                 break;
             case SCHEDULE:
@@ -2835,17 +2842,17 @@ public abstract class PublishUtils {
                 configuration.setConfiguration(calendar);
                 break;
             case JOBCLASS:
-                com.sos.inventory.model.jobclass.JobClass jobClass = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.jobclass.JobClass.class);
+                com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.jobclass.JobClass.class);
                 configuration.setConfiguration(jobClass);
                 break;
             case BOARD:
-                com.sos.inventory.model.board.Board board = 
-                    Globals.objectMapper.readValue(item.getContent().getBytes(), com.sos.inventory.model.board.Board.class);
+                com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getContent().getBytes(),
+                        com.sos.inventory.model.board.Board.class);
                 configuration.setConfiguration(board);
                 break;
             default:
-            	break;
+                break;
             }
             return configuration;
         } catch (IOException e) {
@@ -2887,8 +2894,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
-        if (workflow != null && workflow.getDocumentationName() == null && workflow.getInstructions() == null && workflow.getJobs() == null 
-        		&& workflow.getTYPE() == null) {
+        if (workflow != null && workflow.getDocumentationName() == null && workflow.getInstructions() == null && workflow.getJobs() == null
+                && workflow.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -2896,7 +2903,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(JobResource jobResource) {
-        if (jobResource!= null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
+        if (jobResource != null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -2904,7 +2911,7 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource!= null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
+        if (jobResource != null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -2921,8 +2928,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null
-                && board.getPostOrderToNoticeId() == null && board.getTYPE() == null) {
+        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board
+                .getPostOrderToNoticeId() == null && board.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -2938,7 +2945,8 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass.getTYPE() == null) {
+        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null
+                && jobClass.getTYPE() == null) {
             return false;
         } else {
             return true;
@@ -2946,9 +2954,9 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getAgentPath() == null && fileOrderSource.getDelay() == null 
-                && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowPath() == null
-                && fileOrderSource.getDirectory() == null) {
+        if (fileOrderSource != null && fileOrderSource.getAgentPath() == null && fileOrderSource.getDelay() == null && fileOrderSource
+                .getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowPath() == null && fileOrderSource
+                        .getDirectory() == null) {
             return false;
         } else {
             return true;
@@ -2956,9 +2964,9 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null 
-        		&& fileOrderSource.getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null 
-        		&& fileOrderSource.getWorkflowName() == null && fileOrderSource.getDirectory() == null) {
+        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource
+                .getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource
+                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null) {
             return false;
         } else {
             return true;
@@ -2982,9 +2990,9 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null && schedule
-                .getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null && schedule
-                        .getNonWorkingCalendars() == null && schedule.getVariables() == null) {
+        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
+                && schedule.getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null
+                && schedule.getNonWorkingCalendars() == null && schedule.getVariables() == null) {
             return false;
         } else {
             return true;
@@ -2992,8 +3000,9 @@ public abstract class PublishUtils {
     }
 
     private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar.getFrom() == null
-                && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar.getType() == null) {
+        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar
+                .getFrom() == null && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar
+                        .getType() == null) {
             return false;
         } else {
             return true;
@@ -3089,59 +3098,59 @@ public abstract class PublishUtils {
         }
         return false;
     }
-    
+
     private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
         Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
-                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()), getFileOrderSourcePattern(
-                        fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
+                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()),
+                getFileOrderSourcePattern(fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
         if (fileWatch.isLeft()) {
             throw new JocDeployException(fileWatch.getLeft().toString());
         } else {
             return fileWatch.get();
         }
     }
-        
+
     private static JLock getJLock(Lock lock) {
         return JLock.of(LockPath.of(lock.getPath()), lock.getLimit());
     }
-    
-    private static JBoard getJBoard (Board board) {
-//        JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
+
+    private static JBoard getJBoard(Board board) {
+        // JBoard(Board(boardPath, toNotice.asScala, readingOrderToNoticeId.asScala, endOfLife.asScala))
         JExpression toNoticeExpression = null;
         JExpression readingOrderToNoticeIdExpression = null;
         JExpression endOfLifeExpression = null;
         Either<Problem, JExpression> toNoticeEither = JExpression.parse(board.getPostOrderToNoticeId());
-        if(toNoticeEither.isLeft()) {
-            throw new JocDeployException(toNoticeEither.getLeft().toString());            
+        if (toNoticeEither.isLeft()) {
+            throw new JocDeployException(toNoticeEither.getLeft().toString());
         } else {
             toNoticeExpression = toNoticeEither.get();
         }
         Either<Problem, JExpression> readingOrderToNoticeIdEither = JExpression.parse(board.getExpectOrderToNoticeId());
-        if(readingOrderToNoticeIdEither.isLeft()) {
-            throw new JocDeployException(readingOrderToNoticeIdEither.getLeft().toString());            
+        if (readingOrderToNoticeIdEither.isLeft()) {
+            throw new JocDeployException(readingOrderToNoticeIdEither.getLeft().toString());
         } else {
             readingOrderToNoticeIdExpression = readingOrderToNoticeIdEither.get();
         }
         Either<Problem, JExpression> endOfLifeEither = JExpression.parse(board.getEndOfLife());
-        if(endOfLifeEither.isLeft()) {
-            throw new JocDeployException(endOfLifeEither.getLeft().toString());            
+        if (endOfLifeEither.isLeft()) {
+            throw new JocDeployException(endOfLifeEither.getLeft().toString());
         } else {
             endOfLifeExpression = endOfLifeEither.get();
         }
         return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
     }
-    
-    private static SignedString getSignedStringWithCertificate (String jsonContent, String signature, String signatureAlgorithm, String certificate) {
-		LOGGER.debug("JSON send to controller: ");
-		LOGGER.debug(jsonContent);
-    	return SignedString.x509WithCertificate(jsonContent, signature, signatureAlgorithm, certificate);
+
+    private static SignedString getSignedStringWithCertificate(String jsonContent, String signature, String signatureAlgorithm, String certificate) {
+        LOGGER.debug("JSON send to controller: ");
+        LOGGER.debug(jsonContent);
+        return SignedString.x509WithCertificate(jsonContent, signature, signatureAlgorithm, certificate);
     }
 
-    private static SignedString getSignedStringWithSignerDN (String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
-		LOGGER.debug("JSON send to controller: ");
-		LOGGER.debug(jsonContent);
-    	return SignedString.x509WithSignedId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
+    private static SignedString getSignedStringWithSignerDN(String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
+        LOGGER.debug("JSON send to controller: ");
+        LOGGER.debug(jsonContent);
+        return SignedString.x509WithSignedId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {
@@ -3160,54 +3169,58 @@ public abstract class PublishUtils {
         fileOrderSource.setTimeZone(null);
         return Optional.of(String.format(idPattern, timeZone));
     }
-    
-    public static void postDeployHistoryWorkflowEvent(DBItemDeploymentHistory dbItem) {
+
+    public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
         if (DeployType.WORKFLOW.intValue() == dbItem.getType()) {
             EventBus.getInstance().post(new DeployHistoryWorkflowEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
-                    .getPath()));
+                    .getPath(), ConfigurationType.WORKFLOW.intValue()));
+        } else if (DeployType.JOBRESOURCE.intValue() == dbItem.getType()) {
+            EventBus.getInstance().post(new DeployHistoryJobResourceEvent(dbItem.getControllerId(), dbItem.getName(), dbItem.getCommitId(), dbItem
+                    .getPath(), ConfigurationType.JOBRESOURCE.intValue()));
         }
     }
-    
-    public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId, String commitId, 
-    		Long auditLogId) {
-    	DBItemDeploymentHistory newItem = new DBItemDeploymentHistory();
-    	newItem.setAccount(account);
-    	newItem.setAuditlogId(auditLogId);
-    	newItem.setControllerId(controllerId);
-    	newItem.setControllerInstanceId(0L);
-    	newItem.setFolder(cfg.getFolder());
-    	newItem.setInvContent(cfg.getContent());
-    	newItem.setInventoryConfigurationId(cfg.getId());
-    	newItem.setName(cfg.getName());
-    	newItem.setPath(cfg.getPath());
-    	newItem.setType(cfg.getType());
-    	// TODO: type mapping
-    	try {
-			newItem.writeUpdateableContent(
-					(IDeployObject)Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg.getType())));
-		} catch (IOException e) {
-			throw new JocException(e);
-		}
-    	newItem.setCommitId(commitId);
-    	return newItem;
-    }
-    
-    private static void updatePath (DBItemDeploymentHistory deployed) {
+
+    public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
+            String commitId, Long auditLogId) {
+        DBItemDeploymentHistory newItem = new DBItemDeploymentHistory();
+        newItem.setAccount(account);
+        newItem.setAuditlogId(auditLogId);
+        newItem.setControllerId(controllerId);
+        newItem.setControllerInstanceId(0L);
+        newItem.setFolder(cfg.getFolder());
+        newItem.setInvContent(cfg.getContent());
+        newItem.setInventoryConfigurationId(cfg.getId());
+        newItem.setName(cfg.getName());
+        newItem.setPath(cfg.getPath());
+        newItem.setType(cfg.getType());
+        // TODO: type mapping
         try {
-			if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
-			    ((Workflow)deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
-			} else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
-				((JobResource)deployed.readUpdateableContent()).setPath(deployed.getName());
-			} else if (deployed.getType() == DeployType.LOCK.intValue()) {
-				((Lock)deployed.readUpdateableContent()).setPath(deployed.getName());
-			} else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
-				((FileOrderSource)deployed.readUpdateableContent()).setPath(deployed.getName());
-			} else if (deployed.getType() == DeployType.BOARD.intValue()) {
-				((Board)deployed.readUpdateableContent()).setPath(deployed.getName());
-			} else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
-				((JobClass)deployed.readUpdateableContent()).setPath(deployed.getName());
-			}
-		    deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
-		} catch (JsonProcessingException e) {} 
+            newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
+                    .getType())));
+        } catch (IOException e) {
+            throw new JocException(e);
+        }
+        newItem.setCommitId(commitId);
+        return newItem;
+    }
+
+    private static void updatePath(DBItemDeploymentHistory deployed) {
+        try {
+            if (deployed.getType() == DeployType.WORKFLOW.intValue()) {
+                ((Workflow) deployed.readUpdateableContent()).setPath(Paths.get(deployed.getPath()).getFileName().toString());
+            } else if (deployed.getType() == DeployType.JOBRESOURCE.intValue()) {
+                ((JobResource) deployed.readUpdateableContent()).setPath(deployed.getName());
+            } else if (deployed.getType() == DeployType.LOCK.intValue()) {
+                ((Lock) deployed.readUpdateableContent()).setPath(deployed.getName());
+            } else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
+                ((FileOrderSource) deployed.readUpdateableContent()).setPath(deployed.getName());
+            } else if (deployed.getType() == DeployType.BOARD.intValue()) {
+                ((Board) deployed.readUpdateableContent()).setPath(deployed.getName());
+            } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
+                ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
+            }
+            deployed.setContent(JsonSerializer.serializeAsString(deployed.readUpdateableContent()));
+        } catch (JsonProcessingException e) {
+        }
     }
 }

@@ -43,6 +43,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.deploy.DeployHistoryJobResourceEvent;
 import com.sos.joc.event.bean.history.HistoryEvent;
 import com.sos.joc.event.bean.history.HistoryOrderEvent;
 import com.sos.joc.event.bean.history.HistoryTaskEvent;
@@ -108,6 +109,19 @@ public class HistoryMonitoringModel {
             AJocClusterService.setLogger(serviceIdentifier);
             LOGGER.info(String.format("[%s][%s][configuration]%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass().getSimpleName()));
             setConfiguration();
+        }
+    }
+
+    @Subscribe({ DeployHistoryJobResourceEvent.class })
+    public void handleMonitoringEvents(DeployHistoryJobResourceEvent evt) {
+        if (configuration != null && configuration.exists() && evt.getName() != null) {
+            AJocClusterService.setLogger(serviceIdentifier);
+            List<String> names = configuration.getMailResources().entrySet().stream().map(Map.Entry::getKey).collect(Collectors.toList());
+            if (names.contains(evt.getName())) {
+                LOGGER.info(String.format("[%s][%s][configuration]%s jr=%s", serviceIdentifier, NOTIFICATION_IDENTIFIER, evt.getClass()
+                        .getSimpleName(), evt.getName()));
+                setConfiguration();
+            }
         }
     }
 
@@ -230,8 +244,7 @@ public class HistoryMonitoringModel {
             }
             dbLayer.getSession().commit();
 
-            LOGGER.info(String.format(
-                    "[%s][%s][processed][%s]%s", serviceIdentifier, IDENTIFIER, SOSDate.getDuration(Duration.between(start, Instant
+            LOGGER.info(String.format("[%s][%s][processed][%s]%s", serviceIdentifier, IDENTIFIER, SOSDate.getDuration(Duration.between(start, Instant
                     .now())), toRemove.size()));
         } catch (Throwable e) {
             dbLayer.rollback();

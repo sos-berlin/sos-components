@@ -93,7 +93,7 @@ public class StoreDeployments {
                 		item.setState(DeploymentState.DEPLOYED.value());
                 		item.setAuditlogId(signedItemsSpec.getAuditlogId());
                 		dbLayer.getSession().save(item);
-                        PublishUtils.postDeployHistoryWorkflowEvent(item);
+                        PublishUtils.postDeployHistoryEvent(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
                             dbLayer.getSession().update(signature);
