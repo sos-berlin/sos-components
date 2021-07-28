@@ -20,7 +20,7 @@ public class ExecuteRollOutTest {
         String srcTruststore = "C:/sp/devel/js7/keys/sp-truststore.p12";
         String srcTrustoreType = "PKCS12";
         String srcTruststorePassw = "";
-        String token = "d6983b2c-24af-403b-8871-70a84f0d0939";
+        String token = "b568215c-d7f9-4a93-95cf-30003ca8782c";
         String[] args = new String[] {
                 "--token=" + token,
                 "--joc-uri=" + jocUri,

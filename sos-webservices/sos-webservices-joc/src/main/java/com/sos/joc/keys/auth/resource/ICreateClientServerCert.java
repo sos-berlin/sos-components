@@ -1,6 +1,7 @@
 package com.sos.joc.keys.auth.resource;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,8 +15,8 @@ public interface ICreateClientServerCert {
 
     @POST
     @Path("certificate/create")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCreateClientServerCert(@Context HttpServletRequest request, @HeaderParam("X-Onetime-Token") String token, byte[] filter)
-            throws Exception;
+    public JOCDefaultResponse postCreateClientServerCert(@Context HttpServletRequest request, @HeaderParam("X-Onetime-Token") String token, byte[] filter);
 
 }

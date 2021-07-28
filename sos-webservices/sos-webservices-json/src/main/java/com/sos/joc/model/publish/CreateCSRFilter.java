@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "countryCode",
     "location",
     "state",
-    "subjectAltName"
+    "san"
 })
 public class CreateCSRFilter {
 
@@ -49,8 +49,8 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("subjectAltName")
-    private String subjectAltName;
+    @JsonProperty("san")
+    private String san;
 
     /**
      * 
@@ -127,9 +127,9 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("subjectAltName")
-    public String getSubjectAltName() {
-        return subjectAltName;
+    @JsonProperty("san")
+    public String getSan() {
+        return san;
     }
 
     /**
@@ -137,19 +137,19 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("subjectAltName")
-    public void setSubjectAltName(String subjectAltName) {
-        this.subjectAltName = subjectAltName;
+    @JsonProperty("san")
+    public void setSan(String san) {
+        this.san = san;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("location", location).append("state", state).append("subjectAltName", subjectAltName).toString();
+        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("location", location).append("state", state).append("san", san).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(commonName).append(countryCode).append(organization).append(organizationUnit).append(location).append(state).append(subjectAltName).toHashCode();
+        return new HashCodeBuilder().append(commonName).append(san).append(countryCode).append(organization).append(organizationUnit).append(location).append(state).toHashCode();
     }
 
     @Override
@@ -161,7 +161,7 @@ public class CreateCSRFilter {
             return false;
         }
         CreateCSRFilter rhs = ((CreateCSRFilter) other);
-        return new EqualsBuilder().append(commonName, rhs.commonName).append(countryCode, rhs.countryCode).append(organization, rhs.organization).append(organizationUnit, rhs.organizationUnit).append(location, rhs.location).append(state, rhs.state).append(subjectAltName, rhs.subjectAltName).isEquals();
+        return new EqualsBuilder().append(commonName, rhs.commonName).append(san, rhs.san).append(countryCode, rhs.countryCode).append(organization, rhs.organization).append(organizationUnit, rhs.organizationUnit).append(location, rhs.location).append(state, rhs.state).isEquals();
     }
 
 }

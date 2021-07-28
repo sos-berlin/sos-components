@@ -44,7 +44,7 @@ public abstract class ClientServerCertificateUtil {
         }
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair, userDN);
         X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair.getPrivate(), csr, rootCert,
-                createCsrFilter.getSubjectAltName());
+                createCsrFilter.getSan());
         JocKeyPair clientServerAuthKeyPair = KeyUtil.createECDSAJOCKeyPair(newClientKeyPair);
         clientServerAuthKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
         clientServerAuthKeyPair.setKeyType(JocKeyType.X509.name());

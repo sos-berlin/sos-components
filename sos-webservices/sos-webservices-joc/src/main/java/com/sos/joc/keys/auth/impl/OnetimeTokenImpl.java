@@ -31,7 +31,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     private static String API_CALL_CREATE = "./token/create";
     
     @Override
-    public JOCDefaultResponse postCreateToken(String xAccessToken, byte[] filter) throws Exception {
+    public JOCDefaultResponse postCreateToken(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL_CREATE, filter, xAccessToken);
@@ -78,7 +78,7 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     }
 
     @Override
-    public JOCDefaultResponse postShowToken(String xAccessToken, byte[] filter) throws Exception {
+    public JOCDefaultResponse postShowToken(String xAccessToken, byte[] filter) {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL_SHOW, filter, xAccessToken);

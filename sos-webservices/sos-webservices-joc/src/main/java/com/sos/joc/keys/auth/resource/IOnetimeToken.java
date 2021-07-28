@@ -13,10 +13,10 @@ public interface IOnetimeToken {
     @POST
     @Path("create")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postCreateToken(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
+    public JOCDefaultResponse postCreateToken(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
 
     @POST
     @Path("show")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postShowToken(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter) throws Exception;
+    public JOCDefaultResponse postShowToken(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filter);
 }

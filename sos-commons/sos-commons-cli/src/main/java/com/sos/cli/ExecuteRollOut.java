@@ -158,12 +158,15 @@ public class ExecuteRollOut {
         filter.setCountryCode(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString());
         filter.setLocation(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString());
         filter.setState(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString());
+        filter.setSan(san);
         return mapper.writeValueAsString(filter);
     }
     
     private static String callWebService() throws Exception {
         tryCreateClient();
         client.addHeader("X-Onetime-Token", token);
+        client.addHeader("Content-Type", "application/json");
+        client.addHeader("Accept", "application/json");
         return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN));
     }
 
