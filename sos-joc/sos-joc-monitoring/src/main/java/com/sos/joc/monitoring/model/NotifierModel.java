@@ -212,6 +212,8 @@ public class NotifierModel {
                 }
             }
             break;
+        case ACKNOWLEDGED:
+            return false;
         }
 
         DBItemNotification mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);

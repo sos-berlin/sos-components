@@ -76,6 +76,7 @@ public abstract class ANotifier {
         switch (type) {
         case SUCCESS:
         case RECOVERED:
+        case ACKNOWLEDGED:
             status = NotificationStatus.OK;
             break;
         case WARNING:
