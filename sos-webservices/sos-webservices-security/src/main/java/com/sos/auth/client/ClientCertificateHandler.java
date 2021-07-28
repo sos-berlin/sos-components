@@ -59,20 +59,20 @@ public class ClientCertificateHandler {
             if (clientCertificate != null) {
                 this.subjectDN = clientCertificate.getSubjectDN().getName();
                 
-                // deprecated usage of all sun.* class in Javas rt.jar
+                // deprecated usage of all sun.* classes in Javas rt.jar
                 // the rt.jar is  present in Javas JRE 1.8, not present in Javas JDK 11, 15, 17
 //                this.clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
-//                LOGGER.debug("sun.security.x509.X500Name: CN=" + clientCN);
+
                 // same with bouncy castle
 //                X500Name x500Name = new JcaX509CertificateHolder(clientCertificate).getSubject();
 //                RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
 //                this.clientCN = IETFUtils.valueToString(cn.getFirst().getValue());
-//                LOGGER.debug("bouncycastle: CN=" + clientCN);
+
                 
                 // same with LDAP (preferred implementation, no third party jar needed)
                 LdapName ldapName = new LdapName(subjectDN);
                 this.clientCN = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
-//                LOGGER.debug("LdapName: CN=" + clientCN);
+
                 LOGGER.debug("Client SubjectDN read from request: " + subjectDN);
                 LOGGER.debug("Client CN read from request for comparison with shiro account: " + clientCN);
             }

@@ -23,5 +23,6 @@
 		<module>sos-commons-tools</module>
 		<module>sos-commons-credentialstore</module>
 		<module>sos-commons-vfs</module>
+		<module>sos-commons-cli</module>
 	</modules>
 </project>

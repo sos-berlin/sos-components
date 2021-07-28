@@ -4,7 +4,6 @@ package com.sos.joc.model.publish;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,12 +23,15 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "countryCode",
     "location",
     "state",
-    "alias",
-    "subjectAltName",
-    "auditLog"
+    "subjectAltName"
 })
 public class CreateCSRFilter {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("commonName")
     private String commonName;
     @JsonProperty("organizationUnit")
@@ -38,18 +40,8 @@ public class CreateCSRFilter {
     private String organization;
     @JsonProperty("countryCode")
     private String countryCode;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("location")
     private String location;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("state")
     private String state;
     /**
@@ -57,24 +49,24 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("alias")
-    private String alias;
     @JsonProperty("subjectAltName")
     private String subjectAltName;
+
     /**
-     * auditParams
-     * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("auditLog")
-    private AuditParams auditLog;
-
     @JsonProperty("commonName")
     public String getCommonName() {
         return commonName;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("commonName")
     public void setCommonName(String commonName) {
         this.commonName = commonName;
@@ -110,41 +102,21 @@ public class CreateCSRFilter {
         this.countryCode = countryCode;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("location")
     public String getLocation() {
         return location;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("location")
     public void setLocation(String location) {
         this.location = location;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("state")
     public String getState() {
         return state;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("state")
     public void setState(String state) {
         this.state = state;
@@ -155,9 +127,9 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("alias")
-    public String getAlias() {
-        return alias;
+    @JsonProperty("subjectAltName")
+    public String getSubjectAltName() {
+        return subjectAltName;
     }
 
     /**
@@ -165,51 +137,19 @@ public class CreateCSRFilter {
      * (Required)
      * 
      */
-    @JsonProperty("alias")
-    public void setAlias(String alias) {
-        this.alias = alias;
-    }
-
-    @JsonProperty("subjectAltName")
-    public String getSubjectAltName() {
-        return subjectAltName;
-    }
-
     @JsonProperty("subjectAltName")
     public void setSubjectAltName(String subjectAltName) {
         this.subjectAltName = subjectAltName;
     }
 
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public AuditParams getAuditLog() {
-        return auditLog;
-    }
-
-    /**
-     * auditParams
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("auditLog")
-    public void setAuditLog(AuditParams auditLog) {
-        this.auditLog = auditLog;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("location", location).append("state", state).append("alias", alias).append("subjectAltName", subjectAltName).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("location", location).append("state", state).append("subjectAltName", subjectAltName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(commonName).append(auditLog).append(countryCode).append(organization).append(alias).append(organizationUnit).append(location).append(state).append(subjectAltName).toHashCode();
+        return new HashCodeBuilder().append(commonName).append(countryCode).append(organization).append(organizationUnit).append(location).append(state).append(subjectAltName).toHashCode();
     }
 
     @Override
@@ -221,7 +161,7 @@ public class CreateCSRFilter {
             return false;
         }
         CreateCSRFilter rhs = ((CreateCSRFilter) other);
-        return new EqualsBuilder().append(commonName, rhs.commonName).append(auditLog, rhs.auditLog).append(countryCode, rhs.countryCode).append(organization, rhs.organization).append(alias, rhs.alias).append(organizationUnit, rhs.organizationUnit).append(location, rhs.location).append(state, rhs.state).append(subjectAltName, rhs.subjectAltName).isEquals();
+        return new EqualsBuilder().append(commonName, rhs.commonName).append(countryCode, rhs.countryCode).append(organization, rhs.organization).append(organizationUnit, rhs.organizationUnit).append(location, rhs.location).append(state, rhs.state).append(subjectAltName, rhs.subjectAltName).isEquals();
     }
 
 }
