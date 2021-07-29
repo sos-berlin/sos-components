@@ -68,7 +68,7 @@ public class SOSServicePermissionShiro {
     private static final String USER_IS_NULL = "user is null";
     private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SOSPermissionsCreator.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionShiro.class);
     private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final String ThreadCtx = "authentication";
 
