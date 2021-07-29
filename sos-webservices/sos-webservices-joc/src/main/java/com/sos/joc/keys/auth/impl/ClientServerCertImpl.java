@@ -15,6 +15,7 @@ import com.sos.joc.keys.auth.resource.ICreateClientServerCert;
 import com.sos.joc.keys.auth.token.OnetimeTokens;
 import com.sos.joc.model.auth.token.OnetimeToken;
 import com.sos.joc.model.publish.CreateCSRFilter;
+import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.ClientServerCertificateUtil;
 import com.sos.schema.JsonValidator;
 

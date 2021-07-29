@@ -1,7 +1,14 @@
 package com.sos.cli;
 
+import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,10 +20,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.keyStore.KeyStoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.model.publish.CreateCSRFilter;
-import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.publish.RolloutResponse;
 
 public class ExecuteRollOut {
     
@@ -35,28 +43,32 @@ public class ExecuteRollOut {
     private static final String TRG_KEYSTORE = "--target-keystore";
     private static final String TRG_KEYSTORE_TYPE = "--target-keystore-type";
     private static final String TRG_KEYSTORE_PASS = "--target-keystore-pass";
+    private static final String TRG_KEYSTORE_ENTRY_PASS = "--target-keystore-entry-pass";
     private static final String TRG_TRUSTSTORE = "--target-truststore";
     private static final String TRG_TRUSTSTORE_TYPE = "--target-truststore-type";
     private static final String TRG_TRUSTSTORE_PASS = "--target-truststore-pass";
     private static final String SUBJECT_DN = "--subject-dn";
+    private static final String ALIAS = "--alias";
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
     private static String san;
     private static URI jocUri;
     private static String srcKeystore;
-    private static String srcKeystoreType;
+    private static String srcKeystoreType = "PKCS12";
     private static String srcKeystorePasswd;
     private static String srcKeystoreEntryPasswd;
     private static String srcTruststore;
-    private static String srcTruststoreType;
+    private static String srcTruststoreType = "PKCS12";
     private static String srcTruststorePasswd;
     private static String targetKeystore;
-    private static String targetKeystoreType;
+    private static String targetKeystoreType = "PKCS12";
     private static String targetKeystorePasswd;
+    private static String targetKeystoreEntryPasswd;
     private static String targetTruststore;
-    private static String targetTruststoreType;
+    private static String targetTruststoreType = "PKCS12";
     private static String targetTruststorePasswd;
+    private static String alias;
     private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
@@ -93,6 +105,8 @@ public class ExecuteRollOut {
                     targetKeystoreType = split[1];
                 } else if (args[i].startsWith(TRG_KEYSTORE_PASS + "=")) {
                     targetKeystorePasswd = split[1];
+                } else if (args[i].startsWith(TRG_KEYSTORE_ENTRY_PASS + "=")) {
+                    targetKeystoreEntryPasswd = split[1];
                 } else if (args[i].startsWith(TRG_TRUSTSTORE + "=")) {
                     targetTruststore = split[1];
                 } else if (args[i].startsWith(TRG_TRUSTSTORE_TYPE + "=")) {
@@ -103,12 +117,39 @@ public class ExecuteRollOut {
                     subjectDN = split[1];
                 } else if (args[i].startsWith(SAN + "=")) {
                     san = split[1];
+                } else if (args[i].startsWith(ALIAS + "=")) {
+                    alias = split[1];
                 }
             }
             String response = callWebService();
             closeClient();
-            JocKeyPair jocKeyPair = mapper.readValue(response, JocKeyPair.class);
+            RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
+            addKeyAndCertToStore(rollout);
+            
         }
+    }
+    
+    private static void addKeyAndCertToStore(RolloutResponse rolloutResponse) throws Exception {
+        KeyStore targetKeyStore = null;
+        KeyStore targetTrustStore = null;
+        try {
+            X509Certificate certificate = KeyUtil.getX509Certificate(rolloutResponse.getJocKeyPair().getCertificate());
+            PrivateKey privKey = KeyUtil.getPrivateECDSAKeyFromString(rolloutResponse.getJocKeyPair().getPrivateKey());
+            X509Certificate rootCaCertificate = KeyUtil.getX509Certificate(rolloutResponse.getCaCert());
+            Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
+            if (targetKeystore != null && !targetKeystore.isEmpty()) {
+                targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
+                // java.security.KeyStoreException: Key protection  algorithm not found: java.lang.NullPointerException
+                targetKeyStore.setKeyEntry(alias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+            }
+            if (targetTruststore != null && !targetTruststore.isEmpty()) {
+                targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
+                targetTrustStore.setCertificateEntry(alias, rootCaCertificate);
+            }
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            System.out.println(e.toString());
+        }
+        
     }
     
     private static void tryCreateClient() throws Exception {
@@ -116,20 +157,12 @@ public class ExecuteRollOut {
             return;
         }
         KeyStore srcKeyStore = null;
-        KeyStore targetKeyStore = null;
         KeyStore srcTrustStore = null;
-        KeyStore targetTrustStore = null;
         if (srcKeystore != null && !srcKeystore.isEmpty()) {
             srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeyStoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
         }
-        if (targetKeystore != null && !targetKeystore.isEmpty()) {
-            targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
-        }
         if (srcTruststore != null && !srcTruststore.isEmpty()) {
             srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeyStoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
-        }
-        if (targetTruststore != null && !targetTruststore.isEmpty()) {
-            targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
         }
 
         client = new SOSRestApiClient();

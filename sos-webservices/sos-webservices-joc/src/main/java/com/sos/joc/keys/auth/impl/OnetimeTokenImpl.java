@@ -49,6 +49,10 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             OnetimeTokensResponse response = new OnetimeTokensResponse();
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
             if(controllerId != null && !controllerId.isEmpty()) {
+                // first delete existing token(s)
+                List<OnetimeToken> tokensToDelete = onetimeTokens.getTokens().stream().filter(token -> controllerId.equals(token.getControllerId())).collect(Collectors.toList());
+                onetimeTokens.getTokens().removeAll(tokensToDelete);
+                // then create new token
                 OnetimeToken token = new OnetimeToken();
                 token.setValidUntil(validUntil);
                 token.setControllerId(controllerId);
@@ -57,6 +61,10 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
                 response.getTokens().add(token);
             }
             if (agentIds != null && !agentIds.isEmpty()) {
+                // first delete existing token(s)
+                List<OnetimeToken> tokensToDelete = onetimeTokens.getTokens().stream().filter(token -> agentIds.contains(token.getAgentId())).collect(Collectors.toList());
+                onetimeTokens.getTokens().removeAll(tokensToDelete);
+                // then create new tokens
                 agentIds.stream().forEach(agentId -> {
                     OnetimeToken token = new OnetimeToken();
                     token.setValidUntil(validUntil);

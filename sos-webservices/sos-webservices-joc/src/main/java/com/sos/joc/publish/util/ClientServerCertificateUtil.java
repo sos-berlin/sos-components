@@ -20,12 +20,13 @@ import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.publish.CreateCSRFilter;
+import com.sos.joc.model.publish.RolloutResponse;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 
 public abstract class ClientServerCertificateUtil {
 
-    public static JocKeyPair createClientServerAuthKeyPair (SOSHibernateSession hibernateSession, CreateCSRFilter createCsrFilter)
+    public static RolloutResponse createClientServerAuthKeyPair (SOSHibernateSession hibernateSession, CreateCSRFilter createCsrFilter)
             throws SOSHibernateException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException {
         DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
@@ -49,6 +50,9 @@ public abstract class ClientServerCertificateUtil {
         clientServerAuthKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
         clientServerAuthKeyPair.setKeyType(JocKeyType.X509.name());
         clientServerAuthKeyPair.setCertificate(CertificateUtils.asPEMString(clientCert));
-        return clientServerAuthKeyPair;
+        RolloutResponse response = new RolloutResponse();
+        response.setJocKeyPair(clientServerAuthKeyPair);
+        response.setCaCert(rootKeyPair.getCertificate());
+        return response;
     }
 }

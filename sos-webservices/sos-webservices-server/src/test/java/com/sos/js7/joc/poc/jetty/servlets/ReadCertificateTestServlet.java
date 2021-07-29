@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -73,8 +75,16 @@ public class ReadCertificateTestServlet extends HttpServlet {
             clientCertificate = clientCertificateChain[0];
             if (clientCertificate != null) {
                 subjectDN = clientCertificate.getSubjectDN().getName();
-                clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+//                clientCN = ((sun.security.x509.X500Name)clientCertificate.getSubjectDN()).getCommonName();
+                try {
+                    LdapName ldapName = new LdapName(clientCertificate.getSubjectDN().getName().toString());
+                    clientCN = ldapName.getRdns().stream().filter(item -> item.getType().equalsIgnoreCase("CN")).findFirst().get().getValue().toString();
+                } catch (InvalidNameException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
                 strb.append("{\n");
+                strb.append(String.format("  \"CN\" : \"%1$s\",\n", clientCN));
                 strb.append(String.format("  \"IssuerDN\" : \"%1$s\",\n", clientCertificate.getIssuerDN().getName()));
                 strb.append(String.format("  \"SubjectDN\" : \"%1$s\",\n", subjectDN));
                 boolean[] keyUsages = clientCertificate.getKeyUsage();
