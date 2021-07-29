@@ -5,7 +5,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<title language="en">Result Set</title>
-    <title language="de">Ergebnismenge</title>
     
   	<xi:include href="./param_expected_size_of_result_set.xml" parse="xml" />
 	<xi:include href="./param_raise_error_if_result_set_is.xml" parse="xml" />

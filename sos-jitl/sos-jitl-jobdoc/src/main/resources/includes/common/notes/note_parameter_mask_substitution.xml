@@ -2,7 +2,7 @@
 <note
 	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" language="en">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <p>
             Supports masks for substitution in the file name
             and directory
@@ -29,7 +29,7 @@
             yyyy-MM-dd.HHmmss
             etc.
         </p>
-                <p>
+        <p>
             For further information on valid values for a dateformat string see
             <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a>
         </p>

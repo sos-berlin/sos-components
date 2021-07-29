@@ -799,10 +799,12 @@
       section:first-of-type table.box { border-top-width:2px; }
       table.box        { border-width:0 2px 2px; border-style:solid; border-color:#203e8d; }
 
-      td.td1           {width:11%; }
-      td.td2           {width:12%; }
-      td.td3           {width:77%; }
-      td.td1_3         {width:100%; }
+      td.td1           { width:11%; }
+      td.td2           { width:12%; }
+      td.td3           { width:77%; }
+      td.td1_3         { width:100%; }
+      table.explanation    { border:1px solid #203e8d; } 
+	  table.explanation td { background-color:#d0d6e6; } 
 
       table.resource   { background-color:#eaedf4; }
       table.resource th  { background-color:#d0d6e6;

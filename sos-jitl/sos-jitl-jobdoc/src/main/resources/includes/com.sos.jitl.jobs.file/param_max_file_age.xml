@@ -3,25 +3,15 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="max_file_age" 
-    DataType="java.lang.String" 
     default_value="0" 
     required="false">
 
-    <note language="de">
-        <title>Maximales Alter einer oder mehrerer Dateien</title>
-        <p>
-            Vereinbart das Höchstalter einer oder mehrerer Dateien.
-            Ist eine Datei älter, dann gilt sie als nicht vorhanden.
-        </p>
-    </note>
-    <xi:include href="./note_file_age_values_de.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
-    
-    <note language="en">
+    <note>
         <title>Maximum age of a file</title>
         <p>
             Specifies the maximum age of a file.
             If a file is older, then it is deemed not to exist, it will be not included in the result-list.
         </p>
     </note>
-    <xi:include href="./note_file_age_values_en.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
+    <xi:include href="./note_file_age_values.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
 </param>

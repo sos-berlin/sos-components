@@ -6,18 +6,12 @@
 	name="result_set_file"
 	DataType="java.nio.file.Path (Job argument - String)"
 	required="false">
-	<note language="de">
-		<title>Dateiname der Ergebnisliste </title>
-		<p>
-		Wenn mit diesem Parameter ein gültiger Dateiname angegeben wurde so wird die
-		Ergebnisliste in dieser Datei gespeichert.
-		</p>
-	</note>
-	<note language="en">
+	
+	<note>
 		<title>Name of the result-list file</title>
 		<p>
-		If the value of this parameter specifies a valid filename the result-list will be
-		written to this file.
+			If the value of this parameter specifies a valid filename the result-list will be
+			written to this file.
 		</p>
 	</note>
 </param>

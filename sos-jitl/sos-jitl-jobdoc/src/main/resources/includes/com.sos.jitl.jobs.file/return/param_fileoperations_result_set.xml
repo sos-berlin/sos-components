@@ -6,16 +6,9 @@
 	name="file_operations_result_set" 
 	DataType="java.lang.String"
 	required="false"
-	usewith="file_operations_result_set_size"
-	>
-	<note language="de">
-		<title>Eine Liste aller Dateinamen</title>
-		<p>
-		</p>
-	</note>
-	<note language="en">
+	usewith="file_operations_result_set_size">
+	
+	<note>
 		<title>The result of the operation as a list of items</title>
-		<p>
-		</p>
 	</note>
 </param>

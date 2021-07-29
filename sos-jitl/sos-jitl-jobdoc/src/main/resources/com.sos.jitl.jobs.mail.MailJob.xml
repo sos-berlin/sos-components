@@ -118,46 +118,42 @@
   	  <param name="credential_store_file" required="false">
         <note>
         	<title>Location of the Credential Store file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-	          <p>
+        	<p>
             	The name of the keepass file that contains the credentials for the access to the database.
-          	  </p>
-          	  <p>
+          	</p>
+          	<p>
             	Alternatively it is possible to specify the value in the url with ?file=
-          	  </p>
-          	</div>
+          	</p>
         </note>
       </param>
 	  
       <param name="credential_store_key_file" required="false">
         <note>
         	<title>Location of the Credential Store file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-          	  <p>
-            	The name of the keepass key file that contains the key for the credentials for the access to the database (if a key file is assigned to the keepass file). When no keepass key file is given, the file name is build with the name of the keepass file with changing the extension to .key.
-          	  </p>
-          	  <p>
+          	<p>
+            	The name of the keepass key file that contains the key for the credentials 
+            	for the access to the database (if a key file is assigned to the keepass file). 
+            	When no keepass key file is given, the file name is build with the name of the keepass file with changing the extension to .key.
+          	</p>
+          	<p>
             	Alternatively it is possible to specify the value in the url with ?keyfile=
-          	  </p>
-          </div>
+          	</p>
         </note>
       </param>
 	  
       <param name="credential_store_entry_path" required="false">
         <note>
         	<title>Path for the entries in the keepass file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">        
-          	  <p>
+          	<p>
            		To speciy a path for all entries. This makes the values for e.g. the password shorter.<br/>
 		   		Example: <br/>
 		   		credential_store_entry_path=/sos/scheduler<br/>
 		   		value for password: cs://myMail<br/>
 		   		In the keepass file you find the entry in /sos/scheduler/myMail
-          	  </p>
-          	  <p>
+          	</p>
+          	<p>
             	Alternatively it is possible to specify the value in the url with ?entry_path=
-          	  </p>
-          	</div>
+          	</p>
         </note>
       </param>
       
@@ -165,17 +161,19 @@
     
   </configuration>
   <documentation>
-    <div xmlns="http://www.w3.org/1999/xhtml">
-      This job is used to send emails.<br/>
-      All "mail." parameters for Java mail can be used. See <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>
-      <ul>
-      	<li>"mail.transport.protocol" is set to "smtp"</li>
-        <li>"mail.smtp.class" is set to "com.sun.mail.SMTPTransport</li>
-      	<li>If "mail.smtp.user" is specified then "mail.smtp.auth" is set to "true". Otherwise "mail.smtp.auth" is set to "false".</li>
-      	<li>If the securityProtocol is specified as "ssl" then "mail.smtp.ssl.enable" is set to "true" and "mail.transport.protocol" is set to "smtps".</li>
-      	<li>If the securityProtocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".</li>
-      </ul>        
-    </div>
+  		<p>
+      		This job is used to send emails.<br/>
+      		All "mail." parameters for Java mail can be used (see <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>).
+      	</p>
+      	<p>
+      		<ul>
+      			<li>"mail.transport.protocol" is set to "smtp"</li>
+        		<li>"mail.smtp.class" is set to "com.sun.mail.SMTPTransport</li>
+      			<li>If "mail.smtp.user" is specified then "mail.smtp.auth" is set to "true". Otherwise "mail.smtp.auth" is set to "false".</li>
+      			<li>If the securityProtocol is specified as "ssl" then "mail.smtp.ssl.enable" is set to "true" and "mail.transport.protocol" is set to "smtps".</li>
+      			<li>If the securityProtocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".</li>
+      		</ul>        
+    	</p>
   </documentation>
 </description>
 

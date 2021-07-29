@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<note xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <p>
+            Examples for regular expressions used for replacing:
+        </p>
+        <p>
+            <table class="explanation"> 
+                <tr>
+                    <th>
+                        <code>source_file</code>
+                    </th>
+                    <th>
+                        <code>file_spec</code>
+                    </th>
+                    <th>
+                        <code>replacing</code>
+                    </th>
+                    <th>
+                        <code>replacement</code>
+                    </th>
+                    <th>Example Input</th>
+                    <th>Output</th>
+                    <th>Comment</th>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>~</td>
+                    <td>""</td>
+                    <td>hallo.dat~</td>
+                    <td>hallo.dat</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>a.txt</td>
+                    <td>-</td>
+                    <td>[.]txt</td>
+                    <td>_2011-11-24.txt</td>
+                    <td>-</td>
+                    <td>a_2011-11-24.txt</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>.*</td>
+                    <td>[filename:] [date:yyyy-MM-dd].dat</td>
+                    <td>a.txt</td>
+                    <td>a.txt2011-11-24.dat</td>
+                    <td>[filename:] and [date:] will be substituted after file has
+                        been replaced
+                    </td>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>.*[.]txt</td>
+                    <td>a.*?b</td>
+                    <td>world</td>
+                    <td>a.1.b.txt.b</td>
+                    <td>world.txt.b</td>
+                    <td>.*? : ungreedy usage of .*</td>
+                </tr>
+                <tr>
+                    <td>abcdefg.txt</td>
+                    <td>-</td>
+                    <td>^(ab)cde(fg)[.]txt</td>
+                    <td>123;[date:yyyy-MM-dd]</td>
+                    <td>-</td>
+                    <td>123cde2011-11-24.txt</td>
+                    <td>; : separator between multiple replacements</td>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>.*dat$</td>
+                    <td>(ab)_c[0-9]d_(fg)</td>
+                    <td>group1;group2</td>
+                    <td>ab_c1d_fg. ab_c2d_fg.dat</td>
+                    <td>group1_c1d_group2. ab_c2d_fg.dat</td>
+                    <td>Only the first pattern match is replaced</td>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>^(?:aa|bb)_. {2}_([0-9]+_[0-9]+)$</td>
+                    <td>tail</td>
+                    <td>aa_QU_061205_222334</td>
+                    <td>aa_QU_tail</td>
+                    <td>(?:...) : "?:" specifies a non capturing group. The file will
+                        not be replaced.
+                    </td>
+                </tr>
+                <tr>
+                    <td>./temp</td>
+                    <td>FILE.txt</td>
+                    <td>.*</td>
+                    <td>[filename:lowercase]_[filename:uppercase]_[filename:]</td>
+                    <td>FILE.txt</td>
+                    <td>file.txt_FILE.TXT_FILE.txt</td>
+                    <td>-</td>
+                </tr>
+            </table>
+            <table class="explanation" style="margin-top:10px">
+                <tr>
+                    <th>
+                        <code>source_file</code>
+                    </th>
+                    <th>
+                        <code>target_file</code>
+                    </th>
+                    <th>
+                        <code>file_spec</code>
+                    </th>
+                    <th>
+                        <code>create_dir</code>
+                    </th>
+                    <th>
+                        <code>replacing</code>
+                    </th>
+                    <th>
+                        <code>replacement</code>
+                    </th>
+                    <th>Example input</th>
+                    <th>Output</th>
+                    <th>Comment</th>
+                </tr>
+                <tr>
+                    <td>aaa/bbb/</td>
+                    <td>[directory:]/[date:yyyyMMdd]/</td>
+                    <td>hello.txt</td>
+                    <td>true</td>
+                    <td>[.]txt</td>
+                    <td>[date:yyyy].txt</td>
+                    <td>aaa/bbb/hello.txt</td>
+                    <td>aaa/bbb/20070316/hello2007.txt</td>
+                    <td>If the directory aaa/bbb/20070316 does not yet exist it will
+                        be created
+                    </td>
+                </tr>
+            </table>
+        </p>
+        <p>
+            For further information see
+            <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+        </p>
+        <p>
+            For further information on date-patterns see:
+            <a href="http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html">java.util.regex.Pattern</a>
+        </p>
+</note>

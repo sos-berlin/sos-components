@@ -5,35 +5,21 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	name="file_spec" 
-	DataType="java.lang.String"
 	DefaultValue=".*"
 	required="false">
 
-	<note language="de">
-		<title>Regulärer Ausdruck für die Auswahl der Datei(en)</title>
-		<p>
-			Regulärer Ausdruck als Dateifilter.
-			Verhält sich CASE_INSENSITIVE.
-			</p><p>
-			Nur wirksam, wenn der Parameter
-			<paramref>source_file</paramref>
-			ein Verzeichnis ist.
-		</p>
-		<xi:include href="../common/notes/note_regexp_remarks.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
-    	<xi:include href="./note_regexp_example_replace_de.xml" xmlns:xi="http://www.w3.org/2001/XInclude"  parse="xml" />
-	</note>
-	<note language="en">
+	<note>
 		<title>Regular Expression for filename filtering</title>
 		<p>
 			Regular Expression for file filtering.
-			The behaviour is
-			CASE_INSENSITIVE.
-			</p><p>
+			The behaviour is CASE_INSENSITIVE.
+		</p>
+		<p>
 			Only effective if the parameter
 			<paramref>source_file</paramref>
 			is a directory.
 		</p>
-		<xi:include href="../common/notes/note_regexp_remarks.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
-    	<xi:include href="./note_regexp_example_replace_en.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
 	</note>
+	<xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" />
+    <xi:include href="./note_regexp_example_replace.xml" parse="xml" />
 </param>

@@ -11,53 +11,20 @@
 	<indexterm index="remote_dir, parameter" display="false"></indexterm>
     <indexterm index="parameter, remote_dir" display="false"></indexterm>
 
-        <note language="de">
-        <title>Unterverzeichnisse löschen</title>
-            <div xmlns="http://www.w3.org/1999/xhtml">
-                <p>
-                    Wenn dieser Schalter aktiviert ist, werden auch Unterverzeichnisse gelöscht.
-                    Es werden dann alle Unterverzeichnisse von
-                    <paramref>file</paramref>
-                    gelöscht, auf die
-                    <paramref>file_spec</paramref>
-                    zutrifft.
-                    Ein betroffenes Verzeichniss wird nur dann gelöscht, wenn es leer ist.
-                </p>
-                <p>
-                    Das Verzeichnis
-                    <paramref>file</paramref>
-                    wird selbst nicht gelöscht.
-                </p>
-                <p>
-                    Nur wirksam, wenn
-                    <paramref>file</paramref>
-                    ein Verzeichnis ist.
-                </p>
-            </div>
-        </note>
-        <note language="en">
+    <note language="en">
         <title>delete empty subfolder</title>
-                    <div xmlns="http://www.w3.org/1999/xhtml">
-                <p>
-                    If enabled empty subdirectories are removed.
-                    All subdirectories of
-                    <paramref>file</paramref>
-                    are removed which are matched by
-                    <paramref>file_spec</paramref>
-                    .
-                    An affected subdirectory is only removed if it is empty.
-                </p>
-                <p>
-                    The directory, which name is specified with the parameter
-                    <paramref>file</paramref>
-
-                    is not removed.
-                </p>
-                <p>
-                    Only effective if
-                    <paramref>file</paramref>
-                    is a directory.
-                </p>
-            </div>
-        </note>
+        <p>
+            If enabled empty subdirectories are removed.
+            All subdirectories of <paramref>file</paramref> are removed which are matched by
+            <paramref>file_spec</paramref>.
+            An affected subdirectory is only removed if it is empty.
+        </p>
+        <p>
+            The directory, which name is specified with the parameter
+            <paramref>file</paramref> is not removed.
+        </p>
+        <p>
+            Only effective if <paramref>file</paramref> is a directory.
+        </p>
+	</note>
 </param>

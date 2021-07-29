@@ -4,30 +4,14 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	name="target_file"
-	DataType="java.lang.String" 
 	required="true">
 	
     <indexterm index="target_file, parameter" display="false"></indexterm>
     <indexterm index="parameter, target_file" display="false"></indexterm>
 	
-	<note language="de"> 
-		<title>Ziel-Datei oder -Verzeichnis</title>
-		<p>
-			Zieldatei oder Zielverzeichnis
-            </p>
-		<p>
-			Wird
-			<paramref>target_file</paramref>
-			nicht angegeben, dann wird der Verzeichnispfad von
-			<paramref>source_file</paramref>
-			als Ziel verwendet.
-		</p>
-	</note>
-	<note language="en">
+	<note>
         <title>Target-file or -folder</title>
-		<p>
-			Target file or directory
-                        </p>
+		<p>Target file or directory</p>
 		<p>
 			If the
 			<paramref>target_file</paramref>
@@ -36,8 +20,7 @@
 			is used as target.
 		</p>
 	</note>
-    <xi:include href="./note_param_mask_substitution_de.xml" parse="xml"/>
-    <xi:include href="./note_param_mask_substitution_en.xml" parse="xml"/>
+    <xi:include href="./note_param_mask_substitution.xml" parse="xml"/>
 </param>
 
  

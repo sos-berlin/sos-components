@@ -6,15 +6,14 @@
     default_value="0" 
     DataType="java.lang.Integer"
     usewith="steady_state_interval">
-    <note language="de">
-    </note>
+    
     <note language="en">
         <title>Check the completeness of a file (steady state).Maximum Number of Checkpoints</title>
-            <p>
+        <p>
             The value of this option specifies the number of retries for to check the steady state of a file.
-            </p>
-            <p>
+        </p>
+        <p>
             Setting this parameter to greater than 0 the receiver will check the file for completeness before he starts the transfer.
-            </p>
+        </p>
     </note>
 </param> 

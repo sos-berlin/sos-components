@@ -7,13 +7,7 @@
 	DataType="java.lang.Boolean"
 	default_value="false"
 	required="false">
-	<note language="de">
-		<title>Fehlermeldungstoleranz aktivieren</title>
-		<p>
-			Aktiviert oder deaktiviert Fehlermeldungen, die aufgrund einer leeren Ergebnisliste der im Job auszuführenden Operation ausgelöst werden können.
-		</p>
-	</note>
-	<note language="en">
+	<note>
 		<title>Specify error message tolerance</title>
 		<p>
 			Enables or disables error messages that are caused by an empty result-set, which is the result of an operation, executed by the job.

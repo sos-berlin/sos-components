@@ -3,13 +3,7 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <title language="en">state-dependent substitution</title>
-    <abstract>
-        <p>
-            This technique is useful when for example inserting the current date or a timestamp into a filename or
-            into a name of a directory.
-        </p>
-    </abstract>
+    <title>state-dependent substitution</title>
     <documentation>
         <p>
             This technique is useful when for example inserting the current date or a timestamp into a filename or

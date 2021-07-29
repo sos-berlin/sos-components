@@ -9,14 +9,7 @@
 	required="false" 
 	DataType="java.lang.Boolean">
 	
-	<note language="de">
-		<title >Vorhandene Dateien überschreiben</title>
-		<p>
-			Der Parameter bestimmt, ob vorhandene Dateien überschrieben
-			werden dürfen.
-		</p>
-	</note>
-	<note language="en">
+	<note>
 		<title >Overwrite existing files</title>
 		<p>
 			This parameter specifies wether existing files can be overwritten.

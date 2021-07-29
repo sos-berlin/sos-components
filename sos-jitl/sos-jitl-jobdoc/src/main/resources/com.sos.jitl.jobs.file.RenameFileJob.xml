@@ -5,8 +5,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
     xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
     <job 	name="RenameFileJob" 
-    		title="Rename one or more files" 
-    		tasks="unbounded">
+    		title="Rename one or more files">
         	<script language="java" java_class="com.sos.jitl.jobs.file.RenameFileJob" resource="1" />
     </job>
 
@@ -54,9 +53,9 @@
                     <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
                 </features>
             </p>
-        	<xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace_en.xml" parse="xml" />
+        	<xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace.xml" parse="xml" />
             <xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml" />
-    		</div>
+    	</div>
     </documentation>
 
 </description>

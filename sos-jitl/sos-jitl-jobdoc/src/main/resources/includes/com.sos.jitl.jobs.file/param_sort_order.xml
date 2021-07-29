@@ -2,23 +2,12 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
     xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="sort_order" 
-    DataType="java.lang.String"
     OptionName="sort_order" 
     default_value="asc" 
-    required="false"
->
+    required="false">
 
-    <note language="de">
-        <title>Sortier Folge</title>
-        <p>
-          Default: asc
-          Mögliche Werte: asc | desc  
-          Siehe:  <paramref>sort_criteria</paramref>
-        </p>
-    </note>
-    <note language="en">
-        <title>Sort order with which the result set will be sorted.
-        </title>
+    <note>
+        <title>Sort order with which the result set will be sorted.</title>
         <p>
           Default: asc
           Possible values: asc | desc  

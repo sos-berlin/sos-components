@@ -7,32 +7,8 @@
     required="false" 
     exclude="skip_last_files">
 
-    <note language="de">
-        <title>Anzahl nicht zu berücksichtigender Dateien</title>
-        <p>
-            Die angegebene Anzahl Dateien wird vom Anfang der Ergebnismenge (result-list)
-            der Operation entfernt. Auf diese Dateien wirkt sich die Operation damit nicht aus.
-            </p><p>
-            Der Parameter wirkt auf die resultierende Menge von
-            <paramref>sort_criteria</paramref> und <paramref>sort_order</paramref>
-        </p>
-        <p>
-            Die Reihenfolge der Einträge in der Ergebnismenge wird durch die Parameter bestimmt:
-            <ul>
-                <li>
-                    <paramref>sort_criteria</paramref>                   
-                </li>
-                <li>
-                    <paramref>sort_order</paramref>
-                </li>
-                
-            </ul>
-        </p>
-         
-    </note>
-    <note language="en">
-        <title>number of files to remove from the top of the result-set
-        </title>
+    <note>
+        <title>number of files to remove from the top of the result-set</title>
         <p>
             The number of files are removed from the beginning of the set
             resulting by<paramref>sort_criteria</paramref>,<paramref>sort_order</paramref>
@@ -40,7 +16,8 @@
         </p>
         <p>
             The result set is sorted according to the parameters:
-            </p><p>
+        </p>
+        <p>
             <ul>
                 <li>
                     <paramref>sort_criteria</paramref>

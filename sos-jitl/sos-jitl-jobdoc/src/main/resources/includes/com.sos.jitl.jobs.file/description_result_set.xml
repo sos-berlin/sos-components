@@ -5,20 +5,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd"
 >
-    <note language="en">
+    <note>
         <title>Creation of a result set</title>
         <p>
             This job is creating a result set.
             A result set contains the names of all files which are selected as specified by the filter or search criteria.
             The content of the result set is returned as a parameter, but can be written to a file, too.
-        </p>
-    </note>
-    <note language="de">
-        <title>Das Erzeugen einer Ergebnisliste (result set)</title>
-        <p>
-            Dieser Job erstellt eine Ergebnisliste.
-            Die Ergebnisliste enthält die Namen aller Dateien die aufgrund des oder der Filterkriterien ermittelt wurden.
-            Die Ergebnisliste wird als Auftrags-Parameter vom Job geliefert, kann aber auch als Datei erstellt werden.
         </p>
     </note>
 </items>

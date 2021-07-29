@@ -3,26 +3,12 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-    <title language="en">Result Set</title>
-    <title language="de">Result Set</title>
-    <abstract>
-        <p language="en">
+    <title>Result Set</title>
+    <documentation>
+        <p>
             This job is creating a result set.
             A result set contains the names of all files which are selected as specified by the filter or search criteria.
             The content of the result set is returned as a parameter, but can be written to a file, too.
-        </p>
-        <p language="de">
-		Dieser Job erstellt eine Ergebnisliste.
-        Die Ergebnisliste enthält die Namen aller Dateien die aufgrund des oder der Filterkriterien ermittelt wurden.
-        Die Ergebnisliste wird als Auftrags-Parameter vom Job geliefert, kann aber auch als Datei erstellt werden.
-        </p>
-    </abstract>
-    <documentation>
-        <p language="en">
-        </p>
-        <p language="de">
-        </p>
-        <p language="de">
         </p>
     </documentation>
 </feature>

@@ -7,15 +7,7 @@
        DefaultValue="config/hibernate.cfg.xml" 
        DataType="java.nio.file.Path (Job argument - String)">
 	
-	<note language="de">
-	<div xmlns="http://www.w3.org/1999/xhtml">
-	Speicherort der hibernate configuration Konfigurationsdatei.
-	</div>
-	</note>
-        
-    <note language="en">
-	<div xmlns="http://www.w3.org/1999/xhtml">
-    Location of the hibernate configuration file.
-    </div>
+	<note>
+		<p>Location of the hibernate configuration file.</p>
     </note>
 </param>

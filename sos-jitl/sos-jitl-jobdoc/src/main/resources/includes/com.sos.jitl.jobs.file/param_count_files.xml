@@ -7,28 +7,12 @@
 	DataType="java.lang.Boolean"
 	default_value="false"
 	required="false">
-	<note language="de">
-		<title>Anzahl Treffer im Resultat liefern </title>
-		<p>
-			Wenn dieser Parameter auf "
-			<code>true</code>
-			" gesetzt ist, dann wird die Anzahl der kopierten Dateien in
-			dem
-			Order
-			Parameter "
-			<paramref>fileoperations_result_set_size</paramref>
-			" zurückgeliefert.
-		</p>
-	</note>
-	<note language="en">
+	
+	<note>
 		<title>Return the size of resultset</title>
 		<p>
-			If this parameter is set true "
-			<code>true</code>
-			" the number of matches
-			is returned in the order parameter "
-			<paramref>fileoperations_result_set_size</paramref>
-			".
+			If this parameter is set true "<code>true</code>" the number of matches
+			is returned in the order parameter "<paramref>fileoperations_result_set_size</paramref>".
 		</p>
 	</note>
 </param>

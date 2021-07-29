@@ -11,8 +11,7 @@
        category="PLSQL;SQL;Database;JITL;Oracle">
     <script language   = "java"
             java_class = "com.sos.jitl.jobs.db.oracle.PLSQLJob"
-            resource   = "1">
-    </script>
+            resource   = "1"/>
   </job>
 
   <configuration>
@@ -22,66 +21,60 @@
       <param name="command" required="one of command or command_script_file">
         <note>
         	<title>Database Commands for the Job</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-          		<p>
-            It is possible to define more than one instruction in the COMMAND field.
-            Such instructions  are then carried out in the order in which they are written
-            and must be separated by a semicolon and a subsequent new line.
-            Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
-            at any given point in a command. This variable is then given the value of the
-            instruction parameter with the name [param] before execution.
-          		</p>
-          		<p>
-             The command in command and then the content of the file command_script_file will be executed.
-          		</p>
-          	</div>
+        	<p>
+            	It is possible to define more than one instruction in the COMMAND field.
+            	Such instructions  are then carried out in the order in which they are written
+            	and must be separated by a semicolon and a subsequent new line.
+            	Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
+            	at any given point in a command. This variable is then given the value of the
+            	instruction parameter with the name [param] before execution.
+          	</p>
+          	<p>
+            	The command in command and then the content of the file command_script_file will be executed.
+          	</p>
         </note>
       </param>
       
       <param name="command_script_file" required="one of command or command_script_file">
         <note>
         	<title>Name of a file that contains the database commands for the Job</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-          	  <p>
+        	<p>
             	It is possible to define more than one instruction in a file.
             	Such instructions  are then carried out in the order in which they are written
             	and must be separated by a semicolon and a subsequent new line.
             	Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
             	at any given point in a command. This variable is then given the value of the
             	instruction parameter with the name [param] before execution.
-          	  </p>
-          	  <p>
+          	</p>
+          	<p>
              	The command in command and then the content of the file command_script_file will be executed.
-          	  </p>
-          	</div>
+          	</p>
         </note>
       </param>
 
       <param name="db_url" required="true">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">
+          <p>
             jdbc url (e.g. jdbc:oracle:thin:@localhost:1521:XE)
             with credential store: cs://path/url
-          </div>
+          </p>
         </note>
       </param>
 
       <param name="db_user" required="true">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">
-            database user
-            with credential store: cs://path/user
-          </div>
+          <p>
+            database user with credential store: cs://path/user
+          </p>
         </note>
       </param>
 
       <param name="db_password" required="false">
         <note>
         	<title>The user password for accessing the database</title>
-          	<div xmlns="http://www.w3.org/1999/xhtml">
-            database password
-            with credential store: cs://path/password
-          	</div>
+          	<p>
+            	database password with credential store: cs://path/password
+          	</p>
         </note>
       </param>
 
@@ -93,46 +86,42 @@
       <param name="credential_store_file" required="false">
         <note>
         	<title>Location of the Credential Store file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-          		<p>
-            The name of the keepass file that contains the credentials for the access to the database.
-          		</p>
-          		<p>
-            Alternatively it is possible to specify the value in the url with ?file=
-          		</p>
-          	</div>
+        	<p>
+            	The name of the keepass file that contains the credentials for the access to the database.
+          	</p>
+          	<p>
+            	Alternatively it is possible to specify the value in the url with ?file=
+          	</p>
         </note>
       </param>
 	  
       <param name="credential_store_key_file" required="false">
         <note>
         	<title>Location of the Credential Store file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">
-          		<p>
-            The name of the keepass key file that contains the key for the credentials for the access to the database (if a key file is assigned to the keepass file). When no keepass key file is given, the file name is build with the name of the keepass file with changing the extension to .key.
-          		</p>
-          		<p>
-            Alternatively it is possible to specify the value in the url with ?keyfile=
-          		</p>
-          	</div>
+        	<p>
+            	The name of the keepass key file that contains the key for the credentials for the access 
+            	to the database (if a key file is assigned to the keepass file). When no keepass key file is given, 
+            	the file name is build with the name of the keepass file with changing the extension to .key.
+          	</p>
+          	<p>
+            	Alternatively it is possible to specify the value in the url with ?keyfile=
+          	</p>
         </note>
       </param>
 	  
       <param name="credential_store_entry_path" required="false">
         <note>
         	<title>Path for the entries in the keepass file</title>
-        	<div xmlns="http://www.w3.org/1999/xhtml">        
-          		<p>
-           To speciy a path for all entries. This makes the values for e.g. the password shorter.<br/>
-		   Example: <br/>
-		   credential_store_entry_path=/sos/scheduler<br/>
-		   value for password: cs://mydb<br/>
-		   In the keepass file you find the entry in /sos/scheduler/mydb
-          		</p>
-          		<p>
-            Alternatively it is possible to specify the value in the url with <code>?entry_path=</code>
-          		</p>
-          </div>
+        	<p>
+           		To speciy a path for all entries. This makes the values for e.g. the password shorter.<br/>
+		   		Example: <br/>
+		   		credential_store_entry_path=/sos/scheduler<br/>
+		   		value for password: cs://mydb<br/>
+		   		In the keepass file you find the entry in /sos/scheduler/mydb
+          	</p>
+          	<p>
+            	Alternatively it is possible to specify the value in the url with <code>?entry_path=</code>
+          	</p>
         </note>
       </param>
 

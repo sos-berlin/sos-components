@@ -9,19 +9,7 @@
 	DefaultValue="0"
 	usewith="raise_error_if_result_set_is">
 
-	<note language="de">
-		<title >Erwartete Anzahl Treffer in der Ergebnisliste</title>
-		<p>
-		</p>
-		<p>
-		
-		</p>
-	</note>
-	<note language="en">
-		<title >number of expected hits in result-list</title>
-		<p>
-		</p>
-		<p>
-		</p>
+	<note>
+		<title>number of expected hits in result-list</title>
 	</note>
 </param>

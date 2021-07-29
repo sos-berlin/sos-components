@@ -5,23 +5,14 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	name="min_file_size" 
-	DataType="java.lang.String"
 	default_value="-1"
 	required="false">
-	<note language="de">
-		<title>Minimale Größe einer oder mehrerer Dateien </title>
-		<p>
-			Vereinbart die minimale Größe einer oder mehrerer Dateien in Bytes:
-			unterschreitet die Größe einer Datei diesen Wert, dann wird diese nicht in das Resultat (result list) übernommen.
-		</p>
-	</note>
-	<xi:include href="./note_file_size_values_de.xml" parse="xml" />
-	<note language="en">
+	<note>
 		<title>minimum size of one or multiple files </title>
 		<p>
 			Specifies the minimum size of one or multiple files in bytes:
 			should the size of one of the files fall below this value, then it is not included in the result list of the operation.
 		</p>
 	</note>
-	<xi:include href="./note_file_size_values_en.xml" parse="xml" />
+	<xi:include href="./note_file_size_values.xml" parse="xml" />
 </param>

@@ -4,8 +4,7 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<title language="de">Prüfung auf Vollständigkeit aller Dateien</title>
-	<title language="en">Check the completeness of a file (steady state)</title>
+	<title>Check the completeness of a file (steady state)</title>
 	
 	<xi:include href="./param_steady_state_count.xml" parse="xml" />
 	<xi:include href="./param_steady_state_interval.xml" parse="xml" />

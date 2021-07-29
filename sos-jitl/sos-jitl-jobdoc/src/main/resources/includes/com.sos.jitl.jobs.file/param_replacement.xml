@@ -5,97 +5,32 @@
        name="replacement"
        required="false"
        DataType="java.lang.String"
-       usewith="replacing"
-       >
+       usewith="replacing">
 
 	<indexterm index="replacement, parameter" display="false"></indexterm>
     <indexterm index="parameter, replacement" display="false"></indexterm>
 	   
-	   
-	<note language="de">
-		<title>Zeichenkette für Substitution</title>
-		<div xmlns="http://www.w3.org/1999/xhtml">
-		<p>
-            Zeichenkette für die Ersetzung desjenigen Ausdrucks für Dateinamensbestandteile,
-            der im Wert des Parameters <paramref>replacing</paramref> angegeben ist.
-            </p>
-            <p>
-            Sollen mehrere Gruppen ersetzt werden, dann muss pro Gruppe eine Zeichenkette angegeben werden. Diese werden mit einem Semikolon ";" voneinander getrennt:
-            </p>
-            <p>
-            replacement: aa;[filename:];bb
-            </p>
-            <p>
-              Unterstützt Substitution von Masken im Dateinamen mit Formatangaben, die mit
-              <em>[</em>
-              und
-              <em>]</em>
-              geklammert sind.
-              Folgende Formate werden unterstützt:
-            </p>
-            <p>
-              <ul>
-                <li>
-                  <code>
-                    [date:
-                    <em>date format</em>
-                    ]
-                  </code>
-                  <br/>
-                  <em>date format</em>
-                  muss ein gültiger Java Format-String für Datumsangaben sein, z.B.
-                  <br/>
-                  <em>yyyyMMddHHmmss</em>
-                  ,
-                  <em>yyyy-MM-dd.HHmmss</em>
-                  etc.
-                </li>
-                <li>
-                    <code>[filename:]</code>
-                    <br/>
-                    Wird durch den ursprünglichen Dateinamen einschließlich Dateiendung ersetzt.
-                </li>
-                <li>
-                    <code>[filename:lowercase]</code>
-                    <br/>
-                    Wird durch den ursprünglichen Dateinamen einschließlich Dateiendung in Kleinbuchstaben ersetzt.
-                </li>
-                <li>
-                    <code>[filename:uppercase]</code>
-                    <br/>
-                    Wird durch den ursprünglichen Dateinamen einschließlich Dateiendung in Großbuchstaben ersetzt.
-                </li>
-              </ul>
-            </p>
-            <p>
-            Erfordert den Parameter
-            <paramref>replacing</paramref>
-            .
-            </p>
-		</div>
-	</note>
-	<note language="en">
+	<note>
 		<title>String for renaming Filenames </title>
-		<div xmlns="http://www.w3.org/1999/xhtml">
-            <p>
+        <p>
             String for replacement of matching character sequences within file names that are specified with the
             value of the parameter <paramref>replacing</paramref>.
-            </p>
-            <p>
+        </p>
+        <p>
             If multiple "capturing groups" are to be replaced then one replacement string per group has to be specified. 
             These strings are separated by a semicolon ";":
-            </p>
-            <p>
+        </p>
+        <p>
             replacement: aa;[filename:];bb
-            </p>
-            <p>
+        </p>
+        <p>
               Supports masks for substitution in the file name with format strings that are enclosed with
               <em>[</em>
               and
               <em>]</em>
               .
               The following format strings are supported:
-            </p>
+        </p>
 			<list type="unordered">
                 <item>
 					<p>
@@ -156,11 +91,12 @@
 	                </p>
                 </item>
 			</list>
-            <p>
+        <p>
             Requires the parameter
             <paramref>replacing</paramref>
             to be specified.
-            </p>
+        </p>
+        <p>
 			<list type="unordered">
 				<item>
 					<p>
@@ -185,6 +121,6 @@
 					</p>
 				</item>
 			</list>
-			</div>
-		</note>
-	</param>
+		</p>
+	</note>
+</param>

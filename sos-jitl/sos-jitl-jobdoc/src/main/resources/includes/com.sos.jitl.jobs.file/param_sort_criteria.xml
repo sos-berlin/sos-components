@@ -2,23 +2,12 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
     xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="sort_criteria" 
-    DataType="java.lang.String"
     OptionName="sort_criteria" 
     default_value="name" 
-    required="false"
->
+    required="false">
 
-    <note language="de">
-        <title>Sortierkriterium</title>
-        <p>
-          Default: name
-          Mögliche Werte: name | age | size
-          Siehe:  <paramref>sort_order</paramref>
-        </p>
-    </note>
-    <note language="en">
-        <title>Sort criteria with which the result set will be sorted.
-        </title>
+    <note>
+        <title>Sort criteria with which the result set will be sorted.</title>
         <p>
           Default: name
           Possible values: name | age | size

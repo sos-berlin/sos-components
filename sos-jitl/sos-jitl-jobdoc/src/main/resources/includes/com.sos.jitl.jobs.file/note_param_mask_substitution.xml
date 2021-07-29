@@ -3,8 +3,7 @@
 	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	language="en">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <p>
             Supports masks for substitution in the file name
             and directory
