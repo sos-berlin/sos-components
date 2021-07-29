@@ -71,14 +71,14 @@
                     <feature>
                         Rename or moves files in the (local) file system
                     </feature>
-                    <xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
-                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
-                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
-                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
                 </features>
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace_de.xml" parse="xml" />
-            <xi:include href="./common/notes/note_regexp_remarks.xml" parse="xml" />
+            <xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml" />
         </div>
     </documentation>
     <documentation language="en">
@@ -102,14 +102,14 @@
                     <feature>
                         Rename or moves files in the (local) file system
                     </feature>
-                    <xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
-                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
-                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
-                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
                 </features>
             </p>
         	<xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace_en.xml" parse="xml" />
-            <xi:include href="./common/notes/note_regexp_remarks.xml" parse="xml" />
+            <xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml" />
     		</div>
     </documentation>
 

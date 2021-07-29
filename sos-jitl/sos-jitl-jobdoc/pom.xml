@@ -15,13 +15,6 @@
 		<source.dir>${project.build.directory}/classes</source.dir>
 		<workspace.dir>${project.build.directory}/workspace</workspace.dir>
 		<target.dir>${workspace.dir}/jobs</target.dir>
-		<!-- excludes <jobdoc.excludes></jobdoc.excludes> -->
-		<jobdoc.includes>*.xml</jobdoc.includes>
-		<xslt.transformer.version>9.5.1-5</xslt.transformer.version>
-		<xslt.transformer.groupId>net.sf.saxon</xslt.transformer.groupId>
-		<xslt.transformer.artifactId>Saxon-HE</xslt.transformer.artifactId>
-		<xslt.transformer.factory.class>net.sf.saxon.TransformerFactoryImpl</xslt.transformer.factory.class>
-		<xslt.transformer.location>${settings.localRepository}/net/sf/saxon/${xslt.transformer.version}/${xslt.transformer.artifactId}-${xslt.transformer.version}.jar</xslt.transformer.location>
 	</properties>
 
 	<build>
@@ -33,61 +26,10 @@
 
 		<plugins>
 
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<target description="Resolve xi-includes in	JobDocs">
-
-								<xslt style="${source.dir}/xsl/ResolveXIncludes.xsl"
-									basedir="${source.dir}" destdir="${workspace.dir}/tmp"
-									extension=".xml" includes="${jobdoc.includes}"
-									excludes="${jobdoc.excludes}" failOnError="true"
-									failOnTransformationError="true" failOnNoResources="false"
-									force="yes">
-									<factory name="${xslt.transformer.factory.class}" />
-									<classpath>
-										<pathelement
-											location="${xslt.transformer.location}" />
-									</classpath>
-								</xslt>
-
-								<xslt style="${source.dir}/xsl/JobDoc.xsl"
-									basedir="${workspace.dir}/tmp" destdir="${target.dir}"
-									extension=".xml" includes="${jobdoc.includes}"
-									excludes="${jobdoc.excludes}" failOnError="true"
-									failOnTransformationError="true" failOnNoResources="false"
-									force="yes">
-									<factory name="${xslt.transformer.factory.class}" />
-									<classpath>
-										<pathelement
-											location="${xslt.transformer.location}" />
-									</classpath>
-								</xslt>
-
-							</target>
-						</configuration>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>${xslt.transformer.groupId}</groupId>
-						<artifactId>${xslt.transformer.artifactId}</artifactId>
-						<version>${xslt.transformer.version}</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			
 			<!-- this would be state of the art instead of above maven-antrun-plugin -->
-			<!-- plugin>
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>xml-maven-plugin</artifactId>
-				<version>1.0.2</version>
 				<executions>
 					<execution>
 						<goals>
@@ -102,9 +44,6 @@
 							<includes>
 								<include>*.xml</include>
 							</includes>
-							<excludes>
-								<exclude>jobdoc.languages.xml</exclude>
-							</excludes>
 							<outputDir>${target.dir}</outputDir>
 							<xincludeAware>true</xincludeAware>
 							<stylesheet>src/main/resources/xsl/JobDoc.xsl</stylesheet>
@@ -118,7 +57,7 @@
 						<version>8.7</version>
 					</dependency>
 				</dependencies>
-			</plugin -->
+			</plugin>
 
 
 			<plugin>
@@ -136,8 +75,8 @@
 								<resource>
 									<directory>${source.dir}/</directory>
 									<includes>
-										<include>jobdoc.languages.xml</include>
-										<include>*.gif</include>
+										<include>*.ico</include>
+										<include>*.png</include>
 										<include>*.xsl</include>
 										<include>*.xsd</include>
 									</includes>

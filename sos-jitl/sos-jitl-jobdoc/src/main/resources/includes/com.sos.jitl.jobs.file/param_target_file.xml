@@ -36,12 +36,8 @@
 			is used as target.
 		</p>
 	</note>
-    <xi:include href="./note_parameter_mask_substitution_de.xml" parse="xml" />
-    <xi:include href="./note_parameter_mask_substitution_en.xml" parse="xml" />
-    <!--
-    <xi:include href="./note_parameter_substitution_de.xml" parse="xml" />
-    <xi:include href="./note_parameter_substitution_en.xml" parse="xml" />
-    -->
+    <xi:include href="./note_param_mask_substitution_de.xml" parse="xml"/>
+    <xi:include href="./note_param_mask_substitution_en.xml" parse="xml"/>
 </param>
 
  

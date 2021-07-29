@@ -292,6 +292,11 @@
 					<artifactId>jsonschema2pojo-maven-plugin</artifactId>
 					<version>${jsonschema2pojo.version}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>xml-maven-plugin</artifactId>
+					<version>1.0.2</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>

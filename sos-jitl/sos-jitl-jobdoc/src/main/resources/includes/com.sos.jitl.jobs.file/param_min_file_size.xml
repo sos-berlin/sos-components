@@ -15,7 +15,7 @@
 			unterschreitet die Größe einer Datei diesen Wert, dann wird diese nicht in das Resultat (result list) übernommen.
 		</p>
 	</note>
-	<xi:include href="./notes_file_size_values_de.xml" parse="xml" />
+	<xi:include href="./note_file_size_values_de.xml" parse="xml" />
 	<note language="en">
 		<title>minimum size of one or multiple files </title>
 		<p>
@@ -23,5 +23,5 @@
 			should the size of one of the files fall below this value, then it is not included in the result list of the operation.
 		</p>
 	</note>
-	<xi:include href="./notes_file_size_values_en.xml" parse="xml" />
+	<xi:include href="./note_file_size_values_en.xml" parse="xml" />
 </param>

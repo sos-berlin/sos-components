@@ -62,10 +62,10 @@
             </p>
             <p>
                 <features>
-                    <xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
-                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
-                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
-                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
                 </features>
             </p>
         </div>
@@ -85,10 +85,10 @@
                     <feature>
                         Checking for the existence of files
                     </feature>
-                   	<xi:include href="./common/feature_use_of_regexp.xml" parse="xml" />
-                    <xi:include href="./common/feature_recurse_of_subdirectories.xml" parse="xml" />
-                    <xi:include href="./common/feature_mask_substitution.xml" parse="xml" />
-                    <xi:include href="./common/feature_result_set_creation.xml" parse="xml" />
+                   	<xi:include href="./includes/common/features/feature_use_of_regexp.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_recurse_of_subdirectories.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_mask_substitution.xml" parse="xml" />
+                    <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
                  </features>
             </p>
         </div>

@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <feature xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
 	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-     >
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <title language="en">
             Use of regular expressions for filenames selection (much more than a simple "wildcard")
         </title>

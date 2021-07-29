@@ -11,15 +11,16 @@
 		<div xmlns="http://www.w3.org/1999/xhtml">
 		Vereinbart die maximale Größe einer oder mehrerer Dateien in Bytes:
 		überschreitet die Größe einer der Dateien diesen Wert, dann	gilt sie als nicht vorhanden.
-		</note>
-		<xi:include href="./notes_file_size_values_de.xml" parse="xml" />
+		</div>
+	</note>
+	<xi:include href="./note_file_size_values_de.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
 		
-		<note language="en">
+	<note language="en">
 		<title>maximum size of a file</title>
 		<div xmlns="http://www.w3.org/1999/xhtml">
 		Specifies the maximum size of a file in bytes:
 		should the size of one of the files exceed this value, then it is classified as non-existing.
 		</div>
-		</note>
-    	<xi:include href="./note_file_size_values_en.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
+	</note>
+    <xi:include href="./note_file_size_values_en.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="xml" />
 </param>
