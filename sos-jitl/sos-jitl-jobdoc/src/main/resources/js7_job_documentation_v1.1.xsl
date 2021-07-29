@@ -773,7 +773,7 @@
 	<xsl:template name="get_css">
 		<style type="text/css"><![CDATA[
 
-      body { background-color:#d2d8e8; margin:6px 20px; padding: 0; font-family:verdana,arial,sans-serif; font-size:10pt; color: #203e8d; }
+      body { background-color:#eaedf4; margin:6px 20px; padding: 0; font-family:verdana,arial,sans-serif; font-size:10pt; color: #203e8d; }
 
       header { display: grid;
                grid-template-columns: 100px auto 100px;
@@ -790,7 +790,7 @@
       h1 span { font-weight:600; color:#de5906; }
 
       table { width:100%;
-              background-color:#a5b1d1;
+              background-color:#c2cadf;
             }
 
       td    { padding: 2px;
@@ -804,12 +804,12 @@
       td.td3           {width:77%; }
       td.td1_3         {width:100%; }
 
-      table.resource   { background-color:#d2d8e8; }
-      table.resource th  { background-color:#bcc5dc;
+      table.resource   { background-color:#eaedf4; }
+      table.resource th  { background-color:#d0d6e6;
                            text-align: left;
                            font-weight:300;
                          }
-      table.resource td  { background-color:#bcc5dc;
+      table.resource td  { background-color:#d0d6e6;
                            color:#203e8d;
                            text-align: left;
                            font-weight:300;
@@ -828,14 +828,14 @@
       td.resource2_3   { width:20%; }
       td.resource4     { width:60%; }
 
-      table.section   { background-color:#d2d8e8; width:100%; }
-      table.section td   { background-color:#bcc5dc; color:#8c892c; }
+      table.section   { background-color:#eaedf4; width:100%; }
+      table.section td   { background-color:#d0d6e6; color:#8c892c; }
 
       td.section1     { width:20%; }
       td.section2     { width:80%; }
                       
-      table.description   { background-color:#d2d8e8; margin-top:4px; margin-bottom:4px; }
-      table.description th, table.description td { background-color:#bcc5dc; }
+      table.description   { background-color:#eaedf4; margin-top:4px; margin-bottom:4px; }
+      table.description th, table.description td { background-color:#d0d6e6; }
 
       .section        {font-weight:600; color:#203e8d; }          /* blaue Schrift, fett */
       .label          {font-weight:300; color:#203e8d; }          /* blaue Schrift */
@@ -845,7 +845,7 @@
       .desc           {color:#203e8d; font-weight:300; }                         /* blaue Schrift */
 
       .code           {color:#000000; font-weight:300; font-family:"Courier New",sans-serif;font-size:10pt; }      /* Schrift für XML-Code */
-      pre.example     {background-color:#bcc5dc; padding-left:10px;}
+      pre.example     {background-color:#d0d6e6; padding-left:10px;}
 
       /*** LINK Formatierungen ***/
       a                   { font-weight:600; text-decoration:none; font-size:10pt; color:#de5906; font-weight:300;}

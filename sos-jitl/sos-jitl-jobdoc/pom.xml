@@ -26,7 +26,6 @@
 
 		<plugins>
 
-			<!-- this would be state of the art instead of above maven-antrun-plugin -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>xml-maven-plugin</artifactId>

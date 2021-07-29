@@ -6,23 +6,9 @@
     xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
     <job 	name="RenameFileJob" 
     		title="Rename one or more files" 
-    		tasks="unbounded" 
-    		>
+    		tasks="unbounded">
         	<script language="java" java_class="com.sos.jitl.jobs.file.RenameFileJob" resource="1" />
     </job>
-
-    <releases>
-		<release id="1.0" created="2021-04-23" modified="2021-04-23">
-      		<title>Version 1.0</title>
-      		<note language="de"><div xmlns="http://www.w3.org/1999/xhtml">Initiale Auslieferung</div></note>
-      		<note language="en"><div xmlns="http://www.w3.org/1999/xhtml">Initial release</div></note>
-    	</release>
-	</releases>
-
-    <resources>
-		<xi:include href="./includes/jars/sos/com.sos.commons.exception.jar.xml" parse="xml" />
-    	<xi:include href="./includes/jars/sos/com.sos.commons.util.jar.xml" parse="xml" />
-   </resources>
 
     <configuration>
     	<params id="job_parameter">
@@ -49,52 +35,12 @@
         <params id="return_parameter">
             <xi:include href="./includes/com.sos.jitl.jobs.file/return/main.xml" parse="xml" />
         </params>
-        <params id="other">
-        </params>
     </configuration>
-    <documentation language="de">
+    <documentation>
         <div xmlns="http://www.w3.org/1999/xhtml">
-            <p>
-                Dieser Job benennt eine Datei oder mehrere Dateien eines
-                Verzeichnisses um.
-                <p>
-                    Das Umbenennen von Dateien über Filesystem-Grenzen hinaus ist
-                    abhängig vom verwendeten Betriebssystem bzw. dessen
-                    Version.
-                    (siehe auch
-                    <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/io/File.html#renameTo%28java.io.File%29)">renameTo</a>
-                    ).
-                </p>
-            </p>
-            <p>
-                <features>
-                    <feature>
-                        Rename or moves files in the (local) file system
-                    </feature>
-                    <xi:include href="./includes/common/features/feature_use_of_regexp.xml" parse="xml" />
-                    <xi:include href="./includes/common/features/feature_recurse_of_subdirectories.xml" parse="xml" />
-                    <xi:include href="./includes/common/features/feature_mask_substitution.xml" parse="xml" />
-                    <xi:include href="./includes/common/features/feature_result_set_creation.xml" parse="xml" />
-                </features>
-            </p>
-            <xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace_de.xml" parse="xml" />
-            <xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml" />
-        </div>
-    </documentation>
-    <documentation language="en">
-        <div xmlns="http://www.w3.org/1999/xhtml">
-
-            <p>
-                This job renames one or more files.
-                <p>
-				<!-- JS-690 -->
-                    Whether or not this job can move a file from one filesystem to
-                    another is platform-dependent.
-                    (see
-                    <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/io/File.html#renameTo%28java.io.File%29)">renameTo</a>
-                    ).
-                </p>
-                                The job belongs to the category "FileOperations".
+            <p>This job renames one or more files.</p>
+			<p>Whether or not this job can move a file from one filesystem to another is platform-dependent (see
+               <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/io/File.html#renameTo%28java.io.File%29)">renameTo</a>).
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_file_operations.xml" parse="xml" />
             <p>

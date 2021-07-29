@@ -4,26 +4,16 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <title language="en">state-dependent substitution</title>
-    <title language="de">Dynamische Variable</title>
     <abstract>
-        <p language="en">
+        <p>
             This technique is useful when for example inserting the current date or a timestamp into a filename or
-            into a name of a
-            directory.
-        </p>
-        <p language="de">
-            Mit dieser Technik können bei der Umbennenung von Dateinamen zusätzlich Platzhalter definiert werden,
-            die durch das aktuelle Datum oder einen Zeitstempel, ersetzt werden.
+            into a name of a directory.
         </p>
     </abstract>
     <documentation>
-        <p language="en">
-        </p>
-        <p language="de">
-            Mit dieser Technik können bei der Umbennenung von Dateinamen zusätzlich Platzhalter definiert werden,
-            die durch das aktuelle Datum oder einen Zeitstempel, ersetzt werden.
-        </p>
-        <p language="de">
+        <p>
+            This technique is useful when for example inserting the current date or a timestamp into a filename or
+            into a name of a directory.
         </p>
     </documentation>
     <xi:include href="../notes/note_parameter_mask_substitution.xml" parse="xml" />
