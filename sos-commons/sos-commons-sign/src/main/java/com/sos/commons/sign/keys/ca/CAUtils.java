@@ -14,13 +14,17 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
+import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
+import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
@@ -68,7 +72,10 @@ public abstract class CAUtils {
         // 2.5.29.19 is the oid value for BasicConstraints to indicate if the subject may act as a CA,
         // with the certified public key being used to verify certificate signatures
         // the boolean value sets the criticality
-        certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), critical, basicConstraints);
+        certBuilder.addExtension(Extension.basicConstraints, critical, basicConstraints);
+        certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.keyEncipherment | KeyUsage.cRLSign | KeyUsage.dataEncipherment 
+                | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
+        certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage));
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
@@ -107,9 +114,15 @@ public abstract class CAUtils {
           GeneralNames san = new GeneralNames(altName);
           certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
       }
+
       // client and server authentication
-      certgen.addExtension(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.1"), true, new ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth));
-      certgen.addExtension(new ASN1ObjectIdentifier("1.3.6.1.5.5.7.3.2"), true, new ExtendedKeyUsage(KeyPurposeId.id_kp_clientAuth));
+      certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
+      certgen.addExtension(Extension.keyUsage, false, 
+              new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
+      certgen.addExtension(MiscObjectIdentifiers.netscapeCertType, false, 
+              new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.sslServer | NetscapeCertType.smime));
+      certgen.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
+
       ContentSigner signer = null;
       if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
           signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(PrivateKeyFactory.createKey( privateKey.getEncoded()));

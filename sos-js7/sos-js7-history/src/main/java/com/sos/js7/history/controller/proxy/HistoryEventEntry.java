@@ -204,8 +204,10 @@ public class HistoryEventEntry {
                 forkedChilds = new ArrayList<HistoryEventEntry.HistoryOrder.ForkedChild>();
                 JOrderForked jof = (JOrderForked) getJOrderEvent();
                 jof.children().forEach(c -> {
-                    OrderId oid = c.orderId();
-                    forkedChilds.add(new ForkedChild(oid.string(), c.branchId().string()));
+                    if (c.branchId().isPresent()) {
+                        OrderId oid = c.orderId();
+                        forkedChilds.add(new ForkedChild(oid.string(), c.branchId().get().string()));
+                    }
                 });
             }
             return forkedChilds;

@@ -575,7 +575,7 @@ public class OrdersHelper {
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor) {
-        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args);
+        return JFreshOrder.of(orderId, workflowPath, scheduledFor, args, true);
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {

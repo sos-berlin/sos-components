@@ -1,0 +1,26 @@
+{
+  "title": "forkList",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.ForkList",
+  "type": "object",
+  "required": [
+  	"workflow"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'ForkList'",
+  "properties": {
+  	"children": {
+    	"type": "string"
+    },
+  	"childToArguments": {
+    	"type": "string"
+    },
+    "workflow": {
+    	"$ref": "instructions-schema.json"
+    }
+  },
+  "additionalProperties": false
+}

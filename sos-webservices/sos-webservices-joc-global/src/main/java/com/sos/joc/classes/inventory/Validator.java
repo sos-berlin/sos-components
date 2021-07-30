@@ -26,6 +26,7 @@ import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
@@ -352,6 +353,12 @@ public class Validator {
                             validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
                         }
                         branchIndex++;
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation, labels);
                     }
                     break;
                 case IF:

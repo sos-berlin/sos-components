@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
@@ -252,9 +253,8 @@ public class WorkflowSearcher {
     
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<PostNotice>> getNoticeInstructions() {
-        return getInstructions(InstructionType.POST_NOTICE, InstructionType.READ_NOTICE).stream().map(l -> {
-            return (WorkflowInstruction<PostNotice>) l;
-        }).collect(Collectors.toList());
+        return getInstructions(InstructionType.POST_NOTICE, InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)
+                .collect(Collectors.toList());
     }
 
     public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
@@ -432,6 +432,15 @@ public class WorkflowSearcher {
                             handleInstructions(result, branch.getWorkflow().getInstructions(), position);
                         }
                     }
+                }
+                break;
+            case FORKLIST:
+                ForkList fl = in.cast();
+                if (fl.getWorkflow() != null) {
+                    String position = getPosition(parentPosition, index, "forklist");
+                    result.add(new WorkflowInstruction<ForkList>(position, fl));
+
+                    handleInstructions(result, fl.getWorkflow().getInstructions(), position);
                 }
                 break;
             case EXECUTE_NAMED:

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
@@ -21,6 +22,7 @@ import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -294,6 +296,12 @@ public class JsonSerializer {
                     NamedJob nj = inst.cast();
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
                     break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        cleanInventoryInstructions(fl.getWorkflow().getInstructions());
+                    }
+                    break;
                 case FORK:
                     ForkJoin fj = inst.cast();
                     for (Branch branch : fj.getBranches()) {
@@ -352,6 +360,12 @@ public class JsonSerializer {
                         if (branch.getWorkflow() != null) {
                             cleanSignedInstructions(branch.getWorkflow().getInstructions());
                         }
+                    }
+                    break;
+                case FORKLIST:
+                    com.sos.sign.model.instruction.ForkList fl = inst.cast();
+                    if (fl.getWorkflow() != null) {
+                        cleanSignedInstructions(fl.getWorkflow().getInstructions());
                     }
                     break;
                 case IF:

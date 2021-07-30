@@ -38,7 +38,9 @@ public class ExecuteRollOutTest {
         String targetTruststore = "C:/sp/devel/js7/testing/CLI/controller/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "efa50e0b-9d49-4487-8b6d-60c74d305ede";
+        String token = "be400b0a-cebf-49a2-a09f-3ea6a166c1e1";
+        String keystoreAlias = "My Controller Key";
+        String truststoreAlias = "sp root ca";
         return new String[] {
                 "--token=" + token,
                 "--joc-uri=" + jocUri,
@@ -57,7 +59,9 @@ public class ExecuteRollOutTest {
                 "--target-keystore-entry-pass=" + targetKeystoreEntryPassw,
                 "--target-truststore=" + targetTruststore,
                 "--target-truststore-type=" + targetTrustoreType,
-                "--target-truststore-pass=" + targetTruststorePassw
+                "--target-truststore-pass=" + targetTruststorePassw,
+                "--keystore-alias=" + keystoreAlias,
+                "--truststore-alias=" + truststoreAlias
         };
     }
 
@@ -78,7 +82,9 @@ public class ExecuteRollOutTest {
         String targetTruststore = "C:/sp/devel/js7/testing/CLI/agent/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "92f6d171-1ad1-4990-a73c-edfcfa7bd7c2";
+        String token = "53ffac7e-7e39-42e0-b46c-5dc1eb25814b";
+        String keystoreAlias = "My Agent Key";
+        String truststoreAlias = "sp root ca";
         return new String[] {
                 "--token=" + token,
                 "--joc-uri=" + jocUri,
@@ -97,7 +103,9 @@ public class ExecuteRollOutTest {
                 "--target-keystore-entry-pass=" + targetKeystoreEntryPassw,
                 "--target-truststore=" + targetTruststore,
                 "--target-truststore-type=" + targetTrustoreType,
-                "--target-truststore-pass=" + targetTruststorePassw
+                "--target-truststore-pass=" + targetTruststorePassw,
+                "--keystore-alias=" + keystoreAlias,
+                "--truststore-alias=" + truststoreAlias
         };
     }
 

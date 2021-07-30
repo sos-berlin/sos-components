@@ -79,7 +79,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             String newPath = p.toString().replace('\\', '/');
             //boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             
-            Set<String> events = Collections.emptySet();
+            Set<String> events = new HashSet<>();
             Set<String> folderEvents = Collections.emptySet();
             
             ResponseNewPath response = new ResponseNewPath();
@@ -169,7 +169,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 
-                events = Collections.singleton(newPath);
+                events.add(newPath);
                 folderEvents = Collections.singleton(newFolder);
                 
             } else {
@@ -201,7 +201,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 response.setPath(config.getPath());
                 response.setId(config.getId());
                 
-                events = Collections.singleton(newFolder);
+                events.add(newFolder);
             }
             
             session.commit();

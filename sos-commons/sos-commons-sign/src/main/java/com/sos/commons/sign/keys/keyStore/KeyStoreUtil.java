@@ -27,14 +27,22 @@ public abstract class KeyStoreUtil {
     public static KeyStore readKeyStore(Path keyStorePath, KeyStoreType keyStoreType, String keyStorePassword) throws Exception {
         InputStream keyStoreStream = null;
         try {
-        	keyStoreStream = Files.newInputStream(keyStorePath);
+            boolean fileAlreadyExist = Files.exists(keyStorePath);
+            if (!fileAlreadyExist) {
+                Files.createFile(keyStorePath);
+            }
+            keyStoreStream = Files.newInputStream(keyStorePath);
         	// for testing with keystore in classpath
         	// keyStoreStream = KeyStoreUtil.class.getResourceAsStream(keyStorePath);
             KeyStore keyStore = KeyStore.getInstance(keyStoreType.value()); // "PKCS12" or "JKS"
-            if (keyStorePassword == null) {
-            	keyStore.load(keyStoreStream, "".toCharArray());
+            if(fileAlreadyExist) {
+                if (keyStorePassword == null) {
+                    keyStore.load(keyStoreStream, "".toCharArray());
+                } else {
+                    keyStore.load(keyStoreStream, keyStorePassword.toCharArray());
+                }
             } else {
-            	keyStore.load(keyStoreStream, keyStorePassword.toCharArray());
+                keyStore.load(null, null);
             }
             return keyStore;
         } finally {
@@ -59,12 +67,20 @@ public abstract class KeyStoreUtil {
     public static KeyStore readTrustStore(Path trustStorePath, KeyStoreType trustStoreType, String trustStorePassword) throws Exception {
         InputStream trustStoreStream = null;
         try {
+            boolean fileAlreadyExist = Files.exists(trustStorePath);
+            if (!fileAlreadyExist) {
+                Files.createFile(trustStorePath);
+            }
         	trustStoreStream = Files.newInputStream(trustStorePath);
             KeyStore trustStore = KeyStore.getInstance(trustStoreType.value()); // "PKCS12" or "JKS"
-            if (trustStorePassword == null || trustStorePassword.isEmpty()) {
-            	trustStore.load(trustStoreStream, "".toCharArray());
+            if (fileAlreadyExist) {
+                if (trustStorePassword == null || trustStorePassword.isEmpty()) {
+                    trustStore.load(trustStoreStream, "".toCharArray());
+                } else {
+                    trustStore.load(trustStoreStream, trustStorePassword.toCharArray());
+                }
             } else {
-            	trustStore.load(trustStoreStream, trustStorePassword.toCharArray());
+                trustStore.load(null, null);
             }
             return trustStore;
         } finally {
