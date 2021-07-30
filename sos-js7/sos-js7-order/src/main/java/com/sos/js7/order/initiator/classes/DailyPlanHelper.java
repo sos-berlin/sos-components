@@ -15,7 +15,8 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 
@@ -33,7 +34,7 @@ public class DailyPlanHelper {
         return d;
     }
 
-    public static String dateAsString(Date date,String timeZone) {
+    public static String dateAsString(Date date, String timeZone) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         formatter.setTimeZone(TimeZone.getTimeZone(timeZone));
         String dateS = formatter.format(date);
@@ -43,7 +44,7 @@ public class DailyPlanHelper {
     public static String getDailyPlanDateAsString(Long startTime, String timeZone, String periodBegin) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         calendar.setTime(new Date(startTime));
-        return DailyPlanHelper.dateAsString(calendar.getTime(),timeZone);
+        return DailyPlanHelper.dateAsString(calendar.getTime(), timeZone);
     }
 
     public static Date getDailyPlanDateAsDate(Long startTime) {
@@ -196,29 +197,31 @@ public class DailyPlanHelper {
         return date;
     }
 
-    private static String buildOrderId(Path path, Long startTime, Integer startMode, String timeZone, String periodBegin) {
-        String shortScheduleName = path.getFileName().toString();
-        if (shortScheduleName.length() > 30) {
-            shortScheduleName = shortScheduleName.substring(0, 30);
-        }
-
+    private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone, String periodBegin) {
+        
         String orderId = "";
-        String dailyPlanDate = getDailyPlanDateAsString(startTime,timeZone,periodBegin);
+        String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone, periodBegin);
         if (startMode == 0) {
-            orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + shortScheduleName;
+            orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + orderName;
         } else {
-            orderId = "#" + dailyPlanDate + "#C" + "<id" + startTime + ">-<nr00000>-<size>-" + shortScheduleName;
+            orderId = "#" + dailyPlanDate + "#C" + "<id" + startTime + ">-<nr00000>-<size>-" + orderName;
         }
         return orderId;
     }
 
-    public static String buildOrderId(Schedule o, Long startTime, Integer startMode, String timeZone, String periodBegin) {
-        return buildOrderId(Paths.get(o.getPath()), startTime, startMode,timeZone,periodBegin);
-    }
+    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone,
+            String periodBegin) {
+        String orderName = "";
+        if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
+            orderName = schedule.getPath();
+        }else {
+            orderName = variableSet.getOrderName();
+        }
+        if (orderName.length() > 30) {
+            orderName = orderName.substring(0, 30);
+        }
 
-    public static String buildOrderId(DBItemDailyPlanOrders dbItemDailyPlanOrders, String timeZone, String periodBegin) {
-        return buildOrderId(Paths.get(dbItemDailyPlanOrders.getSchedulePath()), dbItemDailyPlanOrders.getPlannedStart().getTime(),
-                dbItemDailyPlanOrders.getStartMode(),timeZone,periodBegin);
+        return buildOrderId(orderName, startTime, startMode, timeZone, periodBegin);
     }
 
     public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings orderInitiatorSettings) throws ParseException {

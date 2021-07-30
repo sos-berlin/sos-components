@@ -32,7 +32,8 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.calendar.Calendar;
@@ -177,7 +178,9 @@ public class OrderInitiatorRunner extends TimerTask {
                 FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
 
                 filterOrderVariables.setPlannedOrderId(dbItemDailyPlanOrders.getId());
+                VariableSet variableSet = new VariableSet();
                 Variables variables = new Variables();
+
                 List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
                 if (listOfOrderVariables != null) {
                     for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
@@ -201,10 +204,11 @@ public class OrderInitiatorRunner extends TimerTask {
                     }
                 }
 
-                schedule.setVariables(variables);
+                variableSet.setVariables(variables);
+                schedule.getVariableSets().add(variableSet);
 
-                FreshOrder freshOrder = buildFreshOrder(schedule, dbItemDailyPlanOrders.getPlannedStart().getTime(), dbItemDailyPlanOrders
-                        .getStartMode(),orderInitiatorSettings.getTimeZone(),orderInitiatorSettings.getPeriodBegin());
+                FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, dbItemDailyPlanOrders.getPlannedStart().getTime(), dbItemDailyPlanOrders
+                        .getStartMode(), orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
                 freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
                 p.setSchedule(schedule);
                 p.setFreshOrder(freshOrder);
@@ -267,7 +271,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 currentstate = getCurrentState(controllerConfiguration.getCurrent().getId());
 
                 for (int day = 0; day < orderInitiatorSettings.getDayAheadPlan(); day++) {
-                    String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime(),orderInitiatorSettings.getTimeZone());
+                    String dailyPlanDate = DailyPlanHelper.dateAsString(dailyPlanCalendar.getTime(), orderInitiatorSettings.getTimeZone());
                     List<DBItemDailyPlanSubmissions> l = getSubmissionsForDate(dailyPlanCalendar, controllerConfiguration.getCurrent().getId());
                     if ((l.size() == 0)) {
                         if (logDailyPlan) {
@@ -442,12 +446,12 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(Schedule o, Long startTime, Integer startMode, String timeZone, String periodBegin) {
+    private FreshOrder buildFreshOrder(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone, String periodBegin) {
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderId(o, startTime, startMode,timeZone,periodBegin));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(schedule,variableSet, startTime, startMode, timeZone, periodBegin));
         freshOrder.setScheduledFor(startTime);
-        freshOrder.setArguments(o.getVariables());
-        freshOrder.setWorkflowPath(o.getWorkflowName());
+        freshOrder.setArguments(variableSet.getVariables());
+        freshOrder.setWorkflowPath(schedule.getWorkflowName());
         return freshOrder;
     }
 
@@ -466,8 +470,8 @@ public class OrderInitiatorRunner extends TimerTask {
                         ConfigurationType.NONWORKINGDAYSCALENDAR);
                 CalendarDatesFilter calendarFilter = new CalendarDatesFilter();
 
-                calendarFilter.setDateFrom(DailyPlanHelper.dateAsString(dailyPlanDate,orderInitiatorSettings.getTimeZone()));
-                calendarFilter.setDateTo(DailyPlanHelper.dateAsString(nextDate,orderInitiatorSettings.getTimeZone()));
+                calendarFilter.setDateFrom(DailyPlanHelper.dateAsString(dailyPlanDate, orderInitiatorSettings.getTimeZone()));
+                calendarFilter.setDateTo(DailyPlanHelper.dateAsString(nextDate, orderInitiatorSettings.getTimeZone()));
                 calendarFilter.setCalendar(calendar);
                 fr.resolve(calendarFilter);
             }
@@ -539,9 +543,9 @@ public class OrderInitiatorRunner extends TimerTask {
                         FrequencyResolver fr = new FrequencyResolver();
                         LOGGER.debug("Generate dates for:" + assignedCalendar.getCalendarName());
                         CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
-                        String actDateAsString = DailyPlanHelper.dateAsString(actDate,orderInitiatorSettings.getTimeZone());
-                        String nextDateAsString = DailyPlanHelper.dateAsString(nextDate,orderInitiatorSettings.getTimeZone());
-                        String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate,orderInitiatorSettings.getTimeZone());
+                        String actDateAsString = DailyPlanHelper.dateAsString(actDate, orderInitiatorSettings.getTimeZone());
+                        String nextDateAsString = DailyPlanHelper.dateAsString(nextDate, orderInitiatorSettings.getTimeZone());
+                        String dailyPlanDateAsString = DailyPlanHelper.dateAsString(dailyPlanDate, orderInitiatorSettings.getTimeZone());
 
                         if (calendarCacheItem == null) {
                             calendarCacheItem = new CalendarCacheItem();
@@ -589,22 +593,40 @@ public class OrderInitiatorRunner extends TimerTask {
                                         startMode = 0;
                                     }
 
-                                    FreshOrder freshOrder = buildFreshOrder(schedule, periodEntry.getKey(), startMode,this.orderInitiatorSettings.getTimeZone(),this.orderInitiatorSettings.getPeriodBegin());
-
-                                    PlannedOrder plannedOrder = new PlannedOrder();
-                                    plannedOrder.setControllerId(controllerId);
-
-                                    plannedOrder.setFreshOrder(freshOrder);
-                                    plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
-                                    plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
-                                    plannedOrder.setPeriod(periodEntry.getValue());
-                                    plannedOrder.setSubmissionHistoryId(dbItemDailyPlanSubmissionHistory.getId());
-                                    if (!fromService) {
-                                        schedule.setSubmitOrderToControllerWhenPlanned(orderInitiatorSettings.isSubmit());
+                                    //Compatibility
+                                    if (schedule.getVariables() != null) {
+                                        VariableSet variableSet = new VariableSet();
+                                        variableSet.setVariables(schedule.getVariables());
+                                        schedule.setVariableSets(new ArrayList<VariableSet>());
+                                        schedule.getVariableSets().add(variableSet);
                                     }
-                                    plannedOrder.setSchedule(schedule);
-                                    if (orderListSynchronizer.add(controllerId, plannedOrder)) {
-                                        scheduleAdded.add(schedule.getPath());
+                                    
+                                    if (schedule.getVariableSets() == null || schedule.getVariableSets().size() == 0) {
+                                        VariableSet variableSet = new VariableSet();
+                                        schedule.setVariableSets(new ArrayList<VariableSet>());
+                                        schedule.getVariableSets().add(variableSet);
+                                    }
+                                    
+                                    for (VariableSet variableSet : schedule.getVariableSets()) {
+                                        schedule.setVariables(variableSet.getVariables());
+                                        FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, periodEntry.getKey(), startMode, this.orderInitiatorSettings
+                                                .getTimeZone(), this.orderInitiatorSettings.getPeriodBegin());
+
+                                        PlannedOrder plannedOrder = new PlannedOrder();
+                                        plannedOrder.setControllerId(controllerId);
+
+                                        plannedOrder.setFreshOrder(freshOrder);
+                                        plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
+                                        plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
+                                        plannedOrder.setPeriod(periodEntry.getValue());
+                                        plannedOrder.setSubmissionHistoryId(dbItemDailyPlanSubmissionHistory.getId());
+                                        if (!fromService) {
+                                            schedule.setSubmitOrderToControllerWhenPlanned(orderInitiatorSettings.isSubmit());
+                                        }
+                                        plannedOrder.setSchedule(schedule);
+                                        if (orderListSynchronizer.add(controllerId, plannedOrder)) {
+                                            scheduleAdded.add(schedule.getPath());
+                                        }
                                     }
 
                                 }

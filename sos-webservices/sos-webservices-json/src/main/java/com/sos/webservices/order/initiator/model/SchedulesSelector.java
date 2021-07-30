@@ -100,7 +100,7 @@ public class SchedulesSelector {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schedulePaths).append(folders).append(controllerIds).append(workflowPaths).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(workflowPaths).append(folders).append(controllerIds).toHashCode();
     }
 
     @Override
@@ -112,7 +112,7 @@ public class SchedulesSelector {
             return false;
         }
         SchedulesSelector rhs = ((SchedulesSelector) other);
-        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(folders, rhs.folders).append(controllerIds, rhs.controllerIds).append(workflowPaths, rhs.workflowPaths).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(workflowPaths, rhs.workflowPaths).append(folders, rhs.folders).append(controllerIds, rhs.controllerIds).isEquals();
     }
 
 }

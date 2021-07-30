@@ -1,7 +1,7 @@
 package com.sos.js7.order.initiator.classes;
 
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.Schedule;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.calendar.Period;
 
 // import org.slf4j.Logger;
