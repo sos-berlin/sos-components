@@ -1,8 +1,11 @@
 package com.sos.cli;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStore;
+import java.security.KeyStore.PrivateKeyEntry;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -49,6 +52,8 @@ public class ExecuteRollOut {
     private static final String TRG_TRUSTSTORE_PASS = "--target-truststore-pass";
     private static final String SUBJECT_DN = "--subject-dn";
     private static final String ALIAS = "--alias";
+    private static final String KS_ALIAS = "--keystore-alias";
+    private static final String TS_ALIAS = "--truststore-alias";
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
@@ -69,6 +74,8 @@ public class ExecuteRollOut {
     private static String targetTruststoreType = "PKCS12";
     private static String targetTruststorePasswd;
     private static String alias;
+    private static String keystoreAlias;
+    private static String truststoreAlias;
     private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
@@ -119,6 +126,10 @@ public class ExecuteRollOut {
                     san = split[1];
                 } else if (args[i].startsWith(ALIAS + "=")) {
                     alias = split[1];
+                } else if (args[i].startsWith(KS_ALIAS + "=")) {
+                    keystoreAlias = split[1];
+                } else if (args[i].startsWith(TS_ALIAS + "=")) {
+                    truststoreAlias = split[1];
                 }
             }
             String response = callWebService();
@@ -139,12 +150,22 @@ public class ExecuteRollOut {
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
                 targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
-                // java.security.KeyStoreException: Key protection  algorithm not found: java.lang.NullPointerException
-                targetKeyStore.setKeyEntry(alias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                if(keystoreAlias != null && !keystoreAlias.isEmpty()) {
+                    targetKeyStore.setKeyEntry(keystoreAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                } else {
+                    targetKeyStore.setKeyEntry(alias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                }
+                targetKeyStore.store(new FileOutputStream(new File(targetKeystore)), targetKeystorePasswd.toCharArray());
+
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
                 targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
-                targetTrustStore.setCertificateEntry(alias, rootCaCertificate);
+                if (truststoreAlias != null && !truststoreAlias.isEmpty()) {
+                    targetTrustStore.setCertificateEntry(truststoreAlias, rootCaCertificate);
+                } else {
+                    targetTrustStore.setCertificateEntry(alias, rootCaCertificate);
+                }
+                targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
             }
         } catch (CertificateException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             System.out.println(e.toString());
@@ -227,6 +248,9 @@ public class ExecuteRollOut {
         System.out.printf("  %-29s | %s%n", TRG_TRUSTSTORE, "Truststore where the trusted ca certificate should be stored.");
         System.out.printf("  %-29s | %s%n", TRG_TRUSTSTORE_TYPE, "Type of the truststore to store to. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s | %s%n", TRG_TRUSTSTORE_PASS, "Password for the truststore to store to.");
+        System.out.printf("  %-29s | %s%n", ALIAS, "Alias used for the stored entries in both, target keystore and truststore. If differnet aliases should be used, use keystoreAlias and TruststoreAlias instead.");
+        System.out.printf("  %-29s | %s%n", KS_ALIAS, "Alias used to store entries in the target keystore.");
+        System.out.printf("  %-29s | %s%n", TS_ALIAS, "Alias used to store entries in the target truststore.");
         System.out.println();
     }
 
