@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * Order Template Filter
  * <p>
- * The filter for the list of order template for scheduling orders to JobScheduler
+ * The filter for the list of order template for scheduling orders to Controller
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
