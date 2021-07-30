@@ -22,6 +22,7 @@ import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -297,10 +298,8 @@ public class JsonSerializer {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    for (Branch branch : fl.getBranches()) {
-                        if (branch.getWorkflow() != null) {
-                            cleanInventoryInstructions(branch.getWorkflow().getInstructions());
-                        }
+                    if (fl.getWorkflow() != null) {
+                        cleanInventoryInstructions(fl.getWorkflow().getInstructions());
                     }
                     break;
                 case FORK:
@@ -365,10 +364,8 @@ public class JsonSerializer {
                     break;
                 case FORKLIST:
                     com.sos.sign.model.instruction.ForkList fl = inst.cast();
-                    for (com.sos.sign.model.workflow.Branch branch : fl.getBranches()) {
-                        if (branch.getWorkflow() != null) {
-                            cleanSignedInstructions(branch.getWorkflow().getInstructions());
-                        }
+                    if (fl.getWorkflow() != null) {
+                        cleanSignedInstructions(fl.getWorkflow().getInstructions());
                     }
                     break;
                 case IF:

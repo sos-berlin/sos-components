@@ -1,12 +1,10 @@
 
 package com.sos.sign.model.instruction;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.sign.model.workflow.Branch;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "children",
     "childToArguments",
-    "branches"
+    "workflow"
 })
 public class ForkList
     extends Instruction
@@ -33,12 +31,14 @@ public class ForkList
     @JsonProperty("childToArguments")
     private String childToArguments;
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("branches")
-    private List<Branch> branches = null;
+    @JsonProperty("workflow")
+    private Instructions workflow;
 
     /**
      * No args constructor for use in serialization
@@ -49,15 +49,16 @@ public class ForkList
 
     /**
      * 
+     * @param workflow
      * @param children
-     * @param branches
+     * @param tYPE
      * @param childToArguments
      */
-    public ForkList(String children, String childToArguments, List<Branch> branches) {
-        super();
+    public ForkList(String children, String childToArguments, Instructions workflow, InstructionType tYPE) {
+        super(tYPE);
         this.children = children;
         this.childToArguments = childToArguments;
-        this.branches = branches;
+        this.workflow = workflow;
     }
 
     @JsonProperty("children")
@@ -81,33 +82,37 @@ public class ForkList
     }
 
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("branches")
-    public List<Branch> getBranches() {
-        return branches;
+    @JsonProperty("workflow")
+    public Instructions getWorkflow() {
+        return workflow;
     }
 
     /**
+     * instructions
+     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("branches")
-    public void setBranches(List<Branch> branches) {
-        this.branches = branches;
+    @JsonProperty("workflow")
+    public void setWorkflow(Instructions workflow) {
+        this.workflow = workflow;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToArguments", childToArguments).append("branches", branches).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToArguments", childToArguments).append("workflow", workflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(branches).append(children).append(childToArguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflow).append(children).append(childToArguments).toHashCode();
     }
 
     @Override
@@ -119,7 +124,7 @@ public class ForkList
             return false;
         }
         ForkList rhs = ((ForkList) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(branches, rhs.branches).append(children, rhs.children).append(childToArguments, rhs.childToArguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflow, rhs.workflow).append(children, rhs.children).append(childToArguments, rhs.childToArguments).isEquals();
     }
 
 }

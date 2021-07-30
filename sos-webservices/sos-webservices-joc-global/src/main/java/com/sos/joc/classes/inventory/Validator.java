@@ -357,14 +357,8 @@ public class Validator {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    int branchInx = 0;
-                    String branchPos = instPosition + "branches";
-                    for (Branch branch : fl.getBranches()) {
-                        String branchInstPosition = branchPos + "[" + branchPos + "].";
-                        if (branch.getWorkflow() != null) {
-                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
-                        }
-                        branchInx++;
+                    if (fl.getWorkflow() != null) {
+                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation, labels);
                     }
                     break;
                 case IF:

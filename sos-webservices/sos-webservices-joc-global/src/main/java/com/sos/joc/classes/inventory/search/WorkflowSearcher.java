@@ -436,15 +436,11 @@ public class WorkflowSearcher {
                 break;
             case FORKLIST:
                 ForkList fl = in.cast();
-                if (fl.getBranches() != null) {
-                    for (Branch branch : fl.getBranches()) {
-                        if (branch.getWorkflow() != null) {
-                            String position = getPosition(parentPosition, index, "fork+" + branch.getId());
-                            result.add(new WorkflowInstruction<ForkList>(position, fl));
+                if (fl.getWorkflow() != null) {
+                    String position = getPosition(parentPosition, index, "forklist");
+                    result.add(new WorkflowInstruction<ForkList>(position, fl));
 
-                            handleInstructions(result, branch.getWorkflow().getInstructions(), position);
-                        }
-                    }
+                    handleInstructions(result, fl.getWorkflow().getInstructions(), position);
                 }
                 break;
             case EXECUTE_NAMED:

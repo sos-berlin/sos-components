@@ -124,9 +124,7 @@ public class WorkflowsHelper {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    for (Branch b : fl.getBranches()) {
-                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
-                    }
+                    setWorkflowPositions(extendArray(pos, "forklist"), fl.getWorkflow().getInstructions());
                     break;
                 case IF:
                     IfElse ie = inst.cast();
@@ -217,9 +215,7 @@ public class WorkflowsHelper {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    for (Branch b : fl.getBranches()) {
-                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet);
-                    }
+                    extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet);
                     break;
                 case IF:
                     IfElse ie = inst.cast();
