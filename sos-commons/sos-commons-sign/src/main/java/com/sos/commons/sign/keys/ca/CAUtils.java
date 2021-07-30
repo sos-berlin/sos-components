@@ -14,6 +14,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
+import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -117,6 +119,8 @@ public abstract class CAUtils {
       certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
       certgen.addExtension(Extension.keyUsage, false, 
               new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
+      certgen.addExtension(MiscObjectIdentifiers.netscapeCertType, false, 
+              new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.sslServer | NetscapeCertType.smime));
       certgen.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
 
       ContentSigner signer = null;
