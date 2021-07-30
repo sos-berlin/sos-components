@@ -215,12 +215,14 @@ public class HistoryEventsTest {
                 List<?> positions = position.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
-                    String branchId = c.branchId().string();
-                    // copy
-                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                    childPositions.add(branchId);
-                    childPositions.add(0);
-                    childs.add(new FatForkedChild(c.orderId().string(), branchId, wi.createNewPosition(childPositions)));
+                    if (c.branchId().isPresent()) {
+                        String branchId = c.branchId().get().string();
+                        // copy
+                        List<Object> childPositions = positions.stream().collect(Collectors.toList());
+                        childPositions.add(branchId);
+                        childPositions.add(0);
+                        childs.add(new FatForkedChild(c.orderId().string(), branchId, wi.createNewPosition(childPositions)));
+                    }
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, order.getArguments(), childs);
