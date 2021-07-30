@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "totalRunningTime",
     "readyTime",
-    "shutdownTime"
+    "lastKnownTime"
 })
 public class ControllerItemEntryItem {
 
@@ -50,9 +50,9 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
+    @JsonProperty("lastKnownTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date shutdownTime;
+    private Date lastKnownTime;
 
     /**
      * non negative long
@@ -108,9 +108,9 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
-    public Date getShutdownTime() {
-        return shutdownTime;
+    @JsonProperty("lastKnownTime")
+    public Date getLastKnownTime() {
+        return lastKnownTime;
     }
 
     /**
@@ -119,19 +119,19 @@ public class ControllerItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("shutdownTime")
-    public void setShutdownTime(Date shutdownTime) {
-        this.shutdownTime = shutdownTime;
+    @JsonProperty("lastKnownTime")
+    public void setLastKnownTime(Date lastKnownTime) {
+        this.lastKnownTime = lastKnownTime;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("shutdownTime", shutdownTime).toString();
+        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("lastKnownTime", lastKnownTime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(readyTime).append(totalRunningTime).append(shutdownTime).toHashCode();
+        return new HashCodeBuilder().append(lastKnownTime).append(readyTime).append(totalRunningTime).toHashCode();
     }
 
     @Override
@@ -143,7 +143,7 @@ public class ControllerItemEntryItem {
             return false;
         }
         ControllerItemEntryItem rhs = ((ControllerItemEntryItem) other);
-        return new EqualsBuilder().append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).append(shutdownTime, rhs.shutdownTime).isEquals();
+        return new EqualsBuilder().append(lastKnownTime, rhs.lastKnownTime).append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).isEquals();
     }
 
 }

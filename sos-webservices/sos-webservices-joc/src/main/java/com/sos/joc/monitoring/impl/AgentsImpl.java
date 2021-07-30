@@ -14,6 +14,7 @@ import javax.ws.rs.Path;
 import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -75,7 +76,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
             AgentsAnswer answer = new AgentsAnswer();
             answer.setDeliveryDate(new Date());
-            answer.setControllers(getControllers(map));
+            answer.setControllers(getControllers(dbLayer, map, in.getDateFrom() != null, in.getDateTo() != null));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -87,35 +88,107 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         }
     }
 
-    private List<AgentsControllerItem> getControllers(Map<String, Map<String, List<DBItemHistoryAgent>>> map) {
+    private List<AgentsControllerItem> getControllers(MonitoringDBLayer dbLayer, Map<String, Map<String, List<DBItemHistoryAgent>>> map,
+            boolean getPrevious, boolean getLast) throws SOSHibernateException {
+
+        Map<String, Map<String, Long>> lastAgents = null;
+        if (getLast) {
+            lastAgents = getLastAgents(dbLayer);
+        }
+
         final List<AgentsControllerItem> result = new ArrayList<>();
-        map.entrySet().stream().forEach(e -> {
+        for (Map.Entry<String, Map<String, List<DBItemHistoryAgent>>> e : map.entrySet()) {
             AgentsControllerItem controller = new AgentsControllerItem();
             controller.setControllerId(e.getKey());
 
-            e.getValue().entrySet().stream().forEach(a -> {
+            for (Map.Entry<String, List<DBItemHistoryAgent>> a : e.getValue().entrySet()) {
                 AgentItem agent = new AgentItem();
                 agent.setAgentId(a.getKey());
 
-                for (int i = 0; i < a.getValue().size(); i++) {
+                int size = a.getValue().size();
+                long totalRunningTime = 0;
+                int lastIndex = size - 1;
+                for (int i = 0; i < size; i++) {
                     DBItemHistoryAgent item = a.getValue().get(i);
                     if (i == 0) {
                         agent.setUrl(item.getUri());
+                        if (getPrevious) {
+                            setPreviousEntry(dbLayer, item, agent);
+                        }
+                    }
+                    Date lastKnownTime = getLastKnownTime(item);
+                    if (i == lastIndex) {
+                        if (item.getShutdownTime() == null) {
+                            if (lastAgents == null) {
+                                lastKnownTime = null;
+                            } else {
+                                Map<String, Long> last = lastAgents.get(item.getControllerId());
+                                if (last != null && last.containsKey(item.getAgentId())) {
+                                    if (last.get(item.getAgentId()).equals(item.getReadyEventId())) {
+                                        lastKnownTime = null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (lastKnownTime != null) {
+                        long diff = lastKnownTime.getTime() - item.getReadyTime().getTime();
+                        totalRunningTime += diff;
                     }
                     AgentItemEntryItem entry = new AgentItemEntryItem();
                     entry.setReadyTime(item.getReadyTime());
-                    entry.setCouplingFailedTime(item.getCouplingFailedTime());
-                    entry.setCouplingFailedMessage(item.getCouplingFailedMessage());
-
+                    entry.setLastKnownTime(lastKnownTime);
+                    entry.setTotalRunningTime(totalRunningTime);
                     agent.getEntries().add(entry);
                 }
 
                 controller.getAgents().add(agent);
-            });
+            }
 
             result.add(controller);
-        });
+        }
         return result;
+    }
+
+    private Map<String, Map<String, Long>> getLastAgents(MonitoringDBLayer dbLayer) throws SOSHibernateException {
+        Map<String, Map<String, Long>> result = new HashMap<>();
+        List<Object[]> l = dbLayer.getLastAgents();
+        for (Object[] o : l) {
+            result.put(o[1].toString(), Collections.singletonMap(o[2].toString(), (Long) o[0]));
+        }
+        return result;
+    }
+
+    private void setPreviousEntry(MonitoringDBLayer dbLayer, DBItemHistoryAgent item, AgentItem agent) {
+        try {
+            DBItemHistoryAgent previousItem = dbLayer.getPreviousAgent(item.getControllerId(), item.getAgentId(), item.getReadyEventId());
+            if (previousItem != null) {
+                AgentItemEntryItem previousEntry = new AgentItemEntryItem();
+                previousEntry.setReadyTime(previousItem.getReadyTime());
+                previousEntry.setLastKnownTime(getLastKnownTime(previousItem));
+                previousEntry.setTotalRunningTime(previousEntry.getLastKnownTime().getTime() - previousEntry.getReadyTime().getTime());
+                agent.setPreviousEntry(previousEntry);
+            }
+        } catch (SOSHibernateException e1) {
+
+        }
+    }
+
+    private Date getLastKnownTime(DBItemHistoryAgent item) {
+        if (item.getShutdownTime() != null) {
+            return item.getShutdownTime();
+        } else {
+            if (item.getCouplingFailedTime() != null && item.getLastKnownTime() != null) {
+                return item.getCouplingFailedTime().getTime() > item.getLastKnownTime().getTime() ? item.getCouplingFailedTime() : item
+                        .getLastKnownTime();
+            } else if (item.getCouplingFailedTime() != null) {
+                return item.getCouplingFailedTime();
+            } else if (item.getLastKnownTime() != null) {
+                return item.getLastKnownTime();
+            } else {
+                return item.getReadyTime();
+            }
+        }
     }
 
     private boolean getPermitted(String accessToken, AgentsFilter in) {

@@ -572,7 +572,8 @@ public class HistoryModel {
     }
 
     private void setPreviousControllerLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryController current) throws Exception {
-        DBItemHistoryController previous = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
+        DBItemHistoryController previous = dbLayer
+                .getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
                 .getReadyEventId());
         if (previous != null && previous.getShutdownTime() == null) {
             Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), null);

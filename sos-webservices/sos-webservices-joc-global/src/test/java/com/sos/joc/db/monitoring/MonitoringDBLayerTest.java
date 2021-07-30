@@ -76,8 +76,10 @@ public class MonitoringDBLayerTest {
             session = factory.openStatelessSession();
 
             String searchControllerId = null;
+            Date searchDateFrom = null;
+            Date searchDateTo = null;
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            sr = dbLayer.getControllers(searchControllerId);
+            sr = dbLayer.getControllers(searchControllerId, searchDateFrom, searchDateTo);
             int size = 0;
 
             Map<String, List<DBItemHistoryController>> map = new HashMap<>();

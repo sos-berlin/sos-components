@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "url",
+    "previousEntry",
     "entries"
 })
 public class ControllerItem {
@@ -42,6 +43,14 @@ public class ControllerItem {
      */
     @JsonProperty("url")
     private String url;
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    private ControllerItemEntryItem previousEntry;
     /**
      * 
      * (Required)
@@ -97,6 +106,28 @@ public class ControllerItem {
     }
 
     /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    public ControllerItemEntryItem getPreviousEntry() {
+        return previousEntry;
+    }
+
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    public void setPreviousEntry(ControllerItemEntryItem previousEntry) {
+        this.previousEntry = previousEntry;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -118,12 +149,12 @@ public class ControllerItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("entries", entries).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("url", url).append("previousEntry", previousEntry).append("entries", entries).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(entries).append(controllerId).append(url).toHashCode();
+        return new HashCodeBuilder().append(entries).append(controllerId).append(url).append(previousEntry).toHashCode();
     }
 
     @Override
@@ -135,7 +166,7 @@ public class ControllerItem {
             return false;
         }
         ControllerItem rhs = ((ControllerItem) other);
-        return new EqualsBuilder().append(entries, rhs.entries).append(controllerId, rhs.controllerId).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(entries, rhs.entries).append(controllerId, rhs.controllerId).append(url, rhs.url).append(previousEntry, rhs.previousEntry).isEquals();
     }
 
 }

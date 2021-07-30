@@ -19,12 +19,21 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "totalRunningTime",
     "readyTime",
-    "couplingFailedTime",
-    "couplingFailedMessage"
+    "lastKnownTime"
 })
 public class AgentItemEntryItem {
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("totalRunningTime")
+    private Long totalRunningTime;
     /**
      * timestamp
      * <p>
@@ -41,11 +50,33 @@ public class AgentItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("couplingFailedTime")
+    @JsonProperty("lastKnownTime")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date couplingFailedTime;
-    @JsonProperty("couplingFailedMessage")
-    private String couplingFailedMessage;
+    private Date lastKnownTime;
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("totalRunningTime")
+    public Long getTotalRunningTime() {
+        return totalRunningTime;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("totalRunningTime")
+    public void setTotalRunningTime(Long totalRunningTime) {
+        this.totalRunningTime = totalRunningTime;
+    }
 
     /**
      * timestamp
@@ -77,9 +108,9 @@ public class AgentItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("couplingFailedTime")
-    public Date getCouplingFailedTime() {
-        return couplingFailedTime;
+    @JsonProperty("lastKnownTime")
+    public Date getLastKnownTime() {
+        return lastKnownTime;
     }
 
     /**
@@ -88,29 +119,19 @@ public class AgentItemEntryItem {
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("couplingFailedTime")
-    public void setCouplingFailedTime(Date couplingFailedTime) {
-        this.couplingFailedTime = couplingFailedTime;
-    }
-
-    @JsonProperty("couplingFailedMessage")
-    public String getCouplingFailedMessage() {
-        return couplingFailedMessage;
-    }
-
-    @JsonProperty("couplingFailedMessage")
-    public void setCouplingFailedMessage(String couplingFailedMessage) {
-        this.couplingFailedMessage = couplingFailedMessage;
+    @JsonProperty("lastKnownTime")
+    public void setLastKnownTime(Date lastKnownTime) {
+        this.lastKnownTime = lastKnownTime;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("readyTime", readyTime).append("couplingFailedTime", couplingFailedTime).append("couplingFailedMessage", couplingFailedMessage).toString();
+        return new ToStringBuilder(this).append("totalRunningTime", totalRunningTime).append("readyTime", readyTime).append("lastKnownTime", lastKnownTime).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(readyTime).append(couplingFailedTime).append(couplingFailedMessage).toHashCode();
+        return new HashCodeBuilder().append(lastKnownTime).append(readyTime).append(totalRunningTime).toHashCode();
     }
 
     @Override
@@ -122,7 +143,7 @@ public class AgentItemEntryItem {
             return false;
         }
         AgentItemEntryItem rhs = ((AgentItemEntryItem) other);
-        return new EqualsBuilder().append(readyTime, rhs.readyTime).append(couplingFailedTime, rhs.couplingFailedTime).append(couplingFailedMessage, rhs.couplingFailedMessage).isEquals();
+        return new EqualsBuilder().append(lastKnownTime, rhs.lastKnownTime).append(readyTime, rhs.readyTime).append(totalRunningTime, rhs.totalRunningTime).isEquals();
     }
 
 }

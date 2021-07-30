@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "agentId",
     "url",
+    "previousEntry",
     "entries"
 })
 public class AgentItem {
@@ -43,6 +44,14 @@ public class AgentItem {
      */
     @JsonProperty("url")
     private String url;
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    private AgentItemEntryItem previousEntry;
     /**
      * 
      * (Required)
@@ -100,6 +109,28 @@ public class AgentItem {
     }
 
     /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    public AgentItemEntryItem getPreviousEntry() {
+        return previousEntry;
+    }
+
+    /**
+     * order object in history collection
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("previousEntry")
+    public void setPreviousEntry(AgentItemEntryItem previousEntry) {
+        this.previousEntry = previousEntry;
+    }
+
+    /**
      * 
      * (Required)
      * 
@@ -121,12 +152,12 @@ public class AgentItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("url", url).append("entries", entries).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("url", url).append("previousEntry", previousEntry).append("entries", entries).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(entries).append(url).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(entries).append(url).append(previousEntry).toHashCode();
     }
 
     @Override
@@ -138,7 +169,7 @@ public class AgentItem {
             return false;
         }
         AgentItem rhs = ((AgentItem) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(entries, rhs.entries).append(url, rhs.url).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(entries, rhs.entries).append(url, rhs.url).append(previousEntry, rhs.previousEntry).isEquals();
     }
 
 }
