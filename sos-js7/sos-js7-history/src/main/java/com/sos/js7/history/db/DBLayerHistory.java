@@ -75,13 +75,13 @@ public class DBLayerHistory {
     }
 
     public String getLastControllerTimezone(String controllerId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select timezone from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-        hql.append(" where readyEventId = ");
+        StringBuilder hql = new StringBuilder("select timezone from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId= ");
         hql.append("(");
         hql.append("select max(readyEventId) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-        hql.append(" where controllerId=:controllerId");
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("where controllerId=:controllerId");
         hql.append(")");
 
         Query<String> query = session.createQuery(hql.toString());
@@ -89,32 +89,68 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryController getControllerByShutDownEventId(String controllerId, Long shutDownEventId) throws SOSHibernateException {
+    public DBItemHistoryController getControllerByNextEventId(String controllerId, Long nextEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
-        hql.append("where readyEventId = ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId = ");
         hql.append("(");
         hql.append("select max(readyEventId) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER);
-        hql.append(" where controllerId=:controllerId ");
-        hql.append(" and readyEventId < :shutDownEventId ");
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId < :nextEventId ");
         hql.append(")");
 
         Query<DBItemHistoryController> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
-        query.setParameter("shutDownEventId", shutDownEventId);
+        query.setParameter("nextEventId", nextEventId);
 
+        return session.getSingleResult(query);
+    }
+
+    public Object[] getLastExecution(String controllerId, Long fromEventId, Long toEventId, String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select startTime, endTime from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where id=");
+        hql.append("(");
+        hql.append("select max(id) from ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and startEventId > :fromEventId ");
+        hql.append("and startEventId < :toEventId ");
+        if (agentId != null) {
+            hql.append("and agentId=:agentId ");
+        }
+        hql.append(")");
+
+        Query<Object[]> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("fromEventId", fromEventId);
+        query.setParameter("toEventId", toEventId);
+        if (agentId != null) {
+            query.setParameter("agentId", agentId);
+        }
+        return session.getSingleResult(query);
+    }
+
+    public DBItemHistoryController getControllerByReadyEventId(String controllerId, Long readyEventId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId=:readyEventId");
+
+        Query<DBItemHistoryController> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("readyEventId", readyEventId);
         return session.getSingleResult(query);
     }
 
     public DBItemHistoryAgent getLastAgent(String controllerId, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" where readyEventId = ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId= ");
         hql.append("(");
         hql.append("select max(readyEventId) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" where controllerId=:controllerId ");
-        hql.append(" and agentId=:agentId");
+        hql.append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and agentId=:agentId");
         hql.append(")");
 
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
@@ -123,41 +159,42 @@ public class DBLayerHistory {
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgentByCouplingFailedEventId(String controllerId, String agentId, Long couplingFailedEventId)
-            throws SOSHibernateException {
+    public DBItemHistoryAgent getAgentByNextEventId(String controllerId, String agentId, Long nextEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
-        hql.append("where readyEventId = ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId= ");
         hql.append("(");
         hql.append("select max(readyEventId) from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENT);
-        hql.append(" where controllerId=:controllerId ");
-        hql.append(" and agentId=:agentId ");
-        hql.append(" and readyEventId < :couplingFailedEventId ");
+        hql.append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and agentId=:agentId ");
+        hql.append("and readyEventId < :nextEventId ");
         hql.append(")");
 
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("agentId", agentId);
-        query.setParameter("couplingFailedEventId", couplingFailedEventId);
+        query.setParameter("nextEventId", nextEventId);
 
         return session.getSingleResult(query);
     }
 
-    public DBItemHistoryAgent getAgentByReadyEventId(Long readyEventId) throws SOSHibernateException {
+    public DBItemHistoryAgent getAgentByReadyEventId(String controllerId, Long readyEventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
-        hql.append("where readyEventId =:readyEventId");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and readyEventId=:readyEventId");
 
         Query<DBItemHistoryAgent> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
         query.setParameter("readyEventId", readyEventId);
 
         return session.getSingleResult(query);
     }
 
     public DBItemInventoryAgentInstance getAgentInstance(String controllerId, String agentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ");
-        hql.append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-        hql.append(" where controllerId=:controllerId");
-        hql.append(" and agentId=:agentId");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and agentId=:agentId");
 
         Query<DBItemInventoryAgentInstance> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
@@ -239,9 +276,8 @@ public class DBLayerHistory {
     }
 
     public int updateOrderOnResumed(Long id, Integer state, Date stateTime) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-        hql.append(" set severity=:severity ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("set severity=:severity ");
         hql.append(",state=:state ");
         hql.append(",stateTime=:stateTime ");
         hql.append(",hasStates=true ");
@@ -255,12 +291,11 @@ public class DBLayerHistory {
     }
 
     public int updateOrderOnFork(Long id, Integer state, Date stateTime) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-        hql.append(" set hasChildren=true");
-        hql.append(", severity=:severity ");
-        hql.append(", state=:state ");
-        hql.append(", stateTime=:stateTime ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("set hasChildren=true");
+        hql.append(",severity=:severity ");
+        hql.append(",state=:state ");
+        hql.append(",stateTime=:stateTime ");
         hql.append("where id=:id");
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
         query.setParameter("id", id);
@@ -271,9 +306,8 @@ public class DBLayerHistory {
     }
 
     public int updateOrderOnOrderStep(Long id, Long currentHistoryOrderStepId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-        hql.append(" set currentHistoryOrderStepId=:currentHistoryOrderStepId ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("set currentHistoryOrderStepId=:currentHistoryOrderStepId ");
         hql.append(",modified=:modified ");
         hql.append("where id=:id");
 
@@ -287,9 +321,8 @@ public class DBLayerHistory {
     public int setOrderStepEnd(Long id, Date endTime, Long endEventId, String endParameters, Integer returnCode, Integer severity, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEP);
-        hql.append(" set endTime=:endTime ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append("set endTime=:endTime ");
         hql.append(",endEventId=:endEventId ");
         hql.append(",endParameters=:endParameters ");
         hql.append(",returnCode=:returnCode ");
@@ -321,27 +354,25 @@ public class DBLayerHistory {
     public int setOrderEnd(Long id, Date endTime, String endWorkflowPosition, Long endHistoryOrderStepId, Long endEventId, Integer state,
             Date stateTime, boolean hasStates, boolean error, String errorState, String errorReason, Integer errorReturnCode, String errorCode,
             String errorText) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER);
-
-        hql.append(" set modified=:modified");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append("set modified=:modified ");
         if (endTime != null) {
-            hql.append(", endTime=:endTime");
-            hql.append(", endWorkflowPosition=:endWorkflowPosition ");
-            hql.append(", endHistoryOrderStepId=:endHistoryOrderStepId ");
-            hql.append(", endEventId=:endEventId ");
+            hql.append(",endTime=:endTime");
+            hql.append(",endWorkflowPosition=:endWorkflowPosition ");
+            hql.append(",endHistoryOrderStepId=:endHistoryOrderStepId ");
+            hql.append(",endEventId=:endEventId ");
         }
 
-        hql.append(", severity=:severity ");
-        hql.append(", state=:state ");
-        hql.append(", stateTime=:stateTime ");
-        hql.append(", hasStates=:hasStates ");
-        hql.append(", error=:error ");
-        hql.append(", errorState=:errorState ");
-        hql.append(", errorReason=:errorReason ");
-        hql.append(", errorReturnCode=:errorReturnCode ");
-        hql.append(", errorCode=:errorCode ");
-        hql.append(", errorText=:errorText ");
+        hql.append(",severity=:severity ");
+        hql.append(",state=:state ");
+        hql.append(",stateTime=:stateTime ");
+        hql.append(",hasStates=:hasStates ");
+        hql.append(",error=:error ");
+        hql.append(",errorState=:errorState ");
+        hql.append(",errorReason=:errorReason ");
+        hql.append(",errorReturnCode=:errorReturnCode ");
+        hql.append(",errorCode=:errorCode ");
+        hql.append(",errorText=:errorText ");
         hql.append("where id=:id");
 
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
@@ -384,8 +415,7 @@ public class DBLayerHistory {
     }
 
     public Object[] getDeployedWorkflow(String controllerId, String workflowName, String workflowVersionId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select path,invContent from ");
-        hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
+        StringBuilder hql = new StringBuilder("select path,invContent from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
         hql.append("where type=:type ");
         hql.append("and controllerId=:controllerId ");
         hql.append("and name=:workflowName ");

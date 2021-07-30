@@ -20,6 +20,7 @@ public class DBItemHistoryController extends DBItem {
     @Column(name = "[READY_EVENT_ID]", nullable = false)
     private Long readyEventId;
 
+    @Id
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
 
@@ -38,6 +39,9 @@ public class DBItemHistoryController extends DBItem {
 
     @Column(name = "[SHUTDOWN_TIME]", nullable = true)
     private Date shutdownTime;
+
+    @Column(name = "[LAST_KNOWN_TIME]", nullable = true)
+    private Date lastKnownTime;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -102,6 +106,14 @@ public class DBItemHistoryController extends DBItem {
 
     public void setShutdownTime(Date val) {
         shutdownTime = val;
+    }
+
+    public Date getLastKnownTime() {
+        return lastKnownTime;
+    }
+
+    public void setLastKnownTime(Date val) {
+        lastKnownTime = val;
     }
 
     public void setCreated(Date val) {

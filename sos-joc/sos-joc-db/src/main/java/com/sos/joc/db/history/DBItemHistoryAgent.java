@@ -20,6 +20,7 @@ public class DBItemHistoryAgent extends DBItem {
     @Column(name = "[READY_EVENT_ID]", nullable = false)
     private Long readyEventId;
 
+    @Id
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId; // TABLE_HISTORY_CONTROLLERS.CONTROLLER_ID
 
@@ -40,6 +41,12 @@ public class DBItemHistoryAgent extends DBItem {
 
     @Column(name = "[COUPLING_FAILED_MESSAGE]", nullable = true)
     private String couplingFailedMessage;
+
+    @Column(name = "[SHUTDOWN_TIME]", nullable = true)
+    private Date shutdownTime;
+
+    @Column(name = "[LAST_KNOWN_TIME]", nullable = true)
+    private Date lastKnownTime;
 
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
@@ -109,6 +116,22 @@ public class DBItemHistoryAgent extends DBItem {
 
     public void setCouplingFailedMessage(String val) {
         couplingFailedMessage = normalizeValue(val, 500);
+    }
+
+    public Date getShutdownTime() {
+        return shutdownTime;
+    }
+
+    public void setShutdownTime(Date val) {
+        shutdownTime = val;
+    }
+
+    public Date getLastKnownTime() {
+        return lastKnownTime;
+    }
+
+    public void setLastKnownTime(Date val) {
+        lastKnownTime = val;
     }
 
     public void setCreated(Date val) {

@@ -85,6 +85,8 @@ import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
 import com.sos.js7.history.controller.yade.YadeHandler;
 import com.sos.js7.history.db.DBLayerHistory;
 import com.sos.js7.history.helper.CachedAgent;
+import com.sos.js7.history.helper.CachedAgentCouplingFailed;
+import com.sos.js7.history.helper.CachedAgentCouplingFailed.AgentCouplingFailed;
 import com.sos.js7.history.helper.CachedOrder;
 import com.sos.js7.history.helper.CachedOrderStep;
 import com.sos.js7.history.helper.CachedWorkflow;
@@ -123,6 +125,7 @@ public class HistoryModel {
     private Map<String, CachedOrderStep> cachedOrderSteps;
     private Map<String, CachedAgent> cachedAgents;
     private Map<String, CachedWorkflow> cachedWorkflows;
+    private CachedAgentCouplingFailed cachedAgentsCouplingFailed;
 
     private static enum CacheType {
         order, orderStep
@@ -255,13 +258,13 @@ public class HistoryModel {
                         controllerShutDown(dbLayer, (FatEventControllerShutDown) entry);
                         counter.getController().addShutdown();
                         break;
-                    case AgentCouplingFailed:
-                        agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
-                        counter.getAgent().addCouplingFailed();
-                        break;
                     case AgentReady:
                         agentReady(dbLayer, (FatEventAgentReady) entry);
                         counter.getAgent().addReady();
+                        break;
+                    case AgentCouplingFailed:
+                        agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
+                        counter.getAgent().addCouplingFailed();
                         break;
                     case OrderStarted:
                         hob = orderStarted(dbLayer, (FatEventOrderStarted) entry);
@@ -507,6 +510,7 @@ public class HistoryModel {
         cachedOrderSteps = new HashMap<>();
         cachedAgents = new HashMap<>();
         cachedWorkflows = new HashMap<>();
+        cachedAgentsCouplingFailed = new CachedAgentCouplingFailed();
     }
 
     public void close() {
@@ -544,11 +548,13 @@ public class HistoryModel {
             item.setUri(controllerConfiguration.getCurrent().getUri());
             item.setTimezone(entry.getTimezone());
             item.setReadyTime(entry.getEventDatetime());
+            item.setLastKnownTime(item.getReadyTime());
             item.setTotalRunningTime(entry.getTotalRunningTime());
             item.setCreated(new Date());
             dbLayer.getSession().save(item);
 
             controllerTimezone = item.getTimezone();
+            setPreviousControllerLastKnownTime(dbLayer, item);
             tryStoreCurrentState(dbLayer, entry.getEventId());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
@@ -565,14 +571,42 @@ public class HistoryModel {
         }
     }
 
+    private void setPreviousControllerLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryController current) throws Exception {
+        DBItemHistoryController previous = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
+                .getReadyEventId());
+        if (previous != null && previous.getShutdownTime() == null) {
+            Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), null);
+            if (knownTime != null) {
+                previous.setLastKnownTime(knownTime);
+                dbLayer.getSession().update(previous);
+            }
+        }
+    }
+
+    private Date getLastKnownTime(DBLayerHistory dbLayer, Date itemLastKnownTime, Long fromEventId, Long toEventId, String agentId) throws Exception {
+        Object[] result = dbLayer.getLastExecution(controllerConfiguration.getCurrent().getId(), fromEventId, toEventId, agentId);
+        if (result != null) {
+            Date startTime = (Date) result[0];
+            Date endTime = (Date) result[1];
+            Date knownTime = endTime == null ? startTime : endTime;
+            if (itemLastKnownTime == null) {
+                return knownTime;
+            } else if (knownTime.getTime() > itemLastKnownTime.getTime()) {
+                return knownTime;
+            }
+        }
+        return null;
+    }
+
     private void controllerShutDown(DBLayerHistory dbLayer, FatEventControllerShutDown entry) throws Exception {
-        DBItemHistoryController item = dbLayer.getControllerByShutDownEventId(controllerConfiguration.getCurrent().getId(), entry.getEventId());
+        DBItemHistoryController item = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), entry.getEventId());
         if (item == null) {
             LOGGER.warn(String.format("[%s][%s][%s][skip]not found controller entry with the ready time < %s", identifier, entry.getType(),
                     controllerConfiguration.getCurrent().getId(), getDateAsString(entry.getEventDatetime())));
         } else {
             if (item.getShutdownTime() == null) {
                 item.setShutdownTime(entry.getEventDatetime());
+                item.setLastKnownTime(item.getShutdownTime());
                 dbLayer.getSession().update(item);
             } else {
                 LOGGER.info(String.format("[%s][%s][%s][skip]found with the ready time < %s and shutdown time=%s", identifier, entry.getType(),
@@ -600,8 +634,7 @@ public class HistoryModel {
     }
 
     private void agentCouplingFailed(DBLayerHistory dbLayer, FatEventAgentCouplingFailed entry) throws Exception {
-        DBItemHistoryAgent item = dbLayer.getAgentByCouplingFailedEventId(controllerConfiguration.getCurrent().getId(), entry.getId(), entry
-                .getEventId());
+        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), entry.getId(), entry.getEventId());
         if (item == null) {
             LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, entry.getType(), entry.getId(),
                     getDateAsString(entry.getEventDatetime())));
@@ -609,12 +642,11 @@ public class HistoryModel {
             if (item.getCouplingFailedTime() == null) {
                 item.setCouplingFailedMessage(entry.getMessage());
                 item.setCouplingFailedTime(entry.getEventDatetime());
+                item.setLastKnownTime(item.getCouplingFailedTime());
+                tmpAgentShuttingDown(item);
                 dbLayer.getSession().update(item);
             } else {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s][skip]found with the ready time < %s and coupling failed time=%s", identifier, entry
-                            .getType(), entry.getId(), getDateAsString(entry.getEventDatetime()), getDateAsString(item.getCouplingFailedTime())));
-                }
+                cachedAgentsCouplingFailed.add(item.getAgentId(), entry.getEventId(), entry.getMessage());
             }
         }
         tryStoreCurrentState(dbLayer, entry.getEventId());
@@ -632,10 +664,12 @@ public class HistoryModel {
             item.setTimezone(entry.getTimezone());
             item.setReadyTime(entry.getEventDatetime());
             item.setCouplingFailedTime(null);
+            item.setLastKnownTime(item.getReadyTime());
             item.setCreated(new Date());
 
             dbLayer.getSession().save(item);
 
+            setPreviousAgentLastKnownTime(dbLayer, item);
             tryStoreCurrentState(dbLayer, entry.getEventId());
             addCachedAgent(item.getAgentId(), new CachedAgent(item));
         } catch (SOSHibernateObjectOperationException e) {
@@ -647,6 +681,45 @@ public class HistoryModel {
             LOGGER.warn(String.format("[%s][ConstraintViolation]readyEventId=%s", identifier, entry.getEventId()));
             LOGGER.warn(String.format("[%s][%s][%s]%s", identifier, entry.getType(), entry.getId(), e.toString()), e);
             addCachedAgentByReadyEventId(dbLayer, entry.getId(), entry.getEventId());
+        }
+    }
+
+    private void setPreviousAgentLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryAgent current) throws Exception {
+        DBItemHistoryAgent previous = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), current.getAgentId(), current
+                .getReadyEventId());
+        if (previous != null && previous.getShutdownTime() == null) {
+            boolean update = false;
+            Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), current
+                    .getAgentId());
+            if (knownTime != null) {
+                previous.setLastKnownTime(knownTime);
+                update = true;
+            }
+            AgentCouplingFailed cf = cachedAgentsCouplingFailed.getLast(current.getAgentId(), current.getReadyEventId());
+            if (cf != null) {
+                previous.setCouplingFailedTime(HistoryUtil.getEventIdAsDate(cf.getEventId()));
+                previous.setCouplingFailedMessage(cf.getMessage());
+
+                if (previous.getLastKnownTime() != null) {
+                    if (previous.getCouplingFailedTime().getTime() > previous.getLastKnownTime().getTime()) {
+                        previous.setLastKnownTime(previous.getCouplingFailedTime());
+                    }
+                }
+                tmpAgentShuttingDown(previous);
+                update = true;
+            }
+            if (update) {
+                dbLayer.getSession().update(previous);
+            }
+        }
+        cachedAgentsCouplingFailed.remove(current.getAgentId());
+    }
+
+    // tmp solution
+    private void tmpAgentShuttingDown(DBItemHistoryAgent item) {
+        if (item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().trim().equalsIgnoreCase("Shutting down")) {
+            item.setShutdownTime(item.getCouplingFailedTime());
+            item.setLastKnownTime(item.getShutdownTime());
         }
     }
 
@@ -1511,7 +1584,7 @@ public class HistoryModel {
     private CachedAgent addCachedAgentByReadyEventId(DBLayerHistory dbLayer, String agentId, Long readyEventId) {
         CachedAgent ca = null;
         try {
-            ca = new CachedAgent(dbLayer.getAgentByReadyEventId(readyEventId));
+            ca = new CachedAgent(dbLayer.getAgentByReadyEventId(controllerConfiguration.getCurrent().getId(), readyEventId));
         } catch (Throwable e) {
             ca = getCachedAgent(agentId);
         }
