@@ -19,7 +19,6 @@ public enum InstructionType {
     PROMPT("Prompt"),
     POST_NOTICE("PostNotice"),
     EXPECT_NOTICE("ExpectNotice"),
-    READ_NOTICE("ReadNotice"),
     IMPLICIT_END("ImplicitEnd");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();

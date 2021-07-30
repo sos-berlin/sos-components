@@ -252,9 +252,8 @@ public class WorkflowSearcher {
     
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<PostNotice>> getNoticeInstructions() {
-        return getInstructions(InstructionType.POST_NOTICE, InstructionType.READ_NOTICE).stream().map(l -> {
-            return (WorkflowInstruction<PostNotice>) l;
-        }).collect(Collectors.toList());
+        return getInstructions(InstructionType.POST_NOTICE, InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)
+                .collect(Collectors.toList());
     }
 
     public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
