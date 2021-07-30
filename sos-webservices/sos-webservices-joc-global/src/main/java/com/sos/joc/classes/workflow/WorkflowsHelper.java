@@ -17,6 +17,7 @@ import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.ImplicitEnd;
 import com.sos.inventory.model.instruction.Instruction;
@@ -121,6 +122,12 @@ public class WorkflowsHelper {
                         setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
                     }
                     break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    for (Branch b : fl.getBranches()) {
+                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                    }
+                    break;
                 case IF:
                     IfElse ie = inst.cast();
                     setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
@@ -205,6 +212,12 @@ public class WorkflowsHelper {
                 case FORK:
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
+                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet);
+                    }
+                    break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    for (Branch b : fl.getBranches()) {
                         extractImplicitEnds(b.getWorkflow().getInstructions(), posSet);
                     }
                     break;

@@ -108,6 +108,7 @@ public class JocInventory {
                     put(InstructionType.FAIL, "classpath:/raml/inventory/schemas/instruction/fail-schema.json");
                     put(InstructionType.FINISH, "classpath:/raml/inventory/schemas/instruction/finish-schema.json");
                     put(InstructionType.FORK, "classpath:/raml/inventory/schemas/instruction/forkJoin-schema.json");
+                    put(InstructionType.FORKLIST, "classpath:/raml/inventory/schemas/instruction/forkList-schema.json");
                     put(InstructionType.IF, "classpath:/raml/inventory/schemas/instruction/ifelse-schema.json");
                     put(InstructionType.LOCK, "classpath:/raml/inventory/schemas/instruction/lock-schema.json");
                     // TODO put(InstructionType.PUBLISH, "classpath:/raml/inventory/schemas/instruction/publish-schema.json");

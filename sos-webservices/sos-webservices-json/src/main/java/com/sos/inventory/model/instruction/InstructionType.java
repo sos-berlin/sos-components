@@ -12,6 +12,7 @@ public enum InstructionType {
     IF("If"),
     TRY("Try"),
     FORK("Fork"),
+    FORKLIST("ForkList"),
     FINISH("Finish"),
     FAIL("Fail"),
     RETRY("Retry"),

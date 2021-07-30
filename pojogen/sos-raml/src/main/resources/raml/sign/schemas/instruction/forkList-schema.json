@@ -1,0 +1,46 @@
+{
+  "title": "forkList",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.ForkList",
+  "type": "object",
+  "required": [
+  	"branches"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'ForkList'",
+  "properties": {
+  	"children": {
+    	"type": "string"
+    },
+  	"childToArguments": {
+    	"type": "string"
+    },
+  	"branches": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "javaType": "com.sos.sign.model.workflow.Branch",
+        "required": [
+          "id",
+          "workflow"
+        ],
+        "properties": {
+          "id": {
+          	"type": "string",
+          	"maxLength": 10,
+      		"minLength": 1
+          },
+          "workflow": {
+            "$ref": "instructions-schema.json"
+          }
+        },
+    	"additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
