@@ -114,9 +114,9 @@ public abstract class CAUtils {
       }
 
       // client and server authentication
-      certgen.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
-      certgen.addExtension(Extension.keyUsage, true, 
-              new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.dataEncipherment));
+      certgen.addExtension(Extension.basicConstraints, false, new BasicConstraints(false));
+      certgen.addExtension(Extension.keyUsage, false, 
+              new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
       certgen.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
 
       ContentSigner signer = null;
