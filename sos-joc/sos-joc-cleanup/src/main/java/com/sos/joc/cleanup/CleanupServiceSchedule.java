@@ -250,10 +250,18 @@ public class CleanupServiceSchedule {
                         }
                     }
                 }
-                nextBegin = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getBegin()
-                        .getHours(), period.getBegin().getMinutes(), period.getBegin().getSeconds(), 0, service.getConfig().getZoneId());
-                nextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getEnd().getHours(),
+                ZonedDateTime nowZINextBegin = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), period.getBegin().getHours(),
+                        period.getBegin().getMinutes(), period.getBegin().getSeconds(), 0, service.getConfig().getZoneId());
+                ZonedDateTime nowZINextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), period.getEnd().getHours(),
                         period.getEnd().getMinutes(), period.getEnd().getSeconds(), 0, service.getConfig().getZoneId());
+
+                // nextBegin = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getBegin()
+                // .getHours(), period.getBegin().getMinutes(), period.getBegin().getSeconds(), 0, service.getConfig().getZoneId());
+                // nextEnd = ZonedDateTime.of(now.getYear(), now.getMonthValue(), now.getDayOfMonth() + newPeriodDaysDiff, period.getEnd().getHours(),
+                // period.getEnd().getMinutes(), period.getEnd().getSeconds(), 0, service.getConfig().getZoneId());
+
+                nextBegin = nowZINextBegin.plusDays(newPeriodDaysDiff);
+                nextEnd = nowZINextEnd.plusDays(newPeriodDaysDiff);
 
                 if (now.isAfter(nextBegin)) {
                     newPeriodDaysDiff = -1;
