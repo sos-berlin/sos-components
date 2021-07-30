@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
@@ -294,6 +295,14 @@ public class JsonSerializer {
                     NamedJob nj = inst.cast();
                     nj.setDefaultArguments(emptyEnvToNullAndQuoteStrings(nj.getDefaultArguments()));
                     break;
+                case FORKLIST:
+                    ForkList fl = inst.cast();
+                    for (Branch branch : fl.getBranches()) {
+                        if (branch.getWorkflow() != null) {
+                            cleanInventoryInstructions(branch.getWorkflow().getInstructions());
+                        }
+                    }
+                    break;
                 case FORK:
                     ForkJoin fj = inst.cast();
                     for (Branch branch : fj.getBranches()) {
@@ -349,6 +358,14 @@ public class JsonSerializer {
                 case FORK:
                     com.sos.sign.model.instruction.ForkJoin fj = inst.cast();
                     for (com.sos.sign.model.workflow.Branch branch : fj.getBranches()) {
+                        if (branch.getWorkflow() != null) {
+                            cleanSignedInstructions(branch.getWorkflow().getInstructions());
+                        }
+                    }
+                    break;
+                case FORKLIST:
+                    com.sos.sign.model.instruction.ForkList fl = inst.cast();
+                    for (com.sos.sign.model.workflow.Branch branch : fl.getBranches()) {
                         if (branch.getWorkflow() != null) {
                             cleanSignedInstructions(branch.getWorkflow().getInstructions());
                         }

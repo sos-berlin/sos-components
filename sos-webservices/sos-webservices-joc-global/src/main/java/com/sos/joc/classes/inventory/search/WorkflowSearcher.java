@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.ForkJoin;
+import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
@@ -427,6 +428,19 @@ public class WorkflowSearcher {
                         if (branch.getWorkflow() != null) {
                             String position = getPosition(parentPosition, index, "fork+" + branch.getId());
                             result.add(new WorkflowInstruction<ForkJoin>(position, fj));
+
+                            handleInstructions(result, branch.getWorkflow().getInstructions(), position);
+                        }
+                    }
+                }
+                break;
+            case FORKLIST:
+                ForkList fl = in.cast();
+                if (fl.getBranches() != null) {
+                    for (Branch branch : fl.getBranches()) {
+                        if (branch.getWorkflow() != null) {
+                            String position = getPosition(parentPosition, index, "fork+" + branch.getId());
+                            result.add(new WorkflowInstruction<ForkList>(position, fl));
 
                             handleInstructions(result, branch.getWorkflow().getInstructions(), position);
                         }
