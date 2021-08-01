@@ -429,6 +429,8 @@ public class OrdersHelper {
                 case Number:
                     if (curArg instanceof Boolean) {
                         invalid = true;
+                    } else if (curArg instanceof List) {
+                        invalid = true;
                     } else if (curArg instanceof String) {
                         try {
                             BigDecimal number = new BigDecimal((String) curArg);
@@ -436,6 +438,11 @@ public class OrdersHelper {
                         } catch (NumberFormatException e) {
                             invalid = true;
                         }
+                    }
+                    break;
+                case Array:
+                    if ((curArg instanceof List) == false) {
+                        invalid = true;
                     }
                     break;
                 }

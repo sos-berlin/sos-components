@@ -122,6 +122,9 @@ public class DocumentationResourceImpl extends JOCResourceImpl implements IDocum
         case "png":
             type = "image/" + type;
             break;
+        case "icon":
+            type = "image/x-icon";
+            break;
         }
         if (type.startsWith("text/")) {
             type += "; charset=UTF-8";

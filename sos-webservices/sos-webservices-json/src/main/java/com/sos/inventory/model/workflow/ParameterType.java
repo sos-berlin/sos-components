@@ -10,7 +10,8 @@ public enum ParameterType {
 
     String("String"),
     Number("Number"),
-    Boolean("Boolean");
+    Boolean("Boolean"),
+    Array("Array");
     private final java.lang.String value;
     private final static Map<java.lang.String, ParameterType> CONSTANTS = new HashMap<java.lang.String, ParameterType>();
 

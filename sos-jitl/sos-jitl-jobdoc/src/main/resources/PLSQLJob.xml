@@ -17,7 +17,7 @@
   <configuration>
      
     <params id="job_parameter">
-		<!-- TODO required expects true or false -->
+    
       <param name="command" required="one of command or command_script_file">
         <note>
         	<title>Database Commands for the Job</title>
@@ -185,37 +185,35 @@
 
     <p>
 		<codeexample>
-		<embeddedExample>
-    declare
-      howmany NUMBER;
-      p_id varchar2(20) := null;
-    begin
-      dbms_output.put_line('set variable1=value1');
-      p_id := '12345';
-      --
-      -- If the job or order contains the parameter
-      --
-      -- table_name=scheduler_variables
-      --
-      -- then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
-      --
-      select count(*) into howmany from ${SCHEDULER_PARAM_table_name};
-      select count(*) into howmany from %table_name%;
-      select count(*) into howmany from %TABLE_NAME%;
-      select count(*) into howmany from ${SCHEDULER_PARAM_TABLE_NAME};
-      select count(*) into howmany from ${scheduler_param_table_name};
-      select count(*) into howmany from ${sChEdUlEr_pArAm_tAbLe_nAmE};
-      --
-      -- now put the results to the buffer
-      -- JS will get the results from the buffer
-      --
-      dbms_output.put_line('The table %table_name% has ' || howmany || ' rows.');
-      dbms_output.put_line('set howmany is ' || howmany);
-      dbms_output.put_line('set variable1 is ' || p_id);
-      dbms_output.put_line('set variable2 is value2');
-    end;
-    
-		</embeddedExample>
+		<embeddedExample>declare
+  howmany NUMBER;
+  p_id varchar2(20) := null;
+begin
+  dbms_output.put_line('set variable1=value1');
+  p_id := '12345';
+  --
+  -- If the job or order contains the parameter
+  --
+  -- table_name=scheduler_variables
+  --
+  -- then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
+  --
+  select count(*) into howmany from ${SCHEDULER_PARAM_table_name};
+  select count(*) into howmany from %table_name%;
+  select count(*) into howmany from %TABLE_NAME%;
+  select count(*) into howmany from ${SCHEDULER_PARAM_TABLE_NAME};
+  select count(*) into howmany from ${scheduler_param_table_name};
+  select count(*) into howmany from ${sChEdUlEr_pArAm_tAbLe_nAmE};
+  --
+  -- now put the results to the buffer
+  -- JS will get the results from the buffer
+  --
+  dbms_output.put_line('The table %table_name% has ' || howmany || ' rows.');
+  dbms_output.put_line('set howmany is ' || howmany);
+  dbms_output.put_line('set variable1 is ' || p_id);
+  dbms_output.put_line('set variable2 is value2');
+end;
+</embeddedExample>
 
 		<explanation>
 			<title >Example: PL/SQL code</title>

@@ -8,8 +8,7 @@
         <documentation>
         	<p>
                 This job implementation is supporting "regular expressions" on file names for filtering and searching
-                the files which has to be
-                processed.
+                the files which has to be processed.
             </p>
     		<xi:include href="../notes/note_regexp_remarks.xml" parse="xml"/>
         </documentation>

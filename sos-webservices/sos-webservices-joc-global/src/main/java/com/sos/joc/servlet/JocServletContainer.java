@@ -24,6 +24,7 @@ import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.cluster.JocClusterService;
+import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -52,6 +53,7 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+        CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         Globals.readUnmodifiables();
         Globals.setProperties();

@@ -54,12 +54,13 @@
 		<table class="box">
 			<tr>
 				<td class="td1">
-					<span class="section">Class</span>
+					<div class="section">Class</div>
 				</td>
 				<td class="td2">
-					<span class="label">Name/Title</span>
+					<div class="label">Name/Title</div>
 				</td>
 				<td class="td3">
+					<div class="label">
 					<span class="sourceNameBold">
 						<xsl:value-of select="@name" />
 					</span>
@@ -67,6 +68,7 @@
 					<span class="desc">
 						<xsl:value-of select="@title" />
 					</span>
+					</div>
 				</td>
 			</tr>
 			<xsl:if test="@tasks">
@@ -74,11 +76,13 @@
 					<td class="td1">
 						<xsl:text>&#160;</xsl:text>
 					</td>
-					<td class="td2"><span class="label">Tasks</span></td>
+					<td class="td2"><div class="label">Tasks</div></td>
 					<td class="td3">
+						<div class="label">
 						<span class="desc">
 							<xsl:value-of select="@tasks" />
 						</span>
+						</div>
 					</td>
 				</tr>
 			</xsl:if>
@@ -92,14 +96,14 @@
 		<table class="box">
 			<tr>
 				<td class="td1">
-					<span class="section">Documentation</span>
+					<div class="section">Documentation</div>
 				</td>
 				<td class="td2">
 					<xsl:text>&#160;</xsl:text>
 					<xsl:text />
 				</td>
 				<td class="td3">
-					<xsl:apply-templates mode="copy" select="jobdoc:*|xhtml:*|*"/>
+					<div class="label"><xsl:apply-templates mode="copy" select="jobdoc:*|xhtml:*|*"/></div>
 				</td>
 			</tr>
 		</table>
@@ -145,12 +149,7 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 	Template note -->
 	<xsl:template match="jobdoc:note">
-		<xsl:if test="@since">
-			<p>
-				<xsl:value-of select="concat(@since, ' is the version with the following bevaviour added ')" />
-			</p>
-		</xsl:if>
-		<xsl:apply-templates mode="copy"/>
+		<div class="note"><xsl:apply-templates mode="copy"/></div>
 	</xsl:template>
 
 	<xsl:template match="jobdoc:explanation">
@@ -158,12 +157,7 @@
 	</xsl:template>
 
 	<xsl:template match="jobdoc:note" mode="copy">
-		<xsl:if test="@since">
-			<p>
-				<xsl:value-of select="concat(@since, ' is the version with the following bevaviour added ')" />
-			</p>
-		</xsl:if>
-		<xsl:apply-templates mode="copy"/>
+		<div class="note"><xsl:apply-templates mode="copy"/></div>
 	</xsl:template>
 
 	<xsl:template match="*[local-name() = 'features']" mode="copy">
@@ -189,8 +183,9 @@
 			<td class="td1">
 				<xsl:text>&#160;</xsl:text>
 			</td>
-			<td class="td2"><span class="label">Script</span></td>
+			<td class="td2"><div class="label">Script</div></td>
 			<td class="td3">
+				<div class="label">
 				<xsl:if test="@language">
 					<ul>
 						<xsl:if test="@language">
@@ -210,6 +205,7 @@
 					</ul>
 					<xsl:apply-templates select="jobdoc:include" />
 				</xsl:if>
+				</div>
 			</td>
 		</tr>
 	</xsl:template>
@@ -235,8 +231,9 @@
 			<td class="td1">
 				<xsl:text>&#160;</xsl:text>
 			</td>
-			<td class="td2"><span class="label">Environment Variables</span></td>
+			<td class="td2"><div class="label">Environment Variables</div></td>
 			<td class="td3">
+				<div class="label">
 				<table class="resource" cellpadding="0" cellspacing="1">
 					<tbody>
 						<tr>
@@ -252,6 +249,7 @@
 						<xsl:apply-templates select="jobdoc:variable" />
 					</tbody>
 				</table>
+				</div>
 			</td>
 		</tr>
 	</xsl:template>
@@ -282,12 +280,13 @@
 			<table class="box">
 				<tr>
 					<td class="td1">
-						<span class="section">Configuration</span>
+						<div class="section">Configuration</div>
 					</td>
 					<td class="td2">
 						<xsl:text>&#160;</xsl:text>
 					</td>
 					<td class="td3">
+						<div class="label">
 						<xsl:choose>
 							<xsl:when test="jobdoc:note">
 								<xsl:call-template name="call_notes"/>
@@ -296,6 +295,7 @@
 								<xsl:text>&#160;</xsl:text>
 							</xsl:otherwise>
 						</xsl:choose>
+						</div>
 					</td>
 				</tr>
 				<xsl:apply-templates select="jobdoc:params">
@@ -318,8 +318,8 @@
 			</td>
 			<td class="td2">
 				<xsl:choose>
-					<xsl:when test="@id='return_parameter'"><span class="label">Return parameters</span></xsl:when>
-					<xsl:otherwise><span class="label">Parameters</span></xsl:otherwise>
+					<xsl:when test="@id='return_parameter'"><div class="label">Return parameters</div></xsl:when>
+					<xsl:otherwise><div class="label">Parameters</div></xsl:otherwise>
 				</xsl:choose>
 			</td>
 			<td class="td3">
@@ -328,12 +328,6 @@
 						<xsl:call-template name="call_notes"/>
 					</xsl:when>
 					<xsl:otherwise>
-						<xsl:if test="@reference and not(@reference='')">
-							<xsl:if test="jobdoc:note">
-								<br />
-							</xsl:if>
-							<xsl:call-template name="process_reference"/>
-						</xsl:if>
 						<xsl:if test="child::*">
 							<table class="section" cellpadding="0" cellspacing="1">
 								<xsl:apply-templates select="codeexample|jobdoc:codeexample|jobdoc:param|jobdoc:params/jobdoc:*"/>
@@ -352,9 +346,6 @@
 					<xsl:text>&#160;</xsl:text>
 				</td>
 				<td class="td3">
-					<xsl:if test="@reference and not(@reference='')">
-						<xsl:call-template name="process_reference"/>
-					</xsl:if>
 					<xsl:if test="child::*">
 						<table class="section" cellpadding="0" cellspacing="1">
 							<xsl:apply-templates select="jobdoc:param"/>
@@ -365,22 +356,6 @@
 		</xsl:if>
 	</xsl:template>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template für Configuration/ Parameter als Referenz! -->
-	<xsl:template match="jobdoc:params" mode="reference">
-		<xsl:variable name="reftext">
-			<xsl:choose>
-				<xsl:when test="ancestor::jobdoc:payload"><span class="label">Payload Parameters</span></xsl:when>
-				<xsl:otherwise><span class="label">Job Parameters</span></xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<a class="doc">
-			<xsl:attribute name="href">#<xsl:value-of select="@id" /></xsl:attribute>
-			<span style="font-family:Arial;font-size:12px;">&#8594;</span>
-			<xsl:text>&#160;</xsl:text>
-			<xsl:value-of select="$reftext" />
-		</a>
-	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template für einzelnen Parameter -->
 	<xsl:template match="jobdoc:param">
@@ -405,94 +380,64 @@
 				</span>
 			</td>
 		</tr>
-		<xsl:if test="not(@reference)">
-			<tr>
-				<td class="section1">
-					<xsl:if test="@required='false'">
+		<tr>
+			<td class="section1">
+				<xsl:choose>
+					<xsl:when test="@required='false'">
 						<span class="labelSmall">[optional]</span>
-					</xsl:if>
-					<xsl:if test="@required='true'">
+					</xsl:when>
+					<xsl:when test="@required='true'">
 						<span class="labelSmall">[required]</span>
+					</xsl:when>
+					<xsl:otherwise>
+						<span class="labelSmall">[required]</span><br/><span class="labelSmall">(<xsl:value-of select="@required" />)</span>
+					</xsl:otherwise>
+				</xsl:choose>
+			</td>
+			<td class="section2">
+				<span class="desc">
+					<xsl:if test="@DataType and not(@DataType='')">
+						<xsl:text>DataType: </xsl:text>
+						<xsl:value-of select="@DataType"></xsl:value-of>
+						<br />
 					</xsl:if>
-				</td>
-				<td class="section2">
-					<span class="desc">
-						<xsl:if test="@DataType and not(@DataType='')">
-							<xsl:text>DataType: </xsl:text>
-							<xsl:value-of select="@DataType"></xsl:value-of>
-							<br />
-						</xsl:if>
 
-						<xsl:if test="@Alias and not(@Alias='')">
-							<xsl:text>Alias: </xsl:text>
-							<xsl:value-of select="@Alias"></xsl:value-of>
-							<br />
-						</xsl:if>
+					<xsl:if test="@Alias and not(@Alias='')">
+						<xsl:text>Alias: </xsl:text>
+						<xsl:value-of select="@Alias"></xsl:value-of>
+						<br />
+					</xsl:if>
 
+					<xsl:variable name="defVal">
 						<xsl:choose>
-							<xsl:when test="@reference and not(@reference='')">
-								<xsl:call-template name="process_reference"/>
+							<xsl:when test="@default_value and not(@default_value='')">
+								<xsl:value-of select="@default_value" />
+							</xsl:when>
+							<xsl:when test="@DefaultValue and not(@DefaultValue='')">
+								<xsl:value-of select="@DefaultValue" />
 							</xsl:when>
 							<xsl:otherwise>
-								<xsl:variable name="defVal">
-									<xsl:choose>
-										<xsl:when test="@default_value and not(@default_value='')">
-											<xsl:value-of select="@default_value" />
-										</xsl:when>
-										<xsl:when test="@DefaultValue and not(@DefaultValue='')">
-											<xsl:value-of select="@DefaultValue" />
-										</xsl:when>
-										<xsl:otherwise>
-											---
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:variable>
-								<xsl:text>Default: </xsl:text>
-								<xsl:value-of select="$defVal" />
+								---
 							</xsl:otherwise>
 						</xsl:choose>
+					</xsl:variable>
+					<xsl:text>Default: </xsl:text>
+					<xsl:value-of select="$defVal" />
 
-						<xsl:if test="@since and @since != ''">
-							<p>
-								<xsl:value-of select="concat('This parameter is introduced with version ', @since)" />
-							</p>
-						</xsl:if>
-						<p> </p>
-						<xsl:choose>
-							<xsl:when test="$extdoc and $extdoc//jobdoc:note">
-								<xsl:apply-templates select="$extdoc//jobdoc:note|$extdoc//note|$extdoc//jobdoc:codeexample"/>
-							</xsl:when>
-							<xsl:when test="jobdoc:note">
-								<xsl:call-template name="call_notes"/>
-							</xsl:when>
-						</xsl:choose>
-					</span>
-				</td>
-			</tr>
-		</xsl:if>
+					<p> </p>
+					<xsl:choose>
+						<xsl:when test="$extdoc and $extdoc//jobdoc:note">
+							<xsl:apply-templates select="$extdoc//jobdoc:note|$extdoc//note|$extdoc//jobdoc:codeexample"/>
+						</xsl:when>
+						<xsl:when test="jobdoc:note">
+							<xsl:call-template name="call_notes"/>
+						</xsl:when>
+					</xsl:choose>
+				</span>
+			</td>
+		</tr>
 	</xsl:template>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template für einzelnen Parameter als Referenz! -->
-	<xsl:template match="jobdoc:param" mode="reference">
-		<xsl:variable name="reftext">
-			<xsl:choose>
-				<xsl:when test="ancestor::jobdoc:payload"><span class="label">Payload Parameters</span></xsl:when>
-				<xsl:otherwise><span class="label">Job Parameters</span></xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<a class="doc">
-			<xsl:attribute name="href">#<xsl:value-of select="@id" /></xsl:attribute>
-			<!-- xsl:attribute name="href">#<xsl:value-of select="@name" /></xsl:attribute -->
-			<span style="font-family:Arial;font-size:12px;">&#8594;</span>
-			<xsl:text>&#160;</xsl:text>
-			<xsl:value-of select="$reftext" />
-			<xsl:text>&#160;</xsl:text>
-		</a>
-		<span class="sourceNameBold">
-			<xsl:value-of select="@name" />
-		</span>
-	</xsl:template>
-
+	
 	<xsl:template match="jobdoc:p | xhtml:p">
 		<xsl:apply-templates />
 	</xsl:template>
@@ -508,8 +453,9 @@
 				<td class="td1">
 					<xsl:text>&#160;</xsl:text>
 				</td>
-				<td class="td2"><span class="label">Payload</span></td>
+				<td class="td2"><div class="label">Payload</div></td>
 				<td class="td3">
+					<div class="label">
 					<xsl:choose>
 						<xsl:when test="jobdoc:note">
 							<xsl:call-template name="call_notes"/>
@@ -520,6 +466,7 @@
 							</table>
 						</xsl:otherwise>
 					</xsl:choose>
+					</div>
 				</td>
 			</tr>
 			<xsl:if test="jobdoc:note">
@@ -542,9 +489,6 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template für Payload/ Parameter -->
 	<xsl:template match="jobdoc:params[parent::jobdoc:payload]">
-		<xsl:if test="@reference and not(@reference='')">
-			<xsl:call-template name="process_reference"/>
-		</xsl:if>
 		<xsl:if test="child::*">
 			<xsl:apply-templates select="jobdoc:param"/>
 		</xsl:if>
@@ -559,10 +503,10 @@
 						<xsl:text>&#160;</xsl:text>
 					</td>
 					<td class="td2">
-						<span class="label">Settings</span>
+						<div class="label">Settings</div>
 					</td>
 					<td class="td3">
-						<xsl:call-template name="call_notes"/>
+						<div class="label"><xsl:call-template name="call_notes"/></div>
 					</td>
 				</tr>
 			</xsl:if>
@@ -577,8 +521,9 @@
 			<td class="td1">
 				<xsl:text>&#160;</xsl:text>
 			</td>
-			<td class="td2"><span class="label">Profile</span></td>
+			<td class="td2"><div class="label">Profile</div></td>
 			<td class="td3">
+				<div class="label">
 				<xsl:if test="jobdoc:note">
 					<xsl:call-template name="call_notes"/>
 					<br />
@@ -590,6 +535,7 @@
 					</span>
 				</xsl:if>
 				<xsl:apply-templates select="jobdoc:section"/>
+				</div>
 			</td>
 		</tr>
 	</xsl:template>
@@ -600,8 +546,9 @@
 			<td class="td1">
 				<xsl:text>&#160;</xsl:text>
 			</td>
-			<td class="td2"><span class="label">Database</span></td>
+			<td class="td2"><div class="label">Database</div></td>
 			<td class="td3">
+				<div class="label">
 				<xsl:if test="jobdoc:note">
 					<xsl:call-template name="call_notes"/>
 					<p></p>
@@ -615,15 +562,13 @@
 				<table cellpadding="0" cellspacing="0">
 					<xsl:apply-templates select="jobdoc:application"/>
 				</table>
+				</div>
 			</td>
 		</tr>
 	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template Application -->
 	<xsl:template match="jobdoc:application">
-		<xsl:if test="@reference and not(@reference='')">
-			<xsl:call-template name="process_reference"/>
-		</xsl:if>
 		<xsl:if test="child::*">
 			<tr>
 				<td class="td1_3">
@@ -640,27 +585,9 @@
 			</tr>
 		</xsl:if>
 	</xsl:template>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template Application als Referenz! -->
-	<xsl:template match="jobdoc:application" mode="reference">
-		<a class="doc">
-			<xsl:attribute name="href">#<xsl:value-of select="@id" /></xsl:attribute>
-			<span style="font-family:Arial;font-size:12px;">&#8594;</span>
-			<xsl:text>&#160;</xsl:text><!--TODO -->
-			Database Settings: Application
-		</a>
-		<xsl:text>&#160;</xsl:text>
-		<span class="sourceName">
-			<xsl:value-of select="@name" />
-		</span>
-	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template Section -->
 	<xsl:template match="jobdoc:section">
-		<xsl:if test="@reference and not(@reference='')">
-			<br />
-			<xsl:call-template name="process_reference"/>
-		</xsl:if>
 		<xsl:if test="child::*">
 			<table class="section" cellpadding="0" cellspacing="1">
 				<tr>
@@ -680,20 +607,6 @@
 			</table>
 		</xsl:if>
 	</xsl:template>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template Section als Referenz! -->
-	<xsl:template match="jobdoc:section" mode="reference">
-		<a class="doc">
-			<xsl:attribute name="href">#<xsl:value-of select="@name" /></xsl:attribute>
-			<span style="font-family:Arial;font-size:12px;">&#8594;</span>
-			<xsl:text>&#160;</xsl:text>
-			Profile Settings: Section
-			<xsl:text>&#160;</xsl:text>
-		</a>
-		<span class="sourceName">
-			<xsl:value-of select="@name" />
-		</span>
-	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template Setting -->
 	<xsl:template match="jobdoc:setting">
@@ -707,56 +620,23 @@
 				</span>
 			</td>
 		</tr>
-		<xsl:if test="not(@reference)">
-			<tr>
-				<td class="section1">
-					<xsl:if test="@required='false'">
-						<span class="labelSmall">[optional]</span>
+		<tr>
+			<td class="section1">
+				<xsl:if test="@required='false'">
+					<span class="labelSmall">[optional]</span>
+				</xsl:if>
+				<xsl:if test="@required='true'">
+					<xsl:text>&#160;</xsl:text>
+				</xsl:if>
+			</td>
+			<td class="section2">
+				<span class="desc">
+					<xsl:if test="jobdoc:note">
+						<xsl:call-template name="call_notes"/>
 					</xsl:if>
-					<xsl:if test="@required='true'">
-						<xsl:text>&#160;</xsl:text>
-					</xsl:if>
-				</td>
-				<td class="section2">
-					<span class="desc">
-						<xsl:if test="jobdoc:note">
-							<xsl:call-template name="call_notes"/>
-						</xsl:if>
-					</span>
-				</td>
-			</tr>
-		</xsl:if>
-	</xsl:template>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template Setting als Referenz! -->
-	<xsl:template match="jobdoc:setting" mode="reference">
-		<xsl:variable name="reftext">
-			<xsl:choose>
-				<xsl:when test="ancestor::jobdoc:profile">
-					Profile-Setting
-				</xsl:when>
-				<xsl:otherwise>
-					Connection Setting
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:variable>
-		<a class="doc">
-			<xsl:attribute name="href">#<xsl:value-of select="@id" /></xsl:attribute>
-			<span style="font-family:Arial;font-size:12px;">&#8594;</span>
-			<xsl:text>&#160;</xsl:text>
-			<xsl:value-of select="$reftext" />
-			<xsl:text>&#160;</xsl:text>
-		</a>
-		<span class="sourceName">
-			<xsl:value-of select="@name" />
-		</span>
-	</xsl:template>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template Process Reference -->
-	<xsl:template name="process_reference">
-		<xsl:variable name="reference" select="@reference" />
-		<xsl:apply-templates
-			select="//*[@id=$reference or @name=$reference]" mode="reference"/>
+				</span>
+			</td>
+		</tr>
 	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template set_anchor -->
@@ -764,16 +644,13 @@
 		<xsl:param name="anchor_name" />
 		<a><xsl:attribute name="name"><xsl:value-of select="$anchor_name" /></xsl:attribute></a>
 	</xsl:template>
-	
-	<xsl:template match="jobdoc:note | jobdoc:documentation" mode="reference">
-		<xsl:apply-templates select="." />
-	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Template get_css -->
 	<xsl:template name="get_css">
 		<style type="text/css"><![CDATA[
 
-      body { background-color:#eaedf4; margin:6px 20px; padding: 0; font-family:verdana,arial,sans-serif; font-size:10pt; color: #203e8d; }
+      * { padding: 0; margin: 0; box-sizing: border-box; }
+      html, body { background-color:#eaedf4; margin:4px 10px; font-family:verdana,arial,sans-serif; font-size:10pt; color: #203e8d; }
 
       header { display: grid;
                grid-template-columns: 100px auto 100px;
@@ -791,12 +668,13 @@
 
       table { width:100%;
               background-color:#c2cadf;
+              font-size:10pt; /* chrome needs this otherwise font-size:medium; in tables */
             }
 
       td    { padding: 2px;
               vertical-align:top; text-align: left;
             }
-      section:first-of-type table.box { border-top-width:2px; }
+      section:first-of-type table.box { border-top-width:2px; margin-top:8px; }
       table.box        { border-width:0 2px 2px; border-style:solid; border-color:#203e8d; }
 
       td.td1           { width:11%; }
@@ -839,15 +717,17 @@
       table.description   { background-color:#eaedf4; margin-top:4px; margin-bottom:4px; }
       table.description th, table.description td { background-color:#d0d6e6; }
 
-      .section        {font-weight:600; color:#203e8d; }          /* blaue Schrift, fett */
-      .label          {font-weight:300; color:#203e8d; }          /* blaue Schrift */
-      .labelSmall     {font-weight:300; font-size:8pt; }          /* schwarze Schrift */
-      .sourceName     {color:#8c892c; font-weight:300; }                         /* grüne Schrift */
-      .sourceNameBold {color:#8c892c; font-weight:600; }                         /* grüne Schrift */
-      .desc           {color:#203e8d; font-weight:300; }                         /* blaue Schrift */
+      div.section     { font-weight:600; color:#203e8d; margin: 4px 0 }          /* blaue Schrift, fett */
+      div.label       { font-weight:300; color:#203e8d;  margin: 4px 0 }         /* blaue Schrift */
+      .labelSmall     { font-weight:300; font-size:8pt; }          /* schwarze Schrift */
+      .sourceName     { color:#8c892c; font-weight:300; }                         /* grüne Schrift */
+      .sourceNameBold { color:#8c892c; font-weight:600; }                         /* grüne Schrift */
+      .desc           { color:#203e8d; font-weight:300; }                         /* blaue Schrift */
 
-      .code           {color:#000000; font-weight:300; font-family:"Courier New",sans-serif;font-size:10pt; }      /* Schrift für XML-Code */
-      pre.example     {background-color:#d0d6e6; padding-left:10px;}
+      .note           { margin: 4px 0 }
+      .title          { font-weight:600; font-style: italic; }
+      .code           { color:#000000; font-weight:300; font-family:"Courier New",sans-serif;font-size:10pt; }
+      pre.example     { background-color:#d0d6e6; font-family:"Courier New",sans-serif;font-size:10pt; padding:10px; border:1px solid #eaedf4; }
 
       /*** LINK Formatierungen ***/
       a                   { font-weight:600; text-decoration:none; font-size:10pt; color:#de5906; font-weight:300;}
@@ -872,32 +752,12 @@
 		<xsl:apply-templates select="." />
 	</xsl:template>
 
-	<xsl:template match="jobdoc:title">
-		<xsl:if test="parent::jobdoc:note">
-			<i>
-				<b>
-					<xsl:value-of select="." />
-				</b>
-			</i>
-		</xsl:if>
-		<xsl:if test="not (parent::jobdoc:note)">
-			<xsl:value-of select="." />
-		</xsl:if>
-		<br />
+	<xsl:template match="jobdoc:explanation/jobdoc:title | jobdoc:title">
+		<p class="title"><xsl:value-of select="." /></p>
 	</xsl:template>
 
 	<xsl:template match="jobdoc:title" mode="copy">
-		<xsl:if test="parent::jobdoc:note">
-			<i>
-				<b>
-					<xsl:value-of select="." />
-				</b>
-			</i>
-		</xsl:if>
-		<xsl:if test="not (parent::jobdoc:note)">
-			<xsl:value-of select="." />
-		</xsl:if>
-		<br />
+		<p class="title"><xsl:value-of select="." /></p>
 	</xsl:template>
 	
 	<xsl:template match="jobdoc:codeexample | jobdoc:codeExample">

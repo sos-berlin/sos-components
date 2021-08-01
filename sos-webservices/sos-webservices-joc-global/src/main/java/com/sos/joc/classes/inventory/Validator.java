@@ -436,6 +436,9 @@ public class Validator {
                         invalid = !"true".equals(_default.toString()) && !"false".equals(_default.toString());
                     }
                     break;
+                case Array:
+                    invalid = (_default instanceof List) == false;
+                    break;
                 }
                 if (invalid) {
                     throw new JocConfigurationException(String.format(
@@ -506,6 +509,9 @@ public class Validator {
                         break;
                     case Boolean:
                         invalid = (curArg instanceof Boolean) == false;
+                        break;
+                    case Array:
+                        invalid = (curArg instanceof List) == false;
                         break;
                     }
                     if (invalid) {

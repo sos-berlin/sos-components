@@ -76,8 +76,9 @@
 									<includes>
 										<include>*.ico</include>
 										<include>*.png</include>
-										<include>*.xsl</include>
+										<include>*.css</include>
 										<include>*.xsd</include>
+										<include>*.xsl</include>
 									</includes>
 									<filtering>false</filtering>
 								</resource>

@@ -2,7 +2,6 @@ package com.sos.joc.documentations.impl;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +15,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.documentation.DocumentationHelper;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.documentations.resource.IDocumentationsResource;
@@ -30,7 +30,6 @@ import com.sos.schema.JsonValidator;
 public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocumentationsResource {
 
     private static final String API_CALL = "./documentations";
-    protected static final List<String> ASSIGN_TYPES = Arrays.asList("html", "xml", "pdf", "markdown");
 
     @Override
     public JOCDefaultResponse postDocumentations(String accessToken, byte[] filterBytes) {
@@ -53,7 +52,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
                 if (documentationsFilter.getTypes().contains("assigntypes")) {
                     documentationsFilter.getTypes().remove("assigntypes");
-                    types = Stream.concat(documentationsFilter.getTypes().stream(), ASSIGN_TYPES.stream());
+                    types = Stream.concat(documentationsFilter.getTypes().stream(), DocumentationHelper.ASSIGN_TYPES.stream());
                 } else {
                     types = documentationsFilter.getTypes().stream();
                 }

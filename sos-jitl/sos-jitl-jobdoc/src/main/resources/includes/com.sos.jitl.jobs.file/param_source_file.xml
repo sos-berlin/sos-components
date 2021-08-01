@@ -13,6 +13,6 @@
     </note>
     <xi:include href="./note_param_mask_substitution.xml" parse="xml" />
     <!--
-    <xi:include href="./note_param_substitution_en.xml" parse="xml" />
+    <xi:include href="./note_param_substitution.xml" parse="xml" />
     -->
 </param>

@@ -211,8 +211,7 @@
 	
 		<p>
 			<codeexample type="sql*plus">
-				<embeddedExample type="sql*plus">
-WHENEVER SQLERROR EXIT SQL.SQLCODE
+				<embeddedExample type="sql*plus">WHENEVER SQLERROR EXIT SQL.SQLCODE
 WHENEVER OSERROR EXIT FAILURE
 
 column end_date new_value BCY_DATE
@@ -230,11 +229,10 @@ prompt SET period_prev IS &amp;PN_YEAR_PERIOD_PREV;
 /
 prompt SET end_date IS 1;
 exit;
-			
-				</embeddedExample>
+</embeddedExample>
 	
 				<explanation>
-					<title >Example: SQL*Plus script</title>
+					<title>Example: SQL*Plus script</title>
 	            	<p>
 	            		The following parameters are returned to the order
 	              		(see the parameter <paramref>variable_parser_reg_expr</paramref>).

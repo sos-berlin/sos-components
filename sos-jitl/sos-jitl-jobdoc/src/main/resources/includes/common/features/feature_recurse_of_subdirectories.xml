@@ -5,23 +5,22 @@
 
         <title>Recurse of subdirectories</title>
         <documentation>
-            <!-- TODO english -->
             <p>
-                Mit dem Parameter <paramref>recursive</paramref>
-                kann spezifiert werden, daß die Struktur der Unterverzeichnisse
-                und alle in diesen Verzeichnissen enthaltenen Dateien ebenfalls bearbeitet werden sollen.
+                The parameter <paramref>recursive</paramref> can be used to specify that the structure of the subdirectories 
+                and all files contained in these directories should also be processed. and all files contained in these 
+                directories should also be processed.
             </p>
             <p>
-                Sind auf der Zielplattform (target) die Verzeichnisse noch nicht vorhanden, so werden sie in Abhängigkeit des
-                Parameters <paramref>make_dirs</paramref> angelegt.
+                If the directories do not yet exist on the target platform, they are created in dependence on the parameter 
+                <paramref>make_dirs</paramref>.
             </p>
             <p>
-                Die Auswahl der zu verarbeitenden Objekte (Dateien) geschieht auch in den Unterverzeichnissen über den
-                Parameter <paramref>file_spec</paramref>.
+                The selection of the objects (files) to be processed is also done in the subdirectories via the parameter 
+                <paramref>file_spec</paramref>.
             </p>
             <p>
-                Werden Unterverzeichnisse neu angelegt, so wird die Struktur unterhalb des Verzeichnis, welches mit dem
-                Parameter <paramref>target_dir</paramref> (oder <paramref>remote_dir</paramref>) spezifiziert wurde, erzeugt.
+                If subdirectories are newly created, the structure is created below the directory specified with the parameter 
+                <paramref>target_dir</paramref> (or <paramref>remote_dir</paramref>) is created.
             </p>
         </documentation>
     </feature>

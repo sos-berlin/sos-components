@@ -146,22 +146,37 @@ public class PojosTest {
         vars.setAdditionalProperty("myNumber2", 1.34E2);
         vars.setAdditionalProperty("myBigDecimal", new BigDecimal(4711));
         vars.setAdditionalProperty("myBoolean", true);
+        vars.setAdditionalProperty("myArray", new ArrayList<String>(Arrays.asList("hallo")));
+        vars.setAdditionalProperty("myArray2", Arrays.asList("hallo"));
+        vars.setAdditionalProperty("myArray3", Collections.singletonList("hallo"));
         System.out.println(vars.getAdditionalProperties().get("myString").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber2").getClass());
         System.out.println(vars.getAdditionalProperties().get("myBigDecimal").getClass());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myArray").getClass());
+        if (vars.getAdditionalProperties().get("myArray") instanceof List) {
+            System.out.println("It's a List!");
+        }
+        if (vars.getAdditionalProperties().get("myArray2") instanceof List) {
+            System.out.println("It's a List!");
+        }
+        if (vars.getAdditionalProperties().get("myArray3") instanceof List) {
+            System.out.println("It's a List!");
+        }
         System.out.println(objectMapper.writeValueAsString(vars));
-        String json = "{\"returnCode\":0,\"myString\":\"MyStringValue\",\"myBoolean\":true,\"myNumber\":4711,\"myNumber2\":1.34E2}";
+        String json = "{\"returnCode\":0,\"myString\":\"MyStringValue\",\"myBoolean\":true,\"myNumber\":4711,\"myNumber2\":1.34E2,\"myArray\":[\"hallo\"]}";
         vars = objectMapper.readValue(json, Variables.class);
         System.out.println(vars.getAdditionalProperties().get("myString").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber2").getClass());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myArray").getClass());
         System.out.println(vars.getAdditionalProperties().get("myString").toString());
         System.out.println(vars.getAdditionalProperties().get("myNumber").toString());
         System.out.println(vars.getAdditionalProperties().get("myNumber2").toString());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").toString());
+        System.out.println(vars.getAdditionalProperties().get("myArray").toString());
 
     }
     

@@ -53,7 +53,7 @@
             	If set to 'column_value', the first row of the resultset will be set as order parameters
             	(using the column names as parameter names). Example:<br/>
             	The query "SELECT first_name, last_name, age FROM persons" produces the following result set:<br/>
-            	<table>
+            	<table class="explanation">
               	<tr>
                   	<th>first_name</th>
                   	<th>last_name</th>
