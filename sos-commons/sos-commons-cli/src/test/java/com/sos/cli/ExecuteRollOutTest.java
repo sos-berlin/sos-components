@@ -38,7 +38,7 @@ public class ExecuteRollOutTest {
         String targetTruststore = "C:/sp/devel/js7/testing/CLI/controller/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "be400b0a-cebf-49a2-a09f-3ea6a166c1e1";
+        String token = "f7155db9-e0e4-4f4c-83e8-e9b3da586e97";
         String keystoreAlias = "My Controller Key";
         String truststoreAlias = "sp root ca";
         return new String[] {
@@ -82,7 +82,7 @@ public class ExecuteRollOutTest {
         String targetTruststore = "C:/sp/devel/js7/testing/CLI/agent/https-truststore.p12";
         String targetTrustoreType = "PKCS12";
         String targetTruststorePassw = "jobscheduler";
-        String token = "53ffac7e-7e39-42e0-b46c-5dc1eb25814b";
+        String token = "21c07b55-7de2-48b6-8b86-686a5d10a877";
         String keystoreAlias = "My Agent Key";
         String truststoreAlias = "sp root ca";
         return new String[] {
