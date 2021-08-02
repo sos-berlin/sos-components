@@ -136,6 +136,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.restore.RequestFilter", "inventory/restore/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
             put("com.sos.joc.model.inventory.path.PathFilter","inventory/path/pathFilter-schema.json");
+            put("com.sos.joc.model.inventory.search.RequestSearchFilter","inventory/search/request-search-filter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
@@ -172,7 +173,7 @@ public class JsonValidator {
             put("com.sos.joc.model.monitoring.NotificationAcknowledgeFilter","monitoring/notification-acknowledge-filter-schema.json");
             put("com.sos.joc.model.monitoring.ControllersFilter","monitoring/controllers-filter-schema.json");
             put("com.sos.joc.model.monitoring.AgentsFilter","monitoring/agents-filter-schema.json");
-            
+                        
             //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
