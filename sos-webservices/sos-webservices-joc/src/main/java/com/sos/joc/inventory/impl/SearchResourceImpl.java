@@ -1,21 +1,25 @@
 package com.sos.joc.inventory.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.db.inventory.InventorySearchDBLayer;
+import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ISearchResource;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
 import com.sos.joc.model.inventory.search.ResponseSearch;
 import com.sos.joc.model.inventory.search.ResponseSearchItem;
@@ -37,29 +41,15 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 return response;
             }
 
-            ResponseSearch answer = createAnswer();
-
-            switch (in.getReturnType()) {
-            case WORKFLOW:
-                answer.setWorkflows(new HashSet<ResponseSearchItem>());
-                break;
-            case FILEORDERSOURCE:
-                answer.setFileOrderSources(new HashSet<ResponseSearchItem>());
-                break;
-            case JOBRESOURCE:
-                answer.setJobResources(new HashSet<ResponseSearchItem>());
-                break;
-            case BOARD:
-                answer.setBoards(new HashSet<ResponseSearchItem>());
-                break;
-            case LOCK:
-                answer.setLocks(new HashSet<ResponseSearchItem>());
-                break;
-            case SCHEDULE:
-                answer.setSchedules(new HashSet<ResponseSearchItem>());
-                break;
+            List<String> folders = null;
+            if (in.getFolders() != null) {
+                folders = in.getFolders().stream().map(e -> {
+                    return e.getFolder();
+                }).collect(Collectors.toList());
             }
 
+            ResponseSearch answer = new ResponseSearch();
+            answer.setResults(in.getAdvanced() == null ? getBasicSearch(in, folders) : getAdvancedSearch(in, folders));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -69,16 +59,100 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private ResponseSearch createAnswer() {
-        ResponseSearch answer = new ResponseSearch();
-        answer.setDeliveryDate(new Date());
-        answer.setWorkflows(null);
-        answer.setFileOrderSources(null);
-        answer.setJobResources(null);
-        answer.setBoards(null);
-        answer.setLocks(null);
-        answer.setSchedules(null);
-        return answer;
+    private List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, List<String> folders) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+
+            // TODO releasedOrDeployed
+            ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
+            List<InventorySearchItem> items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), folders);
+            List<ResponseSearchItem> r = new ArrayList<>();
+            if (items != null) {
+                for (InventorySearchItem item : items) {
+                    ResponseSearchItem ri = new ResponseSearchItem();
+                    ri.setId(item.getId());
+                    ri.setPath(item.getPath());
+                    ri.setName(item.getName());
+                    ri.setObjectType(objectType);
+                    ri.setTitle(item.getTitle());
+                    ri.setValid(item.isValid());
+                    ri.setDeleted(item.isDeleted());
+                    ri.setDeployed(item.isDeployed());
+                    ri.setReleased(item.isReleased());
+                    ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
+                    ri.setHasReleases(item.getCountReleased().intValue() > 0);
+                    r.add(ri);
+                }
+            }
+            return r;
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, List<String> folders) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+        switch (in.getReturnType()) {
+        case WORKFLOW:
+            r = getWorkflows(in);
+            break;
+        case FILEORDERSOURCE:
+            r = getFileOrderSources(in);
+            break;
+        case JOBRESOURCE:
+            r = getJobResources(in);
+            break;
+        case BOARD:
+            r = getBoards(in);
+            break;
+        case LOCK:
+            r = getLocks(in);
+            break;
+        case SCHEDULE:
+            r = getSchedules(in);
+            break;
+        }
+        return r;
+    }
+
+    private List<ResponseSearchItem> getWorkflows(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
+    }
+
+    private List<ResponseSearchItem> getFileOrderSources(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
+    }
+
+    private List<ResponseSearchItem> getJobResources(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
+    }
+
+    private List<ResponseSearchItem> getBoards(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
+    }
+
+    private List<ResponseSearchItem> getLocks(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
+    }
+
+    private List<ResponseSearchItem> getSchedules(final RequestSearchFilter in) {
+        List<ResponseSearchItem> r = new ArrayList<>();
+
+        return r;
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission) throws Exception {

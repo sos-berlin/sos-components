@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "workflow",
     "fileOrderSource",
     "lock",
+    "schedule",
     "boards",
     "jobResources",
     "jobName",
@@ -65,6 +66,14 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("lock")
     private String lock;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("schedule")
+    private String schedule;
     /**
      * string without < and >
      * <p>
@@ -216,6 +225,28 @@ public class RequestSearchAdvancedItem {
     @JsonProperty("lock")
     public void setLock(String lock) {
         this.lock = lock;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("schedule")
+    public String getSchedule() {
+        return schedule;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("schedule")
+    public void setSchedule(String schedule) {
+        this.schedule = schedule;
     }
 
     /**
@@ -396,12 +427,12 @@ public class RequestSearchAdvancedItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("boards", boards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("argumentName", argumentName).append("argumentValue", argumentValue).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("boards", boards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("argumentName", argumentName).append("argumentValue", argumentValue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(boards).append(argumentValue).append(jobCountFrom).append(jobCountTo).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(boards).append(argumentValue).append(jobCountFrom).append(schedule).append(jobCountTo).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
     }
 
     @Override
@@ -413,7 +444,7 @@ public class RequestSearchAdvancedItem {
             return false;
         }
         RequestSearchAdvancedItem rhs = ((RequestSearchAdvancedItem) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(boards, rhs.boards).append(argumentValue, rhs.argumentValue).append(jobCountFrom, rhs.jobCountFrom).append(jobCountTo, rhs.jobCountTo).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(boards, rhs.boards).append(argumentValue, rhs.argumentValue).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }
