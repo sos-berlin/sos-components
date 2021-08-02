@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "children",
-    "childToArguments",
+    "childToId",
     "workflow"
 })
 public class ForkList
@@ -28,8 +28,8 @@ public class ForkList
 
     @JsonProperty("children")
     private String children;
-    @JsonProperty("childToArguments")
-    private String childToArguments;
+    @JsonProperty("childToId")
+    private String childToId;
     /**
      * instructions
      * <p>
@@ -49,14 +49,14 @@ public class ForkList
 
     /**
      * 
+     * @param childToId
      * @param workflow
      * @param children
-     * @param childToArguments
      */
-    public ForkList(String children, String childToArguments, Instructions workflow) {
+    public ForkList(String children, String childToId, Instructions workflow) {
         super();
         this.children = children;
-        this.childToArguments = childToArguments;
+        this.childToId = childToId;
         this.workflow = workflow;
     }
 
@@ -70,14 +70,14 @@ public class ForkList
         this.children = children;
     }
 
-    @JsonProperty("childToArguments")
-    public String getChildToArguments() {
-        return childToArguments;
+    @JsonProperty("childToId")
+    public String getChildToId() {
+        return childToId;
     }
 
-    @JsonProperty("childToArguments")
-    public void setChildToArguments(String childToArguments) {
-        this.childToArguments = childToArguments;
+    @JsonProperty("childToId")
+    public void setChildToId(String childToId) {
+        this.childToId = childToId;
     }
 
     /**
@@ -106,12 +106,12 @@ public class ForkList
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToArguments", childToArguments).append("workflow", workflow).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("children", children).append("childToId", childToId).append("workflow", workflow).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflow).append(children).append(childToArguments).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(childToId).append(workflow).append(children).toHashCode();
     }
 
     @Override
@@ -123,7 +123,7 @@ public class ForkList
             return false;
         }
         ForkList rhs = ((ForkList) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflow, rhs.workflow).append(children, rhs.children).append(childToArguments, rhs.childToArguments).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(childToId, rhs.childToId).append(workflow, rhs.workflow).append(children, rhs.children).isEquals();
     }
 
 }

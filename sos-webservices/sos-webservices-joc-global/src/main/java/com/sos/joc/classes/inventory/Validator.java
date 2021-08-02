@@ -436,7 +436,7 @@ public class Validator {
                         invalid = !"true".equals(_default.toString()) && !"false".equals(_default.toString());
                     }
                     break;
-                case Array:
+                case List:
                     invalid = (_default instanceof List) == false;
                     break;
                 }
@@ -510,7 +510,7 @@ public class Validator {
                     case Boolean:
                         invalid = (curArg instanceof Boolean) == false;
                         break;
-                    case Array:
+                    case List:
                         invalid = (curArg instanceof List) == false;
                         break;
                     }

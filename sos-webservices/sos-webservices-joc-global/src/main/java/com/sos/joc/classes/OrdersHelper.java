@@ -440,7 +440,7 @@ public class OrdersHelper {
                         }
                     }
                     break;
-                case Array:
+                case List:
                     if ((curArg instanceof List) == false) {
                         invalid = true;
                     }

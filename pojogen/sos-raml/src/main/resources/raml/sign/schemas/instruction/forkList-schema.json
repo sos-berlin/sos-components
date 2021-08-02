@@ -4,6 +4,7 @@
   "javaType": "com.sos.sign.model.instruction.ForkList",
   "type": "object",
   "required": [
+  	"children",
   	"workflow"
   ],
   "extends" : {
@@ -16,6 +17,9 @@
     	"type": "string"
     },
   	"childToArguments": {
+    	"type": "string"
+    },
+    "childToId": {
     	"type": "string"
     },
     "workflow": {
