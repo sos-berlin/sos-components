@@ -50,7 +50,7 @@
 		<commons.codec.version>1.11</commons.codec.version>
 		<commons.lang.version>2.4</commons.lang.version>
 		<apache.commons.lang.version>3.1</apache.commons.lang.version>
-		<apache.commons.compress.version>1.19</apache.commons.compress.version>
+		<apache.commons.compress.version>1.21</apache.commons.compress.version>
 		<apache.httpcomponents.httpclient.version>4.5.13</apache.httpcomponents.httpclient.version>
 		<json.version>1.0.4</json.version>
 		<servlet.version>3.1.0</servlet.version>
