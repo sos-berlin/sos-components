@@ -124,7 +124,7 @@ public class WorkflowsHelper {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "forklist"), fl.getWorkflow().getInstructions());
+                    setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions());
                     break;
                 case IF:
                     IfElse ie = inst.cast();

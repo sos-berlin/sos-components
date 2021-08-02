@@ -8,7 +8,7 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	exclude-result-prefixes="jobdoc xhtml xi fn">
 	<xsl:output method="html" encoding="utf-8" indent="yes" />
-
+	<xsl:variable name="version" select="'${project.version}'"/>
 
 	<xsl:template match="/jobdoc:description">
 		<html>

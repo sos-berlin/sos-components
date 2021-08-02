@@ -69,6 +69,7 @@ public class Globals {
     public static String loginUserName = "";
     public static String apiVersion = "";
     public static String inventoryVersion = "";
+    public static String curVersion = "";
 
     public static long maxSizeOfLogsToDisplay = 1024 * 1024 * 10L; // 10MB
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
@@ -270,6 +271,9 @@ public class Globals {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
+            if (!"unknown".equals(version)) {
+                curVersion = version;
+            }
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
@@ -302,7 +306,9 @@ public class Globals {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
-            apiVersion = version;
+            if (!"unknown".equals(version)) {
+                apiVersion = version;
+            }
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
@@ -335,7 +341,9 @@ public class Globals {
                     LOGGER.warn(String.format("Version file %1$s not found in classpath", versionFile));
                 }
             }
-            inventoryVersion = version;
+            if (!"unknown".equals(version)) {
+                inventoryVersion = version;
+            }
         } catch (Exception e) {
             LOGGER.warn(String.format("Error while reading %1$s from classpath: ", versionFile), e);
         } finally {
@@ -455,6 +463,35 @@ public class Globals {
     public static ConfigurationGlobalsJoc getConfigurationGlobalsJoc() {
         return Globals.configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) Globals.configurationGlobals.getConfigurationSection(
                 DefaultSections.joc);
+    }
+    
+    // -1: current version is older, 0: current version is equal, 1: current version is younger
+    public static int curVersionCompareWith(String version) {
+        try {
+            String currentVersion = curVersion;
+            if (currentVersion == null || currentVersion.isEmpty()) {
+                currentVersion = "1.0.0-SNAPSHOT"; 
+            }
+            String[] curVersionsComplete = (currentVersion + "- ").split("-");
+            String[] curVersions = curVersionsComplete[0].split("\\.");
+            String[] versionsComplete = (version + "- ").split("-");
+            String[] versions = versionsComplete[0].split("\\.");
+            String curVersionsStr = curVersions[0];
+            String versionsStr = versions[0];
+            for (int i = 1; i < curVersions.length; i++) {
+                curVersionsStr += curVersions[i].replaceFirst("^(\\d)$", "0$1");
+            }
+            curVersionsStr += curVersionsComplete[1].replaceFirst("SNAPSHOT", "00").replaceFirst("RC(\\d)", "$1").replaceFirst(" ", "99")
+                    .replaceFirst("^(\\d)$", "0$1");
+            for (int i = 1; i < versions.length; i++) {
+                versionsStr += versions[i].replaceFirst("^(\\d)$", "0$1");
+            }
+            versionsStr += versionsComplete[1].replaceFirst("SNAPSHOT", "00").replaceFirst("RC(\\d)", "$1").replaceFirst(" ", "99").replaceFirst(
+                    "^(\\d)$", "0$1");
+            return Integer.valueOf(versionsStr).compareTo(Integer.valueOf(curVersionsStr));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
 }

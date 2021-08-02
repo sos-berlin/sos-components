@@ -78,9 +78,15 @@
 										<include>*.png</include>
 										<include>*.css</include>
 										<include>*.xsd</include>
-										<include>*.xsl</include>
 									</includes>
 									<filtering>false</filtering>
+								</resource>
+								<resource>
+									<directory>${source.dir}/</directory>
+									<includes>
+										<include>*.xsl</include>
+									</includes>
+									<filtering>true</filtering>
 								</resource>
 							</resources>
 						</configuration>

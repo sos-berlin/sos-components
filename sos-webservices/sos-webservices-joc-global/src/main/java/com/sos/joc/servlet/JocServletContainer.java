@@ -53,9 +53,9 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             throw new ServletException(e);
         }
-        CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         Globals.readUnmodifiables();
+        CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Globals.setProperties();
         WorkflowPaths.init();
         CompletableFuture.runAsync(() -> {
