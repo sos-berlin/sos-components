@@ -6,6 +6,7 @@ public class InventorySearchItem {
     private String path;
     private String name;
     private String title;
+    private String controllerId;
     private boolean valid;
     private boolean deleted;
     private boolean deployed;
@@ -43,6 +44,14 @@ public class InventorySearchItem {
 
     public void setTitle(String val) {
         title = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public boolean isValid() {

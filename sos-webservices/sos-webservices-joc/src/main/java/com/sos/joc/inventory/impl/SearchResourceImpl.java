@@ -59,9 +59,14 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
 
-            // TODO releasedOrDeployed
             ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
-            List<InventorySearchItem> items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
+            List<InventorySearchItem> items = null;
+            if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
+                items = dbLayer.getDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
+            } else {
+                items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
+            }
+
             List<ResponseSearchItem> r = new ArrayList<>();
             if (items != null) {
                 List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).collect(Collectors
@@ -73,6 +78,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     ri.setName(item.getName());
                     ri.setObjectType(objectType);
                     ri.setTitle(item.getTitle());
+                    ri.setControllerId(item.getControllerId());
                     ri.setValid(item.isValid());
                     ri.setDeleted(item.isDeleted());
                     ri.setDeployed(item.isDeployed());
