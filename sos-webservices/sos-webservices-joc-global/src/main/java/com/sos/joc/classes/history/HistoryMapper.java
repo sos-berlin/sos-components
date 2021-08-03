@@ -26,7 +26,7 @@ public class HistoryMapper {
         history.setEndTime(item.getEndTime());
         history.setHistoryId(item.getId());
         history.setOrderId(item.getOrderId());
-        history.setPlannedTime(item.getStartTimePlanned());
+        history.setPlannedTime(item.getStartTimeScheduled());
         history.setStartTime(item.getStartTime());
         history.setState(getState(item.getSeverity()));
         history.setOrderState(OrdersHelper.getHistoryState(item.getStateAsEnum()));
@@ -34,7 +34,7 @@ public class HistoryMapper {
         history.setWorkflow(item.getWorkflowPath());
         history.setPosition(getWorkflowPosition(item));
         history.setSequence(getSequence(item));
-        history.setArguments(getVariables(item.getStartParameters()));
+        history.setArguments(getVariables(item.getStartVariables()));
         return history;
     }
 
@@ -56,7 +56,7 @@ public class HistoryMapper {
         history.setPosition(item.getWorkflowPosition());
         history.setSequence(item.getPosition());
         history.setRetryCounter(item.getRetryCounter());
-        history.setArguments(getVariables(item.getStartParameters()));
+        history.setArguments(getVariables(item.getStartVariables()));
         return history;
     }
 

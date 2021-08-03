@@ -20,10 +20,10 @@ public class HistoryOrderBean extends AHistoryBean {
     private String parentOrderId;
     private String name;
     private String startCause;
-    private Date startTimePlanned;
+    private Date startTimeScheduled;
     private Date startTime;
     private String startWorkflowPosition;
-    private String startParameters;
+    private String startVariables;
     private Long currentHistoryOrderStepId;
     private Date endTime;
     private String endWorkflowPosition;
@@ -60,10 +60,10 @@ public class HistoryOrderBean extends AHistoryBean {
         this.parentOrderId = item.getParentOrderId();
         this.name = item.getName();
         this.startCause = item.getStartCause();
-        this.startTimePlanned = item.getStartTimePlanned();
+        this.startTimeScheduled = item.getStartTimeScheduled();
         this.startTime = item.getStartTime();
         this.startWorkflowPosition = item.getStartWorkflowPosition();
-        this.startParameters = item.getStartParameters();
+        this.startVariables = item.getStartVariables();
         this.currentHistoryOrderStepId = item.getCurrentHistoryOrderStepId();
         this.endTime = item.getEndTime();
         this.endWorkflowPosition = item.getEndWorkflowPosition();
@@ -177,12 +177,12 @@ public class HistoryOrderBean extends AHistoryBean {
         startCause = val;
     }
 
-    public Date getStartTimePlanned() {
-        return startTimePlanned;
+    public Date getStartTimeScheduled() {
+        return startTimeScheduled;
     }
 
-    public void setStartTimePlanned(Date val) {
-        startTimePlanned = val;
+    public void setStartTimeScheduled(Date val) {
+        startTimeScheduled = val;
     }
 
     public Date getStartTime() {
@@ -201,12 +201,12 @@ public class HistoryOrderBean extends AHistoryBean {
         startWorkflowPosition = val;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = val;
+    public void setStartVariables(String val) {
+        startVariables = val;
     }
 
     public Long getCurrentHistoryOrderStepId() {

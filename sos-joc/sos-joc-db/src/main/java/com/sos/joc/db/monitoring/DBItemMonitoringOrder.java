@@ -69,8 +69,8 @@ public class DBItemMonitoringOrder extends DBItem {
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;
 
-    @Column(name = "[START_TIME_PLANNED]", nullable = true)
-    private Date startTimePlanned;
+    @Column(name = "[START_TIME_SCHEDULED]", nullable = true)
+    private Date startTimeScheduled;
 
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
@@ -78,8 +78,8 @@ public class DBItemMonitoringOrder extends DBItem {
     @Column(name = "[START_WORKFLOW_POSITION]", nullable = false)
     private String startWorkflowPosition;
 
-    @Column(name = "[START_PARAMETERS]", nullable = true)
-    private String startParameters;
+    @Column(name = "[START_VARIABLES]", nullable = true)
+    private String startVariables;
 
     @Column(name = "[CURRENT_HOS_ID]", nullable = false)
     private Long currentHistoryOrderStepId;
@@ -257,12 +257,12 @@ public class DBItemMonitoringOrder extends DBItem {
         startCause = val;
     }
 
-    public Date getStartTimePlanned() {
-        return startTimePlanned;
+    public Date getStartTimeScheduled() {
+        return startTimeScheduled;
     }
 
-    public void setStartTimePlanned(Date val) {
-        startTimePlanned = val;
+    public void setStartTimeScheduled(Date val) {
+        startTimeScheduled = val;
     }
 
     public Date getStartTime() {
@@ -281,12 +281,12 @@ public class DBItemMonitoringOrder extends DBItem {
         startWorkflowPosition = val;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = normalizeValue(val, 2_000);
+    public void setStartVariables(String val) {
+        startVariables = normalizeValue(val, 2_000);
     }
 
     public Long getCurrentHistoryOrderStepId() {

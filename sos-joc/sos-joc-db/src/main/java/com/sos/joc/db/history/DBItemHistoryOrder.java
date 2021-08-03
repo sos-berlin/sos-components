@@ -79,8 +79,8 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[START_CAUSE]", nullable = false)
     private String startCause;// event. implemented: unknown(period),fork. planned: file trigger, setback, unskip, unstop ...
 
-    @Column(name = "[START_TIME_PLANNED]", nullable = true)
-    private Date startTimePlanned;// event
+    @Column(name = "[START_TIME_SCHEDULED]", nullable = true)
+    private Date startTimeScheduled;// event
 
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
@@ -91,8 +91,8 @@ public class DBItemHistoryOrder extends DBItem {
     @Column(name = "[START_EVENT_ID]", nullable = false)
     private Long startEventId;// event <- order added event id
 
-    @Column(name = "[START_PARAMETERS]", nullable = true)
-    private String startParameters;
+    @Column(name = "[START_VARIABLES]", nullable = true)
+    private String startVariables;
 
     @Column(name = "[CURRENT_HOS_ID]", nullable = false)
     private Long currentHistoryOrderStepId; // db
@@ -291,12 +291,12 @@ public class DBItemHistoryOrder extends DBItem {
         startCause = val;
     }
 
-    public Date getStartTimePlanned() {
-        return startTimePlanned;
+    public Date getStartTimeScheduled() {
+        return startTimeScheduled;
     }
 
-    public void setStartTimePlanned(Date val) {
-        startTimePlanned = val;
+    public void setStartTimeScheduled(Date val) {
+        startTimeScheduled = val;
     }
 
     public Date getStartTime() {
@@ -323,12 +323,12 @@ public class DBItemHistoryOrder extends DBItem {
         return startEventId;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = normalizeValue(val, 2_000);
+    public void setStartVariables(String val) {
+        startVariables = normalizeValue(val, 2_000);
     }
 
     public Long getCurrentHistoryOrderStepId() {

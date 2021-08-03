@@ -43,6 +43,31 @@ public class SOSReflection {
         return fields;
     }
 
+    public static boolean isEmpty(Object obj) {
+        if (obj == null) {
+            return true;
+        }
+        // TODO getAllDeclaredFields?
+        for (Field field : obj.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
+            try {
+                Object val = field.get(obj);
+                if (val != null) {
+                    if (val instanceof CharSequence) {
+                        if (SOSString.isEmpty(val.toString())) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            } catch (Throwable e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static boolean isList(Type type) throws ClassNotFoundException {
         return isList(Class.forName(normalizeClassForName(type.getTypeName())));
     }

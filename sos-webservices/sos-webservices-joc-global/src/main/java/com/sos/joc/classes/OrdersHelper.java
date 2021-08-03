@@ -448,7 +448,7 @@ public class OrdersHelper {
                 }
                 if (invalid) {
                     throw new JocConfigurationException(String.format("Variable '%s': Wrong data type %s (%s is expected).", param.getKey(), curArg
-                            .getClass().getSimpleName(), param.getValue().getType().value()));
+                            .getClass().getSimpleName().replaceFirst("Array", ""), param.getValue().getType().value()));
                 }
             }
         }
@@ -527,7 +527,7 @@ public class OrdersHelper {
 
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
             final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(FreshOrder::getOldOrderId,
-                    FreshOrder::getJFreshOrder));
+                    FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
             
             proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
@@ -538,9 +538,9 @@ public class OrdersHelper {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-                                    proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
-                                            .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
-                                                    controllerId));
+//                                    proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
+//                                            .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
+//                                                    controllerId));
                                     // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));

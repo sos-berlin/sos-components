@@ -318,13 +318,13 @@ public class DBLayerHistory {
         return session.executeUpdate(query);
     }
 
-    public int setOrderStepEnd(Long id, Date endTime, Long endEventId, String endParameters, Integer returnCode, Integer severity, boolean error,
+    public int setOrderStepEnd(Long id, Date endTime, Long endEventId, String endVariables, Integer returnCode, Integer severity, boolean error,
             String errorState, String errorReason, String errorCode, String errorText, Date modified) throws SOSHibernateException {
 
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
         hql.append("set endTime=:endTime ");
         hql.append(",endEventId=:endEventId ");
-        hql.append(",endParameters=:endParameters ");
+        hql.append(",endVariables=:endVariables ");
         hql.append(",returnCode=:returnCode ");
         hql.append(",severity=:severity ");
         hql.append(",error=:error ");
@@ -338,7 +338,7 @@ public class DBLayerHistory {
         Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
         query.setParameter("endTime", endTime);
         query.setParameter("endEventId", endEventId);
-        query.setParameter("endParameters", endParameters);
+        query.setParameter("endVariables", endVariables);
         query.setParameter("returnCode", returnCode);
         query.setParameter("severity", severity);
         query.setParameter("error", error);

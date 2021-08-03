@@ -6,7 +6,7 @@ import com.sos.js7.history.controller.proxy.HistoryEventType;
 
 public final class FatEventOrderStarted extends AFatEventOrder {
 
-    private Date planned;
+    private Date scheduledFor;
 
     public FatEventOrderStarted(Long eventId, Date eventDatetime) {
         super(eventId, eventDatetime);
@@ -15,7 +15,7 @@ public final class FatEventOrderStarted extends AFatEventOrder {
     @Override
     public void set(Object... objects) {
         super.set(objects);
-        this.planned = (Date) objects[objects.length - 1];
+        this.scheduledFor = (Date) objects[objects.length - 1];
     }
 
     @Override
@@ -23,7 +23,7 @@ public final class FatEventOrderStarted extends AFatEventOrder {
         return HistoryEventType.OrderStarted;
     }
 
-    public Date getPlanned() {
-        return planned;
+    public Date getScheduledFor() {
+        return scheduledFor;
     }
 }

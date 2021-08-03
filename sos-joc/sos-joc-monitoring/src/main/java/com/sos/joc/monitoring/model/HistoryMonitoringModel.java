@@ -331,10 +331,10 @@ public class HistoryMonitoringModel {
         item.setCurrentHistoryOrderStepId(hob.getCurrentHistoryOrderStepId());
 
         item.setStartCause(hob.getStartCause());
-        item.setStartTimePlanned(hob.getStartTimePlanned());
+        item.setStartTimeScheduled(hob.getStartTimeScheduled());
         item.setStartTime(hob.getStartTime());
         item.setStartWorkflowPosition(hob.getStartWorkflowPosition());
-        item.setStartParameters(hob.getStartParameters());
+        item.setStartVariables(hob.getStartVariables());
 
         // item.setEndTime(hob.getEndTime());
         // item.setEndWorkflowPosition(hob.getEndWorkflowPosition());
@@ -433,7 +433,7 @@ public class HistoryMonitoringModel {
 
         item.setStartCause(hosb.getStartCause());
         item.setStartTime(hosb.getStartTime());
-        item.setStartParameters(hosb.getStartParameters());
+        item.setStartVariables(hosb.getStartVariables());
 
         item.setError(false);
         item.setWarn(JobWarning.NONE);

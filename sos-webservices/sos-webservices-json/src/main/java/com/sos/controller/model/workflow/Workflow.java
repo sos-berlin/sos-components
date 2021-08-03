@@ -3,12 +3,15 @@ package com.sos.controller.model.workflow;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
@@ -29,7 +32,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "isCurrentVersion",
     "versionDate",
     "state",
-    "fileOrderSources"
+    "fileOrderSources",
+    "forkListVariables"
 })
 public class Workflow
     extends com.sos.inventory.model.workflow.Workflow
@@ -65,6 +69,9 @@ public class Workflow
     private SyncState state;
     @JsonProperty("fileOrderSources")
     private List<FileOrderSource> fileOrderSources = null;
+    @JsonProperty("forkListVariables")
+    @JsonDeserialize(as = java.util.LinkedHashSet.class)
+    private Set<String> forkListVariables = null;
 
     /**
      * No args constructor for use in serialization
@@ -75,26 +82,28 @@ public class Workflow
 
     /**
      * 
-     * @param documentationPath
      * @param instructions
      * @param jobResourceNames
      * @param jobs
      * @param title
      * @param versionDate
+     * @param orderPreparation
      * @param path
      * @param fileOrderSources
      * @param versionId
+     * @param forkListVariables
      * @param isCurrentVersion
-     * @param orderRequirements
      * @param state
+     * @param documentationName
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, String versionId, Requirements orderRequirements, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationPath, Jobs jobs) {
-        super(versionId, orderRequirements, jobResourceNames, instructions, title, documentationPath, jobs);
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, DeployType tYPE, String version, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
+        super(versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;
         this.state = state;
         this.fileOrderSources = fileOrderSources;
+        this.forkListVariables = forkListVariables;
     }
 
     /**
@@ -183,14 +192,24 @@ public class Workflow
         this.fileOrderSources = fileOrderSources;
     }
 
+    @JsonProperty("forkListVariables")
+    public Set<String> getForkListVariables() {
+        return forkListVariables;
+    }
+
+    @JsonProperty("forkListVariables")
+    public void setForkListVariables(Set<String> forkListVariables) {
+        this.forkListVariables = forkListVariables;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(fileOrderSources).append(state).append(isCurrentVersion).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -202,7 +221,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(state, rhs.state).append(isCurrentVersion, rhs.isCurrentVersion).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

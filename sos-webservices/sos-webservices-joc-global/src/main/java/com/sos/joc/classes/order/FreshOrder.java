@@ -44,6 +44,10 @@ public class FreshOrder {
         return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args);
     }
     
+    public JFreshOrder getJFreshOrderWithDeleteOrderWhenTerminated() {
+        return JFreshOrder.of(newOrderId, workflowPath, scheduledFor, args, true);
+    }
+    
     private static OrderId generateNewFromOldOrderId(OrderId orderId) {
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
         String sOrderId = orderId.string().replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10}(-.+)$", "$1" + uniqueId + "$2");

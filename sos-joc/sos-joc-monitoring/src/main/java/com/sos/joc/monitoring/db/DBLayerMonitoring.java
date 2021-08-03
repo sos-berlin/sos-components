@@ -204,7 +204,7 @@ public class DBLayerMonitoring {
 
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MONITORING_ORDER_STEP).append(" ");
         hql.append("set endTime=:endTime ");
-        hql.append(",endParameters=:endParameters ");
+        hql.append(",endVariables=:endVariables ");
         hql.append(",returnCode=:returnCode ");
         hql.append(",severity=:severity ");
         hql.append(",error=:error ");
@@ -220,7 +220,7 @@ public class DBLayerMonitoring {
         Query<DBItemMonitoringOrderStep> query = session.createQuery(hql.toString());
         HistoryOrderStepBean hosb = result.getStep();
         query.setParameter("endTime", hosb.getEndTime());
-        query.setParameter("endParameters", hosb.getEndParameters());
+        query.setParameter("endVariables", hosb.getEndVariables());
         query.setParameter("returnCode", hosb.getReturnCode());
         query.setParameter("severity", hosb.getSeverity());
         query.setParameter("error", hosb.getError());
@@ -333,7 +333,8 @@ public class DBLayerMonitoring {
         return item;
     }
 
-    public List<String> getNotificationNotificationIds(NotificationType type, NotificationRange range, Long orderId, Long stepId) throws SOSHibernateException {
+    public List<String> getNotificationNotificationIds(NotificationType type, NotificationRange range, Long orderId, Long stepId)
+            throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select n.notificationId from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("where n.id=w.notificationId ");
@@ -351,8 +352,10 @@ public class DBLayerMonitoring {
         return getSession().getResultList(query);
     }
 
-    public LastWorkflowNotificationDBItemEntity getLastNotification(String notificationId, NotificationRange range, Long orderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select n.id as id, n.type as type, n.notificationId as notificationId, w.orderStepHistoryId as stepId ");
+    public LastWorkflowNotificationDBItemEntity getLastNotification(String notificationId, NotificationRange range, Long orderId)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder(
+                "select n.id as id, n.type as type, n.notificationId as notificationId, w.orderStepHistoryId as stepId ");
         hql.append("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" n ");
         hql.append(",").append(DBLayer.DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
         hql.append("where n.id=w.notificationId ");
@@ -431,10 +434,10 @@ public class DBLayerMonitoring {
         item.setHasChildren(history.getHasChildren());
         item.setName(history.getName());
         item.setStartCause(history.getStartCause());
-        item.setStartTimePlanned(history.getStartTimePlanned());
+        item.setStartTimeScheduled(history.getStartTimeScheduled());
         item.setStartTime(history.getStartTime());
         item.setStartWorkflowPosition(history.getStartWorkflowPosition());
-        item.setStartParameters(history.getStartParameters());
+        item.setStartVariables(history.getStartVariables());
         item.setCurrentHistoryOrderStepId(history.getCurrentHistoryOrderStepId());
         item.setEndTime(history.getEndTime());
         item.setEndWorkflowPosition(history.getEndWorkflowPosition());
@@ -474,9 +477,9 @@ public class DBLayerMonitoring {
         item.setAgentUri(history.getAgentUri());
         item.setStartCause(history.getStartCause());
         item.setStartTime(history.getStartTime());
-        item.setStartParameters(history.getStartParameters());
+        item.setStartVariables(history.getStartVariables());
         item.setEndTime(history.getEndTime());
-        item.setEndParameters(history.getEndParameters());
+        item.setEndVariables(history.getEndVariables());
         item.setReturnCode(history.getReturnCode());
         item.setSeverity(history.getSeverity());
         item.setError(history.getError());

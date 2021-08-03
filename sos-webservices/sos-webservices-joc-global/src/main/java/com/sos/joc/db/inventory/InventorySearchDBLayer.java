@@ -79,6 +79,73 @@ public class InventorySearchDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public List<InventorySearchItem> getDeployedOrReleasedConfigurations(ConfigurationType type, String search, List<String> folders,
+            String controllerId) throws SOSHibernateException {
+
+        boolean isReleasable = isReleasable(type);
+        StringBuilder hql = new StringBuilder("select ");
+        if (isReleasable) {
+            hql.append("mt.cid as id");
+            hql.append(",mt.path as path");
+            hql.append(",mt.name as name");
+            hql.append(",mt.title as title ");
+            hql.append(",true as valid ");
+            hql.append(",false as deleted ");
+            hql.append(",false as deployed ");
+            hql.append(",true as released ");
+            hql.append(",1 as countReleased ");
+            hql.append(",0 as countDeployed ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" mt ");
+        } else {
+            hql.append("mt.inventoryConfigurationId as id");
+            hql.append(",mt.path as path");
+            hql.append(",mt.name as name");
+            hql.append(",mt.title as title ");
+            hql.append(",mt.controllerId as controllerId ");
+            hql.append(",true as valid ");
+            hql.append(",false as deleted ");
+            hql.append(",true as deployed ");
+            hql.append(",false as released ");
+            hql.append(",0 as countReleased ");
+            hql.append(",1 as countDeployed ");
+            hql.append("from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" mt ");
+        }
+        hql.append("where mt.type=:type ");
+        if (!SOSString.isEmpty(search)) {
+            hql.append("and (mt.name like :search or mt.title like :search) ");
+        }
+
+        boolean searchInFolders = false;
+        if (folders != null && folders.size() > 0 && !folders.contains("/")) {
+            searchInFolders = true;
+            hql.append("and (");
+            List<String> f = new ArrayList<>();
+            for (int i = 0; i < folders.size(); i++) {
+                f.add("mt.folder like :folder" + i + " ");
+            }
+            hql.append(String.join(" or ", f));
+            hql.append(") ");
+        }
+        if (!isReleasable && !SOSString.isEmpty(controllerId)) {
+            hql.append("and mt.controllerId=:controllerId ");
+        }
+
+        Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
+        query.setParameter("type", type.intValue());
+        if (!SOSString.isEmpty(search)) {
+            query.setParameter("search", '%' + search + '%');
+        }
+        if (searchInFolders) {
+            for (int i = 0; i < folders.size(); i++) {
+                query.setParameter("folder" + i, folders.get(i) + '%');
+            }
+        }
+        if (!isReleasable && !SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
+        return getSession().getResultList(query);
+    }
+
     private boolean isReleasable(ConfigurationType type) {
         switch (type) {
         case SCHEDULE:

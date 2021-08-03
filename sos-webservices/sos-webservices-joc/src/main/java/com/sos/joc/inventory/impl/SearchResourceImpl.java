@@ -2,6 +2,7 @@ package com.sos.joc.inventory.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSReflection;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -18,7 +20,6 @@ import com.sos.joc.db.inventory.InventorySearchDBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.ISearchResource;
-import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.search.RequestSearchFilter;
 import com.sos.joc.model.inventory.search.ResponseSearch;
@@ -41,15 +42,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                 return response;
             }
 
-            List<String> folders = null;
-            if (in.getFolders() != null) {
-                folders = in.getFolders().stream().map(e -> {
-                    return e.getFolder();
-                }).collect(Collectors.toList());
-            }
-
             ResponseSearch answer = new ResponseSearch();
-            answer.setResults(in.getAdvanced() == null ? getBasicSearch(in, folders) : getAdvancedSearch(in, folders));
+            answer.setResults(SOSReflection.isEmpty(in.getAdvanced()) ? getBasicSearch(in) : getAdvancedSearch(in));
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -59,24 +53,32 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in, List<String> folders) throws Exception {
+    private List<ResponseSearchItem> getBasicSearch(final RequestSearchFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
 
-            // TODO releasedOrDeployed
             ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
-            List<InventorySearchItem> items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), folders);
+            List<InventorySearchItem> items = null;
+            if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
+                items = dbLayer.getDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
+            } else {
+                items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
+            }
+
             List<ResponseSearchItem> r = new ArrayList<>();
             if (items != null) {
-                for (InventorySearchItem item : items) {
+                List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).collect(Collectors
+                        .toList());
+                for (InventorySearchItem item : sorted) {
                     ResponseSearchItem ri = new ResponseSearchItem();
                     ri.setId(item.getId());
                     ri.setPath(item.getPath());
                     ri.setName(item.getName());
                     ri.setObjectType(objectType);
                     ri.setTitle(item.getTitle());
+                    ri.setControllerId(item.getControllerId());
                     ri.setValid(item.isValid());
                     ri.setDeleted(item.isDeleted());
                     ri.setDeployed(item.isDeployed());
@@ -94,7 +96,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in, List<String> folders) {
+    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in) {
         List<ResponseSearchItem> r = new ArrayList<>();
         switch (in.getReturnType()) {
         case WORKFLOW:
@@ -159,8 +161,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
         if (response == null) {
             if (in.getFolders() != null) {
-                for (Folder folder : in.getFolders()) {
-                    if (!folderPermissions.isPermittedForFolder(folder.getFolder())) {
+                for (String folder : in.getFolders()) {
+                    if (!folderPermissions.isPermittedForFolder(folder)) {
                         return accessDeniedResponse();
                     }
                 }

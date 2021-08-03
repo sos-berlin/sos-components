@@ -93,8 +93,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[START_EVENT_ID]", nullable = false)
     private Long startEventId;// event <- started event id
 
-    @Column(name = "[START_PARAMETERS]", nullable = true)
-    private String startParameters;
+    @Column(name = "[START_VARIABLES]", nullable = true)
+    private String startVariables;
 
     @Column(name = "[END_TIME]", nullable = true)
     private Date endTime;// event
@@ -102,8 +102,8 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[END_EVENT_ID]", nullable = true)
     private Long endEventId;// event <- ended event id
 
-    @Column(name = "[END_PARAMETERS]", nullable = true)
-    private String endParameters;
+    @Column(name = "[END_VARIABLES]", nullable = true)
+    private String endVariables;
 
     @Column(name = "[RETURN_CODE]", nullable = true)
     private Integer returnCode;// event
@@ -331,12 +331,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         return startEventId;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = normalizeValue(val, 2_000);
+    public void setStartVariables(String val) {
+        startVariables = normalizeValue(val, 2_000);
     }
 
     public Date getEndTime() {
@@ -355,12 +355,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         return endEventId;
     }
 
-    public String getEndParameters() {
-        return endParameters;
+    public String getEndVariables() {
+        return endVariables;
     }
 
-    public void setEndParameters(String val) {
-        endParameters = val;
+    public void setEndVariables(String val) {
+        endVariables = val;
     }
 
     public Integer getReturnCode() {

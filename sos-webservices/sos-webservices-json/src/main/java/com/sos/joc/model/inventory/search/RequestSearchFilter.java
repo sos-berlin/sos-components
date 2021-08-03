@@ -6,7 +6,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -45,14 +44,8 @@ public class RequestSearchFilter {
      */
     @JsonProperty("search")
     private String search;
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("folders")
-    private List<Folder> folders = new ArrayList<Folder>();
+    private List<String> folders = new ArrayList<String>();
     @JsonProperty("deployedOrReleased")
     private Boolean deployedOrReleased = false;
     /**
@@ -117,25 +110,13 @@ public class RequestSearchFilter {
         this.search = search;
     }
 
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("folders")
-    public List<Folder> getFolders() {
+    public List<String> getFolders() {
         return folders;
     }
 
-    /**
-     * folders
-     * <p>
-     * 
-     * 
-     */
     @JsonProperty("folders")
-    public void setFolders(List<Folder> folders) {
+    public void setFolders(List<String> folders) {
         this.folders = folders;
     }
 
