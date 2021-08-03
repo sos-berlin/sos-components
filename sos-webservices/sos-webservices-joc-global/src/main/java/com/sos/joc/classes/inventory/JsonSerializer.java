@@ -22,7 +22,6 @@ import com.sos.inventory.model.job.JobReturnCode;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -321,12 +320,18 @@ public class JsonSerializer {
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    cleanInventoryInstructions(tryCatch.getTry().getInstructions());
-                    cleanInventoryInstructions(tryCatch.getCatch().getInstructions());
+                    if (tryCatch.getTry() != null) {
+                        cleanInventoryInstructions(tryCatch.getTry().getInstructions());
+                    }
+                    if (tryCatch.getCatch() != null) {
+                        cleanInventoryInstructions(tryCatch.getCatch().getInstructions());
+                    }
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
-                    cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions());
+                    if (lock.getLockedWorkflow() != null) {
+                        cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;
@@ -379,12 +384,18 @@ public class JsonSerializer {
                     break;
                 case TRY:
                     com.sos.sign.model.instruction.TryCatch tryCatch = inst.cast();
-                    cleanSignedInstructions(tryCatch.getTry().getInstructions());
-                    cleanSignedInstructions(tryCatch.getCatch().getInstructions());
+                    if (tryCatch.getTry() != null) {
+                        cleanSignedInstructions(tryCatch.getTry().getInstructions());
+                    }
+                    if (tryCatch.getCatch() != null) {
+                        cleanSignedInstructions(tryCatch.getCatch().getInstructions());
+                    }
                     break;
                 case LOCK:
                     com.sos.sign.model.instruction.Lock lock = inst.cast();
-                    cleanSignedInstructions(lock.getLockedWorkflow().getInstructions());
+                    if (lock.getLockedWorkflow() != null) {
+                        cleanSignedInstructions(lock.getLockedWorkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;

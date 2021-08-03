@@ -80,7 +80,7 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 if (workflow.getIsCurrentVersion()) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
-                entity.setWorkflow(WorkflowsHelper.addWorkflowPositions(workflow));
+                entity.setWorkflow(WorkflowsHelper.addWorkflowPositionsAndForkListVariables(workflow));
             } else {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowPath));
             }

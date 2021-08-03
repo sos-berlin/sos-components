@@ -94,8 +94,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
             }
             if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*")).asPredicate();
-                contentsStream = contentsStream.filter(w -> regex.test(w.getPath()));
+                Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+                contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
             }
             
             Map<String, List<FileOrderSource>> fileOrderSources = WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, contents
@@ -117,7 +117,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     if (workflow.getIsCurrentVersion()) {
                         workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                     }
-                    return WorkflowsHelper.addWorkflowPositions(workflow);
+                    return WorkflowsHelper.addWorkflowPositionsAndForkListVariables(workflow);
                 } catch (Exception e) {
                     if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                         LOGGER.info(jocError.printMetaInfo());

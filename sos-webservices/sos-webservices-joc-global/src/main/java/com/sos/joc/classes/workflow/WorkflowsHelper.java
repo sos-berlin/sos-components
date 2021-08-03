@@ -3,6 +3,7 @@ package com.sos.joc.classes.workflow;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -92,22 +93,26 @@ public class WorkflowsHelper {
         return i;
     }
 
-    public static Workflow addWorkflowPositions(Workflow w) {
+    public static Workflow addWorkflowPositionsAndForkListVariables(Workflow w) {
         if (w == null) {
             return null;
         }
         List<Instruction> instructions = w.getInstructions();
         if (instructions != null) {
             instructions.add(createImplicitEndInstruction());
+            w.setForkListVariables(new LinkedHashSet<>());
         } else {
             w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
         }
         Object[] o = {};
-        setWorkflowPositions(o, w.getInstructions());
+        setWorkflowPositionsAndForkListVariables(o, w.getInstructions(), w.getForkListVariables());
+        if (w.getForkListVariables() == null || w.getForkListVariables().isEmpty()) {
+            w.setInstructions(null); 
+        }
         return w;
     }
 
-    private static void setWorkflowPositions(Object[] parentPosition, List<Instruction> insts) {
+    private static void setWorkflowPositionsAndForkListVariables(Object[] parentPosition, List<Instruction> insts, Set<String> forkListVariables) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -119,30 +124,31 @@ public class WorkflowsHelper {
                 case FORK:
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
-                        setWorkflowPositions(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions());
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), forkListVariables);
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "fork"), fl.getWorkflow().getInstructions());
+                    forkListVariables.add(fl.getChildren());
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), forkListVariables);
                     break;
                 case IF:
                     IfElse ie = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "then"), ie.getThen().getInstructions());
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "then"), ie.getThen().getInstructions(), forkListVariables);
                     if (ie.getElse() != null) {
-                        setWorkflowPositions(extendArray(pos, "else"), ie.getElse().getInstructions());
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "else"), ie.getElse().getInstructions(), forkListVariables);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "try+0"), tc.getTry().getInstructions());
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "try+0"), tc.getTry().getInstructions(), forkListVariables);
                     if (tc.getCatch() != null) {
-                        setWorkflowPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions());
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch+0"), tc.getCatch().getInstructions(), forkListVariables);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
-                    setWorkflowPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions());
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), forkListVariables);
                     break;
                 default:
                     break;
