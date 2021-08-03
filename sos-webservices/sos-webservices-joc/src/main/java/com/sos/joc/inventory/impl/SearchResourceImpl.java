@@ -96,65 +96,47 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         }
     }
 
-    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-        switch (in.getReturnType()) {
-        case WORKFLOW:
-            r = getWorkflows(in);
-            break;
-        case FILEORDERSOURCE:
-            r = getFileOrderSources(in);
-            break;
-        case JOBRESOURCE:
-            r = getJobResources(in);
-            break;
-        case BOARD:
-            r = getBoards(in);
-            break;
-        case LOCK:
-            r = getLocks(in);
-            break;
-        case SCHEDULE:
-            r = getSchedules(in);
-            break;
+    private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in) throws Exception {
+        SOSHibernateSession session = null;
+        try {
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
+            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+
+            ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
+            List<InventorySearchItem> items = null;
+            // if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
+            // items = dbLayer.getDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
+            // } else {
+            items = dbLayer.getAdvancedInventoryConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced());
+            // }
+
+            List<ResponseSearchItem> r = new ArrayList<>();
+            if (items != null) {
+                List<InventorySearchItem> sorted = items.stream().sorted(Comparator.comparing(InventorySearchItem::getPath)).collect(Collectors
+                        .toList());
+                for (InventorySearchItem item : sorted) {
+                    ResponseSearchItem ri = new ResponseSearchItem();
+                    ri.setId(item.getId());
+                    ri.setPath(item.getPath());
+                    ri.setName(item.getName());
+                    ri.setObjectType(objectType);
+                    ri.setTitle(item.getTitle());
+                    ri.setControllerId(item.getControllerId());
+                    ri.setValid(item.isValid());
+                    ri.setDeleted(item.isDeleted());
+                    ri.setDeployed(item.isDeployed());
+                    ri.setReleased(item.isReleased());
+                    ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
+                    ri.setHasReleases(item.getCountReleased().intValue() > 0);
+                    r.add(ri);
+                }
+            }
+            return r;
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            Globals.disconnect(session);
         }
-        return r;
-    }
-
-    private List<ResponseSearchItem> getWorkflows(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
-    }
-
-    private List<ResponseSearchItem> getFileOrderSources(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
-    }
-
-    private List<ResponseSearchItem> getJobResources(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
-    }
-
-    private List<ResponseSearchItem> getBoards(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
-    }
-
-    private List<ResponseSearchItem> getLocks(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
-    }
-
-    private List<ResponseSearchItem> getSchedules(final RequestSearchFilter in) {
-        List<ResponseSearchItem> r = new ArrayList<>();
-
-        return r;
     }
 
     private JOCDefaultResponse checkPermissions(final String accessToken, final RequestSearchFilter in, boolean permission) throws Exception {
