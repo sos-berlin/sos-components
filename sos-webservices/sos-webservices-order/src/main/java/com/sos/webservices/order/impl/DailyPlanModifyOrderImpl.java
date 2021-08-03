@@ -32,6 +32,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
@@ -262,30 +263,36 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         schedule.setSubmitOrderToControllerWhenPlanned(finalPlannedOrder.getSubmitted());
                         schedule.setPlanOrderAutomatically(true);
 
-                        schedule.setVariables(new Variables());
+                        schedule.setVariableSets(new ArrayList<VariableSet>());
+                        VariableSet variableSet = new VariableSet();
+                        Variables variables = new Variables();
+                        variableSet.setVariables(variables);
                         for (DBItemDailyPlanVariables orderVariable : listOfVariables) {
                             switch (orderVariable.getVariableType()) {
                             case 0:
-                                schedule.getVariables().setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
+                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
                                 break;
                             case 1:
-                                schedule.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable
+                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable
                                         .getVariableValue()));
                                 break;
                             case 2:
-                                schedule.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable
+                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable
                                         .getVariableValue()));
                                 break;
                             case 3:
-                                schedule.getVariables().setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable
+                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable
                                         .getVariableValue()));
                             case 4:
-                                schedule.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable
+                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable
                                         .getVariableValue()));
                                 break;
 
                             }
                         }
+                        
+                        if (variableSet.getVariables().getAdditionalProperties().size() > 0)
+                        schedule.getVariableSets().add(variableSet);
 
                         schedule.setCalendars(new ArrayList<AssignedCalendars>());
                         AssignedCalendars assignedCalendars = new AssignedCalendars();
