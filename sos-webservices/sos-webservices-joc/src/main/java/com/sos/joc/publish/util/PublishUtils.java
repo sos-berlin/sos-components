@@ -1072,8 +1072,8 @@ public abstract class PublishUtils {
                     if (draft.getPath() != null) {
                         original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.BOARD.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(), ConfigurationType.BOARD
-                                .intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(),
+                                ConfigurationType.BOARD.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -3193,6 +3193,7 @@ public abstract class PublishUtils {
         newItem.setName(cfg.getName());
         newItem.setPath(cfg.getPath());
         newItem.setType(cfg.getType());
+        newItem.setTitle(cfg.getTitle());
         // TODO: type mapping
         try {
             newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
