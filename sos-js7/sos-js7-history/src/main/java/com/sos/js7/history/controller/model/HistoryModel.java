@@ -572,8 +572,7 @@ public class HistoryModel {
     }
 
     private void setPreviousControllerLastKnownTime(DBLayerHistory dbLayer, DBItemHistoryController current) throws Exception {
-        DBItemHistoryController previous = dbLayer
-                .getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
+        DBItemHistoryController previous = dbLayer.getControllerByNextEventId(controllerConfiguration.getCurrent().getId(), current
                 .getReadyEventId());
         if (previous != null && previous.getShutdownTime() == null) {
             Date knownTime = getLastKnownTime(dbLayer, previous.getLastKnownTime(), previous.getReadyEventId(), current.getReadyEventId(), null);
@@ -752,11 +751,11 @@ public class HistoryModel {
             item.setName(entry.getOrderId());
             item.setStartCause(OrderStartCause.order.name());// TODO
 
-            item.setStartTimePlanned(entry.getPlanned() == null ? entry.getEventDatetime() : entry.getPlanned());
+            item.setStartTimeScheduled(entry.getScheduledFor() == null ? entry.getEventDatetime() : entry.getScheduledFor());
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(item.getWorkflowPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartParameters(entry.getArgumentsAsJsonString());
+            item.setStartVariables(entry.getArgumentsAsJsonString());
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -1160,11 +1159,11 @@ public class HistoryModel {
 
             item.setName(forkOrder.getBranchId());// TODO
             item.setStartCause(OrderStartCause.fork.name());// TODO
-            item.setStartTimePlanned(entry.getEventDatetime());
+            item.setStartTimeScheduled(entry.getEventDatetime());
             item.setStartTime(entry.getEventDatetime());
             item.setStartWorkflowPosition(SOSString.isEmpty(entry.getPosition()) ? "0" : entry.getPosition());
             item.setStartEventId(entry.getEventId());
-            item.setStartParameters(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
+            item.setStartVariables(entry.getArgumentsAsJsonString()); // TODO or forkOrder arguments ???
 
             item.setCurrentHistoryOrderStepId(Long.valueOf(0));
 
@@ -1286,7 +1285,7 @@ public class HistoryModel {
             item.setStartCause(OrderStepStartCause.order.name());// TODO
             item.setStartTime(agentStartTime);
             item.setStartEventId(entry.getEventId());
-            item.setStartParameters(entry.getArgumentsAsJsonString());// TODO check
+            item.setStartVariables(entry.getArgumentsAsJsonString());// TODO check
 
             item.setEndTime(null);
             item.setEndEventId(null);
@@ -1381,11 +1380,11 @@ public class HistoryModel {
             cos.setSeverity(HistorySeverity.map2DbSeverity(le.isError() ? OrderStateText.FAILED : OrderStateText.FINISHED));
 
             Map<String, Value> namedValues = handleNamedValues(entry, co, cos);
-            String endParameters = HistoryUtil.map2Json(namedValues);
-            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endParameters, le.getReturnCode(), cos.getSeverity(), le
+            String endVariables = HistoryUtil.map2Json(namedValues);
+            dbLayer.setOrderStepEnd(cos.getId(), cos.getEndTime(), entry.getEventId(), endVariables, le.getReturnCode(), cos.getSeverity(), le
                     .isError(), le.getErrorState(), le.getErrorReason(), le.getErrorCode(), le.getErrorText(), new Date());
             le.onOrderStep(cos);
-            hosb = onOrderStepProcessed(dbLayer, entry.getEventId(), co, cos, le, endParameters);
+            hosb = onOrderStepProcessed(dbLayer, entry.getEventId(), co, cos, le, endVariables);
 
             Path log = storeLog2File(le);
             DBItemHistoryLog logItem = storeLogFile2Db(dbLayer, cos.getHistoryOrderMainParentId(), cos.getHistoryOrderId(), cos.getId(), true, log);
@@ -1410,13 +1409,13 @@ public class HistoryModel {
     }
 
     private HistoryOrderStepBean onOrderStepProcessed(DBLayerHistory dbLayer, Long eventId, CachedOrder co, CachedOrderStep cos, LogEntry le,
-            String endParameters) throws Exception {
+            String endVariables) throws Exception {
         String workflowName = HistoryUtil.getBasenameFromPath(co.getWorkflowPath());
         CachedWorkflow cw = getCachedWorkflow(dbLayer, workflowName, co.getWorkflowVersionId());
         CachedWorkflowJob job = cw.getJob(cos.getJobName());
         HistoryOrderStepBean hosb = cos.convert(EventType.OrderProcessed, eventId, controllerConfiguration.getCurrent().getId(), co
                 .getWorkflowPath());
-        hosb.setEndParameters(endParameters);
+        hosb.setEndVariables(endVariables);
         hosb.setError(le.isError());
         hosb.setErrorCode(le.getErrorCode());
         hosb.setErrorReason(le.getErrorReason());

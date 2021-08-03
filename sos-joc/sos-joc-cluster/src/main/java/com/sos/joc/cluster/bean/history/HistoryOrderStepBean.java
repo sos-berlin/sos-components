@@ -21,9 +21,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String agentUri;
     private String startCause;
     private Date startTime;
-    private String startParameters;
+    private String startVariables;
     private Date endTime;
-    private String endParameters;
+    private String endVariables;
     private Integer returnCode;
     private Integer severity;
     private boolean error;
@@ -57,9 +57,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
         this.agentUri = item.getAgentUri();
         this.startCause = item.getStartCause();
         this.startTime = item.getStartTime();
-        this.startParameters = item.getStartParameters();
+        this.startVariables = item.getStartVariables();
         this.endTime = item.getEndTime();
-        this.endParameters = item.getEndParameters();
+        this.endVariables = item.getEndVariables();
         this.returnCode = item.getReturnCode();
         this.severity = item.getSeverity();
         this.error = item.getError();
@@ -185,12 +185,12 @@ public class HistoryOrderStepBean extends AHistoryBean {
         startTime = val;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = val;
+    public void setStartVariables(String val) {
+        startVariables = val;
     }
 
     public Date getEndTime() {
@@ -201,12 +201,12 @@ public class HistoryOrderStepBean extends AHistoryBean {
         endTime = val;
     }
 
-    public String getEndParameters() {
-        return endParameters;
+    public String getEndVariables() {
+        return endVariables;
     }
 
-    public void setEndParameters(String val) {
-        endParameters = val;
+    public void setEndVariables(String val) {
+        endVariables = val;
     }
 
     public Integer getReturnCode() {

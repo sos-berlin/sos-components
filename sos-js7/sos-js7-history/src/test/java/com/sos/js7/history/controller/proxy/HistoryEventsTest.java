@@ -196,15 +196,15 @@ public class HistoryEventsTest {
 
             case OrderStarted:
                 order = entry.getCheckedOrder();
-                Date planned = null;
+                Date scheduledFor = null;
                 try {
-                    planned = entry.getCheckedOrderFromPreviousState().getScheduledFor();
+                    scheduledFor = entry.getCheckedOrderFromPreviousState().getScheduledFor();
                 } catch (Throwable e) {
                     LOGGER.warn(String.format("[%s][%s][PreviousState]%s", entry.getEventType().name(), order.getOrderId(), e.toString()), e);
                 }
                 event = new FatEventOrderStarted(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), order.getWorkflowInfo().getPath(), order.getWorkflowInfo().getVersionId(), order.getWorkflowInfo()
-                        .getPosition(), order.getArguments(), planned);
+                        .getPosition(), order.getArguments(), scheduledFor);
                 break;
             case OrderForked:
                 order = entry.getCheckedOrder();

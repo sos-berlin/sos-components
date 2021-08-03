@@ -62,14 +62,14 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Column(name = "[START_TIME]", nullable = false)
     private Date startTime;
 
-    @Column(name = "[START_PARAMETERS]", nullable = true)
-    private String startParameters;
+    @Column(name = "[START_VARIABLES]", nullable = true)
+    private String startVariables;
 
     @Column(name = "[END_TIME]", nullable = true)
     private Date endTime;
 
-    @Column(name = "[END_PARAMETERS]", nullable = true)
-    private String endParameters;
+    @Column(name = "[END_VARIABLES]", nullable = true)
+    private String endVariables;
 
     @Column(name = "[RETURN_CODE]", nullable = true)
     private Integer returnCode;
@@ -231,12 +231,12 @@ public class DBItemMonitoringOrderStep extends DBItem {
         startTime = val;
     }
 
-    public String getStartParameters() {
-        return startParameters;
+    public String getStartVariables() {
+        return startVariables;
     }
 
-    public void setStartParameters(String val) {
-        startParameters = normalizeValue(val, 2_000);
+    public void setStartVariables(String val) {
+        startVariables = normalizeValue(val, 2_000);
     }
 
     public Date getEndTime() {
@@ -247,12 +247,12 @@ public class DBItemMonitoringOrderStep extends DBItem {
         endTime = val;
     }
 
-    public String getEndParameters() {
-        return endParameters;
+    public String getEndVariables() {
+        return endVariables;
     }
 
-    public void setEndParameters(String val) {
-        endParameters = val;
+    public void setEndVariables(String val) {
+        endVariables = val;
     }
 
     public Integer getReturnCode() {
