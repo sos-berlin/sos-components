@@ -1030,6 +1030,9 @@ public class DBLayerDeploy {
                 if (existingConfiguration != null) {
                     existingConfiguration.setModified(Date.from(Instant.now()));
                     existingConfiguration.setContent(Globals.objectMapper.writeValueAsString(configuration.getConfiguration()));
+                    if (configuration.getConfiguration().getTitle() != null) {
+                        existingConfiguration.setTitle(configuration.getConfiguration().getTitle());
+                    }
                     if(configuration.getPath() != null) {
                     	existingConfiguration.setPath(configuration.getPath());
                     	existingConfiguration.setFolder(Paths.get(existingConfiguration.getPath()).getParent().toString().replace('\\', '/'));
@@ -1049,6 +1052,7 @@ public class DBLayerDeploy {
                     newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                     newConfiguration.setType(configuration.getObjectType());
                     newConfiguration.setAuditLogId(auditLogId);
+                    newConfiguration.setTitle(configuration.getConfiguration().getTitle());
                     newConfiguration.setDeployed(false);
                     newConfiguration.setReleased(false);
                     newConfiguration.setValid(valid);
@@ -1065,6 +1069,7 @@ public class DBLayerDeploy {
                 newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
                 newConfiguration.setType(configuration.getObjectType());
                 newConfiguration.setAuditLogId(auditLogId);
+                newConfiguration.setTitle(configuration.getConfiguration().getTitle());
                 newConfiguration.setDeployed(false);
                 newConfiguration.setReleased(false);
                 newConfiguration.setValid(valid);
@@ -1113,6 +1118,7 @@ public class DBLayerDeploy {
 			newConfiguration.setName(Paths.get(newConfiguration.getPath()).getFileName().toString());
 			newConfiguration.setType(configuration.getObjectType());
 			newConfiguration.setAuditLogId(auditLogId);
+            newConfiguration.setTitle(configuration.getConfiguration().getTitle());
 			newConfiguration.setDeployed(false);
 			newConfiguration.setReleased(false);
 			newConfiguration.setValid(valid);
