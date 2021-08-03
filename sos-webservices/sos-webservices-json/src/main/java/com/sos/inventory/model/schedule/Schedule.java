@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
 import com.sos.inventory.model.common.IInventoryObject;
-import com.sos.inventory.model.common.Variables;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -35,8 +34,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "planOrderAutomatically",
     "calendars",
     "nonWorkingCalendars",
-    "variableSets",
-    "variables"
+    "variableSets"
 })
 public class Schedule implements IInventoryObject, IConfigurationObject, IReleaseObject
 {
@@ -115,15 +113,6 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
     private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
     @JsonProperty("variableSets")
     private List<VariableSet> variableSets = null;
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables variables;
 
     /**
      * inventory repository version
@@ -335,36 +324,14 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
         this.variableSets = variableSets;
     }
 
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    public Variables getVariables() {
-        return variables;
-    }
-
-    /**
-     * key-value pairs
-     * <p>
-     * a map for arbitrary key-value pairs
-     * 
-     */
-    @JsonProperty("variables")
-    public void setVariables(Variables variables) {
-        this.variables = variables;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variableSets", variableSets).append("variables", variables).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variableSets", variableSets).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(variables).append(nonWorkingCalendars).append(workflowPath).append(workflowName).append(variableSets).append(title).append(version).append(planOrderAutomatically).append(path).append(calendars).append(submitOrderToControllerWhenPlanned).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -376,7 +343,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(variables, rhs.variables).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(workflowName, rhs.workflowName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

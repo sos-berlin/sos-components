@@ -207,8 +207,8 @@ public class OrderInitiatorRunner extends TimerTask {
                 variableSet.setVariables(variables);
                 schedule.getVariableSets().add(variableSet);
 
-                FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, dbItemDailyPlanOrders.getPlannedStart().getTime(), dbItemDailyPlanOrders
-                        .getStartMode(), orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
+                FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, dbItemDailyPlanOrders.getPlannedStart().getTime(),
+                        dbItemDailyPlanOrders.getStartMode(), orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
                 freshOrder.setId(dbItemDailyPlanOrders.getOrderId());
                 p.setSchedule(schedule);
                 p.setFreshOrder(freshOrder);
@@ -446,9 +446,10 @@ public class OrderInitiatorRunner extends TimerTask {
         }
     }
 
-    private FreshOrder buildFreshOrder(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone, String periodBegin) {
+    private FreshOrder buildFreshOrder(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone,
+            String periodBegin) {
         FreshOrder freshOrder = new FreshOrder();
-        freshOrder.setId(DailyPlanHelper.buildOrderId(schedule,variableSet, startTime, startMode, timeZone, periodBegin));
+        freshOrder.setId(DailyPlanHelper.buildOrderId(schedule, variableSet, startTime, startMode, timeZone, periodBegin));
         freshOrder.setScheduledFor(startTime);
         freshOrder.setArguments(variableSet.getVariables());
         freshOrder.setWorkflowPath(schedule.getWorkflowName());
@@ -593,24 +594,15 @@ public class OrderInitiatorRunner extends TimerTask {
                                         startMode = 0;
                                     }
 
-                                    //Compatibility
-                                    if (schedule.getVariables() != null) {
-                                        VariableSet variableSet = new VariableSet();
-                                        variableSet.setVariables(schedule.getVariables());
-                                        schedule.setVariableSets(new ArrayList<VariableSet>());
-                                        schedule.getVariableSets().add(variableSet);
-                                    }
-                                    
                                     if (schedule.getVariableSets() == null || schedule.getVariableSets().size() == 0) {
                                         VariableSet variableSet = new VariableSet();
                                         schedule.setVariableSets(new ArrayList<VariableSet>());
                                         schedule.getVariableSets().add(variableSet);
                                     }
-                                    
+
                                     for (VariableSet variableSet : schedule.getVariableSets()) {
-                                        schedule.setVariables(variableSet.getVariables());
-                                        FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, periodEntry.getKey(), startMode, this.orderInitiatorSettings
-                                                .getTimeZone(), this.orderInitiatorSettings.getPeriodBegin());
+                                        FreshOrder freshOrder = buildFreshOrder(schedule, variableSet, periodEntry.getKey(), startMode,
+                                                this.orderInitiatorSettings.getTimeZone(), this.orderInitiatorSettings.getPeriodBegin());
 
                                         PlannedOrder plannedOrder = new PlannedOrder();
                                         plannedOrder.setControllerId(controllerId);
