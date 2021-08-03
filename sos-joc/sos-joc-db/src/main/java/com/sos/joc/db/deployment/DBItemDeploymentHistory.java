@@ -20,7 +20,8 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.common.IDeployObject;
 
 @Entity
-@Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]", "[COMMIT_ID]"}) })
+@Table(name = DBLayer.TABLE_DEP_HISTORY, uniqueConstraints = { @UniqueConstraint(columnNames = { "[NAME]", "[TYPE]", "[CONTROLLER_ID]",
+        "[COMMIT_ID]" }) })
 @SequenceGenerator(name = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_DEP_HISTORY_SEQUENCE, allocationSize = 1)
 public class DBItemDeploymentHistory extends DBItem {
 
@@ -40,6 +41,9 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[NAME]", nullable = false)
     private String name;
 
+    @Column(name = "[TITLE]", nullable = true)
+    private String title;
+
     @Column(name = "[FOLDER]", nullable = false)
     private String folder;
 
@@ -48,13 +52,13 @@ public class DBItemDeploymentHistory extends DBItem {
 
     @Column(name = "[INV_CID]", nullable = false)
     private Long inventoryConfigurationId;
-    
+
     @Column(name = "[INV_IID]", nullable = false)
     private Long controllerInstanceId;
-    
+
     @Column(name = "[CONTROLLER_ID]", nullable = false)
     private String controllerId;
-    
+
     @Column(name = "[CONTENT]", nullable = false)
     private String content;
 
@@ -72,7 +76,7 @@ public class DBItemDeploymentHistory extends DBItem {
 
     @Column(name = "[VERSION]", nullable = false)
     private String version;
-    
+
     /* ADD, UPDATE, DELETE */
     @Column(name = "[OPERATION]", nullable = false)
     private Integer operation;
@@ -98,6 +102,7 @@ public class DBItemDeploymentHistory extends DBItem {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -105,30 +110,42 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getAccount() {
         return account;
     }
+
     public void setAccount(String account) {
         this.account = account;
     }
-    
+
     public String getPath() {
         return path;
     }
+
     public void setPath(String path) {
         this.path = path;
     }
-    
+
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
-    
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String val) {
+        title = val;
+    }
+
     public String getFolder() {
         if ((folder == null || folder.isEmpty()) && (path != null && !path.isEmpty())) {
             folder = Paths.get(path).getParent().toString().replaceAll("\\\\", "/");
         }
         return folder;
     }
+
     public void setFolder(String folder) {
         this.folder = folder;
     }
@@ -136,6 +153,7 @@ public class DBItemDeploymentHistory extends DBItem {
     public Integer getType() {
         return type;
     }
+
     public void setType(Integer type) {
         this.type = type;
     }
@@ -143,20 +161,23 @@ public class DBItemDeploymentHistory extends DBItem {
     public Long getInventoryConfigurationId() {
         return inventoryConfigurationId;
     }
+
     public void setInventoryConfigurationId(Long inventoryConfigurationId) {
         this.inventoryConfigurationId = inventoryConfigurationId;
     }
-    
+
     public Long getControllerInstanceId() {
         return controllerInstanceId;
     }
+
     public void setControllerInstanceId(Long controllerInstanceId) {
         this.controllerInstanceId = controllerInstanceId;
     }
-    
+
     public String getControllerId() {
         return controllerId;
     }
+
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
@@ -164,34 +185,39 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getContent() {
         return content;
     }
+
     public void setContent(String content) {
         this.content = content;
     }
-    
+
     public String getSignedContent() {
         return signedContent;
     }
+
     public void setSignedContent(String signedContent) {
         this.signedContent = signedContent;
     }
-    
+
     public String getCommitId() {
         return commitId;
     }
+
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
-    
+
     public String getVersion() {
         return version;
     }
+
     public void setVersion(String version) {
         this.version = version;
     }
-    
+
     public Integer getOperation() {
         return operation;
     }
+
     public void setOperation(Integer operation) {
         this.operation = operation;
     }
@@ -199,6 +225,7 @@ public class DBItemDeploymentHistory extends DBItem {
     public Integer getState() {
         return state;
     }
+
     public void setState(Integer state) {
         this.state = state;
     }
@@ -206,13 +233,15 @@ public class DBItemDeploymentHistory extends DBItem {
     public Date getDeploymentDate() {
         return deploymentDate;
     }
+
     public void setDeploymentDate(Date deploymentDate) {
         this.deploymentDate = deploymentDate;
     }
-    
+
     public String getErrorMessage() {
         return errorMessage;
     }
+
     public void setErrorMessage(String errorMessage) {
         if (errorMessage != null && errorMessage.length() > 255) {
             errorMessage = errorMessage.substring(0, 254);
@@ -223,32 +252,35 @@ public class DBItemDeploymentHistory extends DBItem {
     public Date getDeleteDate() {
         return deleteDate;
     }
+
     public void setDeleteDate(Date deletedDate) {
         this.deleteDate = deletedDate;
     }
-    
+
     public String getInvContent() {
         return invContent;
     }
+
     public void setInvContent(String invContent) {
         this.invContent = invContent;
     }
-    
-	public Long getAuditlogId() {
-		return auditlogId;
-	}
-	public void setAuditlogId(Long auditlogId) {
-		this.auditlogId = auditlogId;
-	}
 
-	@Transient
-	public IDeployObject readUpdateableContent() {
-		return updateableContent;
-	}
-	@Transient
-	public void writeUpdateableContent(IDeployObject updateableContent) {
-		this.updateableContent = updateableContent;
-	}
-    
-	
+    public Long getAuditlogId() {
+        return auditlogId;
+    }
+
+    public void setAuditlogId(Long auditlogId) {
+        this.auditlogId = auditlogId;
+    }
+
+    @Transient
+    public IDeployObject readUpdateableContent() {
+        return updateableContent;
+    }
+
+    @Transient
+    public void writeUpdateableContent(IDeployObject updateableContent) {
+        this.updateableContent = updateableContent;
+    }
+
 }
