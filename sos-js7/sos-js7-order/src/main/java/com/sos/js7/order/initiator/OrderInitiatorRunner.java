@@ -3,6 +3,7 @@ package com.sos.js7.order.initiator;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -617,7 +618,11 @@ public class OrderInitiatorRunner extends TimerTask {
                                             schedule.setSubmitOrderToControllerWhenPlanned(orderInitiatorSettings.isSubmit());
                                         }
                                         plannedOrder.setSchedule(schedule);
-                                        plannedOrder.setOrderName(variableSet.getOrderName());
+                                        if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {
+                                            plannedOrder.setOrderName(variableSet.getOrderName());
+                                        } else {
+                                            plannedOrder.setOrderName(Paths.get(schedule.getPath()).getFileName().toString());
+                                        }
                                         if (orderListSynchronizer.add(controllerId, plannedOrder)) {
                                             scheduleAdded.add(schedule.getPath());
                                         }
