@@ -107,7 +107,7 @@ public class WorkflowsHelper {
         Object[] o = {};
         setWorkflowPositionsAndForkListVariables(o, w.getInstructions(), w.getForkListVariables());
         if (w.getForkListVariables() == null || w.getForkListVariables().isEmpty()) {
-            w.setInstructions(null); 
+            w.setForkListVariables(null); 
         }
         return w;
     }
