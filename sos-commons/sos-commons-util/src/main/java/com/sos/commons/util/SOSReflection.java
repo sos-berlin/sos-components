@@ -54,7 +54,7 @@ public class SOSReflection {
                 Object val = field.get(obj);
                 if (val != null) {
                     if (val instanceof CharSequence) {
-                        if (SOSString.isEmpty(val.toString())) {
+                        if (!SOSString.isEmpty(val.toString())) {
                             return false;
                         }
                     } else {
