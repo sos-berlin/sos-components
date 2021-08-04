@@ -3,6 +3,7 @@ package com.sos.commons.sign.keys.ca;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Security;
@@ -10,14 +11,17 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
@@ -25,10 +29,12 @@ import org.bouncycastle.asn1.x509.GeneralName;
 import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -48,7 +54,7 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 public abstract class CAUtils {
     
     public static Certificate createSelfSignedRootCertificate(String algorithm, KeyPair keyPair, String subjectDN, boolean operatesAsCA, boolean critical)
-            throws OperatorCreationException, CertificateException, IOException {
+            throws OperatorCreationException, CertificateException, IOException, NoSuchAlgorithmException {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
         Date startDate = Date.from(Instant.now());
@@ -73,9 +79,14 @@ public abstract class CAUtils {
         // with the certified public key being used to verify certificate signatures
         // the boolean value sets the criticality
         certBuilder.addExtension(Extension.basicConstraints, critical, basicConstraints);
-        certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.keyEncipherment | KeyUsage.cRLSign | KeyUsage.dataEncipherment 
-                | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
-        certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage));
+//        certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.keyEncipherment | KeyUsage.cRLSign | KeyUsage.dataEncipherment 
+//                | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
+        certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.cRLSign | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
+        AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(keyPair.getPublic());
+        certBuilder.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
+        SubjectKeyIdentifier subjectKeyIdentifier = new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic());
+        certBuilder.addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier);
+//        certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage));
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
@@ -110,9 +121,20 @@ public abstract class CAUtils {
       // 2.5.29.17 is the oid value for Subject Alternative Name [SAN] 
       // new ASN1ObjectIdentifier("2.5.29.17")
       if (subjectAlternativeName != null && !subjectAlternativeName.isEmpty()) {
-          GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
-          GeneralNames san = new GeneralNames(altName);
-          certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+          if (subjectAlternativeName.contains(",")) {
+              String[] sans = subjectAlternativeName.split(",");
+              List<GeneralName> generalNames = new ArrayList<>();
+              for (int i=0; i < sans.length; i++) {
+                  GeneralName altName = new GeneralName(GeneralName.dNSName, sans[i].trim());
+                  generalNames.add(altName);
+              }
+              GeneralNames san = new GeneralNames(generalNames.toArray(new GeneralName [0]));
+              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+          } else {
+              GeneralName altName = new GeneralName(GeneralName.dNSName, subjectAlternativeName);
+              GeneralNames san = new GeneralNames(altName);
+              certgen.addExtension(new ASN1ObjectIdentifier("2.5.29.17"), false, san);
+          }
       }
 
       // client and server authentication
