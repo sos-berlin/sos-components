@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
+import com.sos.joc.model.inventory.search.RequestSearchAdvancedItem;
 
 public class InventorySearchDBLayerTest {
 
@@ -37,6 +39,57 @@ public class InventorySearchDBLayerTest {
             session.beginTransaction();
 
             List<InventorySearchItem> items = dbLayer.getInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders);
+            LOGGER.info("RESULT=" + items.size());
+            for (InventorySearchItem item : items) {
+                LOGGER.info(SOSString.toString(item));
+            }
+
+            session.commit();
+        } catch (Exception e) {
+            try {
+                session.rollback();
+            } catch (Throwable ex) {
+            }
+            e.printStackTrace();
+            // throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testAdvancedAllConfigurations() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            String search = null;
+            List<String> folders = new ArrayList<>();
+            folders.add("/x");
+            folders.add("/ssh");
+
+            RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
+            advanced.setJobCountFrom(Integer.valueOf(2));
+            advanced.setJobName("ssh");
+            advanced.setAgentName("agent");
+            advanced.setJobCriticality(JobCriticality.NORMAL);
+            advanced.setJobResources(null);
+            advanced.setBoards(null);
+            advanced.setLock(null);
+            advanced.setArgumentName("");
+            advanced.setArgumentValue("x");
+
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
+            session.beginTransaction();
+
+            List<InventorySearchItem> items = dbLayer.getAdvancedInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders, advanced);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));

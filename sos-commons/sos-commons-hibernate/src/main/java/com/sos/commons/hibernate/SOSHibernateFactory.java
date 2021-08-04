@@ -149,6 +149,10 @@ public class SOSHibernateFactory implements Serializable {
     public boolean dbmsIsPostgres() {
         return dbms == SOSHibernateFactory.Dbms.PGSQL;
     }
+    
+    public boolean dbmsIsH2() {
+        return dbms == SOSHibernateFactory.Dbms.H2;
+    }
 
     public boolean getAutoCommit() throws SOSHibernateConfigurationException {
         if (configuration == null) {

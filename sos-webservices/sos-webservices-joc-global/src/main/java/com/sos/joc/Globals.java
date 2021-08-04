@@ -61,7 +61,6 @@ public class Globals {
     public static TimeZone jocTimeZone = TimeZone.getDefault();
     public static Path servletContextRealPath = null;
     public static URI servletBaseUri = null;
-    public static Map<String, SOSHibernateFactory> sosSchedulerHibernateFactories;
     public static Map<String, String> schedulerVariables = null;
     public static ConfigurationGlobals configurationGlobals = null;
     public static String servletContextContextPath = null; // /joc
