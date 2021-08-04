@@ -179,6 +179,11 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
+        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
+            where += and + " p.orderName = :orderName";
+            and = " and ";
+        }
+
         if (filter.getCalendarId() != null) {
             where += and + " p.calendarId = :calendarId";
             and = " and ";
@@ -330,6 +335,10 @@ public class DBLayerDailyPlannedOrders {
             query.setParameter("scheduleName", filter.getScheduleName());
         }
 
+        if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
+            query.setParameter("orderName", filter.getOrderName());
+        }
+
         return query;
 
     }
@@ -337,7 +346,7 @@ public class DBLayerDailyPlannedOrders {
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryListExecute(FilterDailyPlannedOrders filter, final int limit)
             throws SOSHibernateException {
         String q =
-                "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
+                "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
                         + "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
                         + "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
                         + "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
@@ -463,7 +472,7 @@ public class DBLayerDailyPlannedOrders {
         LOGGER.trace("----> " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder.getFreshOrder().getScheduledFor()));
         filter.setControllerId(plannedOrder.getControllerId());
         filter.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
-        filter.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
+        filter.setOrderName(plannedOrder.getOrderName());
         return getUniqueDailyPlan(filter);
     }
 
@@ -488,6 +497,7 @@ public class DBLayerDailyPlannedOrders {
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
         dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
+        dbItemDailyPlannedOrders.setOrderName(plannedOrder.getOrderName());
         dbItemDailyPlannedOrders.setOrderId(plannedOrder.getFreshOrder().getId());
 
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
@@ -600,6 +610,7 @@ public class DBLayerDailyPlannedOrders {
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
+                    filterCyclic.setOrderName(dbItemDailyPlanOrder.getOrderName());
                     filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(timeZone), timeZone, periodBegin);
 
                     List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
@@ -608,7 +619,6 @@ public class DBLayerDailyPlannedOrders {
                             orderIds.add(dbItemDailyPlanOrders.getOrderId());
                         }
                     }
-
                 }
                 return dbItemDailyPlanOrder;
 

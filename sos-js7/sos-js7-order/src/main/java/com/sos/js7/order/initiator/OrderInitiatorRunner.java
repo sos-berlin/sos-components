@@ -179,6 +179,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
                 filterOrderVariables.setPlannedOrderId(dbItemDailyPlanOrders.getId());
                 VariableSet variableSet = new VariableSet();
+                schedule.setVariableSets(new ArrayList<VariableSet>());
                 Variables variables = new Variables();
 
                 List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
@@ -616,6 +617,7 @@ public class OrderInitiatorRunner extends TimerTask {
                                             schedule.setSubmitOrderToControllerWhenPlanned(orderInitiatorSettings.isSubmit());
                                         }
                                         plannedOrder.setSchedule(schedule);
+                                        plannedOrder.setOrderName(variableSet.getOrderName());
                                         if (orderListSynchronizer.add(controllerId, plannedOrder)) {
                                             scheduleAdded.add(schedule.getPath());
                                         }

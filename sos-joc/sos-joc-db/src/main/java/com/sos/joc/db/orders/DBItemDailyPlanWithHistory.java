@@ -21,6 +21,7 @@ public class DBItemDailyPlanWithHistory {
     private String orderId;
     private String schedulePath;
     private String scheduleName;
+    private String orderName;
     private Long calendarId;
     private boolean submitted;
     private Date submitTime;
@@ -255,6 +256,20 @@ public class DBItemDailyPlanWithHistory {
     
     public void setScheduleName(String scheduleName) {
         this.scheduleName = scheduleName;
+    }
+
+
+
+    
+    public String getOrderName() {
+        return orderName;
+    }
+
+
+
+    
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
 }

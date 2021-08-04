@@ -21,6 +21,7 @@ public class PlannedOrder {
     private boolean storedInDb = false;
     private Schedule schedule;
     private String workflowPath;
+    private String orderName;
 
     public boolean isStoredInDb() {
         return storedInDb;
@@ -118,6 +119,16 @@ public class PlannedOrder {
     
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
+    }
+
+    
+    public String getOrderName() {
+        return orderName;
+    }
+
+    
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
  

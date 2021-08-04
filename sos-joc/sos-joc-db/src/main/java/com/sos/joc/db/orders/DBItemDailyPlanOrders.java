@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.orders.classes.DailyPlanDate;
- 
+
 @Entity
 @Table(name = DBLayer.DAILY_PLAN_ORDERS_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_PATH]",
         "[ORDER_ID]" }) })
@@ -68,10 +68,13 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[SCHEDULE_NAME]", nullable = false)
     private String scheduleName;
 
+    @Column(name = "[ORDER_NAME]", nullable = false)
+    private String orderName;
+
     @Column(name = "[CALENDAR_ID]", nullable = false)
     private Long calendarId;
 
-   @Column(name = "[SUBMITTED]", nullable = false)
+    @Column(name = "[SUBMITTED]", nullable = false)
     @Type(type = "numeric_boolean")
     private boolean submitted;
 
@@ -238,7 +241,6 @@ public class DBItemDailyPlanOrders extends DBItem {
         this.periodEnd = periodEnd;
     }
 
-
     public Date getCreated() {
         return created;
     }
@@ -253,6 +255,30 @@ public class DBItemDailyPlanOrders extends DBItem {
 
     public void setModified(Date modified) {
         this.modified = modified;
+    }
+
+    public String getScheduleFolder() {
+        return scheduleFolder;
+    }
+
+    public void setScheduleFolder(String scheduleFolder) {
+        this.scheduleFolder = scheduleFolder;
+    }
+
+    public String getWorkflowFolder() {
+        return workflowFolder;
+    }
+
+    public void setWorkflowFolder(String workflowFolder) {
+        this.workflowFolder = workflowFolder;
+    }
+
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
     @Transient
@@ -299,26 +325,6 @@ public class DBItemDailyPlanOrders extends DBItem {
         LOGGER.debug("timeZone: " + timeZone);
         LOGGER.debug("dailyPlanDate:" + format.format(plannedStart));
         return format.format(plannedStart);
-    }
-
-    
-    public String getScheduleFolder() {
-        return scheduleFolder;
-    }
-
-    
-    public void setScheduleFolder(String scheduleFolder) {
-        this.scheduleFolder = scheduleFolder;
-    }
-
-    
-    public String getWorkflowFolder() {
-        return workflowFolder;
-    }
-
-    
-    public void setWorkflowFolder(String workflowFolder) {
-        this.workflowFolder = workflowFolder;
     }
 
 }

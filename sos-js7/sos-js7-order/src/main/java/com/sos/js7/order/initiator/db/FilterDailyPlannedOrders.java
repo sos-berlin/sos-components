@@ -52,6 +52,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private Long plannedOrderId;
     private List<String> listOfScheduleNames;
     private String scheduleName;
+    private String orderName;
 
     public Collection<String> getListOfOrders() {
         return listOfOrders;
@@ -342,6 +343,16 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     
     public void setSetOfWorkflowFolders(Set<Folder> setOfWorkflowFolders) {
         this.setOfWorkflowFolders = setOfWorkflowFolders;
+    }
+
+    
+    public String getOrderName() {
+        return orderName;
+    }
+
+    
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
     
