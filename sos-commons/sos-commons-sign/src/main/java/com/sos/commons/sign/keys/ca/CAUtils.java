@@ -79,14 +79,11 @@ public abstract class CAUtils {
         // with the certified public key being used to verify certificate signatures
         // the boolean value sets the criticality
         certBuilder.addExtension(Extension.basicConstraints, critical, basicConstraints);
-//        certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.keyEncipherment | KeyUsage.cRLSign | KeyUsage.dataEncipherment 
-//                | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
         certBuilder.addExtension(Extension.keyUsage, critical, new KeyUsage(KeyUsage.cRLSign | KeyUsage.digitalSignature | KeyUsage.keyCertSign));
         AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(keyPair.getPublic());
         certBuilder.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
         SubjectKeyIdentifier subjectKeyIdentifier = new JcaX509ExtensionUtils().createSubjectKeyIdentifier(keyPair.getPublic());
         certBuilder.addExtension(Extension.subjectKeyIdentifier, false, subjectKeyIdentifier);
-//        certBuilder.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(KeyPurposeId.anyExtendedKeyUsage));
         return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 
@@ -104,7 +101,7 @@ public abstract class CAUtils {
     }
     
     public static X509Certificate signCSR(String algorithm, PrivateKey privateKey, PKCS10CertificationRequest csr, X509Certificate rootCa,
-            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException {
+            String subjectAlternativeName) throws OperatorCreationException, IOException, CertificateException, NoSuchAlgorithmException {
       AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(algorithm);
       AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
       X500Name issuer = X500Name.getInstance(rootCa.getSubjectX500Principal().getEncoded());
@@ -142,8 +139,11 @@ public abstract class CAUtils {
       certgen.addExtension(Extension.keyUsage, false, 
               new KeyUsage(KeyUsage.nonRepudiation | KeyUsage.keyAgreement | KeyUsage.digitalSignature | KeyUsage.dataEncipherment));
       certgen.addExtension(MiscObjectIdentifiers.netscapeCertType, false, 
-              new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.sslServer | NetscapeCertType.smime));
-      certgen.addExtension(Extension.extendedKeyUsage, true, new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
+              new NetscapeCertType(NetscapeCertType.sslClient | NetscapeCertType.sslServer));
+      certgen.addExtension(Extension.extendedKeyUsage, true, 
+              new ExtendedKeyUsage(new KeyPurposeId[] {KeyPurposeId.id_kp_serverAuth, KeyPurposeId.id_kp_clientAuth}));
+      AuthorityKeyIdentifier authorityKeyIdentifier = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(rootCa.getPublicKey());
+      certgen.addExtension(Extension.authorityKeyIdentifier, false, authorityKeyIdentifier);
 
       ContentSigner signer = null;
       if (algorithm.equals(SOSKeyConstants.RSA_SIGNER_ALGORITHM)) {
