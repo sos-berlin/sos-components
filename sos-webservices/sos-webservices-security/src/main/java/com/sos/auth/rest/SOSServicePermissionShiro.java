@@ -34,7 +34,6 @@ import org.slf4j.MDC;
 
 import com.sos.auth.client.ClientCertificateHandler;
 import com.sos.auth.shiro.SOSlogin;
-import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -381,15 +380,19 @@ public class SOSServicePermissionShiro {
         MDC.put("context", ThreadCtx);
         try {
             if (Globals.sosHibernateFactory != null) {
+                if (Globals.sosHibernateFactory.dbmsIsH2()) {
+                    SOSHibernateSession connection = null;
+                    try {
+                        connection = Globals.createSosHibernateStatelessConnection("closeH2");
+                        connection.createQuery("SHUTDOWN").executeUpdate();
+                    } catch (Exception e) {
+                        LOGGER.warn("shutdown H2 database: " + e.toString());
+                    } finally {
+                        Globals.disconnect(connection);
+                    }
+                }
                 Globals.sosHibernateFactory.close();
                 Globals.sosHibernateFactory.build();
-
-            }
-            if (Globals.sosSchedulerHibernateFactories != null) {
-                for (SOSHibernateFactory sosHibernateFactory : Globals.sosSchedulerHibernateFactories.values()) {
-                    sosHibernateFactory.close();
-                    sosHibernateFactory.build();
-                }
             }
 
             return JOCDefaultResponse.responseStatus200("Db connections reconnected");
