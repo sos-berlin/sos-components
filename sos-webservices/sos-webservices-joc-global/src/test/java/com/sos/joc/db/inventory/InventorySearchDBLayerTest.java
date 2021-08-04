@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -70,26 +69,27 @@ public class InventorySearchDBLayerTest {
         try {
             String search = null;
             List<String> folders = new ArrayList<>();
-            folders.add("/x");
-            folders.add("/ssh");
+            // folders.add("/x");
+            // folders.add("/ssh");
 
             RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
-            advanced.setJobCountFrom(Integer.valueOf(2));
-            advanced.setJobName("ssh");
-            advanced.setAgentName("agent");
-            advanced.setJobCriticality(JobCriticality.NORMAL);
+            // advanced.setJobCountFrom(Integer.valueOf(2));
+            advanced.setJobName("xx");
+            advanced.setAgentName(null);
+            // advanced.setJobCriticality(JobCriticality.NORMAL);
             advanced.setJobResources(null);
             advanced.setBoards(null);
             advanced.setLock(null);
-            advanced.setArgumentName("");
-            advanced.setArgumentValue("x");
+            advanced.setArgumentName(null);
+            advanced.setArgumentValue(null);
+            advanced.setWorkflow("shell");
 
             factory = createFactory();
             session = factory.openStatelessSession();
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders, advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedInventoryConfigurations(ConfigurationType.SCHEDULE, search, folders, advanced);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));

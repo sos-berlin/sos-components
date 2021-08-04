@@ -99,6 +99,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
     private List<ResponseSearchItem> getAdvancedSearch(final RequestSearchFilter in) throws Exception {
         SOSHibernateSession session = null;
         try {
+            adjustAdvanced(in);
+
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
 
@@ -136,6 +138,32 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             throw e;
         } finally {
             Globals.disconnect(session);
+        }
+    }
+
+    private void adjustAdvanced(final RequestSearchFilter in) {
+        if (in.getAdvanced() == null) {
+            return;
+        }
+        switch (in.getReturnType()) {
+        case WORKFLOW:
+            in.getAdvanced().setWorkflow(null);
+            break;
+        case FILEORDERSOURCE:
+            in.getAdvanced().setFileOrderSource(null);
+            break;
+        case JOBRESOURCE:
+            in.getAdvanced().setJobResources(null);
+            break;
+        case BOARD:
+            in.getAdvanced().setBoards(null);
+            break;
+        case LOCK:
+            in.getAdvanced().setLock(null);
+            break;
+        case SCHEDULE:
+            in.getAdvanced().setSchedule(null);
+            break;
         }
     }
 

@@ -44,15 +44,14 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
 
         Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
         if (Dbms.MYSQL.equals(dbms)) {
+            ReturnType returnType = argument2ReturnType(arguments.get(0).toString());
             // path = '$.ports.usb' -> '$.ports.usb'
             String extract = "JSON_EXTRACT(" + property + "," + path + ")";
-            // if (returnType.equals(ReturnType.SCALAR)) {
-            // return "JSON_UNQUOTE(" + extract + ")";
-            // } else {
-            // return extract;
-            // }
-            // TODO JSON_UNQUOTE is only for select JSON_UNQUOTE... and not important for where ...
-            return extract;
+            if (returnType.equals(ReturnType.SCALAR)) {
+                return "JSON_UNQUOTE(" + extract + ")";
+            } else {
+                return extract;
+            }
         } else if (Dbms.MSSQL.equals(dbms) || Dbms.ORACLE.equals(dbms)) {
             ReturnType returnType = argument2ReturnType(arguments.get(0).toString());
             if (returnType.equals(ReturnType.SCALAR)) {
