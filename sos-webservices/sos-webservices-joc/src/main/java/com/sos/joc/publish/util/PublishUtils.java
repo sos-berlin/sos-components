@@ -1286,6 +1286,7 @@ public abstract class PublishUtils {
         final String versionId = UUID.randomUUID().toString();
         // check first if a deploymentHistory item related to the configuration item exist
         List<DBItemDeploymentHistory> alreadyDeployedToDelete = new ArrayList<DBItemDeploymentHistory>();
+        DBItemDeploymentHistory latestDepHistory = null;
         for (T object : verifiedObjects) {
             if (DBItemInventoryConfiguration.class.isInstance(object)) {
                 invConf = (DBItemInventoryConfiguration) object;
@@ -1294,15 +1295,21 @@ public abstract class PublishUtils {
                 if (depHistory != null && OperationType.DELETE.equals(OperationType.fromValue(depHistory.getOperation()))) {
                     depHistory = null;
                 }
+                // if so, check if the paths of both are the same
+                if (depHistory != null && invConf != null && !depHistory.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    depHistory.setCommitId(versionId);
+                    alreadyDeployedToDelete.add(depHistory);
+                }
             } else {
                 depHistory = (DBItemDeploymentHistory) object;
-                invConf = dbLayer.getSession().get(DBItemInventoryConfiguration.class, depHistory.getInventoryConfigurationId());
-            }
-            // if so, check if the paths of both are the same
-            if (depHistory != null && invConf != null && !depHistory.getName().equals(invConf.getName())) {
-                // if not, delete the old deployed item via updateRepo before deploy of the new configuration
-                depHistory.setCommitId(versionId);
-                alreadyDeployedToDelete.add(depHistory);
+                latestDepHistory = dbLayer.getLatestDepHistoryItem(depHistory.getInventoryConfigurationId(), controllerId);
+                // if so, check if the paths of both are the same
+                if (depHistory != null && latestDepHistory != null && latestDepHistory.getOperation() != 1 && !depHistory.getName().equals(latestDepHistory.getName())) {
+                    // if not, delete the old deployed item via updateRepo before deploy of the new configuration
+                    depHistory.setCommitId(versionId);
+                    alreadyDeployedToDelete.add(latestDepHistory);
+                }
             }
         }
         return alreadyDeployedToDelete;
