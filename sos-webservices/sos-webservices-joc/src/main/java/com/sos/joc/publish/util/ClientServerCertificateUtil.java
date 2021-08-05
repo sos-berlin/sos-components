@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
 
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -28,7 +29,7 @@ public abstract class ClientServerCertificateUtil {
 
     public static RolloutResponse createClientServerAuthKeyPair (SOSHibernateSession hibernateSession, CreateCSRFilter createCsrFilter)
             throws SOSHibernateException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException,
-            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException {
+            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException {
         DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
         JocKeyPair rootKeyPair = dbLayer.getRootCaKeyPair();
         X509Certificate rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
@@ -44,8 +45,10 @@ public abstract class ClientServerCertificateUtil {
                     CertificateUtils.extractCountryCode(rootCert));
         }
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair, userDN);
-        X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair.getPrivate(), csr, rootCert,
-                createCsrFilter.getSan());
+//        X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair.getPrivate(), csr, rootCert,
+//                createCsrFilter.getSan());
+        X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
+                KeyUtil.getKeyPairFromECDSAPrivatKeyString(rootKeyPair.getPrivateKey()).getPrivate(), csr, rootCert, createCsrFilter.getSan());
         JocKeyPair clientServerAuthKeyPair = KeyUtil.createECDSAJOCKeyPair(newClientKeyPair);
         clientServerAuthKeyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
         clientServerAuthKeyPair.setKeyType(JocKeyType.X509.name());
