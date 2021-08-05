@@ -23,7 +23,7 @@ public class InventorySearchDBLayerTest {
 
     @Ignore
     @Test
-    public void testBasicAllConfigurations() throws Exception {
+    public void testBasicSearchInventoryConfigurations() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -37,7 +37,7 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders);
+            List<InventorySearchItem> items = dbLayer.getBasicSearchInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
@@ -63,7 +63,7 @@ public class InventorySearchDBLayerTest {
 
     @Ignore
     @Test
-    public void testAdvancedAllConfigurations() throws Exception {
+    public void testAdvancedSearchInventoryConfigurations() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -89,7 +89,7 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedInventoryConfigurations(ConfigurationType.SCHEDULE, search, folders, advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.SCHEDULE, search, folders, advanced);
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
