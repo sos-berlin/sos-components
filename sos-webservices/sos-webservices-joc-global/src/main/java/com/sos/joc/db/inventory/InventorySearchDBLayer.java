@@ -22,7 +22,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(InventorySearchDBLayer.class);
-    private boolean tmpShowLog = false; // TODO to remove
+    private boolean tmpShowLog = true; // TODO to remove
 
     private static final String FIND_ALL = "*";
 
@@ -115,7 +115,9 @@ public class InventorySearchDBLayer extends DBLayer {
             }
         }
         hql.append("where mt.type=:type ");
-        if (!SOSString.isEmpty(search)) {
+        if (SOSString.isEmpty(search) || search.equals(FIND_ALL)) {
+            search = null;
+        } else {
             hql.append("and (lower(mt.name) like :search or lower(mt.title) like :search) ");
         }
         if (searchInFolders) {
@@ -124,40 +126,8 @@ public class InventorySearchDBLayer extends DBLayer {
 
         /*------------------------*/
         String fileOrderSource = null;
-        if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
-            hql.append("and mt.name in (");
-            hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
-            hql.append("where subt.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
-            if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
-                fileOrderSource = advanced.getFileOrderSource();
-                hql.append("and lower(subt.name) like :fileOrderSource");
-            }
-            hql.append(") ");
-        }
         String schedule = null;
-        if (!SOSString.isEmpty(advanced.getSchedule())) {
-            hql.append("and mt.name in (");
-            hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
-            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
-            hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
-            if (!advanced.getSchedule().equals(FIND_ALL)) {
-                schedule = advanced.getSchedule();
-                hql.append("and lower(subt.name) like :schedule ");
-            }
-            hql.append(") ");
-        }
         String workflow = null;
-        if (!SOSString.isEmpty(advanced.getWorkflow())) {
-            if (!advanced.getWorkflow().equals(FIND_ALL)) {
-                workflow = advanced.getWorkflow();
-                hql.append("and lower(");
-                hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
-                hql.append(") ");
-                hql.append("like :workflow ");
-            }
-        }
-
         Integer jobCountFrom = null;
         Integer jobCountTo = null;
         String jobCriticality = null;
@@ -171,6 +141,28 @@ public class InventorySearchDBLayer extends DBLayer {
 
         switch (type) {
         case WORKFLOW:
+            if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
+                hql.append("and mt.name in (");
+                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
+                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
+                hql.append("where subt.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
+                    fileOrderSource = advanced.getFileOrderSource();
+                    hql.append("and lower(subt.name) like :fileOrderSource ");
+                }
+                hql.append(") ");
+            }
+            if (!SOSString.isEmpty(advanced.getSchedule())) {
+                hql.append("and mt.name in (");
+                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
+                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
+                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                if (!advanced.getSchedule().equals(FIND_ALL)) {
+                    schedule = advanced.getSchedule();
+                    hql.append("and lower(subt.name) like :schedule ");
+                }
+                hql.append(") ");
+            }
             if (advanced.getJobCountFrom() != null) {
                 jobCountFrom = advanced.getJobCountFrom();
                 hql.append("and sw.jobsCount >= :jobCountFrom ");
@@ -191,6 +183,51 @@ public class InventorySearchDBLayer extends DBLayer {
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
+            if (!SOSString.isEmpty(advanced.getWorkflow())) {
+                if (!advanced.getWorkflow().equals(FIND_ALL)) {
+                    workflow = advanced.getWorkflow();
+                    hql.append("and lower(");
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
+                    hql.append(") ");
+                    hql.append("like :workflow ");
+                }
+            }
+
+            if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
+                hql.append("and exists (");
+                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
+                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
+                hql.append("where subt.type=").append(ConfigurationType.FILEORDERSOURCE.intValue()).append(" ");
+                if (!advanced.getFileOrderSource().equals(FIND_ALL)) {
+                    fileOrderSource = advanced.getFileOrderSource();
+                    hql.append("and lower(subt.name) like :fileOrderSource ");
+                }
+                if (workflow != null) {
+                    hql.append("and lower(");
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName"));
+                    hql.append(") ");
+                    hql.append("like :workflow ");
+                }
+                hql.append(") ");
+            }
+            if (!SOSString.isEmpty(advanced.getSchedule())) {
+                hql.append("and exists (");
+                hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
+                hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" subt ");
+                hql.append("where subt.type=").append(ConfigurationType.SCHEDULE.intValue()).append(" ");
+                if (!advanced.getSchedule().equals(FIND_ALL)) {
+                    schedule = advanced.getSchedule();
+                    hql.append("and lower(subt.name) like :schedule ");
+                }
+                if (workflow != null) {
+                    hql.append("and lower(");
+                    hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName"));
+                    hql.append(") ");
+                    hql.append("like :workflow ");
+                }
+                hql.append(") ");
+            }
+
             hql.append("and exists(");// start exists
             hql.append("  select sw.id from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
             hql.append("  where sw.deployed=mt.deployed ");
@@ -225,7 +262,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
-        if (!SOSString.isEmpty(search)) {
+        if (search != null) {
             query.setParameter("search", '%' + search.toLowerCase() + '%');
         }
         if (searchInFolders) {
