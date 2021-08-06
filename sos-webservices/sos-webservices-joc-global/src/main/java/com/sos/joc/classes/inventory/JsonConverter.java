@@ -2,8 +2,12 @@ package com.sos.joc.classes.inventory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -15,23 +19,47 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.ListParameterType;
+import com.sos.inventory.model.workflow.ParameterType;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.sign.model.workflow.ListParameters;
+import com.sos.sign.model.workflow.OrderPreparation;
+import com.sos.sign.model.workflow.Parameter;
+import com.sos.sign.model.workflow.ParameterListType;
+import com.sos.sign.model.workflow.Parameters;
 
 public class JsonConverter {
     
     private final static Predicate<String> hasForkListInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"" + InstructionType.FORKLIST.value() + "\"").asPredicate();
+    private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
     
-    public static com.sos.sign.model.workflow.Workflow readConvertedWorkflow(String json) throws JsonParseException, JsonMappingException, IOException {
+    @SuppressWarnings("unchecked")
+    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        
+        if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
+            return (T) readAsConvertedWorkflow(json);
+        } else {
+            return Globals.objectMapper.readValue(json, clazz);
+        }
+    }
+    
+    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String json) throws JsonParseException, JsonMappingException, IOException {
         
         com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json, com.sos.sign.model.workflow.Workflow.class);
+        Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
+        
+        signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation()));
         
         if (signWorkflow.getInstructions() != null) {
             // at the moment the converter is only necessary for ForkList instructions
             if (hasForkListInstruction.test(json)) {
-                convertInstructions(Globals.objectMapper.readValue(json, Workflow.class).getInstructions(), signWorkflow.getInstructions());
+                convertInstructions(invWorkflow.getInstructions(), signWorkflow.getInstructions());
             }
         }
+        
+        LOGGER.info(Globals.objectMapper.writeValueAsString(signWorkflow));
         
         return signWorkflow;
     }
@@ -97,7 +125,87 @@ public class JsonConverter {
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
         sfl.setChildren("$" + fl.getChildren());
         sfl.setChildToArguments("(x) => $x");
-        sfl.setChildToId("(x, i) => $i + '-' + $x." + fl.getChildToId());
+        // TODO index is not supported yet in the controller
+        //sfl.setChildToId("(x, i) => $i + '-' + $x." + fl.getChildToId());
+        sfl.setChildToId("(x) => $x." + fl.getChildToId());
+    }
+    
+    public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
+        if (orderPreparation == null) {
+            return null;
+        }
+        Parameters params = new Parameters();
+        if (orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
+            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                Parameter p = new Parameter();
+                p.setDefault(v.getDefault());
+                p.setFinal(v.getFinal());
+                if (ParameterType.List.equals(v.getType())) {
+                    ListParameters lps = new ListParameters();
+                    if (v.getListParameters() != null && v.getListParameters().getAdditionalProperties() != null) {
+                        v.getListParameters().getAdditionalProperties().forEach((k1, v1) -> {
+                            lps.setAdditionalProperty(k1, v1.getType());
+                        });
+                    }
+                    p.setType(new ParameterListType("List", lps));
+                } else {
+                    p.setType(v.getType()); // wrong type enum
+                }
+                params.setAdditionalProperty(k, p);
+            });
+        }
+        return new OrderPreparation(params, orderPreparation.getAllowUndeclared());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static Requirements signOrderPreparationToInvOrderPreparation(OrderPreparation orderPreparation) {
+        if (orderPreparation == null) {
+            return null;
+        }
+        com.sos.inventory.model.workflow.Parameters params = new com.sos.inventory.model.workflow.Parameters();
+        if (orderPreparation.getParameters() != null && orderPreparation.getParameters().getAdditionalProperties() != null) {
+            orderPreparation.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                com.sos.inventory.model.workflow.Parameter p = new com.sos.inventory.model.workflow.Parameter();
+                p.setDefault(v.getDefault());
+                p.setFinal(v.getFinal());
+                if (v.getType() != null) {
+                    System.out.println(v.getType().getClass().getName());
+                    if (v.getType() instanceof String) {
+                        try {
+                            p.setType(ParameterType.fromValue((String) v.getType()));
+                        } catch (Exception e) {
+                        }
+                    } else if (v.getType() instanceof ParameterListType) {
+                        p.setType(ParameterType.List);
+                        ParameterListType plt = (ParameterListType) v.getType();
+                        if (plt.getElementType() != null && plt.getElementType().getAdditionalProperties() != null) {
+                            com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
+                            plt.getElementType().getAdditionalProperties().forEach((k1, v1) -> {
+                                lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1));
+                                p.setListParameters(lp);
+                            });
+                        }
+                    } else if (v.getType() instanceof Map) {
+                        p.setType(ParameterType.List);
+                        Map<String, String> slp = (Map<String, String>) ((Map<String, Object>) v.getType()).get("elementType");
+                        if (slp != null) {
+                            com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
+                            slp.forEach((k1, v1) -> {
+                                if (!"TYPE".equals(k1)) {
+                                    try {
+                                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType.fromValue(v1)));
+                                        p.setListParameters(lp);
+                                    } catch (Exception e) {
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+                params.setAdditionalProperty(k, p);
+            });
+        }
+        return new Requirements(params, orderPreparation.getAllowUndeclared()); 
     }
 
 }

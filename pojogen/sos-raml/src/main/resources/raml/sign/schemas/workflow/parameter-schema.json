@@ -1,0 +1,26 @@
+{
+  "title": "parameter",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.workflow.Parameter",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "description": "parameters only for parameter type 'List'",
+  "properties": {
+    "type": {
+      "anyOf": [
+      	{ "$ref": "../../../inventory/schemas/workflow/listParameterType-schema.json" },
+      	{ "$ref": "parameterListType-schema.json" }
+      ]
+    },
+    "default": {
+      "description": "this value has to have the data type of the 'type' attribute",
+      "javaType": "java.lang.Object"
+    },
+    "final": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

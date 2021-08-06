@@ -29,11 +29,7 @@ import js7.data_for_java.value.JExpression;
 
 public class JsonSerializer {
     
-    // TODO FileOrderSource: default for delay?
-    // TODO Job: default for logLevel?
-    // TODO Job: default for criticality?
-    // TODO Job: default for timeout?
-    // TODO Job: default for graceTimeout?
+    // TODO FileOrderSource: default for delay? 0
     
     
     public static <T> String serializeAsString(T config) throws JsonProcessingException {
@@ -80,7 +76,7 @@ public class JsonSerializer {
             return null;
         }
         emptyStringCollectionsToNull(w.getJobResourcePaths());
-        w.setOrderPreparation(emptyRequirementsToNull(w.getOrderPreparation()));
+        w.setOrderPreparation(emptyOrderPreparationToNull(w.getOrderPreparation()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
         cleanSignedInstructions(w.getInstructions());
         return w;
@@ -92,7 +88,7 @@ public class JsonSerializer {
             return null;
         }
         emptyStringCollectionsToNull(w.getJobResourceNames());
-        w.setOrderPreparation(emptyRequirementsToNull(w.getOrderPreparation()));
+        w.setOrderPreparation(emptyOrderPreparationToNull(w.getOrderPreparation()));
         w.setJobs(emptyJobsValuesToNull(w.getJobs()));
         cleanInventoryInstructions(w.getInstructions());
         return w;
@@ -182,7 +178,25 @@ public class JsonSerializer {
         return vars;
     }
     
-    private static Requirements emptyRequirementsToNull(Requirements r) {
+    private static Requirements emptyOrderPreparationToNull(Requirements r) {
+        if (r == null) {
+            return null;
+        }
+        if (r != null && (r.getParameters() == null || (r.getParameters() != null && r.getParameters().getAdditionalProperties().isEmpty()))) {
+            return null;
+        }
+        r.getParameters().getAdditionalProperties().replaceAll((k, v) -> {
+            if (v.getDefault() != null) {
+                v.setDefault(quoteString(v.getDefault().toString()));
+            }
+            v.setFinal(quoteString(v.getFinal()));
+            return v;
+        });
+        r.setAllowUndeclared(defaultToNull(r.getAllowUndeclared(), Boolean.FALSE));
+        return r;
+    }
+    
+    private static com.sos.sign.model.workflow.OrderPreparation emptyOrderPreparationToNull(com.sos.sign.model.workflow.OrderPreparation r) {
         if (r == null) {
             return null;
         }

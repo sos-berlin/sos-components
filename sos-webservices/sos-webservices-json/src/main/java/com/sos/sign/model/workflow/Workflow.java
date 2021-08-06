@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.instruction.Instruction;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -71,7 +70,7 @@ public class Workflow implements IDeployObject
     @JsonAlias({
         "orderRequirements"
     })
-    private Requirements orderPreparation;
+    private OrderPreparation orderPreparation;
     @JsonProperty("jobResourcePaths")
     @JsonAlias({
         "jobResourceNames"
@@ -111,7 +110,7 @@ public class Workflow implements IDeployObject
      * @param tYPE
      * @param orderPreparation
      */
-    public Workflow(DeployType tYPE, String path, String versionId, Requirements orderPreparation, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(DeployType tYPE, String path, String versionId, OrderPreparation orderPreparation, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
         super();
         this.tYPE = tYPE;
         this.path = path;
@@ -201,7 +200,7 @@ public class Workflow implements IDeployObject
      * 
      */
     @JsonProperty("orderPreparation")
-    public Requirements getOrderPreparation() {
+    public OrderPreparation getOrderPreparation() {
         return orderPreparation;
     }
 
@@ -212,7 +211,7 @@ public class Workflow implements IDeployObject
      * 
      */
     @JsonProperty("orderPreparation")
-    public void setOrderPreparation(Requirements orderPreparation) {
+    public void setOrderPreparation(OrderPreparation orderPreparation) {
         this.orderPreparation = orderPreparation;
     }
 

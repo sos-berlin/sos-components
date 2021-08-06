@@ -1,0 +1,9 @@
+{
+  "title": "parameters",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.workflow.Parameters",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "parameter-schema.json"
+  }
+}

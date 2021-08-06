@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
@@ -208,7 +209,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 			.peek(item -> {
                 				try {
 									item.writeUpdateableContent(
-											(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+									        (IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+											//(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
 								} catch (IOException e) {
 									throw new JocException(e);
 								}

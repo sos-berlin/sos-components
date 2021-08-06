@@ -1,5 +1,5 @@
 
-package com.sos.inventory.model.workflow;
+package com.sos.sign.model.workflow;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,20 +20,17 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "type",
     "default",
-    "final",
-    "listParameters"
+    "final"
 })
 public class Parameter {
 
     /**
-     * parameterType
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    private ParameterType type;
+    private Object type;
     /**
      * this value has to have the data type of the 'type' attribute
      * 
@@ -43,14 +40,6 @@ public class Parameter {
     private Object _default;
     @JsonProperty("final")
     private String _final;
-    /**
-     * list parameters
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("listParameters")
-    private ListParameters listParameters;
 
     /**
      * No args constructor for use in serialization
@@ -64,37 +53,31 @@ public class Parameter {
      * @param _default
      * @param type
      * @param _final
-     * @param listParameters
      */
-    public Parameter(ParameterType type, Object _default, String _final, ListParameters listParameters) {
+    public Parameter(Object type, Object _default, String _final) {
         super();
         this.type = type;
         this._default = _default;
         this._final = _final;
-        this.listParameters = listParameters;
     }
 
     /**
-     * parameterType
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    public ParameterType getType() {
+    public Object getType() {
         return type;
     }
 
     /**
-     * parameterType
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("type")
-    public void setType(ParameterType type) {
+    public void setType(Object type) {
         this.type = type;
     }
 
@@ -126,36 +109,14 @@ public class Parameter {
         this._final = _final;
     }
 
-    /**
-     * list parameters
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("listParameters")
-    public ListParameters getListParameters() {
-        return listParameters;
-    }
-
-    /**
-     * list parameters
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("listParameters")
-    public void setListParameters(ListParameters listParameters) {
-        this.listParameters = listParameters;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).append("listParameters", listParameters).toString();
+        return new ToStringBuilder(this).append("type", type).append("_default", _default).append("_final", _final).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(_default).append(type).append(_final).append(listParameters).toHashCode();
+        return new HashCodeBuilder().append(_default).append(type).append(_final).toHashCode();
     }
 
     @Override
@@ -167,7 +128,7 @@ public class Parameter {
             return false;
         }
         Parameter rhs = ((Parameter) other);
-        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).append(listParameters, rhs.listParameters).isEquals();
+        return new EqualsBuilder().append(_default, rhs._default).append(type, rhs.type).append(_final, rhs._final).isEquals();
     }
 
 }

@@ -35,7 +35,7 @@
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
     "orderPreparation": {
-    	"$ref": "../../../inventory/schemas/workflow/orderRequirements-schema.json"
+    	"$ref": "orderPreparation-schema.json"
     },
     "jobResourcePaths": {
       "alias": "jobResourceNames",

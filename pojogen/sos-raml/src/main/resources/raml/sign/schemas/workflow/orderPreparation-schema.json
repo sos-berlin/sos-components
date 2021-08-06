@@ -1,0 +1,16 @@
+{
+  "title": "order or job requirements",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.workflow.OrderPreparation",
+  "type": "object",
+  "alias": "orderRequirements",
+  "properties": {
+    "parameters": {
+      "$ref": "parameters-schema.json"
+    },
+    "allowUndeclared": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

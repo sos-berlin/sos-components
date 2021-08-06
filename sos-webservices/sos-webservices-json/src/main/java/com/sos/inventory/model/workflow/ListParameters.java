@@ -3,39 +3,38 @@ package com.sos.inventory.model.workflow;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 
 /**
- * parameters
+ * list parameters
  * <p>
  * 
  * 
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
 
 })
-public class Parameters {
+public class ListParameters {
 
     @JsonIgnore
-    private Map<String, Parameter> additionalProperties = new LinkedHashMap<String, Parameter>();
+    private Map<String, ListParameter> additionalProperties = new LinkedHashMap<String, ListParameter>();
 
     @JsonAnyGetter
-    public Map<String, Parameter> getAdditionalProperties() {
+    public Map<String, ListParameter> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperty(String name, Parameter value) {
+    public void setAdditionalProperty(String name, ListParameter value) {
         this.additionalProperties.put(name, value);
     }
 
@@ -54,10 +53,10 @@ public class Parameters {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Parameters) == false) {
+        if ((other instanceof ListParameters) == false) {
             return false;
         }
-        Parameters rhs = ((Parameters) other);
+        ListParameters rhs = ((ListParameters) other);
         return new EqualsBuilder().append(additionalProperties, rhs.additionalProperties).isEquals();
     }
 

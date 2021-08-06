@@ -32,6 +32,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.order.FreshOrder;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
@@ -61,6 +62,7 @@ import com.sos.joc.model.order.OrderMarkText;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
+import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
@@ -72,7 +74,9 @@ import js7.data.order.OrderMark.Cancelling;
 import js7.data.order.OrderMark.Resuming;
 import js7.data.order.OrderMark.Suspending;
 import js7.data.value.BooleanValue;
+import js7.data.value.ListValue;
 import js7.data.value.NumberValue;
+import js7.data.value.ObjectValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
@@ -366,11 +370,16 @@ public class OrdersHelper {
         return o;
     }
 
-    public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
+    public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
+    }
+    
+    public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
+            IOException {
+        return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState));
     }
 
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
@@ -443,6 +452,9 @@ public class OrdersHelper {
                 case List:
                     if ((curArg instanceof List) == false) {
                         invalid = true;
+                        
+                        // TODO check list params types
+                        
                     }
                     break;
                 }
@@ -497,7 +509,8 @@ public class OrdersHelper {
                             vars.getAdditionalProperties().remove(k);
                         });
                     }
-                    args = variablesToScalaValuedArguments(checkArguments(vars, workflow.getOrderPreparation()));
+                    args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
+                            .getOrderPreparation())));
                 }
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
@@ -586,9 +599,16 @@ public class OrdersHelper {
     }
 
     public static Map<String, Value> variablesToScalaValuedArguments(Variables vars) {
+        if (vars != null) {
+            return variablesToScalaValuedArguments(vars.getAdditionalProperties());
+        }
+        return Collections.emptyMap();
+    }
+    
+    public static Map<String, Value> variablesToScalaValuedArguments(Map<String, Object> vars) {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
-            vars.getAdditionalProperties().forEach((key, val) -> {
+            vars.forEach((key, val) -> {
                 if (val instanceof String) {
                     arguments.put(key, StringValue.of((String) val));
                 } else if (val instanceof Boolean) {
@@ -601,10 +621,24 @@ public class OrdersHelper {
                     arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
                 } else if (val instanceof BigDecimal) {
                     arguments.put(key, NumberValue.of(((BigDecimal) val)));
+                } else if (val instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> valListOfObjects = (List<Map<String, Object>>) val;
+                    List<Value> valueList = new ArrayList<>();
+                    valListOfObjects.forEach(m -> {
+                        Map<String, Value> listArguments = variablesToScalaValuedArguments(m);
+                        // TODO ObjectValue.of(...map...) missing
+                        valueList.add(ObjectValue.apply(toScalaImmutableMap(listArguments)));
+                    });
+                    arguments.put(key, ListValue.of(valueList));
                 }
             });
         }
         return arguments;
+    }
+    
+    public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
+        return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
     }
 
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {

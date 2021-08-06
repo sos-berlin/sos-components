@@ -69,6 +69,7 @@ import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.settings.ClusterSettings;
@@ -2684,7 +2685,8 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getContent());
+                //Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
                 }
@@ -2728,7 +2730,8 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getInvContent());
+                //Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
                 }
@@ -3203,8 +3206,10 @@ public abstract class PublishUtils {
         newItem.setTitle(cfg.getTitle());
         // TODO: type mapping
         try {
-            newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
-                    .getType())));
+            newItem.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(cfg.getContent(), StoreDeployments.CLASS_MAPPING
+                    .get(cfg.getType())));
+//            newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
+//                    .getType())));
         } catch (IOException e) {
             throw new JocException(e);
         }

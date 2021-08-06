@@ -35,7 +35,8 @@ import com.sos.inventory.model.instruction.InstructionType;
 		@JsonSubTypes.Type(value = IfElse.class, name = "If"),
 		@JsonSubTypes.Type(value = NamedJob.class, name = "Execute.Named"),
 		@JsonSubTypes.Type(value = ForkJoin.class, name = "Fork"),
-		@JsonSubTypes.Type(value = RetryCatch.class, name = "Try"),
+		@JsonSubTypes.Type(value = ForkList.class, name = "ForkList"),
+        @JsonSubTypes.Type(value = RetryCatch.class, name = "Try"),
 		@JsonSubTypes.Type(value = TryCatch.class, name = "Try"),
 		@JsonSubTypes.Type(value = RetryInCatch.class, name = "Retry"),
 		@JsonSubTypes.Type(value = Finish.class, name = "Finish"),
@@ -43,7 +44,6 @@ import com.sos.inventory.model.instruction.InstructionType;
 		@JsonSubTypes.Type(value = Lock.class, name = "Lock"),
 		@JsonSubTypes.Type(value = PostNotice.class, name = "PostNotice"),
         @JsonSubTypes.Type(value = ExpectNotice.class, name = "ExpectNotice"),
-        @JsonSubTypes.Type(value = ExpectNotice.class, name = "ReadNotice"),
         @JsonSubTypes.Type(value = Prompt.class, name = "Prompt")})
 public abstract class Instruction
     extends ClassHelper

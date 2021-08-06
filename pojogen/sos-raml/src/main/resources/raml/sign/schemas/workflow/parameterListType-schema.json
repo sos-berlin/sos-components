@@ -1,0 +1,30 @@
+{
+  "title": "list type parameter",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.workflow.ParameterListType",
+  "type": "object",
+  "required": [
+    "TYPE",
+    "elementType"
+  ],
+  "properties": {
+    "TYPE": {
+    	"type": "string",
+    	"default": "List"
+    },
+    "elementType": {
+    	"type": "object",
+    	"javaType": "com.sos.sign.model.workflow.ListParameters",
+    	"properties": {
+    		"TYPE": {
+    			"type": "string",
+    			"default": "Object"
+    		}
+    	},
+    	"additionalProperties": {
+    		"$ref": "../../../inventory/schemas/workflow/listParameterType-schema.json"
+  		}
+    }
+  },
+  "additionalProperties": false
+}

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -35,14 +36,26 @@ import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Jobs;
+import com.sos.inventory.model.workflow.ListParameterType;
+import com.sos.inventory.model.workflow.ParameterType;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.schema.JsonValidator;
+import com.sos.sign.model.workflow.ListParameters;
+import com.sos.sign.model.workflow.OrderPreparation;
+import com.sos.sign.model.workflow.Parameter;
+import com.sos.sign.model.workflow.ParameterListType;
+import com.sos.sign.model.workflow.Parameters;
 
 public class PojosTest {
 	
 	private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
+	
+	private static final String invOrderPreparation = "{\"parameters\":{\"myOptionalNumberVar\":{\"type\":\"Number\",\"default\":\"0\"},\"myFinalVar\":{\"final\":\"'hello'\"},\"myRequiredStringVar\":{\"type\":\"String\"},\"myListVar\":{\"type\":\"List\",\"listParameters\":{\"myListVar2\":{\"type\":\"String\"},\"myListVar1\":{\"type\":\"Number\"}}}},\"allowUndeclared\":false}";
+	private static final String signOrderPreparation = "{\"parameters\":{\"myOptionalNumberVar\":{\"type\":\"Number\",\"default\":\"0\"},\"myFinalVar\":{\"final\":\"'hello'\"},\"myRequiredStringVar\":{\"type\":\"String\"},\"myListVar\":{\"type\":{\"TYPE\":\"List\",\"elementType\":{\"TYPE\":\"Object\",\"myListVar2\":\"String\",\"myListVar1\":\"Number\"}}}},\"allowUndeclared\":false}";
+    
 
     @Test
     public void freshOrderTest() throws Exception {
@@ -185,6 +198,87 @@ public class PojosTest {
         String json = "{\"configuration\":{\"env\":{\"value\":\"'b'\",\"name\":\"'a'\"}},\"valid\":false,\"id\":5,\"objectType\":\"JOBRESOURCE\"}";
         ConfigurationObject conf = objectMapper.readValue(json, ConfigurationObject.class);
         System.out.println(objectMapper.writeValueAsString(conf.getConfiguration()));
+    }
+    
+    @Test
+    public void invOrderPrepToSignOrderPrep() throws JsonParseException, JsonMappingException, IOException {
+        Requirements conf = objectMapper.readValue(invOrderPreparation, Requirements.class);
+        Parameters params = new Parameters();
+        if (conf.getParameters() != null && conf.getParameters().getAdditionalProperties() != null) {
+            conf.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                Parameter p = new Parameter();
+                p.setDefault(v.getDefault());
+                p.setFinal(v.getFinal());
+                if (ParameterType.List.equals(v.getType())) {
+                    ListParameters lps = new ListParameters();
+                    v.getListParameters().getAdditionalProperties().forEach((k1, v1) -> {
+                        lps.setAdditionalProperty(k1, v1.getType());
+                    });
+                    p.setType(new ParameterListType("List", lps));
+                } else {
+                    p.setType(v.getType()); // wrong type enum
+                }
+                params.setAdditionalProperty(k, p);
+            });
+        }
+        OrderPreparation op = new OrderPreparation(params, conf.getAllowUndeclared());
+        String result = objectMapper.writeValueAsString(op);
+        System.out.println(result);
+        assertEquals("signOrderPrepToInvOrderPrep", result, signOrderPreparation);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void signOrderPrepToInvOrderPrep() throws JsonParseException, JsonMappingException, IOException {
+        OrderPreparation conf = objectMapper.readValue(signOrderPreparation, OrderPreparation.class);
+        com.sos.inventory.model.workflow.Parameters params = new com.sos.inventory.model.workflow.Parameters();
+        if (conf.getParameters() != null && conf.getParameters().getAdditionalProperties() != null) {
+            conf.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                com.sos.inventory.model.workflow.Parameter p = new com.sos.inventory.model.workflow.Parameter();
+                p.setDefault(v.getDefault());
+                p.setFinal(v.getFinal());
+                if (v.getType() != null) {
+                    //System.out.println(v.getType().getClass().getName());
+                    if (v.getType() instanceof String) {
+                        try {
+                            p.setType(ParameterType.fromValue((String) v.getType()));
+                        } catch (Exception e) {
+                        }
+                    } else if (v.getType() instanceof ParameterListType) {
+                        p.setType(ParameterType.List);
+                        ParameterListType plt = (ParameterListType) v.getType();
+                        if (plt.getElementType() != null && plt.getElementType().getAdditionalProperties() != null) {
+                            com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
+                            plt.getElementType().getAdditionalProperties().forEach((k1, v1) -> {
+                                lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(v1));
+                                p.setListParameters(lp);
+                            });
+                        }
+                    } else if (v.getType() instanceof Map) {
+                        p.setType(ParameterType.List);
+                        Map<String, String> slp = (Map<String, String>) ((Map<String, Object>) v.getType()).get("elementType");
+                        if (slp != null) {
+                            com.sos.inventory.model.workflow.ListParameters lp = new com.sos.inventory.model.workflow.ListParameters();
+                            slp.forEach((k1, v1) -> {
+                                if (!"TYPE".equals(k1)) {
+                                    try {
+                                        lp.setAdditionalProperty(k1, new com.sos.inventory.model.workflow.ListParameter(ListParameterType.fromValue(v1)));
+                                        p.setListParameters(lp);
+                                    } catch (Exception e) {
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+                params.setAdditionalProperty(k, p);
+            });
+        }
+        Requirements r = new Requirements(params, conf.getAllowUndeclared()); 
+        String result = objectMapper.writeValueAsString(r);
+        System.out.println(invOrderPreparation);
+        System.out.println(result);
+        assertEquals("signOrderPrepToInvOrderPrep", result, invOrderPreparation);
     }
 
 }

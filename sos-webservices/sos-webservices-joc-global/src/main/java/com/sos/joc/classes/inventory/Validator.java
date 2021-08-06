@@ -438,6 +438,7 @@ public class Validator {
                     break;
                 case List:
                     invalid = (_default instanceof List) == false;
+                    // TODO check list params types
                     break;
                 }
                 if (invalid) {
@@ -512,6 +513,7 @@ public class Validator {
                         break;
                     case List:
                         invalid = (curArg instanceof List) == false;
+                        // TODO check list params types
                         break;
                     }
                     if (invalid) {

@@ -128,7 +128,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * @param documentationName
      * 
      * @param title
-     * @param version
      * @param orderPreparation
      */
     public Workflow(String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
