@@ -128,7 +128,7 @@ public class PlannedOrder {
 
     
     public void setOrderName(String orderName) {
-        this.orderName = orderName;
+        this.orderName = orderName.substring(0,30);
     }
 
  
