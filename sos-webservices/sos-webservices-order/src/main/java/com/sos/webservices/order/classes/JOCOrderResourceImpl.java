@@ -142,6 +142,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         p.setWorkflowPath(dbItemDailyPlanWithHistory.getWorkflowPath());
         p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
         p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
+        p.setOrderName(dbItemDailyPlanWithHistory.getOrderName());
 
         DailyPlanOrderState orderState = new DailyPlanOrderState();
         if (dbItemDailyPlanWithHistory.isSubmitted()) {
@@ -182,7 +183,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
                     cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
                     cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
-                    cycleOrderKey.setSchedulePath(p.getSchedulePath());
+                    cycleOrderKey.setOrderName(p.getOrderName());
                     cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
                     if (mapOfCycledOrders.get(cycleOrderKey) == null) {
                         mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());

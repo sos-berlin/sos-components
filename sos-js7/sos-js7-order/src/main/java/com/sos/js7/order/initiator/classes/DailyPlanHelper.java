@@ -118,7 +118,7 @@ public class DailyPlanHelper {
                 cycleOrderKey.setPeriodBegin(periodFormat.format(dbItemDailyPlanOrders.getPeriodBegin()));
                 cycleOrderKey.setPeriodEnd(periodFormat.format(dbItemDailyPlanOrders.getPeriodEnd()));
                 cycleOrderKey.setRepeat(String.valueOf(dbItemDailyPlanOrders.getRepeatInterval()));
-                cycleOrderKey.setSchedulePath(dbItemDailyPlanOrders.getSchedulePath());
+                cycleOrderKey.setOrderName(dbItemDailyPlanOrders.getOrderName());
                 cycleOrderKey.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
                 if (mapOfCycledOrders.get(cycleOrderKey) == null) {
                     mapOfCycledOrders.put(cycleOrderKey, new ArrayList<DBItemDailyPlanOrders>());
@@ -149,7 +149,7 @@ public class DailyPlanHelper {
                 cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
                 cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
                 cycleOrderKey.setRepeat(String.valueOf(plannedOrder.getPeriod().getRepeat()));
-                cycleOrderKey.setSchedulePath(plannedOrder.getSchedule().getPath());
+                cycleOrderKey.setOrderName(plannedOrder.getOrderName());
                 cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
                 if (mapOfCycledOrders.get(cycleOrderKey) == null) {
                     mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());

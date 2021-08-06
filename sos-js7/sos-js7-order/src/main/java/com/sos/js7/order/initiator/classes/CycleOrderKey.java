@@ -7,7 +7,7 @@ public class CycleOrderKey implements Comparable<CycleOrderKey> {
     private String periodBegin="";
     private String periodEnd="";
     private String repeat="";
-    private String schedulePath="";
+    private String orderName="";
     private String workflowPath="";
 
     public String getPeriodBegin() {
@@ -34,12 +34,12 @@ public class CycleOrderKey implements Comparable<CycleOrderKey> {
         this.repeat = repeat;
     }
 
-    public String getSchedulePath() {
-        return schedulePath;
+    public String getOrderName() {
+        return orderName;
     }
 
-    public void setSchedulePath(String schedulePath) {
-        this.schedulePath = schedulePath;
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
     }
 
     public String getWorkflowPath() {
@@ -57,7 +57,7 @@ public class CycleOrderKey implements Comparable<CycleOrderKey> {
         result = prime * result + ((periodBegin == null) ? 0 : periodBegin.hashCode());
         result = prime * result + ((periodEnd == null) ? 0 : periodEnd.hashCode());
         result = prime * result + ((repeat == null) ? 0 : repeat.hashCode());
-        result = prime * result + ((schedulePath == null) ? 0 : schedulePath.hashCode());
+        result = prime * result + ((orderName == null) ? 0 : orderName.hashCode());
         result = prime * result + ((workflowPath == null) ? 0 : workflowPath.hashCode());
         return result;
     }
@@ -86,10 +86,10 @@ public class CycleOrderKey implements Comparable<CycleOrderKey> {
                 return false;
         } else if (!repeat.equals(other.repeat))
             return false;
-        if (schedulePath == null) {
-            if (other.schedulePath != null)
+        if (orderName == null) {
+            if (other.orderName != null)
                 return false;
-        } else if (!schedulePath.equals(other.schedulePath))
+        } else if (!orderName.equals(other.orderName))
             return false;
         if (workflowPath == null) {
             if (other.workflowPath != null)
@@ -102,7 +102,7 @@ public class CycleOrderKey implements Comparable<CycleOrderKey> {
     @Override
     public int compareTo(CycleOrderKey o) {
         return Comparator.comparing(CycleOrderKey::getPeriodBegin).thenComparing(CycleOrderKey::getPeriodEnd).thenComparing(
-                CycleOrderKey::getRepeatInterval).thenComparing(CycleOrderKey::getSchedulePath).thenComparing(CycleOrderKey::getWorkflowPath).compare(
+                CycleOrderKey::getRepeatInterval).thenComparing(CycleOrderKey::getOrderName).thenComparing(CycleOrderKey::getWorkflowPath).compare(
                         this, o);
     }
 

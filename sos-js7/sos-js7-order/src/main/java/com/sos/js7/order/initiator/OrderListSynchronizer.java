@@ -294,7 +294,7 @@ public class OrderListSynchronizer {
                     cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
                     cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
                     cycleOrderKey.setRepeat(plannedOrder.getPeriod().getRepeat());
-                    cycleOrderKey.setSchedulePath(plannedOrder.getSchedule().getPath());
+                    cycleOrderKey.setOrderName(plannedOrder.getOrderName());
                     cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
 
                     if (mapOfCycledOrders.get(cycleOrderKey) == null) {

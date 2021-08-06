@@ -248,7 +248,7 @@ public class DailyPlanOrderFilterDef {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(scheduleFolders).append(states).append(schedulePaths).append(late).append(workflowFolders).append(controllerIds).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(dailyPlanDate).append(late).append(workflowFolders).append(controllerIds).append(submissionHistoryIds).append(workflowPaths).append(orderIds).append(schedulesFolder).append(scheduleFolders).append(states).toHashCode();
     }
 
     @Override
@@ -260,7 +260,7 @@ public class DailyPlanOrderFilterDef {
             return false;
         }
         DailyPlanOrderFilterDef rhs = ((DailyPlanOrderFilterDef) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(scheduleFolders, rhs.scheduleFolders).append(states, rhs.states).append(schedulePaths, rhs.schedulePaths).append(late, rhs.late).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(late, rhs.late).append(workflowFolders, rhs.workflowFolders).append(controllerIds, rhs.controllerIds).append(submissionHistoryIds, rhs.submissionHistoryIds).append(workflowPaths, rhs.workflowPaths).append(orderIds, rhs.orderIds).append(schedulesFolder, rhs.schedulesFolder).append(scheduleFolders, rhs.scheduleFolders).append(states, rhs.states).isEquals();
     }
 
 }
