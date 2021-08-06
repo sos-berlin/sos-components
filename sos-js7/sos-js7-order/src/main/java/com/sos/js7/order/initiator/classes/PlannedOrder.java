@@ -111,26 +111,25 @@ public class PlannedOrder {
         this.controllerId = controllerId;
     }
 
-    
     public String getWorkflowPath() {
         return workflowPath;
     }
 
-    
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
     }
 
-    
     public String getOrderName() {
         return orderName;
     }
 
-    
     public void setOrderName(String orderName) {
-        this.orderName = orderName.substring(0,30);
-    }
+        if (orderName.length() > 30) {
+            this.orderName = orderName.substring(0, 30);
+        } else {
+            this.orderName = orderName;
+        }
 
- 
+    }
 
 }

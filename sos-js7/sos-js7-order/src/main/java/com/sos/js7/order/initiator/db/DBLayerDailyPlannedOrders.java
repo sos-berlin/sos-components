@@ -161,7 +161,7 @@ public class DBLayerDailyPlannedOrders {
         }
 
         if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
-            where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart <= :plannedStartTo";
+            where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo";
             and = " and ";
         }
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {

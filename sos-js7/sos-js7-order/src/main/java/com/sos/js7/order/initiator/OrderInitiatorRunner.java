@@ -627,7 +627,6 @@ public class OrderInitiatorRunner extends TimerTask {
                                             scheduleAdded.add(schedule.getPath());
                                         }
                                     }
-
                                 }
                             }
                         }
