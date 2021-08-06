@@ -21,12 +21,14 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
+import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.event.Event;
 import js7.data.event.KeyedEvent;
 import js7.data.event.Stamped;
 import js7.data.lock.Lock;
 import js7.data.lock.LockPath;
+import js7.data.node.NodeId;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockQueued;
@@ -110,6 +112,10 @@ public class HistoryEventEntry {
 
     public HistoryEventType getEventType() {
         return eventType;
+    }
+
+    public HistoryClusterCoupled getClusterCoupled() {
+        return new HistoryClusterCoupled();
     }
 
     public HistoryControllerReady getControllerReady() {
@@ -658,6 +664,31 @@ public class HistoryEventEntry {
             }
         }
 
+    }
+
+    public class HistoryClusterCoupled {
+
+        private String activeId;
+        private boolean isPrimary = true;// TODO remove after test ...
+
+        public HistoryClusterCoupled() {
+            ClusterCoupled ev = (ClusterCoupled) event;
+            try {
+                NodeId nid = ev.activeId();
+                activeId = nid.string();
+                isPrimary = !activeId.equalsIgnoreCase("backup");
+            } catch (Throwable e) {
+
+            }
+        }
+
+        public String getActiveId() {
+            return activeId;
+        }
+
+        public boolean isPrimary() {
+            return isPrimary;
+        }
     }
 
     public class HistoryControllerReady {

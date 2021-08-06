@@ -12,7 +12,6 @@ import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.JocConfigurationException;
 
 import js7.proxy.javaapi.JControllerApi;
-import js7.proxy.javaapi.JControllerProxy;
 
 
 public class ControllerApi {

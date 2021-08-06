@@ -20,6 +20,7 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryClusterCoupled;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryControllerReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.OrderLock;
@@ -31,6 +32,7 @@ import com.sos.js7.history.controller.proxy.common.JProxyTestClass;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderBroken;
@@ -168,6 +170,12 @@ public class HistoryEventsTest {
             FatOutcome outcome;
             OrderLock ol;
             switch (entry.getEventType()) {
+            case ClusterCoupled:
+                HistoryClusterCoupled cc = entry.getClusterCoupled();
+
+                event = new FatEventClusterCoupled(entry.getEventId(), entry.getEventDate());
+                event.set(CONTROLLER_ID, cc.getActiveId(), cc.isPrimary());
+                break;
             case ControllerReady:
                 HistoryControllerReady cr = entry.getControllerReady();
 

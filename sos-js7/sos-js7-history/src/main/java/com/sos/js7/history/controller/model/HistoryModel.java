@@ -69,6 +69,7 @@ import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderLock;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderCancelled;
@@ -250,6 +251,15 @@ public class HistoryModel {
                 HistoryOrderStepBean hosb;
                 try {
                     switch (entry.getType()) {
+                    case ClusterCoupled:
+                        FatEventClusterCoupled fecc = (FatEventClusterCoupled) entry;
+                        if (controllerConfiguration.getSecondary() != null) {
+                            controllerConfiguration.setCurrent(fecc.isPrimary() ? controllerConfiguration.getPrimary() : controllerConfiguration
+                                    .getSecondary());
+                            LOGGER.info(String.format("[%s][ClusterCoupled %s, %s][%s][%s]", identifier, fecc.getActiveId(), controllerConfiguration
+                                    .getCurrent().getUri4Log(), eventId, eventIdAsTime(eventId)));
+                        }
+                        break;
                     case ControllerReady:
                         controllerReady(dbLayer, (FatEventControllerReady) entry);
                         counter.getController().addReady();
@@ -464,9 +474,9 @@ public class HistoryModel {
     }
 
     private Duration showSummary(Long startEventId, Long firstEventId, Instant start, Counter counter) {
-        String startEventIdAsTime = startEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(startEventId));
-        String endEventIdAsTime = storedEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(storedEventId));
-        String firstEventIdAsTime = firstEventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(firstEventId));
+        String startEventIdAsTime = eventIdAsTime(startEventId);
+        String endEventIdAsTime = eventIdAsTime(storedEventId);
+        String firstEventIdAsTime = eventIdAsTime(firstEventId);
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);
 
@@ -474,6 +484,10 @@ public class HistoryModel {
                 startEventIdAsTime, firstEventIdAsTime, endEventIdAsTime, SOSDate.getTime(start), SOSDate.getTime(end), SOSDate.getDuration(duration),
                 counter.toString(), getCachedSummary()));
         return duration;
+    }
+
+    private String eventIdAsTime(Long eventId) {
+        return eventId.equals(Long.valueOf(0)) ? "0" : SOSDate.getTime(HistoryUtil.eventId2Instant(eventId));
     }
 
     private String getCachedSummary() {
