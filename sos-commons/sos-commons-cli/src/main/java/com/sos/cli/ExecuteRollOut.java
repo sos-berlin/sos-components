@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -22,6 +25,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.httpclient.SOSRestApiClient;
+import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.keyStore.KeyStoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
@@ -50,9 +54,11 @@ public class ExecuteRollOut {
     private static final String TRG_TRUSTSTORE_TYPE = "--target-truststore-type";
     private static final String TRG_TRUSTSTORE_PASS = "--target-truststore-pass";
     private static final String SUBJECT_DN = "--subject-dn";
-    private static final String ALIAS = "--alias";
-    private static final String KS_ALIAS = "--keystore-alias";
-    private static final String TS_ALIAS = "--truststore-alias";
+    private static final String KS_ALIAS = "--key-alias";
+    private static final String TS_ALIAS = "--ca-alias";
+    private static final String SRC_PRIVATE_KEY = "--source-private-key";
+    private static final String SRC_CERT = "--source-certificate";
+    private static final String SRC_CA_CERT = "--source-ca-cert";
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
@@ -72,9 +78,11 @@ public class ExecuteRollOut {
     private static String targetTruststore;
     private static String targetTruststoreType = "PKCS12";
     private static String targetTruststorePasswd;
-    private static String alias;
-    private static String keystoreAlias;
-    private static String truststoreAlias;
+    private static String keyAlias;
+    private static String caAlias;
+    private static String srcPrivateKeyPath;
+    private static String srcCertPath;
+    private static String srcCaCertPath;
     private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
@@ -123,12 +131,16 @@ public class ExecuteRollOut {
                     subjectDN = split[1];
                 } else if (args[i].startsWith(SAN + "=")) {
                     san = split[1];
-                } else if (args[i].startsWith(ALIAS + "=")) {
-                    alias = split[1];
                 } else if (args[i].startsWith(KS_ALIAS + "=")) {
-                    keystoreAlias = split[1];
+                    keyAlias = split[1];
                 } else if (args[i].startsWith(TS_ALIAS + "=")) {
-                    truststoreAlias = split[1];
+                    caAlias = split[1];
+                } else if (args[i].startsWith(SRC_PRIVATE_KEY + "=")) {
+                    srcPrivateKeyPath = split[1];
+                } else if (args[i].startsWith(SRC_CERT + "=")) {
+                    srcCertPath = split[1];
+                } else if (args[i].startsWith(SRC_CA_CERT + "=")) {
+                    srcCaCertPath = split[1];
                 }
             }
             String response = callWebService();
@@ -149,20 +161,25 @@ public class ExecuteRollOut {
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
                 targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
-                if(keystoreAlias != null && !keystoreAlias.isEmpty()) {
-                    targetKeyStore.setKeyEntry(keystoreAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                if(keyAlias != null && !keyAlias.isEmpty()) {
+                    targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
                 } else {
-                    targetKeyStore.setKeyEntry(alias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
+                    System.err.println("no alias provided for the certificate and its private key. Parameter --key-alias is required.");
+                }
+                if (caAlias != null && !caAlias.isEmpty()) {
+                    targetKeyStore.setCertificateEntry(caAlias, rootCaCertificate);
+                } else {
+                    System.err.println("no alias provided for the CA certificate. Parameter --ca-alias is required.");
                 }
                 targetKeyStore.store(new FileOutputStream(new File(targetKeystore)), targetKeystorePasswd.toCharArray());
 
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
                 targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
-                if (truststoreAlias != null && !truststoreAlias.isEmpty()) {
-                    targetTrustStore.setCertificateEntry(truststoreAlias, rootCaCertificate);
+                if (caAlias != null && !caAlias.isEmpty()) {
+                    targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
                 } else {
-                    targetTrustStore.setCertificateEntry(alias, rootCaCertificate);
+                    System.err.println("no alias provided for the CA certificate. Parameter --ca-alias is required.");
                 }
                 targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
             }
@@ -176,18 +193,62 @@ public class ExecuteRollOut {
         if (client != null) {
             return;
         }
+        client = new SOSRestApiClient();
         KeyStore srcKeyStore = null;
         KeyStore srcTrustStore = null;
-        if (srcKeystore != null && !srcKeystore.isEmpty()) {
+        if (srcKeystore != null && !srcKeystore.isEmpty() && srcTruststore != null && !srcTruststore.isEmpty()) {
             srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeyStoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
-        }
-        if (srcTruststore != null && !srcTruststore.isEmpty()) {
             srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeyStoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
+        } else if (srcPrivateKeyPath != null && !srcPrivateKeyPath.isEmpty()
+                && srcCertPath != null && !srcCertPath.isEmpty()
+                && srcCaCertPath != null && !srcCaCertPath.isEmpty()) {
+            PrivateKey privKey = null;
+            X509Certificate cert = null;
+            X509Certificate caCert = null;
+            String pk = new String (Files.readAllBytes(Paths.get(srcPrivateKeyPath)), StandardCharsets.UTF_8);
+            if (pk != null && !pk.isEmpty()) {
+                if (pk.contains(SOSKeyConstants.RSA_ALGORITHM_NAME)) {
+                    privKey = KeyUtil.getPrivateRSAKeyFromString(pk);
+                } else {
+                    privKey = KeyUtil.getPrivateECDSAKeyFromString(pk);
+                }
+            }
+            cert = (X509Certificate)KeyUtil.getCertificate(Paths.get(srcCertPath));
+            Certificate[] chain = null;
+            Certificate[] caChain = null;
+            if (srcCaCertPath.contains(",")) {
+                String[] caCertPaths = srcCaCertPath.split(",");
+                caChain = new Certificate [caCertPaths.length];
+                chain = new Certificate[caChain.length + 1];
+                chain[0] = cert;
+                for (int i=0; i < caCertPaths.length; i++) {
+                    X509Certificate caCertficate = (X509Certificate)KeyUtil.getCertificate(Paths.get(caCertPaths[i].trim()));
+                    caChain[i] = caCertficate;
+                    chain[i+1] = caCertficate;
+                }
+            } else {
+                caCert = (X509Certificate)KeyUtil.getCertificate(srcCaCertPath);
+                chain = new Certificate[] {cert, caCert};
+            }
+            srcKeyStore = KeyStore.getInstance("PKCS12");
+            srcKeyStore.load(null, null);
+            srcKeyStore.setKeyEntry(keyAlias, privKey, "".toCharArray(), chain);
+            srcTrustStore = KeyStore.getInstance("PKCS12");
+            srcTrustStore.load(null, null);
+            if (caChain.length != 0) {
+                for (int i=0; i < caChain.length; i++) {
+                    srcTrustStore.setCertificateEntry(caAlias + (i+1), caChain[i]);
+                }
+            } else {
+                srcTrustStore.setCertificateEntry(caAlias, caCert);
+            }
         }
-
-        client = new SOSRestApiClient();
         if (srcKeyStore != null && srcTrustStore != null) {
-            client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcTrustStore);
+            if (srcKeystoreEntryPasswd != null) {
+                client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcTrustStore);
+            } else {
+                client.setSSLContext(srcKeyStore, "".toCharArray(), srcTrustStore);
+            }
         }
     }
 
@@ -198,19 +259,33 @@ public class ExecuteRollOut {
     }
     
     private static String createRequestBody (String dn) throws InvalidNameException, JsonProcessingException {
-        // --subject-dn="CN=sp, OU=IT, O=SOS GmbH, S=Berlin, L=Berlin, C=DE" --token=12345
+        // --subject-dn="CN=sp, OU=IT, O=SOS GmbH, S=Berlin, L=Berlin, C=DE"
         LdapName ldapName = new LdapName(dn);
-        List<String> cns = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList());
-        List<String> ous = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList());
         CreateCSRFilter filter = new CreateCSRFilter();
-        filter.setCommonName(cns.get(0));
-        filter.setOrganizationUnit(ous.get(0));
-        filter.setOrganization(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString());
-        filter.setCountryCode(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString());
-        filter.setLocation(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString());
-        filter.setState(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString());
+        List<String> cns = null;
+        List<String> ous = null;
+        if (dn.contains("CN=")) {
+            cns = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
+                .collect(Collectors.toList());
+            filter.setCommonName(cns.get(0));
+        }
+        if (dn.contains("OU=")) {
+            ous = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
+                .collect(Collectors.toList());
+            filter.setOrganizationUnit(ous.get(0));
+        }
+        if (dn.contains("O=")) {
+            filter.setOrganization(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString());
+        }
+        if (dn.contains("C=")) {
+            filter.setCountryCode(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString());
+        }
+        if (dn.contains("L=")) {
+            filter.setLocation(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString());
+        }
+        if (dn.contains("S=")) {
+            filter.setState(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString());
+        }
         filter.setSan(san);
         return mapper.writeValueAsString(filter);
     }
@@ -241,15 +316,17 @@ public class ExecuteRollOut {
         System.out.printf("  %-29s= | %s%n", SRC_TRUSTSTORE, "Truststore holding the trusted certificates to connect to JS7 JOC over https.");
         System.out.printf("  %-29s= | %s%n", SRC_TRUSTSTORE_TYPE, "Type of the truststore to connect to JS7 JOC over https. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s= | %s%n", SRC_TRUSTSTORE_PASS, "Password for the truststore holding the keys to connect to JS7 JOC over https.");
+        System.out.printf("  %-29s= | %s%n", SRC_PRIVATE_KEY, "Path to the private Key file used to connect to JS7 JOC over https.");
+        System.out.printf("  %-29s= | %s%n", SRC_CERT, "Path to the certificate file used to connect to JS7 JOC over https.");
+        System.out.printf("  %-29s= | %s%n", SRC_CA_CERT, "Path to the CA certificate file(s) used to connect to JS7 JOC over https. (Comma separated)");
         System.out.printf("  %-29s= | %s%n", TRG_KEYSTORE, "Keystore where the generated SSL certificates and keys should be stored.");
         System.out.printf("  %-29s= | %s%n", TRG_KEYSTORE_TYPE, "Type of the keystore to store to. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s= | %s%n", TRG_KEYSTORE_PASS, "Password for the keystore to store to.");
         System.out.printf("  %-29s= | %s%n", TRG_TRUSTSTORE, "Truststore where the trusted ca certificate should be stored.");
         System.out.printf("  %-29s= | %s%n", TRG_TRUSTSTORE_TYPE, "Type of the truststore to store to. (PKCS12[default] and JKS are supported only)");
         System.out.printf("  %-29s= | %s%n", TRG_TRUSTSTORE_PASS, "Password for the truststore to store to.");
-        System.out.printf("  %-29s= | %s%n", ALIAS, "Alias used for the stored entries in both, target keystore and truststore. If different aliases should be used, use --keystore-alias and --truststore-alias instead.");
-        System.out.printf("  %-29s= | %s%n", KS_ALIAS, "Alias used to store entries in the target keystore.");
-        System.out.printf("  %-29s= | %s%n", TS_ALIAS, "Alias used to store entries in the target truststore.");
+        System.out.printf("  %-29s= | %s%n", KS_ALIAS, "Alias used to store the certificate and its private key in the target keystore.");
+        System.out.printf("  %-29s= | %s%n", TS_ALIAS, "Alias used to store the ca certificate in both, the target keystore and truststore.");
         System.out.println();
     }
 
