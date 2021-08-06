@@ -22,7 +22,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(InventorySearchDBLayer.class);
-    private boolean tmpShowLog = false; // TODO to remove
+    private boolean tmpShowLog = true; // TODO to remove
 
     private static final String FIND_ALL = "*";
 
@@ -297,8 +297,9 @@ public class InventorySearchDBLayer extends DBLayer {
 
             hql.append("and exists(");// start exists
             hql.append("  select sw.id from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
-            hql.append("  where sw.deployed=mt.deployed ");
-            hql.append("  and sw.inventoryConfigurationId in (");
+            //hql.append("  where sw.deployed=mt.deployed ");
+            //hql.append("  and sw.inventoryConfigurationId in (");
+            hql.append("  where sw.inventoryConfigurationId in (");
             hql.append("    select ic.id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("    where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
             hql.append("    and ic.type=").append(ConfigurationType.WORKFLOW.intValue()).append(" ");
