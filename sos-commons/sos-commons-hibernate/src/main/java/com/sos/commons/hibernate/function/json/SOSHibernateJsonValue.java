@@ -65,7 +65,8 @@ public class SOSHibernateJsonValue extends StandardSQLFunction {
             // path = '$.arg' -> 'arg'
             // '<column>->>'arg'
 
-            StringBuilder r = new StringBuilder(property.toString());
+            // StringBuilder r = new StringBuilder(property.toString());
+            StringBuilder r = new StringBuilder(property.toString()).append("::jsonb");
             String[] arr = path.replaceAll("'", "").substring(2).split("\\.");
             if (arr.length == 1) {
                 r.append("->>'").append(arr[0]).append("'");

@@ -63,9 +63,9 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
             List<InventorySearchItem> items = null;
             if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
-                items = dbLayer.getDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
+                items = dbLayer.getBasicSearchDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
             } else {
-                items = dbLayer.getInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
+                items = dbLayer.getBasicSearchInventoryConfigurations(objectType, in.getSearch(), in.getFolders());
             }
 
             List<ResponseSearchItem> r = new ArrayList<>();
@@ -107,11 +107,13 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
 
             ConfigurationType objectType = ConfigurationType.valueOf(in.getReturnType().value());
             List<InventorySearchItem> items = null;
-            // if (in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue()) {
-            // items = dbLayer.getDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getControllerId());
-            // } else {
-            items = dbLayer.getAdvancedInventoryConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced());
-            // }
+            boolean deployedOrReleased = in.getDeployedOrReleased() != null && in.getDeployedOrReleased().booleanValue();
+            if (deployedOrReleased) {
+                items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced(), in
+                        .getControllerId());
+            } else {
+                items = dbLayer.getAdvancedSearchInventoryConfigurations(objectType, in.getSearch(), in.getFolders(), in.getAdvanced());
+            }
 
             List<ResponseSearchItem> r = new ArrayList<>();
             if (items != null) {
@@ -137,8 +139,14 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         break;
                     }
                     if (checkWorkflow) {
-                        List<InventorySearchItem> wi = dbLayer.getAdvancedInventoryConfigurations(ConfigurationType.WORKFLOW, in.getAdvanced()
-                                .getWorkflow(), null, workflowAdvanced);
+                        List<InventorySearchItem> wi = null;
+                        if (deployedOrReleased) {
+                            wi = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, in.getAdvanced().getWorkflow(),
+                                    null, workflowAdvanced, in.getControllerId());
+                        } else {
+                            wi = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.WORKFLOW, in.getAdvanced().getWorkflow(), null,
+                                    workflowAdvanced);
+                        }
                         if (wi == null || wi.size() == 0) {
                             continue;
 
