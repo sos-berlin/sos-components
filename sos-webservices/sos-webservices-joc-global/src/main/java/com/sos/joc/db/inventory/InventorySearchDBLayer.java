@@ -22,7 +22,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(InventorySearchDBLayer.class);
-    private boolean tmpShowLog = true; // TODO to remove
+    private boolean tmpShowLog = false; // TODO to remove
 
     private static final String FIND_ALL = "*";
 
