@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -252,8 +253,14 @@ public class WorkflowSearcher {
     }
 
     @SuppressWarnings("unchecked")
-    public List<WorkflowInstruction<PostNotice>> getNoticeInstructions() {
-        return getInstructions(InstructionType.POST_NOTICE, InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)
+    public List<WorkflowInstruction<PostNotice>> getPostNoticeInstructions() {
+        return getInstructions(InstructionType.POST_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)
+                .collect(Collectors.toList());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<ExpectNotice>> getExpectNoticeInstructions() {
+        return getInstructions(InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<ExpectNotice>) l)
                 .collect(Collectors.toList());
     }
 
@@ -437,7 +444,7 @@ public class WorkflowSearcher {
             case FORKLIST:
                 ForkList fl = in.cast();
                 if (fl.getWorkflow() != null) {
-                    String position = getPosition(parentPosition, index, "forklist");
+                    String position = getPosition(parentPosition, index, "fork");
                     result.add(new WorkflowInstruction<ForkList>(position, fl));
 
                     handleInstructions(result, fl.getWorkflow().getInstructions(), position);
@@ -445,6 +452,12 @@ public class WorkflowSearcher {
                 break;
             case EXECUTE_NAMED:
                 result.add(new WorkflowInstruction<NamedJob>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case POST_NOTICE:
+                result.add(new WorkflowInstruction<PostNotice>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case EXPECT_NOTICE:
+                result.add(new WorkflowInstruction<ExpectNotice>(getPosition(parentPosition, index, null), in.cast()));
                 break;
             default:
 

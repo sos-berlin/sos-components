@@ -59,7 +59,9 @@ public class JsonConverter {
             }
         }
         
-        LOGGER.info(Globals.objectMapper.writeValueAsString(signWorkflow));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(Globals.objectMapper.writeValueAsString(signWorkflow));
+        }
         
         return signWorkflow;
     }

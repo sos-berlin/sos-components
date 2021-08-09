@@ -42,6 +42,7 @@ import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
@@ -449,6 +450,13 @@ public class Validator {
             }
             if (value.getFinal() != null) {
                 validateExpression("$.orderPreparation.parameters['" + key + "'].final: ", value.getFinal());
+            }
+            if (ParameterType.List.equals(value.getType())) {
+                if (value.getListParameters() == null || value.getListParameters().getAdditionalProperties() == null || value.getListParameters()
+                        .getAdditionalProperties().isEmpty()) {
+                    throw new JocConfigurationException(String.format(
+                            "$.orderPreparation.parameters['%s'].listParameters: missing but required if the parameter is of type 'List'", key));
+                }
             }
         });
     }
