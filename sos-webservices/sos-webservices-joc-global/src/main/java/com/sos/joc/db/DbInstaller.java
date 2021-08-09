@@ -34,6 +34,7 @@ public class DbInstaller {
         
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
+        
         try {
             Path createTableSignalFile = Paths.get(System.getProperty("user.dir"), "etc", "createTables");
             boolean createTables = Files.exists(createTableSignalFile);
@@ -43,26 +44,34 @@ public class DbInstaller {
             }
             if (createTables || Globals.sosCockpitProperties.getProperty("create_db_tables", false)) {
                 
-                Path sqlsFolderParent = Paths.get(System.getProperty("user.dir"), "db");
-                if (!Files.isDirectory(sqlsFolderParent)) {
-                    throw new SOSHibernateConfigurationException("Folder '" + sqlsFolderParent.toString() + "' doesn't exist.");
+                //Path sqlsFolderParent = Paths.get(System.getProperty("user.dir"), "db");
+                
+                String jettyHome = System.getProperty("jetty.home");
+                if (jettyHome == null || jettyHome.isEmpty()) {
+                    LOGGER.warn("Creating database table are only supported in Jetty");
+                } else {
+                    Path sqlsFolderParent = Paths.get(jettyHome).getParent().resolve("db");
+                    if (!Files.isDirectory(sqlsFolderParent)) {
+                        throw new SOSHibernateConfigurationException("Folder '" + sqlsFolderParent.toString() + "' doesn't exist.");
+                    }
+
+                    factory = new SOSHibernateFactory(Globals.getHibernateConfFile());
+                    // SOSClassList sosClassList = DBLayer.getJocClassMapping();
+                    // factory.addClassMapping(sosClassList);
+                    factory.setAutoCommit(false);
+                    factory.build();
+
+                    Enum<Dbms> dbms = factory.getDbms();
+                    if (!supportedDbms.contains(dbms)) {
+                        throw new SOSHibernateConfigurationException("Unsupported dbms: " + dbms.name());
+                    }
+                    session = factory.openStatelessSession();
+
+                    // if (missingAnyTable(sosClassList, session)) {
+                    create(session, dbms.name(), sqlsFolderParent);
+                    // }
+
                 }
-
-                factory = new SOSHibernateFactory(Globals.getHibernateConfFile());
-//                SOSClassList sosClassList = DBLayer.getJocClassMapping();
-//                factory.addClassMapping(sosClassList);
-                factory.setAutoCommit(false);
-                factory.build();
-
-                Enum<Dbms> dbms = factory.getDbms();
-                if (!supportedDbms.contains(dbms)) {
-                    throw new SOSHibernateConfigurationException("Unsupported dbms: " + dbms.name());
-                }
-                session = factory.openStatelessSession();
-
-//                if (missingAnyTable(sosClassList, session)) {
-                create(session, dbms.name(), sqlsFolderParent);
-//                }
                 try {
                     Globals.sosCockpitProperties.updateProperty("create_db_tables", "false");
                 } catch (IOException e) {
