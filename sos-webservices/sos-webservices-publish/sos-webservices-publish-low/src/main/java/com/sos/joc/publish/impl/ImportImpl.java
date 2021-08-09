@@ -81,6 +81,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setOverwrite(overwrite);
         filter.setPrefix(prefix);
         filter.setSuffix(suffix);
+        filter.setFormat(ArchiveFormat.fromValue(format));
 		return postImportConfiguration(xAccessToken, body, filter, auditLog);
 	}
 
