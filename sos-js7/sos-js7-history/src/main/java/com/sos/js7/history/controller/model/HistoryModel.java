@@ -1171,7 +1171,7 @@ public class HistoryModel {
             item.setHasChildren(false);
             item.setRetryCounter(HistoryPosition.getRetry(entry.getPosition()));
 
-            item.setName(forkOrder.getBranchId());// TODO
+            item.setName(forkOrder.getBranchIdOrName());
             item.setStartCause(OrderStartCause.fork.name());// TODO
             item.setStartTimeScheduled(entry.getEventDatetime());
             item.setStartTime(entry.getEventDatetime());
@@ -1226,8 +1226,8 @@ public class HistoryModel {
             sb.append("-").append(entry.getOrderId());
 
             LOGGER.warn(String.format("[%s][ConstraintViolation][%s]%s", identifier, constraintHash, sb.toString()));
-            LOGGER.warn(String.format("[%s][%s][%s][%s]%s", identifier, entry.getType(), entry.getOrderId(), forkOrder.getBranchId(), e.toString()),
-                    e);
+            LOGGER.warn(String.format("[%s][%s][%s][%s]%s", identifier, entry.getType(), entry.getOrderId(), forkOrder.getBranchIdOrName(), e
+                    .toString()), e);
 
             getCachedOrderByConstraint(dbLayer, constraintHash, forkOrder.getOrderId(), sb.toString());
             return null;

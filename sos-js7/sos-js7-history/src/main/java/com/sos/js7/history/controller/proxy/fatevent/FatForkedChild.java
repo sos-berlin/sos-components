@@ -5,12 +5,12 @@ import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder.Workf
 public class FatForkedChild {
 
     private final String orderId;
-    private final String branchId;
+    private final String branchIdOrName;
     private final String position;
 
-    public FatForkedChild(String orderId, String branchId, Position position) {
+    public FatForkedChild(String orderId, String branchIdOrName, Position position) {
         this.orderId = orderId;
-        this.branchId = branchId;
+        this.branchIdOrName = branchIdOrName;
         this.position = position == null ? null : position.asString();
     }
 
@@ -18,8 +18,8 @@ public class FatForkedChild {
         return orderId;
     }
 
-    public String getBranchId() {
-        return branchId;
+    public String getBranchIdOrName() {
+        return branchIdOrName;
     }
 
     public String getPosition() {

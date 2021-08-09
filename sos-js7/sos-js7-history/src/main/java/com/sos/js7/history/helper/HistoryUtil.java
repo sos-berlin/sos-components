@@ -30,6 +30,11 @@ public class HistoryUtil {
         return li > -1 ? path.substring(li + 1) : path;
     }
 
+    public static String getForkChildNameFromOrderId(String forkChildOrderId) {
+        int li = forkChildOrderId.lastIndexOf("|");
+        return li > -1 ? forkChildOrderId.substring(li + 1) : forkChildOrderId;
+    }
+
     /** An variable is referenced as "${VAR}" */
     public static String resolveVars(String cmd) {
         SOSParameterSubstitutor ps = new SOSParameterSubstitutor();

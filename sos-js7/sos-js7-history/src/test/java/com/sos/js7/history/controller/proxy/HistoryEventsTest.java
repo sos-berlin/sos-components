@@ -15,8 +15,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
@@ -56,6 +54,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderSuspended;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
 import com.sos.js7.history.controller.proxy.fatevent.FatForkedChild;
 import com.sos.js7.history.controller.proxy.fatevent.FatOutcome;
+import com.sos.js7.history.helper.HistoryUtil;
 
 import js7.data.event.Event;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -85,7 +84,7 @@ public class HistoryEventsTest {
     private static final String CONTROLLER_ID = "js7.x";
     private static final int MAX_EXECUTION_TIME = 30; // seconds
     private static final int CHECKER_REFRESH_INTERVAL = 10; // seconds
-    private static final Long START_EVENT_ID = 1626690343147000L;
+    private static final Long START_EVENT_ID = 1627982697084002L;
 
     private EventFluxStopper stopper = new EventFluxStopper();
     private AtomicBoolean stopped = new AtomicBoolean();
@@ -137,14 +136,14 @@ public class HistoryEventsTest {
                         // continue;
                     }
                     if (event instanceof FatEventOrderStepProcessed) {
-                        FatEventOrderStepProcessed p = (FatEventOrderStepProcessed) event;
-                        LOGGER.info(SOSString.toString(event));
-                        LOGGER.info("----" + SOSString.toString(p.getOutcome()));
-                        try {
-                            LOGGER.info("-----------" + p.getOutcome().getNamedValuesAsJsonString());
-                        } catch (JsonProcessingException e1) {
-                            e1.printStackTrace();
-                        }
+                        // FatEventOrderStepProcessed p = (FatEventOrderStepProcessed) event;
+                        // LOGGER.info(SOSString.toString(event));
+                        // LOGGER.info("----" + SOSString.toString(p.getOutcome()));
+                        // try {
+                        // LOGGER.info("-----------" + p.getOutcome().getNamedValuesAsJsonString());
+                        // } catch (JsonProcessingException e1) {
+                        // e1.printStackTrace();
+                        // }
 
                     }
                 }
@@ -223,14 +222,20 @@ public class HistoryEventsTest {
                 List<?> positions = position.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
+                    String branchIdOrName = null;
+                    String name4Position = null;
                     if (c.branchId().isPresent()) {
-                        String branchId = c.branchId().get().string();
-                        // copy
-                        List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                        childPositions.add(branchId);
-                        childPositions.add(0);
-                        childs.add(new FatForkedChild(c.orderId().string(), branchId, wi.createNewPosition(childPositions)));
+                        branchIdOrName = c.branchId().get().string();
+                        name4Position = branchIdOrName;
+                    } else {
+                        branchIdOrName = HistoryUtil.getForkChildNameFromOrderId(c.orderId().string());
+                        name4Position = "fork";
                     }
+                    // copy
+                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
+                    childPositions.add(name4Position);
+                    childPositions.add(0);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPositions)));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, order.getArguments(), childs);

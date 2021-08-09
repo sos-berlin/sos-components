@@ -60,6 +60,7 @@ import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStarted;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderStepStdWritten.StdType;
+import com.sos.js7.history.helper.HistoryUtil;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderSuspendMarked;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventOrderSuspended;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventWithProblem;
@@ -315,14 +316,20 @@ public class HistoryControllerHandler {
                 List<?> positions = position.getUnderlying().toList();
                 childs = new ArrayList<FatForkedChild>();
                 jof.children().forEach(c -> {
+                    String branchIdOrName = null;
+                    String name4Position = null;
                     if (c.branchId().isPresent()) {
-                        String branchId = c.branchId().get().string();
-                        // copy
-                        List<Object> childPositions = positions.stream().collect(Collectors.toList());
-                        childPositions.add(branchId);
-                        childPositions.add(0);
-                        childs.add(new FatForkedChild(c.orderId().string(), branchId, wi.createNewPosition(childPositions)));
+                        branchIdOrName = c.branchId().get().string();
+                        name4Position = branchIdOrName;
+                    } else {
+                        branchIdOrName = HistoryUtil.getForkChildNameFromOrderId(c.orderId().string());
+                        name4Position = "fork";
                     }
+                    // copy
+                    List<Object> childPositions = positions.stream().collect(Collectors.toList());
+                    childPositions.add(name4Position);
+                    childPositions.add(0);
+                    childs.add(new FatForkedChild(c.orderId().string(), branchIdOrName, wi.createNewPosition(childPositions)));
                 });
                 event = new FatEventOrderForked(entry.getEventId(), entry.getEventDate());
                 event.set(order.getOrderId(), wi.getPath(), wi.getVersionId(), position, order.getArguments(), childs);
