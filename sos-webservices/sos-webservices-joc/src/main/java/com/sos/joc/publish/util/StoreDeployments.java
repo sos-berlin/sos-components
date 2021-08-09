@@ -83,10 +83,10 @@ public class StoreDeployments {
                     	// first id == null 
                 		item.setContent(JsonSerializer.serializeAsString(entry.getKey().readUpdateableContent()));
                         DBItemDepSignatures signature = entry.getValue();
-                		if (signature != null) {
+                		if (signature != null && signature.getSignature() != null && !signature.getSignature().isEmpty()) {
                 			item.setSignedContent(signature.getSignature());
                 		} else {
-                			item.setSignedContent("");
+                			item.setSignedContent(".");
                 		}
                 		item.setDeploymentDate(deploymentDate);
                 		item.setOperation(OperationType.UPDATE.value());

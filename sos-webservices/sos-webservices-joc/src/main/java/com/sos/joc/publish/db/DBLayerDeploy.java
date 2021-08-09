@@ -1199,6 +1199,8 @@ public class DBLayerDeploy {
             // save or update signature in different Table
             if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
                 saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
+            } else {
+                jsObject.setSignedContent(".");
             }
             session.update(existingJsObject);
             return existingJsObject;
@@ -1221,6 +1223,8 @@ public class DBLayerDeploy {
             // save or update signature in different Table
             if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
                 saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
+            } else {
+                jsObject.setSignedContent(".");
             }
             return newJsObject;
         }
@@ -1689,6 +1693,9 @@ public class DBLayerDeploy {
                 }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(inventoryConfig).getSignature());
+                if(newDepHistoryItem.getSignedContent() == null || newDepHistoryItem.getSignedContent().isEmpty()) {
+                    newDepHistoryItem.setSignedContent(".");
+                }
                 newDepHistoryItem.setInvContent(inventoryConfig.getContent());
                 newDepHistoryItem.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
@@ -1704,6 +1711,9 @@ public class DBLayerDeploy {
         if (verifiedReDeployables != null) {
             for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
                 deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
+                if (deploy.getSignedContent() == null || deploy.getSignedContent().isEmpty()) {
+                    deploy.setSignedContent(".");
+                }
                 deploy.setId(null);
                 deploy.setCommitId(versionId);
                 deploy.setAccount(account);
@@ -1787,6 +1797,9 @@ public class DBLayerDeploy {
                 }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(verifiedConfigurations.get(jsObject).getSignature());
+                if (newDepHistoryItem.getSignedContent() == null || newDepHistoryItem.getSignedContent().isEmpty()) {
+                    newDepHistoryItem.setSignedContent(".");
+                }
                 newDepHistoryItem.setInvContent(inventoryConfig.getContent());
                 newDepHistoryItem.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
@@ -1802,6 +1815,9 @@ public class DBLayerDeploy {
         if (verifiedReDeployables != null) {
             for (DBItemDeploymentHistory deploy : verifiedReDeployables.keySet()) {
                 deploy.setSignedContent(verifiedReDeployables.get(deploy).getSignature());
+                if (deploy.getSignedContent() == null || deploy.getSignedContent().isEmpty()) {
+                    deploy.setSignedContent(".");
+                }
                 deploy.setId(null);
                 deploy.setCommitId(versionId);
                 deploy.setAccount(account);
@@ -1850,6 +1866,9 @@ public class DBLayerDeploy {
                 deploy.setState(DeploymentState.NOT_DEPLOYED.value());
                 deploy.setDeploymentDate(Date.from(Instant.now()));
                 deploy.setErrorMessage(errorMessage);
+                if (deploy.getSignedContent() == null || deploy.getSignedContent().isEmpty()) {
+                    deploy.setSignedContent(".");
+                }
                 try {
                     session.save(deploy);
                     //postDeployHistoryWorkflowEvent(deploy);
@@ -1895,6 +1914,9 @@ public class DBLayerDeploy {
                 }
                 newDepHistoryItem.setFolder(inventoryConfig.getFolder());
                 newDepHistoryItem.setSignedContent(importedObjects.get(inventoryConfig).getSignedContent());
+                if (newDepHistoryItem.getSignedContent() == null || newDepHistoryItem.getSignedContent().isEmpty()) {
+                    newDepHistoryItem.setSignedContent(".");
+                }
                 newDepHistoryItem.setErrorMessage(errorMessage);
                 // TODO: get Version to set here
                 newDepHistoryItem.setVersion(null);
@@ -1928,6 +1950,9 @@ public class DBLayerDeploy {
                 deploy.setOperation(OperationType.DELETE.value());
                 deploy.setState(DeploymentState.NOT_DEPLOYED.value());
                 deploy.setErrorMessage(errorMessage);
+                if (deploy.getSignedContent() == null || deploy.getSignedContent().isEmpty()) {
+                    deploy.setSignedContent(".");
+                }
                 // TODO: get Version to set here
                 session.save(deploy);
                 // postDeployHistoryWorkflowEvent(deploy);
@@ -1961,6 +1986,9 @@ public class DBLayerDeploy {
                 submission.setOperation(failedDeploy.getOperation());
                 submission.setPath(failedDeploy.getPath());
                 submission.setSignedContent(failedDeploy.getSignedContent());
+                if (submission.getSignedContent() == null || submission.getSignedContent().isEmpty()) {
+                    submission.setSignedContent(".");
+                }
                 submission.setVersion(failedDeploy.getVersion());
                 submission.setCreated(Date.from(Instant.now()));
                 if (submission.getId() == null) {

@@ -22,7 +22,7 @@ public class DBItemInventoryCertificate extends DBItem {
     private static final long serialVersionUID = 5376578176235147194L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DEP_KEYS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_CERTS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

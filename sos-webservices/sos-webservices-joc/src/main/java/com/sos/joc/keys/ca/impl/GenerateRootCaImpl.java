@@ -55,7 +55,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             jocKeyPair.setValidUntil(x509Cert.getNotAfter());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             // store private key to the db
-            PublishUtils.storeCA(jocKeyPair, hibernateSession);
+            PublishUtils.storeAuthCA(jocKeyPair, hibernateSession);
             return JOCDefaultResponse.responseStatus200(jocKeyPair);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

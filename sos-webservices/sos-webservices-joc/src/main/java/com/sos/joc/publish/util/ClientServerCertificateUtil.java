@@ -31,7 +31,7 @@ public abstract class ClientServerCertificateUtil {
             throws SOSHibernateException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException,
             InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException {
         DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-        JocKeyPair rootKeyPair = dbLayer.getRootCaKeyPair();
+        JocKeyPair rootKeyPair = dbLayer.getAuthRootCaKeyPair();
         X509Certificate rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
         KeyPair newClientKeyPair = KeyUtil.createECDSAKeyPair();
         String userDN;

@@ -213,7 +213,7 @@ public abstract class PublishUtils {
         }
     }
 
-    public static void storeCA(JocKeyPair keyPair, SOSHibernateSession hibernateSession) throws SOSHibernateException {
+    public static void storeAuthCA(JocKeyPair keyPair, SOSHibernateSession hibernateSession) throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
             dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), "", JocSecurityLevel.LOW,
@@ -270,6 +270,8 @@ public abstract class PublishUtils {
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
                     session.save(sig);
+                } else {
+                    deployed.setSignedContent(".");
                 }
                 signedDrafts.put(deployed, sig);
             }
@@ -1107,6 +1109,9 @@ public abstract class PublishUtils {
                     break;
                 }
                 newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
+                if (newDeployedObject.getSignedContent() == null || newDeployedObject.getSignedContent().isEmpty()) {
+                    newDeployedObject.setSignedContent(".");
+                }
                 newDeployedObject.setDeploymentDate(deploymentDate);
                 newDeployedObject.setControllerInstanceId(controllerInstance.getId());
                 newDeployedObject.setControllerId(controllerId);
@@ -1131,10 +1136,7 @@ public abstract class PublishUtils {
             String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
         try {
             if (depHistoryItem.getId() != null) {
-                if (depSignatureItem == null) {
-                    // simple item
-                    depHistoryItem.setSignedContent(".");
-                } else {
+                if (depSignatureItem != null) {
                     // signed item
                     depHistoryItem.setSignedContent(depSignatureItem.getSignature());
                 }
@@ -1158,6 +1160,9 @@ public abstract class PublishUtils {
                 depHistoryItem.setOperation(OperationType.UPDATE.value());
                 depHistoryItem.setState(DeploymentState.DEPLOYED.value());
                 depHistoryItem.setAuditlogId(auditlogId);
+                if(depHistoryItem.getSignedContent() == null || depHistoryItem.getSignedContent().isEmpty()) {
+                    depHistoryItem.setSignedContent(".");
+                }
                 if (!constraintViolation) {
                     dbLayerDeploy.getSession().save(depHistoryItem);
                 } else {
@@ -1205,6 +1210,9 @@ public abstract class PublishUtils {
                 redeployed.setDeploymentDate(deploymentDate);
                 redeployed.setOperation(OperationType.UPDATE.value());
                 redeployed.setState(DeploymentState.DEPLOYED.value());
+                if (redeployed.getSignedContent() == null || redeployed.getSignedContent().isEmpty()) {
+                    redeployed.setSignedContent(".");
+                }
                 dbLayerDeploy.getSession().save(redeployed);
                 postDeployHistoryEvent(redeployed);
                 deployedObjects.add(redeployed);
@@ -1228,6 +1236,9 @@ public abstract class PublishUtils {
                     delete.setState(DeploymentState.DEPLOYED.value());
                     delete.setDeleteDate(Date.from(Instant.now()));
                     delete.setDeploymentDate(Date.from(Instant.now()));
+                    if (delete.getSignedContent() == null || delete.getSignedContent().isEmpty()) {
+                        delete.setSignedContent(".");
+                    }
                     dbLayer.getSession().save(delete);
                     deletedObjects.add(delete);
                     if (withTrash) {

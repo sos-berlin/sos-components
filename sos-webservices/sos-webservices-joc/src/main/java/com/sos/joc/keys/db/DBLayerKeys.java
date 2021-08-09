@@ -1,12 +1,16 @@
 package com.sos.joc.keys.db;
 
+import java.security.cert.X509Certificate;
+
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
+import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyAlgorithm;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -203,7 +207,7 @@ public class DBLayerKeys {
         return null;
     }
 
-    public JocKeyPair getRootCaKeyPair() throws SOSHibernateException {
+    public JocKeyPair getAuthRootCaKeyPair() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ");
         hql.append(DBLayer.DBITEM_DEP_KEYS);
         hql.append(" where keyType = 3");
@@ -219,6 +223,38 @@ public class DBLayerKeys {
             return keyPair;
         }
         return null;
+    }
+
+    public DBItemInventoryCertificate getSigningRootCaCertificate() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ");
+        hql.append(DBLayer.DBITEM_INV_CERTS);
+        hql.append(" where ca = 1");
+        Query<DBItemInventoryCertificate> query = session.createQuery(hql.toString());
+        query.setMaxResults(1);
+        DBItemInventoryCertificate key = session.getSingleResult(query);
+        return key;
+    }
+    
+    public void saveOrUpdateSigningRootCaCertificate(JocKeyPair keyPair, String account, Integer secLvl) throws SOSHibernateException {
+        DBItemInventoryCertificate certificate = getSigningRootCaCertificate();
+        if (certificate != null) {
+            certificate.setCa(true);
+            certificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
+            certificate.setKeyType(JocKeyType.valueOf(keyPair.getKeyType()).value());
+            certificate.setPem(keyPair.getCertificate());
+            certificate.setAccount(account);
+            certificate.setSecLvl(secLvl);
+            session.update(certificate);
+        } else {
+            DBItemInventoryCertificate newCertificate = new DBItemInventoryCertificate();
+            newCertificate.setCa(true);
+            newCertificate.setKeyAlgorithm(JocKeyAlgorithm.valueOf(keyPair.getKeyAlgorithm()).value());
+            newCertificate.setKeyType(JocKeyType.valueOf(keyPair.getKeyType()).value());
+            newCertificate.setPem(keyPair.getCertificate());
+            newCertificate.setAccount(account);
+            newCertificate.setSecLvl(secLvl);
+            session.save(newCertificate);
+        }
     }
 
     public JocKeyPair getDefaultKeyPair(String defaultAccount) throws SOSHibernateException {

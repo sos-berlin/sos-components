@@ -1,4 +1,4 @@
-package com.sos.joc.keys.ca.impl;
+package com.sos.joc.keys.sign.ca.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,10 +33,10 @@ import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.publish.util.PublishUtils;
 
-@Path("profile/ca")
+@Path("profile/key/ca")
 public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
 
-    private static final String API_CALL = "./profile/ca/import";
+    private static final String API_CALL = "./profile/key/ca/import";
 
     @Override
     public JOCDefaultResponse postImportRootCa(

@@ -1,4 +1,4 @@
-package com.sos.joc.keys.ca.impl;
+package com.sos.joc.keys.sign.ca.impl;
 
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -16,6 +16,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
+import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -24,7 +25,7 @@ import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 
-@Path("profile/ca")
+@Path("profile/key/ca")
 public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
 
     private static final String API_CALL = "./profile/ca/store";
@@ -42,28 +43,23 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             }
             
             storeAuditLog(setRootCaFilter.getAuditLog(), CategoryType.CERTIFICATES);
-            
+            X509Certificate cert;
+            try {
+                cert = KeyUtil.getX509Certificate(setRootCaFilter.getCertificate());
+            } catch (Exception e) {
+                throw new JocKeyNotValidException("Certificate data is not a known certificate type!");
+            }
             JocKeyPair keyPair = new JocKeyPair();
-            keyPair.setPrivateKey(setRootCaFilter.getPrivateKey());
             keyPair.setCertificate(setRootCaFilter.getCertificate());
-            X509Certificate cert = KeyUtil.getX509Certificate(keyPair.getCertificate());
             keyPair.setKeyID(cert.getSubjectDN().getName());
             keyPair.setValidUntil(cert.getNotAfter());
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             keyPair.setKeyType(JocKeyType.CA.name());
-            if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
-                if (KeyUtil.isECDSARootKeyPairValid(keyPair)) {
-                    hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    if (keyPair.getPrivateKey() != null && !keyPair.getPrivateKey().isEmpty() &&
-                            keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
-                        PublishUtils.storeAuthCA(keyPair, hibernateSession);
-                    } 
-                } else {
-                    throw new JocKeyNotValidException("key data is not a known key type!");
-                }
-            } else {
-              throw new JocMissingRequiredParameterException("No key was provided");
-            }
+            hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
+                DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+                dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSosShiroCurrentUser().getUsername(), Globals.getJocSecurityLevel().intValue());
+            } 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
