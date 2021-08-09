@@ -35,10 +35,13 @@ public class DbInstaller {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
+            Path createTableSignalFile = Paths.get(System.getProperty("user.dir"), "etc", "createTables");
+            boolean createTables = Files.exists(createTableSignalFile);
+            
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
             }
-            if (Globals.sosCockpitProperties.getProperty("create_db_tables", false)) {
+            if (createTables || Globals.sosCockpitProperties.getProperty("create_db_tables", false)) {
                 
                 Path sqlsFolderParent = Paths.get(System.getProperty("user.dir"), "db");
                 if (!Files.isDirectory(sqlsFolderParent)) {
@@ -64,6 +67,11 @@ public class DbInstaller {
                     Globals.sosCockpitProperties.updateProperty("create_db_tables", "false");
                 } catch (IOException e) {
                     LOGGER.warn("Problem updating the joc.properties file", e);
+                }
+                try {
+                    Files.deleteIfExists(createTableSignalFile);
+                } catch (IOException e) {
+                    LOGGER.warn("Problem deleting signal file " + createTableSignalFile.toString(), e);
                 }
             }
             

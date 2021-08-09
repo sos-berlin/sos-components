@@ -1,11 +1,15 @@
 package com.sos.joc.classes.inventory.search;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -13,6 +17,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
@@ -243,7 +248,8 @@ public class WorkflowConverter {
         private List<String> jobNames;
         private List<String> jobLabels;
         private List<String> lockIds;
-        private List<String> boardNames;
+        private Set<String> postNotices;
+        private Set<String> expectNotices;
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
@@ -257,7 +263,8 @@ public class WorkflowConverter {
             jobLabels = new ArrayList<String>();
             lockIds = new ArrayList<String>();
             locks = new HashMap<String, Integer>();
-            boardNames = new ArrayList<String>();
+            postNotices = new HashSet<String>();
+            expectNotices = new HashSet<String>();
 
             jobArgNames = new ArrayList<String>();
             jobArgValues = new ArrayList<String>();
@@ -266,6 +273,7 @@ public class WorkflowConverter {
         public void process(List<Instruction> instructions) {
             handleJobInstructions(instructions);
             handleLockInstructions(instructions);
+            handleNoticeInstructions(instructions);
             removeDuplicates();
             toJson();
         }
@@ -280,7 +288,9 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "jobNames", jobNames);
             jsonAddStringValues(builder, "jobLabels", jobLabels);
             jsonAddStringValues(builder, "lockIds", lockIds);
-            jsonAddStringValues(builder, "boardNames", boardNames);
+            jsonAddStringValues(builder, "postNotices", postNotices);
+            jsonAddStringValues(builder, "expectNotices", expectNotices);
+            jsonAddStringValues(builder, "boardNames", getBoardNames());
             if (locks.size() > 0) {
                 builder.add("locks", getJsonObject(locks));
             }
@@ -318,8 +328,16 @@ public class WorkflowConverter {
             return locks;
         }
 
-        public List<String> getBoardNames() {
-            return boardNames;
+        public Set<String> getPostNotices() {
+            return postNotices;
+        }
+        
+        public Set<String> getExpectNotices() {
+            return expectNotices;
+        }
+        
+        public Set<String> getBoardNames() {
+            return Stream.of(postNotices, expectNotices).flatMap(n -> n.stream()).collect(Collectors.toSet());
         }
 
         public List<String> getJobArgNames() {
@@ -376,11 +394,25 @@ public class WorkflowConverter {
                     }
                 }
             }
-            List<WorkflowInstruction<PostNotice>> notices = searcher.getNoticeInstructions();
-            if (notices != null) {
-                for (WorkflowInstruction<PostNotice> notice : notices) {
+        }
+        
+        private void handleNoticeInstructions(List<Instruction> instructions) {
+            if (instructions == null) {
+                return;
+            }
+            List<WorkflowInstruction<PostNotice>> pNotices = searcher.getPostNoticeInstructions();
+            if (pNotices != null) {
+                for (WorkflowInstruction<PostNotice> notice : pNotices) {
                     if (!SOSString.isEmpty(notice.getInstruction().getBoardName())) {
-                        boardNames.add(notice.getInstruction().getBoardName());
+                        postNotices.add(notice.getInstruction().getBoardName());
+                    }
+                }
+            }
+            List<WorkflowInstruction<ExpectNotice>> eNotices = searcher.getExpectNoticeInstructions();
+            if (eNotices != null) {
+                for (WorkflowInstruction<ExpectNotice> notice : eNotices) {
+                    if (!SOSString.isEmpty(notice.getInstruction().getBoardName())) {
+                        expectNotices.add(notice.getInstruction().getBoardName());
                     }
                 }
             }
@@ -404,13 +436,13 @@ public class WorkflowConverter {
         return list.stream().distinct().collect(Collectors.toList());
     }
 
-    private static void jsonAddStringValues(JsonObjectBuilder builder, String key, List<String> list) {
+    private static void jsonAddStringValues(JsonObjectBuilder builder, String key, Collection<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArray(list));
         }
     }
 
-    private static JsonArrayBuilder getJsonArray(List<String> list) {
+    private static JsonArrayBuilder getJsonArray(Collection<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         for (String n : list) {
             b.add(n);
@@ -418,13 +450,13 @@ public class WorkflowConverter {
         return b;
     }
 
-    private static void jsonAddObjectValues(JsonObjectBuilder builder, String key, List<String> list) {
+    private static void jsonAddObjectValues(JsonObjectBuilder builder, String key, Collection<String> list) {
         if (list.size() > 0) {
             builder.add(key, getJsonArrayFromObjects(list));
         }
     }
 
-    private static JsonArrayBuilder getJsonArrayFromObjects(List<String> list) {
+    private static JsonArrayBuilder getJsonArrayFromObjects(Collection<String> list) {
         JsonArrayBuilder b = Json.createArrayBuilder();
         list.forEach(s -> b.add(s));
         return b;
