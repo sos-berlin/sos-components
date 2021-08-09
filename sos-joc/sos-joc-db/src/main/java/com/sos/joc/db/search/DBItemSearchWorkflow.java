@@ -55,10 +55,10 @@ public class DBItemSearchWorkflow extends DBItem {
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
     private String jobs;
 
-    @Column(name = "[JOBS_ARGS]", nullable = false)
+    @Column(name = "[ARGS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
     @ColumnTransformer(write = SOSHibernateJsonType.COLUMN_TRANSFORMER_WRITE_DEFAULT)
-    private String jobsArgs;
+    private String args;
 
     @Column(name = "[JOBS_SCRIPTS]", nullable = false)
     @Type(type = SOSHibernateJsonType.TYPE_NAME)
@@ -134,15 +134,15 @@ public class DBItemSearchWorkflow extends DBItem {
         jobs = val;
     }
 
-    public String getJobsArgs() {
-        return jobsArgs;
+    public String getArgs() {
+        return args;
     }
 
-    public void setJobsArgs(String val) {
+    public void setArgs(String val) {
         if (SOSString.isEmpty(val)) {
             val = DEFAULT_JSON_VALUE;
         }
-        jobsArgs = val;
+        args = val;
     }
 
     public String getJobsScripts() {

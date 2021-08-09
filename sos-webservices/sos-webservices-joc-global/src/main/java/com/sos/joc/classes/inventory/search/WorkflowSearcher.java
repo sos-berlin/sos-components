@@ -33,7 +33,7 @@ public class WorkflowSearcher {
     private List<WorkflowInstruction<? extends Instruction>> instructions;
     private List<WorkflowInstruction<NamedJob>> jobInstructions;
     private List<WorkflowJob> jobs;
-    private Map<String, Parameter> orderRequirementsParameters;
+    private Map<String, Parameter> orderPreparationParameters;
 
     public WorkflowSearcher(final Workflow workflow) {
         this.workflow = workflow;
@@ -77,27 +77,27 @@ public class WorkflowSearcher {
         }
     }
 
-    public Map<String, Parameter> getOrderRequirementsParameters() {
-        setAllOrderRequirementsParameters();
-        return orderRequirementsParameters;
+    public Map<String, Parameter> getOrderPreparationParameters() {
+        setAllOrderPreparationParameters();
+        return orderPreparationParameters;
     }
 
-    public Map<String, Parameter> getOrderRequirementsParameters(String nameRegex) {
-        setAllOrderRequirementsParameters();
-        if (nameRegex == null || orderRequirementsParameters.isEmpty()) {
-            return orderRequirementsParameters;
+    public Map<String, Parameter> getOrderPreparationParameters(String nameRegex) {
+        setAllOrderPreparationParameters();
+        if (nameRegex == null || orderPreparationParameters.isEmpty()) {
+            return orderPreparationParameters;
         }
-        return orderRequirementsParameters.entrySet().stream().filter(e -> e.getKey().matches(nameRegex)).collect(Collectors.toMap(x -> x.getKey(),
+        return orderPreparationParameters.entrySet().stream().filter(e -> e.getKey().matches(nameRegex)).collect(Collectors.toMap(x -> x.getKey(),
                 x -> x.getValue()));
     }
 
-    private void setAllOrderRequirementsParameters() {
-        if (orderRequirementsParameters == null) {
+    private void setAllOrderPreparationParameters() {
+        if (orderPreparationParameters == null) {
             if (workflow.getOrderPreparation() != null && workflow.getOrderPreparation().getParameters() != null) {
-                orderRequirementsParameters = workflow.getOrderPreparation().getParameters().getAdditionalProperties();
+                orderPreparationParameters = workflow.getOrderPreparation().getParameters().getAdditionalProperties();
             }
-            if (orderRequirementsParameters == null) {
-                orderRequirementsParameters = new HashMap<String, Parameter>();
+            if (orderPreparationParameters == null) {
+                orderPreparationParameters = new HashMap<String, Parameter>();
             }
         }
     }
@@ -148,8 +148,8 @@ public class WorkflowSearcher {
         if (regex == null || jobs.isEmpty()) {
             return jobs;
         }
-        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && ExecutableType.ScriptExecutable.equals(j.getJob().getExecutable().getTYPE()))
-                .filter(j -> ((ExecutableScript) j.getJob().getExecutable()).getScript().matches(regex)).collect(Collectors.toList());
+        return jobs.stream().filter(j -> j.getJob().getExecutable() != null && ExecutableType.ScriptExecutable.equals(j.getJob().getExecutable()
+                .getTYPE())).filter(j -> ((ExecutableScript) j.getJob().getExecutable()).getScript().matches(regex)).collect(Collectors.toList());
     }
 
     public List<WorkflowJob> getJobsByArgument(String nameRegex) {
@@ -250,7 +250,7 @@ public class WorkflowSearcher {
             return (WorkflowInstruction<Lock>) l;
         }).collect(Collectors.toList());
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<PostNotice>> getNoticeInstructions() {
         return getInstructions(InstructionType.POST_NOTICE, InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)

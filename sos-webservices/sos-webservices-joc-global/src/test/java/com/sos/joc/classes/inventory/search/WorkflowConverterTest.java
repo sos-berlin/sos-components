@@ -68,7 +68,7 @@ public class WorkflowConverterTest {
 
         LOGGER.info("JOB MAIN INFO:" + c.getJobs().getMainInfo());
         LOGGER.info("JOB SCRIPT INFO:" + c.getJobs().getScriptInfo());
-        LOGGER.info("JOB ARG INFO:" + c.getJobs().getArgInfo());
+        LOGGER.info("ARG INFO:" + c.getArgInfo());
         LOGGER.info("--------------------------");
 
         LOGGER.info("INSTR JOB MAIN INFO:" + c.getInstructions().getMainInfo());

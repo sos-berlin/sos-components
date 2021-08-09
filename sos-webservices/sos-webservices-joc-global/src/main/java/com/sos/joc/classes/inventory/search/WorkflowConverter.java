@@ -25,11 +25,15 @@ import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowInstruction
 
 public class WorkflowConverter {
 
+    private final OrderPreparation orderPreparation;
     private final Jobs jobs;
     private final Instructions instructions;
     private WorkflowSearcher searcher;
 
+    private JsonObject argInfo;
+
     public WorkflowConverter() {
+        orderPreparation = new OrderPreparation();
         jobs = new Jobs();
         instructions = new Instructions();
     }
@@ -37,9 +41,26 @@ public class WorkflowConverter {
     public void process(Workflow w) {
         searcher = new WorkflowSearcher(w);
         if (w != null) {
+            orderPreparation.process(w.getOrderPreparation());
             jobs.process(w.getJobs());
             instructions.process(w.getInstructions());
+            toJson();
         }
+    }
+
+    private void toJson() {
+        jsonArgInfo();
+    }
+
+    private void jsonArgInfo() {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        jsonAddStringValues(builder, "orderPreparationParamNames", orderPreparation.paramNames);
+        jsonAddObjectValues(builder, "orderPreparationParamValues", orderPreparation.paramValues);
+        jsonAddStringValues(builder, "jobArgNames", jobs.argNames);
+        jsonAddObjectValues(builder, "jobArgValues", jobs.argValues);
+        jsonAddStringValues(builder, "jobEnvNames", jobs.envNames);
+        jsonAddObjectValues(builder, "jobEnvValues", jobs.envValues);
+        argInfo = builder.build();
     }
 
     public Jobs getJobs() {
@@ -54,6 +75,51 @@ public class WorkflowConverter {
         return searcher;
     }
 
+    public JsonObject getArgInfo() {
+        return argInfo;
+    }
+
+    public class OrderPreparation {
+
+        private List<String> paramNames;
+        private List<String> paramValues;
+
+        public OrderPreparation() {
+            paramNames = new ArrayList<String>();
+            paramValues = new ArrayList<String>();
+        }
+
+        public void process(com.sos.inventory.model.workflow.Requirements preparation) {
+            handlePreparation(preparation);
+            removeDuplicates();
+        }
+
+        private void handlePreparation(com.sos.inventory.model.workflow.Requirements preparation) {
+            if (preparation == null || preparation.getParameters() == null || preparation.getParameters().getAdditionalProperties() == null) {
+                return;
+            }
+            preparation.getParameters().getAdditionalProperties().forEach((name, param) -> {
+                paramNames.add(name);
+                if (param.getDefault() != null) {
+                    try {
+                        paramValues.add(param.getDefault().toString());
+                    } catch (Throwable e) {
+                    }
+                }
+                if (param.getListParameters() != null && param.getListParameters().getAdditionalProperties() != null) {
+                    param.getListParameters().getAdditionalProperties().forEach((listParamName, listParam) -> {
+                        paramNames.add(listParamName);
+                    });
+                }
+            });
+        }
+
+        private void removeDuplicates() {
+            paramNames = WorkflowConverter.removeDuplicates(paramNames);
+            paramValues = WorkflowConverter.removeDuplicates(paramValues);
+        }
+    }
+
     public class Jobs {
 
         private List<String> names;
@@ -66,10 +132,11 @@ public class WorkflowConverter {
         private List<String> scripts;
         private List<String> argNames;
         private List<String> argValues;
+        private List<String> envNames;
+        private List<String> envValues;
 
         private JsonObject mainInfo;
         private JsonObject scriptInfo;
-        private JsonObject argInfo;
 
         public Jobs() {
             names = new ArrayList<String>();
@@ -82,6 +149,8 @@ public class WorkflowConverter {
             scripts = new ArrayList<String>();
             argNames = new ArrayList<String>();
             argValues = new ArrayList<String>();
+            envNames = new ArrayList<String>();
+            envValues = new ArrayList<String>();
         }
 
         public void process(com.sos.inventory.model.workflow.Jobs jobs) {
@@ -93,7 +162,6 @@ public class WorkflowConverter {
         private void toJson() {
             jsonMainInfo();
             jsonScriptInfo();
-            jsonArgInfo();
         }
 
         private void jsonMainInfo() {
@@ -114,23 +182,12 @@ public class WorkflowConverter {
             scriptInfo = builder.build();
         }
 
-        private void jsonArgInfo() {
-            JsonObjectBuilder builder = Json.createObjectBuilder();
-            jsonAddStringValues(builder, "names", argNames);
-            jsonAddObjectValues(builder, "values", argValues);
-            argInfo = builder.build();
-        }
-
         public JsonObject getMainInfo() {
             return mainInfo;
         }
 
         public JsonObject getScriptInfo() {
             return scriptInfo;
-        }
-
-        public JsonObject getArgInfo() {
-            return argInfo;
         }
 
         public List<String> getNames() {
@@ -156,7 +213,7 @@ public class WorkflowConverter {
         public List<String> getCriticalities() {
             return criticalities;
         }
-        
+
         public List<String> getDocumentationNames() {
             return documentationNames;
         }
@@ -208,6 +265,16 @@ public class WorkflowConverter {
                         if (!SOSString.isEmpty(es.getScript())) {
                             scripts.add(es.getScript());
                         }
+                        if (es.getEnv() != null && es.getEnv().getAdditionalProperties() != null) {
+                            es.getEnv().getAdditionalProperties().forEach((name, value) -> {
+                                if (!SOSString.isEmpty(name)) {
+                                    envNames.add(name);
+                                }
+                                if (value != null) {
+                                    envValues.add(value);
+                                }
+                            });
+                        }
                     }
                 }
 
@@ -235,6 +302,8 @@ public class WorkflowConverter {
             scripts = WorkflowConverter.removeDuplicates(scripts);
             argNames = WorkflowConverter.removeDuplicates(argNames);
             argValues = WorkflowConverter.removeDuplicates(argValues);
+            envNames = WorkflowConverter.removeDuplicates(envNames);
+            envValues = WorkflowConverter.removeDuplicates(envValues);
         }
     }
 
@@ -290,7 +359,7 @@ public class WorkflowConverter {
         private void jsonArgInfo() {
             JsonObjectBuilder builder = Json.createObjectBuilder();
             jsonAddStringValues(builder, "jobArgNames", jobArgNames);
-            jsonAddObjectValues(builder, "jobArgvalues", jobArgValues);
+            jsonAddObjectValues(builder, "jobArgValues", jobArgValues);
             argInfo = builder.build();
         }
 

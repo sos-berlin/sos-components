@@ -240,13 +240,13 @@ public class InventorySearchDBLayer extends DBLayer {
             }
 
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "jobName", advanced.getJobName(), "sw.jobs", "$.names");
-            jobResources = setHQLAndGetParameterValue(hql, "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
-            boards = setHQLAndGetParameterValue(hql, "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
-            lock = setHQLAndGetParameterValue(hql, "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            argumentName = setHQLAndGetParameterValue(hql, "argumentName", advanced.getArgumentName(), "sw.instructionsArgs", "$.jobArgNames");
-            argumentValue = setHQLAndGetParameterValue(hql, "argumentValue", advanced.getArgumentValue(), "sw.instructionsArgs", "$.jobArgvalues");
+            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
@@ -297,8 +297,8 @@ public class InventorySearchDBLayer extends DBLayer {
 
             hql.append("and exists(");// start exists
             hql.append("  select sw.id from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
-            //hql.append("  where sw.deployed=mt.deployed ");
-            //hql.append("  and sw.inventoryConfigurationId in (");
+            // hql.append(" where sw.deployed=mt.deployed ");
+            // hql.append(" and sw.inventoryConfigurationId in (");
             hql.append("  where sw.inventoryConfigurationId in (");
             hql.append("    select ic.id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("    where ic.name=").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "mt.jsonContent", "$.workflowName"));
@@ -313,11 +313,11 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "jobName", advanced.getJobName(), "sw.jobs", "$.names");
-            jobResources = setHQLAndGetParameterValue(hql, "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
-            boards = setHQLAndGetParameterValue(hql, "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
-            lock = setHQLAndGetParameterValue(hql, "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -490,13 +490,13 @@ public class InventorySearchDBLayer extends DBLayer {
             }
 
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "jobName", advanced.getJobName(), "sw.jobs", "$.names");
-            jobResources = setHQLAndGetParameterValue(hql, "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
-            boards = setHQLAndGetParameterValue(hql, "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
-            lock = setHQLAndGetParameterValue(hql, "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
-            argumentName = setHQLAndGetParameterValue(hql, "argumentName", advanced.getArgumentName(), "sw.instructionsArgs", "$.jobArgNames");
-            argumentValue = setHQLAndGetParameterValue(hql, "argumentValue", advanced.getArgumentValue(), "sw.instructionsArgs", "$.jobArgvalues");
+            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
+            argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
             break;
         case FILEORDERSOURCE:
         case SCHEDULE:
@@ -569,11 +569,11 @@ public class InventorySearchDBLayer extends DBLayer {
                 hql.append("and sw.jobsCount <= :jobCountTo ");
             }
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
-            agentName = setHQLAndGetParameterValue(hql, "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "jobName", advanced.getJobName(), "sw.jobs", "$.names");
-            jobResources = setHQLAndGetParameterValue(hql, "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
-            boards = setHQLAndGetParameterValue(hql, "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
-            lock = setHQLAndGetParameterValue(hql, "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
+            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -655,12 +655,40 @@ public class InventorySearchDBLayer extends DBLayer {
         return result;
     }
 
-    private String setHQLAndGetParameterValue(StringBuilder hql, String paramName, String paramValue, String columnName, String jsonAttribute) {
+    private String setHQLAndGetArgNames(StringBuilder hql, String paramValue) {
+        String result = null;
+        if (!SOSString.isEmpty(paramValue)) {
+            hql.append("and (");
+            result = setHQLAndGetParameterValue(hql, null, "argumentName", paramValue, "sw.args", "$.orderPreparationParamNames");
+            setHQLAndGetParameterValue(hql, "or", "argumentName", paramValue, "sw.args", "$.jobArgNames");
+            setHQLAndGetParameterValue(hql, "or", "argumentName", paramValue, "sw.instructionsArgs", "$.jobArgNames");
+            hql.append(")");
+        }
+        return result;
+    }
+
+    private String setHQLAndGetArgValues(StringBuilder hql, String paramValue) {
+        String result = null;
+        if (!SOSString.isEmpty(paramValue)) {
+            hql.append("and (");
+            result = setHQLAndGetParameterValue(hql, null, "argumentValue", paramValue, "sw.args", "$.orderPreparationParamValues");
+            setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.args", "$.jobArgValues");
+            setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.instructionsArgs", "$.jobArgValues");
+            hql.append(")");
+        }
+        return result;
+    }
+
+    private String setHQLAndGetParameterValue(StringBuilder hql, String operator, String paramName, String paramValue, String columnName,
+            String jsonAttribute) {
         String result = null;
         if (!SOSString.isEmpty(paramValue)) {
             String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
             // hql.append("and ").append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobName")).append(" ");
-            hql.append("and lower(").append(jsonFunc).append(") ");
+            if (!SOSString.isEmpty(operator)) {
+                hql.append(operator).append(" ");// and,or ..
+            }
+            hql.append("lower(").append(jsonFunc).append(") ");
             if (paramValue.equals(FIND_ALL)) {
                 hql.append("is not null ");
             } else {

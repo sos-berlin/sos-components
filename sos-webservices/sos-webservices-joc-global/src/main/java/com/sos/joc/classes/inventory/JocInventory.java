@@ -171,7 +171,7 @@ public class JocInventory {
     public static boolean isFolder(ConfigurationType type) {
         return ConfigurationType.FOLDER.equals(type);
     }
-    
+
     public static boolean isFolder(Integer type) {
         return ConfigurationType.FOLDER.intValue() == type;
     }
@@ -183,11 +183,12 @@ public class JocInventory {
     public static boolean isCalendar(Integer type) {
         return Arrays.asList(ConfigurationType.WORKINGDAYSCALENDAR.intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue()).contains(type);
     }
-    
+
     public static List<Integer> getTypesFromObjectsWithReferences() {
-        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE.intValue());
+        return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
+                .intValue());
     }
-    
+
     public static List<Integer> getTypesFromObjectsWithReferencesAndFolders() {
         return Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.FILEORDERSOURCE.intValue(), ConfigurationType.SCHEDULE
                 .intValue(), ConfigurationType.FOLDER.intValue());
@@ -359,11 +360,11 @@ public class JocInventory {
         }
         return deletedFolders;
     }
-    
+
     public static DBItemJocAuditLog storeAuditLog(JocAuditLog auditLog, AuditParams auditParams) {
         return storeAuditLog(auditLog, auditParams, null);
     }
-    
+
     public static DBItemJocAuditLog storeAuditLog(JocAuditLog auditLog, AuditParams auditParams, Collection<AuditLogDetail> details) {
         if (ClusterSettings.getForceCommentsForAuditLog(Globals.getConfigurationGlobalsJoc())) {
             String comment = null;
@@ -392,15 +393,15 @@ public class JocInventory {
     public static void postEvent(String folder) {
         EventBus.getInstance().post(new InventoryEvent(folder));
     }
-    
+
     public static void postFolderEvent(String folder) {
         EventBus.getInstance().post(new InventoryFolderEvent(folder));
     }
-    
+
     public static void postTrashEvent(String folder) {
         EventBus.getInstance().post(new InventoryTrashEvent(folder));
     }
-    
+
     public static void postTrashFolderEvent(String folder) {
         EventBus.getInstance().post(new InventoryTrashFolderEvent(folder));
     }
@@ -455,7 +456,7 @@ public class JocInventory {
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
-    
+
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, id, path, type, folderPermissions, false);
@@ -465,7 +466,7 @@ public class JocInventory {
             SOSShiroFolderPermissions folderPermissions, boolean withIsNotPermittedParentFolder) throws Exception {
         DBItemInventoryConfiguration config = null;
         String name = null;
-        
+
         if (id != null) {
             config = dbLayer.getConfiguration(id);
             if (config == null) {
@@ -529,15 +530,16 @@ public class JocInventory {
         }
         return config;
     }
-    
-    private static boolean isNotPermittedParentFolder(SOSShiroFolderPermissions folderPermissions, String path, boolean withIsNotPermittedParentFolder) {
+
+    private static boolean isNotPermittedParentFolder(SOSShiroFolderPermissions folderPermissions, String path,
+            boolean withIsNotPermittedParentFolder) {
         if (!withIsNotPermittedParentFolder) {
             return true;
         }
         Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections.emptySet());
         return notPermittedParentFolders.contains(path);
     }
-    
+
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
             SOSShiroFolderPermissions folderPermissions) throws Exception {
         return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
@@ -690,7 +692,7 @@ public class JocInventory {
         if (workflow == null) {
             item.setJobsCount(0);
             item.setJobs(null);
-            item.setJobsArgs(null);
+            item.setArgs(null);
             item.setJobsScripts(null);
             item.setInstructions(null);
             item.setInstructionsArgs(null);
@@ -700,7 +702,7 @@ public class JocInventory {
 
             item.setJobsCount(converter.getJobs().getNames().size());
             item.setJobs(converter.getJobs().getMainInfo().toString());
-            item.setJobsArgs(converter.getJobs().getArgInfo().toString());
+            item.setArgs(converter.getArgInfo().toString());
             item.setJobsScripts(converter.getJobs().getScriptInfo().toString());
             item.setInstructions(converter.getInstructions().getMainInfo().toString());
             item.setInstructionsArgs(converter.getInstructions().getArgInfo().toString());
@@ -804,7 +806,7 @@ public class JocInventory {
             }
         }
     }
-    
+
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, InventoryDBLayer dbLayer) throws JsonParseException,
             JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         return deepCopy(config, newName, Collections.emptyList(), dbLayer);
@@ -818,13 +820,14 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
             if (workflows != null && !workflows.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
+                    workflow.setContent(workflow.getContent().replaceAll("(\"lockName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                            + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);
                     if (i != -1) {
                         items.get(i).setContent(workflow.getContent());
                         items.get(i).setDeployed(false);
-                    } else{
+                    } else {
                         JocInventory.updateConfiguration(dbLayer, workflow);
                         events.add(workflow.getFolder());
                     }
@@ -862,33 +865,34 @@ public class JocInventory {
                     if (i != -1) {
                         items.get(i).setContent(workflow.getContent());
                         items.get(i).setDeployed(false);
-                    } else{
+                    } else {
                         JocInventory.updateConfiguration(dbLayer, workflow);
                         events.add(workflow.getFolder());
                     }
                 }
             }
             break;
-        
+
         case BOARD: // determine Workflows with PostNotice or ReadNotice reference
             // TODO
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"boardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName + "\""));
+                    workflow.setContent(workflow.getContent().replaceAll("(\"boardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                            + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);
                     if (i != -1) {
                         items.get(i).setContent(workflow.getContent());
                         items.get(i).setDeployed(false);
-                    } else{
+                    } else {
                         JocInventory.updateConfiguration(dbLayer, workflow);
                         events.add(workflow.getFolder());
                     }
                 }
             }
             break;
-            
+
         case WORKFLOW: // determine Schedules and FileOrderSources with Workflow reference
             List<DBItemInventoryConfiguration> schedules = dbLayer.getUsedSchedulesByWorkflowName(config.getName());
             if (schedules != null && !schedules.isEmpty()) {
@@ -900,7 +904,7 @@ public class JocInventory {
                     if (i != -1) {
                         items.get(i).setContent(schedule.getContent());
                         items.get(i).setReleased(false);
-                    } else{
+                    } else {
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());
                     }
@@ -935,7 +939,7 @@ public class JocInventory {
                     if (i != -1) {
                         items.get(i).setContent(schedule.getContent());
                         items.get(i).setReleased(false);
-                    } else{
+                    } else {
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());
                     }
@@ -947,13 +951,13 @@ public class JocInventory {
         }
         return events;
     }
-    
+
     public static SuffixPrefix getSuffixPrefix(String _suffix, String _prefix, SuffixPrefix setting, String defaultValue, String _name,
             ConfigurationType type, InventoryDBLayer dbLayer) throws SOSHibernateException {
         String prefix = _prefix == null ? "" : _prefix.trim().replaceFirst("-+$", "");
         String suffix = _suffix == null ? "" : _suffix.trim().replaceFirst("^-+", "");
         String name = isFolder(type) ? null : _name;
-        
+
         if (!suffix.isEmpty()) { // suffix beats prefix
             prefix = "";
         } else if (prefix.isEmpty()) {
@@ -981,14 +985,14 @@ public class JocInventory {
                 prefix += num;
             }
         }
-        
+
         SuffixPrefix suffixPrefix = new SuffixPrefix();
         suffixPrefix.setPrefix(prefix);
         suffixPrefix.setSuffix(suffix);
-        
+
         return suffixPrefix;
     }
-    
+
     public static List<String> getSearchReplace(SuffixPrefix suffixPrefix) {
         return suffixPrefix.getSuffix().isEmpty() ? Arrays.asList("^(" + suffixPrefix.getPrefix().replaceFirst("[0-9]*$", "") + "[0-9]*-)?(.*)$",
                 suffixPrefix.getPrefix() + "-$2") : Arrays.asList("(.*?)(-" + suffixPrefix.getSuffix().replaceFirst("[0-9]*$", "") + "[0-9]*)?$",
