@@ -14,21 +14,19 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.keys.ca.resource.ISetRootCa;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.SetRootCaFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
-import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 
 @Path("profile/key/ca")
 public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
 
-    private static final String API_CALL = "./profile/ca/store";
+    private static final String API_CALL = "./profile/key/ca/store";
 
     @Override
     public JOCDefaultResponse postSetRootCa(String xAccessToken, byte[] filter) throws Exception {

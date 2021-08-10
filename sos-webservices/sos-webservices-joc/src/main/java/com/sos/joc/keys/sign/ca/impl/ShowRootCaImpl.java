@@ -21,7 +21,7 @@ import com.sos.joc.model.sign.JocKeyType;
 @Path("profile/key/ca")
 public class ShowRootCaImpl extends JOCResourceImpl implements IShowKey {
 
-    private static final String API_CALL = "./profile/ca";
+    private static final String API_CALL = "./profile/key/ca";
 //    private static final Logger LOGGER = LoggerFactory.getLogger(ShowRootCaImpl.class);
 
     @Override
