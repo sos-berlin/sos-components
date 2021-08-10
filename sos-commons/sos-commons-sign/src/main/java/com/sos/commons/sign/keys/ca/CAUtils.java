@@ -15,11 +15,16 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -158,23 +163,126 @@ public abstract class CAUtils {
     public static String createRootSubjectDN (String commonName, String organizationUnit, String organization, String countryCode) {
         final String separator = ",";
         StringBuilder rootSubjectDN = new StringBuilder();
-        rootSubjectDN.append("CN=").append(commonName).append(separator);
-        rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
-        rootSubjectDN.append("O=").append(organization).append(separator);
-        rootSubjectDN.append("C=").append(countryCode);
+        if (commonName != null) {
+            rootSubjectDN.append("CN=").append(commonName).append(separator);
+        }
+        if (organizationUnit != null) {
+            rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
+        }
+        if (organization != null) {
+            rootSubjectDN.append("O=").append(organization).append(separator);
+        }
+        if (countryCode != null) {
+            rootSubjectDN.append("C=").append(countryCode);
+        }
         return rootSubjectDN.toString();
     }
     
-    public static String createUserSubjectDN (String commonName, String organizationUnit, String organization, String location, String state, String countryCode) {
+    public static String createUserSubjectDN (String commonName, String organizationUnit, String organization, String locality, String state,
+            String countryCode) {
         final String separator = ",";
         StringBuilder userSubjectDN = new StringBuilder();
-        userSubjectDN.append("CN=").append(commonName).append(separator);
-        userSubjectDN.append("OU=").append(organizationUnit).append(separator);
-        userSubjectDN.append("O=").append(organization).append(separator);
-        userSubjectDN.append("L=").append(location).append(separator);
-        userSubjectDN.append("ST=").append(state).append(separator);
-        userSubjectDN.append("C=").append(countryCode);
+        if (commonName != null) {
+            userSubjectDN.append("CN=").append(commonName).append(separator);
+        }
+        if (organizationUnit != null) {
+            userSubjectDN.append("OU=").append(organizationUnit).append(separator);
+        }
+        if (organization != null) {
+            userSubjectDN.append("O=").append(organization).append(separator);
+        }
+        if (locality != null) {
+            userSubjectDN.append("L=").append(locality).append(separator);
+        }
+        if (state != null) {
+            userSubjectDN.append("ST=").append(state).append(separator);
+        }
+        if (countryCode != null) {
+            userSubjectDN.append("C=").append(countryCode);
+        }
         return userSubjectDN.toString();
+    }
+    
+    public static String createUserSubjectDN (String commonName, String[] organizationUnits, String organization, String locality, String state,
+            String countryCode) {
+        final String separator = ",";
+        StringBuilder userSubjectDN = new StringBuilder();
+        userSubjectDN.append("CN=").append(commonName);
+        if (organizationUnits != null && organizationUnits.length > 0) {
+            for(int i = organizationUnits.length -1; i == 0; i--) {
+                userSubjectDN.append(separator).append("OU=").append(organizationUnits[i]);
+            }
+        }
+        if (organization != null) {
+            userSubjectDN.append(separator).append("O=").append(organization);
+        }
+        if (locality != null) {
+            userSubjectDN.append(separator).append("L=").append(locality);
+        }
+        if (state != null) {
+            userSubjectDN.append(separator).append("ST=").append(state);
+        }
+        if (countryCode != null) {
+            userSubjectDN.append(separator).append("C=").append(countryCode);
+        }
+        return userSubjectDN.toString();
+    }
+    
+    public static String createUserSubjectDN (String dn, X509Certificate alternativeSource, String targetHostname) throws InvalidNameException {
+        LdapName dnName = null;
+        if (dn != null) {
+            dnName = new LdapName(dn);
+        } else {
+            dnName = new LdapName("");
+        }
+        LdapName altSourceIssuerDN = null;
+        if (alternativeSource != null) {
+            altSourceIssuerDN = new LdapName(alternativeSource.getIssuerDN().getName());
+        }
+        String commonName = null;
+        List<String> organizationUnits = null;
+        String organization = null;
+        String countryCode = null;
+        String locality = null;
+        String state = null;
+        if (dn != null && dn.contains("CN=")) {
+            commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
+                .collect(Collectors.toList()).get(0);
+        } else if (targetHostname != null) {
+            commonName = targetHostname;
+        }
+        if (dn != null && dn.contains("OU=")) {
+            organizationUnits = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
+                .collect(Collectors.toList());
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("OU=")){
+            organizationUnits = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
+                    .collect(Collectors.toList());
+        }
+        if (dn != null && dn.contains("O=")) {
+            organization = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("O=")){
+            organization = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString();
+        }
+        if (dn != null && dn.contains("C=")) {
+            countryCode = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("C=")){
+            countryCode = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString();
+        }
+        if (dn != null && dn.contains("L=")) {
+            locality = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("L=")){
+            locality = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
+        }
+        if (dn != null && dn.contains("S=")) {
+            state = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("S=")){
+            state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString();
+        }
+        if (organizationUnits != null) {
+            return createUserSubjectDN(commonName, organizationUnits.toArray(new String[0]), organization, locality, state, countryCode);
+        } else {
+            return createUserSubjectDN(commonName, new String[0], organization, locality, state, countryCode);
+        }
     }
     
 }

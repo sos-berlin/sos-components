@@ -11,6 +11,12 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
@@ -204,25 +210,39 @@ public abstract class CertificateUtils {
 	    return SOSKeyConstants.CERTIFICATE_HEADER + lineSeparator + encodedCert + lineSeparator + SOSKeyConstants.CERTIFICATE_FOOTER;
 	}
 	
+    public static String extractCommonName (String dn) throws InvalidNameException {
+        String cn = null;
+        if (dn.contains("CN=")) {
+            cn = dn.substring(dn.indexOf("CN=") +3, dn.indexOf(",")).trim();
+        }
+        LdapName dnName = new LdapName(dn);
+        for (Rdn rdn : dnName.getRdns()) {
+            
+        }
+        return cn;
+    }
     public static String extractFirstCommonName (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.CN)[0].getFirst().getValue());
+        if (x500name.getRDNs(BCStyle.CN)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.CN)[0].getFirst().getValue());
+        } else {
+            return null;
+        }
     }
 
     public static List<String> extractCommonNames (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        String rootCN = IETFUtils.valueToString(x500name.getRDNs(BCStyle.CN)[0].getFirst().getValue());
         RDN cn = x500name.getRDNs(BCStyle.CN)[0];
-        List<String> cns = new ArrayList<String>();
-        if (cn.size() > 1) {
+        if (cn.size() > 0) {
+            List<String> cns = new ArrayList<String>();
             AttributeTypeAndValue[] values = cn.getTypesAndValues();
             for(int i = 0; i < values.length; i++) {
                 cns.add(IETFUtils.valueToString(values[i].getValue()));
             }
+            return cns;
         } else {
-            cns.add(IETFUtils.valueToString(cn.getFirst().getValue()));
+            return null;
         }
-        return cns;
     }
 
     public static String extractFirstOrganizationUnit (X509Certificate cert) throws CertificateEncodingException {
@@ -233,36 +253,67 @@ public abstract class CertificateUtils {
     public static List<String> extractOrganizationUnits (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
         RDN ou = x500name.getRDNs(BCStyle.OU)[0];
-        List<String> ous = new ArrayList<String>();
-        if (ou.size() > 1) {
+        if (ou.size() > 0) {
+            List<String> ous = new ArrayList<String>();
             AttributeTypeAndValue[] values = ou.getTypesAndValues();
             for(int i = 0; i < values.length; i++) {
                 ous.add(IETFUtils.valueToString(values[i].getValue()));
             }
+            return ous;
         } else {
-            ous.add(IETFUtils.valueToString(ou.getFirst().getValue()));
+            return null;
         }
-        return ous;
+    }
+
+    public static List<String> extractDomainComponents (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        RDN dc = x500name.getRDNs(BCStyle.DC)[0];
+        if (dc.size() > 0) {
+            List<String> dcs = new ArrayList<String>();
+            AttributeTypeAndValue[] values = dc.getTypesAndValues();
+            for(int i = 0; i < values.length; i++) {
+                dcs.add(IETFUtils.valueToString(values[i].getValue()));
+            }
+            return dcs;
+        } else {
+            return null;
+        }
     }
 
     public static String extractOrganization (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.O)[0].getFirst().getValue());
+        if (x500name.getRDNs(BCStyle.O)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.O)[0].getFirst().getValue());
+        } else {
+            return null;
+        }
     }
 
     public static String extractCountryCode (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.C)[0].getFirst().getValue());
+        if (x500name.getRDNs(BCStyle.C)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.C)[0].getFirst().getValue());
+        } else {
+            return null;
+        }
     }
 
-    public static String extractLocation (X509Certificate cert) throws CertificateEncodingException {
+    public static String extractLocality (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.L)[0].getFirst().getValue());
+        if (x500name.getRDNs(BCStyle.L)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.L)[0].getFirst().getValue());
+        } else {
+            return null;
+        }
     }
 
     public static String extractState (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
-        return IETFUtils.valueToString(x500name.getRDNs(BCStyle.ST)[0].getFirst().getValue());
+        if (x500name.getRDNs(BCStyle.ST)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.ST)[0].getFirst().getValue());
+        } else {
+            return null;
+        }
     }
 
 }

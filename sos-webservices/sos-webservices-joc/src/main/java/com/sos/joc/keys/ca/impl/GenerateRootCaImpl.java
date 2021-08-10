@@ -44,7 +44,7 @@ public class GenerateRootCaImpl extends JOCResourceImpl implements IGenerateRoot
             storeAuditLog(filter.getAuditLog(), CategoryType.CERTIFICATES);
             
             KeyPair keyPair = KeyUtil.createECDSAKeyPair();
-            String subjectDN = CAUtils.createRootSubjectDN(filter.getCommonName(), filter.getOrganizationUnit(), filter.getOrganization(), filter.getCountryCode());
+            String subjectDN = filter.getDn();
             Certificate cert = CAUtils.createSelfSignedRootCertificate(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair, subjectDN, true, false);
             JocKeyPair jocKeyPair = KeyUtil.createECDSAJOCKeyPair(keyPair);
             jocKeyPair.setCertificate(CertificateUtils.asPEMString((X509Certificate)cert));

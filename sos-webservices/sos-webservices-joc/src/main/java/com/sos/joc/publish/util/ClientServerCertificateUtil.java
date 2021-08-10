@@ -9,6 +9,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 
+import javax.naming.InvalidNameException;
+
 import org.bouncycastle.cert.CertException;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
@@ -29,24 +31,13 @@ public abstract class ClientServerCertificateUtil {
 
     public static RolloutResponse createClientServerAuthKeyPair (SOSHibernateSession hibernateSession, CreateCSRFilter createCsrFilter)
             throws SOSHibernateException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException,
-            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException {
+            InvalidAlgorithmParameterException, CertException, OperatorCreationException, IOException, InvalidKeySpecException, InvalidNameException {
         DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
         JocKeyPair rootKeyPair = dbLayer.getAuthRootCaKeyPair();
         X509Certificate rootCert = KeyUtil.getX509Certificate(rootKeyPair.getCertificate());
         KeyPair newClientKeyPair = KeyUtil.createECDSAKeyPair();
-        String userDN;
-        if (createCsrFilter.getCommonName() != null && createCsrFilter.getOrganizationUnit() != null && createCsrFilter.getOrganization() != null 
-                && createCsrFilter.getCountryCode() != null) {
-            userDN = CAUtils.createUserSubjectDN(createCsrFilter.getCommonName(), createCsrFilter.getOrganizationUnit(), createCsrFilter.getOrganization(),
-                    createCsrFilter.getLocation(), createCsrFilter.getState(), createCsrFilter.getCountryCode());
-        } else {
-            userDN = CAUtils.createUserSubjectDN(CertificateUtils.extractFirstCommonName(rootCert), CertificateUtils.extractFirstOrganizationUnit(rootCert),
-                    CertificateUtils.extractOrganization(rootCert), createCsrFilter.getLocation(), createCsrFilter.getState(),
-                    CertificateUtils.extractCountryCode(rootCert));
-        }
+        String userDN = CAUtils.createUserSubjectDN(createCsrFilter.getDn(), rootCert, createCsrFilter.getHostname());
         PKCS10CertificationRequest csr = CAUtils.createCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair, userDN);
-//        X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, newClientKeyPair.getPrivate(), csr, rootCert,
-//                createCsrFilter.getSan());
         X509Certificate clientCert = CAUtils.signCSR(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, 
                 KeyUtil.getKeyPairFromECDSAPrivatKeyString(rootKeyPair.getPrivateKey()).getPrivate(), csr, rootCert, createCsrFilter.getSan());
         JocKeyPair clientServerAuthKeyPair = KeyUtil.createECDSAJOCKeyPair(newClientKeyPair);

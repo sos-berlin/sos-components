@@ -27,6 +27,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocKeyNotValidException;
 import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.ca.resource.IImportRootCa;
+import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
@@ -65,33 +66,24 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             
             stream = body.getEntityAs(InputStream.class);
             JocKeyPair keyPair = new JocKeyPair();
-            String keyFromFile = readFileContent(stream);
+            String certificateFromFile = readFileContent(stream);
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
             String account = "";
             String publicKey = null;
-            if (keyFromFile != null) {
-                if (!keyFromFile.startsWith(SOSKeyConstants.CERTIFICATE_HEADER)) {
-                    try {
-                        KeyPair kp = KeyUtil.getKeyPairFromECDSAPrivatKeyString(keyFromFile);
-                        if (kp != null) {
-                            keyPair.setPrivateKey(keyFromFile);
-                        }
-                    } catch (Exception e) {
-                        throw new JocKeyNotValidException("The provided file does not contain a valid private ECDSA key!");
+            if (certificateFromFile != null) {
+                try {
+                    X509Certificate cert = KeyUtil.getX509Certificate(certificateFromFile);
+                    if (cert != null) {
+                        keyPair.setCertificate(certificateFromFile);
                     }
-                } else {
-                    try {
-                        X509Certificate cert = KeyUtil.getX509Certificate(keyFromFile);
-                        if (cert != null) {
-                            keyPair.setCertificate(keyFromFile);
-                        }
-                    } catch (Exception e) {
-                        throw new JocKeyNotValidException("The provided file does not contain a valid X.509 certificate!");
-                    }
+                } catch (Exception e) {
+                    throw new JocKeyNotValidException("The provided file does not contain a valid X.509 certificate!");
                 }
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            PublishUtils.storeKey(keyPair, hibernateSession, "", JocSecurityLevel.LOW);
+            DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
+            dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSosShiroCurrentUser().getUsername(), 
+                    Globals.getJocSecurityLevel().intValue());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());

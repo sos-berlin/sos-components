@@ -3,6 +3,7 @@ package com.sos.cli;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,11 +15,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -258,34 +256,11 @@ public class ExecuteRollOut {
         }
     }
     
-    private static String createRequestBody (String dn) throws InvalidNameException, JsonProcessingException {
+    private static String createRequestBody (String dn, String hostname) throws InvalidNameException, JsonProcessingException {
         // --subject-dn="CN=sp, OU=IT, O=SOS GmbH, S=Berlin, L=Berlin, C=DE"
-        LdapName ldapName = new LdapName(dn);
         CreateCSRFilter filter = new CreateCSRFilter();
-        List<String> cns = null;
-        List<String> ous = null;
-        if (dn.contains("CN=")) {
-            cns = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList());
-            filter.setCommonName(cns.get(0));
-        }
-        if (dn.contains("OU=")) {
-            ous = ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("OU")).map(rdn -> rdn.getValue().toString())
-                .collect(Collectors.toList());
-            filter.setOrganizationUnit(ous.get(0));
-        }
-        if (dn.contains("O=")) {
-            filter.setOrganization(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("O")).findFirst().get().getValue().toString());
-        }
-        if (dn.contains("C=")) {
-            filter.setCountryCode(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("C")).findFirst().get().getValue().toString());
-        }
-        if (dn.contains("L=")) {
-            filter.setLocation(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString());
-        }
-        if (dn.contains("S=")) {
-            filter.setState(ldapName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString());
-        }
+        filter.setDn(dn);
+        filter.setHostname(hostname);
         filter.setSan(san);
         return mapper.writeValueAsString(filter);
     }
@@ -295,7 +270,8 @@ public class ExecuteRollOut {
         client.addHeader("X-Onetime-Token", token);
         client.addHeader("Content-Type", "application/json");
         client.addHeader("Accept", "application/json");
-        return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN));
+        String hostname = InetAddress.getLocalHost().getCanonicalHostName();
+        return client.postRestService(jocUri.resolve(WS_API), createRequestBody(subjectDN, hostname));
     }
 
     private static void printUsage(){

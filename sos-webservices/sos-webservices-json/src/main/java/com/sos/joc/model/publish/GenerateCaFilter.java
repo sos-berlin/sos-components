@@ -18,10 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "commonName",
-    "organizationUnit",
-    "organization",
-    "countryCode",
+    "dn",
     "auditLog"
 })
 public class GenerateCaFilter {
@@ -31,29 +28,8 @@ public class GenerateCaFilter {
      * (Required)
      * 
      */
-    @JsonProperty("commonName")
-    private String commonName;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organizationUnit")
-    private String organizationUnit;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organization")
-    private String organization;
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("countryCode")
-    private String countryCode;
+    @JsonProperty("dn")
+    private String dn;
     /**
      * auditParams
      * <p>
@@ -68,9 +44,9 @@ public class GenerateCaFilter {
      * (Required)
      * 
      */
-    @JsonProperty("commonName")
-    public String getCommonName() {
-        return commonName;
+    @JsonProperty("dn")
+    public String getDn() {
+        return dn;
     }
 
     /**
@@ -78,69 +54,9 @@ public class GenerateCaFilter {
      * (Required)
      * 
      */
-    @JsonProperty("commonName")
-    public void setCommonName(String commonName) {
-        this.commonName = commonName;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organizationUnit")
-    public String getOrganizationUnit() {
-        return organizationUnit;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organizationUnit")
-    public void setOrganizationUnit(String organizationUnit) {
-        this.organizationUnit = organizationUnit;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organization")
-    public String getOrganization() {
-        return organization;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("organization")
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("countryCode")
-    public String getCountryCode() {
-        return countryCode;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("countryCode")
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
+    @JsonProperty("dn")
+    public void setDn(String dn) {
+        this.dn = dn;
     }
 
     /**
@@ -167,12 +83,12 @@ public class GenerateCaFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("dn", dn).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(commonName).append(organizationUnit).append(auditLog).append(countryCode).append(organization).toHashCode();
+        return new HashCodeBuilder().append(auditLog).append(dn).toHashCode();
     }
 
     @Override
@@ -184,7 +100,7 @@ public class GenerateCaFilter {
             return false;
         }
         GenerateCaFilter rhs = ((GenerateCaFilter) other);
-        return new EqualsBuilder().append(commonName, rhs.commonName).append(organizationUnit, rhs.organizationUnit).append(auditLog, rhs.auditLog).append(countryCode, rhs.countryCode).append(organization, rhs.organization).isEquals();
+        return new EqualsBuilder().append(auditLog, rhs.auditLog).append(dn, rhs.dn).isEquals();
     }
 
 }

@@ -17,139 +17,57 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "commonName",
-    "organizationUnit",
-    "organization",
-    "countryCode",
-    "location",
-    "state",
-    "san"
+    "dn",
+    "san",
+    "hostname"
 })
 public class CreateCSRFilter {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commonName")
-    private String commonName;
-    @JsonProperty("organizationUnit")
-    private String organizationUnit;
-    @JsonProperty("organization")
-    private String organization;
-    @JsonProperty("countryCode")
-    private String countryCode;
-    @JsonProperty("location")
-    private String location;
-    @JsonProperty("state")
-    private String state;
-    /**
-     * 
-     * (Required)
-     * 
-     */
+    @JsonProperty("dn")
+    private String dn;
     @JsonProperty("san")
     private String san;
+    @JsonProperty("hostname")
+    private String hostname;
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commonName")
-    public String getCommonName() {
-        return commonName;
+    @JsonProperty("dn")
+    public String getDn() {
+        return dn;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("commonName")
-    public void setCommonName(String commonName) {
-        this.commonName = commonName;
+    @JsonProperty("dn")
+    public void setDn(String dn) {
+        this.dn = dn;
     }
 
-    @JsonProperty("organizationUnit")
-    public String getOrganizationUnit() {
-        return organizationUnit;
-    }
-
-    @JsonProperty("organizationUnit")
-    public void setOrganizationUnit(String organizationUnit) {
-        this.organizationUnit = organizationUnit;
-    }
-
-    @JsonProperty("organization")
-    public String getOrganization() {
-        return organization;
-    }
-
-    @JsonProperty("organization")
-    public void setOrganization(String organization) {
-        this.organization = organization;
-    }
-
-    @JsonProperty("countryCode")
-    public String getCountryCode() {
-        return countryCode;
-    }
-
-    @JsonProperty("countryCode")
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
-    }
-
-    @JsonProperty("location")
-    public String getLocation() {
-        return location;
-    }
-
-    @JsonProperty("location")
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    @JsonProperty("state")
-    public String getState() {
-        return state;
-    }
-
-    @JsonProperty("state")
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("san")
     public String getSan() {
         return san;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("san")
     public void setSan(String san) {
         this.san = san;
     }
 
+    @JsonProperty("hostname")
+    public String getHostname() {
+        return hostname;
+    }
+
+    @JsonProperty("hostname")
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("commonName", commonName).append("organizationUnit", organizationUnit).append("organization", organization).append("countryCode", countryCode).append("location", location).append("state", state).append("san", san).toString();
+        return new ToStringBuilder(this).append("dn", dn).append("san", san).append("hostname", hostname).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(commonName).append(san).append(countryCode).append(organization).append(organizationUnit).append(location).append(state).toHashCode();
+        return new HashCodeBuilder().append(san).append(dn).append(hostname).toHashCode();
     }
 
     @Override
@@ -161,7 +79,7 @@ public class CreateCSRFilter {
             return false;
         }
         CreateCSRFilter rhs = ((CreateCSRFilter) other);
-        return new EqualsBuilder().append(commonName, rhs.commonName).append(san, rhs.san).append(countryCode, rhs.countryCode).append(organization, rhs.organization).append(organizationUnit, rhs.organizationUnit).append(location, rhs.location).append(state, rhs.state).isEquals();
+        return new EqualsBuilder().append(san, rhs.san).append(dn, rhs.dn).append(hostname, rhs.hostname).isEquals();
     }
 
 }
