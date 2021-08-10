@@ -663,14 +663,14 @@ public class DeploymentTestUtils {
         return response;
     }
 
-    public static GenerateCaFilter createGenerateCaFilter () {
-        GenerateCaFilter filter = new GenerateCaFilter();
-        filter.setCommonName("sp");
-        filter.setOrganizationUnit("devel");
-        filter.setOrganization("SOS");
-        filter.setCountryCode("DE");
-        return filter;
-    }
+//    public static GenerateCaFilter createGenerateCaFilter () {
+//        GenerateCaFilter filter = new GenerateCaFilter();
+//        filter.setCommonName("sp");
+//        filter.setOrganizationUnit("devel");
+//        filter.setOrganization("SOS");
+//        filter.setCountryCode("DE");
+//        return filter;
+//    }
 
     public static SetRootCaFilter createSetRootCaFilter () {
         SetRootCaFilter filter = new SetRootCaFilter();
