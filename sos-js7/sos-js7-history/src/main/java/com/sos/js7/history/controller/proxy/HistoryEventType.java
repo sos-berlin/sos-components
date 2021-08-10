@@ -5,6 +5,7 @@ import java.util.Map;
 
 import js7.data.agent.AgentRefStateEvent.AgentCouplingFailed;
 import js7.data.agent.AgentRefStateEvent.AgentReady;
+import js7.data.agent.AgentRefStateEvent.AgentShutDown$;
 import js7.data.cluster.ClusterEvent.ClusterCoupled;
 import js7.data.controller.ControllerEvent.ControllerReady;
 import js7.data.controller.ControllerEvent.ControllerShutDown;
@@ -37,9 +38,11 @@ public enum HistoryEventType {
 
     ClusterCoupled(ClusterCoupled.class.getSimpleName()),
 
+    AgentReady(AgentReady.class.getSimpleName()),
+
     AgentCouplingFailed(AgentCouplingFailed.class.getSimpleName()),
 
-    AgentReady(AgentReady.class.getSimpleName()),
+    AgentShutDown(AgentShutDown$.class.getSimpleName()),
 
     OrderStarted(OrderStarted$.class.getSimpleName()),
 

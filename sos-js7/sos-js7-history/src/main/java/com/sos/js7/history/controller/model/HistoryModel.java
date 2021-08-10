@@ -69,6 +69,7 @@ import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderLock;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEventOrderProcessed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -106,6 +107,7 @@ public class HistoryModel {
 
     private static final String KEY_DELIMITER = "|||";
     private static final String RETURN_CODE_KEY = "returnCode";
+    private static final String AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE = "Shutting down";
 
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
@@ -259,6 +261,7 @@ public class HistoryModel {
                             LOGGER.info(String.format("[%s][ClusterCoupled %s, %s][%s][%s]", identifier, fecc.getActiveId(), controllerConfiguration
                                     .getCurrent().getUri4Log(), eventId, eventIdAsTime(eventId)));
                         }
+                        counter.getController().addClusterCoupled();
                         break;
                     case ControllerReady:
                         controllerReady(dbLayer, (FatEventControllerReady) entry);
@@ -275,6 +278,10 @@ public class HistoryModel {
                     case AgentCouplingFailed:
                         agentCouplingFailed(dbLayer, (FatEventAgentCouplingFailed) entry);
                         counter.getAgent().addCouplingFailed();
+                        break;
+                    case AgentShutDown:
+                        agentShutDown(dbLayer, (FatEventAgentShutDown) entry);
+                        counter.getAgent().addShutdown();
                         break;
                     case OrderStarted:
                         hob = orderStarted(dbLayer, (FatEventOrderStarted) entry);
@@ -653,15 +660,33 @@ public class HistoryModel {
             LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, entry.getType(), entry.getId(),
                     getDateAsString(entry.getEventDatetime())));
         } else {
-            if (item.getCouplingFailedTime() == null) {
-                item.setCouplingFailedMessage(entry.getMessage());
-                item.setCouplingFailedTime(entry.getEventDatetime());
-                item.setLastKnownTime(item.getCouplingFailedTime());
-                tmpAgentShuttingDown(item);
-                dbLayer.getSession().update(item);
-            } else {
-                cachedAgentsCouplingFailed.add(item.getAgentId(), entry.getEventId(), entry.getMessage());
+            if (item.getShutdownTime() == null) {
+                if (item.getCouplingFailedTime() == null) {
+                    item.setCouplingFailedMessage(entry.getMessage());
+                    item.setCouplingFailedTime(entry.getEventDatetime());
+                    item.setLastKnownTime(item.getCouplingFailedTime());
+                    tmpAgentShuttingDown(item);
+                    dbLayer.getSession().update(item);
+                } else {
+                    cachedAgentsCouplingFailed.add(item.getAgentId(), entry.getEventId(), entry.getMessage());
+                }
             }
+        }
+        tryStoreCurrentState(dbLayer, entry.getEventId());
+    }
+
+    private void agentShutDown(DBLayerHistory dbLayer, FatEventAgentShutDown entry) throws Exception {
+        DBItemHistoryAgent item = dbLayer.getAgentByNextEventId(controllerConfiguration.getCurrent().getId(), entry.getId(), entry.getEventId());
+        if (item == null) {
+            LOGGER.warn(String.format("[%s][%s][%s][skip]not found agent entry with the ready time < %s", identifier, entry.getType(), entry.getId(),
+                    getDateAsString(entry.getEventDatetime())));
+        } else {
+            if (item.getShutdownTime() == null || isAgentCouplingFailedBecauseShutdown(item)) {
+                item.setShutdownTime(entry.getEventDatetime());
+                item.setLastKnownTime(item.getShutdownTime());
+                dbLayer.getSession().update(item);
+            }
+            cachedAgentsCouplingFailed.remove(item.getAgentId());
         }
         tryStoreCurrentState(dbLayer, entry.getEventId());
     }
@@ -729,12 +754,16 @@ public class HistoryModel {
         cachedAgentsCouplingFailed.remove(current.getAgentId());
     }
 
-    // tmp solution
     private void tmpAgentShuttingDown(DBItemHistoryAgent item) {
-        if (item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().trim().equalsIgnoreCase("Shutting down")) {
+        if (isAgentCouplingFailedBecauseShutdown(item)) {
             item.setShutdownTime(item.getCouplingFailedTime());
             item.setLastKnownTime(item.getShutdownTime());
         }
+    }
+
+    private boolean isAgentCouplingFailedBecauseShutdown(DBItemHistoryAgent item) {
+        return item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().trim().equalsIgnoreCase(
+                AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE);
     }
 
     private HistoryOrderBean orderStarted(DBLayerHistory dbLayer, FatEventOrderStarted entry) throws Exception {

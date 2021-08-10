@@ -69,10 +69,10 @@ public class Counter {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(toString(this)).append(",");
-        if (controller.ready > 0 || controller.shutdown > 0) {
+        if (controller.ready > 0 || controller.shutdown > 0 || controller.clusterCoupled > 0) {
             sb.append(toString(controller)).append(",");
         }
-        if (agent.ready > 0 || agent.couplingFailed > 0) {
+        if (agent.ready > 0 || agent.couplingFailed > 0 || agent.shutdown > 0) {
             sb.append(toString(agent)).append(",");
         }
         sb.append(toString(order)).append(",").append(toString(orderStep));
@@ -95,10 +95,15 @@ public class Counter {
     public class Controller {
 
         private int ready = 0;
+        private int clusterCoupled = 0;
         private int shutdown = 0;
 
         public void addReady() {
             ready += 1;
+        }
+
+        public void addClusterCoupled() {
+            clusterCoupled += 1;
         }
 
         public void addShutdown() {
@@ -110,6 +115,7 @@ public class Counter {
 
         private int ready = 0;
         private int couplingFailed = 0;
+        private int shutdown = 0;
 
         public void addReady() {
             ready += 1;
@@ -117,6 +123,10 @@ public class Counter {
 
         public void addCouplingFailed() {
             couplingFailed += 1;
+        }
+
+        public void addShutdown() {
+            shutdown += 1;
         }
     }
 

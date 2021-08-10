@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
+import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentShutDown;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryClusterCoupled;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryControllerReady;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryOrder;
@@ -30,6 +31,7 @@ import com.sos.js7.history.controller.proxy.common.JProxyTestClass;
 import com.sos.js7.history.controller.proxy.fatevent.AFatEvent;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentReady;
+import com.sos.js7.history.controller.proxy.fatevent.FatEventAgentShutDown;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventClusterCoupled;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerReady;
 import com.sos.js7.history.controller.proxy.fatevent.FatEventControllerShutDown;
@@ -187,6 +189,13 @@ public class HistoryEventsTest {
                 event.set(CONTROLLER_ID);
                 break;
 
+            case AgentReady:
+                HistoryAgentReady ar = entry.getAgentReady();
+
+                event = new FatEventAgentReady(entry.getEventId(), entry.getEventDate());
+                event.set(ar.getId(), ar.getUri(), ar.getTimezone());
+                break;
+
             case AgentCouplingFailed:
                 HistoryAgentCouplingFailed acf = entry.getAgentCouplingFailed();
 
@@ -194,11 +203,11 @@ public class HistoryEventsTest {
                 event.set(acf.getId(), acf.getMessage());
                 break;
 
-            case AgentReady:
-                HistoryAgentReady ar = entry.getAgentReady();
+            case AgentShutDown:
+                HistoryAgentShutDown acs = entry.getAgentShutDown();
 
-                event = new FatEventAgentReady(entry.getEventId(), entry.getEventDate());
-                event.set(ar.getId(), ar.getUri(), ar.getTimezone());
+                event = new FatEventAgentShutDown(entry.getEventId(), entry.getEventDate());
+                event.set(acs.getId());
                 break;
 
             case OrderStarted:

@@ -126,6 +126,10 @@ public class HistoryEventEntry {
         return new HistoryAgentCouplingFailed();
     }
 
+    public HistoryAgentShutDown getAgentShutDown() {
+        return new HistoryAgentShutDown();
+    }
+
     public HistoryAgentReady getAgentReady() throws FatEventProblemException {
         return new HistoryAgentReady();
     }
@@ -736,6 +740,20 @@ public class HistoryEventEntry {
 
         public String getMessage() {
             return message;
+        }
+    }
+
+    public class HistoryAgentShutDown {
+
+        private final String id;
+
+        public HistoryAgentShutDown() {
+            AgentPath arp = (AgentPath) keyedEvent.key();
+            id = arp.string();
+        }
+
+        public String getId() {
+            return id;
         }
     }
 
