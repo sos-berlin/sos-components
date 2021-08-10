@@ -623,13 +623,8 @@ public class OrdersHelper {
                     arguments.put(key, NumberValue.of(((BigDecimal) val)));
                 } else if (val instanceof List) {
                     @SuppressWarnings("unchecked")
-                    List<Map<String, Object>> valListOfObjects = (List<Map<String, Object>>) val;
-                    List<Value> valueList = new ArrayList<>();
-                    valListOfObjects.forEach(m -> {
-                        Map<String, Value> listArguments = variablesToScalaValuedArguments(m);
-                        // TODO ObjectValue.of(...map...) missing
-                        valueList.add(ObjectValue.apply(toScalaImmutableMap(listArguments)));
-                    });
+                    List<Value> valueList = ((List<Map<String, Object>>) val).stream().map(m -> ObjectValue.of(variablesToScalaValuedArguments(m)))
+                            .collect(Collectors.toList());
                     arguments.put(key, ListValue.of(valueList));
                 }
             });
@@ -637,9 +632,9 @@ public class OrdersHelper {
         return arguments;
     }
     
-    public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
-        return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
-    }
+//    public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
+//        return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
+//    }
 
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {
         Variables variables = new Variables();

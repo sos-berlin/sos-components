@@ -127,9 +127,7 @@ public class JsonConverter {
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
         sfl.setChildren("$" + fl.getChildren());
         sfl.setChildToArguments("(x) => $x");
-        // TODO index is not supported yet in the controller
-        //sfl.setChildToId("(x, i) => $i + '-' + $x." + fl.getChildToId());
-        sfl.setChildToId("(x) => $x." + fl.getChildToId());
+        sfl.setChildToId("(x, i) => $i + '-' + $x." + fl.getChildToId());
     }
     
     public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
