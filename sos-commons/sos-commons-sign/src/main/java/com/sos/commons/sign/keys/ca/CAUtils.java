@@ -273,10 +273,10 @@ public abstract class CAUtils {
         } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("L=")){
             locality = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("L")).findFirst().get().getValue().toString();
         }
-        if (dn != null && dn.contains("S=")) {
-            state = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString();
-        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("S=")){
-            state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("S")).findFirst().get().getValue().toString();
+        if (dn != null && dn.contains("ST=")) {
+            state = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
+        } else if (alternativeSource != null && alternativeSource.getIssuerDN().getName().contains("ST=")){
+            state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
         }
         if (organizationUnits != null) {
             return createUserSubjectDN(commonName, organizationUnits.toArray(new String[0]), organization, locality, state, countryCode);
