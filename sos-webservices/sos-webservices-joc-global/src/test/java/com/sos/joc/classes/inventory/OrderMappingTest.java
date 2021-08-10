@@ -16,7 +16,7 @@ import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.model.order.OrderV;
 
 

@@ -1,4 +1,4 @@
-package com.sos.joc.classes;
+package com.sos.joc.classes.order;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -29,11 +29,12 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
-import com.sos.joc.classes.order.FreshOrder;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;

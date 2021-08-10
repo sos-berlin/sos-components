@@ -1,7 +1,7 @@
 package com.sos.joc.yade.common;
 
 import com.sos.commons.util.SOSString;
-import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.yade.DBItemYadeFile;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.order.OrderStateText;

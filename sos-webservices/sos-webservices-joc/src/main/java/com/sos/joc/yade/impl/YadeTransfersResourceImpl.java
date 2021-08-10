@@ -16,7 +16,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.classes.OrdersHelper;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.yade.DBItemYadeProtocol;
 import com.sos.joc.db.yade.DBItemYadeTransfer;
