@@ -201,10 +201,13 @@ public class InventorySearchDBLayer extends DBLayer {
         String agentName = null;
         String jobName = null;
         String jobResources = null;
+        String jobScript = null;
         String boards = null;
         String lock = null;
         String argumentName = null;
         String argumentValue = null;
+        String envName = null;
+        String envValue = null;
 
         switch (type) {
         case WORKFLOW:
@@ -243,8 +246,11 @@ public class InventorySearchDBLayer extends DBLayer {
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
             argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
             break;
@@ -316,8 +322,11 @@ public class InventorySearchDBLayer extends DBLayer {
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -364,11 +373,20 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobResources != null) {
             query.setParameter("jobResources", '%' + jobResources.toLowerCase() + '%');
         }
+        if (jobScript != null) {
+            query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
+        }
         if (boards != null) {
             query.setParameter("boards", '%' + boards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');
+        }
+        if (envName != null) {
+            query.setParameter("envName", '%' + envName.toLowerCase() + '%');
+        }
+        if (envValue != null) {
+            query.setParameter("envValue", '%' + envValue.toLowerCase() + '%');
         }
         if (argumentName != null) {
             query.setParameter("argumentName", '%' + argumentName.toLowerCase() + '%');
@@ -448,8 +466,11 @@ public class InventorySearchDBLayer extends DBLayer {
         String agentName = null;
         String jobName = null;
         String jobResources = null;
+        String jobScript = null;
         String boards = null;
         String lock = null;
+        String envName = null;
+        String envValue = null;
         String argumentName = null;
         String argumentValue = null;
 
@@ -493,8 +514,11 @@ public class InventorySearchDBLayer extends DBLayer {
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             argumentName = setHQLAndGetArgNames(hql, advanced.getArgumentName());
             argumentValue = setHQLAndGetArgValues(hql, advanced.getArgumentValue());
             break;
@@ -572,8 +596,11 @@ public class InventorySearchDBLayer extends DBLayer {
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
+            jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
             boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
+            envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
+            envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
@@ -621,11 +648,20 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobResources != null) {
             query.setParameter("jobResources", '%' + jobResources.toLowerCase() + '%');
         }
+        if (jobScript != null) {
+            query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
+        }
         if (boards != null) {
             query.setParameter("boards", '%' + boards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');
+        }
+        if (envName != null) {
+            query.setParameter("envName", '%' + envName.toLowerCase() + '%');
+        }
+        if (envValue != null) {
+            query.setParameter("envValue", '%' + envValue.toLowerCase() + '%');
         }
         if (argumentName != null) {
             query.setParameter("argumentName", '%' + argumentName.toLowerCase() + '%');

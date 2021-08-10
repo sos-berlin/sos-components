@@ -29,8 +29,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "jobCriticality",
     "jobCountFrom",
     "jobCountTo",
+    "jobScript",
     "argumentName",
-    "argumentValue"
+    "argumentValue",
+    "envName",
+    "envValue"
 })
 public class RequestSearchAdvancedItem {
 
@@ -128,6 +131,14 @@ public class RequestSearchAdvancedItem {
      * 
      * 
      */
+    @JsonProperty("jobScript")
+    private String jobScript;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("argumentName")
     private String argumentName;
     /**
@@ -138,6 +149,22 @@ public class RequestSearchAdvancedItem {
      */
     @JsonProperty("argumentValue")
     private String argumentValue;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envName")
+    private String envName;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envValue")
+    private String envValue;
 
     /**
      * string without < and >
@@ -387,6 +414,28 @@ public class RequestSearchAdvancedItem {
      * 
      * 
      */
+    @JsonProperty("jobScript")
+    public String getJobScript() {
+        return jobScript;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobScript")
+    public void setJobScript(String jobScript) {
+        this.jobScript = jobScript;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("argumentName")
     public String getArgumentName() {
         return argumentName;
@@ -425,14 +474,58 @@ public class RequestSearchAdvancedItem {
         this.argumentValue = argumentValue;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envName")
+    public String getEnvName() {
+        return envName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envName")
+    public void setEnvName(String envName) {
+        this.envName = envName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envValue")
+    public String getEnvValue() {
+        return envValue;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("envValue")
+    public void setEnvValue(String envValue) {
+        this.envValue = envValue;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("boards", boards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("argumentName", argumentName).append("argumentValue", argumentValue).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("boards", boards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(boards).append(argumentValue).append(jobCountFrom).append(schedule).append(jobCountTo).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(boards).append(argumentValue).append(jobScript).append(envValue).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
     }
 
     @Override
@@ -444,7 +537,7 @@ public class RequestSearchAdvancedItem {
             return false;
         }
         RequestSearchAdvancedItem rhs = ((RequestSearchAdvancedItem) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(boards, rhs.boards).append(argumentValue, rhs.argumentValue).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(boards, rhs.boards).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }

@@ -11,6 +11,7 @@ import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSReflection;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -37,7 +38,11 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
             JsonValidator.validateFailFast(inBytes, RequestSearchFilter.class);
             RequestSearchFilter in = Globals.objectMapper.readValue(inBytes, RequestSearchFilter.class);
 
-            boolean permission = getJocPermissions(accessToken).getInventory().getView();
+            boolean controllerPermissions = false;
+            if (!SOSString.isEmpty(in.getControllerId())) {
+                controllerPermissions = getControllerPermissions(in.getControllerId(), accessToken).getWorkflows().getView();
+            }
+            boolean permission = getJocPermissions(accessToken).getInventory().getView() || controllerPermissions;
             JOCDefaultResponse response = checkPermissions(accessToken, in, permission);
             if (response != null) {
                 return response;
@@ -149,7 +154,6 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         }
                         if (wi == null || wi.size() == 0) {
                             continue;
-
                         }
                     }
 
