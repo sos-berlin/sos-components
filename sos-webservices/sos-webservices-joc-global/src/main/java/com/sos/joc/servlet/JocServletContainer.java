@@ -19,7 +19,6 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -83,17 +82,17 @@ public class JocServletContainer extends ServletContainer {
         Proxies.closeAll();
 
         if (Globals.sosHibernateFactory != null) {
-            if (Globals.sosHibernateFactory.dbmsIsH2()) {
-                SOSHibernateSession connection = null;
-                try {
-                    connection = Globals.createSosHibernateStatelessConnection("closeH2");
-                    connection.createQuery("SHUTDOWN").executeUpdate();
-                } catch (Exception e) {
-                    LOGGER.warn("shutdown H2 database: " + e.toString());
-                } finally {
-                    Globals.disconnect(connection);
-                }
-            }
+//            if (Globals.sosHibernateFactory.dbmsIsH2()) {
+//                SOSHibernateSession connection = null;
+//                try {
+//                    connection = Globals.createSosHibernateStatelessConnection("closeH2");
+//                    connection.createQuery("SHUTDOWN").executeUpdate();
+//                } catch (Exception e) {
+//                    LOGGER.warn("shutdown H2 database: " + e.toString());
+//                } finally {
+//                    Globals.disconnect(connection);
+//                }
+//            }
             LOGGER.info("----> closing DB Connections");
             Globals.sosHibernateFactory.close();
         }

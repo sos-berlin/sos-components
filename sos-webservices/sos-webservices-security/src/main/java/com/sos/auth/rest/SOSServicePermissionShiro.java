@@ -380,17 +380,17 @@ public class SOSServicePermissionShiro {
         MDC.put("context", ThreadCtx);
         try {
             if (Globals.sosHibernateFactory != null) {
-                if (Globals.sosHibernateFactory.dbmsIsH2()) {
-                    SOSHibernateSession connection = null;
-                    try {
-                        connection = Globals.createSosHibernateStatelessConnection("closeH2");
-                        connection.createQuery("SHUTDOWN").executeUpdate();
-                    } catch (Exception e) {
-                        LOGGER.warn("shutdown H2 database: " + e.toString());
-                    } finally {
-                        Globals.disconnect(connection);
-                    }
-                }
+//                if (Globals.sosHibernateFactory.dbmsIsH2()) {
+//                    SOSHibernateSession connection = null;
+//                    try {
+//                        connection = Globals.createSosHibernateStatelessConnection("closeH2");
+//                        connection.createQuery("SHUTDOWN").executeUpdate();
+//                    } catch (Exception e) {
+//                        LOGGER.warn("shutdown H2 database: " + e.toString());
+//                    } finally {
+//                        Globals.disconnect(connection);
+//                    }
+//                }
                 Globals.sosHibernateFactory.close();
                 Globals.sosHibernateFactory.build();
             }
