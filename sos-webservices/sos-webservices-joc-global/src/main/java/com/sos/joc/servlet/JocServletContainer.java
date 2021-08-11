@@ -47,13 +47,13 @@ public class JocServletContainer extends ServletContainer {
         cleanupOldLogFiles(0);
 
         Globals.sosCockpitProperties = new JocCockpitProperties();
+        Globals.readUnmodifiables();
         try {
             DbInstaller.createTables();
         } catch (Exception e) {
             throw new ServletException(e);
         }
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
-        Globals.readUnmodifiables();
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Globals.setProperties();
         WorkflowPaths.init();
