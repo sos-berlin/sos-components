@@ -1,7 +1,6 @@
 package com.sos.joc.audit.impl;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -161,7 +160,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories, auditLogIds.collect(
                     Collectors.toSet()));
             AuditLog entity = new AuditLog();
-            entity.setAuditLog(getAuditLogItems(dbLayer.getAuditLogs(auditLogDBFilter, withDeployment, auditLogFilter.getLimit())));
+            setAuditLogItems(entity.getAuditLog(), dbLayer.getAuditLogs(auditLogDBFilter, withDeployment, auditLogFilter.getLimit()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -182,16 +181,13 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
         return categories.stream().anyMatch(c -> !CategoryType.CONTROLLER.equals(c));
     }
 
-    private List<AuditLogItem> getAuditLogItems(ScrollableResults sr) throws Exception {
+    private void setAuditLogItems(List<AuditLogItem> auditLogItems, ScrollableResults sr) throws Exception {
         try {
             if (sr != null) {
-                List<AuditLogItem> result = new ArrayList<>();
                 while (sr.next()) {
-                    result.add(((AuditLogDBItem) sr.get(0)).toAuditLogItem());
+                    auditLogItems.add(((AuditLogDBItem) sr.get(0)).toAuditLogItem());
                 }
-                return result;
             }
-            return Collections.emptyList();
         } catch (Exception e) {
             throw e;
         } finally {
