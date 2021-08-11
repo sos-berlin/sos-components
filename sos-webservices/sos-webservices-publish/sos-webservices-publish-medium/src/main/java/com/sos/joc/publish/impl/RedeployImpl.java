@@ -74,14 +74,9 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
                 unsignedRedeployables = latest.stream().peek(item -> {
-    				try { // temp. for compatibility ReadNotice -> ExpectNotice
-    				    if (DeployType.WORKFLOW.intValue().equals(item.getType())) {
-                            item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent().replaceAll(
-                                    "(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\""), StoreDeployments.CLASS_MAPPING.get(item.getType())));
-                        } else {
-                            item.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(item.getInvContent(),
-                                    StoreDeployments.CLASS_MAPPING.get(item.getType())));
-                        }
+    				try {
+                        item.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
+                                StoreDeployments.CLASS_MAPPING.get(item.getType())));
 					} catch (IOException e) {
 						throw new JocException(e);
 					}
