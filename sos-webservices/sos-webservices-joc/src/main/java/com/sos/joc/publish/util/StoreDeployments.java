@@ -158,8 +158,10 @@ public class StoreDeployments {
                     dbLayer.getSession().update(optimistic);
                     // update related inventory configuration to deployed=false 
                     DBItemInventoryConfiguration cfg = dbLayer.getConfiguration(optimistic.getInventoryConfigurationId());
-                    cfg.setDeployed(false);
-                    dbLayer.getSession().update(cfg);
+                    if (cfg != null) {
+                        cfg.setDeployed(false);
+                        dbLayer.getSession().update(cfg);
+                    }
                 }
                 // if not successful the objects and the related controllerId have to be stored 
                 // in a submissions table for reprocessing
