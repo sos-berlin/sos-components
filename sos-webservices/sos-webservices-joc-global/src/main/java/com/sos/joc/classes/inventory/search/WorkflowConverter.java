@@ -265,7 +265,7 @@ public class WorkflowConverter {
                     }
                 }
                 if (job.getExecutable() != null) {
-                    if (ExecutableType.ScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                    if (ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
                         ExecutableScript es = job.getExecutable().cast();
                         if (!SOSString.isEmpty(es.getScript())) {
                             scripts.add(es.getScript());
@@ -400,11 +400,11 @@ public class WorkflowConverter {
         public Set<String> getPostNotices() {
             return postNotices;
         }
-        
+
         public Set<String> getExpectNotices() {
             return expectNotices;
         }
-        
+
         public Set<String> getBoardNames() {
             return Stream.of(postNotices, expectNotices).flatMap(n -> n.stream()).collect(Collectors.toSet());
         }
@@ -464,7 +464,7 @@ public class WorkflowConverter {
                 }
             }
         }
-        
+
         private void handleNoticeInstructions(List<Instruction> instructions) {
             if (instructions == null) {
                 return;

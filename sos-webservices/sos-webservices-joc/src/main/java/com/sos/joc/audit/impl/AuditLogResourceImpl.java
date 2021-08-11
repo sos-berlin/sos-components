@@ -23,6 +23,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.audit.AuditLogDBFilter;
+import com.sos.joc.db.audit.AuditLogDBItem;
 import com.sos.joc.db.audit.AuditLogDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.AuditLog;
@@ -44,13 +45,13 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             initLogging(API_CALL, bytes, accessToken);
             JsonValidator.validateFailFast(bytes, AuditLogFilter.class);
             AuditLogFilter auditLogFilter = Globals.objectMapper.readValue(bytes, AuditLogFilter.class);
-            
+
             String controllerId = auditLogFilter.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAuditLog().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             Set<String> allowedControllers = Collections.emptySet();
             boolean allControllerAllowed = false;
             boolean controllerCategoryIsPermitted = false;
@@ -60,8 +61,8 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
                         availableController, accessToken).getView()).collect(Collectors.toSet());
                 controllerCategoryIsPermitted = !allowedControllers.isEmpty();
-                deployCategoryIsPermitted = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                        availableController, accessToken).getDeployments().getView()).count() > 0L;
+                deployCategoryIsPermitted = Proxies.getControllerDbInstances().keySet().stream().filter(
+                        availableController -> getControllerPermissions(availableController, accessToken).getDeployments().getView()).count() > 0L;
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
                     allControllerAllowed = true;
                 }
@@ -72,17 +73,17 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                     allowedControllers = Collections.singleton(controllerId);
                 }
             }
-              
+
             Set<CategoryType> allowedCategories = EnumSet.allOf(CategoryType.class).stream().filter(c -> {
                 switch (c) {
                 case CONTROLLER:
-                    return true; //depends on ControllerId
+                    return true; // depends on ControllerId
                 case CERTIFICATES:
                     return getJocPermissions(accessToken).getAdministration().getCertificates().getView();
                 case DAILYPLAN:
                     return getJocPermissions(accessToken).getDailyPlan().getView();
                 case DEPLOYMENT:
-                    return true; //depends on ControllerId
+                    return true; // depends on ControllerId
                 case DOCUMENTATIONS:
                     return getJocPermissions(accessToken).getDocumentations().getView();
                 case INVENTORY:
@@ -91,7 +92,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                     return true;
                 }
             }).collect(Collectors.toSet());
-            
+
             if (!controllerCategoryIsPermitted) {
                 allowedCategories.remove(CategoryType.CONTROLLER);
             }
@@ -101,37 +102,35 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             if (auditLogFilter.getCategories() != null && !auditLogFilter.getCategories().isEmpty()) {
                 allowedCategories.retainAll(auditLogFilter.getCategories());
             }
-            
+
             boolean withDeployment = allowedCategories.contains(CategoryType.DEPLOYMENT);
-            
+
             // advanced search with objects or folders
             boolean withFolders = auditLogFilter.getFolders() != null && !auditLogFilter.getFolders().isEmpty();
             boolean withObjectName = auditLogFilter.getObjectName() != null && !auditLogFilter.getObjectName().isEmpty();
             boolean withObjectTypes = auditLogFilter.getObjectTypes() != null && !auditLogFilter.getObjectTypes().isEmpty();
             boolean withAdvancedSearch = withFolders || withObjectName || withObjectTypes;
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
-            
+
             Stream<Long> auditLogIds = Stream.empty();
             if (withAdvancedSearch) {
                 boolean searchInDepHistory = withDeployment;
                 if (withDeployment && withObjectTypes && !auditLogFilter.getObjectTypes().stream().anyMatch(t -> !ObjectType.ORDER.equals(t))) {
-                    searchInDepHistory = false; 
+                    searchInDepHistory = false;
                 }
-                
+
                 auditLogIds = dbLayer.getAuditlogIds(auditLogFilter.getFolders(), auditLogFilter.getObjectTypes(), auditLogFilter.getObjectName());
                 if (searchInDepHistory) {
                     auditLogIds = Stream.concat(auditLogIds, dbLayer.getAuditlogIdsFromDepHistory(auditLogFilter.getFolders(), auditLogFilter
                             .getObjectTypes(), auditLogFilter.getObjectName()));
                 }
             }
-            
-            
-            
+
             if (categoriesWithEmptyControllerIds(allowedCategories)) {
                 if (allControllerAllowed) {
-                    allowedControllers = Collections.emptySet(); 
+                    allowedControllers = Collections.emptySet();
                 } else {
                     if (allowedControllers.isEmpty()) {
                         allowedControllers = Collections.singleton(JocAuditLog.EMPTY_STRING);
@@ -151,14 +150,14 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
                 }
             } else {
                 if (allControllerAllowed) {
-                    allowedControllers = Collections.emptySet(); 
+                    allowedControllers = Collections.emptySet();
                 }
             }
-            
+
             if (EnumSet.allOf(CategoryType.class).size() == allowedCategories.size()) {
-                allowedCategories = Collections.emptySet(); 
+                allowedCategories = Collections.emptySet();
             }
-            
+
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories, auditLogIds.collect(
                     Collectors.toSet()));
             AuditLog entity = new AuditLog();
@@ -175,20 +174,20 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             Globals.disconnect(connection);
         }
     }
-    
+
     private boolean categoriesWithEmptyControllerIds(Set<CategoryType> categories) {
         if (categories == null || categories.isEmpty()) {
             return true;
         }
         return categories.stream().anyMatch(c -> !CategoryType.CONTROLLER.equals(c));
     }
-    
+
     private List<AuditLogItem> getAuditLogItems(ScrollableResults sr) throws Exception {
         try {
             if (sr != null) {
                 List<AuditLogItem> result = new ArrayList<>();
                 while (sr.next()) {
-                    result.add((AuditLogItem) sr.get(0));
+                    result.add(((AuditLogDBItem) sr.get(0)).toAuditLogItem());
                 }
                 return result;
             }
