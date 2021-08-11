@@ -33,14 +33,14 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
             OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
-            
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(
-                    orderFilter.getControllerId(), accessToken).getOrders().getView());
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(orderFilter
+                    .getControllerId(), accessToken).getOrders().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
 
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
@@ -50,32 +50,23 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             OrderVariables orderVariables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
             Variables variables = new Variables();
-            if (listOfOrderVariables != null) {
-                for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) {
-                    switch (VariableType.fromValue(orderVariable.getVariableType())) {
-                    case STRING:
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
-                        break;
-                    case INTEGER:
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable.getVariableValue()));
-                        break;
-                    case DOUBLE:
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable.getVariableValue()));
-                        break;
-                    case BIGDECIMAL:
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable.getVariableValue().replaceAll(",", "")));
-                        break;
-                    case BOOLEAN:
-                        variables.setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable.getVariableValue()));
-                        break;
-                    }
-                }
+            if (listOfOrderVariables != null && listOfOrderVariables.size() > 0) {
+                variables = Globals.objectMapper.readValue(listOfOrderVariables.get(0).getVariableValue(), Variables.class);
+                /*
+                 * for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) { switch (VariableType.fromValue(orderVariable.getVariableType())) { case
+                 * STRING: variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue()); break; case INTEGER:
+                 * variables.setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable.getVariableValue())); break; case DOUBLE:
+                 * variables.setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable.getVariableValue())); break; case
+                 * BIGDECIMAL: variables.setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable.getVariableValue().replaceAll(",",
+                 * ""))); break; case BOOLEAN: variables.setAdditionalProperty(orderVariable.getVariableName(),
+                 * Boolean.parseBoolean(orderVariable.getVariableValue())); break; } }
+                 */
             } else {
                 // TODO @ur throw exception
             }
             orderVariables.setVariables(variables);
             orderVariables.setDeliveryDate(new Date());
-            
+
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(orderVariables));
 
         } catch (JocException e) {

@@ -31,14 +31,8 @@ public class DBItemDailyPlanVariables extends DBItem {
     @Column(name = "[PLANNED_ORDER_ID]", nullable = false)
     private Long plannedOrderId;
 
-    @Column(name = "[VARIABLE_NAME]", nullable = false)
-    private String variableName;
-
     @Column(name = "[VARIABLE_VALUE]", nullable = false)
     private String variableValue;
-
-    @Column(name = "[VARIABLE_TYPE]", nullable = false)
-    private Integer variableType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
@@ -48,7 +42,6 @@ public class DBItemDailyPlanVariables extends DBItem {
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
-    
     public Long getId() {
         return id;
     }
@@ -63,14 +56,6 @@ public class DBItemDailyPlanVariables extends DBItem {
 
     public void setPlannedOrderId(Long plannedOrderId) {
         this.plannedOrderId = plannedOrderId;
-    }
-
-    public String getVariableName() {
-        return variableName;
-    }
-
-    public void setVariableName(String variableName) {
-        this.variableName = variableName;
     }
 
     public String getVariableValue() {
@@ -95,16 +80,6 @@ public class DBItemDailyPlanVariables extends DBItem {
 
     public void setModified(Date modified) {
         this.modified = modified;
-    }
-
-    
-    public Integer getVariableType() {
-        return variableType;
-    }
-
-    
-    public void setVariableType(Integer variableType) {
-        this.variableType = variableType;
     }
 
 }

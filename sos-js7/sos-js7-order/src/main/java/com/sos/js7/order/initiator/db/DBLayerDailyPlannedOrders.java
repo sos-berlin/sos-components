@@ -14,6 +14,8 @@ import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
@@ -366,7 +368,8 @@ public class DBLayerDailyPlannedOrders {
         return sosHibernateSession.getResultList(query);
     }
 
-    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException{
+    public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
+            throws SOSHibernateException {
 
         if (filter.getListOfOrders() != null) {
             List<DBItemDailyPlanWithHistory> resultList = new ArrayList<DBItemDailyPlanWithHistory>();
@@ -389,8 +392,7 @@ public class DBLayerDailyPlannedOrders {
             return getDailyPlanWithHistoryListExecute(filter, limit);
         }
     }
-    
-    
+
     public List<DBItemDailyPlanOrders> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath") + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(q);
@@ -476,23 +478,21 @@ public class DBLayerDailyPlannedOrders {
         return getUniqueDailyPlan(filter);
     }
 
-    public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException {
+    public void storeVariables(PlannedOrder plannedOrder, Long id) throws SOSHibernateException, JsonProcessingException {
         DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
         if (plannedOrder.getFreshOrder().getArguments() != null) {
-            for (Entry<String, Object> variable : plannedOrder.getFreshOrder().getArguments().getAdditionalProperties().entrySet()) {
-                dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
-                dbItemDailyPlanVariables.setPlannedOrderId(id);
-                dbItemDailyPlanVariables.setVariableName(variable.getKey());
-                dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
-                dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase()).value());
-                sosHibernateSession.save(dbItemDailyPlanVariables);
-            }
+            String variablesJson = new ObjectMapper().writeValueAsString(plannedOrder.getFreshOrder().getArguments());
+
+            dbItemDailyPlanVariables.setCreated(JobSchedulerDate.nowInUtc());
+            dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
+            dbItemDailyPlanVariables.setPlannedOrderId(id);
+            dbItemDailyPlanVariables.setVariableValue(variablesJson);
+            sosHibernateSession.save(dbItemDailyPlanVariables);
         }
     }
 
     public Long store(PlannedOrder plannedOrder, Long firstId, Integer nr, Integer size) throws JocConfigurationException,
-            DBConnectionRefusedException, SOSHibernateException, ParseException {
+            DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
 
         DBItemDailyPlanOrders dbItemDailyPlannedOrders = new DBItemDailyPlanOrders();
         dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
@@ -568,7 +568,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
-            ParseException {
+            ParseException, JsonProcessingException {
         store(plannedOrder, null, 0, 0);
     }
 

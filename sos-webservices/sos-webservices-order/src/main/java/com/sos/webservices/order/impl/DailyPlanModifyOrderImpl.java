@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
@@ -266,33 +267,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         schedule.setVariableSets(new ArrayList<VariableSet>());
                         VariableSet variableSet = new VariableSet();
                         Variables variables = new Variables();
-                        variableSet.setVariables(variables);
-                        for (DBItemDailyPlanVariables orderVariable : listOfVariables) {
-                            switch (orderVariable.getVariableType()) {
-                            case 0:
-                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue());
-                                break;
-                            case 1:
-                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Boolean.parseBoolean(orderVariable
-                                        .getVariableValue()));
-                                break;
-                            case 2:
-                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Integer.parseInt(orderVariable
-                                        .getVariableValue()));
-                                break;
-                            case 3:
-                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), new BigDecimal(orderVariable
-                                        .getVariableValue()));
-                            case 4:
-                                variableSet.getVariables().setAdditionalProperty(orderVariable.getVariableName(), Double.parseDouble(orderVariable
-                                        .getVariableValue()));
-                                break;
-
-                            }
+                        if (listOfVariables != null && listOfVariables.size() > 0) {
+                            variables = Globals.objectMapper.readValue(listOfVariables.get(0).getVariableValue(), Variables.class);
                         }
-                        
-                        if (variableSet.getVariables().getAdditionalProperties().size() > 0)
-                        schedule.getVariableSets().add(variableSet);
+                        variableSet.setVariables(variables);
+
+                        if (variableSet.getVariables().getAdditionalProperties().size() > 0) {
+                            schedule.getVariableSets().add(variableSet);
+                        }
 
                         schedule.setCalendars(new ArrayList<AssignedCalendars>());
                         AssignedCalendars assignedCalendars = new AssignedCalendars();
@@ -360,7 +342,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void updateVariables(DailyPlanModifyOrder dailyplanModifyOrder, DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException {
+    private void updateVariables(DailyPlanModifyOrder dailyplanModifyOrder, DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException,
+            IOException {
 
         SOSHibernateSession sosHibernateSession = null;
 
@@ -371,47 +354,57 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
             FilterOrderVariables filter = new FilterOrderVariables();
             filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+            List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
+            DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+            if (listOfVariables.size() > 0) {
+                dbItemDailyPlanVariables = listOfVariables.get(0);
+            } else {
+                dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                dbItemDailyPlanVariables.setCreated(new Date());
+            }
 
             if (dailyplanModifyOrder.getVariables() != null) {
 
-                Map<String, Object> mapOfvariables = new HashMap<String, Object>();
-                List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
-                for (DBItemDailyPlanVariables dbItemDailyPlanVariables : listOfVariables) {
-                    mapOfvariables.put(dbItemDailyPlanVariables.getVariableName(), dbItemDailyPlanVariables.getVariableValue());
+                Variables variables = new Variables();
+                try {
+                    variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+                } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
+                    LOGGER.warn("Illegal value " + dbItemDailyPlanVariables.getVariableValue() + " in DPL_ORDER_VARIABLES for order: "
+                            + dbItemDailyPlanOrder.getOrderId());
+                    variables = new Variables();
+                }
+                Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
+                for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
+                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
                 }
 
-                for (DBItemDailyPlanVariables dbItemDailyPlanVariables : listOfVariables) {
-                    Object value = dailyplanModifyOrder.getVariables().getAdditionalProperties().get(dbItemDailyPlanVariables.getVariableName());
-                    if (value != null) {
-                        dbItemDailyPlanVariables.setVariableValue(value.toString());
-                        sosHibernateSession.update(dbItemDailyPlanVariables);
-                    }
+                for (Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
+                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
                 }
-
-                for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
-
-                    String varName = variable.getKey().toString();
-
-                    if (mapOfvariables.get(varName) == null) {
-
-                        DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-                        dbItemDailyPlanVariables.setCreated(new Date());
-                        dbItemDailyPlanVariables.setModified(new Date());
-                        dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                        dbItemDailyPlanVariables.setVariableName(varName);
-
-                        dbItemDailyPlanVariables.setVariableType(VariableType.valueOf(variable.getValue().getClass().getSimpleName().toUpperCase())
-                                .value());
-                        dbItemDailyPlanVariables.setVariableValue(variable.getValue().toString());
-                        sosHibernateSession.save(dbItemDailyPlanVariables);
-                    }
-                }
+                variables.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+                String variablesJson = Globals.objectMapper.writeValueAsString(variables);
+                dbItemDailyPlanVariables.setVariableValue(variablesJson);
+                dbItemDailyPlanVariables.setModified(new Date());
             }
 
             if (dailyplanModifyOrder.getRemoveVariables() != null) {
-                for (Map.Entry<String, Object> variable : dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().entrySet()) {
-                    filter.setVariableName(variable.getKey().toString());
-                    dbLayerOrderVariables.delete(filter);
+                Variables variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+                Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
+                for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
+                    if (dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {
+                        newAdditionalProperties.put(variable.getKey(), variable.getValue());
+                    }
+                }
+                variables.setAdditionalProperties(newAdditionalProperties);
+                String variablesJson = Globals.objectMapper.writeValueAsString(variables);
+                dbItemDailyPlanVariables.setVariableValue(variablesJson);
+            }
+
+            if (dbItemDailyPlanVariables.getVariableValue() != null && !dbItemDailyPlanVariables.getVariableValue().isEmpty()) {
+                if (listOfVariables.size() > 0) {
+                    sosHibernateSession.update(dbItemDailyPlanVariables);
+                } else {
+                    sosHibernateSession.save(dbItemDailyPlanVariables);
                 }
             }
 

@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -178,18 +179,30 @@ public class PojosTest {
             System.out.println("It's a List!");
         }
         System.out.println(objectMapper.writeValueAsString(vars));
-        String json = "{\"returnCode\":0,\"myString\":\"MyStringValue\",\"myBoolean\":true,\"myNumber\":4711,\"myNumber2\":1.34E2,\"myArray\":[\"hallo\"]}";
+        String json = "{\"returnCode\":0,\"myString\":\"MyStringValue\",\"myBoolean\":true,\"myNumber\":4711,\"myNumber2\":1.34E2,\"myList\": [{\"countryCode\": 4711,\"countryName\": \"Germany\"},{\"countryCode\": \"UK\",\"countryName\": \"United Kingdom\"}]}";
         vars = objectMapper.readValue(json, Variables.class);
         System.out.println(vars.getAdditionalProperties().get("myString").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber").getClass());
         System.out.println(vars.getAdditionalProperties().get("myNumber2").getClass());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").getClass());
-        System.out.println(vars.getAdditionalProperties().get("myArray").getClass());
+        System.out.println(vars.getAdditionalProperties().get("myList").getClass());
         System.out.println(vars.getAdditionalProperties().get("myString").toString());
         System.out.println(vars.getAdditionalProperties().get("myNumber").toString());
         System.out.println(vars.getAdditionalProperties().get("myNumber2").toString());
         System.out.println(vars.getAdditionalProperties().get("myBoolean").toString());
-        System.out.println(vars.getAdditionalProperties().get("myArray").toString());
+        
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> x = (List<Map<String, Object>>) vars.getAdditionalProperties().get("myList");
+        
+        x.forEach(m -> {
+            m.forEach((k, v) -> {
+                System.out.println(k + ": " + v.getClass() + " -> " + v.toString());
+            });
+        });
+        
+        
+ 
+        //System.out.println(vars.getAdditionalProperties().get("myList").toString());
 
     }
     

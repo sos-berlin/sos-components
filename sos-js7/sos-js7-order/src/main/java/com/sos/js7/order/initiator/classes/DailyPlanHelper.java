@@ -213,7 +213,7 @@ public class DailyPlanHelper {
             String periodBegin) {
         String orderName = "";
         if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
-            orderName = schedule.getPath();
+            orderName = Paths.get(schedule.getPath()).getFileName().toString();
         }else {
             orderName = variableSet.getOrderName();
         }

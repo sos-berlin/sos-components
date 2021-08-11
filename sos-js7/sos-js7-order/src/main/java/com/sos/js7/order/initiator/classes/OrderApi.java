@@ -2,6 +2,7 @@ package com.sos.js7.order.initiator.classes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +18,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
+import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
@@ -39,7 +42,9 @@ import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import io.vavr.control.Either;
 import js7.data.order.OrderId;
 import js7.data.value.BooleanValue;
+import js7.data.value.ListValue;
 import js7.data.value.NumberValue;
+import js7.data.value.ObjectValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
@@ -50,29 +55,15 @@ import reactor.core.publisher.Flux;
 public class OrderApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
+    
+   
+    
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
-        Map<String, Value> arguments = new HashMap<>();
-        if (order.getArguments() != null) {
-            Map<String, Object> a = order.getArguments().getAdditionalProperties();
-            for (String key : a.keySet()) {
-                Object val = a.get(key);
-                if (val instanceof String) {
-                    arguments.put(key, StringValue.of((String) val));
-                } else if (val instanceof Boolean) {
-                    arguments.put(key, BooleanValue.of((Boolean) val));
-                } else if (val instanceof Integer) {
-                    arguments.put(key, NumberValue.of((Integer) val));
-                } else if (val instanceof Long) {
-                    arguments.put(key, NumberValue.of((Long) val));
-                } else if (val instanceof Double) {
-                    arguments.put(key, NumberValue.of(BigDecimal.valueOf((Double) val)));
-                } else if (val instanceof BigDecimal) {
-                    arguments.put(key, NumberValue.of((BigDecimal) val));
-                }
-            }
-        }
+        
+        Map<String,Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
+        
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
