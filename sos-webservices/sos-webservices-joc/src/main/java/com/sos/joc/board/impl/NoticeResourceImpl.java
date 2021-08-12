@@ -29,10 +29,10 @@ import js7.data.controller.ControllerCommand;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.proxy.javaapi.JControllerApi;
 
-@Path("board/notice")
+@Path("notice")
 public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResource {
 
-    private static final String API_CALL = "./board/notice/";
+    private static final String API_CALL = "./notice/";
     private enum Action {
         DELETE, POST
     }

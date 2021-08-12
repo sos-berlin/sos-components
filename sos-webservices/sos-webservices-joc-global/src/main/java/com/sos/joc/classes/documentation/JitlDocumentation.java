@@ -80,7 +80,7 @@ public class JitlDocumentation {
                         DBItemXmlEditorConfiguration item = new DBItemXmlEditorConfiguration();
                         item.setId(null);
                         item.setType("NOTIFICATION");
-                        item.setName("notification.xml");
+                        item.setName(notificationPath.getFileName().toString());
                         item.setSchemaLocation("Notification_configuration_v1.0.xsd");
                         item.setConfigurationDraft(null);
                         item.setConfigurationDraftJson(null);
@@ -95,32 +95,13 @@ public class JitlDocumentation {
                         //session.beginTransaction();
                         session.save(item);
                         //session.commit();
+                        LOGGER.info(notificationPath.getFileName().toString() + " is inserted in database");
                     }
                 }
             }
         } catch (Exception e) {
             Globals.rollback(session);
             LOGGER.warn("Problem inserting notification.xml in database", e);
-        }
-    }
-    
-    private static void updateVersion(SOSHibernateSession session) {
-        try {
-            session.beginTransaction();
-            DBItemJocVariable item = session.get(DBItemJocVariable.class, "version");
-            if (item == null) {
-                item = new DBItemJocVariable();
-                item.setName("version");
-                item.setTextValue(Globals.curVersion);
-                session.save(item);
-            } else {
-                item.setTextValue(Globals.curVersion);
-                session.update(item);
-            }
-            //session.commit();
-        } catch (Exception e) {
-            Globals.rollback(session);
-            LOGGER.warn("Problem updating version in database", e);
         }
     }
     

@@ -65,7 +65,7 @@ import reactor.core.publisher.Flux;
 public class ControllerEditResourceImpl extends JOCResourceImpl implements IControllerEditResource {
 
     private static final String API_CALL_REGISTER = "./controller/register";
-    private static final String API_CALL_DELETE = "./controller/cleanup";
+    private static final String API_CALL_DELETE = "./controller/unregister";
     private static final String API_CALL_TEST = "./controller/test";
 
     @Override
@@ -333,9 +333,14 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             Globals.disconnect(connection);
         }
     }
-
+    
     @Override
     public JOCDefaultResponse deleteController(String accessToken, byte[] filterBytes) {
+        return unregisterController(accessToken, filterBytes); //alias for cleanup
+    }
+
+    @Override
+    public JOCDefaultResponse unregisterController(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);

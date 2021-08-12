@@ -487,7 +487,7 @@ public class Globals {
             }
             versionsStr += versionsComplete[1].replaceFirst("SNAPSHOT", "00").replaceFirst("RC(\\d)", "$1").replaceFirst(" ", "99").replaceFirst(
                     "^(\\d)$", "0$1");
-            return Integer.valueOf(versionsStr).compareTo(Integer.valueOf(curVersionsStr));
+            return Integer.valueOf(curVersionsStr).compareTo(Integer.valueOf(versionsStr));
         } catch (NumberFormatException e) {
             return 1;
         }
