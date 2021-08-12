@@ -52,6 +52,9 @@ public class DBItemInventoryAgentInstance extends DBItem {
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
     
+    @Column(name = "[CERTIFICATE]", nullable = true)
+    private String certificate;
+    
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -155,6 +158,14 @@ public class DBItemInventoryAgentInstance extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+    
+    public String getCertificate() {
+        return certificate;
+    }
+    
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 
 }

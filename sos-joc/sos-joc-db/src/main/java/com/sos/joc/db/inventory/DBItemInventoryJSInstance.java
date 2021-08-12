@@ -65,6 +65,9 @@ public class DBItemInventoryJSInstance extends DBItem {
     @Type(type = "numeric_boolean")
     private boolean isPrimary;
 
+    @Column(name = "[CERTIFICATE]", nullable = true)
+    private String certificate;
+
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
@@ -166,6 +169,14 @@ public class DBItemInventoryJSInstance extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+    
+    public String getCertificate() {
+        return certificate;
+    }
+    
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 
 }
