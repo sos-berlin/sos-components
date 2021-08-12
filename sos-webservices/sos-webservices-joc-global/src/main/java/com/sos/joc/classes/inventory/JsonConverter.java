@@ -127,8 +127,8 @@ public class JsonConverter {
     private static void convertForkList(ForkList fl, com.sos.sign.model.instruction.ForkList sfl) {
         sfl.setChildren("$" + fl.getChildren());
         sfl.setChildToArguments("(x) => $x");
-        //sfl.setChildToId("(x, i) => $i + \"-\" + $x." + fl.getChildToId());
-        sfl.setChildToId("(x) => $x." + fl.getChildToId());
+        sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x." + fl.getChildToId());
+        //sfl.setChildToId("(x) => $x." + fl.getChildToId());
     }
     
     public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {

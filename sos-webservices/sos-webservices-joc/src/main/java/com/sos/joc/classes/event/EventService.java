@@ -316,6 +316,7 @@ public class EventService {
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
+                    LOGGER.info(opt.get().toString());
                     String mainOrderId = orderId.string().substring(0, 24);
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
@@ -327,6 +328,7 @@ public class EventService {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     }
                 } else {
+                    LOGGER.info("Order is not in current state");
                     if (evt instanceof OrderDeleted$) {
                         String mainOrderId = orderId.string().substring(0, 24);
                         if (orders.containsKey(mainOrderId)) {
