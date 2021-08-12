@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<hibernate-configuration>
+	<session-factory>
+		<property name="hibernate.dialect">org.hibernate.dialect.SQLServer2005Dialect</property>
+        <property name="hibernate.connection.driver_class">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+        <property name="hibernate.connection.url">jdbc:sqlserver://localhost:1433;sendStringParametersAsUnicode=false;selectMethod=cursor;databaseName=js7_x</property>
+        <property name="hibernate.connection.username">jobscheduler</property>
+        <property name="hibernate.connection.password">jobscheduler</property>
+    
+        <property name="hibernate.show_sql">false</property>
+		<property name="hibernate.format_sql">true</property>
+		<property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+		<property name="javax.persistence.validation.mode">none</property>
+        
+        <property name="hibernate.sos.mssql_lock_timeout">-1</property>
+        
+		<!-- Hikari Connection Pool -->
+		<!--
+        <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+		<property name="hibernate.hikari.maximumPoolSize">10</property>
+		-->
+	</session-factory>
+</hibernate-configuration>

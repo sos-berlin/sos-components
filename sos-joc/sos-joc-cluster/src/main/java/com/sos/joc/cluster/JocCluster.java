@@ -386,6 +386,7 @@ public class JocCluster {
             }
             item = new DBItemJocCluster();
             item.setId(JocClusterConfiguration.IDENTIFIER);
+            item.setHeartBeat(new Date());
             item.setMemberId(currentMemberId);
 
             dbLayer.beginTransaction();
@@ -422,6 +423,7 @@ public class JocCluster {
 
                     if (update) {
                         item.setMemberId(currentMemberId);
+                        item.setHeartBeat(new Date());
                         item.setSwitchMemberId(null);
                         item.setSwitchHeartBeat(null);
 
@@ -563,6 +565,7 @@ public class JocCluster {
                         handler.perform(mode, PerformType.STOP, configurations);
                     }
                     item.setMemberId(newMemberId);
+                    item.setHeartBeat(new Date());
                     // item.setSwitchMemberId(null);
                     // item.setSwitchHeartBeat(null);
 
@@ -586,6 +589,7 @@ public class JocCluster {
                     if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
                         // set switchMember because before "switch" the active cluster instance must be stopped
                         // and the current instance is not an active instance
+                        item.setHeartBeat(new Date());
                         item.setSwitchMemberId(newMemberId);
                         item.setSwitchHeartBeat(new Date());
 
@@ -617,6 +621,7 @@ public class JocCluster {
             item.setStartupMode(mode.name());
 
             if (item.getSwitchMemberId().equals(currentMemberId)) {
+                item.setHeartBeat(new Date());
                 item.setSwitchMemberId(null);
                 item.setSwitchHeartBeat(null);
 
@@ -645,7 +650,7 @@ public class JocCluster {
                         }
                         // item.setSwitchMemberId(null);
                         // item.setSwitchHeartBeat(null);
-
+                        item.setHeartBeat(new Date());
                         dbLayer.beginTransaction();
                         dbLayer.getSession().update(item);
                         dbLayer.commit();
@@ -668,6 +673,7 @@ public class JocCluster {
             }
 
             dbLayer.beginTransaction();
+            item.setHeartBeat(new Date());
             dbLayer.getSession().update(activeMemberHandleConfigurationGlobalsChanged(item));
             dbLayer.commit();
         }

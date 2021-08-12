@@ -40,7 +40,7 @@ public class AuditLogDBLayerTest {
             // Collection<Long> auditLogIds
 
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(session);
-            sr = dbLayer.getAuditLogs(new AuditLogDBFilter(aFilter, null, null, null), true, limit);
+            sr = dbLayer.getAuditLogs(new AuditLogDBFilter(aFilter, null, null, null), limit);
             int size = 0;
             while (sr.next()) {
                 AuditLogDBItem item = (AuditLogDBItem) sr.get(0);
