@@ -1,21 +1,13 @@
 package com.sos.joc.wizard.impl;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.Path;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +15,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
- 
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.util.SOSString;
 import com.sos.commons.xml.SOSXML;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -37,8 +31,6 @@ import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.job.RunningTaskLog;
-import com.sos.joc.model.job.RunningTaskLogFilter;
 import com.sos.joc.model.wizard.Job;
 import com.sos.joc.model.wizard.JobWizardFilter;
 import com.sos.joc.model.wizard.Jobs;
@@ -51,8 +43,8 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
     private static final String API_CALL_JOBS = "./wizard/jobs";
     private static final String API_CALL_JOB = "./wizard/job";
-    private static final String XSL_FILE = "scheduler_job_documentation_fragment_v1.1.xsl";
     private static final Logger LOGGER = LoggerFactory.getLogger(WizardResourceImpl.class);
+    private static final String XSL_FILE = "scheduler_job_documentation_fragment_v1.1.xsl";
 
     @Override
     public JOCDefaultResponse postJobs(final String accessToken, final byte[] filterBytes) {
@@ -134,6 +126,10 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                 throw new DBMissingDataException(String.format("The documentation '%s' is missing", body.getDocPath()));
             }
 
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer transformer = factory.newTransformer(new StreamSource(getClass().getResourceAsStream("/" + XSL_FILE)));
+            transformer.setParameter("lang", "en");
+
             Node jobNode = SOSXML.newXPath().selectNode(SOSXML.parse(jitlDoc.getContent()), "//job");
             Node scriptNode = SOSXML.newXPath().selectNode(SOSXML.parse(jitlDoc.getContent()), "//script");
 
@@ -164,6 +160,10 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                     if (paramNode.getAttributes().getNamedItem("required") != null) {
                         param.setRequired("true".equals(paramNode.getAttributes().getNamedItem("required").getNodeValue()));
                     }
+
+                    Node descriptionNode = SOSXML.newXPath().selectNode(paramNode, "note");
+                    param.setDescription(getDescription(transformer, descriptionNode));
+
                     params.add(param);
 
                 } catch (Throwable e) {
@@ -185,7 +185,28 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
     }
 
-   
+    private String transform(Transformer transformer, Node note) throws TransformerException {
+        final StringWriter writer = new StringWriter();
+        StreamSource src = new StreamSource(new StringReader(note.getTextContent()));
+        StreamResult result = new StreamResult(writer);
+        transformer.transform(src, result);
+        return writer.toString();
+    }
 
+    private String getDescription(Transformer transformer, Node note) {
+        String paramDoc = null;
+        try {
+            if (note != null) {
+                paramDoc = transform(transformer, note);
+                if (paramDoc != null) {
+                    paramDoc = paramDoc.replaceAll(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
+                    paramDoc = "<div class=\"jitl-job-param\">" + paramDoc.trim() + "</div>";
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn(e.toString());
+        }
+        return paramDoc;
+    }
 
 }
