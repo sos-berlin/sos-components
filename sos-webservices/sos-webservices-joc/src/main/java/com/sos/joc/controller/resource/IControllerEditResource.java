@@ -24,6 +24,12 @@ public interface IControllerEditResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse deleteController(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
     
+	@POST
+    @Path("unregister")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse unregisterController(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
+    
     @POST
     @Path("test")
 	@Consumes(MediaType.APPLICATION_JSON)
