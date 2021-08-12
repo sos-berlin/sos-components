@@ -160,7 +160,7 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories, auditLogIds.collect(
                     Collectors.toSet()));
             AuditLog entity = new AuditLog();
-            setAuditLogItems(entity.getAuditLog(), dbLayer.getAuditLogs(auditLogDBFilter, withDeployment, auditLogFilter.getLimit()));
+            setAuditLogItems(entity.getAuditLog(), dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

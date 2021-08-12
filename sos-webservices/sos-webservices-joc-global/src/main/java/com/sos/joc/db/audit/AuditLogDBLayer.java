@@ -46,8 +46,8 @@ public class AuditLogDBLayer {
         }
     }
 
-    public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter, boolean withDeploymentJoin, Integer limit)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public ScrollableResults getAuditLogs(AuditLogDBFilter auditLogDBFilter, Integer limit) throws DBConnectionRefusedException,
+            DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("select ");
             hql.append("al.id as id ");
@@ -60,18 +60,8 @@ public class AuditLogDBLayer {
             hql.append(",al.parameters as parameters ");
             hql.append(",al.timeSpent as timeSpent ");
             hql.append(",al.ticketLink as ticketLink ");
-            if (withDeploymentJoin) {
-                hql.append(",dh.commitId as commitId ");
-            }
             hql.append("from ").append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al ");
-            if (withDeploymentJoin) {
-                hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-                hql.append("on al.id=dh.auditlogId ");
-            }
             hql.append(getWhere(auditLogDBFilter, "al."));
-            // if (withDeploymentJoin) {
-            // hql.append(" group by al, dh.commitId");
-            // }
             hql.append(" order by al.id desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString(), AuditLogDBItem.class);
 
