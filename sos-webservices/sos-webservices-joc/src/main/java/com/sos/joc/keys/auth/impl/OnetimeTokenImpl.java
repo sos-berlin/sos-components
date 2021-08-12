@@ -13,6 +13,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.auth.resource.IOnetimeToken;
 import com.sos.joc.keys.auth.token.OnetimeTokens;
@@ -46,19 +48,40 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             List<String> agentIds = createOnetimeTokenFilter.getAgentIds();
             Date validUntil = JobSchedulerDate.getDateFrom(createOnetimeTokenFilter.getValidUntil(), createOnetimeTokenFilter.getTimezone());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_CREATE);
+            InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(hibernateSession);
+            List<DBItemInventoryJSInstance> controllerClusterInstances = dbLayer.getInventoryInstancesByControllerId(controllerId);
+            
             OnetimeTokensResponse response = new OnetimeTokensResponse();
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
+            // delete invalidated tokens
+            cleanupInvalidatedTokens();
+            List<OnetimeToken> invalidatedTokens = onetimeTokens.getTokens().stream()
+                    .filter(token -> token.getValidUntil().getTime() < Date.from(Instant.now()).getTime()).collect(Collectors.toList());
+            onetimeTokens.getTokens().removeAll(invalidatedTokens);
+            
             if(controllerId != null && !controllerId.isEmpty()) {
                 // first delete existing token(s)
                 List<OnetimeToken> tokensToDelete = onetimeTokens.getTokens().stream().filter(token -> controllerId.equals(token.getControllerId())).collect(Collectors.toList());
                 onetimeTokens.getTokens().removeAll(tokensToDelete);
                 // then create new token
-                OnetimeToken token = new OnetimeToken();
-                token.setValidUntil(validUntil);
-                token.setControllerId(controllerId);
-                token.setUUID(UUID.randomUUID().toString());
-                onetimeTokens.getTokens().add(token);
-                response.getTokens().add(token);
+                if (controllerClusterInstances != null && controllerClusterInstances.size() > 1) {
+                    for (DBItemInventoryJSInstance member : controllerClusterInstances) {
+                        OnetimeToken token = new OnetimeToken();
+                        token.setValidUntil(validUntil);
+                        token.setControllerId(controllerId);
+                        token.setUUID(UUID.randomUUID().toString());
+                        token.setURI(member.getClusterUri());
+                        onetimeTokens.getTokens().add(token);
+                        response.getTokens().add(token);
+                    }
+                } else {
+                    OnetimeToken token = new OnetimeToken();
+                    token.setValidUntil(validUntil);
+                    token.setControllerId(controllerId);
+                    token.setUUID(UUID.randomUUID().toString());
+                    onetimeTokens.getTokens().add(token);
+                    response.getTokens().add(token);
+                }
             }
             if (agentIds != null && !agentIds.isEmpty()) {
                 // first delete existing token(s)
@@ -134,10 +157,10 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
     private void cleanupInvalidatedTokens() {
         Date now = Date.from(Instant.now());
         OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
-        List<OnetimeToken> invalidated = onetimeTokens.getTokens().stream().filter(token -> token.getValidUntil().getTime() <= now.getTime())
+        List<OnetimeToken> invalidated = onetimeTokens.getTokens().stream().filter(token -> token.getValidUntil().getTime() < now.getTime())
                 .collect(Collectors.toList());
         if (!invalidated.isEmpty()) {
-            invalidated.stream().forEach(token -> onetimeTokens.getTokens().remove(token));
+            onetimeTokens.getTokens().removeAll(invalidated);
         }
     }
 

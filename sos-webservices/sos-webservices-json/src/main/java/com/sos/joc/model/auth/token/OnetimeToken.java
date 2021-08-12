@@ -22,6 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "agentId",
     "controllerId",
     "UUID",
+    "URI",
     "validUntil"
 })
 public class OnetimeToken {
@@ -50,6 +51,14 @@ public class OnetimeToken {
      */
     @JsonProperty("UUID")
     private String uUID;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("URI")
+    private String uRI;
     /**
      * timestamp
      * <p>
@@ -127,6 +136,28 @@ public class OnetimeToken {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("URI")
+    public String getURI() {
+        return uRI;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("URI")
+    public void setURI(String uRI) {
+        this.uRI = uRI;
+    }
+
+    /**
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
@@ -150,12 +181,12 @@ public class OnetimeToken {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentId", agentId).append("controllerId", controllerId).append("uUID", uUID).append("validUntil", validUntil).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("controllerId", controllerId).append("uUID", uUID).append("uRI", uRI).append("validUntil", validUntil).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(validUntil).append(agentId).append(controllerId).append(uUID).toHashCode();
+        return new HashCodeBuilder().append(validUntil).append(agentId).append(controllerId).append(uUID).append(uRI).toHashCode();
     }
 
     @Override
@@ -167,7 +198,7 @@ public class OnetimeToken {
             return false;
         }
         OnetimeToken rhs = ((OnetimeToken) other);
-        return new EqualsBuilder().append(validUntil, rhs.validUntil).append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(uUID, rhs.uUID).isEquals();
+        return new EqualsBuilder().append(validUntil, rhs.validUntil).append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(uUID, rhs.uUID).append(uRI, rhs.uRI).isEquals();
     }
 
 }
