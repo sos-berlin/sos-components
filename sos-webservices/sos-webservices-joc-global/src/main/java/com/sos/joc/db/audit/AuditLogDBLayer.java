@@ -80,6 +80,7 @@ public class AuditLogDBLayer {
 
     public List<AuditLogDetailItem> getDetails(Long auditLogId) {
         try {
+            // TODO select new ok when without join otherwise use entity class as second parameter in getResultSet
             StringBuilder hql = new StringBuilder("select new ").append(AuditLogDBDetailItem.class.getName());
             hql.append("(path, type, orderId) from ");
             hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG_DETAILS);

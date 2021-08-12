@@ -17,6 +17,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -30,6 +31,10 @@ import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.HistoryStateText;
 
 public class JobHistoryDBLayer {
+
+    /** result rerun interval in seconds */
+    private static final long RERUN_INTERVAL = 1;
+    private static final int MAX_RERUNS = 3;
 
     private SOSHibernateSession session;
     private HistoryFilter filter;
@@ -58,7 +63,7 @@ public class JobHistoryDBLayer {
             Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP)
                     .append(" where historyOrderId = :historyOrderId").toString());
             query.setParameter("historyOrderId", historyOrderId);
-            return session.getResultList(query);
+            return executeResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -74,7 +79,7 @@ public class JobHistoryDBLayer {
                 query.setMaxResults(filter.getLimit());
             }
 
-            return session.scroll(query);
+            return executeScroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -109,7 +114,7 @@ public class JobHistoryDBLayer {
             StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(where).append(
                     " order by startTime desc");
             Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
-            return session.scroll(query);
+            return executeScroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -128,7 +133,7 @@ public class JobHistoryDBLayer {
             } else {
                 Query<String> query = createQuery(new StringBuilder().append("select workflowFolder from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP)
                         .append(getOrderStepsWhere()).toString());
-                List<String> result = session.getResultList(query);
+                List<String> result = executeResultList(query);
                 if (result == null) {
                     return 0L;
                 } else {
@@ -152,7 +157,7 @@ public class JobHistoryDBLayer {
                 query.setMaxResults(filter.getLimit());
             }
             filter.setMainOrder(isMainOrder);
-            return session.getResultList(query);
+            return executeResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -171,7 +176,7 @@ public class JobHistoryDBLayer {
             }
             filter.setMainOrder(isMainOrder);
 
-            return session.scroll(query);
+            return executeScroll(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -185,7 +190,7 @@ public class JobHistoryDBLayer {
             hql.append("where parentId=:orderId");
             Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
             query.setParameter("orderId", orderId);
-            return session.getResultList(query);
+            return executeResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -199,7 +204,7 @@ public class JobHistoryDBLayer {
             hql.append("where historyOrderId=:historyOrderId");
             Query<DBItemHistoryOrderState> query = session.createQuery(hql.toString());
             query.setParameter("historyOrderId", historyOrderId);
-            return session.getResultList(query);
+            return executeResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -220,7 +225,7 @@ public class JobHistoryDBLayer {
                         .getName()).append("(count(id), controllerId, workflowFolder) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
                                 getOrdersWhere()).append(" group by controllerId, workflowFolder").toString());
 
-                List<HistoryGroupedSummary> result = session.getResultList(query);
+                List<HistoryGroupedSummary> result = executeResultList(query);
                 if (result != null) {
                     return result.stream().filter(s -> isPermittedForFolder(s.getFolder(), permittedFoldersMap.get(s.getControllerId()))).mapToLong(
                             s -> s.getCount()).sum();
@@ -254,7 +259,7 @@ public class JobHistoryDBLayer {
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
             }
-            List<JobsPerAgent> result = session.getResultList(query);
+            List<JobsPerAgent> result = executeResultList(query);
             if (result == null) {
                 return Collections.emptyMap();
             } else {
@@ -485,6 +490,62 @@ public class JobHistoryDBLayer {
             }
         }
         return query;
+    }
+
+    private <T> List<T> executeResultList(Query<T> query) throws SOSHibernateException {
+        List<T> result = null;
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
+            try {
+                result = session.getResultList(query);
+                run = false;
+            } catch (Exception e) {
+                if (count >= MAX_RERUNS) {
+                    throw e;
+                } else {
+                    Throwable te = SOSHibernate.findLockException(e);
+                    if (te == null) {
+                        throw e;
+                    } else {
+                        try {
+                            Thread.sleep(RERUN_INTERVAL * 1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private <T> ScrollableResults executeScroll(Query<T> query) throws SOSHibernateException {
+        ScrollableResults result = null;
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
+            try {
+                result = session.scroll(query);
+                run = false;
+            } catch (Exception e) {
+                if (count >= MAX_RERUNS) {
+                    throw e;
+                } else {
+                    Throwable te = SOSHibernate.findLockException(e);
+                    if (te == null) {
+                        throw e;
+                    } else {
+                        try {
+                            Thread.sleep(RERUN_INTERVAL * 1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
 }
