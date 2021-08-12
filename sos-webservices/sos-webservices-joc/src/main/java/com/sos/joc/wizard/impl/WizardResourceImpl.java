@@ -19,6 +19,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -128,8 +129,8 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
             TransformerFactory factory = TransformerFactory.newInstance();
             Transformer transformer = factory.newTransformer(new StreamSource(getClass().getResourceAsStream("/" + XSL_FILE)));
-            transformer.setParameter("lang", "en");
-
+ 
+            
             Node jobNode = SOSXML.newXPath().selectNode(SOSXML.parse(jitlDoc.getContent()), "//job");
             Node scriptNode = SOSXML.newXPath().selectNode(SOSXML.parse(jitlDoc.getContent()), "//script");
 
@@ -161,8 +162,10 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         param.setRequired("true".equals(paramNode.getAttributes().getNamedItem("required").getNodeValue()));
                     }
 
-                    Node descriptionNode = SOSXML.newXPath().selectNode(paramNode, "note");
-                    param.setDescription(getDescription(transformer, descriptionNode));
+                    try{
+                        //Node descriptionNode = SOSXML.newXPath().selectNode(paramNode, "note");
+                        param.setDescription(getDescription(transformer, paramNode));
+                    }catch(Throwable e){};
 
                     params.add(param);
 
@@ -182,12 +185,11 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     private String transform(Transformer transformer, Node note) throws TransformerException {
         final StringWriter writer = new StringWriter();
-        StreamSource src = new StreamSource(new StringReader(note.getTextContent()));
+        DOMSource src = new DOMSource(note);
         StreamResult result = new StreamResult(writer);
         transformer.transform(src, result);
         return writer.toString();
