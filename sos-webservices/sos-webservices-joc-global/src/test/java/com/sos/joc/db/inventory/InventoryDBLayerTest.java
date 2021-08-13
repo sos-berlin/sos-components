@@ -58,6 +58,7 @@ public class InventoryDBLayerTest {
         }
     }
 
+    @Ignore
     @Test
     public void testGetLastDeploymentHistory() throws Exception {
         SOSHibernateFactory factory = null;
