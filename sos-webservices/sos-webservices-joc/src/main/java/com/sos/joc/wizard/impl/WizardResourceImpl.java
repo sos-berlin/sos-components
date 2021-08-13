@@ -17,7 +17,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -53,11 +52,11 @@ import com.sos.joc.model.wizard.Param;
 import com.sos.joc.wizard.resource.IWizardResource;
 import com.sos.schema.JsonValidator;
 
-@Path("inventory/wizzard")
+@Path("inventory/wizard")
 public class WizardResourceImpl extends JOCResourceImpl implements IWizardResource {
 
-    private static final String API_CALL_JOBS = "./wizzard/jobs";
-    private static final String API_CALL_JOB = "./wizzard/job";
+    private static final String API_CALL_JOBS = "./wizard/jobs";
+    private static final String API_CALL_JOB = "./wizard/job";
     private static final Logger LOGGER = LoggerFactory.getLogger(WizardResourceImpl.class);
     private static final String JITLJOB_NAMESPACE = "http://www.sos-berlin.com/schema/js7_job_documentation_v1.1";
 
@@ -241,31 +240,32 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
         return xpath;
     }
 
-    private static String transform(Transformer transformer, Node param) throws TransformerException {
-        final StringWriter writer = new StringWriter();
-        DOMSource src = new DOMSource(param);
-        StreamResult result = new StreamResult(writer);
-        transformer.transform(src, result);
-        return writer.toString();
+    private static String transform(Transformer transformer, Node param) {
+        try {
+            final StringWriter writer = new StringWriter();
+            DOMSource src = new DOMSource(param);
+            StreamResult result = new StreamResult(writer);
+            transformer.transform(src, result);
+            return writer.toString();
+        } catch (Throwable e) {
+            LOGGER.warn(e.toString());
+            return "";
+        }
     }
 
     private static String getDescription(Transformer transformer, Node param) {
         String paramDoc = null;
-        try {
-            if (param != null && transformer != null) {
-                NodeList paramChildren = param.getChildNodes();
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < paramChildren.getLength(); i++) {
-                    sb.append(transform(transformer, paramChildren.item(i)));
-                }
-                paramDoc = sb.toString();
-                if (paramDoc != null && !paramDoc.isEmpty()) {
-                    paramDoc = paramDoc.replaceAll(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
-                    paramDoc = "<div class=\"jitl-job-param\">" + paramDoc.trim() + "</div>";
-                }
+        if (param != null && transformer != null) {
+            NodeList paramChildren = param.getChildNodes();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < paramChildren.getLength(); i++) {
+                sb.append(transform(transformer, paramChildren.item(i)));
             }
-        } catch (Throwable e) {
-            LOGGER.warn(e.toString());
+            paramDoc = sb.toString();
+            if (paramDoc != null && !paramDoc.isEmpty()) {
+                paramDoc = paramDoc.replaceAll(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
+                paramDoc = "<div class=\"jitl-job-param\">" + paramDoc.trim() + "</div>";
+            }
         }
         return paramDoc;
     }
