@@ -104,7 +104,7 @@ public class InventoryDBLayerTest {
             String folder = "/";
             boolean recursive = true;
             Collection<Integer> configTypes = null;// Collections.singletonList(ConfigurationType.WORKFLOW.intValue());
-            Boolean onlyValidObjects = null;
+            Boolean onlyValidObjects = false;
             boolean forTrash = false;
 
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(folder, recursive, configTypes, onlyValidObjects, forTrash);
