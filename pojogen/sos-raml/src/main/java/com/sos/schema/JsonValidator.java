@@ -137,7 +137,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
             put("com.sos.joc.model.inventory.path.PathFilter","inventory/path/pathFilter-schema.json");
             put("com.sos.joc.model.inventory.search.RequestSearchFilter","inventory/search/request-search-filter-schema.json");
-            put("JobWizzardFilter", "wizzard/wizzard-job-filter-schema.json");
+            put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");
