@@ -35,6 +35,7 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.JocError;
@@ -48,6 +49,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
 import com.sos.joc.model.security.permissions.JocPermissions;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 
 public class JOCResourceImpl {
 
@@ -477,4 +479,5 @@ public class JOCResourceImpl {
     
     
 
+  
 }
