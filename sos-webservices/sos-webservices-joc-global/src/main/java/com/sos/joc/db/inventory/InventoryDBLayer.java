@@ -304,21 +304,22 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
             hql.append("on ic.id=irc.cid ");
         }
-        hql.append("where ");
+        List<String> where = new ArrayList<>();
         if (recursive) {
             if (!"/".equals(folder)) {
-                hql.append("(ic.folder=:folder or ic.folder like :likeFolder) ");
-            } else {
-                hql.append("1=1 ");
+                where.add("(ic.folder=:folder or ic.folder like :likeFolder)");
             }
         } else {
-            hql.append("ic.folder=:folder ");
+            where.add("ic.folder=:folder");
         }
         if (onlyValidObjects == Boolean.TRUE) {
-            hql.append("and ic.valid = 1 ");
+            where.add("ic.valid = 1");
         }
         if (configTypes != null && !configTypes.isEmpty()) {
-            hql.append("and ic.type in (:configTypes) ");
+            where.add("ic.type in (:configTypes)");
+        }
+        if (where.size() > 0) {
+            hql.append("where ").append(String.join(" and ", where)).append(" ");
         }
         if (!forTrash) {
             hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.deleted,ic.deployed,ic.released");
@@ -366,25 +367,44 @@ public class InventoryDBLayer extends DBLayer {
     public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Long> configIds)
             throws SOSHibernateException {
         if (configIds != null && !configIds.isEmpty()) {
-            StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-            hql.append("(");
-            hql.append("ic");
-            hql.append(",dh.id as deploymentId,dh.commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
-            hql.append(") ");
+            StringBuilder hql = new StringBuilder("select ");
+            hql.append("ic.id as icId");
+            hql.append(",ic.type as icType");
+            hql.append(",ic.path as icPath");
+            hql.append(",ic.name as icName");
+            hql.append(",ic.folder as icFolder");
+            hql.append(",ic.title as icTitle");
+            hql.append(",ic.valid as icValid");
+            hql.append(",ic.deleted as icDeleted");
+            hql.append(",ic.deployed as icDeployed");
+            hql.append(",ic.released as icReleased");
+            hql.append(",ic.auditLogId as icAuditLogId");
+            hql.append(",ic.created as icCreated");
+            hql.append(",ic.modified as icModified");
+            hql.append(",dh.id as dhId");
+            hql.append(",dh.commitId as dhCommitId");
+            hql.append(",dh.version as dhVersion");
+            hql.append(",dh.operation as dhOperation");
+            hql.append(",dh.deploymentDate as dhDeploymentDate");
+            hql.append(",dh.path as dhPath");
+            hql.append(",dh.controllerId as dhControllerId ");
             hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("where ic.id in (:configIds) ");
             hql.append("and (dh.state = :state or dh.id is null)");
 
-            Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
+            Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryDeployablesTreeFolderItem.class);
             query.setParameterList("configIds", configIds);
             query.setParameter("state", DeploymentState.DEPLOYED.value());
+
             List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
             if (result != null && !result.isEmpty()) {
                 Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
                         .reversed());
-                return result.stream().collect(Collectors.groupingBy(InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(
+                return result.stream().map(e -> {
+                    return e.map();
+                }).collect(Collectors.groupingBy(InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(
                         InventoryDeployablesTreeFolderItem::getDeployment, Collectors.toCollection(() -> new TreeSet<>(comp)))));
             }
         }
