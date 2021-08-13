@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<sos.engine.version>2.0.0-alpha.20210810</sos.engine.version>
+		<sos.engine.version>2.0.0-alpha.20210813</sos.engine.version>
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->
 		<jackson.version>2.9.10</jackson.version>
