@@ -2,6 +2,7 @@ package com.sos.joc.db.inventory;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +101,13 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder("/", true);
+            String folder = "/";
+            boolean recursive = true;
+            Collection<Integer> configTypes = null;// Collections.singletonList(ConfigurationType.WORKFLOW.intValue());
+            Boolean onlyValidObjects = null;
+            boolean forTrash = false;
+
+            List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(folder, recursive, configTypes, onlyValidObjects, forTrash);
             for (InventoryTreeFolderItem item : items) {
                 LOGGER.info(SOSString.toString(item.toResponseFolderItem()));
             }
@@ -138,11 +145,11 @@ public class InventoryDBLayerTest {
             Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map = dbLayer.getConfigurationsWithAllDeployments(configIds);
             for (Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> entry : map.entrySet()) {
                 LOGGER.info(SOSString.toString(entry.getKey()));
-                
+
             }
-            //for (InventoryDeployablesTreeFolderItem item : items) {
-            //    LOGGER.info(SOSString.toString(item));
-            //}
+            // for (InventoryDeployablesTreeFolderItem item : items) {
+            // LOGGER.info(SOSString.toString(item));
+            // }
             LOGGER.info("SIZE=" + map.size());
             session.commit();
         } catch (Exception e) {

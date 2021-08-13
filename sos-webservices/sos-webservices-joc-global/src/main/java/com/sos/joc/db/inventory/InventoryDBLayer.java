@@ -320,8 +320,9 @@ public class InventoryDBLayer extends DBLayer {
         if (configTypes != null && !configTypes.isEmpty()) {
             hql.append("and ic.type in (:configTypes) ");
         }
-        hql.append("group by ic.id");
-
+        if (!forTrash) {
+            hql.append("group by ic.id,ic.name,ic.title,ic.valid,ic.type,ic.path,ic.deleted,ic.deployed,ic.released");
+        }
         Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryTreeFolderItem.class);
         if (recursive) {
             if (!"/".equals(folder)) {
