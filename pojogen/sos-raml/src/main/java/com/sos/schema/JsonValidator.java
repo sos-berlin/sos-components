@@ -116,7 +116,7 @@ public class JsonValidator {
             put("StoreConfiguration", "xmleditor/store/store-configuration-schema.json");
             put("ValidateConfiguration", "xmleditor/validate/validate-configuration-schema.json");
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
-
+            
             put("TreeFilter", "tree/treeFilter-schema.json");
             put("SecurityConfiguration", "security/security-configuration-schema.json");
             put("SecurityConfigurationRole", "security/role-schema.json");
@@ -137,6 +137,7 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
             put("com.sos.joc.model.inventory.path.PathFilter","inventory/path/pathFilter-schema.json");
             put("com.sos.joc.model.inventory.search.RequestSearchFilter","inventory/search/request-search-filter-schema.json");
+            put("JobWizzardFilter", "wizzard/wizzard-job-filter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
             put("com.sos.joc.model.publish.GenerateKeyFilter", "publish/generateKey-schema.json");

@@ -76,23 +76,6 @@ public class DbInstaller {
                     
                     if (updateIsNecessary(session) || Globals.sosCockpitProperties.getProperty("create_db_tables", false)) {
                         create(session, dbms.name(), sqlsFolderParent);
-
-//                        try {
-//                            session.beginTransaction();
-//                            DBItemJocVariable item = session.get(DBItemJocVariable.class, "version");
-//                            if (item == null) {
-//                                item = new DBItemJocVariable();
-//                                item.setName("version");
-//                                item.setTextValue(Globals.curVersion);
-//                                session.save(item);
-//                            } else {
-//                                item.setTextValue(Globals.curVersion);
-//                                session.update(item);
-//                            }
-//                            session.commit();
-//                        } catch (Exception e) {
-//                            LOGGER.warn("Problem updating version in database", e);
-//                        }
                     }
 
                 }
@@ -186,9 +169,6 @@ public class DbInstaller {
     private static boolean updateIsNecessary(SOSHibernateSession session) {
         boolean update = true;
         try {
-//            Query<String> query = session.createQuery("select textValue from " + DBLayer.DBITEM_JOC_VARIABLE + " where name=:name");
-//            query.setParameter("name", "version");
-//            String version = query.getSingleResult();
             DBItemJocVariable item = session.get(DBItemJocVariable.class, "version");
             String version = item.getTextValue();
             if (version != null) {

@@ -7,13 +7,7 @@
     required="false" 
     DataType="java.lang.Boolean">
 	
-	<indexterm index="recursive, parameter" display="false"></indexterm>
-    <indexterm index="parameter, recursive" display="false"></indexterm>
-	   
-	<indexterm index="file_spec, parameter" display="false"></indexterm>
-    <indexterm index="parameter, file_spec" display="false"></indexterm>
-	   
-    <note>
+	<note>
         <title>Include subfolders in operation</title>
         <p>
             This parameter specifies wether files from subdirectories should be included recursively.

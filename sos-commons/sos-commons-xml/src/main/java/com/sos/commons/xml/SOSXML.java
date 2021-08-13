@@ -6,8 +6,10 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -120,7 +122,11 @@ public class SOSXML {
         return new SOSXML().new SOSXMLXPath();
     }
 
-    private static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
+    public static DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
+        return getDocumentBuilder(false);
+    }
+    
+    public static DocumentBuilder getDocumentBuilder(boolean namespaceAware) throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -128,7 +134,7 @@ public class SOSXML {
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         factory.setXIncludeAware(false);
         factory.setExpandEntityReferences(false);
-        factory.setNamespaceAware(false);
+        factory.setNamespaceAware(namespaceAware);
         factory.setValidating(false);
 
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -139,7 +145,7 @@ public class SOSXML {
     public class SOSXMLXPath {
 
         private XPath xpath = XPathFactory.newInstance().newXPath();
-
+        
         public Node selectNode(Element element, String expression) throws SOSXMLXPathException {
             return selectNode((Node) element, expression);
         }

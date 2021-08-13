@@ -89,6 +89,22 @@ public class DocumentationDBLayer {
         }
     }
     
+    public DBItemDocumentation getDocumentationByRef(String reference) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append(" where docRef = :reference");
+            Query<DBItemDocumentation> query = session.createQuery(sql.toString());
+            query.setParameter("reference", reference);
+            query.setMaxResults(1);
+            return session.getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public String getUniqueDocRef(String reference) throws SOSHibernateException {
         if (reference == null || reference.isEmpty()) {
             return null;
@@ -152,8 +168,7 @@ public class DocumentationDBLayer {
         }
     }
     
-    public List<DBItemDocumentation> getDocumentations(Collection<String> paths) throws DBConnectionRefusedException,
-    DBInvalidDataException {
+    public List<DBItemDocumentation> getDocumentations(Collection<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
         return getDocumentations(paths, false);
     }
 

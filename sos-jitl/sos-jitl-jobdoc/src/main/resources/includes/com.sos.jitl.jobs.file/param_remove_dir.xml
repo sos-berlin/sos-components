@@ -8,10 +8,7 @@
     default_value="false" 
     required="false">
 
-	<indexterm index="remote_dir, parameter" display="false"></indexterm>
-    <indexterm index="parameter, remote_dir" display="false"></indexterm>
-
-    <note language="en">
+	<note">
         <title>delete empty subfolder</title>
         <p>
             If enabled empty subdirectories are removed.

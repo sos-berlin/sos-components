@@ -7,9 +7,6 @@
        DataType="java.lang.String"
        usewith="replacing">
 
-	<indexterm index="replacement, parameter" display="false"></indexterm>
-    <indexterm index="parameter, replacement" display="false"></indexterm>
-	   
 	<note>
 		<title>String for renaming Filenames </title>
         <p>

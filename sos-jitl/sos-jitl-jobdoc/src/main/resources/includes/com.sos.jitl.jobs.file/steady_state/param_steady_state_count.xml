@@ -7,7 +7,7 @@
     DataType="java.lang.Integer"
     usewith="steady_state_interval">
     
-    <note language="en">
+    <note>
         <title>Check the completeness of a file (steady state).Maximum Number of Checkpoints</title>
         <p>
             The value of this option specifies the number of retries for to check the steady state of a file.

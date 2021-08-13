@@ -7,7 +7,7 @@
     DataType="java.lang.Integer" 
     usewith="steady_state_count">
     
-    <note language="en">
+    <note>
         <title>Temporal distance between checkpoints</title>
         <p>The value of this option defines the temporal distance in seconds between two checkpoints.</p>
     </note>

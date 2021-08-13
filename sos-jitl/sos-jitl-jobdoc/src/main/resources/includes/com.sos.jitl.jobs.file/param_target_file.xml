@@ -6,10 +6,7 @@
 	name="target_file"
 	required="true">
 	
-    <indexterm index="target_file, parameter" display="false"></indexterm>
-    <indexterm index="parameter, target_file" display="false"></indexterm>
-	
-	<note>
+    <note>
         <title>Target-file or -folder</title>
 		<p>Target file or directory</p>
 		<p>

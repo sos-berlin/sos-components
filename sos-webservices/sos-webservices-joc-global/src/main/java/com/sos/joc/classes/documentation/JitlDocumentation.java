@@ -20,15 +20,15 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.documentation.DBItemDocumentation;
 import com.sos.joc.db.documentation.DocumentationDBLayer;
-import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
 
 public class JitlDocumentation {
 
     private static final String DOCUS = "/sos-jitl-jobdoc.zip";
     private static final String NOTIFICATION = "/notification.xml";
-    private static final String FOLDER = "/sos";
-    private static final String XSLT = FOLDER + "/jitl-jobs/js7_job_documentation_v1.1.xsl";
+    private static final String MAINFOLDER = "/sos";
+    public static final String FOLDER = MAINFOLDER + "/jitl-jobs";
+    public static final String XSLT = FOLDER + "/js7_job_documentation_v1.1.xsl";
     private static final Logger LOGGER = LoggerFactory.getLogger(JitlDocumentation.class);
 
     public static void saveOrUpdate() {
@@ -43,7 +43,7 @@ public class JitlDocumentation {
                 try {
                     DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
                     if (updateIsNecessary(dbLayer)) {
-                        DocumentationHelper.readZipFileContent(stream, FOLDER, dbLayer);
+                        DocumentationHelper.readZipFileContent(stream, MAINFOLDER, dbLayer);
                         LOGGER.info("JITL-Job documentations are inserted/updated.");
                     } else {
                         LOGGER.info("JITL-Job documentations are already up to date.");

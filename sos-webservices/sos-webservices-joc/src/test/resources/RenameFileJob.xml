@@ -1,0 +1,1441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"
+		?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+   <job xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        name="RenameFileJob"
+        title="Rename one or more files">
+        	<script language="java" java_class="com.sos.jitl.jobs.file.RenameFileJob" resource="1"/>
+    </job>
+   <configuration>
+      <params order="1" id="return_parameter">
+         <params xmlns:xi="http://www.w3.org/2001/XInclude"
+                 xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                 xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd"
+                 xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/return/main.xml">
+
+            <param name="file_operations_result_set" DataType="java.lang.String" required="false"
+                   usewith="file_operations_result_set_size"
+                   xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/return/param_fileoperations_result_set.xml">
+	
+	              <note>
+		                <title>The result of the operation as a list of items</title>
+	              </note>
+            </param>
+            <param name="file_operations_result_set_size" DataType="java.lang.Integer"
+                   required="false"
+                   usewith="file_operations_result_set"
+                   xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/return/param_fileoperations_result_set_size.xml">
+    
+               <note>
+                  <title>The amount of hits in the result set of the operation</title>
+               </note>
+            </param>
+         </params>
+      </params>
+      <params id="job_parameter">
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="source_file"
+                required="true"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_source_file.xml">
+
+            <note>
+               <title>File or Folder to be monitored</title>
+               <p>Monitored file or directory.</p>
+            </note>
+            <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_param_mask_substitution.xml">
+               <p>
+            Supports masks for substitution in the file name
+            and directory
+            name with format strings that are
+            enclosed by brackets
+            ([
+            and
+            ]).
+            The following format strings are supported:
+        </p>
+
+               <p>
+                  <code>
+                [date:date format]
+            </code>
+               </p>
+               <p>
+        
+            date format
+            must be a valid Java data format string,
+            e.g.
+            yyyyMMddHHmmss
+            ,
+            yyyy-MM-dd.HHmmss
+            etc.
+        </p>
+                <p>
+            For further information on valid values for a dateformat string see
+            <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a>
+               </p>
+        
+               <p>
+            An example:
+        </p>
+               <p>
+                  <code>
+                &lt;param name="file"
+                value="sample/hello[date:yyyyMMdd].txt"
+                /&gt; </code>
+               </p>
+               <p>
+            On 2050-12-31 the parameter
+            <code>file</code>
+            contains the value
+            <code>"sample/hello20501231.txt"</code>
+            .
+        </p>
+            </note>
+            <!--
+    <xi:include href="./note_param_substitution.xml" parse="xml" />
+    -->
+</param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="target_file"
+                required="true"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_target_file.xml">
+	
+            <indexterm index="target_file, parameter" display="false"/>
+            <indexterm index="parameter, target_file" display="false"/>
+	
+	           <note>
+               <title>Target-file or -folder</title>
+		             <p>Target file or directory</p>
+		             <p>
+			If the
+			<paramref>target_file</paramref>
+			is not specified, then the directory path of
+			<paramref>source_file</paramref>
+			is used as target.
+		</p>
+	           </note>
+            <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_param_mask_substitution.xml">
+               <p>
+            Supports masks for substitution in the file name
+            and directory
+            name with format strings that are
+            enclosed by brackets
+            ([
+            and
+            ]).
+            The following format strings are supported:
+        </p>
+
+               <p>
+                  <code>
+                [date:date format]
+            </code>
+               </p>
+               <p>
+        
+            date format
+            must be a valid Java data format string,
+            e.g.
+            yyyyMMddHHmmss
+            ,
+            yyyy-MM-dd.HHmmss
+            etc.
+        </p>
+                <p>
+            For further information on valid values for a dateformat string see
+            <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a>
+               </p>
+        
+               <p>
+            An example:
+        </p>
+               <p>
+                  <code>
+                &lt;param name="file"
+                value="sample/hello[date:yyyyMMdd].txt"
+                /&gt; </code>
+               </p>
+               <p>
+            On 2050-12-31 the parameter
+            <code>file</code>
+            contains the value
+            <code>"sample/hello20501231.txt"</code>
+            .
+        </p>
+            </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="file_spec"
+                DefaultValue=".*"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_file_spec_fileop.xml">
+
+	           <note>
+		             <title>Regular Expression for filename filtering</title>
+		             <p>
+			Regular Expression for file filtering.
+			The behaviour is CASE_INSENSITIVE.
+		</p>
+		             <p>
+			Only effective if the parameter
+			<paramref>source_file</paramref>
+			is a directory.
+		</p>
+	           </note>
+	           <items xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/notes/note_regexp_remarks.xml">
+	              <note>
+		                <p>
+		Some remarks on regular expression, used in JobScheduler and YADE.
+		</p>
+		                <p>
+			A regular expression is not a
+			<a href="http://en.wikipedia.org/wiki/Wildcard_character#Files_and_directories">wildcard</a>.
+			To get an impression of the differences one have a look on the meaning of the wildcard *.txt, which will
+			select all filenames with the filename-extension ".txt".
+			A regular expression to match, e.g. works the same way, this "wildcard" must look like "^.*\.txt$".
+			That looks a little bit strange but it is much more flexible and powerfull on filtering filenames
+			than the concept of wildcards, if one want to filter more complex names or pattern.
+		</p>
+		                <p>
+	        The general syntax of an
+	        <a href="http://en.wikipedia.org/wiki/Regular_expression">regular expression</a>, also referred to as regex or regexp,
+	        is described
+	        <a href="http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html">
+	        here</a>.
+	        It is different to other RegExp definitions, e.g. as for Perl.
+		</p>
+	                 <p>
+	    	For further information on regular expressions see
+	        <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+	                 </p>
+	                 <p>
+	    	As an extension of regular expression the [date:] variable is supported. Using this feature it is possible to create a regexp, which is
+	    	depending on the date with is defined in the date-format.
+	    </p>
+	                 <p>
+	    	If you want (only part of the regex) to be case sensitive , then you have the option to use
+	    	the (?-i) and [optionally] (?i) mode modifiers:    (?-i)G[a-b](?i).*
+		</p>
+		                <p>
+			If you're dealing with Unicode characters besides ASCII, check whether or not your regex engine properly supports them.
+		</p>
+	              </note>
+
+            </items>
+            <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_regexp_example_replace.xml">
+               <p>
+            Examples for regular expressions used for replacing:
+        </p>
+               <p>
+                  <table class="explanation"> 
+                     <tr>
+                        <th>
+                           <code>source_file</code>
+                        </th>
+                        <th>
+                           <code>file_spec</code>
+                        </th>
+                        <th>
+                           <code>replacing</code>
+                        </th>
+                        <th>
+                           <code>replacement</code>
+                        </th>
+                        <th>Example Input</th>
+                        <th>Output</th>
+                        <th>Comment</th>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>~</td>
+                        <td>""</td>
+                        <td>hallo.dat~</td>
+                        <td>hallo.dat</td>
+                        <td>-</td>
+                     </tr>
+                     <tr>
+                        <td>a.txt</td>
+                        <td>-</td>
+                        <td>[.]txt</td>
+                        <td>_2011-11-24.txt</td>
+                        <td>-</td>
+                        <td>a_2011-11-24.txt</td>
+                        <td>-</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>.*</td>
+                        <td>[filename:] [date:yyyy-MM-dd].dat</td>
+                        <td>a.txt</td>
+                        <td>a.txt2011-11-24.dat</td>
+                        <td>[filename:] and [date:] will be substituted after file has
+                        been replaced
+                    </td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*[.]txt</td>
+                        <td>a.*?b</td>
+                        <td>world</td>
+                        <td>a.1.b.txt.b</td>
+                        <td>world.txt.b</td>
+                        <td>.*? : ungreedy usage of .*</td>
+                     </tr>
+                     <tr>
+                        <td>abcdefg.txt</td>
+                        <td>-</td>
+                        <td>^(ab)cde(fg)[.]txt</td>
+                        <td>123;[date:yyyy-MM-dd]</td>
+                        <td>-</td>
+                        <td>123cde2011-11-24.txt</td>
+                        <td>; : separator between multiple replacements</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*dat$</td>
+                        <td>(ab)_c[0-9]d_(fg)</td>
+                        <td>group1;group2</td>
+                        <td>ab_c1d_fg. ab_c2d_fg.dat</td>
+                        <td>group1_c1d_group2. ab_c2d_fg.dat</td>
+                        <td>Only the first pattern match is replaced</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>^(?:aa|bb)_. {2}_([0-9]+_[0-9]+)$</td>
+                        <td>tail</td>
+                        <td>aa_QU_061205_222334</td>
+                        <td>aa_QU_tail</td>
+                        <td>(?:...) : "?:" specifies a non capturing group. The file will
+                        not be replaced.
+                    </td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>FILE.txt</td>
+                        <td>.*</td>
+                        <td>[filename:lowercase]_[filename:uppercase]_[filename:]</td>
+                        <td>FILE.txt</td>
+                        <td>file.txt_FILE.TXT_FILE.txt</td>
+                        <td>-</td>
+                     </tr>
+                  </table>
+                  <table class="explanation" style="margin-top:10px">
+                     <tr>
+                        <th>
+                           <code>source_file</code>
+                        </th>
+                        <th>
+                           <code>target_file</code>
+                        </th>
+                        <th>
+                           <code>file_spec</code>
+                        </th>
+                        <th>
+                           <code>create_dir</code>
+                        </th>
+                        <th>
+                           <code>replacing</code>
+                        </th>
+                        <th>
+                           <code>replacement</code>
+                        </th>
+                        <th>Example input</th>
+                        <th>Output</th>
+                        <th>Comment</th>
+                     </tr>
+                     <tr>
+                        <td>aaa/bbb/</td>
+                        <td>[directory:]/[date:yyyyMMdd]/</td>
+                        <td>hello.txt</td>
+                        <td>true</td>
+                        <td>[.]txt</td>
+                        <td>[date:yyyy].txt</td>
+                        <td>aaa/bbb/hello.txt</td>
+                        <td>aaa/bbb/20070316/hello2007.txt</td>
+                        <td>If the directory aaa/bbb/20070316 does not yet exist it will
+                        be created
+                    </td>
+                     </tr>
+                  </table>
+               </p>
+               <p>
+            For further information see
+            <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+               </p>
+               <p>
+            For further information on date-patterns see:
+            <a href="http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html">java.util.regex.Pattern</a>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="gracious"
+                DataType="java.lang.Boolean"
+                default_value="false"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_gracious.xml">
+	           <note>
+		             <title>Specify error message tolerance</title>
+		             <p>
+			Enables or disables error messages that are caused by an empty result-set, which is the result of an operation, executed by the job.
+    	</p>
+	           </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="max_file_age"
+                default_value="0"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_max_file_age.xml">
+
+            <note>
+               <title>Maximum age of a file</title>
+               <p>
+            Specifies the maximum age of a file.
+            If a file is older, then it is deemed not to exist, it will be not included in the result-list.
+        </p>
+            </note>
+            <note language="en"
+                  xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_file_age_values.xml">
+	              <p>Valid values:</p>
+ 	             <table class="explanation"> 
+		                <tr>
+			                  <th>Value</th>
+			                  <th>Description</th>
+		                </tr>
+		                <tr>
+			                  <td>0</td>
+			                  <td>The value of the parameter has no effect and the parameter is not part of the filter.</td>
+		                </tr>
+		                <tr>
+			                  <td>seconds</td>
+			                  <td>no of seconds.</td>
+		                </tr>
+		                <tr>
+			                  <td>hours:minutes</td>
+			                  <td>01:15 is to read as "1 hour and 15 minutes".</td>
+		                </tr>
+		                <tr>
+			                  <td>hours:minutes:seconds</td>
+			                  <td>01:15:10 is to read as "1 hour, 15 minutes and 10 seconds".</td>
+		                </tr>
+	              </table>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="min_file_age"
+                default_value="0"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_min_file_age.xml">
+            <note>
+               <title>minimum age of a file</title>
+               <p>
+        	Specifies the minimum age of a files.
+        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+        </p>
+   	        </note>
+   	        <note language="en"
+                  xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_file_age_values.xml">
+	              <p>Valid values:</p>
+ 	             <table class="explanation"> 
+		                <tr>
+			                  <th>Value</th>
+			                  <th>Description</th>
+		                </tr>
+		                <tr>
+			                  <td>0</td>
+			                  <td>The value of the parameter has no effect and the parameter is not part of the filter.</td>
+		                </tr>
+		                <tr>
+			                  <td>seconds</td>
+			                  <td>no of seconds.</td>
+		                </tr>
+		                <tr>
+			                  <td>hours:minutes</td>
+			                  <td>01:15 is to read as "1 hour and 15 minutes".</td>
+		                </tr>
+		                <tr>
+			                  <td>hours:minutes:seconds</td>
+			                  <td>01:15:10 is to read as "1 hour, 15 minutes and 10 seconds".</td>
+		                </tr>
+	              </table>
+            </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="min_file_size"
+                default_value="-1"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_min_file_size.xml">
+	           <note>
+		             <title>minimum size of one or multiple files </title>
+		             <p>
+			Specifies the minimum size of one or multiple files in bytes:
+			should the size of one of the files fall below this value, then it is not included in the result list of the operation.
+		</p>
+	           </note>
+	           <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_file_size_values.xml">
+	              <p>valid values for file size are</p>
+		             <table class="explanation">
+			               <tr>
+				                 <th>Value</th>
+				                 <th>Description</th>
+			               </tr>
+			               <tr>
+				                 <td>-1</td>
+				                 <td>The value of the parameter has no effect and the parameter is not part of the filter.</td>
+			               </tr>
+			               <tr>
+				                 <td>number</td>
+				                 <td>a number stand for the size in byte, e.g. 40 means 40 bytes.</td>
+			               </tr>
+			               <tr>
+				                 <td>numberKB</td>
+				                 <td>a number with the chars "KB" stand for the size in kilobyte.</td>
+			               </tr>
+			               <tr>
+				                 <td>numberMB</td>
+				                 <td>a number with the chars "MB" stand for the size in megabyte.</td>
+			               </tr>
+                  <tr>
+                     <td>numberGB</td>
+                     <td>a number with the chars "GB" stand for the size in gigabyte.</td>
+                  </tr>
+		             </table>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="skip_first_files"
+                DataType="java.lang.Integer"
+                default_value="0"
+                required="false"
+                exclude="skip_last_files"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_skip_first_files.xml">
+
+            <note>
+               <title>number of files to remove from the top of the result-set</title>
+               <p>
+            The number of files are removed from the beginning of the set
+            resulting by<paramref>sort_criteria</paramref>,<paramref>sort_order</paramref>
+            These files are excluded from further operations.
+        </p>
+               <p>
+            The result set is sorted according to the parameters:
+        </p>
+               <p>
+                  <ul>
+                     <li>
+                        <paramref>sort_criteria</paramref>
+                     </li>
+                     <li>
+                        <paramref>sort_order</paramref>
+                     </li>
+                  </ul>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="skip_last_files"
+                DataType="java.lang.Integer"
+                default_value="0"
+                required="false"
+                exclude="skip_first_files"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_skip_last_files.xml">
+
+            <note>
+               <title>number of files to remove from the top of the result-set</title>
+               <p>
+            The number of files are removed from the beginning of the set
+            resulting by<paramref>sort_criteria</paramref>,<paramref>sort_order</paramref>
+            These files are excluded from further operations.
+        </p>
+               <p>
+            The result set is sorted according to the parameters:
+        </p>
+               <p>
+                  <ul>
+                     <li>
+                        <paramref>sort_criteria</paramref>
+                     </li>
+                     <li>
+                        <paramref>sort_order</paramref>
+                     </li>
+                  </ul>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="count_files"
+                DataType="java.lang.Boolean"
+                default_value="false"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_count_files.xml">
+	
+	           <note>
+		             <title>Return the size of resultset</title>
+		             <p>
+			If this parameter is set true "<code>true</code>" the number of matches
+			is returned in the order parameter "<paramref>fileoperations_result_set_size</paramref>".
+		</p>
+	           </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd"
+                name="create_dir"
+                DataType="java.lang.Boolean"
+                default_value="false"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_create_dir.xml">
+    
+	           <note>
+		             <title>Create folder</title>
+		             <p>
+			If enabled the folder, which is specified as value of the parameter
+			<paramref>target_file</paramref>, is checked for existence.
+			If <paramref>target_file</paramref> does not exist
+			<paramref>target_file</paramref> will be created as a directory.
+		</p>
+	           </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="recursive"
+                DefaultValue="false"
+                required="false"
+                DataType="java.lang.Boolean"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_recursive.xml">
+	
+	           <indexterm index="recursive, parameter" display="false"/>
+            <indexterm index="parameter, recursive" display="false"/>
+	   
+	           <indexterm index="file_spec, parameter" display="false"/>
+            <indexterm index="parameter, file_spec" display="false"/>                                                                                                                                                                                                                                                                
+            <note>
+               <title>Include subfolders in operation</title>
+               <p>
+            This parameter specifies wether files from subdirectories should be included recursively.
+        </p>
+               <p>
+            Only effective if <paramref>file</paramref> is a directory.
+        </p>
+               <p>
+            Regular expression matches apply to files from subdirectories
+            as specified by the parameter <paramref>file_spec</paramref>.
+        </p>
+            </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="overwrite"
+                DefaultValue="true"
+                required="false"
+                DataType="java.lang.Boolean"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_overwrite.xml">
+	
+	           <note>
+		             <title>Overwrite existing files</title>
+		             <p>
+			This parameter specifies wether existing files can be overwritten.
+		</p>
+	           </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="replacing"
+                required="false"
+                DataType="java.lang.String"
+                usewith="replacement"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_replacing.xml">
+	
+	           <indexterm index="replacement, parameter" display="false"/>
+            <indexterm index="parameter, replacement" display="false"/>
+	   
+	           <note>
+		             <title>Regular expression for renaming Files</title>
+		             <p>
+			Regular expression for filename replacement with
+			the value of the parameter <paramref>replacement</paramref>.
+		</p>
+		             <p>
+			If the expression matches the filename then the groups found are replaced.
+		</p>
+		             <p>
+			a) For replacement "capturing groups" are used. Only the content of the
+			capturing groups is replaced.
+		</p>
+		             <p>
+			Replacements are separated by a semicolon ";". Example:
+		</p>
+		             <p>
+			               <paramref>replacing</paramref> = (1)abc(12)def(.*)
+			<br/>
+			               <paramref>replacement</paramref> = A;BB;CCC
+			<br/>
+			Name of original file: 1abc12def123.txt
+			<br/>
+			Name after renaming: AabcBBdefCCC
+		</p>
+		             <p>
+			b) If no "capturing groups" are specified then the entire match is
+			replaced. Example:
+			<br/>
+			               <paramref>replacing</paramref> = Hello
+			<br/>
+			               <paramref>replacement</paramref> = 1234
+			<br/>
+			Input file: Hello_World.txt
+			<br/>
+			Output file: 1234_World.txt
+		</p>
+		             <p>
+			Requires the parameter <paramref>replacement</paramref> to be specified.
+		</p>
+	           </note>
+	           <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_regexp_example_replace.xml">
+               <p>
+            Examples for regular expressions used for replacing:
+        </p>
+               <p>
+                  <table class="explanation"> 
+                     <tr>
+                        <th>
+                           <code>source_file</code>
+                        </th>
+                        <th>
+                           <code>file_spec</code>
+                        </th>
+                        <th>
+                           <code>replacing</code>
+                        </th>
+                        <th>
+                           <code>replacement</code>
+                        </th>
+                        <th>Example Input</th>
+                        <th>Output</th>
+                        <th>Comment</th>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>~</td>
+                        <td>""</td>
+                        <td>hallo.dat~</td>
+                        <td>hallo.dat</td>
+                        <td>-</td>
+                     </tr>
+                     <tr>
+                        <td>a.txt</td>
+                        <td>-</td>
+                        <td>[.]txt</td>
+                        <td>_2011-11-24.txt</td>
+                        <td>-</td>
+                        <td>a_2011-11-24.txt</td>
+                        <td>-</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>.*</td>
+                        <td>[filename:] [date:yyyy-MM-dd].dat</td>
+                        <td>a.txt</td>
+                        <td>a.txt2011-11-24.dat</td>
+                        <td>[filename:] and [date:] will be substituted after file has
+                        been replaced
+                    </td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*[.]txt</td>
+                        <td>a.*?b</td>
+                        <td>world</td>
+                        <td>a.1.b.txt.b</td>
+                        <td>world.txt.b</td>
+                        <td>.*? : ungreedy usage of .*</td>
+                     </tr>
+                     <tr>
+                        <td>abcdefg.txt</td>
+                        <td>-</td>
+                        <td>^(ab)cde(fg)[.]txt</td>
+                        <td>123;[date:yyyy-MM-dd]</td>
+                        <td>-</td>
+                        <td>123cde2011-11-24.txt</td>
+                        <td>; : separator between multiple replacements</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*dat$</td>
+                        <td>(ab)_c[0-9]d_(fg)</td>
+                        <td>group1;group2</td>
+                        <td>ab_c1d_fg. ab_c2d_fg.dat</td>
+                        <td>group1_c1d_group2. ab_c2d_fg.dat</td>
+                        <td>Only the first pattern match is replaced</td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>.*</td>
+                        <td>^(?:aa|bb)_. {2}_([0-9]+_[0-9]+)$</td>
+                        <td>tail</td>
+                        <td>aa_QU_061205_222334</td>
+                        <td>aa_QU_tail</td>
+                        <td>(?:...) : "?:" specifies a non capturing group. The file will
+                        not be replaced.
+                    </td>
+                     </tr>
+                     <tr>
+                        <td>./temp</td>
+                        <td>FILE.txt</td>
+                        <td>.*</td>
+                        <td>[filename:lowercase]_[filename:uppercase]_[filename:]</td>
+                        <td>FILE.txt</td>
+                        <td>file.txt_FILE.TXT_FILE.txt</td>
+                        <td>-</td>
+                     </tr>
+                  </table>
+                  <table class="explanation" style="margin-top:10px">
+                     <tr>
+                        <th>
+                           <code>source_file</code>
+                        </th>
+                        <th>
+                           <code>target_file</code>
+                        </th>
+                        <th>
+                           <code>file_spec</code>
+                        </th>
+                        <th>
+                           <code>create_dir</code>
+                        </th>
+                        <th>
+                           <code>replacing</code>
+                        </th>
+                        <th>
+                           <code>replacement</code>
+                        </th>
+                        <th>Example input</th>
+                        <th>Output</th>
+                        <th>Comment</th>
+                     </tr>
+                     <tr>
+                        <td>aaa/bbb/</td>
+                        <td>[directory:]/[date:yyyyMMdd]/</td>
+                        <td>hello.txt</td>
+                        <td>true</td>
+                        <td>[.]txt</td>
+                        <td>[date:yyyy].txt</td>
+                        <td>aaa/bbb/hello.txt</td>
+                        <td>aaa/bbb/20070316/hello2007.txt</td>
+                        <td>If the directory aaa/bbb/20070316 does not yet exist it will
+                        be created
+                    </td>
+                     </tr>
+                  </table>
+               </p>
+               <p>
+            For further information see
+            <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+               </p>
+               <p>
+            For further information on date-patterns see:
+            <a href="http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html">java.util.regex.Pattern</a>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="replacement"
+                required="false"
+                DataType="java.lang.String"
+                usewith="replacing"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_replacement.xml">
+
+	           <indexterm index="replacement, parameter" display="false"/>
+            <indexterm index="parameter, replacement" display="false"/>
+	   
+	           <note>
+		             <title>String for renaming Filenames </title>
+               <p>
+            String for replacement of matching character sequences within file names that are specified with the
+            value of the parameter <paramref>replacing</paramref>.
+        </p>
+               <p>
+            If multiple "capturing groups" are to be replaced then one replacement string per group has to be specified. 
+            These strings are separated by a semicolon ";":
+        </p>
+               <p>
+            replacement: aa;[filename:];bb
+        </p>
+               <p>
+              Supports masks for substitution in the file name with format strings that are enclosed with
+              <em>[</em>
+              and
+              <em>]</em>
+              .
+              The following format strings are supported:
+        </p>
+			            <list type="unordered">
+                  <item>
+					                <p>
+						                  <code>
+							[date:
+							<em>date format</em>
+							]
+						</code>
+					                </p>
+				              </item>
+				              <item>
+					                <p>
+						                  <em>date format</em>
+						must be a valid Java data format string, e.g.
+						<br/>
+						                  <em>yyyyMMddHHmmss</em>
+						,
+						<em>yyyy-MM-dd.HHmmss</em>
+						etc.
+	                </p>
+                  </item>
+			            </list>
+			            <list type="unordered">
+                  <item>
+    	                <p>
+                        <code>[filename:]</code>
+ 					               </p>
+				              </item>
+				              <item>
+					                <p>
+						Will be substituted by the original file name including the file extension.
+	                </p>
+                  </item>
+			            </list>
+			            <list type="def">
+                  <item>
+	                    <p>
+                        <code>[filename:lowercase]</code>
+					                </p>
+				              </item>
+				              <item>
+					                <p>
+						Will be substituted by the original file name including the file extension 
+						with all characters converted to lower case.
+	                </p>
+                  </item>
+			            </list>
+			            <list type="def">
+                  <item>
+	                    <p>
+                        <code>[filename:uppercase]</code>
+					                </p>
+				              </item>
+				              <item>
+					                <p>
+						Will be substituted by the original file name including the file extension 
+						with all characters converted to upper case.
+	                </p>
+                  </item>
+			            </list>
+               <p>
+            Requires the parameter
+            <paramref>replacing</paramref>
+            to be specified.
+        </p>
+               <p>
+			               <list type="unordered">
+				                 <item>
+					                   <p>
+						                     <paramref>replacing</paramref>
+						= Hello
+					</p>
+				                 </item>
+				                 <item>
+					                   <p>
+						                     <paramref>replacement</paramref>
+						= 1234
+					</p>
+				                 </item>
+				                 <item>
+					                   <p>
+						Input file: Hello_World.txt
+					</p>
+				                 </item>
+				                 <item>
+					                   <p>
+						Output file: 1234_World.txt
+					</p>
+				                 </item>
+			               </list>
+		             </p>
+	           </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="sort_order"
+                OptionName="sort_order"
+                default_value="asc"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_sort_order.xml">
+
+            <note>
+               <title>Sort order with which the result set will be sorted.</title>
+               <p>
+          Default: asc
+          Possible values: asc | desc  
+          See:  <paramref>sort_criteria</paramref>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                xmlns:xi="http://www.w3.org/2001/XInclude"
+                name="sort_criteria"
+                OptionName="sort_criteria"
+                default_value="name"
+                required="false"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/param_sort_criteria.xml">
+
+            <note>
+               <title>Sort criteria with which the result set will be sorted.</title>
+               <p>
+          Default: name
+          Possible values: name | age | size
+          See:  <paramref>sort_order</paramref>
+               </p>
+            </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="expected_size_of_result_set"
+                DataType="java.lang.Integer"
+                required="false"
+                DefaultValue="0"
+                usewith="raise_error_if_result_set_is"
+                xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/result_set/param_expected_size_of_result_set.xml">
+
+	           <note>
+		             <title>number of expected hits in result-list</title>
+	           </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="raise_error_if_result_set_is"
+                DataType="java.lang.String"
+                required="false"
+                DefaultValue=""
+                usewith="expected_size_of_result_set"
+                xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/result_set/param_raise_error_if_result_set_is.xml">
+
+	           <note>
+		             <title>raise error on expected size of result-set</title>
+		             <p>
+			With this parameter it is possible to raise an error if the quantity of hits of the
+			result-list is according to the value of this parameter.
+		</p>
+		             <p>
+			An example:
+		</p>
+		             <p>
+			Assuming, that the parameter "raise_error_if_result_set_is=ne" is defined and the parameter
+			"expected_size_of_result_set=1" is specified as well. If the number of hits is not equal to "1"
+			an error will raised.
+		</p>
+	           </note>
+         </param>
+         <param xmlns:xi="http://www.w3.org/2001/XInclude"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                name="result_set_file"
+                DataType="java.nio.file.Path (Job argument - String)"
+                required="false"
+                xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/result_set/param_result_set_file.xml">
+	
+	           <note>
+		             <title>Name of the result-list file</title>
+		             <p>
+			If the value of this parameter specifies a valid filename the result-list will be
+			written to this file.
+		</p>
+	           </note>
+         </param>
+      </params>
+   </configuration>
+   <documentation xmlns:xi="http://www.w3.org/2001/XInclude"
+                  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>This job renames one or more files.</p>
+			      <p>Whether or not this job can move a file from one filesystem to another is platform-dependent (see
+               <a href="http://download.oracle.com/javase/1.4.2/docs/api/java/io/File.html#renameTo%28java.io.File%29)">renameTo</a>).
+            </p>
+            <note xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+               xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_file_operations.xml">
+	           <p>
+		The JITL category "FileOperations" includes commonly used operations such as copying, renaming, moving and deleting of files. 
+		These File Operations are based on Java so they are available on all by JobScheduler supported os-platforms . 
+		In comparison with functions such as system-specific operating-system commands like copy, cp, move, mv, del and rm, 
+		which behave differently on different operating systems, handling and behavior of the File Operations job-classes is 
+		identical on all supported operating systems.
+	</p>
+	           <p>
+		Most of the job implementations are supporting "regular expressions" on file names for filtering and searching the files which has to be processed.
+	</p>
+	           <p>File operations are often used in workflows that e.g. receive files	by SFTP, rename the files and transfer them to different locations.</p>
+         </note>
+            <p>
+                <features>
+                    <feature>
+                        Rename or moves files in the (local) file system
+                    </feature>
+                    <feature xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+                        xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/features/feature_use_of_regexp.xml">
+                  <title>
+            Use of regular expressions for filenames selection (much more than a simple "wildcard")
+        </title>
+                  <documentation>
+        	            <p>
+                This job implementation is supporting "regular expressions" on file names for filtering and searching
+                the files which has to be processed.
+            </p>
+    		               <items xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/notes/note_regexp_remarks.xml">
+	                       <note>
+		                         <p>
+		Some remarks on regular expression, used in JobScheduler and YADE.
+		</p>
+		                         <p>
+			A regular expression is not a
+			<a href="http://en.wikipedia.org/wiki/Wildcard_character#Files_and_directories">wildcard</a>.
+			To get an impression of the differences one have a look on the meaning of the wildcard *.txt, which will
+			select all filenames with the filename-extension ".txt".
+			A regular expression to match, e.g. works the same way, this "wildcard" must look like "^.*\.txt$".
+			That looks a little bit strange but it is much more flexible and powerfull on filtering filenames
+			than the concept of wildcards, if one want to filter more complex names or pattern.
+		</p>
+		                         <p>
+	        The general syntax of an
+	        <a href="http://en.wikipedia.org/wiki/Regular_expression">regular expression</a>, also referred to as regex or regexp,
+	        is described
+	        <a href="http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html">
+	        here</a>.
+	        It is different to other RegExp definitions, e.g. as for Perl.
+		</p>
+	                          <p>
+	    	For further information on regular expressions see
+	        <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+	                          </p>
+	                          <p>
+	    	As an extension of regular expression the [date:] variable is supported. Using this feature it is possible to create a regexp, which is
+	    	depending on the date with is defined in the date-format.
+	    </p>
+	                          <p>
+	    	If you want (only part of the regex) to be case sensitive , then you have the option to use
+	    	the (?-i) and [optionally] (?i) mode modifiers:    (?-i)G[a-b](?i).*
+		</p>
+		                         <p>
+			If you're dealing with Unicode characters besides ASCII, check whether or not your regex engine properly supports them.
+		</p>
+	                       </note>
+
+                     </items>
+                  </documentation>
+               </feature>
+                    <feature xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+                        xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/features/feature_recurse_of_subdirectories.xml">
+
+                  <title>Recurse of subdirectories</title>
+                  <documentation>
+                     <p>
+                The parameter <paramref>recursive</paramref> can be used to specify that the structure of the subdirectories 
+                and all files contained in these directories should also be processed. and all files contained in these 
+                directories should also be processed.
+            </p>
+                     <p>
+                If the directories do not yet exist on the target platform, they are created in dependence on the parameter 
+                <paramref>make_dirs</paramref>.
+            </p>
+                     <p>
+                The selection of the objects (files) to be processed is also done in the subdirectories via the parameter 
+                <paramref>file_spec</paramref>.
+            </p>
+                     <p>
+                If subdirectories are newly created, the structure is created below the directory specified with the parameter 
+                <paramref>target_dir</paramref> (or <paramref>remote_dir</paramref>) is created.
+            </p>
+                  </documentation>
+               </feature>
+                    <feature xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+                        xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/features/feature_mask_substitution.xml">
+
+                  <title>state-dependent substitution</title>
+                  <documentation>
+                     <p>
+            This technique is useful when for example inserting the current date or a timestamp into a filename or
+            into a name of a directory.
+        </p>
+                  </documentation>
+                  <note xml:base="/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/notes/note_parameter_mask_substitution.xml">
+                     <p>
+            Supports masks for substitution in the file name
+            and directory
+            name with format strings that are
+            enclosed by brackets
+            ([
+            and
+            ]).
+            The following format strings are supported:
+        </p>
+
+                     <p>
+                        <code>
+                [date:date format]
+            </code>
+                     </p>
+                     <p>
+        
+            date format
+            must be a valid Java data format string,
+            e.g.
+            yyyyMMddHHmmss
+            ,
+            yyyy-MM-dd.HHmmss
+            etc.
+        </p>
+                     <p>
+            For further information on valid values for a dateformat string see
+            <a href="http://docs.oracle.com/javase/1.4.2/docs/api/java/text/SimpleDateFormat.html">SimpleDateFormat</a>
+                     </p>
+        
+                     <p>
+            An example:
+        </p>
+                     <p>
+                        <code>
+                &lt;param name="file"
+                value="sample/hello[date:yyyyMMdd].txt"
+                /&gt; </code>
+                     </p>
+                     <p>
+            On 2050-12-31 the parameter
+            <code>file</code>
+            contains the value
+            <code>"sample/hello20501231.txt"</code>
+            .
+        </p>
+                  </note>
+               </feature>
+                    <feature xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+                        xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/features/feature_result_set_creation.xml">
+
+                  <title>Result Set</title>
+                  <documentation>
+                     <p>
+            This job is creating a result set.
+            A result set contains the names of all files which are selected as specified by the filter or search criteria.
+            The content of the result set is returned as a parameter, but can be written to a file, too.
+        </p>
+                  </documentation>
+               </feature>
+                </features>
+            </p>
+        	<note xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+               xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/com.sos.jitl.jobs.file/note_regexp_example_replace.xml">
+            <p>
+            Examples for regular expressions used for replacing:
+        </p>
+            <p>
+               <table class="explanation"> 
+                  <tr>
+                    <th>
+                        <code>source_file</code>
+                    </th>
+                    <th>
+                        <code>file_spec</code>
+                    </th>
+                    <th>
+                        <code>replacing</code>
+                    </th>
+                    <th>
+                        <code>replacement</code>
+                    </th>
+                    <th>Example Input</th>
+                    <th>Output</th>
+                    <th>Comment</th>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>~</td>
+                    <td>""</td>
+                    <td>hallo.dat~</td>
+                    <td>hallo.dat</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>a.txt</td>
+                    <td>-</td>
+                    <td>[.]txt</td>
+                    <td>_2011-11-24.txt</td>
+                    <td>-</td>
+                    <td>a_2011-11-24.txt</td>
+                    <td>-</td>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>.*</td>
+                    <td>[filename:] [date:yyyy-MM-dd].dat</td>
+                    <td>a.txt</td>
+                    <td>a.txt2011-11-24.dat</td>
+                    <td>[filename:] and [date:] will be substituted after file has
+                        been replaced
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>.*[.]txt</td>
+                    <td>a.*?b</td>
+                    <td>world</td>
+                    <td>a.1.b.txt.b</td>
+                    <td>world.txt.b</td>
+                    <td>.*? : ungreedy usage of .*</td>
+                  </tr>
+                  <tr>
+                    <td>abcdefg.txt</td>
+                    <td>-</td>
+                    <td>^(ab)cde(fg)[.]txt</td>
+                    <td>123;[date:yyyy-MM-dd]</td>
+                    <td>-</td>
+                    <td>123cde2011-11-24.txt</td>
+                    <td>; : separator between multiple replacements</td>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>.*dat$</td>
+                    <td>(ab)_c[0-9]d_(fg)</td>
+                    <td>group1;group2</td>
+                    <td>ab_c1d_fg. ab_c2d_fg.dat</td>
+                    <td>group1_c1d_group2. ab_c2d_fg.dat</td>
+                    <td>Only the first pattern match is replaced</td>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>.*</td>
+                    <td>^(?:aa|bb)_. {2}_([0-9]+_[0-9]+)$</td>
+                    <td>tail</td>
+                    <td>aa_QU_061205_222334</td>
+                    <td>aa_QU_tail</td>
+                    <td>(?:...) : "?:" specifies a non capturing group. The file will
+                        not be replaced.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>./temp</td>
+                    <td>FILE.txt</td>
+                    <td>.*</td>
+                    <td>[filename:lowercase]_[filename:uppercase]_[filename:]</td>
+                    <td>FILE.txt</td>
+                    <td>file.txt_FILE.TXT_FILE.txt</td>
+                    <td>-</td>
+                  </tr>
+               </table>
+               <table class="explanation" style="margin-top:10px">
+                  <tr>
+                    <th>
+                        <code>source_file</code>
+                    </th>
+                    <th>
+                        <code>target_file</code>
+                    </th>
+                    <th>
+                        <code>file_spec</code>
+                    </th>
+                    <th>
+                        <code>create_dir</code>
+                    </th>
+                    <th>
+                        <code>replacing</code>
+                    </th>
+                    <th>
+                        <code>replacement</code>
+                    </th>
+                    <th>Example input</th>
+                    <th>Output</th>
+                    <th>Comment</th>
+                  </tr>
+                  <tr>
+                    <td>aaa/bbb/</td>
+                    <td>[directory:]/[date:yyyyMMdd]/</td>
+                    <td>hello.txt</td>
+                    <td>true</td>
+                    <td>[.]txt</td>
+                    <td>[date:yyyy].txt</td>
+                    <td>aaa/bbb/hello.txt</td>
+                    <td>aaa/bbb/20070316/hello2007.txt</td>
+                    <td>If the directory aaa/bbb/20070316 does not yet exist it will
+                        be created
+                    </td>
+                  </tr>
+               </table>
+            </p>
+            <p>
+            For further information see
+            <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+            </p>
+            <p>
+            For further information on date-patterns see:
+            <a href="http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html">java.util.regex.Pattern</a>
+            </p>
+         </note>
+            <items xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+                xml:base="file:/C:/Users/oh/GIT/sos-components/sos-jitl/sos-jitl-jobdoc/src/main/resources/includes/common/notes/note_regexp_remarks.xml">
+	           <note>
+		             <p>
+		Some remarks on regular expression, used in JobScheduler and YADE.
+		</p>
+		             <p>
+			A regular expression is not a
+			<a href="http://en.wikipedia.org/wiki/Wildcard_character#Files_and_directories">wildcard</a>.
+			To get an impression of the differences one have a look on the meaning of the wildcard *.txt, which will
+			select all filenames with the filename-extension ".txt".
+			A regular expression to match, e.g. works the same way, this "wildcard" must look like "^.*\.txt$".
+			That looks a little bit strange but it is much more flexible and powerfull on filtering filenames
+			than the concept of wildcards, if one want to filter more complex names or pattern.
+		</p>
+		             <p>
+	        The general syntax of an
+	        <a href="http://en.wikipedia.org/wiki/Regular_expression">regular expression</a>, also referred to as regex or regexp,
+	        is described
+	        <a href="http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html">
+	        here</a>.
+	        It is different to other RegExp definitions, e.g. as for Perl.
+		</p>
+	              <p>
+	    	For further information on regular expressions see
+	        <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
+	              </p>
+	              <p>
+	    	As an extension of regular expression the [date:] variable is supported. Using this feature it is possible to create a regexp, which is
+	    	depending on the date with is defined in the date-format.
+	    </p>
+	              <p>
+	    	If you want (only part of the regex) to be case sensitive , then you have the option to use
+	    	the (?-i) and [optionally] (?i) mode modifiers:    (?-i)G[a-b](?i).*
+		</p>
+		             <p>
+			If you're dealing with Unicode characters besides ASCII, check whether or not your regex engine properly supports them.
+		</p>
+	           </note>
+
+         </items>
+    	</div>
+    </documentation>
+</description>

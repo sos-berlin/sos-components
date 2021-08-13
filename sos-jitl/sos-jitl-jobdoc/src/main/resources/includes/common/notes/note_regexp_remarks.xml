@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<items
+<note
 	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xi="http://www.w3.org/2001/XInclude"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<note>
 		<p>
 		Some remarks on regular expression, used in JobScheduler and YADE.
 		</p>
@@ -40,6 +39,5 @@
 		<p>
 			If you're dealing with Unicode characters besides ASCII, check whether or not your regex engine properly supports them.
 		</p>
-	</note>
 
-</items>
+</note>
