@@ -78,7 +78,8 @@ public class JsonValidator {
             put("StoreAgents", "agent/storeParam-schema.json");
             put("ReadAgents", "agent/readAgents-schema.json");
             put("ReadAgentsV", "agent/readAgents_v-schema.json");
-
+            put("AgentReportFilter", "agent/agentReportFilter-schema.json");
+            
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");
             
