@@ -49,7 +49,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
-    
+
     @Override
     public JOCDefaultResponse readTrashFolder(final String accessToken, final byte[] inBytes) {
         try {
@@ -82,16 +82,20 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             if (in.getObjectTypes() != null && !in.getObjectTypes().isEmpty()) {
                 configTypes = in.getObjectTypes().stream().map(ConfigurationType::intValue).collect(Collectors.toSet());
             }
-            
+
             List<InventoryTreeFolderItem> items = dbLayer.getConfigurationsByFolder(in.getPath(), in.getRecursive() == Boolean.TRUE, configTypes, in
                     .getOnlyValidObjects(), TRASH_IMPL_PATH.equals(action));
 
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
-            
+
             if (items != null && !items.isEmpty()) {
-                for (InventoryTreeFolderItem config : items) {
+                for (InventoryTreeFolderItem item : items) {
+                    ResponseFolderItem config = item.toResponseFolderItem();
+                    if (config == null) {// e.g. unknown type
+                        continue;
+                    }
                     ConfigurationType type = config.getObjectType();
                     if (type != null) {
                         switch (type) {
@@ -124,14 +128,14 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                             folder.getCalendars().add(config);
                             break;
                         case FOLDER:
-                            //folder.getFolders().add(config);
+                            // folder.getFolders().add(config);
                             break;
                         default:
                             break;
                         }
                     }
                 }
-                
+
                 folder.setWorkflows(sort(folder.getWorkflows()));
                 folder.setJobs(sort(folder.getJobs()));
                 folder.setJobClasses(sort(folder.getJobClasses()));
@@ -141,7 +145,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setFileOrderSources(sort(folder.getFileOrderSources()));
                 folder.setSchedules(sort(folder.getSchedules()));
                 folder.setCalendars(sort(folder.getCalendars()));
-                //folder.setFolders(sort(folder.getFolders()));
+                // folder.setFolders(sort(folder.getFolders()));
             }
             return folder;
         } catch (Throwable e) {

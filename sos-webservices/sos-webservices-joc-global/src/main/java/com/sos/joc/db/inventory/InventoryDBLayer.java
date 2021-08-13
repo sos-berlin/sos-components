@@ -278,15 +278,31 @@ public class InventoryDBLayer extends DBLayer {
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive, Collection<Integer> configTypes,
             Boolean onlyValidObjects, boolean forTrash) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryTreeFolderItem.class.getName());
-        if (!forTrash) {
-            hql.append("(ic, count(dh.id), count(irc.id)) from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("ic.id as id");
+        hql.append(",ic.name as name");
+        hql.append(",ic.title as title");
+        hql.append(",ic.valid as valid");
+        hql.append(",ic.type as type");
+        hql.append(",ic.path as path");
+        if (forTrash) {
+            hql.append(",false as deleted ");// TODO?
+            hql.append(",false as deployed ");
+            hql.append(",false as released ");
+            hql.append(",0 as countDeployed ");
+            hql.append(",0 as countReleased ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" ic ");
+        } else {
+            hql.append(",ic.deleted as deleted ");
+            hql.append(",ic.deployed as deployed ");
+            hql.append(",ic.released as released ");
+            hql.append(",count(dh.id) as countDeployed ");
+            hql.append(",count(irc.id) as countReleased  ");
+            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
             hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
             hql.append("on ic.id=dh.inventoryConfigurationId ");
             hql.append("left join ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" irc ");
             hql.append("on ic.id=irc.cid ");
-        } else {
-            hql.append("(ic) from ").append(DBLayer.DBITEM_INV_CONFIGURATION_TRASH).append(" ic ");
         }
         hql.append("where ");
         if (recursive) {
@@ -299,14 +315,14 @@ public class InventoryDBLayer extends DBLayer {
             hql.append("ic.folder=:folder ");
         }
         if (onlyValidObjects == Boolean.TRUE) {
-            hql.append("and valid = 1 ");
+            hql.append("and ic.valid = 1 ");
         }
         if (configTypes != null && !configTypes.isEmpty()) {
             hql.append("and ic.type in (:configTypes) ");
         }
         hql.append("group by ic.id");
 
-        Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString());
+        Query<InventoryTreeFolderItem> query = getSession().createQuery(hql.toString(), InventoryTreeFolderItem.class);
         if (recursive) {
             if (!"/".equals(folder)) {
                 query.setParameter("folder", folder);
@@ -344,31 +360,6 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameterList("configTypes", configTypes);
         }
         return getSession().getSingleResult(query);
-    }
-
-    public List<InventoryDeployablesTreeFolderItem> getConfigurationsWithMaxDeployment(Collection<Long> configIds) throws SOSHibernateException {
-        if (configIds != null && !configIds.isEmpty()) {
-            StringBuilder hql = new StringBuilder("select new ").append(InventoryDeployablesTreeFolderItem.class.getName());
-            hql.append("(");
-            hql.append("ic,dh.id as deploymentId,dh.commitId,dh.version,dh.operation,dh.deploymentDate,dh.path,dh.controllerId");
-            hql.append(") ");
-            hql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
-            hql.append("left join ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dh ");
-            hql.append("on ic.id=dh.inventoryConfigurationId ");
-            hql.append("and dh.id=(");
-            hql.append("select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(
-                    " dhsub where ic.id=dhsub.inventoryConfigurationId and state=" + DeploymentState.DEPLOYED.value());
-            hql.append(") ");
-            hql.append("where ic.id in (:configIds) ");
-
-            Query<InventoryDeployablesTreeFolderItem> query = getSession().createQuery(hql.toString());
-            if (configIds != null && !configIds.isEmpty()) {
-                query.setParameterList("configIds", configIds);
-            }
-            return getSession().getResultList(query);
-        } else {
-            return Collections.emptyList();
-        }
     }
 
     public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Long> configIds)
@@ -1107,7 +1098,7 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
-    
+
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByBoardName(String boardName) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select ic from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ic ");
         hql.append("left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
@@ -1115,7 +1106,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("where ic.type=:type ");
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
-        
+
         String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.boardNames");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
 
