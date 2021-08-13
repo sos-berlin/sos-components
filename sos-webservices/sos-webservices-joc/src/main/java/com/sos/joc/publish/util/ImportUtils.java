@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -225,4 +226,9 @@ public class ImportUtils {
     			}).filter(Objects::nonNull).collect(Collectors.toSet());
     }
     
+    public static List<ConfigurationType> getImportOrder() {
+        return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.BOARD, 
+                ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
+                ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+    }
 }

@@ -135,9 +135,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
-            final List<ConfigurationType> importOrder = Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.BOARD, 
-                    ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
-                    ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+            final List<ConfigurationType> importOrder = ImportUtils.getImportOrder();
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
@@ -151,7 +149,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                                 if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                     for (ConfigurationObject configuration : configurationObjectsByType) {
-                                            dbLayer.saveNewInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                            dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
                                     }
                                 }
                             }
@@ -169,7 +167,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                 List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
                                 if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
                                     for (ConfigurationObject configuration : configurationObjectsByType) {
-                                            dbLayer.saveNewInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                            dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
                                     }
                                 }
                             }
