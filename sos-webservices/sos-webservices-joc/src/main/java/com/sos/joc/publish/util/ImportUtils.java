@@ -61,6 +61,9 @@ public class ImportUtils {
 	    	case LOCK:
 	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations));
 	    		break;
+	    	case BOARD:
+                referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations));
+	    	    break;
         	case WORKFLOW:
                 referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations));
                 referencedBy.addAll(getUsedSchedulesFromArchiveByWorkflowName(oldName, configurations));
@@ -92,14 +95,25 @@ public class ImportUtils {
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
-					try {
-						String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-	                	json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
-	                	((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+                    if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.LOCK)) {
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.BOARD)) {
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll("(\"boardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
                     break;
                 case FILEORDERSOURCE:
                 	if (((FileOrderSourceEdit)configurationWithReference).getConfiguration().getWorkflowName().equals(updateableItem.getOldName())
@@ -156,6 +170,23 @@ public class ImportUtils {
 					}
     				return null;
     			}).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
+
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    Workflow wf = (Workflow)item.getConfiguration();
+                    try {
+                        String wfJson = Globals.objectMapper.writeValueAsString(wf);
+                        Matcher matcher = Pattern.compile("(\"boardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        if (matcher.find()) {
+                            return item;
+                        }
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
 
     private static Set<ConfigurationObject> getUsedFileOrderSourcesFromArchiveByWorkflowName (String name, Set<ConfigurationObject> configurations) {

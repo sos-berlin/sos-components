@@ -1003,7 +1003,7 @@ public class DBLayerDeploy {
             try {
                 Validator.validate(configuration.getObjectType(), configuration.getConfiguration(), new InventoryDBLayer(session), agentNames);
                 valid = true;
-            } catch (SOSJsonSchemaException | JocConfigurationException | IOException e) {
+            } catch (Throwable e) {
                 valid = false;
             }
             // check if imported agentName is known. Has to be removed, when the Validator takes over the check!

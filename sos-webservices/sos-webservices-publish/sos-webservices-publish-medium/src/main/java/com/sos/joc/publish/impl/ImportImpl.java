@@ -80,7 +80,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
         filter.setOverwrite(overwrite);
         filter.setPrefix(prefix);
         filter.setSuffix(suffix);
-        filter.setFormat(ArchiveFormat.fromValue(format));;
+        filter.setFormat(ArchiveFormat.fromValue(format));
 		return postImportConfiguration(xAccessToken, body, filter, auditLog);
 	}
 
@@ -134,6 +134,9 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             Set<ConfigurationObject> filteredConfigurations = new HashSet<ConfigurationObject>();
+            final List<ConfigurationType> importOrder = Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.BOARD, 
+                    ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
+                    ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
             if (!configurations.isEmpty()) {
                 if (filter.getOverwrite()) {
                     if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
@@ -141,25 +144,42 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     	filteredConfigurations = configurations.stream().peek(item -> item.setPath(filter.getTargetFolder() + item.getPath()))
                     			.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                     	if (!filteredConfigurations.isEmpty()) {
-                    		filteredConfigurations.stream().forEach(configuration 
-                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                            Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
+                                    .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                            for (ConfigurationType type : importOrder) {
+                                List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                                if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                    for (ConfigurationObject configuration : configurationObjectsByType) {
+                                            dbLayer.saveNewInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                    }
+                                }
+                            }
+//                    		filteredConfigurations.stream().forEach(configuration 
+//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     } else {
                 		// filter according to folder permissions
                     	filteredConfigurations = configurations.stream().filter(configuration 
                     			-> canAdd(configuration.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                     	if (!filteredConfigurations.isEmpty()) {
-                    		filteredConfigurations.stream().forEach(configuration 
-                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
+                            Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = filteredConfigurations.stream()
+                                    .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                            for (ConfigurationType type : importOrder) {
+                                List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                                if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                    for (ConfigurationObject configuration : configurationObjectsByType) {
+                                            dbLayer.saveNewInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                    }
+                                }
+                            }
+//                    		filteredConfigurations.stream().forEach(configuration 
+//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     }
             	} else {
                     if ((filter.getSuffix() != null && !filter.getSuffix().isEmpty()) ||
                     		(filter.getPrefix() != null && !filter.getPrefix().isEmpty())) {
                     	// process prefix/suffix only if overwrite==false AND one of both not empty 
-                        final List<ConfigurationType> importOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.JOBRESOURCE,
-                                ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW,
-                                ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
                         
                     	Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
                     			.collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
