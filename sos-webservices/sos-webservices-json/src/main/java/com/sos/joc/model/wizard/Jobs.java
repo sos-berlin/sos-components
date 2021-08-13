@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.wizzard;
+package com.sos.joc.model.wizard;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * jobs for wizzard
+ * jobs for wizard
  * <p>
  * 
  * 

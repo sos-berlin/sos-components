@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.wizzard;
+package com.sos.joc.model.wizard;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * job wizzard filter
+ * job wizard filter
  * <p>
  * 
  * 
@@ -19,7 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "assignReference"
 })
-public class JobWizzardFilter {
+public class JobWizardFilter {
 
     /**
      * string without < and >
@@ -70,10 +70,10 @@ public class JobWizzardFilter {
         if (other == this) {
             return true;
         }
-        if ((other instanceof JobWizzardFilter) == false) {
+        if ((other instanceof JobWizardFilter) == false) {
             return false;
         }
-        JobWizzardFilter rhs = ((JobWizzardFilter) other);
+        JobWizardFilter rhs = ((JobWizardFilter) other);
         return new EqualsBuilder().append(assignReference, rhs.assignReference).isEquals();
     }
 

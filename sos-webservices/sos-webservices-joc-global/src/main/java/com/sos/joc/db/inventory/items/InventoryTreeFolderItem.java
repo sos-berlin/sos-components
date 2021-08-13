@@ -1,45 +1,39 @@
 package com.sos.joc.db.inventory.items;
 
-import com.sos.joc.classes.inventory.JocInventory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
-import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 
-public class InventoryTreeFolderItem extends ResponseFolderItem {
+public class InventoryTreeFolderItem {
 
-    public InventoryTreeFolderItem(DBItemInventoryConfiguration conf, Long countDeployments, Long countReleases) {
-        if (conf != null) {
-            conf.setContent(null);
-            setId(conf.getId());
-            setName(conf.getName());
-            setTitle(conf.getTitle());
-            setValid(conf.getValid());
-            setDeleted(conf.getDeleted());
-            setDeployed(conf.getDeployed());
-            setReleased(conf.getReleased());
-            setObjectType(JocInventory.getType(conf.getType()));
-            setPath(conf.getPath());
+    private Long id;
+    private Integer type;
+    private String path;
+    private String name;
+    private String title;
+    private boolean valid;
+    private boolean deleted;
+    private boolean deployed;
+    private boolean released;
+    private Number countDeployed;
+    private Number countReleased;
+
+    public ResponseFolderItem toResponseFolderItem() {
+        try {
+            ResponseFolderItem item = new ResponseFolderItem();
+            item.setId(id);
+            item.setPath(path);
+            item.setName(name);
+            item.setObjectType(ConfigurationType.fromValue(type));
+            item.setTitle(title);
+            item.setValid(valid);
+            item.setDeleted(deleted);
+            item.setDeployed(deployed);
+            item.setReleased(released);
+            item.setHasDeployments(countDeployed.intValue() > 0);
+            item.setHasReleases(countReleased.intValue() > 0);
+            return item;
+        } catch (Throwable e) {// e.g. unknown type
+            return null;
         }
-        setHasDeployments(long2boolean(countDeployments));
-        setHasReleases(long2boolean(countReleases));
     }
-    
-    public InventoryTreeFolderItem(DBItemInventoryConfigurationTrash conf) {
-        if (conf != null) {
-            conf.setContent(null);
-            setId(conf.getId());
-            setName(conf.getName());
-            setTitle(conf.getTitle());
-            setValid(conf.getValid());
-            setObjectType(JocInventory.getType(conf.getType()));
-            setPath(conf.getPath());
-        }
-        setHasDeployments(null);
-        setHasReleases(null);
-    }
-
-    private static boolean long2boolean(Long val) {
-        return val != null && val.longValue() > 0;
-    }
-
 }

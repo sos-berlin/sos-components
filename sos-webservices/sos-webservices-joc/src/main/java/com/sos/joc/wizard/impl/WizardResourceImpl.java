@@ -17,7 +17,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -46,18 +45,18 @@ import com.sos.joc.db.documentation.DocumentationDBLayer;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.wizzard.Job;
-import com.sos.joc.model.wizzard.JobWizzardFilter;
-import com.sos.joc.model.wizzard.Jobs;
-import com.sos.joc.model.wizzard.Param;
+import com.sos.joc.model.wizard.Job;
+import com.sos.joc.model.wizard.JobWizardFilter;
+import com.sos.joc.model.wizard.Jobs;
+import com.sos.joc.model.wizard.Param;
 import com.sos.joc.wizard.resource.IWizardResource;
 import com.sos.schema.JsonValidator;
 
-@Path("inventory/wizzard")
+@Path("inventory/wizard")
 public class WizardResourceImpl extends JOCResourceImpl implements IWizardResource {
 
-    private static final String API_CALL_JOBS = "./wizzard/jobs";
-    private static final String API_CALL_JOB = "./wizzard/job";
+    private static final String API_CALL_JOBS = "./wizard/jobs";
+    private static final String API_CALL_JOB = "./wizard/job";
     private static final Logger LOGGER = LoggerFactory.getLogger(WizardResourceImpl.class);
     private static final String JITLJOB_NAMESPACE = "http://www.sos-berlin.com/schema/js7_job_documentation_v1.1";
 
@@ -73,10 +72,11 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_JOBS);
             DocumentationDBLayer docDbLayer = new DocumentationDBLayer(sosHibernateSession);
-            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml").stream(), JitlDocumentation.FOLDER, false, true);
+            List<DBItemDocumentation> jitlDocs = docDbLayer.getDocumentations(Collections.singleton("xml").stream(), JitlDocumentation.FOLDER, false,
+                    true);
             Jobs jobs = new Jobs();
             if (jitlDocs != null) {
-                
+
                 final XPath xpath = newXPath();
                 final JocError jocError = getJocError();
                 jobs.setJobs(jitlDocs.stream().map(jitlDoc -> {
@@ -84,7 +84,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         Document doc = xmlToDoc(jitlDoc.getContent());
                         Element jobElem = (Element) xpath.compile("//jobdoc:job").evaluate(doc, XPathConstants.NODE);
                         Element scriptElem = (Element) xpath.compile("//jobdoc:script").evaluate(doc, XPathConstants.NODE);
-                        
+
                         Job job = new Job();
                         job.setDocPath(jitlDoc.getPath());
                         job.setDocName(jitlDoc.getName());
@@ -125,8 +125,8 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_JOB, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, JobWizzardFilter.class);
-            JobWizzardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizzardFilter.class);
+            JsonValidator.validateFailFast(filterBytes, JobWizardFilter.class);
+            JobWizardFilter body = Globals.objectMapper.readValue(filterBytes, JobWizardFilter.class);
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(accessToken).getInventory().getManage());
             if (jocDefaultResponse != null) {
@@ -140,10 +140,10 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             if (jitlDoc == null) {
                 throw new DBMissingDataException(String.format("The documentation '%s' is missing", body.getAssignReference()));
             }
-            
+
             XPath xpath = newXPath();
             Document doc = xmlToDoc(jitlDoc.getContent());
-            
+
             Element jobElem = (Element) xpath.compile("//jobdoc:job").evaluate(doc, XPathConstants.NODE);
             Element scriptElem = (Element) xpath.compile("//jobdoc:script").evaluate(doc, XPathConstants.NODE);
             NodeList paramsNodes = (NodeList) xpath.compile("//jobdoc:configuration/*/jobdoc:param").evaluate(doc, XPathConstants.NODESET);
@@ -159,7 +159,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             job.setDocPath(jitlDoc.getPath());
             job.setAssignReference(jitlDoc.getDocRef());
             job.setParams(null);
-            
+
             if (paramsNodes.getLength() > 0) {
                 Transformer transformer = null;
                 if (xsltItem != null) {
@@ -168,7 +168,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                 }
                 List<Param> params = new ArrayList<>();
                 JocError jocError = getJocError();
-                
+
                 for (int i = 0; i < paramsNodes.getLength(); i++) {
                     if (paramsNodes.item(i).getNodeType() != Node.ELEMENT_NODE) {
                         continue;
@@ -194,7 +194,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         LOGGER.error(String.format("[%s] can't get attribute ", paramNode.getNodeName()), e);
                     }
                 }
-                
+
                 job.setParams(params);
             }
 
@@ -210,15 +210,15 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
             Globals.disconnect(sosHibernateSession);
         }
     }
-    
+
     private static Document xmlToDoc(String xml) throws SAXException, IOException, ParserConfigurationException {
         DocumentBuilder builder = SOSXML.getDocumentBuilder(true);
         return builder.parse(new InputSource(new StringReader(xml)));
     }
-    
+
     private static XPath newXPath() {
         XPath xpath = XPathFactory.newInstance().newXPath();
-        
+
         xpath.setNamespaceContext(new NamespaceContext() {
 
             @Override
@@ -236,35 +236,36 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                 return null;
             }
         });
-        
+
         return xpath;
     }
 
-    private String transform(Transformer transformer, Node param) throws TransformerException {
-        final StringWriter writer = new StringWriter();
-        DOMSource src = new DOMSource(param);
-        StreamResult result = new StreamResult(writer);
-        transformer.transform(src, result);
-        return writer.toString();
-    }
-
-    private String getDescription(Transformer transformer, Node param) {
-        String paramDoc = null;
+    private static String transform(Transformer transformer, Node param) {
         try {
-            if (param != null && transformer != null) {
-                NodeList paramChildren = param.getChildNodes();
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < paramChildren.getLength(); i++) {
-                    sb.append(transform(transformer, paramChildren.item(i)));
-                }
-                paramDoc = sb.toString();
-                if (paramDoc != null && !paramDoc.isEmpty()) {
-                    paramDoc = paramDoc.replaceAll(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
-                    paramDoc = "<div class=\"jitl-job-param\">" + paramDoc.trim() + "</div>";
-                }
-            }
+            final StringWriter writer = new StringWriter();
+            DOMSource src = new DOMSource(param);
+            StreamResult result = new StreamResult(writer);
+            transformer.transform(src, result);
+            return writer.toString();
         } catch (Throwable e) {
             LOGGER.warn(e.toString());
+            return "";
+        }
+    }
+
+    private static String getDescription(Transformer transformer, Node param) {
+        String paramDoc = null;
+        if (param != null && transformer != null) {
+            NodeList paramChildren = param.getChildNodes();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < paramChildren.getLength(); i++) {
+                sb.append(transform(transformer, paramChildren.item(i)));
+            }
+            paramDoc = sb.toString();
+            if (paramDoc != null && !paramDoc.isEmpty()) {
+                paramDoc = paramDoc.replaceAll(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
+                paramDoc = "<div class=\"jitl-job-param\">" + paramDoc.trim() + "</div>";
+            }
         }
         return paramDoc;
     }

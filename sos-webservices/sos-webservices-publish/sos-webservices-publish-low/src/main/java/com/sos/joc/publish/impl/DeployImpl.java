@@ -73,11 +73,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 return jocDefaultResponse;
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(deployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
-            
+
             Set<String> allowedControllerIds = Collections.emptySet();
-            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
-            		.filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
-            
+            allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                    availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
+
             String account = ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc());
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
@@ -88,11 +88,11 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<Configuration> deployConfigsToStoreAgain = getDeployConfigurationsToStoreFromFilter(deployFilter);
             List<Configuration> deployFoldersToStoreAgain = getDeployConfigurationFoldersToStoreFromFilter(deployFilter);
             List<Configuration> deployConfigsToDelete = getDeployConfigurationsToDeleteFromFilter(deployFilter);
-            
+
             List<Config> foldersToDelete = null;
             if (deployFilter.getDelete() != null) {
-                foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream()
-                .filter(item -> item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
+                foldersToDelete = deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType()
+                        .equals(ConfigurationType.FOLDER)).collect(Collectors.toList());
                 if (!(foldersToDelete.size() == 1 && "/".equals(foldersToDelete.get(0).getConfiguration().getPath()))) {
                     foldersToDelete = PublishUtils.handleFolders(foldersToDelete, dbLayer);
                 }
@@ -106,7 +106,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (configurationDBItemsToStore == null) {
                     configurationDBItemsToStore = new ArrayList<DBItemInventoryConfiguration>();
                 }
-                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore, dbLayer));
+                configurationDBItemsToStore.addAll(PublishUtils.getValidDeployableDraftInventoryConfigurationsfromFolders(draftFoldersToStore,
+                        dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToStore = null;
             if (!deployConfigsToStoreAgain.isEmpty()) {
@@ -116,14 +117,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (depHistoryDBItemsToStore == null) {
                     depHistoryDBItemsToStore = new ArrayList<DBItemDeploymentHistory>();
                 }
-                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain, dbLayer));
+                depHistoryDBItemsToStore.addAll(PublishUtils.getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(deployFoldersToStoreAgain,
+                        dbLayer));
             }
             List<DBItemDeploymentHistory> depHistoryDBItemsToDeployDelete = null;
             if (deployConfigsToDelete != null && !deployConfigsToDelete.isEmpty()) {
                 depHistoryDBItemsToDeployDelete = dbLayer.getFilteredDeploymentHistoryToDelete(deployConfigsToDelete);
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                    Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream()
-                            .collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
+                    Map<String, List<DBItemDeploymentHistory>> grouped = depHistoryDBItemsToDeployDelete.stream().collect(Collectors.groupingBy(
+                            DBItemDeploymentHistory::getPath));
                     depHistoryDBItemsToDeployDelete = grouped.keySet().stream().map(item -> grouped.get(item).get(0)).collect(Collectors.toList());
                 }
             }
@@ -137,7 +139,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (depHistoryDBItemsToStore != null) {
                 unsignedReDeployables = new HashSet<DBItemDeploymentHistory>(depHistoryDBItemsToStore);
             }
-            
+
             // set new versionId for first round (update items)
             final String commitId = UUID.randomUUID().toString();
 
@@ -148,112 +150,113 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
             }
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
-            //DeployAudit audit = null;
+            // DeployAudit audit = null;
             // store to selected controllers
             for (String controllerId : controllerIds) {
-            	if (!allowedControllerIds.contains(controllerId)) {
-            		continue;
-            	}
-            	folderPermissions.setSchedulerId(controllerId);
+                if (!allowedControllerIds.contains(controllerId)) {
+                    continue;
+                }
+                folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
                 // sign deployed configurations with new versionId
-//                Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
-//                        new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
+                // Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations =
+                // new HashMap<DBItemInventoryConfiguration, DBItemDepSignatures>();
                 Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedDeployables = new HashMap<DBItemDeploymentHistory, DBItemDepSignatures>();
                 // determine agent names to be replaced
                 Set<UpdateableWorkflowJobAgentName> updateableAgentNames = new HashSet<UpdateableWorkflowJobAgentName>();
                 Set<UpdateableFileOrderSourceAgentName> updateableAgentNamesFileOrderSources = new HashSet<UpdateableFileOrderSourceAgentName>();
                 // determine all (latest) entries from the given folders
 
-                if(foldersToDelete != null && !foldersToDelete.isEmpty()) {
-                    foldersToDelete.stream()
-                        .map(Config::getConfiguration)
-                        .map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), controllerId, item.getRecursive()))
-                        .forEach(item -> itemsFromFolderToDelete.addAll(item));
+                if (foldersToDelete != null && !foldersToDelete.isEmpty()) {
+                    foldersToDelete.stream().map(Config::getConfiguration).map(item -> dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(),
+                            controllerId, item.getRecursive())).forEach(item -> itemsFromFolderToDelete.addAll(item));
                 }
                 if (unsignedDrafts != null) {
-                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
-                    		.filter(draft -> canAdd(draft.getPath(), permittedFolders)).map(item -> {
-                    			return PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId());
-                    }).collect(Collectors.toList());
-                    if(filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
-//                        // WORKAROUND: old items with leading slash
-//                        PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
-                        filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue())
-                        	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
-                        filteredUnsignedDrafts.stream()
-                        	.filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue())
-                        	.forEach(item -> {
-                        		UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
-	                            try {
-	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-//	                                        Globals.objectMapper.readValue(item.readUpdateableContent(), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-//	                                fileOrderSource.setAgentPath(update.getAgentId());
-//	                                item.writeUpdateableContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
-	                                updateableAgentNamesFileOrderSources.add(update);
-	                            } catch (Exception e) {}
-	                        });
-                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                                commitId, account, filteredUnsignedDrafts, updateableAgentNames, keyPair, controllerId, hibernateSession));
-                    	
+                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream().filter(draft -> canAdd(draft.getPath(),
+                            permittedFolders)).map(item -> {
+                                return PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId());
+                            }).collect(Collectors.toList());
+                    if (filteredUnsignedDrafts != null && !filteredUnsignedDrafts.isEmpty()) {
+                        // // WORKAROUND: old items with leading slash
+                        // PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
+                        filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue()).forEach(
+                                item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
+                        filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue()).forEach(
+                                item -> {
+                                    UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item,
+                                            controllerId, dbLayer);
+                                    try {
+                                        ((FileOrderSource) item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                        // Globals.objectMapper.readValue(item.readUpdateableContent(),
+                                        // com.sos.inventory.model.fileordersource.FileOrderSource.class);
+                                        // fileOrderSource.setAgentPath(update.getAgentId());
+                                        // item.writeUpdateableContent(Globals.objectMapper.writeValueAsString(fileOrderSource));
+                                        updateableAgentNamesFileOrderSources.add(update);
+                                    } catch (Exception e) {
+                                    }
+                                });
+                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, filteredUnsignedDrafts,
+                                updateableAgentNames, keyPair, controllerId, hibernateSession));
+
                     }
                 }
                 // already deployed objects AgentName handling
                 // all items will be signed or re-signed with current commitId
                 if (unsignedReDeployables != null && !unsignedReDeployables.isEmpty()) {
-                	// filter regarding folder permissions
-                	List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream()
-                			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
-                			.peek(item -> {
-                				try {
-									item.writeUpdateableContent(
-									        (IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
-											//(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
-								} catch (IOException e) {
-									throw new JocException(e);
-								}
-            				}).collect(Collectors.toList());
-                	if (!filteredUnsignedReDeployables.isEmpty()) {
-//                        // WORKAROUND: old items with leading slash
-//                        PublishUtils.updatePathWithNameInContent(filteredUnsignedReDeployables);
-                        filteredUnsignedReDeployables.stream()
-                        	.filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item.getType())))
-                        	.forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
-                        filteredUnsignedReDeployables.stream()
-	                        .filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(item.getType())))
-	                        .forEach(item -> {
-	                            UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item, controllerId, dbLayer);
-	                            try {
-	                                ((FileOrderSource)item.readUpdateableContent()).setAgentPath(update.getAgentId());
-	                                updateableAgentNamesFileOrderSources.add(update);
-	                            } catch (Exception e) {}
-	                        });
-                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(
-                        		commitId, account, filteredUnsignedReDeployables, updateableAgentNames, keyPair, controllerId, hibernateSession));
-                	}
+                    // filter regarding folder permissions
+                    List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream().filter(draft -> canAdd(draft
+                            .getPath(), permittedFolders)).peek(item -> {
+                                try {
+                                    item.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
+                                            StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                    // (IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                } catch (IOException e) {
+                                    throw new JocException(e);
+                                }
+                            }).collect(Collectors.toList());
+                    if (!filteredUnsignedReDeployables.isEmpty()) {
+                        // // WORKAROUND: old items with leading slash
+                        // PublishUtils.updatePathWithNameInContent(filteredUnsignedReDeployables);
+                        filteredUnsignedReDeployables.stream().filter(item -> ConfigurationType.WORKFLOW.equals(ConfigurationType.fromValue(item
+                                .getType()))).forEach(item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item,
+                                        controllerId, dbLayer)));
+                        filteredUnsignedReDeployables.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.equals(ConfigurationType.fromValue(
+                                item.getType()))).forEach(item -> {
+                                    UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item,
+                                            controllerId, dbLayer);
+                                    try {
+                                        ((FileOrderSource) item.readUpdateableContent()).setAgentPath(update.getAgentId());
+                                        updateableAgentNamesFileOrderSources.add(update);
+                                    } catch (Exception e) {
+                                    }
+                                });
+                        verifiedDeployables.putAll(PublishUtils.getDraftsWithSignature(commitId, account, filteredUnsignedReDeployables,
+                                updateableAgentNames, keyPair, controllerId, hibernateSession));
+                    }
                 }
-                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename 
-                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(
-                            verifiedDeployables.keySet(), controllerId, dbLayer, keyPair.getKeyAlgorithm());
-                // and subsequently call delete for the object with the previous path before committing the update 
+                // check Paths of ConfigurationObject and latest Deployment (if exists) to determine a rename
+                List<DBItemDeploymentHistory> toDeleteForRename = PublishUtils.checkRenamingForUpdate(verifiedDeployables.keySet(), controllerId,
+                        dbLayer, keyPair.getKeyAlgorithm());
+                // and subsequently call delete for the object with the previous path before committing the update
                 if (toDeleteForRename != null && !toDeleteForRename.isEmpty()) {
                     // clone list as it has to be final now for processing in CompleteableFuture.thenAccept method
                     final List<DBItemDeploymentHistory> toDelete = toDeleteForRename;
                     // set new versionId for second round (delete items)
                     final String versionIdForDeleteRenamed = UUID.randomUUID().toString();
-                        // call updateRepo command via Proxy of given controllers
+                    // call updateRepo command via Proxy of given controllers
                     DeleteDeployments.storeNewDepHistoryEntries(dbLayer, toDelete, versionIdForDeleteRenamed);
-                        PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(), getJocError());
-                        });
+                    PublishUtils.updateItemsDelete(versionIdForDeleteRenamed, toDelete, controllerId).thenAccept(either -> {
+                        DeleteDeployments.processAfterDelete(either, controllerId, account, versionIdForDeleteRenamed, getAccessToken(),
+                                getJocError());
+                    });
                 }
                 if (verifiedDeployables != null && !verifiedDeployables.isEmpty()) {
-                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames, updateableAgentNamesFileOrderSources,
-                    		dbAuditlog.getId());
+                    SignedItemsSpec signedItemsSpec = new SignedItemsSpec(keyPair, verifiedDeployables, updateableAgentNames,
+                            updateableAgentNamesFileOrderSources, dbAuditlog.getId());
                     // call updateRepo command via ControllerApi for given controller
-                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(), API_CALL);
+                    StoreDeployments.callUpdateItemsFor(dbLayer, signedItemsSpec, account, commitId, controllerId, getAccessToken(), getJocError(),
+                            API_CALL);
                 }
             }
             // Delete from all known controllers
@@ -265,29 +268,29 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
             // loop 1: store db entries optimistically
             for (String controllerId : allowedControllerIds) {
-            	folderPermissions.setSchedulerId(controllerId);
+                folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 // store history entries for delete operation optimistically
                 if (depHistoryDBItemsToDeployDelete != null && !depHistoryDBItemsToDeployDelete.isEmpty()) {
-                	filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream()
-                			.filter(history -> canAdd(history.getPath(), permittedFolders)).collect(Collectors.toList());
-                    invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete)));
+                    filteredDepHistoryItemsToDelete = depHistoryDBItemsToDeployDelete.stream().filter(history -> canAdd(history.getPath(),
+                            permittedFolders)).collect(Collectors.toList());
+                    invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, DeleteDeployments
+                            .storeNewDepHistoryEntries(dbLayer, filteredDepHistoryItemsToDelete, commitIdForDelete)));
                 }
                 if (itemsFromFolderToDelete != null && !itemsFromFolderToDelete.isEmpty()) {
-                	// first filter for folder permissions
-                	// remember filtered items for later
-                	filteredItemsFromFolderToDelete = itemsFromFolderToDelete.stream()
-                    		.filter(fromFolder -> canAdd(fromFolder.getPath(), permittedFolders)).collect(Collectors.toList());
-                	// second filter for not already deleted
-                    final List<DBItemDeploymentHistory> itemsToDelete = filteredItemsFromFolderToDelete.stream()
-                    		.filter(item -> item.getControllerId().equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-                    		.collect(Collectors.toList());
+                    // first filter for folder permissions
+                    // remember filtered items for later
+                    filteredItemsFromFolderToDelete = itemsFromFolderToDelete.stream().filter(fromFolder -> canAdd(fromFolder.getPath(),
+                            permittedFolders)).collect(Collectors.toList());
+                    // second filter for not already deleted
+                    final List<DBItemDeploymentHistory> itemsToDelete = filteredItemsFromFolderToDelete.stream().filter(item -> item.getControllerId()
+                            .equals(controllerId) && !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).collect(Collectors
+                                    .toList());
                     itemsFromFolderToDeletePerController.put(controllerId, itemsToDelete);
                     // store history entries for delete operation optimistically
-                    invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, 
-                                    DeleteDeployments.storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
-                    //audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
+                    invConfigurationsToDelete.addAll(DeleteDeployments.getInvConfigurationsForTrash(dbLayer, DeleteDeployments
+                            .storeNewDepHistoryEntries(dbLayer, itemsToDelete, commitIdForDeleteFromFolder)));
+                    // audit = new DeployAudit(deployFilter.getAuditLog(), null, commitId, "delete", account);
                 }
             }
             // delete configurations optimistically
@@ -295,7 +298,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             if (foldersToDelete != null) {
                 folders = foldersToDelete.stream().map(item -> item.getConfiguration()).collect(Collectors.toList());
             }
-            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(), 
+            DeleteDeployments.deleteConfigurations(dbLayer, folders, invConfigurationsToDelete, commitIdForDeleteFromFolder, getAccessToken(),
                     getJocError(), dbAuditlog.getId(), withoutFolderDeletion);
 
             // loop 2: send commands to controllers
@@ -311,15 +314,16 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 // process folder to Delete
                 if (filteredItemsFromFolderToDelete != null && !filteredItemsFromFolderToDelete.isEmpty()) {
                     PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, itemsFromFolderToDeletePerController.get(controllerId), controllerId)
-                        .thenAccept(either -> {
-                            DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(), getJocError());
-                        }); 
-                } 
+                            .thenAccept(either -> {
+                                DeleteDeployments.processAfterDelete(either, controllerId, account, commitIdForDelete, getAccessToken(),
+                                        getJocError());
+                            });
+                }
             }
-//            if (audit != null) {
-//                logAuditMessage(audit);
-//                storeAuditLogEntry(audit);
-//            }
+            // if (audit != null) {
+            // logAuditMessage(audit);
+            // storeAuditLogEntry(audit);
+            // }
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -331,16 +335,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private List<Configuration> getDraftConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDraftConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
-            return deployFilter.getStore().getDraftConfigurations().stream()
-                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+            return deployFilter.getStore().getDraftConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
+                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
             return new ArrayList<Configuration>();
         }
-   }
-    
+    }
+
     private List<Configuration> getDraftConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDraftConfigurations().stream().filter(item -> item.getConfiguration().getObjectType().equals(
@@ -350,16 +353,15 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private List<Configuration> getDeployConfigurationsToStoreFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDeployConfigurationsToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
-            return deployFilter.getStore().getDeployConfigurations().stream()
-                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+            return deployFilter.getStore().getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
+                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
             return new ArrayList<Configuration>();
         }
     }
-    
+
     private List<Configuration> getDeployConfigurationFoldersToStoreFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getStore() != null) {
             return deployFilter.getStore().getDeployConfigurations().stream().filter(item -> item.getConfiguration().getObjectType().equals(
@@ -369,14 +371,13 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
         }
     }
 
-    private List<Configuration> getDeployConfigurationsToDeleteFromFilter (DeployFilter deployFilter) {
+    private List<Configuration> getDeployConfigurationsToDeleteFromFilter(DeployFilter deployFilter) {
         if (deployFilter.getDelete() != null) {
-            return deployFilter.getDelete().getDeployConfigurations().stream()
-                    .filter(item -> !item.getConfiguration().getObjectType().equals(ConfigurationType.FOLDER))
-                    .map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
+            return deployFilter.getDelete().getDeployConfigurations().stream().filter(item -> !item.getConfiguration().getObjectType().equals(
+                    ConfigurationType.FOLDER)).map(Config::getConfiguration).filter(Objects::nonNull).collect(Collectors.toList());
         } else {
-          return new ArrayList<Configuration>();
+            return new ArrayList<Configuration>();
         }
     }
-    
+
 }

@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.wizzard;
+package com.sos.joc.model.wizard;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

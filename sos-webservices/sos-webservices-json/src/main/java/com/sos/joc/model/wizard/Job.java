@@ -1,5 +1,5 @@
 
-package com.sos.joc.model.wizzard;
+package com.sos.joc.model.wizard;
 
 import java.util.ArrayList;
 import java.util.Date;
