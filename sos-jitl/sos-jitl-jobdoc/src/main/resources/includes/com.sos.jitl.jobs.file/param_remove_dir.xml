@@ -8,7 +8,7 @@
     default_value="false" 
     required="false">
 
-	<note">
+	<note>
         <title>delete empty subfolder</title>
         <p>
             If enabled empty subdirectories are removed.
