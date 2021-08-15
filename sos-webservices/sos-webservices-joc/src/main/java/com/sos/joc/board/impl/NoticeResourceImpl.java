@@ -3,7 +3,6 @@ package com.sos.joc.board.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Optional;
 
 import javax.ws.rs.Path;
 
@@ -15,11 +14,13 @@ import com.sos.joc.Globals;
 import com.sos.joc.board.resource.INoticeResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.ModifyNotice;
+import com.sos.joc.model.security.permissions.controller.NoticeBoards;
 import com.sos.schema.JsonValidator;
 import com.sos.schema.exception.SOSJsonSchemaException;
 
@@ -68,15 +69,16 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         JsonValidator.validateFailFast(filterBytes, ModifyNotice.class);
         ModifyNotice filter = Globals.objectMapper.readValue(filterBytes, ModifyNotice.class);
         String controllerId = filter.getControllerId();
-        JOCDefaultResponse response = initPermissions(controllerId, getControllerPermissions(controllerId, accessToken).getOrders().getModify());
+        NoticeBoards nb = getControllerPermissions(controllerId, accessToken).getNoticeBoards();
+        boolean permission = (action.equals(Action.DELETE)) ? nb.getDelete() : nb.getPost();
+        JOCDefaultResponse response = initPermissions(controllerId, permission);
         if (response != null) {
             return response;
         }
 
         JControllerApi controllerApi = ControllerApi.of(controllerId);
-        BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getBoardPath()));
+        BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
         NoticeId notice = NoticeId.of(filter.getNoticeId());
-        Instant now = Instant.now();
         
         switch(action) {
         case DELETE:
@@ -85,16 +87,12 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
             break;
             
         case POST:
-            Optional<Instant> endOfLife = Optional.empty();
-            if (filter.getEndOfLife() != null) {
-                endOfLife = Optional.of(Instant.ofEpochMilli(now.toEpochMilli() + filter.getEndOfLife()));
-            }
-            controllerApi.postNotice(board, notice, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
-                    controllerId));
+            controllerApi.postNotice(board, notice, JobSchedulerDate.getScheduledForInUTC(filter.getEndOfLife(), filter.getTimeZone())).thenAccept(
+                    e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             break;
         }
         
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
+        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
     }
 
 }

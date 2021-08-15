@@ -60,7 +60,7 @@ public class TreePermanent {
                     types.add(TreeType.JOBCLASS);
                     types.add(TreeType.LOCK);
                     types.add(TreeType.FILEORDERSOURCE);
-                    types.add(TreeType.BOARD);
+                    types.add(TreeType.NOTICEBOARD);
                     types.add(TreeType.SCHEDULE);
                     types.add(TreeType.WORKINGDAYSCALENDAR);
                     types.add(TreeType.NONWORKINGDAYSCALENDAR);
@@ -116,9 +116,13 @@ public class TreePermanent {
                     }
                 }
                 break;
-            case BOARD:
+            case NOTICEBOARD:
                 if (treeForInventory || treeForInventoryTrash) {
                     if (inventoryPermission) {
+                        types.add(type);
+                    }
+                } else {
+                    if (controllerPermission.getNoticeBoards().getView()) {
                         types.add(type);
                     }
                 }

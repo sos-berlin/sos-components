@@ -202,7 +202,7 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobName = null;
         String jobResources = null;
         String jobScript = null;
-        String boards = null;
+        String noticeBoards = null;
         String lock = null;
         String argumentName = null;
         String argumentValue = null;
@@ -247,7 +247,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -323,14 +323,14 @@ public class InventorySearchDBLayer extends DBLayer {
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
-        case BOARD:
+        case NOTICEBOARD:
         case LOCK:
         default:
             break;
@@ -376,8 +376,8 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobScript != null) {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
-        if (boards != null) {
-            query.setParameter("boards", '%' + boards.toLowerCase() + '%');
+        if (noticeBoards != null) {
+            query.setParameter("boards", '%' + noticeBoards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');
@@ -467,7 +467,7 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobName = null;
         String jobResources = null;
         String jobScript = null;
-        String boards = null;
+        String noticeBoards = null;
         String lock = null;
         String envName = null;
         String envValue = null;
@@ -515,7 +515,7 @@ public class InventorySearchDBLayer extends DBLayer {
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -597,14 +597,14 @@ public class InventorySearchDBLayer extends DBLayer {
             jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            boards = setHQLAndGetParameterValue(hql, "and", "boards", advanced.getBoards(), "sw.instructions", "$.boardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
             hql.append(")");// end exists
             break;
         case JOBRESOURCE:
-        case BOARD:
+        case NOTICEBOARD:
         case LOCK:
         default:
             break;
@@ -651,8 +651,8 @@ public class InventorySearchDBLayer extends DBLayer {
         if (jobScript != null) {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
-        if (boards != null) {
-            query.setParameter("boards", '%' + boards.toLowerCase() + '%');
+        if (noticeBoards != null) {
+            query.setParameter("boards", '%' + noticeBoards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');

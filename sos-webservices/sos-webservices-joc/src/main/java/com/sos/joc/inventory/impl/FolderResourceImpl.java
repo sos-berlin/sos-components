@@ -114,8 +114,8 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case LOCK:
                             folder.getLocks().add(config);
                             break;
-                        case BOARD:
-                            folder.getBoards().add(config);
+                        case NOTICEBOARD:
+                            folder.getNoticeBoards().add(config);
                             break;
                         case FILEORDERSOURCE:
                             folder.getFileOrderSources().add(config);
@@ -141,7 +141,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setJobClasses(sort(folder.getJobClasses()));
                 folder.setJobResources(sort(folder.getJobResources()));
                 folder.setLocks(sort(folder.getLocks()));
-                folder.setBoards(sort(folder.getBoards()));
+                folder.setNoticeBoards(sort(folder.getNoticeBoards()));
                 folder.setFileOrderSources(sort(folder.getFileOrderSources()));
                 folder.setSchedules(sort(folder.getSchedules()));
                 folder.setCalendars(sort(folder.getCalendars()));

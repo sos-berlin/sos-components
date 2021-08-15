@@ -125,7 +125,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (!in.getShallowCopy()) {
                     List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
                             .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
-                            ConfigurationType.BOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue());
+                            ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue());
                     oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
                             .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
                                     item -> item.getName().replaceFirst(replace.get(0), replace.get(1)))));
@@ -201,9 +201,9 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                     .entrySet()) {
                                 json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
-                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.BOARD, Collections.emptyMap())
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll("(\"boardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                                json = json.replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames.size() > 0) {

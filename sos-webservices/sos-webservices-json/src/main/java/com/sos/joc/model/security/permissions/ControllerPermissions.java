@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.security.permissions.controller.Agents;
 import com.sos.joc.model.security.permissions.controller.Deployments;
 import com.sos.joc.model.security.permissions.controller.Locks;
+import com.sos.joc.model.security.permissions.controller.NoticeBoards;
 import com.sos.joc.model.security.permissions.controller.Orders;
 import com.sos.joc.model.security.permissions.controller.Workflows;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -30,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployments",
     "orders",
     "agents",
+    "noticeBoards",
     "locks",
     "workflows"
 })
@@ -51,6 +53,8 @@ public class ControllerPermissions {
     private Orders orders;
     @JsonProperty("agents")
     private Agents agents;
+    @JsonProperty("noticeBoards")
+    private NoticeBoards noticeBoards;
     @JsonProperty("locks")
     private Locks locks;
     @JsonProperty("workflows")
@@ -75,8 +79,9 @@ public class ControllerPermissions {
      * @param workflows
      * @param locks
      * @param agents
+     * @param noticeBoards
      */
-    public ControllerPermissions(Boolean view, Boolean restart, Boolean terminate, Boolean getLog, Boolean switchOver, Deployments deployments, Orders orders, Agents agents, Locks locks, Workflows workflows) {
+    public ControllerPermissions(Boolean view, Boolean restart, Boolean terminate, Boolean getLog, Boolean switchOver, Deployments deployments, Orders orders, Agents agents, NoticeBoards noticeBoards, Locks locks, Workflows workflows) {
         super();
         this.view = view;
         this.restart = restart;
@@ -86,6 +91,7 @@ public class ControllerPermissions {
         this.deployments = deployments;
         this.orders = orders;
         this.agents = agents;
+        this.noticeBoards = noticeBoards;
         this.locks = locks;
         this.workflows = workflows;
     }
@@ -170,6 +176,16 @@ public class ControllerPermissions {
         this.agents = agents;
     }
 
+    @JsonProperty("noticeBoards")
+    public NoticeBoards getNoticeBoards() {
+        return noticeBoards;
+    }
+
+    @JsonProperty("noticeBoards")
+    public void setNoticeBoards(NoticeBoards noticeBoards) {
+        this.noticeBoards = noticeBoards;
+    }
+
     @JsonProperty("locks")
     public Locks getLocks() {
         return locks;
@@ -192,12 +208,12 @@ public class ControllerPermissions {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("view", view).append("restart", restart).append("terminate", terminate).append("getLog", getLog).append("switchOver", switchOver).append("deployments", deployments).append("orders", orders).append("agents", agents).append("locks", locks).append("workflows", workflows).toString();
+        return new ToStringBuilder(this).append("view", view).append("restart", restart).append("terminate", terminate).append("getLog", getLog).append("switchOver", switchOver).append("deployments", deployments).append("orders", orders).append("agents", agents).append("noticeBoards", noticeBoards).append("locks", locks).append("workflows", workflows).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(view).append(switchOver).append(deployments).append(restart).append(getLog).append(orders).append(terminate).append(workflows).append(locks).append(agents).toHashCode();
+        return new HashCodeBuilder().append(view).append(switchOver).append(deployments).append(restart).append(getLog).append(orders).append(terminate).append(workflows).append(locks).append(agents).append(noticeBoards).toHashCode();
     }
 
     @Override
@@ -209,7 +225,7 @@ public class ControllerPermissions {
             return false;
         }
         ControllerPermissions rhs = ((ControllerPermissions) other);
-        return new EqualsBuilder().append(view, rhs.view).append(switchOver, rhs.switchOver).append(deployments, rhs.deployments).append(restart, rhs.restart).append(getLog, rhs.getLog).append(orders, rhs.orders).append(terminate, rhs.terminate).append(workflows, rhs.workflows).append(locks, rhs.locks).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(view, rhs.view).append(switchOver, rhs.switchOver).append(deployments, rhs.deployments).append(restart, rhs.restart).append(getLog, rhs.getLog).append(orders, rhs.orders).append(terminate, rhs.terminate).append(workflows, rhs.workflows).append(locks, rhs.locks).append(agents, rhs.agents).append(noticeBoards, rhs.noticeBoards).isEquals();
     }
 
 }

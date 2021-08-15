@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "fileOrderSource",
     "lock",
     "schedule",
-    "boards",
+    "noticeBoards",
     "jobResources",
     "jobName",
     "jobCriticality",
@@ -83,8 +83,8 @@ public class RequestSearchAdvancedItem {
      * 
      * 
      */
-    @JsonProperty("boards")
-    private String boards;
+    @JsonProperty("noticeBoards")
+    private String noticeBoards;
     /**
      * string without < and >
      * <p>
@@ -282,9 +282,9 @@ public class RequestSearchAdvancedItem {
      * 
      * 
      */
-    @JsonProperty("boards")
-    public String getBoards() {
-        return boards;
+    @JsonProperty("noticeBoards")
+    public String getNoticeBoards() {
+        return noticeBoards;
     }
 
     /**
@@ -293,9 +293,9 @@ public class RequestSearchAdvancedItem {
      * 
      * 
      */
-    @JsonProperty("boards")
-    public void setBoards(String boards) {
-        this.boards = boards;
+    @JsonProperty("noticeBoards")
+    public void setNoticeBoards(String noticeBoards) {
+        this.noticeBoards = noticeBoards;
     }
 
     /**
@@ -520,12 +520,12 @@ public class RequestSearchAdvancedItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("boards", boards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("workflow", workflow).append("fileOrderSource", fileOrderSource).append("lock", lock).append("schedule", schedule).append("noticeBoards", noticeBoards).append("jobResources", jobResources).append("jobName", jobName).append("jobCriticality", jobCriticality).append("jobCountFrom", jobCountFrom).append("jobCountTo", jobCountTo).append("jobScript", jobScript).append("argumentName", argumentName).append("argumentValue", argumentValue).append("envName", envName).append("envValue", envValue).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(boards).append(argumentValue).append(jobScript).append(envValue).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
+        return new HashCodeBuilder().append(jobName).append(workflow).append(argumentName).append(jobCriticality).append(agentName).append(argumentValue).append(jobScript).append(envValue).append(noticeBoards).append(jobCountFrom).append(schedule).append(jobCountTo).append(envName).append(lock).append(fileOrderSource).append(jobResources).toHashCode();
     }
 
     @Override
@@ -537,7 +537,7 @@ public class RequestSearchAdvancedItem {
             return false;
         }
         RequestSearchAdvancedItem rhs = ((RequestSearchAdvancedItem) other);
-        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(boards, rhs.boards).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
+        return new EqualsBuilder().append(jobName, rhs.jobName).append(workflow, rhs.workflow).append(argumentName, rhs.argumentName).append(jobCriticality, rhs.jobCriticality).append(agentName, rhs.agentName).append(argumentValue, rhs.argumentValue).append(jobScript, rhs.jobScript).append(envValue, rhs.envValue).append(noticeBoards, rhs.noticeBoards).append(jobCountFrom, rhs.jobCountFrom).append(schedule, rhs.schedule).append(jobCountTo, rhs.jobCountTo).append(envName, rhs.envName).append(lock, rhs.lock).append(fileOrderSource, rhs.fileOrderSource).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }

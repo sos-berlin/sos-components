@@ -41,7 +41,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.BOARD;
+    private DeployType tYPE = DeployType.NOTICEBOARD;
     /**
      * Expression that returns a NoticeId for the PostNotice statement.
      * 

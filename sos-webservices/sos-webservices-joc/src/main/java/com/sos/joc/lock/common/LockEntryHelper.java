@@ -60,6 +60,7 @@ public class LockEntryHelper {
         Lock item = Globals.objectMapper.readValue(dc.getContent(), Lock.class);
         item.setPath(dc.getPath());
         item.setVersionDate(dc.getCreated());
+        item.setVersion(null);
         String lockId = JocInventory.pathToName(dc.getPath());
         
         //JLockState jLockState = getFromEither(controllerState.idToLockState(LockId.of(lockId)), "LockId=" + lockId);

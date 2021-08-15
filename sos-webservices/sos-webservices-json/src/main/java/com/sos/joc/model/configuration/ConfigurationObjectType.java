@@ -9,12 +9,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ConfigurationObjectType {
 
     JOB("JOB"),
-    JOBCHAIN("JOBCHAIN"),
     ORDER("ORDER"),
-    PROCESSCLASS("PROCESSCLASS"),
     AGENTCLUSTER("AGENTCLUSTER"),
     LOCK("LOCK"),
-    BOARD("BOARD"),
+    NOTICEBOARD("NOTICEBOARD"),
     SCHEDULE("SCHEDULE"),
     FOLDER("FOLDER"),
     JOBSCHEDULER("JOBSCHEDULER"),

@@ -11,7 +11,7 @@ public enum RequestSearchReturnType {
     WORKFLOW("WORKFLOW"),
     FILEORDERSOURCE("FILEORDERSOURCE"),
     JOBRESOURCE("JOBRESOURCE"),
-    BOARD("BOARD"),
+    NOTICEBOARD("NOTICEBOARD"),
     LOCK("LOCK"),
     SCHEDULE("SCHEDULE");
     private final String value;

@@ -1,18 +1,21 @@
 
-package com.sos.joc.model.common;
+package com.sos.joc.model.board;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.board.Board;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * configuration
+ * boards response
  * <p>
  * 
  * 
@@ -20,9 +23,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "configuration"
+    "surveyDate",
+    "noticeBoards"
 })
-public class Configuration200 {
+public class Boards {
 
     /**
      * timestamp
@@ -35,12 +39,16 @@ public class Configuration200 {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
-     * 
-     * (Required)
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("configuration")
-    private Configuration configuration;
+    @JsonProperty("surveyDate")
+    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
+    private Date surveyDate;
+    @JsonProperty("noticeBoards")
+    private List<Board> noticeBoards = new ArrayList<Board>();
 
     /**
      * timestamp
@@ -67,33 +75,45 @@ public class Configuration200 {
     }
 
     /**
-     * 
-     * (Required)
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("configuration")
-    public Configuration getConfiguration() {
-        return configuration;
+    @JsonProperty("surveyDate")
+    public Date getSurveyDate() {
+        return surveyDate;
     }
 
     /**
-     * 
-     * (Required)
+     * timestamp
+     * <p>
+     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
      * 
      */
-    @JsonProperty("configuration")
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
+    @JsonProperty("surveyDate")
+    public void setSurveyDate(Date surveyDate) {
+        this.surveyDate = surveyDate;
+    }
+
+    @JsonProperty("noticeBoards")
+    public List<Board> getNoticeBoards() {
+        return noticeBoards;
+    }
+
+    @JsonProperty("noticeBoards")
+    public void setNoticeBoards(List<Board> noticeBoards) {
+        this.noticeBoards = noticeBoards;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("configuration", configuration).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("noticeBoards", noticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(configuration).toHashCode();
+        return new HashCodeBuilder().append(deliveryDate).append(surveyDate).append(noticeBoards).toHashCode();
     }
 
     @Override
@@ -101,11 +121,11 @@ public class Configuration200 {
         if (other == this) {
             return true;
         }
-        if ((other instanceof Configuration200) == false) {
+        if ((other instanceof Boards) == false) {
             return false;
         }
-        Configuration200 rhs = ((Configuration200) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(configuration, rhs.configuration).isEquals();
+        Boards rhs = ((Boards) other);
+        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(surveyDate, rhs.surveyDate).append(noticeBoards, rhs.noticeBoards).isEquals();
     }
 
 }

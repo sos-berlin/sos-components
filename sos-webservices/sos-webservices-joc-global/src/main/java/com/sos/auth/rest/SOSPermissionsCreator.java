@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.Ini;
-import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.config.Ini.Section;
+import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.InvalidSessionException;
 import org.apache.shiro.session.Session;
@@ -39,6 +39,7 @@ import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.model.security.permissions.controller.Agents;
 import com.sos.joc.model.security.permissions.controller.Deployments;
 import com.sos.joc.model.security.permissions.controller.Locks;
+import com.sos.joc.model.security.permissions.controller.NoticeBoards;
 import com.sos.joc.model.security.permissions.controller.Orders;
 import com.sos.joc.model.security.permissions.controller.Workflows;
 import com.sos.joc.model.security.permissions.joc.Administration;
@@ -223,7 +224,7 @@ public class SOSPermissionsCreator {
     private ControllerPermissions getControllerPermissions(String controllerId) {
 
         ControllerPermissions controllerPermissions = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
-                new Agents(), new Locks(), new Workflows());
+                new Agents(), new NoticeBoards(), new Locks(), new Workflows());
 
         if (currentUser != null && currentUser.getCurrentSubject() != null) {
 
@@ -235,6 +236,9 @@ public class SOSPermissionsCreator {
             controllerPermissions.getAgents().setView(haveRight(controllerId, "sos:products:controller:agents:view"));
             controllerPermissions.getDeployments().setView(haveRight(controllerId, "sos:products:controller:deployment:view"));
             controllerPermissions.getDeployments().setDeploy(haveRight(controllerId, "sos:products:controller:deployment:deploy"));
+            controllerPermissions.getNoticeBoards().setView(haveRight(controllerId, "sos:products:controller:noticeboards:view"));
+            controllerPermissions.getNoticeBoards().setPost(haveRight(controllerId, "sos:products:controller:noticeboards:post"));
+            controllerPermissions.getNoticeBoards().setDelete(haveRight(controllerId, "sos:products:controller:noticeboards:delete"));
             controllerPermissions.getLocks().setView(haveRight(controllerId, "sos:products:controller:locks:view"));
             controllerPermissions.getWorkflows().setView(haveRight(controllerId, "sos:products:controller:workflows:view"));
             controllerPermissions.getOrders().setView(haveRight(controllerId, "sos:products:controller:orders:view"));

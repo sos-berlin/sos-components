@@ -53,7 +53,7 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                     switch(ConfigurationType.fromValue(filter.getObjectType())) {
                         case WORKFLOW:
                         case JOBCLASS:
-                        case BOARD:
+                        case NOTICEBOARD:
                         case FILEORDERSOURCE:
                         case LOCK:
                             path = dbLayer.getPathByNameFromLatestActiveDepHistoryItem(filter.getName(), ConfigurationType.fromValue(filter.getObjectType()));

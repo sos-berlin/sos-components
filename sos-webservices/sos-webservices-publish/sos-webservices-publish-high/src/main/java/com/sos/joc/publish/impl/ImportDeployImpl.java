@@ -152,7 +152,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case LOCK:
                     break;
-                case BOARD:
+                case NOTICEBOARD:
                     break;
                 case JOBCLASS:
                     break;
@@ -208,12 +208,12 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 	objectsToCheckPathRenaming.add(fosDbItem);
                 	fosPublish.setObjectType(DeployType.FILEORDERSOURCE);
                 	importedObjects.put(fosPublish, null);
-                case BOARD:
+                case NOTICEBOARD:
                     BoardPublish boardPublish = new BoardPublish();
                     boardPublish.setContent((Board) config.getContent());
-                    DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.BOARD);
+                    DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.NOTICEBOARD);
                     objectsToCheckPathRenaming.add(boardDbItem);
-                    boardPublish.setObjectType(DeployType.BOARD);
+                    boardPublish.setObjectType(DeployType.NOTICEBOARD);
                     importedObjects.put(boardPublish, null);
                     break;
                 case JOBCLASS:

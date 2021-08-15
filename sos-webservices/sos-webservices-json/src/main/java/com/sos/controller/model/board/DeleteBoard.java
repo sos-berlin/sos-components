@@ -32,7 +32,7 @@ public class DeleteBoard implements IDeleteObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeleteType tYPE = DeleteType.BOARD;
+    private DeleteType tYPE = DeleteType.NOTICEBOARD;
     /**
      * string without < and >
      * <p>

@@ -359,7 +359,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "lockIds", lockIds);
             jsonAddStringValues(builder, "postNotices", postNotices);
             jsonAddStringValues(builder, "expectNotices", expectNotices);
-            jsonAddStringValues(builder, "boardNames", getBoardNames());
+            jsonAddStringValues(builder, "noticeBoardNames", getNoticeBoardNames());
             if (locks.size() > 0) {
                 builder.add("locks", getJsonObject(locks));
             }
@@ -405,7 +405,7 @@ public class WorkflowConverter {
             return expectNotices;
         }
 
-        public Set<String> getBoardNames() {
+        public Set<String> getNoticeBoardNames() {
             return Stream.of(postNotices, expectNotices).flatMap(n -> n.stream()).collect(Collectors.toSet());
         }
 
@@ -472,16 +472,16 @@ public class WorkflowConverter {
             List<WorkflowInstruction<PostNotice>> pNotices = searcher.getPostNoticeInstructions();
             if (pNotices != null) {
                 for (WorkflowInstruction<PostNotice> notice : pNotices) {
-                    if (!SOSString.isEmpty(notice.getInstruction().getBoardName())) {
-                        postNotices.add(notice.getInstruction().getBoardName());
+                    if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardName())) {
+                        postNotices.add(notice.getInstruction().getNoticeBoardName());
                     }
                 }
             }
             List<WorkflowInstruction<ExpectNotice>> eNotices = searcher.getExpectNoticeInstructions();
             if (eNotices != null) {
                 for (WorkflowInstruction<ExpectNotice> notice : eNotices) {
-                    if (!SOSString.isEmpty(notice.getInstruction().getBoardName())) {
-                        expectNotices.add(notice.getInstruction().getBoardName());
+                    if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardName())) {
+                        expectNotices.add(notice.getInstruction().getNoticeBoardName());
                     }
                 }
             }

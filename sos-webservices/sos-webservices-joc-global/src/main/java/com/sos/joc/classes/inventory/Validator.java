@@ -166,7 +166,7 @@ public class Validator {
             if (jobResource.getArguments() != null) {
                 validateExpression("$.arguments", jobResource.getArguments().getAdditionalProperties());
             }
-        } else if (ConfigurationType.BOARD.equals(type)) {
+        } else if (ConfigurationType.NOTICEBOARD.equals(type)) {
             Board board = (Board) config;
             if (board.getPostOrderToNoticeId() != null) {
                 validateExpression("$.postOrderToNotice: ", board.getPostOrderToNoticeId());
@@ -262,7 +262,7 @@ public class Validator {
     }
     
     private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        Matcher m = Pattern.compile("\"boardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Matcher m = Pattern.compile("\"(noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> boards = new HashSet<>();
         while (m.find()) {
             if (m.group(1) != null && !m.group(1).isEmpty()) {
@@ -270,13 +270,13 @@ public class Validator {
             }
         }
         if (!boards.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream(), ConfigurationType.BOARD.intValue());
+            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream(), ConfigurationType.NOTICEBOARD.intValue());
             if (dbBoards == null || dbBoards.isEmpty()) {
-                throw new JocConfigurationException("Missing assigned Boards: " + boards.toString());
+                throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
             } else {
                 boards.removeAll(dbBoards.stream().map(DBItemInventoryConfiguration::getName).collect(Collectors.toSet()));
                 if (!boards.isEmpty()) {
-                    throw new JocConfigurationException("Missing assigned Boards: " + boards.toString());
+                    throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
                 }
             }
         }

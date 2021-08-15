@@ -1128,7 +1128,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("and ic.deployed=sw.deployed ");
         hql.append("and ");
 
-        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.boardNames");
+        String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.noticeBoardNames");
         hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());

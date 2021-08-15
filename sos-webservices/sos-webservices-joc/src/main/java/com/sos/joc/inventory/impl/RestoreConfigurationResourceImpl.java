@@ -94,9 +94,9 @@ public class RestoreConfigurationResourceImpl extends JOCResourceImpl implements
                     throw new JocFolderPermissionsException("Access denied for folder: " + newPathWithoutFix);
                 }
                 
-                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.BOARD, ConfigurationType.JOBRESOURCE,
-                        ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, ConfigurationType.WORKFLOW,
-                        ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
+                List<ConfigurationType> restoreOrder = Arrays.asList(ConfigurationType.LOCK, ConfigurationType.NOTICEBOARD,
+                        ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR,
+                        ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
 
                 List<DBItemInventoryConfigurationTrash> trashDBFolderContent = dbLayer.getTrashFolderContent(config.getPath(), true, null);
                 Map<ConfigurationType, List<DBItemInventoryConfigurationTrash>> trashMap = trashDBFolderContent.stream().collect(Collectors

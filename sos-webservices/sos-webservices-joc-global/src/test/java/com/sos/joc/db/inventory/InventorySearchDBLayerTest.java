@@ -78,7 +78,7 @@ public class InventorySearchDBLayerTest {
             advanced.setAgentName(null);
             // advanced.setJobCriticality(JobCriticality.NORMAL);
             advanced.setJobResources(null);
-            advanced.setBoards(null);
+            advanced.setNoticeBoards(null);
             advanced.setLock(null);
             advanced.setArgumentName(null);
             advanced.setArgumentValue(null);

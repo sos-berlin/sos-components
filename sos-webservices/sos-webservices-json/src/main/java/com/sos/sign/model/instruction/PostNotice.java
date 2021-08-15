@@ -32,7 +32,8 @@ public class PostNotice
      */
     @JsonProperty("boardPath")
     @JsonAlias({
-        "boardName"
+        "boardName",
+        "noticeBoardName"
     })
     private String boardPath;
 

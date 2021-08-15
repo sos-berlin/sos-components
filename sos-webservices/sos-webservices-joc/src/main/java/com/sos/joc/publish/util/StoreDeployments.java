@@ -57,7 +57,7 @@ public class StoreDeployments {
         {
             put(DeployType.JOBCLASS.intValue(), JobClass.class);
             put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
-            put(DeployType.BOARD.intValue(), Board.class);
+            put(DeployType.NOTICEBOARD.intValue(), Board.class);
             put(DeployType.LOCK.intValue(), Lock.class);
             put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
             put(DeployType.WORKFLOW.intValue(), Workflow.class);
@@ -117,7 +117,7 @@ public class StoreDeployments {
                 long countLocks = deployedObjects.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count();
                 long countFileOrderSources = deployedObjects.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count();
                 long countJobResources = deployedObjects.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count();
-                long countBoards = deployedObjects.stream().filter(item -> ConfigurationType.BOARD.intValue() == item.getType()).count();
+                long countBoards = deployedObjects.stream().filter(item -> ConfigurationType.NOTICEBOARD.intValue() == item.getType()).count();
                 LOGGER.info(String.format(
                         "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).", 
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));

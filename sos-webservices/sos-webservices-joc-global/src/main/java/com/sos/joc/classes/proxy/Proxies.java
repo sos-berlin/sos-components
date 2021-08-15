@@ -397,10 +397,8 @@ public class Proxies {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors
                         .groupingBy(DBItemInventoryJSInstance::getControllerId));
             } else {
-                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().map(i -> {
-                    i.setUri(urlMapper.getOrDefault(i.getUri(), i.getUri()));
-                    return i;
-                }).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
+                controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().peek(i -> i.setUri(
+                        urlMapper.getOrDefault(i.getUri(), i.getUri()))).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
             }
         } finally {
             Globals.disconnect(sosHibernateSession);

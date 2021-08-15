@@ -17,7 +17,7 @@
   ],
   "properties": {
     "boardPath": {
-    	"alias": "boardName",
+    	"alias": "boardName,noticeBoardName",
     	"type": "string",
     	"pattern": "^[^<>]*$",
   		"maxLength": 255,

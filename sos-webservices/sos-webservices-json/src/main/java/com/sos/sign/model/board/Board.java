@@ -38,7 +38,7 @@ public class Board implements IDeployObject
      * 
      */
     @JsonProperty("TYPE")
-    private DeployType tYPE = DeployType.BOARD;
+    private DeployType tYPE = DeployType.NOTICEBOARD;
     /**
      * string without < and >
      * <p>

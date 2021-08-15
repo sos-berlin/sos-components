@@ -76,6 +76,10 @@ public class SOSListOfPermissions {
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:locks:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:workflows:view");
         
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:noticeboards:view");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:noticeboards:post");
+        addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:noticeboards:delete");
+        
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:view");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:create");
         addPermission(forUser, sosPermissions.getSOSPermission(), "sos:products:controller:orders:cancel");

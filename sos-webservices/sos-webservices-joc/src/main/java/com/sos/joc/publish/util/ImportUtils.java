@@ -62,7 +62,7 @@ public class ImportUtils {
 	    	case LOCK:
 	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations));
 	    		break;
-	    	case BOARD:
+	    	case NOTICEBOARD:
                 referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations));
 	    	    break;
         	case WORKFLOW:
@@ -105,10 +105,10 @@ public class ImportUtils {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         }
-                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.BOARD)) {
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NOTICEBOARD)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"boardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            json = json.replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
                             // TODO Auto-generated catch block
@@ -179,7 +179,7 @@ public class ImportUtils {
                     Workflow wf = (Workflow)item.getConfiguration();
                     try {
                         String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"boardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        Matcher matcher = Pattern.compile("(\"(noticeB|b)oardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
                         if (matcher.find()) {
                             return item;
                         }
@@ -227,7 +227,7 @@ public class ImportUtils {
     }
     
     public static List<ConfigurationType> getImportOrder() {
-        return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.BOARD, 
+        return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.NOTICEBOARD, 
                 ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
                 ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }

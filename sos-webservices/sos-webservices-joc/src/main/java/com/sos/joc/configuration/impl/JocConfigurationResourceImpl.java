@@ -468,9 +468,6 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             config.setConfigurationType(ConfigurationType.fromValue(dbItem.getConfigurationType()));
         }
         config.setConfigurationItem(dbItem.getConfigurationItem());
-        //if (dbItem.getObjectType() != null) {
-            //config.setObjectType(ConfigurationObjectType.fromValue(dbItem.getObjectType()));
-        //}
         config.setObjectType(dbItem.getObjectType());
         config.setShared(dbItem.getShared());
         config.setName(dbItem.getName());

@@ -47,6 +47,7 @@ import com.sos.joc.model.event.EventType;
 
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
+import js7.data.board.BoardPath;
 import js7.data.cluster.ClusterEvent;
 import js7.data.controller.ControllerEvent;
 import js7.data.event.Event;
@@ -60,6 +61,7 @@ import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
 import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
+import js7.data.board.BoardEvent;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -71,6 +73,7 @@ import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockEvent;
 import js7.data.order.OrderEvent.OrderLockQueued;
 import js7.data.order.OrderEvent.OrderLockReleased;
+import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderNoticeExpected;
 import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderProcessed;
@@ -105,7 +108,7 @@ public class EventService {
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted$.class, OrderDeleted$.class, 
-            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class,
+            VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeExpected.class, OrderNoticePosted.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
@@ -326,6 +329,10 @@ public class EventService {
                     addEvent(createWorkflowEventOfOrder(eventId, w));
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
+                    } else if (evt instanceof OrderLockEvent) {
+                        addEvent(createLockEvent(eventId, ((LockPath) key).string()));
+                    } else if (evt instanceof OrderNoticeEvent) {
+                        addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
                     }
                 } else {
                     //LOGGER.info("Order is not in current state");
@@ -369,8 +376,8 @@ public class EventService {
 //                } else if (itemId instanceof OrderWatchPath) {
 //                 // We don't need an Item event for FileOrderSource
 //                    addEvent(createFileOrderSourceEvent(eventId, itemId.string(), eventType));
-//                } else if (itemId instanceof BoardPath) {
-//                     We don't need an Item event for Board
+                } else if (itemId instanceof BoardPath) {
+                    addEvent(createBoardEvent(eventId, itemId.string(), eventType));
                 } else {
                     // TODO other simple objects
                 }
@@ -390,15 +397,17 @@ public class EventService {
                     addEvent(createAgentEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof LockPath) {
                     addEvent(createLockEvent(eventId, itemId.path().string(), eventType));
+                } else if (itemId instanceof BoardPath) {
+                    addEvent(createBoardEvent(eventId, itemId.path().string(), eventType));
                 } else if (itemId instanceof VersionedItemId<?>) {
                     addEvent(createWorkflowEvent(eventId, mapWorkflowId((VersionedItemId<?>) itemId), eventType));
-                } // JobResourcePath, OrderWatchPath, BoardPath
+                } // JobResourcePath, OrderWatchPath
                 
             } else if (evt instanceof AgentRefStateEvent && !(evt instanceof AgentRefStateEvent.AgentEventsObserved)) {
                 addEvent(createAgentEvent(eventId, ((AgentPath) key).string()));
                 
-            } else if (evt instanceof OrderLockEvent) {
-                addEvent(createLockEvent(eventId, ((LockPath) key).string()));
+            } else if (evt instanceof BoardEvent) {
+                addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
             }
             
         } catch (Exception e) {
@@ -494,6 +503,19 @@ public class EventService {
         evt.setEventType(eventType);
         evt.setPath(path);
         evt.setObjectType(EventType.LOCK);
+        return evt;
+    }
+    
+    private EventSnapshot createBoardEvent(long eventId, String path) {
+        return createLockEvent(eventId, path, "NoticeBoardStateChanged");
+    }
+    
+    private EventSnapshot createBoardEvent(long eventId, String path, String eventType) {
+        EventSnapshot evt = new EventSnapshot();
+        evt.setEventId(eventId);
+        evt.setEventType(eventType);
+        evt.setPath(path);
+        evt.setObjectType(EventType.NOTICEBOARD);
         return evt;
     }
     

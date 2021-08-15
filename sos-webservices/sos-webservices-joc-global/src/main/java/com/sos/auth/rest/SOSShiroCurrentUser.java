@@ -24,6 +24,7 @@ import com.sos.joc.model.security.permissions.JocPermissions;
 import com.sos.joc.model.security.permissions.controller.Agents;
 import com.sos.joc.model.security.permissions.controller.Deployments;
 import com.sos.joc.model.security.permissions.controller.Locks;
+import com.sos.joc.model.security.permissions.controller.NoticeBoards;
 import com.sos.joc.model.security.permissions.controller.Orders;
 import com.sos.joc.model.security.permissions.controller.Workflows;
 import com.sos.joc.model.security.permissions.joc.Administration;
@@ -179,7 +180,7 @@ public class SOSShiroCurrentUser {
         Administration administration = new Administration(new Accounts(), new Settings(), new Controllers(), new Certificates(),
                 new Customization());
         ControllerPermissions controllerDefaults = new ControllerPermissions(false, false, false, false, false, new Deployments(), new Orders(),
-                new Agents(), new Locks(), new Workflows());
+                new Agents(), new NoticeBoards(), new Locks(), new Workflows());
         JocPermissions joc = new JocPermissions(false, administration, new Cluster(), new Inventory(), new Calendars(), new Documentations(), new AuditLog(),
                 new DailyPlan(), new FileTransfer(), new Notification(), new Others());
         return new Permissions(getRoles(), joc, controllerDefaults, new com.sos.joc.model.security.permissions.Controllers());

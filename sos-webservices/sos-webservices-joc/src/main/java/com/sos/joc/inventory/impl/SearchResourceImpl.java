@@ -132,8 +132,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                         workflowAdvanced.setJobResources(item.getName());
                         checkWorkflow = true;
                         break;
-                    case BOARD:
-                        workflowAdvanced.setBoards(item.getName());
+                    case NOTICEBOARD:
+                        workflowAdvanced.setNoticeBoards(item.getName());
                         checkWorkflow = true;
                         break;
                     case LOCK:
@@ -195,8 +195,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         case JOBRESOURCE:
             in.getAdvanced().setJobResources(null);
             break;
-        case BOARD:
-            in.getAdvanced().setBoards(null);
+        case NOTICEBOARD:
+            in.getAdvanced().setNoticeBoards(null);
             break;
         case LOCK:
             in.getAdvanced().setLock(null);
@@ -215,7 +215,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setAgentName(in.getAdvanced().getAgentName());
         item.setArgumentName(in.getAdvanced().getArgumentName());
         item.setArgumentValue(in.getAdvanced().getArgumentValue());
-        item.setBoards(in.getAdvanced().getBoards());
+        item.setNoticeBoards(in.getAdvanced().getNoticeBoards());
         item.setFileOrderSource(in.getAdvanced().getFileOrderSource());
         item.setJobCountFrom(in.getAdvanced().getJobCountFrom());
         item.setJobCountTo(in.getAdvanced().getJobCountTo());

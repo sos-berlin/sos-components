@@ -92,7 +92,7 @@ public class JocInventory {
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
-            put(ConfigurationType.BOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
+            put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
         }
     });
@@ -134,14 +134,14 @@ public class JocInventory {
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.SCHEDULE, Schedule.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
-            put(ConfigurationType.BOARD, Board.class);
+            put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
         }
     });
 
     public static final Set<ConfigurationType> DEPLOYABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ConfigurationType.JOB,
             ConfigurationType.JOBCLASS, ConfigurationType.FILEORDERSOURCE, ConfigurationType.LOCK, ConfigurationType.WORKFLOW,
-            ConfigurationType.JOBRESOURCE, ConfigurationType.BOARD)));
+            ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
@@ -873,12 +873,12 @@ public class JocInventory {
             }
             break;
 
-        case BOARD: // determine Workflows with PostNotice or ReadNotice reference
+        case NOTICEBOARD: // determine Workflows with PostNotice or ReadNotice reference
             // TODO
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"boardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                    workflow.setContent(workflow.getContent().replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
                             + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);

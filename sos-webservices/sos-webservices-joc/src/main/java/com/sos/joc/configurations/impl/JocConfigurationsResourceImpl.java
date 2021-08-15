@@ -141,7 +141,6 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     configuration.setControllerId(jocConfigurationDbItem.getControllerId());
                     configuration.setName(jocConfigurationDbItem.getName());
                     if (jocConfigurationDbItem.getObjectType() != null) {
-                        //configuration.setObjectType(ConfigurationObjectType.fromValue(jocConfigurationDbItem.getObjectType()));
                         configuration.setObjectType(jocConfigurationDbItem.getObjectType());
                     }
                     configuration.setShared(jocConfigurationDbItem.getShared());

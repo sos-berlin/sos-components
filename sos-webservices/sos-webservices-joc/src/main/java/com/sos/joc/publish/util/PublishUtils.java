@@ -516,7 +516,7 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // Board
-            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+            updateItemOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
                     item -> {
                         try {
                             Board board = (Board) item.readUpdateableContent();
@@ -589,7 +589,7 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
                 try {
                     Board board = (Board) item.getContent();
                     if (board.getPath() == null) {
@@ -660,7 +660,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
                     item -> {
                         try {
                             Board board = (Board) item.readUpdateableContent();
@@ -733,7 +733,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+            updateRepoOperationsSimple.addAll(alreadyDeployed.keySet().stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
                     item -> {
                         try {
                             Board board = (Board) item.readUpdateableContent();
@@ -805,7 +805,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
                 try {
                     Board board = (Board) item.getContent();
                     board.setPath(Paths.get(item.getPath()).getFileName().toString());
@@ -875,7 +875,7 @@ public abstract class PublishUtils {
                         }
                     }).filter(Objects::nonNull).collect(Collectors.toSet()));
             // Board
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.BOARD)).map(item -> {
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.NOTICEBOARD)).map(item -> {
                 try {
                     Board board = (Board) item.getContent();
                     if (board.getPath() == null) {
@@ -927,7 +927,7 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.BOARD.intValue()).map(
+            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
                     item -> {
                         try {
                             Board board = Globals.objectMapper.readValue(item.getContent(), Board.class);
@@ -1069,14 +1069,14 @@ public abstract class PublishUtils {
                     newDeployedObject.setInvContent(original.getContent());
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
-                case BOARD:
+                case NOTICEBOARD:
                     String board = Globals.objectMapper.writeValueAsString(((BoardPublish) draft).getContent());
                     newDeployedObject.setContent(board);
                     if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.BOARD.intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.NOTICEBOARD.intValue());
                     } else {
                         original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(),
-                                ConfigurationType.BOARD.intValue());
+                                ConfigurationType.NOTICEBOARD.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1575,17 +1575,17 @@ public abstract class PublishUtils {
             lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
             lockPublish.setObjectType(DeployType.LOCK);
             return lockPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
+        } else if (entryName.endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value())) {
             BoardPublish boardPublish = new BoardPublish();
             Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Board.class);
             if (checkObjectNotEmpty(board)) {
                 boardPublish.setContent(board);
             } else {
                 throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""))));
+                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""))));
             }
-            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), "")));
-            boardPublish.setObjectType(DeployType.BOARD);
+            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), "")));
+            boardPublish.setObjectType(DeployType.NOTICEBOARD);
             return boardPublish;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             JobClassPublish jobClassPublish = new JobClassPublish();
@@ -1707,8 +1707,8 @@ public abstract class PublishUtils {
             lockEdit.setPath(normalizedPath);
             lockEdit.setObjectType(ConfigurationType.LOCK);
             return lockEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.BOARD_FILE_EXTENSION.value(), ""));
+        } else if (entryName.endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""));
             if (normalizedPath.startsWith("//")) {
                 normalizedPath = normalizedPath.substring(1);
             }
@@ -1722,7 +1722,7 @@ public abstract class PublishUtils {
             }
             boardEdit.setName(Paths.get(normalizedPath).getFileName().toString());
             boardEdit.setPath(normalizedPath);
-            boardEdit.setObjectType(ConfigurationType.BOARD);
+            boardEdit.setObjectType(ConfigurationType.NOTICEBOARD);
             return boardEdit;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
             String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
@@ -1848,8 +1848,8 @@ public abstract class PublishUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
-                            case BOARD:
-                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                            case NOTICEBOARD:
+                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 Board board = (Board) deployable.getContent();
                                 board.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(board);
@@ -1946,8 +1946,8 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 break;
-                            case BOARD:
-                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                            case NOTICEBOARD:
+                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -2057,8 +2057,8 @@ public abstract class PublishUtils {
                                 lock.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(lock);
                                 break;
-                            case BOARD:
-                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                            case NOTICEBOARD:
+                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 Board board = (Board) deployable.getContent();
                                 board.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(board);
@@ -2180,8 +2180,8 @@ public abstract class PublishUtils {
                             case LOCK:
                                 extension = ControllerObjectFileExtension.LOCK_FILE_EXTENSION.toString();
                                 break;
-                            case BOARD:
-                                extension = ControllerObjectFileExtension.BOARD_FILE_EXTENSION.toString();
+                            case NOTICEBOARD:
+                                extension = ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.toString();
                                 break;
                             case JOBCLASS:
                                 extension = ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.toString();
@@ -2711,7 +2711,7 @@ public abstract class PublishUtils {
                 Lock lock = Globals.objectMapper.readValue(item.getContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
-            case BOARD:
+            case NOTICEBOARD:
                 Board board = Globals.objectMapper.readValue(item.getContent().getBytes(), Board.class);
                 jsObject.setContent(board);
                 break;
@@ -2760,7 +2760,7 @@ public abstract class PublishUtils {
                 Lock lock = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Lock.class);
                 jsObject.setContent(lock);
                 break;
-            case BOARD:
+            case NOTICEBOARD:
                 Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Board.class);
                 jsObject.setContent(board);
                 break;
@@ -2805,7 +2805,7 @@ public abstract class PublishUtils {
                         com.sos.inventory.model.lock.Lock.class);
                 configurationObject.setConfiguration(lock);
                 break;
-            case BOARD:
+            case NOTICEBOARD:
                 com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getInvContent().getBytes(),
                         com.sos.inventory.model.board.Board.class);
                 configurationObject.setConfiguration(board);
@@ -2867,7 +2867,7 @@ public abstract class PublishUtils {
                         com.sos.inventory.model.jobclass.JobClass.class);
                 configuration.setConfiguration(jobClass);
                 break;
-            case BOARD:
+            case NOTICEBOARD:
                 com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(item.getContent().getBytes(),
                         com.sos.inventory.model.board.Board.class);
                 configuration.setConfiguration(board);
@@ -3238,7 +3238,7 @@ public abstract class PublishUtils {
                 ((Lock) deployed.readUpdateableContent()).setPath(deployed.getName());
             } else if (deployed.getType() == DeployType.FILEORDERSOURCE.intValue()) {
                 ((FileOrderSource) deployed.readUpdateableContent()).setPath(deployed.getName());
-            } else if (deployed.getType() == DeployType.BOARD.intValue()) {
+            } else if (deployed.getType() == DeployType.NOTICEBOARD.intValue()) {
                 ((Board) deployed.readUpdateableContent()).setPath(deployed.getName());
             } else if (deployed.getType() == DeployType.JOBCLASS.intValue()) {
                 ((JobClass) deployed.readUpdateableContent()).setPath(deployed.getName());
