@@ -211,7 +211,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 			.peek(item -> {
                 				try {
 									item.writeUpdateableContent(
-									        (IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+									        (IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(), 
+									                StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId));
 											//(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
 								} catch (IOException e) {
 									throw new JocException(e);

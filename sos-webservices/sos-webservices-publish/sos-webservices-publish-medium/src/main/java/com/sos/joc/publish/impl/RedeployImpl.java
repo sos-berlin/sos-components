@@ -76,7 +76,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
                 unsignedRedeployables = latest.stream().peek(item -> {
     				try {
                         item.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
-                                StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId));
 					} catch (IOException e) {
 						throw new JocException(e);
 					}

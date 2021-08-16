@@ -181,7 +181,14 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                         // // WORKAROUND: old items with leading slash
                         // PublishUtils.updatePathWithNameInContent(filteredUnsignedDrafts);
                         filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.WORKFLOW.intValue()).forEach(
-                                item -> updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer)));
+                                item -> {
+                                    updateableAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(item, controllerId, dbLayer));
+                                    item.setCommitId(commitId);
+                                });
+                        filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.JOBRESOURCE.intValue()).forEach(
+                                item -> {
+                                    item.setCommitId(commitId);
+                                });
                         filteredUnsignedDrafts.stream().filter(item -> item.getType() == ConfigurationType.FILEORDERSOURCE.intValue()).forEach(
                                 item -> {
                                     UpdateableFileOrderSourceAgentName update = PublishUtils.getUpdateableAgentRefInFileOrderSource(item,
@@ -209,7 +216,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                             .getPath(), permittedFolders)).peek(item -> {
                                 try {
                                     item.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
-                                            StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                            StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId));
                                     // (IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
                                 } catch (IOException e) {
                                     throw new JocException(e);
