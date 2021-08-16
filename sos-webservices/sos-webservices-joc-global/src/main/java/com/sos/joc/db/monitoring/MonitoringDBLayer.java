@@ -59,10 +59,17 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getNotifications(List<Long> notificationIds) throws SOSHibernateException {
+    public ScrollableResults getNotifications(List<Long> notificationIds, List<Integer> types) throws SOSHibernateException {
         int size = notificationIds.size();
 
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
+        if (types != null && types.size() > 0) {
+            if (types.size() == 1) {
+                hql.append("and n.type=:type ");
+            } else {
+                hql.append("and n.type in :types ");
+            }
+        }
         if (size == 1) {
             hql.append("and n.id=:notificationId");
         } else {
@@ -70,6 +77,13 @@ public class MonitoringDBLayer extends DBLayer {
             hql.append("order by n.id desc");
         }
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
+        if (types != null && types.size() > 0) {
+            if (types.size() == 1) {
+                query.setParameter("type", types.get(0));
+            } else {
+                query.setParameterList("types", types);
+            }
+        }
         if (size == 1) {
             query.setParameter("notificationId", notificationIds.get(0));
         } else {

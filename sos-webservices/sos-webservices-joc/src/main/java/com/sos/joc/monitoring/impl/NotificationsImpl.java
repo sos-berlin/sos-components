@@ -65,7 +65,7 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
                     sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), types, in
                             .getLimit());
                 } else {
-                    sr = dbLayer.getNotifications(in.getNotificationIds());
+                    sr = dbLayer.getNotifications(in.getNotificationIds(), types);
                 }
                 while (sr.next()) {
                     notifications.add(convert((NotificationDBItemEntity) sr.get(0)));
