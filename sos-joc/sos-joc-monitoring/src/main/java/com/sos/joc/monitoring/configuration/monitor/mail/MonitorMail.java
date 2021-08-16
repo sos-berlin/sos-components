@@ -2,8 +2,6 @@ package com.sos.joc.monitoring.configuration.monitor.mail;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -16,9 +14,7 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorMail extends AMonitor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MonitorMail.class);
-
-    private static final String ELEMENT_NAME_FROM = "From";
+   private static final String ELEMENT_NAME_FROM = "From";
     private static final String ELEMENT_NAME_TO = "To";
     private static final String ELEMENT_NAME_CC = "CC";
     private static final String ELEMENT_NAME_BCC = "BCC";
@@ -57,13 +53,8 @@ public class MonitorMail extends AMonitor {
     }
 
     @Override
-    public NotifierMail createNotifier(Configuration conf) {
-        try {
-            return new NotifierMail(this, conf);
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
-            return null;
-        }
+    public NotifierMail createNotifier(Configuration conf) throws Exception {
+        return new NotifierMail(this, conf);
     }
 
     @Override

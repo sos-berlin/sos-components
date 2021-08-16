@@ -73,13 +73,8 @@ public class MonitorJMS extends AMonitor {
     }
 
     @Override
-    public NotifierJMS createNotifier(Configuration conf) {
-        try {
-            return new NotifierJMS(this, conf);
-        } catch (Throwable e) {
-            LOGGER.error(String.format("[createNotifier]%s", e.toString()), e);
-            return null;
-        }
+    public NotifierJMS createNotifier(Configuration conf) throws Exception {
+        return new NotifierJMS(this, conf);
     }
 
     @Override

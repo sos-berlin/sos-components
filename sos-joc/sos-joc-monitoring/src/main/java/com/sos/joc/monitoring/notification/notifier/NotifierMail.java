@@ -90,15 +90,14 @@ public class NotifierMail extends ANotifier {
             MailResource mr = getMailResource(conf);
             createMail(mr);
             if (SOSString.isEmpty(mail.getHost())) {
+                String knownProperties = null;
                 if (mr != null) {
                     Properties p = mr.getMaskedProperties();
-                    if (p == null) {
-                        LOGGER.error(String.format("[%s]missing mail properties", monitor.getInfo()));
-                    } else {
-                        LOGGER.info(String.format("[%s][properties]%s", monitor.getInfo(), p));
+                    if (p != null) {
+                        knownProperties = p.toString();
                     }
                 }
-                throw new Exception(String.format("[%s]missing host", monitor.getInfo()));
+                throw new Exception(String.format("[%s][missing host]known properties: %s", monitor.getInfo(), knownProperties));
             }
         } catch (Throwable e) {
             mail = null;

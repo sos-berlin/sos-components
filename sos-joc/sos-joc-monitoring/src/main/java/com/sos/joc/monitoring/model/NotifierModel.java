@@ -223,7 +223,18 @@ public class NotifierModel {
         }
 
         for (AMonitor m : notification.getMonitors()) {
-            ANotifier n = m.createNotifier(conf);
+            ANotifier n = null;
+            try {
+                n = m.createNotifier(conf);
+            } catch (Throwable e) {
+                if (mn == null) {
+                    LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType().value(), m
+                            .getMonitorName()));
+                } else {
+                    dbLayer.saveNotificationMonitor(mn, m, e);
+                }
+                n = null;
+            }
             if (n != null) {
                 try {
                     NotifyResult nr = n.notify(type, analyzer.getOrder(), os, mn);

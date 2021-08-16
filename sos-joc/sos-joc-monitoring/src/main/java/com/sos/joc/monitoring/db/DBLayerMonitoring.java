@@ -414,6 +414,24 @@ public class DBLayerMonitoring {
         return item;
     }
 
+    public DBItemNotificationMonitor saveNotificationMonitor(DBItemNotification notification, AMonitor monitor, Throwable exception)
+            throws SOSHibernateException {
+        DBItemNotificationMonitor item = new DBItemNotificationMonitor();
+        item.setNotificationId(notification.getId());
+        item.setType(monitor.getType());
+        item.setName(monitor.getMonitorName());
+        item.setMessage(monitor.getMessage());
+        item.setConfiguration(monitor.getInfo().toString());
+        if (exception != null) {
+            item.setError(true);
+            item.setErrorText(exception.getMessage());
+        }
+        item.setCreated(new Date());
+
+        session.save(item);
+        return item;
+    }
+
     public DBItemMonitoringOrder convert(DBItemHistoryOrder history) {
         if (history == null) {
             return null;
