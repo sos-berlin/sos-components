@@ -245,17 +245,32 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private void updateUnknownOrders(String controllerId, Set<String> orders, Set<JOrder> jOrders) throws SOSHibernateException {
         List<String> listOfOrderIds = new ArrayList<String>();
-        for (String orderId : orders) {
-            listOfOrderIds.add(orderId);
-        }
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/modify updateUnknownOrders");
+            sosHibernateSession.setAutoCommit(false);
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
-        for (String orderId : orders) {
-            addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
-        }
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+            filter.setControllerId(controllerId);
 
-        Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
-        listOfOrderIds.removeAll(orderIds);
-        updateDailyPlan(listOfOrderIds);
+            for (String orderId : orders) {
+                filter.setOrderId(orderId);
+                if (dbLayerDailyPlannedOrders.getUniqueDailyPlan(filter) != null) {
+                    listOfOrderIds.add(orderId);
+                }
+            }
+
+            for (String orderId : orders) {
+                addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
+            }
+
+            Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
+            listOfOrderIds.removeAll(orderIds);
+            updateDailyPlan(listOfOrderIds);
+        } finally {
+            Globals.disconnect(sosHibernateSession);
+        }
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
@@ -292,20 +307,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
 
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders(), withOrders);
-        updateUnknownOrders(controllerId, orders, jOrders);
 
-        List<String> listOfOrderIds = new ArrayList<String>();
-        for (String orderId : orders) {
-            listOfOrderIds.add(orderId);
+        if (Action.CANCEL_DAILYPLAN.equals(action)) {
+            updateUnknownOrders(controllerId, orders, jOrders);
         }
-
-        for (String orderId : orders) {
-            addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
-        }
-
-        Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
-        listOfOrderIds.removeAll(orderIds);
-        updateDailyPlan(listOfOrderIds);
 
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
