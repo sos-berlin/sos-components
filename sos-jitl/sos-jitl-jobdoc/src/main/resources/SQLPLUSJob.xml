@@ -45,13 +45,13 @@
                 </note>
             </param>
 
-            <xi:include href="./params/param_sqlplus_script_file.xml" parse="xml">
-            	<xi:fallback>./params/param_sqlplus_script_file.xml not found</xi:fallback>
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml">
+            	<xi:fallback>./includes/param_sqlplus_script_file.xml not found</xi:fallback>
             </xi:include>
-            <xi:include href="./params/param_sqlplus_db_url.xml" parse="xml">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_db_url.xml" parse="xml">
             	<xi:fallback>./params/param_sqlplus_db_url.xml not found</xi:fallback>
             </xi:include>
-            <xi:include href="./params/param_variable_parser_reg_expr.xml" parse="xml">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml">
             	<xi:fallback>./params/param_variable_parser_reg_expr.xml not found</xi:fallback>
             </xi:include>
 
@@ -100,10 +100,10 @@
                 </note>
             </param>
 
-            <xi:include href="./params/param_std_out_output.xml" parse="xml">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml" parse="xml">
                 <xi:fallback>./params/param_std_out_output.xml not found</xi:fallback>
             </xi:include>
-            <xi:include href="./params/param_exit_code.xml" parse="xml">
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_exit_code.xml" parse="xml">
                 <xi:fallback>./params/param_exit_code.xml not found</xi:fallback>
             </xi:include>
         </params>
