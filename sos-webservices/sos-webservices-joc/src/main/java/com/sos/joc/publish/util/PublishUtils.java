@@ -3218,7 +3218,7 @@ public abstract class PublishUtils {
         // TODO: type mapping
         try {
             newItem.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(cfg.getContent(), StoreDeployments.CLASS_MAPPING
-                    .get(cfg.getType())));
+                    .get(cfg.getType()), commitId));
 //            newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
 //                    .getType())));
         } catch (IOException e) {
