@@ -203,7 +203,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             }
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.NOTICEBOARD, Collections.emptyMap())
                                     .entrySet()) {
-                                json = json.replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                                json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames.size() > 0) {

@@ -878,7 +878,7 @@ public class JocInventory {
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
-                    workflow.setContent(workflow.getContent().replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
+                    workflow.setContent(workflow.getContent().replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + config.getName() + "\"", "$1" + newName
                             + "\""));
                     workflow.setDeployed(false);
                     int i = items.indexOf(workflow);

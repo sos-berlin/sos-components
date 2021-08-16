@@ -108,7 +108,7 @@ public class ImportUtils {
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NOTICEBOARD)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"(noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
                             // TODO Auto-generated catch block
@@ -179,7 +179,7 @@ public class ImportUtils {
                     Workflow wf = (Workflow)item.getConfiguration();
                     try {
                         String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"(noticeB|b)oardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        Matcher matcher = Pattern.compile("(\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
                         if (matcher.find()) {
                             return item;
                         }

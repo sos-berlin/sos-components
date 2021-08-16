@@ -262,7 +262,7 @@ public class Validator {
     }
     
     private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        Matcher m = Pattern.compile("\"(noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
+        Matcher m = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> boards = new HashSet<>();
         while (m.find()) {
             if (m.group(1) != null && !m.group(1).isEmpty()) {
