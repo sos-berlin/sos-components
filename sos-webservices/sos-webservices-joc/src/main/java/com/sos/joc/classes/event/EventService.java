@@ -47,6 +47,7 @@ import com.sos.joc.model.event.EventType;
 
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefStateEvent;
+import js7.data.board.BoardEvent;
 import js7.data.board.BoardPath;
 import js7.data.cluster.ClusterEvent;
 import js7.data.controller.ControllerEvent;
@@ -61,7 +62,6 @@ import js7.data.item.VersionedEvent.VersionedItemAddedOrChanged;
 import js7.data.item.VersionedItemId;
 import js7.data.item.VersionedItemPath;
 import js7.data.lock.LockPath;
-import js7.data.board.BoardEvent;
 import js7.data.order.OrderEvent;
 import js7.data.order.OrderEvent.OrderAdded;
 import js7.data.order.OrderEvent.OrderBroken;
@@ -73,7 +73,6 @@ import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockEvent;
 import js7.data.order.OrderEvent.OrderLockQueued;
 import js7.data.order.OrderEvent.OrderLockReleased;
-import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderNoticeExpected;
 import js7.data.order.OrderEvent.OrderNoticePosted;
 import js7.data.order.OrderEvent.OrderProcessed;
@@ -94,6 +93,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.proxy.javaapi.eventbus.JControllerEventBus;
+import scala.collection.JavaConverters;
 
 public class EventService {
 
@@ -313,13 +313,13 @@ public class EventService {
             long eventId = stampedEvt.eventId() / 1000000; //eventId per second
             Object key = event.key();
             Event evt = event.event();
-            //LOGGER.info(evt.toString());
+            LOGGER.info(evt.toString());
 
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
-                    //LOGGER.info(opt.get().toString());
+                    LOGGER.info(opt.get().toString());
                     String mainOrderId = orderId.string().substring(0, 24);
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
@@ -330,9 +330,14 @@ public class EventService {
                     if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     } else if (evt instanceof OrderLockEvent) {
-                        addEvent(createLockEvent(eventId, ((LockPath) key).string()));
-                    } else if (evt instanceof OrderNoticeEvent) {
-                        addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
+                        OrderLockEvent lockEvt = (OrderLockEvent) evt;
+                        JavaConverters.asJava(lockEvt.lockPaths()).forEach(lock -> {
+                            addEvent(createLockEvent(eventId, lock.string()));
+                        });
+//                    } else if (evt instanceof OrderNoticePosted) {
+//                        OrderNoticePosted nEvt = (OrderNoticePosted) evt;
+//                        nEvt.notice().
+//                        addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
                     }
                 } else {
                     //LOGGER.info("Order is not in current state");

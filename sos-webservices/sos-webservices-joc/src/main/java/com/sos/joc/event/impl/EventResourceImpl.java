@@ -132,6 +132,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
                     .filter(Objects::nonNull).collect(Collectors.toSet());
             
+            Set<String> noticeBoardNames = evt.getEventSnapshots().stream().filter(e -> EventType.NOTICEBOARD.equals(e.getObjectType())).map(EventSnapshot::getPath)
+                    .filter(Objects::nonNull).collect(Collectors.toSet());
+            
 //            Set<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
 //                    EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
             
@@ -141,6 +144,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 //            Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
 //                    .intValue());
             Map<String, String> namePathLockMap = dbCLayer.getNamePathMapping(evt.getControllerId(), lockNames, DeployType.LOCK.intValue());
+            Map<String, String> namePathNoticeBoardMap = dbCLayer.getNamePathMapping(evt.getControllerId(), noticeBoardNames, DeployType.NOTICEBOARD.intValue());
 //            Map<String, String> namePathFileOrderSourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), fileOrderSourceNames,
 //                    DeployType.FILEORDERSOURCE.intValue());
 //            Map<String, String> namePathJobResourceMap = dbCLayer.getNamePathMapping(evt.getControllerId(), jobResourceNames,
@@ -184,6 +188,11 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
 //                        if (!canAdd(e.getPath(), permittedFolders)) {
 //                            return null;
 //                        }
+                    } else if (EventType.NOTICEBOARD.equals(e.getObjectType())) {
+                        e.setPath(namePathNoticeBoardMap.getOrDefault(path, path));
+                        if (!canAdd(e.getPath(), permittedFolders)) {
+                            return null;
+                        }
                     } else if (EventType.FOLDER.equals(e.getObjectType())) {
                         //LOGGER.info("folder: " + path);
                         if (!folderIsPermitted(path, permittedFolders)) {
