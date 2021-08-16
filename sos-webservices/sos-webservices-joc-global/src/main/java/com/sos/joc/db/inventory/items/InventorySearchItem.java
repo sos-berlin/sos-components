@@ -4,6 +4,7 @@ public class InventorySearchItem {
 
     private Long id;
     private String path;
+    private String folder;
     private String name;
     private String title;
     private String controllerId;
@@ -28,6 +29,14 @@ public class InventorySearchItem {
 
     public void setPath(String val) {
         path = val;
+    }
+
+    public String getFolder() {
+        return folder;
+    }
+
+    public void setFolder(String val) {
+        folder = val;
     }
 
     public String getName() {

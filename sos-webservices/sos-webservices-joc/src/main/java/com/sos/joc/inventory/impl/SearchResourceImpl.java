@@ -91,6 +91,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     ri.setReleased(item.isReleased());
                     ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
                     ri.setHasReleases(item.getCountReleased().intValue() > 0);
+                    ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
                     r.add(ri);
                 }
             }
@@ -170,6 +171,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
                     ri.setReleased(item.isReleased());
                     ri.setHasDeployments(item.getCountDeployed().intValue() > 0);
                     ri.setHasReleases(item.getCountReleased().intValue() > 0);
+                    ri.setPermitted(folderPermissions.isPermittedForFolder(item.getFolder()));
                     r.add(ri);
                 }
             }

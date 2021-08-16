@@ -38,6 +38,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
+        hql.append(",mt.folder as folder ");
         hql.append(",mt.name as name ");
         hql.append(",mt.title as title ");
         hql.append(",mt.valid as valid ");
@@ -92,6 +93,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (isReleasable) {
             hql.append("mt.cid as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
             hql.append(",true as valid ");
@@ -104,6 +106,7 @@ public class InventorySearchDBLayer extends DBLayer {
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
             hql.append(",mt.controllerId as controllerId ");
@@ -156,6 +159,7 @@ public class InventorySearchDBLayer extends DBLayer {
 
         StringBuilder hql = new StringBuilder("select mt.id as id ");
         hql.append(",mt.path as path ");
+        hql.append(",mt.folder as folder ");
         hql.append(",mt.name as name ");
         hql.append(",mt.title as title ");
         hql.append(",mt.valid as valid ");
@@ -410,6 +414,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (isReleasable) {
             hql.append("mt.cid as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
             hql.append(",true as valid ");
@@ -422,6 +427,7 @@ public class InventorySearchDBLayer extends DBLayer {
         } else {
             hql.append("mt.inventoryConfigurationId as id");
             hql.append(",mt.path as path");
+            hql.append(",mt.folder as folder ");
             hql.append(",mt.name as name");
             hql.append(",mt.title as title ");
             hql.append(",mt.controllerId as controllerId ");

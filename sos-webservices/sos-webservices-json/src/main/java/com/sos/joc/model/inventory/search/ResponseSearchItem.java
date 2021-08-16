@@ -30,7 +30,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "released",
     "hasDeployments",
     "hasReleases",
-    "controllerId"
+    "controllerId",
+    "permitted"
 })
 public class ResponseSearchItem {
 
@@ -98,6 +99,8 @@ public class ResponseSearchItem {
      */
     @JsonProperty("controllerId")
     private String controllerId;
+    @JsonProperty("permitted")
+    private Boolean permitted;
 
     /**
      * non negative long
@@ -297,14 +300,24 @@ public class ResponseSearchItem {
         this.controllerId = controllerId;
     }
 
+    @JsonProperty("permitted")
+    public Boolean getPermitted() {
+        return permitted;
+    }
+
+    @JsonProperty("permitted")
+    public void setPermitted(Boolean permitted) {
+        this.permitted = permitted;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("controllerId", controllerId).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("controllerId", controllerId).append("permitted", permitted).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(hasDeployments).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(permitted).append(name).append(id).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -316,7 +329,7 @@ public class ResponseSearchItem {
             return false;
         }
         ResponseSearchItem rhs = ((ResponseSearchItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(hasDeployments, rhs.hasDeployments).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(permitted, rhs.permitted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }
