@@ -200,27 +200,33 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                     } else {
                     	// check if items to import already exist in current configuration and ignore them
                     	// import only if item does not exist yet
-                    	for (ConfigurationObject configuration : configurations) {
-                    		DBItemInventoryConfiguration existingConfiguration = 
-                    				dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
-                    		if (existingConfiguration == null) {
-                    			if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
-                    				if(!configuration.getPath().startsWith(filter.getTargetFolder())) {
-                    					configuration.setPath(filter.getTargetFolder() + configuration.getPath());
-                    				}
-                    				if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                    					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                    				}
-                    			} else {
-                    				if (canAdd(configuration.getPath(), permittedFolders)) {
-                        				filteredConfigurations.add(configuration);
-                    					dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
-                    				}
-                    			}
-                    		}
-                    	}
-                    	
+                        Map<ConfigurationType, List<ConfigurationObject>> configurationsByType = configurations.stream()
+                                .collect(Collectors.groupingBy(ConfigurationObject::getObjectType));
+                        for (ConfigurationType type : importOrder) {
+                            List<ConfigurationObject> configurationObjectsByType = configurationsByType.get(type);
+                            if (configurationObjectsByType != null && !configurationObjectsByType.isEmpty()) {
+                                for (ConfigurationObject configuration : configurationsByType.get(type)) {
+                                    DBItemInventoryConfiguration existingConfiguration = 
+                                            dbLayer.getConfigurationByName(configuration.getName(), configuration.getObjectType());
+                                    if (existingConfiguration == null) {
+                                        if(filter.getTargetFolder() != null && !filter.getTargetFolder().isEmpty()) {
+                                            if(!configuration.getPath().startsWith(filter.getTargetFolder())) {
+                                                configuration.setPath(filter.getTargetFolder() + configuration.getPath());
+                                            }
+                                            if (canAdd(configuration.getPath(), permittedFolders)) {
+                                                filteredConfigurations.add(configuration);
+                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                            }
+                                        } else {
+                                            if (canAdd(configuration.getPath(), permittedFolders)) {
+                                                filteredConfigurations.add(configuration);
+                                                dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
             	}
                 if (!filteredConfigurations.isEmpty()) {
