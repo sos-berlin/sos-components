@@ -36,8 +36,10 @@ public class JsonConverter {
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
     
     @SuppressWarnings("unchecked")
-    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
-        
+    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId) throws JsonParseException, JsonMappingException, IOException {
+        if (commitId != null && !commitId.isEmpty()) {
+            json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
+        }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
             return (T) readAsConvertedWorkflow(json);
         } else {
