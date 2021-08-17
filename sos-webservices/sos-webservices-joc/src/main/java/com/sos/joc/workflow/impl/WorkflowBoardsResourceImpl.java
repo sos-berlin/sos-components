@@ -13,27 +13,31 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
-import com.sos.joc.workflow.resource.IWorkflowResource;
+import com.sos.joc.model.workflow.WorkflowsFilter;
+import com.sos.joc.workflow.resource.IWorkflowBoardsResource;
+import com.sos.joc.workflows.impl.WorkflowsResourceImpl;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
 
 @Path("workflow")
-public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowResource {
+public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWorkflowBoardsResource {
 
-    private static final String API_CALL = "./workflow";
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowResourceImpl.class);
+    private static final String API_CALL = "./workflow/dependencies";
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowBoardsResourceImpl.class);
 
     @Override
-    public JOCDefaultResponse postWorkflowPermanent(String accessToken, byte[] filterBytes) {
+    public JOCDefaultResponse postWorkflowDependencies(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
@@ -61,8 +65,8 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
 
             DeployedContent content = dbLayer.getDeployedInventory(controllerId, DeployType.WORKFLOW.intValue(), workflowPath, versionId);
             if (content != null && content.getContent() != null && !content.getContent().isEmpty()) {
-                com.sos.controller.model.workflow.Workflow workflow = Globals.objectMapper.readValue(content.getContent(),
-                        com.sos.controller.model.workflow.Workflow.class);
+                com.sos.controller.model.workflow.WorkflowDeps workflow = Globals.objectMapper.readValue(content.getContent(),
+                        com.sos.controller.model.workflow.WorkflowDeps.class);
                 checkFolderPermissions(content.getPath(), folderPermissions.getListOfFolders());
                 workflow.setPath(content.getPath());
                 workflow.setVersionDate(content.getCreated());
@@ -80,7 +84,20 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                 if (workflow.getIsCurrentVersion()) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
-                entity.setWorkflow(WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow));
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
+                
+                JocError jocError = getJocError();
+                for (String boardName : workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet()) {
+                    WorkflowsFilter f = new WorkflowsFilter();
+                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByPostNoticeBoard(JocInventory.pathToName(boardName), controllerId));
+                    f.setControllerId(controllerId);
+                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+                        workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
+                                currentstate, folderPermissions, jocError));
+                    }
+                }
+                
+                entity.setWorkflow(workflow);
             } else {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowPath));
             }

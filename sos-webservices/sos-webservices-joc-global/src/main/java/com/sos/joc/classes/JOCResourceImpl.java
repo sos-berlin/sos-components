@@ -463,6 +463,10 @@ public class JOCResourceImpl {
         return folderPermissions.getPermittedFolders(folders);
     }
     
+    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSShiroFolderPermissions folderPermissions) {
+        return folderPermissions.getPermittedFolders(folders);
+    }
+    
     protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
         return SOSShiroFolderPermissions.isPermittedForFolder(folder, listOfFolders);
     }
