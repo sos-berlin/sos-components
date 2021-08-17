@@ -60,7 +60,7 @@ public abstract class ClientServerCertificateUtil {
         Date now = Date.from(Instant.now());
         OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
         List<OnetimeToken> invalidated = onetimeTokens.getTokens().stream()
-                .filter(token -> token.getValidUntil().getTime() > now.getTime()).collect(Collectors.toList());
+                .filter(token -> token.getValidUntil().getTime() <= now.getTime()).collect(Collectors.toList());
         if (!invalidated.isEmpty()) {
             onetimeTokens.getTokens().removeAll(invalidated);
         }
