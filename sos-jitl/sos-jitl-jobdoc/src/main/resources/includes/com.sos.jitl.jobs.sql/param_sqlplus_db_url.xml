@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<param
-	xmlns="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1"
-	xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	name="db_url"
 	Category="database" DefaultValue="" required="true"
 	DataType="SOSOptionString">
 	 
-	<note language="en">
+	<note>
 		<title>SID of the database connection</title>
 
-		<div xmlns="http://www.w3.org/1999/xhtml">
-        <p>
+		<p>
                The database connection is formed with  the parameters db_url, <paramref>db_user</paramref> and <paramref>db_password</paramref>: db_user/db_password@db_url, e.g.
         </p>
         <pre>
@@ -18,7 +17,6 @@
                
                scheduler/scheduler@scheduler
         </pre>
-        </div>
     </note>
     
 </param>

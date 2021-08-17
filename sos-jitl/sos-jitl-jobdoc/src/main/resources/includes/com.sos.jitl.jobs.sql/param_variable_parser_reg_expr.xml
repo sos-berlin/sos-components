@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<param xmlns="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1"
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
        xmlns:xhtml="http://www.w3.org/1999/xhtml"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:xi="http://www.w3.org/2001/XInclude"
-       xsi:schemaLocation="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1
-http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1.xsd"
        name="variable_parser_reg_expr"
        default_value="^SET\s+([^\s]+)\s*IS\s+(.*)$"
        required="false"
@@ -12,9 +9,8 @@ http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1.xsd"
        Alias="VariableParserRegExpr">
 
  
-        <note language="en">
+        <note>
 		    <title>Regular Expression for Parameter parsing</title>
-          <div xmlns="http://www.w3.org/1999/xhtml">
           <p>The script output will parse with this regular expression. The hits are available as order parameters.
           </p>
           <ul>
@@ -47,7 +43,6 @@ http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1.xsd"
                <li>variable_parser_reg_expr="^([^=]+)\s*=\s+(.*)$" returns the order parameter "foo=bar"</li>
              </ul>
 
-          </div>
         </note>
-        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" xml:base="."/>
+        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
       </param>

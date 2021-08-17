@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<param xmlns="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1" xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-xsi:schemaLocation="http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1 http://www.sos-berlin.com/schema/scheduler_job_documentation_v1.1.xsd"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="command_script_file" required="false" DataType="SOSOptionCommandString"
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       name="command_script_file" required="false" DataType="SOSOptionCommandString"
     OptionName="SQLPlusScriptFile" see="" prefix="" scope="all">
 
     
 <codeexample type="sql*plus">
-<title language="en"></title>
-<title language="de"></title>
 <embeddedExample>
 WHENEVER SQLERROR EXIT SQL.SQLCODE
 WHENEVER OSERROR EXIT FAILURE
@@ -28,13 +27,9 @@ prompt SET period_prev IS &amp;PN_YEAR_PERIOD_PREV;
 prompt SET end_date IS 1;
 exit;
 </embeddedExample>
-<explanation language="de"></explanation>
-<explanation language="en"></explanation>
 </codeexample>
 
 <codeexample type="xml">
-<title language="en"></title>
-<title language="de"></title>
 <embeddedExample>
 <![CDATA[
 <param  name="command_script_file" value="
@@ -60,7 +55,7 @@ exit;
 ]]>
 </embeddedExample>
  
-<explanation language="en">
+<explanation>
 <title>Parameter value with many lines</title>
 <p>
 The value of a parameter can be arranged in lines.
@@ -71,15 +66,13 @@ obtain the well-formedness of XML.
 </codeexample>
 
 <codeexample type="xml">
-<title language="en"></title>
-<title language="de"></title>
 <embeddedExample>
         ...
         &lt;param  name="command_script_file" value="./config/live/sqlplus/sqlplus2.sql"/>
         ...
 </embeddedExample>
  
-<explanation language="en">
+<explanation>
 <title>Parameter value from file</title>
 <p>
 </p>
