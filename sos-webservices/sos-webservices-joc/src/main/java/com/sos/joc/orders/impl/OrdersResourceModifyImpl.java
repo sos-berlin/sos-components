@@ -219,9 +219,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-
+    private DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId,
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders) throws SOSHibernateException {
         OrderInitiatorSettings settings;
         if (Globals.configurationGlobals == null) {
             settings = new OrderInitiatorSettings();
@@ -234,13 +233,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             settings = reader.getSettings(section);
         }
 
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYCLIC_ORDERS");
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            return dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
+        return dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
     }
 
     private void updateUnknownOrders(String controllerId, Set<String> orders, Set<JOrder> jOrders) throws SOSHibernateException {
@@ -262,7 +255,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
 
             for (String orderId : orders) {
-                addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
+                addCyclicOrderIds(listOfOrderIds, orderId, controllerId, dbLayerDailyPlannedOrders);
             }
 
             Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
