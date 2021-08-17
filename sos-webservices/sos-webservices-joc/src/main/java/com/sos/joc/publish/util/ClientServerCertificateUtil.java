@@ -8,6 +8,10 @@ import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.naming.InvalidNameException;
 
@@ -21,7 +25,9 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.ca.CAUtils;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.joc.keys.auth.token.OnetimeTokens;
 import com.sos.joc.keys.db.DBLayerKeys;
+import com.sos.joc.model.auth.token.OnetimeToken;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
 import com.sos.joc.model.sign.JocKeyPair;
@@ -48,5 +54,15 @@ public abstract class ClientServerCertificateUtil {
         response.setJocKeyPair(clientServerAuthKeyPair);
         response.setCaCert(rootKeyPair.getCertificate());
         return response;
+    }
+
+    public static void cleanupInvalidatedTokens() {
+        Date now = Date.from(Instant.now());
+        OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
+        List<OnetimeToken> invalidated = onetimeTokens.getTokens().stream()
+                .filter(token -> token.getValidUntil().getTime() > now.getTime()).collect(Collectors.toList());
+        if (!invalidated.isEmpty()) {
+            onetimeTokens.getTokens().removeAll(invalidated);
+        }
     }
 }

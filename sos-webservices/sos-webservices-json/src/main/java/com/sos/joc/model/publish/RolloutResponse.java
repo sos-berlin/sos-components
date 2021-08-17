@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.publish;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -19,12 +21,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "jocKeyPair",
-    "caCert"
+    "caCert",
+    "DNs"
 })
 public class RolloutResponse {
 
     /**
-     * SOS PGP Key Pair
+     * SOS Key Pair
      * <p>
      * 
      * 
@@ -33,9 +36,11 @@ public class RolloutResponse {
     private JocKeyPair jocKeyPair;
     @JsonProperty("caCert")
     private String caCert;
+    @JsonProperty("DNs")
+    private List<String> dNs = new ArrayList<String>();
 
     /**
-     * SOS PGP Key Pair
+     * SOS Key Pair
      * <p>
      * 
      * 
@@ -46,7 +51,7 @@ public class RolloutResponse {
     }
 
     /**
-     * SOS PGP Key Pair
+     * SOS Key Pair
      * <p>
      * 
      * 
@@ -66,14 +71,24 @@ public class RolloutResponse {
         this.caCert = caCert;
     }
 
+    @JsonProperty("DNs")
+    public List<String> getDNs() {
+        return dNs;
+    }
+
+    @JsonProperty("DNs")
+    public void setDNs(List<String> dNs) {
+        this.dNs = dNs;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).toString();
+        return new ToStringBuilder(this).append("jocKeyPair", jocKeyPair).append("caCert", caCert).append("dNs", dNs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(caCert).append(jocKeyPair).toHashCode();
+        return new HashCodeBuilder().append(dNs).append(caCert).append(jocKeyPair).toHashCode();
     }
 
     @Override
@@ -85,7 +100,7 @@ public class RolloutResponse {
             return false;
         }
         RolloutResponse rhs = ((RolloutResponse) other);
-        return new EqualsBuilder().append(caCert, rhs.caCert).append(jocKeyPair, rhs.jocKeyPair).isEquals();
+        return new EqualsBuilder().append(dNs, rhs.dNs).append(caCert, rhs.caCert).append(jocKeyPair, rhs.jocKeyPair).isEquals();
     }
 
 }

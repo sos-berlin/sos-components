@@ -316,4 +316,13 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
+    public DBItemInventoryAgentInstance getAgentInstance(String agentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+        hql.append(" where agentId = :agentId");
+        Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
+        query.setParameter("agentId", agentId);
+        return getSession().getSingleResult(query);
+    }
+    
 }

@@ -15,6 +15,16 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.naming.InvalidNameException;
 
@@ -25,10 +35,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
+import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.model.publish.CreateCSRFilter;
 import com.sos.joc.model.publish.RolloutResponse;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigResolveOptions;
+import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.ConfigValue;
+import com.typesafe.config.ConfigValueFactory;
 
 public class ExecuteRollOut {
     
@@ -57,6 +77,25 @@ public class ExecuteRollOut {
     private static final String SRC_PRIVATE_KEY = "--source-private-key";
     private static final String SRC_CERT = "--source-certificate";
     private static final String SRC_CA_CERT = "--source-ca-cert";
+    private static final String PRIVATE_FOLDER_NAME = "private";
+    private static final String PRIVATE_CONF_FILENAME = "private.conf";
+    private static final String PRIVATE_CONF_JS7_PARAM_CONFDIR = "js7.config-directory";
+    private static final String PRIVATE_CONF_JS7_PARAM_JOCURL = "js7.web.joc.url";
+    private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH = "js7.web.https.keystore.file";
+    private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD = "js7.web.https.keystore.key-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD = "js7.web.https.keystore.store-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY = "js7.web.https.truststores";
+    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH = "file";
+    private static final String PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD = "store-password";
+    private static final String PRIVATE_CONF_JS7_PARAM_DN = "js7.auth.users.Controller.distinguished-names"; 
+    private static final String DEFAULT_KEYSTORE_FILENAME = "https-keystore.p12";
+    private static final String DEFAULT_TRUSTSTORE_FILENAME = "https-truststore.p12";
+    private static final ConfigParseOptions PARSE_OPTIONS = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF);
+    private static final ConfigRenderOptions RENDER_OPTIONS = ConfigRenderOptions.concise().setComments(true).setOriginComments(false).setFormatted(true)
+            .setJson(false);
+    private static final ConfigResolveOptions RESOLVE_OPTIONS = ConfigResolveOptions.noSystem().setUseSystemEnvironment(false).setAllowUnresolved(true);
+    private static final List<String> CONFIG_DIRECTORY_KEYS = Arrays.asList("js7.configuration.trusted-signature-keys", "js7.web.https.keystore",
+            "js7.web.https.truststores");
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
@@ -81,15 +120,19 @@ public class ExecuteRollOut {
     private static String srcPrivateKeyPath;
     private static String srcCertPath;
     private static String srcCaCertPath;
+    private static String confDir;
+    private static Config resolved;
+    private static Config toUpdate;
     private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
 
     public static void main(String[] args) throws Exception {
-        
+        if (args != null && args.length > 0 && args[0].equalsIgnoreCase("cert")) {
+            args = Arrays.stream(args).skip(1).toArray(String[]::new);
+        }
         if (args == null || args.length == 0 || (args.length == 1 && args[0].equalsIgnoreCase("--help"))) {
             printUsage();
-//            System.exit(0);
         } else {
             for(int i = 0; i < args.length; i++) {
                 String[] split = args[i].split("=", 2);
@@ -141,14 +184,73 @@ public class ExecuteRollOut {
                     srcCaCertPath = split[1];
                 }
             }
+            readConfig();
             String response = callWebService();
             closeClient();
-            RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
-            addKeyAndCertToStore(rollout);
-            
+            // TODO: 
+            // cert -> arg to determine if key/Certificate should be generated 
+            //                        or
+            // certDN -> arg to determine if only DNs should be updated/added
+            //
+            // args --token=%JS7_TOKEN%  --joc-uri=%JS7_JOC_URI% should be sufficient 
+            try {
+                RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
+                addKeyAndCertToStore(rollout);
+                configure(toUpdate, rollout);
+            } catch (Throwable e) {
+                System.out.println("token expired or no valid token found!");
+            }             
         }
     }
     
+    private static void configure (Config config, RolloutResponse response) throws Exception {
+        // avoid merge problem with unresolved variable: ${js7.config-directory}; see https://github.com/lightbend/config/issues/412
+//        for (String configDirectoryKey : CONFIG_DIRECTORY_KEYS) {
+//            if (original.hasPath(configDirectoryKey) && setupConfig.hasPath(configDirectoryKey)) {
+//                setupConfig = setupConfig.withoutPath(configDirectoryKey);
+//            }
+//        }
+
+        X509Certificate  certificate = KeyUtil.getX509Certificate(response.getJocKeyPair().getCertificate());
+        String subjectDN = certificate.getSubjectDN().getName();
+        if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
+            List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
+            dns.add(subjectDN);
+            ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
+            toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+        } else {
+            List<String> newValues = new ArrayList<String>();
+            newValues.add(subjectDN);
+            ConfigValue value = ConfigValueFactory.fromIterable(newValues);
+            toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+        }
+        saveConfigToFile(toUpdate);
+    }
+    
+    private static void saveConfigToFile(final Config config) throws IOException {
+        final String configAsHoconString = config.root().render(RENDER_OPTIONS);
+        Files.write(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME), configAsHoconString.getBytes());
+    }
+    
+    private static void readConfig() {
+        // set default com.typesafe.config.Config
+        Config defaultConfig = ConfigFactory.load();
+        /*
+         * set initial properties 
+         * - js7.config-directory
+         * 
+         * */
+        confDir = System.getProperty(PRIVATE_CONF_JS7_PARAM_CONFDIR);
+        Properties props = new Properties();
+        props.put(PRIVATE_CONF_JS7_PARAM_CONFDIR, confDir);
+        if (confDir != null && !confDir.isEmpty()) {
+            toUpdate = ConfigFactory.parseFile(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME).toFile(), PARSE_OPTIONS).resolve(RESOLVE_OPTIONS);
+            Config defaultConfigWithConfDir = ConfigFactory.parseProperties(props, PARSE_OPTIONS).resolve();
+            resolved = ConfigFactory.parseFile(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME).toFile(), PARSE_OPTIONS)
+                    .withFallback(defaultConfigWithConfDir).resolve();
+        }
+    }
+
     private static void addKeyAndCertToStore(RolloutResponse rolloutResponse) throws Exception {
         KeyStore targetKeyStore = null;
         KeyStore targetTrustStore = null;
@@ -187,65 +289,114 @@ public class ExecuteRollOut {
         
     }
     
+    private static KeyStoreCredentials readKeystoreCredentials(Config config) {
+        String keystorePath = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH);
+        String keyPasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD);
+        String storePasswd = config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_STOREPWD);
+        return new KeyStoreCredentials(keystorePath, storePasswd, keyPasswd);
+    }
+
+    private static List<KeyStoreCredentials> readTruststoreCredentials(Config config) {
+        List<KeyStoreCredentials> credentials = config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).stream().map(item -> {
+            return new KeyStoreCredentials(item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH),
+                    item.getString(PRIVATE_CONF_JS7_PARAM_TRUSTORES_SUB_STOREPWD), null);
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        if (credentials != null) {
+            return credentials;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
     private static void tryCreateClient() throws Exception {
         if (client != null) {
             return;
         }
         client = new SOSRestApiClient();
-        KeyStore srcKeyStore = null;
-        KeyStore srcTrustStore = null;
-        if (srcKeystore != null && !srcKeystore.isEmpty() && srcTruststore != null && !srcTruststore.isEmpty()) {
-            srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeyStoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
-            srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeyStoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
-        } else if (srcPrivateKeyPath != null && !srcPrivateKeyPath.isEmpty()
-                && srcCertPath != null && !srcCertPath.isEmpty()
-                && srcCaCertPath != null && !srcCaCertPath.isEmpty()) {
-            PrivateKey privKey = null;
-            X509Certificate cert = null;
-            X509Certificate caCert = null;
-            String pk = new String (Files.readAllBytes(Paths.get(srcPrivateKeyPath)), StandardCharsets.UTF_8);
-            if (pk != null && !pk.isEmpty()) {
-                if (pk.contains(SOSKeyConstants.RSA_ALGORITHM_NAME)) {
-                    privKey = KeyUtil.getPrivateRSAKeyFromString(pk);
+        if (resolved != null) {
+            for (Entry<String, ConfigValue> entry : resolved.entrySet()) {
+                if(entry.getKey().startsWith("js7")) {
+                    System.out.println(entry.getKey() + ": " + entry.getValue().toString());
+                }
+            }
+            String jocUriFromConfig = resolved.getString(PRIVATE_CONF_JS7_PARAM_JOCURL);
+            System.out.println("JOC Url (private.conf): " + jocUriFromConfig);
+            if (!SOSString.isEmpty(jocUriFromConfig) && jocUri == null) {
+                jocUri = URI.create(jocUriFromConfig);
+            }
+            if (jocUri == null) {
+                throw new Exception("missing jocUri");
+            }
+            List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
+            System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
+            KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
+                try {
+                    return KeyStoreUtil.readTrustStore(item.getPath(), KeyStoreType.PKCS12, item.getStorePwd());
+                } catch (Exception e) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).findFirst().get();
+            KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
+//            KeyStoreCredentials credentials = readKeystoreCredentials(toUpdate);
+            System.out.println("read Keystore from: " + resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
+            KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+            client.setSSLContext(keystore, credentials.getKeyPwd().toCharArray(), truststore);
+        } else {
+            KeyStore srcKeyStore = null;
+            KeyStore srcTrustStore = null;
+            if (srcKeystore != null && !srcKeystore.isEmpty() && srcTruststore != null && !srcTruststore.isEmpty()) {
+                srcKeyStore = KeyStoreUtil.readKeyStore(srcKeystore, KeyStoreType.fromValue(srcKeystoreType), srcKeystorePasswd);
+                srcTrustStore = KeyStoreUtil.readTrustStore(srcTruststore, KeyStoreType.fromValue(srcTruststoreType), srcTruststorePasswd);
+            } else if (srcPrivateKeyPath != null && !srcPrivateKeyPath.isEmpty()
+                    && srcCertPath != null && !srcCertPath.isEmpty()
+                    && srcCaCertPath != null && !srcCaCertPath.isEmpty()) {
+                PrivateKey privKey = null;
+                X509Certificate cert = null;
+                X509Certificate caCert = null;
+                String pk = new String (Files.readAllBytes(Paths.get(srcPrivateKeyPath)), StandardCharsets.UTF_8);
+                if (pk != null && !pk.isEmpty()) {
+                    if (pk.contains(SOSKeyConstants.RSA_ALGORITHM_NAME)) {
+                        privKey = KeyUtil.getPrivateRSAKeyFromString(pk);
+                    } else {
+                        privKey = KeyUtil.getPrivateECDSAKeyFromString(pk);
+                    }
+                }
+                cert = (X509Certificate)KeyUtil.getCertificate(Paths.get(srcCertPath));
+                Certificate[] chain = null;
+                Certificate[] caChain = null;
+                if (srcCaCertPath.contains(",")) {
+                    String[] caCertPaths = srcCaCertPath.split(",");
+                    caChain = new Certificate [caCertPaths.length];
+                    chain = new Certificate[caChain.length + 1];
+                    chain[0] = cert;
+                    for (int i=0; i < caCertPaths.length; i++) {
+                        X509Certificate caCertficate = (X509Certificate)KeyUtil.getCertificate(Paths.get(caCertPaths[i].trim()));
+                        caChain[i] = caCertficate;
+                        chain[i+1] = caCertficate;
+                    }
                 } else {
-                    privKey = KeyUtil.getPrivateECDSAKeyFromString(pk);
+                    caCert = (X509Certificate)KeyUtil.getCertificate(srcCaCertPath);
+                    chain = new Certificate[] {cert, caCert};
+                }
+                srcKeyStore = KeyStore.getInstance("PKCS12");
+                srcKeyStore.load(null, null);
+                srcKeyStore.setKeyEntry(keyAlias, privKey, "".toCharArray(), chain);
+                srcTrustStore = KeyStore.getInstance("PKCS12");
+                srcTrustStore.load(null, null);
+                if (caChain.length != 0) {
+                    for (int i=0; i < caChain.length; i++) {
+                        srcTrustStore.setCertificateEntry(caAlias + (i+1), caChain[i]);
+                    }
+                } else {
+                    srcTrustStore.setCertificateEntry(caAlias, caCert);
                 }
             }
-            cert = (X509Certificate)KeyUtil.getCertificate(Paths.get(srcCertPath));
-            Certificate[] chain = null;
-            Certificate[] caChain = null;
-            if (srcCaCertPath.contains(",")) {
-                String[] caCertPaths = srcCaCertPath.split(",");
-                caChain = new Certificate [caCertPaths.length];
-                chain = new Certificate[caChain.length + 1];
-                chain[0] = cert;
-                for (int i=0; i < caCertPaths.length; i++) {
-                    X509Certificate caCertficate = (X509Certificate)KeyUtil.getCertificate(Paths.get(caCertPaths[i].trim()));
-                    caChain[i] = caCertficate;
-                    chain[i+1] = caCertficate;
+            if (srcKeyStore != null && srcTrustStore != null) {
+                if (srcKeystoreEntryPasswd != null) {
+                    client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcTrustStore);
+                } else {
+                    client.setSSLContext(srcKeyStore, "".toCharArray(), srcTrustStore);
                 }
-            } else {
-                caCert = (X509Certificate)KeyUtil.getCertificate(srcCaCertPath);
-                chain = new Certificate[] {cert, caCert};
-            }
-            srcKeyStore = KeyStore.getInstance("PKCS12");
-            srcKeyStore.load(null, null);
-            srcKeyStore.setKeyEntry(keyAlias, privKey, "".toCharArray(), chain);
-            srcTrustStore = KeyStore.getInstance("PKCS12");
-            srcTrustStore.load(null, null);
-            if (caChain.length != 0) {
-                for (int i=0; i < caChain.length; i++) {
-                    srcTrustStore.setCertificateEntry(caAlias + (i+1), caChain[i]);
-                }
-            } else {
-                srcTrustStore.setCertificateEntry(caAlias, caCert);
-            }
-        }
-        if (srcKeyStore != null && srcTrustStore != null) {
-            if (srcKeystoreEntryPasswd != null) {
-                client.setSSLContext(srcKeyStore, srcKeystoreEntryPasswd.toCharArray(), srcTrustStore);
-            } else {
-                client.setSSLContext(srcKeyStore, "".toCharArray(), srcTrustStore);
             }
         }
     }
@@ -257,7 +408,7 @@ public class ExecuteRollOut {
     }
     
     private static String createRequestBody (String dn, String hostname) throws InvalidNameException, JsonProcessingException {
-        // --subject-dn="CN=sp, OU=IT, O=SOS GmbH, S=Berlin, L=Berlin, C=DE"
+        // --subject-dn="CN=sp, OU=IT, O=SOS GmbH, ST=Berlin, L=Berlin, C=DE"
         CreateCSRFilter filter = new CreateCSRFilter();
         filter.setDn(dn);
         filter.setHostname(hostname);

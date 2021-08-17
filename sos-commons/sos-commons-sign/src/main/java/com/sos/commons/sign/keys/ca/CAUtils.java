@@ -24,7 +24,6 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -63,7 +62,9 @@ public abstract class CAUtils {
         Provider bcProvider = new BouncyCastleProvider();
         Security.addProvider(bcProvider);
         Date startDate = Date.from(Instant.now());
-        X500Name subjectDNX500Name = new X500Name(subjectDN);
+//        X500Name subjectDNX500Name = new X500Name(subjectDN);
+        X500Name subjectDNX500Name = createX500NameWithReverseOrder(subjectDN);
+        
         // Using the current timestamp as the certificate serial number
         BigInteger certSerialNumber = new BigInteger(Long.toString(startDate.getTime()));
         Calendar calendar = Calendar.getInstance();
@@ -94,7 +95,7 @@ public abstract class CAUtils {
 
     public static PKCS10CertificationRequest createCSR(String algorithm, KeyPair keyPair, String userDN) throws CertException {
         try {
-            PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(new X500Name(userDN), keyPair.getPublic());
+            PKCS10CertificationRequestBuilder builder = new JcaPKCS10CertificationRequestBuilder(createX500NameWithReverseOrder(userDN), keyPair.getPublic());
             JcaContentSignerBuilder jcaBuilder = new JcaContentSignerBuilder(algorithm);
             jcaBuilder.setProvider(BouncyCastleProvider.PROVIDER_NAME);
             ContentSigner contentSigner = jcaBuilder.build(keyPair.getPrivate());
@@ -160,11 +161,18 @@ public abstract class CAUtils {
       return new JcaX509CertificateConverter().setProvider(BouncyCastleProvider.PROVIDER_NAME).getCertificate(holder);
     }
     
-    public static String createRootSubjectDN (String commonName, String organizationUnit, String organization, String countryCode) {
+    public static String createRootSubjectDN (String dnQualifier, String commonName, String organizationUnit, String organization, String countryCode) {
         final String separator = ",";
         StringBuilder rootSubjectDN = new StringBuilder();
+        if (dnQualifier != null) {
+            rootSubjectDN.append("DN=").append(dnQualifier).append(separator);
+        }
         if (commonName != null) {
-            rootSubjectDN.append("CN=").append(commonName).append(separator);
+            if (dnQualifier == null) {
+                rootSubjectDN.append("DN=").append(commonName).append(separator).append("CN=").append(commonName).append(separator);
+            } else {
+                rootSubjectDN.append("CN=").append(commonName).append(separator);
+            }
         }
         if (organizationUnit != null) {
             rootSubjectDN.append("OU=").append(organizationUnit).append(separator);
@@ -178,12 +186,19 @@ public abstract class CAUtils {
         return rootSubjectDN.toString();
     }
     
-    public static String createUserSubjectDN (String commonName, String organizationUnit, String organization, String locality, String state,
-            String countryCode) {
+    public static String createUserSubjectDN (String dnQualifier, String commonName, String organizationUnit, String organization, String locality,
+            String state, String countryCode) {
         final String separator = ",";
         StringBuilder userSubjectDN = new StringBuilder();
+        if (dnQualifier != null) {
+            userSubjectDN.append("DN=").append(dnQualifier).append(separator);
+        }
         if (commonName != null) {
-            userSubjectDN.append("CN=").append(commonName).append(separator);
+            if (dnQualifier == null) {
+                userSubjectDN.append("DN=").append(commonName).append(separator).append("CN=").append(commonName).append(separator);
+            } else {
+                userSubjectDN.append("CN=").append(commonName).append(separator);
+            }
         }
         if (organizationUnit != null) {
             userSubjectDN.append("OU=").append(organizationUnit).append(separator);
@@ -203,11 +218,20 @@ public abstract class CAUtils {
         return userSubjectDN.toString();
     }
     
-    public static String createUserSubjectDN (String commonName, String[] organizationUnits, String organization, String locality, String state,
-            String countryCode) {
+    public static String createUserSubjectDN (String dnQualifier, String commonName, String[] organizationUnits, String organization, String locality,
+            String state, String countryCode) {
         final String separator = ",";
         StringBuilder userSubjectDN = new StringBuilder();
-        userSubjectDN.append("CN=").append(commonName);
+        if (dnQualifier != null) {
+            userSubjectDN.append("DN=").append(dnQualifier).append(separator);
+        }
+        if (commonName != null) {
+            if (dnQualifier == null) {
+                userSubjectDN.append("DN=").append(commonName).append(separator).append("CN=").append(commonName).append(separator);
+            } else {
+                userSubjectDN.append("CN=").append(commonName).append(separator);
+            }
+        }
         if (organizationUnits != null && organizationUnits.length > 0) {
             for(int i = organizationUnits.length -1; i == 0; i--) {
                 userSubjectDN.append(separator).append("OU=").append(organizationUnits[i]);
@@ -239,12 +263,22 @@ public abstract class CAUtils {
         if (alternativeSource != null) {
             altSourceIssuerDN = new LdapName(alternativeSource.getIssuerDN().getName());
         }
+        String dnQualifier = null;
         String commonName = null;
         List<String> organizationUnits = null;
         String organization = null;
         String countryCode = null;
         String locality = null;
         String state = null;
+        if(dn != null && (dn.contains("DN=") || dn.contains("DNQ="))) {
+            try {
+                commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DNQ")).map(rdn -> rdn.getValue().toString())
+                        .collect(Collectors.toList()).get(0);
+            } catch (Exception e) {
+                commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("DN")).map(rdn -> rdn.getValue().toString())
+                        .collect(Collectors.toList()).get(0);
+            }
+        }
         if (dn != null && dn.contains("CN=")) {
             commonName = dnName.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("CN")).map(rdn -> rdn.getValue().toString())
                 .collect(Collectors.toList()).get(0);
@@ -279,10 +313,20 @@ public abstract class CAUtils {
             state = altSourceIssuerDN.getRdns().stream().filter(rdn -> rdn.getType().equalsIgnoreCase("ST")).findFirst().get().getValue().toString();
         }
         if (organizationUnits != null) {
-            return createUserSubjectDN(commonName, organizationUnits.toArray(new String[0]), organization, locality, state, countryCode);
+            return createUserSubjectDN(dnQualifier, commonName, organizationUnits.toArray(new String[0]), organization, locality, state, countryCode);
         } else {
-            return createUserSubjectDN(commonName, new String[0], organization, locality, state, countryCode);
+            return createUserSubjectDN(dnQualifier, commonName, new String[0], organization, locality, state, countryCode);
         }
     }
     
-}
+    private static X500Name createX500NameWithReverseOrder( String dn) {
+        String[] RDN = dn.split(",");
+        StringBuffer buf = new StringBuffer(dn.length());
+        for(int i = RDN.length - 1; i >= 0; i--){
+            if(i != RDN.length - 1) {
+                buf.append(',');
+            }
+            buf.append(RDN[i]);
+        }
+        return new X500Name(buf.toString());
+    }}

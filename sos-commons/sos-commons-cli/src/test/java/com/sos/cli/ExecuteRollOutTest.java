@@ -1,5 +1,7 @@
 package com.sos.cli;
 
+import java.util.Arrays;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -8,6 +10,28 @@ public class ExecuteRollOutTest {
     @Test
     public void testMainWithoutArguments() throws Exception {
         ExecuteRollOut.main(new String[0]);
+    }
+
+    @Test
+    public void testShiftMainArguments() throws Exception {
+        String[] args = createSkriptArgsWithSourceKeyStore();
+        String[] newArgsStream = Arrays.stream(args).skip(1).toArray(String[]::new);
+        String[] newArgsCopy = Arrays.copyOfRange(args, 1, args.length);
+        System.out.println("***** Original *****");
+        for (String arg : args) {
+            System.out.print(arg + " | ");
+        }
+        System.out.println();
+        System.out.println("***** shifted with stream *****");
+        for (String arg : newArgsStream) {
+            System.out.print(arg + " | ");
+        }
+        System.out.println();
+        System.out.println("***** shifted with copyOfRange *****");
+        for (String arg : newArgsCopy) {
+            System.out.print(arg + " | ");
+        }
+        System.out.println();
     }
 
     @Test
@@ -38,6 +62,13 @@ public class ExecuteRollOutTest {
     @Ignore
     public void testMainWithHttpArgumentsForController() throws Exception {
         ExecuteRollOut.main(createControllerArgsHttp());
+    }
+
+    @Test
+    @Ignore
+    public void testMainWithMinArgumentsForController() throws Exception {
+        System.setProperty("js7.config-directory", "C:/sp/devel/js7/testing/CLI/controller");
+        ExecuteRollOut.main(createMinimalControllerArgsHttp());
     }
 
     private String[] createControllerArgsWithSourceKeyStore() {
@@ -230,4 +261,15 @@ public class ExecuteRollOutTest {
                 "--ca-alias=" + truststoreAlias };
     }
 
+    private String[] createMinimalControllerArgsHttp() {
+        String jocUri = "http://sp.sos:3333";
+        String token = "3b145844-fb4b-417c-8266-c9a97b1b72ba";
+        return new String[] { 
+                "--token=" + token, 
+                "--joc-uri=" + jocUri };
+    }
+
+    private String[] createSkriptArgsWithSourceKeyStore() {
+        return new String[] {"cert", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"};
+    }
 }
