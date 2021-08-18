@@ -178,7 +178,7 @@ public class JobSchedulerDate {
             return NEVER;
         }
         Pattern offsetPattern = Pattern.compile(
-                "(\\d{2,4}-\\d{1,2}-\\d{1,2}T\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
+                "(\\d{2,4}-\\d{1,2}-\\d{1,2}(?:T| )\\d{1,2}:\\d{1,2}:\\d{1,2}(?:\\.\\d+)?|(?:\\s*[+-]?\\d+\\s*[smhdwMy])+)([+-][0-9:]+|Z)?$");
         Pattern dateTimePattern = Pattern.compile("(?:([+-]?\\d+)\\s*([smhdwMy])\\s*)");
         Matcher m = offsetPattern.matcher(dateStr);
         TimeZone timeZ = null;
@@ -211,6 +211,7 @@ public class JobSchedulerDate {
                 relativeDateTimes.put(m.group(2), number);
             }
             if (!dateTimeIsRelative) {
+                dateStr = dateStr.replace(' ', 'T');
                 Instant instant = Instant.parse(dateStr + "Z");
                 int offset = timeZ.getOffset(instant.toEpochMilli());
                 return instant.plusMillis(-1 * offset);

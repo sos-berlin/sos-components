@@ -2,7 +2,6 @@ package com.sos.joc.board.impl;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -19,7 +18,6 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.board.Board;
 import com.sos.joc.model.board.BoardFilter;
-import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
