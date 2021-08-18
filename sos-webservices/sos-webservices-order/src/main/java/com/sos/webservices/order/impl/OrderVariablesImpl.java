@@ -50,7 +50,7 @@ public class OrderVariablesImpl extends JOCResourceImpl implements IOrderVariabl
             OrderVariables orderVariables = new OrderVariables();
             List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
             Variables variables = new Variables();
-            if (listOfOrderVariables != null && listOfOrderVariables.size() > 0) {
+            if (listOfOrderVariables != null && listOfOrderVariables.size() > 0 && listOfOrderVariables.get(0).getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(listOfOrderVariables.get(0).getVariableValue(), Variables.class);
                 /*
                  * for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) { switch (VariableType.fromValue(orderVariable.getVariableType())) { case

@@ -211,7 +211,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfPlannedOrders);
             c.thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
-                if (either.isRight()) {
+                if (either.isRight() || true) {
                     SOSHibernateSession sosHibernateSession2 = null;
                     sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
 
@@ -264,7 +264,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         schedule.setVariableSets(new ArrayList<VariableSet>());
                         VariableSet variableSet = new VariableSet();
                         Variables variables = new Variables();
-                        if (listOfVariables != null && listOfVariables.size() > 0) {
+                        if (listOfVariables != null && listOfVariables.size() > 0 && listOfVariables.get(0).getVariableValue() != null) {
                             variables = Globals.objectMapper.readValue(listOfVariables.get(0).getVariableValue(), Variables.class);
                         }
                         variableSet.setVariables(variables);
@@ -363,12 +363,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (dailyplanModifyOrder.getVariables() != null) {
 
                 Variables variables = new Variables();
-                try {
-                    variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
-                } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
-                    LOGGER.warn("Illegal value " + dbItemDailyPlanVariables.getVariableValue() + " in DPL_ORDER_VARIABLES for order: "
-                            + dbItemDailyPlanOrder.getOrderId());
-                    variables = new Variables();
+                if (dbItemDailyPlanVariables.getVariableValue() != null) {
+                    try {
+                        variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+                    } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
+                        LOGGER.warn("Illegal value " + dbItemDailyPlanVariables.getVariableValue() + " in DPL_ORDER_VARIABLES for order: "
+                                + dbItemDailyPlanOrder.getOrderId());
+                        variables = new Variables();
+                    }
                 }
                 Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
                 for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
@@ -385,7 +387,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
 
             if (dailyplanModifyOrder.getRemoveVariables() != null) {
-                Variables variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+                Variables variables;
+                if (dbItemDailyPlanVariables.getVariableValue() != null) {
+                    variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+                } else {
+                    variables = new Variables();
+                }
                 Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
                 for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
                     if (dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {

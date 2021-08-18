@@ -184,7 +184,7 @@ public class OrderInitiatorRunner extends TimerTask {
                 Variables variables = new Variables();
 
                 List<DBItemDailyPlanVariables> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-                if (listOfOrderVariables != null && listOfOrderVariables.size() > 0) {
+                if (listOfOrderVariables != null && listOfOrderVariables.size() > 0 && listOfOrderVariables.get(0).getVariableValue() != null) {
                     variables = Globals.objectMapper.readValue(listOfOrderVariables.get(0).getVariableValue(), Variables.class);
                 }
 
