@@ -54,8 +54,8 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                     onetimeToken = optional.get();
                 }
                 if (onetimeToken != null) {
-                    response = ClientServerCertificateUtil.createClientServerAuthKeyPair(hibernateSession, createCsrFilter);
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    response = ClientServerCertificateUtil.createClientServerAuthKeyPair(hibernateSession, createCsrFilter);
                     if (onetimeToken.getAgentId() != null) {
                         InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
                         InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
