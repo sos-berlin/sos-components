@@ -13,6 +13,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
@@ -35,9 +36,11 @@ import com.sos.joc.model.tree.Tree;
 public class DeployedConfigurationDBLayer {
 
     private SOSHibernateSession session;
+    private String regexpParamPrefixSuffix = "";
 
     public DeployedConfigurationDBLayer(SOSHibernateSession connection) {
         this.session = connection;
+        setRegexpParamPrefixSuffix();
     }
 
     public DeployedContent getDeployedInventory(String controllerId, Integer type, String path) throws DBConnectionRefusedException,
@@ -287,7 +290,7 @@ public class DeployedConfigurationDBLayer {
             Query<WorkflowId> query = session.createQuery(hql.toString());
             query.setParameter("type", DeployType.WORKFLOW.intValue());
             query.setParameter("controllerId", controllerId);
-            query.setParameter("boardName", "\"" + boardName + "\"");
+            query.setParameter("boardName", getRegexpParameter(boardName,"\""));
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -456,4 +459,16 @@ public class DeployedConfigurationDBLayer {
         return query;
     }
 
+    private String getRegexpParameter(String param, String prefixSuffix) {
+        return regexpParamPrefixSuffix + prefixSuffix + param + prefixSuffix + regexpParamPrefixSuffix;
+    }
+    
+    private void setRegexpParamPrefixSuffix() {
+        try {
+            if (session.getFactory().getDbms().equals(Dbms.MSSQL)) {
+                regexpParamPrefixSuffix = "%";
+            }
+        } catch (Throwable e) {
+        }
+    }
 }
