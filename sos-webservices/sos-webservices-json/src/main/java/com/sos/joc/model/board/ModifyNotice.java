@@ -52,13 +52,13 @@ public class ModifyNotice {
     @JsonProperty("noticeId")
     private String noticeId;
     /**
-     * timestamp with now
+     * string for dateFrom and dateTo as search filter
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
     @JsonProperty("endOfLife")
-    @JsonPropertyDescription("ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty")
+    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
     private String endOfLife;
     /**
      * string without < and >
@@ -138,9 +138,9 @@ public class ModifyNotice {
     }
 
     /**
-     * timestamp with now
+     * string for dateFrom and dateTo as search filter
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
     @JsonProperty("endOfLife")
@@ -149,9 +149,9 @@ public class ModifyNotice {
     }
 
     /**
-     * timestamp with now
+     * string for dateFrom and dateTo as search filter
      * <p>
-     * ISO format yyyy-mm-dd HH:MM[:SS] or now or now + HH:MM[:SS] or now + SECONDS or empty
+     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
      * 
      */
     @JsonProperty("endOfLife")

@@ -3,6 +3,7 @@ package com.sos.joc.board.impl;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.ws.rs.Path;
 
@@ -79,6 +80,7 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
         JControllerApi controllerApi = ControllerApi.of(controllerId);
         BoardPath board = BoardPath.of(JocInventory.pathToName(filter.getNoticeBoardPath()));
         NoticeId notice = NoticeId.of(filter.getNoticeId());
+        Instant now = Instant.now();
         
         switch(action) {
         case DELETE:
@@ -87,12 +89,21 @@ public class NoticeResourceImpl extends JOCResourceImpl implements INoticeResour
             break;
             
         case POST:
-            controllerApi.postNotice(board, notice, JobSchedulerDate.getScheduledForInUTC(filter.getEndOfLife(), filter.getTimeZone())).thenAccept(
-                    e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+            // JobSchedulerDate.getScheduledForInUTC(filter.getEndOfLife(), filter.getTimeZone())
+            // JobSchedulerDate.getDateTo(filter.getEndOfLife(), filter.getTimeZone())
+            Optional<Instant> endOfLife = Optional.empty();
+            if (filter.getEndOfLife() != null && !filter.getEndOfLife().isEmpty()) {
+                Instant endOfLifeInstant = JobSchedulerDate.getDateFrom(filter.getEndOfLife(), filter.getTimeZone()).toInstant();
+                if (endOfLifeInstant.isAfter(now)) {
+                    endOfLife = Optional.of(endOfLifeInstant);
+                }
+            }
+            controllerApi.postNotice(board, notice, endOfLife).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(),
+                    controllerId));
             break;
         }
         
-        return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        return JOCDefaultResponse.responseStatusJSOk(Date.from(now));
     }
 
 }
