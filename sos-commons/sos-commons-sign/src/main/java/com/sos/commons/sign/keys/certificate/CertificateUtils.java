@@ -210,17 +210,15 @@ public abstract class CertificateUtils {
 	    return SOSKeyConstants.CERTIFICATE_HEADER + lineSeparator + encodedCert + lineSeparator + SOSKeyConstants.CERTIFICATE_FOOTER;
 	}
 	
-    public static String extractCommonName (String dn) throws InvalidNameException {
-        String cn = null;
-        if (dn.contains("CN=")) {
-            cn = dn.substring(dn.indexOf("CN=") +3, dn.indexOf(",")).trim();
+    public static String extractDistinguishedNameQualifier (X509Certificate cert) throws CertificateEncodingException {
+        X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
+        if (x500name.getRDNs(BCStyle.DN_QUALIFIER)[0].size() > 0) {
+            return IETFUtils.valueToString(x500name.getRDNs(BCStyle.DN_QUALIFIER)[0].getFirst().getValue());
+        } else {
+            return null;
         }
-        LdapName dnName = new LdapName(dn);
-        for (Rdn rdn : dnName.getRdns()) {
-            
-        }
-        return cn;
     }
+
     public static String extractFirstCommonName (X509Certificate cert) throws CertificateEncodingException {
         X500Name x500name = new JcaX509CertificateHolder(cert).getSubject();
         if (x500name.getRDNs(BCStyle.CN)[0].size() > 0) {

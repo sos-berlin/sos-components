@@ -18,11 +18,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -34,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.SOSKeyConstants;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
 import com.sos.commons.sign.keys.keyStore.KeyStoreType;
@@ -54,6 +54,7 @@ public class ExecuteRollOut {
     
     private static final String WS_API = "/joc/api/authentication/certificate/create";
     private static final String HELP = "--help";
+    private static final String DN_ONLY = "--dn-only";
     private static final String TOKEN = "--token";
     private static final String JOC_URI = "--joc-uri";
     private static final String SAN = "--san";
@@ -94,8 +95,8 @@ public class ExecuteRollOut {
     private static final ConfigRenderOptions RENDER_OPTIONS = ConfigRenderOptions.concise().setComments(true).setOriginComments(false).setFormatted(true)
             .setJson(false);
     private static final ConfigResolveOptions RESOLVE_OPTIONS = ConfigResolveOptions.noSystem().setUseSystemEnvironment(false).setAllowUnresolved(true);
-    private static final List<String> CONFIG_DIRECTORY_KEYS = Arrays.asList("js7.configuration.trusted-signature-keys", "js7.web.https.keystore",
-            "js7.web.https.truststores");
+//    private static final List<String> CONFIG_DIRECTORY_KEYS = Arrays.asList("js7.configuration.trusted-signature-keys", "js7.web.https.keystore",
+//            "js7.web.https.truststores");
     private static SOSRestApiClient client;
     private static String token;
     private static String subjectDN;
@@ -123,6 +124,7 @@ public class ExecuteRollOut {
     private static String confDir;
     private static Config resolved;
     private static Config toUpdate;
+    private static boolean dnOnly = false;
     private static ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
 
@@ -182,35 +184,34 @@ public class ExecuteRollOut {
                     srcCertPath = split[1];
                 } else if (args[i].startsWith(SRC_CA_CERT + "=")) {
                     srcCaCertPath = split[1];
+                } else if (args[i].startsWith(DN_ONLY)) {
+                    dnOnly = true;
                 }
             }
             readConfig();
-            String response = callWebService();
-            closeClient();
-            // TODO: 
-            // cert -> arg to determine if key/Certificate should be generated 
-            //                        or
-            // certDN -> arg to determine if only DNs should be updated/added
-            //
-            // args --token=%JS7_TOKEN%  --joc-uri=%JS7_JOC_URI% should be sufficient 
             try {
+                createClient();
+                String response = callWebService();
                 RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
-                addKeyAndCertToStore(rollout);
-                configure(toUpdate, rollout);
+                if (dnOnly) {
+                    // TODO: 
+                    // certDN -> arg to determine if only DNs should be updated/added
+                    
+                } else {
+                    // TODO: 
+                    // args --token=%JS7_TOKEN%  --joc-uri=%JS7_JOC_URI% should be sufficient 
+                        addKeyAndCertToStore(rollout);
+                        updatePrivateConf(toUpdate, rollout);
+                }
             } catch (Throwable e) {
                 System.out.println("token expired or no valid token found!");
+            } finally {
+                closeClient();
             }             
         }
     }
     
-    private static void configure (Config config, RolloutResponse response) throws Exception {
-        // avoid merge problem with unresolved variable: ${js7.config-directory}; see https://github.com/lightbend/config/issues/412
-//        for (String configDirectoryKey : CONFIG_DIRECTORY_KEYS) {
-//            if (original.hasPath(configDirectoryKey) && setupConfig.hasPath(configDirectoryKey)) {
-//                setupConfig = setupConfig.withoutPath(configDirectoryKey);
-//            }
-//        }
-
+    private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
         X509Certificate  certificate = KeyUtil.getX509Certificate(response.getJocKeyPair().getCertificate());
         String subjectDN = certificate.getSubjectDN().getName();
         if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
@@ -234,7 +235,6 @@ public class ExecuteRollOut {
     
     private static void readConfig() {
         // set default com.typesafe.config.Config
-        Config defaultConfig = ConfigFactory.load();
         /*
          * set initial properties 
          * - js7.config-directory
@@ -244,8 +244,11 @@ public class ExecuteRollOut {
         Properties props = new Properties();
         props.put(PRIVATE_CONF_JS7_PARAM_CONFDIR, confDir);
         if (confDir != null && !confDir.isEmpty()) {
+            // original file without substitution
             toUpdate = ConfigFactory.parseFile(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME).toFile(), PARSE_OPTIONS).resolve(RESOLVE_OPTIONS);
+            // Config to substitute
             Config defaultConfigWithConfDir = ConfigFactory.parseProperties(props, PARSE_OPTIONS).resolve();
+            // file with substituted values
             resolved = ConfigFactory.parseFile(Paths.get(confDir).resolve(PRIVATE_FOLDER_NAME).resolve(PRIVATE_CONF_FILENAME).toFile(), PARSE_OPTIONS)
                     .withFallback(defaultConfigWithConfDir).resolve();
         }
@@ -261,27 +264,53 @@ public class ExecuteRollOut {
             Certificate[] chain = new Certificate[] {certificate, rootCaCertificate}; 
             if (targetKeystore != null && !targetKeystore.isEmpty()) {
                 targetKeyStore = KeyStoreUtil.readKeyStore(targetKeystore, KeyStoreType.fromValue(targetKeystoreType), targetKeystorePasswd);
-                if(keyAlias != null && !keyAlias.isEmpty()) {
+                if (keyAlias != null && !keyAlias.isEmpty()) {
                     targetKeyStore.setKeyEntry(keyAlias, privKey, targetKeystoreEntryPasswd.toCharArray(), chain);
                 } else {
-                    System.err.println("no alias provided for the certificate and its private key. Parameter --key-alias is required.");
+                    System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
                 }
-                if (caAlias != null && !caAlias.isEmpty()) {
-                    targetKeyStore.setCertificateEntry(caAlias, rootCaCertificate);
+            } else if (resolved != null) {
+                KeyStoreCredentials credentials = readKeystoreCredentials(resolved);
+                targetKeyStore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+                String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(certificate);
+                if (defaultAlias != null) {
+                    targetKeyStore.setKeyEntry(defaultAlias, privKey, resolved.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_KEYPWD).toCharArray(), chain);
+                    // targetKeystoreEntryPasswd.toCharArray(), 
+                    targetKeyStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
                 } else {
-                    System.err.println("no alias provided for the CA certificate. Parameter --ca-alias is required.");
+                    System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
                 }
-                targetKeyStore.store(new FileOutputStream(new File(targetKeystore)), targetKeystorePasswd.toCharArray());
-
+            } else {
+                System.err.println(String.format("no keystore found. Parameter <%1$s> is required.", TRG_KEYSTORE));
             }
             if (targetTruststore != null && !targetTruststore.isEmpty()) {
                 targetTrustStore = KeyStoreUtil.readTrustStore(targetTruststore, KeyStoreType.fromValue(targetTruststoreType), targetTruststorePasswd);
                 if (caAlias != null && !caAlias.isEmpty()) {
                     targetTrustStore.setCertificateEntry(caAlias, rootCaCertificate);
                 } else {
-                    System.err.println("no alias provided for the CA certificate. Parameter --ca-alias is required.");
+                    System.err.println(String.format("no alias provided for the CA certificate. Parameter <%1$s> is required.", TS_ALIAS));
                 }
                 targetTrustStore.store(new FileOutputStream(new File(targetTruststore)), targetTruststorePasswd.toCharArray());
+            } else if (resolved != null) {
+                List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
+                Optional<KeyStoreCredentials> defaultTruststoreCredentials = truststoresCredentials.stream()
+                        .filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).filter(Objects::nonNull).findFirst();
+                if (defaultTruststoreCredentials.isPresent()) {
+                    KeyStoreCredentials credentials = defaultTruststoreCredentials.get();
+                    targetTrustStore = KeyStoreUtil.readTrustStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+                    String defaultAlias = CertificateUtils.extractDistinguishedNameQualifier(rootCaCertificate);
+                    if (defaultAlias == null) {
+                        defaultAlias = CertificateUtils.extractFirstCommonName(rootCaCertificate);
+                    }
+                    if (defaultAlias != null) {
+                        targetTrustStore.setCertificateEntry(defaultAlias, rootCaCertificate);
+                        targetTrustStore.store(new FileOutputStream(new File(credentials.getPath())), credentials.getStorePwd().toCharArray());
+                    } else {
+                        System.err.println(String.format("no alias provided for the certificate and its private key. Parameter <%1$s> is required.", KS_ALIAS));
+                    }
+                }
+            } else {
+                System.err.println(String.format("no truststore found. Parameter <%1$s> is required.", TRG_TRUSTSTORE));
             }
         } catch (CertificateException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             System.out.println(e.toString());
@@ -308,7 +337,7 @@ public class ExecuteRollOut {
         }
     }
 
-    private static void tryCreateClient() throws Exception {
+    private static void createClient() throws Exception {
         if (client != null) {
             return;
         }
@@ -327,6 +356,7 @@ public class ExecuteRollOut {
             if (jocUri == null) {
                 throw new Exception("missing jocUri");
             }
+            
             List<KeyStoreCredentials> truststoresCredentials = readTruststoreCredentials(resolved);
             System.out.println("read Trustore from: " + resolved.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
             KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(DEFAULT_TRUSTSTORE_FILENAME)).map(item -> {
@@ -413,11 +443,11 @@ public class ExecuteRollOut {
         filter.setDn(dn);
         filter.setHostname(hostname);
         filter.setSan(san);
+        filter.setDnOnly(dnOnly);
         return mapper.writeValueAsString(filter);
     }
     
     private static String callWebService() throws Exception {
-        tryCreateClient();
         client.addHeader("X-Onetime-Token", token);
         client.addHeader("Content-Type", "application/json");
         client.addHeader("Accept", "application/json");
@@ -432,6 +462,7 @@ public class ExecuteRollOut {
         System.out.println(" [ExecuteRollOut] [Options]");
         System.out.println();
         System.out.printf("  %-29s | %s%n", HELP, "Shows this help page, this option is exclusive and has no value");
+        System.out.printf("  %-29s | %s%n", DN_ONLY, "Flag to receive relevant DNs to update the private.conf file, without certficate generation.");
         System.out.printf("  %-29s | %s%n", TOKEN + "=", "UUID of the token for a onetime authentication to JS7 JOC to receive the generated certificates.");
         System.out.printf("  %-29s | %s%n", SUBJECT_DN + "=", "The SubjectDN to be used consisting of [CN, OU, O, C, L, S] where the current hostname has to be set as CN.");
         System.out.printf("  %-29s | %s%n", SAN + "=", "The subject alternative names(SAN) should be set with variation of the hostname e.g. including the domain part. The alternatives are separated by comma.");
