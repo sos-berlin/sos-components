@@ -563,7 +563,25 @@ public class DBLayerDailyPlannedOrders {
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
 
         bindParameters(filter, query);
-        int row = sosHibernateSession.executeUpdate(query);
+        int retry=10;
+        int row=-1;
+        do {
+            try {
+                row = sosHibernateSession.executeUpdate(query);
+                retry = 0;
+            } catch (SOSHibernateLockAcquisitionException e) {
+                retry = retry - 1;
+                try {
+                    java.lang.Thread.sleep(500);
+                } catch (InterruptedException e1) {}
+                if (retry == 0) {
+                    throw e;
+                }
+            }
+        } while (retry > 0);
+        
+        
+        
         return row;
     }
 
