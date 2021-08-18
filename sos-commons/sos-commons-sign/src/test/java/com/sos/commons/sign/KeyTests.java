@@ -1235,7 +1235,7 @@ public class KeyTests {
         String subjectDN = certificate.getSubjectDN().getName();
         // deprecated usage of all sun.* class in Javas rt.jar
         String clientCN = ((sun.security.x509.X500Name)certificate.getSubjectDN()).getCommonName();
-        LOGGER.debug("sun.security.x509.X500Name: CN=" + clientCN);
+        LOGGER.debug("(Access Restriction)sun.security.x509.X500Name: CN=" + clientCN);
         // same with bouncy castle
         X500Name x500Name = new JcaX509CertificateHolder(certificate).getSubject();
         RDN cn = x500Name.getRDNs(BCStyle.CN)[0];

@@ -13,6 +13,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
+    @Ignore
     public void testShiftMainArguments() throws Exception {
         String[] args = createSkriptArgsWithSourceKeyStore();
         String[] newArgsStream = Arrays.stream(args).skip(1).toArray(String[]::new);
@@ -65,7 +66,7 @@ public class ExecuteRollOutTest {
     }
 
     @Test
-    @Ignore
+//    @Ignore
     public void testMainWithMinArgumentsForController() throws Exception {
         System.setProperty("js7.config-directory", "C:/sp/devel/js7/testing/CLI/controller");
         ExecuteRollOut.main(createMinimalControllerArgsHttp());
@@ -263,7 +264,7 @@ public class ExecuteRollOutTest {
 
     private String[] createMinimalControllerArgsHttp() {
         String jocUri = "http://sp.sos:3333";
-        String token = "3b145844-fb4b-417c-8266-c9a97b1b72ba";
+        String token = "0f15b55a-3521-4836-8f95-bbfb6be93652";
         return new String[] { 
                 "--token=" + token, 
                 "--joc-uri=" + jocUri };

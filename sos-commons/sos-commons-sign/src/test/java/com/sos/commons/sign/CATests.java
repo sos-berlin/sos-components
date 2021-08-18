@@ -367,14 +367,6 @@ public class CATests {
     }
     
     @Test
-    public void testExtractCN () throws InvalidNameException {
-        String cn = CertificateUtils.extractCommonName("CN=HOSTNAME , OU=devel, O=SOS, L=Area 51, C=DE");
-        LOGGER.info(cn +"|");
-        assertEquals("HOSTNAME", cn);
-        assertTrue(cn.length() == 8);
-    }
-
-    @Test
     public void testExtractFromDistinguishedName () throws InvalidNameException {
         String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
         LdapName ldapNameDN = new LdapName(dn);
