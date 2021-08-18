@@ -313,13 +313,13 @@ public class EventService {
             long eventId = stampedEvt.eventId() / 1000000; //eventId per second
             Object key = event.key();
             Event evt = event.event();
-            LOGGER.info(evt.toString());
+            LOGGER.debug(evt.toString());
 
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
-                    LOGGER.info(opt.get().toString());
+                    //LOGGER.info(opt.get().toString());
                     String mainOrderId = orderId.string().substring(0, 24);
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
@@ -336,7 +336,8 @@ public class EventService {
                         });
 //                    } else if (evt instanceof OrderNoticePosted) {
 //                        OrderNoticePosted nEvt = (OrderNoticePosted) evt;
-//                        nEvt.notice().
+//                        //nEvt.notice().
+//                        currentState.
 //                        addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
                     }
                 } else {
