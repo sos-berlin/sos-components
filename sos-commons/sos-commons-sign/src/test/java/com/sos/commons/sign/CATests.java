@@ -1,5 +1,6 @@
 package com.sos.commons.sign;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,6 +28,9 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import javax.xml.bind.DatatypeConverter;
 
 import org.bouncycastle.cert.CertException;
@@ -44,9 +48,12 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.ca.CAUtils;
+import com.sos.commons.sign.keys.certificate.CertificateUtils;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
+
+import junit.framework.Assert;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CATests {
@@ -357,6 +364,49 @@ public class CATests {
             LOGGER.info(ECNamedCurveTable.getNames().nextElement().toString());
         }
 
+    }
+    
+    @Test
+    public void testExtractCN () throws InvalidNameException {
+        String cn = CertificateUtils.extractCommonName("CN=HOSTNAME , OU=devel, O=SOS, L=Area 51, C=DE");
+        LOGGER.info(cn +"|");
+        assertEquals("HOSTNAME", cn);
+        assertTrue(cn.length() == 8);
+    }
+
+    @Test
+    public void testExtractFromDistinguishedName () throws InvalidNameException {
+        String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        LdapName ldapNameDN = new LdapName(dn);
+        for (Rdn rdn : ldapNameDN.getRdns()) {
+            LOGGER.info(rdn.getType() + " : " + rdn.getValue());
+        }
+    }
+
+    @Test
+    public void testCreateUserSubjectDN () throws InvalidNameException, IOException, CertificateException {
+        String dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        String certificateString = new String(Files.readAllBytes(Paths.get("src/test/resources/sp_root_ca.cer")), StandardCharsets.UTF_8);
+        X509Certificate certificate =  KeyUtil.getX509Certificate(certificateString);
+        LOGGER.info("************************************  full DN");
+        LOGGER.info(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
+        dn = "OU=Büro hinten, L=Area 51";
+        LOGGER.info("************************************  partial DN");
+        LOGGER.info(CAUtils.createUserSubjectDN(dn, certificate, "MyAgent"));
+        LOGGER.info("************************************  empty DN");
+        LOGGER.info(CAUtils.createUserSubjectDN("", certificate, "MyAgent"));
+        LOGGER.info("************************************  null DN");
+        LOGGER.info(CAUtils.createUserSubjectDN(null, certificate, "MyAgent"));
+        dn = "CN=HOSTNAME , OU=devel, OU= Büro hinten, O=SOS, L=Area 51, C=DE";
+        LOGGER.info("************************************  full DN alt cert null");
+        LOGGER.info(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
+        dn = "OU=Büro hinten, L=Area 51";
+        LOGGER.info("************************************  partial DN alt cert null");
+        LOGGER.info(CAUtils.createUserSubjectDN(dn, null, "MyAgent"));
+        LOGGER.info("************************************  empty DN alt cert null");
+        LOGGER.info(CAUtils.createUserSubjectDN("", null, "MyAgent"));
+        LOGGER.info("************************************  null DN alt cert null");
+        LOGGER.info(CAUtils.createUserSubjectDN(null, null, "MyAgent"));
     }
 
     private void exportCertificateBundle(String rootKey, String rootCert, String userCertificateRequest, String userKey, String userCert, String filename)
