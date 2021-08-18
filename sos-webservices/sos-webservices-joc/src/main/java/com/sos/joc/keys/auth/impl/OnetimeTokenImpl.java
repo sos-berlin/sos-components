@@ -56,10 +56,6 @@ public class OnetimeTokenImpl extends JOCResourceImpl implements IOnetimeToken {
             OnetimeTokens onetimeTokens = OnetimeTokens.getInstance();
             // delete invalidated tokens
             ClientServerCertificateUtil.cleanupInvalidatedTokens();
-            List<OnetimeToken> invalidatedTokens = onetimeTokens.getTokens().stream()
-                    .filter(token -> token.getValidUntil().getTime() < Date.from(Instant.now()).getTime()).collect(Collectors.toList());
-            onetimeTokens.getTokens().removeAll(invalidatedTokens);
-            
             if(controllerId != null && !controllerId.isEmpty()) {
                 // first delete existing token(s)
                 List<OnetimeToken> tokensToDelete = onetimeTokens.getTokens().stream().filter(token -> controllerId.equals(token.getControllerId())).collect(Collectors.toList());

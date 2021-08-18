@@ -77,7 +77,7 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                         List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(onetimeToken.getControllerId());
                         List<String> dNs = new ArrayList<String>();
                         for (DBItemInventoryJSInstance controller : controllers) {
-                            if(!onetimeToken.getURI().equals(controller.getUri())) {
+                            if(!controller.getUri().equals(onetimeToken.getURI())) {
                                 try {
                                     if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
                                         X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
