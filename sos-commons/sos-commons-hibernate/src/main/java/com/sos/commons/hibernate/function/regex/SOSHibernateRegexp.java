@@ -12,6 +12,7 @@ import org.hibernate.type.Type;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.util.SOSString;
 
 public class SOSHibernateRegexp extends StandardSQLFunction {
 
@@ -50,19 +51,25 @@ public class SOSHibernateRegexp extends StandardSQLFunction {
         } else if (Dbms.MSSQL.equals(dbms)) {
             // TODO
             String innRegexp = null;
+            String quote = "'";
             if (mssqlRegexp == null) {
-                regexp = regexp.replaceAll(Pattern.quote(".*"), "%");
-                innRegexp = regexp.substring(1, regexp.length() - 1);
-                if (!innRegexp.startsWith("^")) {
-                    innRegexp = "%" + innRegexp;
-                }
-                if (!innRegexp.endsWith("$")) {
-                    innRegexp = innRegexp + "%";
+                if (!SOSString.isEmpty(regexp) && !regexp.equals("?")) {
+                    regexp = regexp.replaceAll(Pattern.quote(".*"), "%");
+                    innRegexp = regexp.substring(1, regexp.length() - 1);
+                    if (!innRegexp.startsWith("^")) {
+                        innRegexp = "%" + innRegexp;
+                    }
+                    if (!innRegexp.endsWith("$")) {
+                        innRegexp = innRegexp + "%";
+                    }
+                } else {
+                    innRegexp = "?";
+                    quote = "";
                 }
             } else {
                 innRegexp = mssqlRegexp.substring(1, mssqlRegexp.length() - 1);
             }
-            return "(case when (" + property + " like '" + innRegexp + "') then 1 else 0 end)";
+            return "(case when (" + property + " like " + quote + innRegexp + quote + ") then 1 else 0 end)";
         } else if (Dbms.ORACLE.equals(dbms)) {
             return "(case when (REGEXP_LIKE(" + property + "," + regexp + ")) then 1 else 0 end)";
         } else if (Dbms.PGSQL.equals(dbms)) {

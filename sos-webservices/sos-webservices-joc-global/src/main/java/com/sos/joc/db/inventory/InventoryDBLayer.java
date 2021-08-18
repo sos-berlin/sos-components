@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -50,8 +51,11 @@ public class InventoryDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
 
+    private String regexpParamPrefixSuffix = "";
+
     public InventoryDBLayer(SOSHibernateSession session) {
         super(session);
+        setRegexpParamPrefixSuffix();
     }
 
     public InventoryDeploymentItem getLastDeploymentHistory(Long configId) throws SOSHibernateException {
@@ -1133,7 +1137,7 @@ public class InventoryDBLayer extends DBLayer {
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
-        query.setParameter("boardName", "\"" + boardName + "\"");
+        query.setParameter("boardName", getRegexpParameter(boardName, "\""));
         return getSession().getResultList(query);
     }
 
@@ -1152,7 +1156,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append(")");
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("jobResourceName", jobResourceName);
+        query.setParameter("jobResourceName", getRegexpParameter(jobResourceName, ""));
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
         return getSession().getResultList(query);
     }
@@ -1227,7 +1231,7 @@ public class InventoryDBLayer extends DBLayer {
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameter("calendarPath", "\"" + calendarPath + "\"");
+        query.setParameter("calendarPath", getRegexpParameter(calendarPath, "\""));
         return getSession().getResultList(query);
     }
 
@@ -1240,7 +1244,7 @@ public class InventoryDBLayer extends DBLayer {
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameter("calendarName", "\"" + calendarName + "\"");
+        query.setParameter("calendarName", getRegexpParameter(calendarName, "\""));
         return getSession().getResultList(query);
     }
 
@@ -1257,7 +1261,7 @@ public class InventoryDBLayer extends DBLayer {
 
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
-        query.setParameter("docName", "\"" + docName + "\"");
+        query.setParameter("docName", getRegexpParameter(docName, "\""));
         return getSession().getResultList(query);
     }
 
@@ -1314,5 +1318,18 @@ public class InventoryDBLayer extends DBLayer {
         query.setParameter("name", name);
         query.setParameter("type", type.intValue());
         return getSession().getSingleResult(query);
+    }
+
+    private String getRegexpParameter(String param, String prefixSuffix) {
+        return regexpParamPrefixSuffix + prefixSuffix + param + prefixSuffix + regexpParamPrefixSuffix;
+    }
+
+    private void setRegexpParamPrefixSuffix() {
+        try {
+            if (getSession().getFactory().getDbms().equals(Dbms.MSSQL)) {
+                regexpParamPrefixSuffix = "%";
+            }
+        } catch (Throwable e) {
+        }
     }
 }
