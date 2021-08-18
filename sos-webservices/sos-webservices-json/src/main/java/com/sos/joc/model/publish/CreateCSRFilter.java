@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "dn",
     "san",
-    "hostname"
+    "hostname",
+    "dnOnly"
 })
 public class CreateCSRFilter {
 
@@ -29,6 +30,8 @@ public class CreateCSRFilter {
     private String san;
     @JsonProperty("hostname")
     private String hostname;
+    @JsonProperty("dnOnly")
+    private Boolean dnOnly = false;
 
     @JsonProperty("dn")
     public String getDn() {
@@ -60,14 +63,24 @@ public class CreateCSRFilter {
         this.hostname = hostname;
     }
 
+    @JsonProperty("dnOnly")
+    public Boolean getDnOnly() {
+        return dnOnly;
+    }
+
+    @JsonProperty("dnOnly")
+    public void setDnOnly(Boolean dnOnly) {
+        this.dnOnly = dnOnly;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("dn", dn).append("san", san).append("hostname", hostname).toString();
+        return new ToStringBuilder(this).append("dn", dn).append("san", san).append("hostname", hostname).append("dnOnly", dnOnly).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(san).append(dn).append(hostname).toHashCode();
+        return new HashCodeBuilder().append(san).append(dn).append(hostname).append(dnOnly).toHashCode();
     }
 
     @Override
@@ -79,7 +92,7 @@ public class CreateCSRFilter {
             return false;
         }
         CreateCSRFilter rhs = ((CreateCSRFilter) other);
-        return new EqualsBuilder().append(san, rhs.san).append(dn, rhs.dn).append(hostname, rhs.hostname).isEquals();
+        return new EqualsBuilder().append(san, rhs.san).append(dn, rhs.dn).append(hostname, rhs.hostname).append(dnOnly, rhs.dnOnly).isEquals();
     }
 
 }
