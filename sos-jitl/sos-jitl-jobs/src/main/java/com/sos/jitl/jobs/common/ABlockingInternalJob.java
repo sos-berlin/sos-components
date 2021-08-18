@@ -273,9 +273,9 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     }
 
     private Object getNamedValue(final JobStep<A> step, final String name) throws SOSJobProblemException {
-        Optional<Value> op = Job.getFromEither(step.getInternalStep().namedValue(name));
-        if (op.isPresent()) {
-            return Job.getValue(op.get());
+        Optional<Either<Problem, Value>> opt = step.getInternalStep().namedValue(name);
+        if (opt.isPresent()) {
+            return Job.getValue(Job.getFromEither(opt.get()));
         }
         return null;
     }
