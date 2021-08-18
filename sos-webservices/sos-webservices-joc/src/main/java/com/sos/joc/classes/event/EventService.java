@@ -513,7 +513,7 @@ public class EventService {
     }
     
     private EventSnapshot createBoardEvent(long eventId, String path) {
-        return createLockEvent(eventId, path, "NoticeBoardStateChanged");
+        return createBoardEvent(eventId, path, "NoticeBoardStateChanged");
     }
     
     private EventSnapshot createBoardEvent(long eventId, String path, String eventType) {
