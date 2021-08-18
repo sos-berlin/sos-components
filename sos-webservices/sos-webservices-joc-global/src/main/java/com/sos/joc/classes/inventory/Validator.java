@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -21,9 +22,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -46,10 +49,12 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
+import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -144,13 +149,12 @@ public class Validator {
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
-                    validateWorkflowRef(schedule.getWorkflowName(), dbLayer);
-                    // String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer);
+                    String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer);
                     validateCalendarRefs(schedule, dbLayer);
-                    // if (json != null) {
-                    // Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
-                    // validateArguments(schedule.getVariables(), workflowOfSchedule.getOrderPreparation(), "$.variables");
-                    // }
+                    if (json != null) {
+                        Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
+                        validateVariableSets(schedule.getVariableSets(), workflowOfSchedule.getOrderPreparation(), "$.variableSets");
+                    }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
                     validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer);
@@ -528,6 +532,21 @@ public class Validator {
                         throw new JocConfigurationException(String.format("%s['%s']: Wrong data type %s (%s is expected).", key, position, curArg
                                 .getClass().getSimpleName(), value.getType().value()));
                     }
+                }
+            });
+        }
+    }
+    
+    private static void validateVariableSets(List<VariableSet> variableSets, Requirements orderPreparation, String position) throws JocConfigurationException {
+        if (variableSets != null) {
+            if (variableSets.size() != variableSets.stream().map(VariableSet::getOrderName).distinct().mapToInt(e -> 1).sum()) {
+                throw new JocConfigurationException(position + ": Order names has to be unique");
+            }
+            variableSets.stream().map(VariableSet::getVariables).filter(Objects::nonNull).forEach(v -> {
+                try {
+                    OrdersHelper.checkArguments(v, orderPreparation);
+                } catch (Exception e1) {
+                    throw new JocConfigurationException(position + ": " + e1.getMessage());
                 }
             });
         }

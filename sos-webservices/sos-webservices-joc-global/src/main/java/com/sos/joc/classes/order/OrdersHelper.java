@@ -418,6 +418,11 @@ public class OrdersHelper {
                 case String:
                     if ((curArg instanceof String) == false) {
                         invalid = true;
+                    } else {
+                        String strArg = (String) curArg;
+                        if ((strArg == null || strArg.isEmpty()) && param.getValue().getDefault() == null) {
+                            throw new JocMissingRequiredParameterException("Variable '" + param.getKey() + "' is empty but required");
+                        }
                     }
                     break;
                 case Boolean:
