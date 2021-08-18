@@ -1659,8 +1659,9 @@ public abstract class PublishUtils {
                 normalizedPath = normalizedPath.substring(1);
             }
             WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
-                    .displayName()), com.sos.inventory.model.workflow.Workflow.class);
+            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
+                    com.sos.inventory.model.workflow.Workflow.class);
+            workflow = JsonSerializer.emptyValuesToNull(workflow);
             if (checkObjectNotEmpty(workflow)) {
                 workflowEdit.setConfiguration(workflow);
             } else {
