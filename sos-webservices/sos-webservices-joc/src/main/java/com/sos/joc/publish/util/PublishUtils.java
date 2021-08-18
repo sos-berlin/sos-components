@@ -3154,11 +3154,13 @@ public abstract class PublishUtils {
         } else {
             readingOrderToNoticeIdExpression = readingOrderToNoticeIdEither.get();
         }
-        Either<Problem, JExpression> endOfLifeEither = JExpression.parse(board.getEndOfLife());
-        if (endOfLifeEither.isLeft()) {
-            throw new JocDeployException(endOfLifeEither.getLeft().toString());
-        } else {
-            endOfLifeExpression = endOfLifeEither.get();
+        if (board.getEndOfLife() != null) {
+            Either<Problem, JExpression> endOfLifeEither = JExpression.parse(board.getEndOfLife());
+            if (endOfLifeEither.isLeft()) {
+                throw new JocDeployException(endOfLifeEither.getLeft().toString());
+            } else {
+                endOfLifeExpression = endOfLifeEither.get();
+            }
         }
         return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
     }
