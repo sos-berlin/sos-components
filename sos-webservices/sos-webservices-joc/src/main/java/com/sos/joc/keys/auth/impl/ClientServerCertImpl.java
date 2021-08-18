@@ -76,17 +76,22 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                         InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
                         List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(onetimeToken.getControllerId());
                         List<String> dNs = new ArrayList<String>();
-                        for (DBItemInventoryJSInstance controller : controllers) {
-                            if(!controller.getUri().equals(onetimeToken.getURI())) {
-                                try {
-                                    if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
-                                        X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
-                                        dNs.add(cert.getSubjectDN().getName());
-                                    }
-                                } catch (CertificateException | UnsupportedEncodingException e) {}
-                            } else {
-                                controller.setCertificate(response.getJocKeyPair().getCertificate());
-                                hibernateSession.update(controller);
+                        if (controllers.size() == 1) { //standalone
+                            controllers.get(0).setCertificate(response.getJocKeyPair().getCertificate());
+                            hibernateSession.update(controllers.get(0));
+                        } else {
+                            for (DBItemInventoryJSInstance controller : controllers) {
+                                if(!controller.getUri().equals(onetimeToken.getURI())) {
+                                    try {
+                                        if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
+                                            X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
+                                            dNs.add(cert.getSubjectDN().getName());
+                                        }
+                                    } catch (CertificateException | UnsupportedEncodingException e) {}
+                                } else {
+                                    controller.setCertificate(response.getJocKeyPair().getCertificate());
+                                    hibernateSession.update(controller);
+                                }
                             }
                         }
                         response.setDNs(dNs);
