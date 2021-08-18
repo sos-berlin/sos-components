@@ -220,11 +220,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     private static List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
             DeployedConfigurationDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions) {
 
-        Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
-        if (wIds == null || wIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
         final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders(), folderPermissions);
         List<DeployedContent> contents = null;
@@ -233,11 +228,15 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         if (workflowIds != null && !workflowIds.isEmpty()) {
             workflowsFilter.setRegex(null);
             // only permanent info
-        }
-        if (withFolderFilter && (folders == null || folders.isEmpty())) {
+        } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
             // no folder permissions
         } else {
-
+            
+            Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
+            if (wIds == null || wIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getControllerId());
             dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));

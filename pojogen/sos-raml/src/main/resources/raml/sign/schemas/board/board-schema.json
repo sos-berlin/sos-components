@@ -10,7 +10,8 @@
     "TYPE",
     "path",
     "postOrderToNoticeId",
-    "expectOrderToNoticeId"
+    "expectOrderToNoticeId",
+    "endOfLife"
   ],
   "propertyOrder": [
     "TYPE",
