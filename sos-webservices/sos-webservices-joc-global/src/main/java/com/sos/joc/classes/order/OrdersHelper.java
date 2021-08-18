@@ -104,7 +104,7 @@ public class OrdersHelper {
                     put(Order.ExpectingNotice.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
-                    //put(Order.Offering.class, OrderStateText.WAITING);
+                    // put(Order.Offering.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
@@ -175,20 +175,20 @@ public class OrdersHelper {
             put(OrderStateText.UNKNOWN, 2);
         }
     });
-    
-    public static final Map<DailyPlanOrderStateText, Integer> severityByGroupedDailyPlanStates = Collections.unmodifiableMap(new HashMap<DailyPlanOrderStateText, Integer>() {
 
-        // consider 'blocked' as further grouped state
-        private static final long serialVersionUID = 1L;
+    public static final Map<DailyPlanOrderStateText, Integer> severityByGroupedDailyPlanStates = Collections.unmodifiableMap(
+            new HashMap<DailyPlanOrderStateText, Integer>() {
 
-        {
-            put(DailyPlanOrderStateText.PLANNED, 4);
-            put(DailyPlanOrderStateText.SUBMITTED, 5);
-            put(DailyPlanOrderStateText.FINISHED, 6);
-        }
-    });
-    
-    
+                // consider 'blocked' as further grouped state
+                private static final long serialVersionUID = 1L;
+
+                {
+                    put(DailyPlanOrderStateText.PLANNED, 4);
+                    put(DailyPlanOrderStateText.SUBMITTED, 5);
+                    put(DailyPlanOrderStateText.FINISHED, 6);
+                }
+            });
+
     public static final Map<Class<? extends js7.data.order.OrderMark>, OrderMarkText> groupByMarkClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends js7.data.order.OrderMark>, OrderMarkText>() {
 
@@ -200,7 +200,7 @@ public class OrdersHelper {
                     put(Cancelling.class, OrderMarkText.CANCELLING);
                 }
             });
-    
+
     public static final Map<OrderMarkText, Integer> severityByMarks = Collections.unmodifiableMap(new HashMap<OrderMarkText, Integer>() {
 
         private static final long serialVersionUID = 1L;
@@ -246,7 +246,7 @@ public class OrdersHelper {
         }
         return OrderStateText.FAILED.equals(getGroupedState(o.state().getClass()));
     }
-    
+
     public static boolean isPendingOrScheduledOrBlocked(JOrder order) {
         Order<Order.State> o = order.asScala();
         if (o.isSuspended()) {
@@ -254,7 +254,7 @@ public class OrdersHelper {
         }
         return OrderStateText.SCHEDULED.equals(getGroupedState(order.asScala().state().getClass()));
     }
-    
+
     public static boolean isPrompting(JOrder order) {
         Order<Order.State> o = order.asScala();
         if (o.isSuspended()) {
@@ -283,7 +283,7 @@ public class OrdersHelper {
         }
         return state;
     }
-    
+
     public static Integer getHistoryStateSeverity(OrderStateText st) {
         Integer severity = severityByGroupedStates.get(st);
         if (severity == null) {
@@ -291,35 +291,35 @@ public class OrdersHelper {
         }
         return severity;
     }
-    
-//    private static OrderMark getMark(Order<Order.State> o) {
-//        OrderMarkText markText = null;
-//        if (o.isCancelling()) {
-//            markText = OrderMarkText.CANCELLING; 
-//        } else if (o.isSuspending() || o.isSuspendingWithKill()) {
-//            markText = OrderMarkText.SUSPENDING; 
-//        } else if (o.isResuming()) {
-//            markText = OrderMarkText.RESUMING; 
-//        }
-//        if (markText != null) {
-//           OrderMark mark = new OrderMark();
-//           mark.set_text(markText);
-//           mark.setSeverity(severityByMarks.get(markText));
-//           return mark;
-//        }
-//        return null;
-//    }
-    
+
+    // private static OrderMark getMark(Order<Order.State> o) {
+    // OrderMarkText markText = null;
+    // if (o.isCancelling()) {
+    // markText = OrderMarkText.CANCELLING;
+    // } else if (o.isSuspending() || o.isSuspendingWithKill()) {
+    // markText = OrderMarkText.SUSPENDING;
+    // } else if (o.isResuming()) {
+    // markText = OrderMarkText.RESUMING;
+    // }
+    // if (markText != null) {
+    // OrderMark mark = new OrderMark();
+    // mark.set_text(markText);
+    // mark.setSeverity(severityByMarks.get(markText));
+    // return mark;
+    // }
+    // return null;
+    // }
+
     private static OrderMark getMark(Option<js7.data.order.OrderMark> opt) {
         OrderMarkText markText = null;
         if (opt.nonEmpty()) {
             markText = groupByMarkClasses.get(opt.get().getClass());
         }
         if (markText != null) {
-           OrderMark mark = new OrderMark();
-           mark.set_text(markText);
-           mark.setSeverity(severityByMarks.get(markText));
-           return mark;
+            OrderMark mark = new OrderMark();
+            mark.set_text(markText);
+            mark.setSeverity(severityByMarks.get(markText));
+            return mark;
         }
         return null;
     }
@@ -377,7 +377,7 @@ public class OrdersHelper {
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
-    
+
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState));
@@ -391,9 +391,9 @@ public class OrdersHelper {
 
         boolean allowUndeclared = false;
         if (orderRequirements == null || orderRequirements.getAllowUndeclared() == Boolean.TRUE) {
-            allowUndeclared = true; 
+            allowUndeclared = true;
         }
-        
+
         if (!allowUndeclared) {
             Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
             if (!keys.isEmpty()) {
@@ -458,9 +458,9 @@ public class OrdersHelper {
                 case List:
                     if ((curArg instanceof List) == false) {
                         invalid = true;
-                        
+
                         // TODO check list params types
-                        
+
                     }
                     break;
                 }
@@ -494,8 +494,8 @@ public class OrdersHelper {
                 Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(e.get().id());
-                
-                //TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
+
+                // TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
 
                 // modify parameters if necessary
                 if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
@@ -526,9 +526,9 @@ public class OrdersHelper {
                 if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
                     scheduledFor = Optional.empty();
                 }
-                
+
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
-                //JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
+                // JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
                 auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string()));
                 either = Either.right(o);
             } catch (Exception ex) {
@@ -545,9 +545,9 @@ public class OrdersHelper {
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
 
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
-            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(FreshOrder::getOldOrderId,
-                    FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
-            
+            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(
+                    FreshOrder::getOldOrderId, FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
+
             proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                 if (either.isRight()) {
@@ -557,9 +557,9 @@ public class OrdersHelper {
                             proxy.api().addOrders(Flux.fromIterable(freshOrders.values())).thenAccept(either3 -> {
                                 ProblemHelper.postProblemEventIfExist(either3, accessToken, jocError, controllerId);
                                 if (either3.isRight()) {
-//                                    proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
-//                                            .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
-//                                                    controllerId));
+                                    // proxy.api().deleteOrdersWhenTerminated(Flux.fromStream(freshOrders.values().stream().map(JFreshOrder::id)))
+                                    // .thenAccept(either4 -> ProblemHelper.postProblemEventIfExist(either4, accessToken, jocError,
+                                    // controllerId));
                                     // auditlog is written even deleteOrdersWhenTerminated has a problem
                                     storeAuditLogDetails(auditLogDetails, auditlogId).thenAccept(either5 -> ProblemHelper.postExceptionEventIfExist(
                                             either5, accessToken, jocError, controllerId));
@@ -610,7 +610,7 @@ public class OrdersHelper {
         }
         return Collections.emptyMap();
     }
-    
+
     public static Map<String, Value> variablesToScalaValuedArguments(Map<String, Object> vars) {
         Map<String, Value> arguments = new HashMap<>();
         if (vars != null) {
@@ -637,10 +637,10 @@ public class OrdersHelper {
         }
         return arguments;
     }
-    
-//    public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
-//        return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
-//    }
+
+    // public static scala.collection.immutable.Map<String, Value> toScalaImmutableMap(Map<String, Value> jmap) {
+    // return scala.collection.immutable.Map.from(scala.jdk.CollectionConverters.MapHasAsScala(jmap).asScala());
+    // }
 
     public static Variables scalaValuedArgumentsToVariables(Map<String, Value> args) {
         Variables variables = new Variables();
@@ -665,7 +665,7 @@ public class OrdersHelper {
         return storeAuditLogDetails(jOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
                 .string())).collect(Collectors.toList()), auditlogId);
     }
-    
+
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId) {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(jOrder.workflowId().path().string()), jOrder.id()
                 .string())), auditlogId);
@@ -686,17 +686,24 @@ public class OrdersHelper {
             return p.toString().replace('\\', '/');
         }
     }
-    
+
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
-            List<DBItemDailyPlanOrders> listOfDailyPlanOrders) {
-        return ControllerApi.of(controllerId).cancelOrders(listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(
-                dbItem -> OrderId.of(dbItem.getOrderId())).collect(Collectors.toSet()), JCancellationMode.freshOnly());
+            List<DBItemDailyPlanOrders> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
+
+        Set<OrderId> setOfOrderIds = listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
+                .getOrderId())).collect(Collectors.toSet());
+
+        JControllerProxy proxy = Proxy.of(controllerId);
+        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).map(JOrder::id).collect((Collectors
+                .toSet())), JCancellationMode.freshOnly());
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
             List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
         return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
                 Collectors.toSet()), JCancellationMode.freshOnly());
-    }   
+    }
 
 }

@@ -87,11 +87,11 @@ public class DBLayerDailyPlannedOrders {
             try {
                 deleteVariables(filter);
                 row = delete(filter);
-                retryCount = 10;
+                retryCount = 20;
             } catch (SOSHibernateLockAcquisitionException e) {
                 if (retryCount < 10) {
                     try {
-                        java.lang.Thread.sleep(500);
+                        java.lang.Thread.sleep(1000);
                     } catch (InterruptedException e1) {
                     }
                     retryCount = retryCount + 1;

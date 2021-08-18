@@ -208,12 +208,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             setSettings();
 
-            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
-            FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
-            filterOrderVariables.setPlannedOrderId(finalPlannedOrder.getId());
-
-            List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
             FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
@@ -324,7 +318,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void recreateCyclicOrder(DailyPlanModifyOrder dailyplanModifyOrder, List<String> listOfOrderIds,
-            final DBItemDailyPlanOrders finalPlannedOrder, DBItemJocAuditLog dbAuditlog) throws SOSHibernateException {
+            final DBItemDailyPlanOrders finalPlannedOrder, DBItemJocAuditLog dbAuditlog) throws SOSHibernateException,
+            ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         SOSHibernateSession sosHibernateSession = null;
         String controllerId = dailyplanModifyOrder.getControllerId();
         try {
@@ -346,20 +342,16 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
             if (listOfPlannedOrders.size() > 0) {
-                listOfPlannedOrders.get(listOfPlannedOrders.size() - 1).setLastInList(true);
-
-                for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
-                    listOfOrderIds.clear();
-                    listOfOrderIds.add(dbItemDailyPlanOrders.getOrderId());
-                    CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfPlannedOrders);
-                    c.thenAccept(either -> {
-                        // ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfPlannedOrders);
+                c.thenAccept(either -> {
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
+                    if (either.isRight()) {
                         removeRecreateCyclicOrder(true, dailyplanModifyOrder, finalPlannedOrder, listOfOrderIds, dbAuditlog);
-                        if (dbItemDailyPlanOrders.isLastInList()) {
-                            executeRecreateCyclicOrder(dailyplanModifyOrder, finalPlannedOrder, listOfVariables, dbAuditlog);
-                        }
-                    });
-                }
+                        executeRecreateCyclicOrder(dailyplanModifyOrder, finalPlannedOrder, listOfVariables, dbAuditlog);
+                    }
+
+                });
+
             } else {
                 executeRecreateCyclicOrder(dailyplanModifyOrder, finalPlannedOrder, listOfVariables, dbAuditlog);
             }
@@ -526,7 +518,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(),
                             listOfDailyPlanItems);
                     c.thenAccept(either -> {
-                        //ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
+                        // ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
                         if (either.isRight()) {
                             SOSHibernateSession sosHibernateSession2 = null;
                             try {
