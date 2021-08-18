@@ -67,7 +67,7 @@ public class InventorySearchDBLayer extends DBLayer {
         if (searchInFolders) {
             hql.append("and (").append(foldersHql(folders)).append(") ");
         }
-        hql.append("group by mt.id");
+        hql.append("group by mt.id,mt.path,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
@@ -339,7 +339,7 @@ public class InventorySearchDBLayer extends DBLayer {
         default:
             break;
         }
-        hql.append("group by mt.id");
+        hql.append("group by mt.id,mt.path,mt.folder,mt.name,mt.title,mt.valid,mt.deleted,mt.deployed,mt.released ");
 
         Query<InventorySearchItem> query = getSession().createQuery(hql.toString(), InventorySearchItem.class);
         query.setParameter("type", type.intValue());
