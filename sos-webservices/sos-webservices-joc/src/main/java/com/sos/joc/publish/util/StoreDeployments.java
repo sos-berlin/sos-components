@@ -88,6 +88,7 @@ public class StoreDeployments {
                 		} else {
                 			item.setSignedContent(".");
                 		}
+                		item.setCommitId(commitId);
                 		item.setDeploymentDate(deploymentDate);
                 		item.setOperation(OperationType.UPDATE.value());
                 		item.setState(DeploymentState.DEPLOYED.value());

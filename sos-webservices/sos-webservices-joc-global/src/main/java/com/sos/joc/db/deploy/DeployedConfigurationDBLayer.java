@@ -15,6 +15,9 @@ import org.hibernate.query.Query;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
+import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
+import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
@@ -264,6 +267,33 @@ public class DeployedConfigurationDBLayer {
             return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getWorkflowId, InventoryNamePath::getPath));
         }
         return Collections.emptyMap();
+    }
+    
+    public List<WorkflowId> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+            hql.append("(dc.path, dc.commitId) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.postNotices");
+            hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
+
+            Query<WorkflowId> query = session.createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("boardName", "\"" + boardName + "\"");
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
     }
 
     public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types) throws DBConnectionRefusedException,

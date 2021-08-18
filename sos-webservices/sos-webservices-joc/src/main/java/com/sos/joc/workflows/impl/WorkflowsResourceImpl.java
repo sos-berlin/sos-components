@@ -19,6 +19,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
@@ -63,70 +64,16 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
-            
+
             Workflows workflows = new Workflows();
             workflows.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = getCurrentState(controllerId);
-            
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(connection);
-
-            List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer);
             if (currentstate != null) {
                 workflows.setSurveyDate(Date.from(currentstate.instant()));
-                contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer));
             }
-            
-            List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-            if (workflowIds != null && !workflowIds.isEmpty()) {
-                workflowsFilter.setFolders(null);
-                workflowsFilter.setRegex(null);
-            }
-
-            Stream<DeployedContent> contentsStream = contents.stream().sorted(Comparator.comparing(DeployedContent::getCreated).reversed())
-                    .distinct();
-            
-            boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
-                    .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
-            if (withoutFilter) {
-                Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-                contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
-            }
-            if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
-            }
-            
-            Map<String, List<FileOrderSource>> fileOrderSources = WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, contents
-                    .stream().filter(DeployedContent::isCurrentVersion).map(w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()),
-                    dbLayer);
-
-            JocError jocError = getJocError();
-            workflows.setWorkflows(contentsStream.map(w -> {
-                try {
-                    if (w.getContent() == null || w.getContent().isEmpty()) {
-                        throw new DBMissingDataException("doesn't exist");
-                    }
-                    Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
-                    workflow.setPath(w.getPath());
-                    workflow.setVersionId(w.getCommitId());
-                    workflow.setIsCurrentVersion(w.isCurrentVersion());
-                    workflow.setVersionDate(w.getCreated());
-                    workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
-                    if (workflow.getIsCurrentVersion()) {
-                        workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
-                    }
-                    return WorkflowsHelper.addWorkflowPositionsAndForkListVariables(workflow);
-                } catch (Exception e) {
-                    if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                        LOGGER.info(jocError.printMetaInfo());
-                        jocError.clearMetaInfo();
-                    }
-                    LOGGER.error(String.format("[%s] %s", w.getPath(), e.toString()));
-                    return null;
-                }
-            }).filter(Objects::nonNull).collect(Collectors.toList()));
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folderPermissions,
+                    getJocError()));
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(workflows));
@@ -141,7 +88,63 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
     }
 
-    
+    public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
+            SOSShiroFolderPermissions folderPermissions, JocError jocError) {
+        String controllerId = workflowsFilter.getControllerId();
+
+        List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, folderPermissions);
+        if (currentstate != null) {
+            contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, folderPermissions));
+        }
+
+        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            workflowsFilter.setFolders(null);
+            workflowsFilter.setRegex(null);
+        }
+
+        Stream<DeployedContent> contentsStream = contents.stream().sorted(Comparator.comparing(DeployedContent::getCreated).reversed()).distinct();
+
+        boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
+                .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
+        if (withoutFilter) {
+            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
+        }
+        if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
+            Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+            contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
+        }
+
+        Map<String, List<FileOrderSource>> fileOrderSources = WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, contents.stream()
+                .filter(DeployedContent::isCurrentVersion).map(w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
+
+        return contentsStream.map(w -> {
+            try {
+                if (w.getContent() == null || w.getContent().isEmpty()) {
+                    throw new DBMissingDataException("doesn't exist");
+                }
+                Workflow workflow = Globals.objectMapper.readValue(w.getContent(), Workflow.class);
+                workflow.setPath(w.getPath());
+                workflow.setVersionId(w.getCommitId());
+                workflow.setIsCurrentVersion(w.isCurrentVersion());
+                workflow.setVersionDate(w.getCreated());
+                workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
+                if (workflow.getIsCurrentVersion()) {
+                    workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
+                }
+                return WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
+            } catch (Exception e) {
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
+                }
+                LOGGER.error(String.format("[%s] %s", w.getPath(), e.toString()));
+                return null;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
     private JControllerState getCurrentState(String controllerId) {
         JControllerState currentstate = null;
         try {
@@ -152,7 +155,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         return currentstate;
     }
 
-    private List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer) {
+    private static List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
+            SOSShiroFolderPermissions folderPermissions) {
         DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
         dbFilter.setControllerId(workflowsFilter.getControllerId());
         dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
@@ -163,7 +167,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             workflowsFilter.setRegex(null);
         }
         boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
-        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders());
+        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders(), folderPermissions);
         List<DeployedContent> contents = null;
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
@@ -212,9 +216,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
         return contents;
     }
-    
-    private List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
-            DeployedConfigurationDBLayer dbLayer) {
+
+    private static List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
+            DeployedConfigurationDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions) {
 
         Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
         if (wIds == null || wIds.isEmpty()) {
@@ -222,7 +226,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         }
 
         List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders());
+        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders(), folderPermissions);
         List<DeployedContent> contents = null;
         boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
 
