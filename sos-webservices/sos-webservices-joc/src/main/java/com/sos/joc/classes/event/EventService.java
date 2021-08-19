@@ -73,8 +73,7 @@ import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockEvent;
 import js7.data.order.OrderEvent.OrderLockQueued;
 import js7.data.order.OrderEvent.OrderLockReleased;
-import js7.data.order.OrderEvent.OrderNoticeExpected;
-import js7.data.order.OrderEvent.OrderNoticePosted;
+import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
 import js7.data.order.OrderEvent.OrderProcessingStarted$;
@@ -89,6 +88,7 @@ import js7.data.order.OrderEvent.OrderSuspensionMarked;
 import js7.data.order.OrderEvent.OrderTerminated;
 import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.instructions.BoardInstruction;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflowId;
@@ -109,7 +109,7 @@ public class EventService {
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
             OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted$.class, OrderDeleted$.class, 
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
-            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeExpected.class, OrderNoticePosted.class);
+            OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class);
     private String controllerId;
     private volatile CopyOnWriteArraySet<EventSnapshot> events = new CopyOnWriteArraySet<>();
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
@@ -334,11 +334,9 @@ public class EventService {
                         JavaConverters.asJava(lockEvt.lockPaths()).forEach(lock -> {
                             addEvent(createLockEvent(eventId, lock.string()));
                         });
-//                    } else if (evt instanceof OrderNoticePosted) {
-//                        OrderNoticePosted nEvt = (OrderNoticePosted) evt;
-//                        //nEvt.notice().
-//                        currentState.
-//                        addEvent(createBoardEvent(eventId, ((BoardPath) key).string()));
+                    } else if (evt instanceof OrderNoticeEvent) {
+                        orderPositionToBoardPath(opt, currentState).ifPresent(boardPath -> addEvent(createBoardEvent(eventId,
+                                boardPath.string())));
                     }
                 } else {
                     //LOGGER.info("Order is not in current state");
@@ -420,6 +418,16 @@ public class EventService {
             LOGGER.warn(e.toString());
         }
     };
+    
+    private static Optional<BoardPath> orderPositionToBoardPath(Optional<JOrder> orderOpt, JControllerState controllerState) {
+        return orderOpt.map(order -> controllerState.asScala().instruction(order.asScala().workflowPosition())).flatMap(instruction -> tryCast(
+                BoardInstruction.class, instruction)).map(postNotice -> postNotice.boardPath());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Optional<T> tryCast(Class<T> clazz, Object object) {
+        return clazz.isAssignableFrom(object.getClass()) ? Optional.of((T) object) : Optional.empty();
+    }
     
     private WorkflowId mapWorkflowId(JWorkflowId workflowId) {
         WorkflowId w = new WorkflowId();
