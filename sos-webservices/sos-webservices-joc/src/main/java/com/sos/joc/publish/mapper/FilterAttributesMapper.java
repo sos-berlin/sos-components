@@ -41,6 +41,9 @@ public abstract class FilterAttributesMapper {
         if (filter.getCommitId() != null) {
             filterAttributes.add("commitId");
         }
+        if (filter.getAuditlogId() != null) {
+            filterAttributes.add("auditlogId");
+        }
         if (filter.getVersion() != null) {
             filterAttributes.add("version");
         }
