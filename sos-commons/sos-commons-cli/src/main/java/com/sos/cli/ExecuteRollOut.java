@@ -193,16 +193,10 @@ public class ExecuteRollOut {
                 createClient();
                 String response = callWebService();
                 RolloutResponse rollout = mapper.readValue(response, RolloutResponse.class);
-                if (dnOnly) {
-                    // TODO: 
-                    // certDN -> arg to determine if only DNs should be updated/added
-                    
-                } else {
-                    // TODO: 
-                    // args --token=%JS7_TOKEN%  --joc-uri=%JS7_JOC_URI% should be sufficient 
-                        addKeyAndCertToStore(rollout);
-                        updatePrivateConf(toUpdate, rollout);
+                if (!dnOnly) {
+                    addKeyAndCertToStore(rollout);
                 }
+                updatePrivateConf(toUpdate, rollout);
             } catch (Throwable e) {
                 System.out.println("token expired or no valid token found!");
             } finally {
@@ -315,7 +309,6 @@ public class ExecuteRollOut {
         } catch (CertificateException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
             System.out.println(e.toString());
         }
-        
     }
     
     private static KeyStoreCredentials readKeystoreCredentials(Config config) {

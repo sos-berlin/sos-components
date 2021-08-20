@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -55,46 +56,31 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
                 }
                 if (onetimeToken != null) {
                     hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                    response = ClientServerCertificateUtil.createClientServerAuthKeyPair(hibernateSession, createCsrFilter);
-                    if (onetimeToken.getAgentId() != null) {
-                        InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
-                        InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
-                        DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(onetimeToken.getAgentId());
-                        agent.setCertificate(response.getJocKeyPair().getCertificate());
-                        hibernateSession.update(agent);
-                        List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(agent.getControllerId());
-                        List<X509Certificate> certs = controllers.stream().map(controller -> {
-                            try {
-                                return KeyUtil.getX509Certificate(controller.getCertificate());
-                            } catch (CertificateException | UnsupportedEncodingException e) {
-                                return null;
-                            }
-                        }).filter(Objects::nonNull).collect(Collectors.toList());
-                        List<String> dNs = certs.stream().map(cert -> cert.getSubjectDN().getName()).collect(Collectors.toList());
-                        response.setDNs(dNs);
-                    } else if (onetimeToken.getControllerId() != null) {
-                        InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
-                        List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(onetimeToken.getControllerId());
-                        List<String> dNs = new ArrayList<String>();
-                        if (controllers.size() == 1) { //standalone
-                            controllers.get(0).setCertificate(response.getJocKeyPair().getCertificate());
-                            hibernateSession.update(controllers.get(0));
-                        } else {
-                            for (DBItemInventoryJSInstance controller : controllers) {
-                                if(!controller.getUri().equals(onetimeToken.getURI())) {
-                                    try {
-                                        if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
-                                            X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
-                                            dNs.add(cert.getSubjectDN().getName());
-                                        }
-                                    } catch (CertificateException | UnsupportedEncodingException e) {}
-                                } else {
-                                    controller.setCertificate(response.getJocKeyPair().getCertificate());
-                                    hibernateSession.update(controller);
+                    InventoryInstancesDBLayer controllerDbLayer = new InventoryInstancesDBLayer(hibernateSession);
+                    InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(hibernateSession);
+                    if (createCsrFilter.getDnOnly()) {
+                        response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
+                    } else {
+                        response = ClientServerCertificateUtil.createClientServerAuthKeyPair(hibernateSession, createCsrFilter);
+                        if (onetimeToken.getAgentId() != null) {
+                            DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(onetimeToken.getAgentId());
+                            agent.setCertificate(response.getJocKeyPair().getCertificate());
+                            hibernateSession.update(agent);
+                        } else if (onetimeToken.getControllerId() != null) {
+                            List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(onetimeToken.getControllerId());
+                            if (controllers.size() == 1) { //standalone
+                                controllers.get(0).setCertificate(response.getJocKeyPair().getCertificate());
+                                hibernateSession.update(controllers.get(0));
+                            } else { // cluster
+                                for (DBItemInventoryJSInstance controller : controllers) {
+                                    if(controller.getClusterUri() != null && controller.getClusterUri().equals(onetimeToken.getURI())) {
+                                        controller.setCertificate(response.getJocKeyPair().getCertificate());
+                                        hibernateSession.update(controller);
+                                    }
                                 }
                             }
+                            response.setDNs(getDns(onetimeToken, controllerDbLayer, agentDbLayer));
                         }
-                        response.setDNs(dNs);
                     }
                 } else {
                     throw new JocAuthenticationException(String.format("One-time token %1$s not found or has expired and was removed from the system.", token));
@@ -120,5 +106,33 @@ public class ClientServerCertImpl extends JOCResourceImpl implements ICreateClie
         }
     }
 
-
+    private List<String> getDns(OnetimeToken token, InventoryInstancesDBLayer controllerDbLayer, InventoryAgentInstancesDBLayer agentDbLayer)
+            throws SOSHibernateException {
+        List<String> dNs = new ArrayList<String>();
+        if (token.getAgentId() != null) {
+            DBItemInventoryAgentInstance agent = agentDbLayer.getAgentInstance(token.getAgentId());
+            List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(agent.getControllerId());
+            List<X509Certificate> certs = controllers.stream().map(controller -> {
+                try {
+                    return KeyUtil.getX509Certificate(controller.getCertificate());
+                } catch (CertificateException | UnsupportedEncodingException e) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.toList());
+            dNs = certs.stream().map(cert -> cert.getSubjectDN().getName()).collect(Collectors.toList());
+        } else if (token.getControllerId() != null) {
+            List<DBItemInventoryJSInstance> controllers = controllerDbLayer.getInventoryInstancesByControllerId(token.getControllerId());
+            for (DBItemInventoryJSInstance controller : controllers) {
+                if(!controller.getUri().equals(token.getURI())) {
+                    try {
+                        if(controller.getCertificate() != null && !controller.getCertificate().isEmpty()) {
+                            X509Certificate cert = KeyUtil.getX509Certificate(controller.getCertificate());
+                            dNs.add(cert.getSubjectDN().getName());
+                        }
+                    } catch (CertificateException | UnsupportedEncodingException e) {}
+                }
+            }
+        }
+        return dNs;
+    }
 }

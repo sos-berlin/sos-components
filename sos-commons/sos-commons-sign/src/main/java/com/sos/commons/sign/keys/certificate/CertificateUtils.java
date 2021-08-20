@@ -11,12 +11,6 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
 
 import org.bouncycastle.asn1.x500.AttributeTypeAndValue;
 import org.bouncycastle.asn1.x500.RDN;
@@ -51,12 +45,6 @@ public abstract class CertificateUtils {
 			}
 			LOGGER.info("x509 certificate valid from - " + certificate.getNotBefore() + " - until - " + certificate.getNotAfter());
 			String licenceCheckMessage = "";
-			// not public API
-//			if (CertificateUtils.checkLicence(certificate)) {
-//				licenceCheckMessage = "SOS Licence is valid.";
-//			} else {
-//				licenceCheckMessage = "SOS Licence is not valid.";
-//			}
 			if(!licenceCheckMessage.isEmpty()) {
 				LOGGER.info(licenceCheckMessage);
 			}
@@ -66,9 +54,9 @@ public abstract class CertificateUtils {
 			} catch (IOException e) {
 				LOGGER.error(e.getMessage(), e);
 			}
-			String subjectPrincipalName = certificate.getSubjectX500Principal().getName();
+//			String subjectPrincipalName = certificate.getSubjectX500Principal().getName();
 			LOGGER.info("Issuer DN: " + certificate.getIssuerDN().getName());
-			String issuerPrincipalName = certificate.getIssuerX500Principal().getName();
+//			String issuerPrincipalName = certificate.getIssuerX500Principal().getName();
 			LOGGER.info("Version: v" + certificate.getVersion());
 			LOGGER.info("Type: " + certificate.getType());
 			LOGGER.info("Serial Number: " + certificate.getSerialNumber());
