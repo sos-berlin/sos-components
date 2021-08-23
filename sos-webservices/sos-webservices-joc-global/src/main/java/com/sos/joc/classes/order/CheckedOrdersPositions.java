@@ -15,12 +15,14 @@ import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.workflow.HistoricOutcome;
-import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.instruction.Instruction;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -106,8 +108,10 @@ public class CheckedOrdersPositions extends OrdersPositions {
             JWorkflowId workflowId = map.keySet().iterator().next();
             Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
             ProblemHelper.throwProblemIfExist(e);
-            Workflow workflow = Globals.objectMapper.readValue(e.get().withPositions().toJson(), Workflow.class);
-            Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(workflow.getInstructions());
+            JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
+            List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
+            //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
+            Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
 
             setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
@@ -172,8 +176,10 @@ public class CheckedOrdersPositions extends OrdersPositions {
         JWorkflowId workflowId = jOrder.workflowId();
         Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
         ProblemHelper.throwProblemIfExist(e);
-        Workflow workflow = Globals.objectMapper.readValue(e.get().withPositions().toJson(), Workflow.class);
-        Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(workflow.getInstructions());
+        JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
+        List<Instruction> instructions = Globals.objectMapper.reader().forType(new TypeReference<List<Instruction>>() {}).readValue(node.get("instructions"));
+        //List<Instruction> instructions = Arrays.asList(Globals.objectMapper.reader().treeToValue(node.get("instructions"), Instruction[].class));
+        Set<String> implicitEnds = WorkflowsHelper.extractImplicitEnds(instructions);
         
         setWorkflowId(new WorkflowId(WorkflowPaths.getPath(workflowId), workflowId.versionId().string()));
 
