@@ -4,6 +4,11 @@ package com.sos.controller.model.workflow;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -14,9 +19,6 @@ import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -33,7 +35,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "state",
     "fileOrderSources",
     "forkListVariables",
-    "hasExpectedNoticeBoards"
+    "hasExpectedNoticeBoards",
+    "hasPostNoticeBoards"
 })
 public class Workflow
     extends com.sos.inventory.model.workflow.Workflow
@@ -74,6 +77,8 @@ public class Workflow
     private Set<String> forkListVariables = null;
     @JsonProperty("hasExpectedNoticeBoards")
     private Boolean hasExpectedNoticeBoards;
+    @JsonProperty("hasPostNoticeBoards")
+    private Boolean hasPostNoticeBoards;
 
     /**
      * No args constructor for use in serialization
@@ -86,6 +91,7 @@ public class Workflow
      * 
      * @param hasExpectedNoticeBoards
      * @param instructions
+     * @param hasPostNoticeBoards
      * @param jobResourceNames
      * @param jobs
      * @param title
@@ -99,7 +105,7 @@ public class Workflow
      * @param state
      * @param documentationName
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
         super(versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
@@ -108,6 +114,7 @@ public class Workflow
         this.fileOrderSources = fileOrderSources;
         this.forkListVariables = forkListVariables;
         this.hasExpectedNoticeBoards = hasExpectedNoticeBoards;
+        this.hasPostNoticeBoards = hasPostNoticeBoards;
     }
 
     /**
@@ -216,14 +223,24 @@ public class Workflow
         this.hasExpectedNoticeBoards = hasExpectedNoticeBoards;
     }
 
+    @JsonProperty("hasPostNoticeBoards")
+    public Boolean getHasPostNoticeBoards() {
+        return hasPostNoticeBoards;
+    }
+
+    @JsonProperty("hasPostNoticeBoards")
+    public void setHasPostNoticeBoards(Boolean hasPostNoticeBoards) {
+        this.hasPostNoticeBoards = hasPostNoticeBoards;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(hasExpectedNoticeBoards).append(fileOrderSources).append(forkListVariables).append(isCurrentVersion).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(path).append(hasExpectedNoticeBoards).append(fileOrderSources).append(forkListVariables).append(hasPostNoticeBoards).append(isCurrentVersion).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -235,7 +252,7 @@ public class Workflow
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(path, rhs.path).append(hasExpectedNoticeBoards, rhs.hasExpectedNoticeBoards).append(fileOrderSources, rhs.fileOrderSources).append(forkListVariables, rhs.forkListVariables).append(hasPostNoticeBoards, rhs.hasPostNoticeBoards).append(isCurrentVersion, rhs.isCurrentVersion).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }

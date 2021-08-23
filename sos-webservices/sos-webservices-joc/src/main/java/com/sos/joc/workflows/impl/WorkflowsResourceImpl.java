@@ -116,8 +116,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
 
-        Map<String, List<FileOrderSource>> fileOrderSources = WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, contents.stream()
-                .filter(DeployedContent::isCurrentVersion).map(w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
+        Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
+                .workflowToFileOrderSources(currentstate, controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(
+                        w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
 
         return contentsStream.map(w -> {
             try {
@@ -130,10 +131,20 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 workflow.setIsCurrentVersion(w.isCurrentVersion());
                 workflow.setVersionDate(w.getCreated());
                 workflow.setState(WorkflowsHelper.getState(currentstate, workflow));
-                if (workflow.getIsCurrentVersion()) {
+                if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                 }
-                return WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
+                if (workflowsFilter.getCompact() == Boolean.TRUE) {
+                    workflow.setFileOrderSources(null);
+                    //workflow.setForkListVariables(null);
+                    workflow.setInstructions(null);
+                    workflow.setJobResourceNames(null);
+                    workflow.setJobs(null);
+                    //workflow.setOrderPreparation(null);
+                }
+                
+                return workflow;
             } catch (Exception e) {
                 if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                     LOGGER.info(jocError.printMetaInfo());

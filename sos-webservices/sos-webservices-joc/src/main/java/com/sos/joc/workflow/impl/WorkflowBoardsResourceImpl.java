@@ -81,18 +81,35 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
                 }
-                if (workflow.getIsCurrentVersion()) {
+                if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
                 workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
                 
+                if (workflowFilter.getCompact() == Boolean.TRUE) {
+                    workflow.setFileOrderSources(null);
+                    //workflow.setForkListVariables(null);
+                    workflow.setInstructions(null);
+                    workflow.setJobResourceNames(null);
+                    workflow.setJobs(null);
+                    //workflow.setOrderPreparation(null);
+                }
+                
                 JocError jocError = getJocError();
+                WorkflowsFilter f = new WorkflowsFilter();
+                f.setControllerId(controllerId);
+                f.setCompact(true);
                 for (String boardName : workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet()) {
-                    WorkflowsFilter f = new WorkflowsFilter();
                     f.setWorkflowIds(dbLayer.getUsedWorkflowsByPostNoticeBoard(JocInventory.pathToName(boardName), controllerId));
-                    f.setControllerId(controllerId);
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
                         workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
+                                currentstate, folderPermissions, jocError));
+                    }
+                }
+                for (String boardName : workflow.getPostNoticeBoards().getAdditionalProperties().keySet()) {
+                    f.setWorkflowIds(dbLayer.getUsedWorkflowsByExpectedNoticeBoard(JocInventory.pathToName(boardName), controllerId));
+                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+                        workflow.getPostNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
                                 currentstate, folderPermissions, jocError));
                     }
                 }

@@ -77,10 +77,21 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                         workflow.setIsCurrentVersion(lastContent.getCommitId().equals(content.getCommitId()));
                     }
                 }
-                if (workflow.getIsCurrentVersion()) {
+                if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
-                entity.setWorkflow(WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow));
+                
+                workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
+                        
+                if (workflowFilter.getCompact() == Boolean.TRUE) {
+                    workflow.setFileOrderSources(null);
+                    //workflow.setForkListVariables(null);
+                    workflow.setInstructions(null);
+                    workflow.setJobResourceNames(null);
+                    workflow.setJobs(null);
+                    //workflow.setOrderPreparation(null);
+                }
+                entity.setWorkflow(workflow);
             } else {
                 throw new DBMissingDataException(String.format("Workflow '%s' doesn't exist", workflowPath));
             }

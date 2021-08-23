@@ -298,6 +298,33 @@ public class DeployedConfigurationDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
+    
+    public List<WorkflowId> getUsedWorkflowsByExpectedNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+            hql.append("(dc.path, dc.commitId) from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, "sw.instructions", "$.expectNotices");
+            hql.append(SOSHibernateRegexp.getFunction(jsonFunc, ":boardName"));
+
+            Query<WorkflowId> query = session.createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("boardName", getRegexpParameter(boardName, "\""));
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
 
     public Set<Tree> getFoldersByFolderAndType(String controllerId, String folderName, Collection<Integer> types) throws DBConnectionRefusedException,
             DBInvalidDataException {

@@ -27,14 +27,17 @@ import com.sos.inventory.model.workflow.Requirements;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "expectedNoticeBoards"
+    "expectedNoticeBoards",
+    "postNoticeBoards"
 })
 public class WorkflowDeps
     extends Workflow
 {
 
     @JsonProperty("expectedNoticeBoards")
-    private ExpectedWorkflows expectedNoticeBoards;
+    private BoardWorkflows expectedNoticeBoards;
+    @JsonProperty("postNoticeBoards")
+    private BoardWorkflows postNoticeBoards;
 
     /**
      * No args constructor for use in serialization
@@ -47,10 +50,14 @@ public class WorkflowDeps
      * 
      * @param hasExpectedNoticeBoards
      * @param instructions
+     * @param hasPostNoticeBoards
      * @param jobResourceNames
      * @param jobs
+     * @param tYPE
      * @param title
      * @param versionDate
+     * @param version
+     * @param postNoticeBoards
      * @param orderPreparation
      * @param path
      * @param fileOrderSources
@@ -61,29 +68,40 @@ public class WorkflowDeps
      * @param state
      * @param documentationName
      */
-    public WorkflowDeps(ExpectedWorkflows expectedNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs);
+    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
+        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs);
         this.expectedNoticeBoards = expectedNoticeBoards;
+        this.postNoticeBoards = postNoticeBoards;
     }
 
     @JsonProperty("expectedNoticeBoards")
-    public ExpectedWorkflows getExpectedNoticeBoards() {
+    public BoardWorkflows getExpectedNoticeBoards() {
         return expectedNoticeBoards;
     }
 
     @JsonProperty("expectedNoticeBoards")
-    public void setExpectedNoticeBoards(ExpectedWorkflows expectedNoticeBoards) {
+    public void setExpectedNoticeBoards(BoardWorkflows expectedNoticeBoards) {
         this.expectedNoticeBoards = expectedNoticeBoards;
+    }
+
+    @JsonProperty("postNoticeBoards")
+    public BoardWorkflows getPostNoticeBoards() {
+        return postNoticeBoards;
+    }
+
+    @JsonProperty("postNoticeBoards")
+    public void setPostNoticeBoards(BoardWorkflows postNoticeBoards) {
+        this.postNoticeBoards = postNoticeBoards;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("expectedNoticeBoards", expectedNoticeBoards).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("expectedNoticeBoards", expectedNoticeBoards).append("postNoticeBoards", postNoticeBoards).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectedNoticeBoards).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(expectedNoticeBoards).append(postNoticeBoards).toHashCode();
     }
 
     @Override
@@ -95,7 +113,7 @@ public class WorkflowDeps
             return false;
         }
         WorkflowDeps rhs = ((WorkflowDeps) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectedNoticeBoards, rhs.expectedNoticeBoards).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(expectedNoticeBoards, rhs.expectedNoticeBoards).append(postNoticeBoards, rhs.postNoticeBoards).isEquals();
     }
 
 }
