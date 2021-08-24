@@ -182,7 +182,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                                 });
                                 configuration.setConfigurationItem(builder.build().toString());
                             } catch (Exception e) {
-                                e.printStackTrace();
+                                //
                             }
                         }
                         listOfConfigurations.add(configuration);

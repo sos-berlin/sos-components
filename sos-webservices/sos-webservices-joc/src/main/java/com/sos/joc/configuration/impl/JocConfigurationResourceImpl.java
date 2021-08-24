@@ -119,32 +119,36 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     // store only user settings without permissions
-                    JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
-                    JsonObject obj = rdr.readObject();
-                    Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
-                    JsonObjectBuilder builder = Json.createObjectBuilder();
-                    boolean hint = false;
-                    for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
-                        if (!ds.equals(DefaultSections.user)) {
-                            if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                                builder.add(ds.name(), oldObj.get().get(ds.name()));
-                                hint = true;
-                            }
-                        } else {
-                            if (obj.get(ds.name()) != null) {
-                                builder.add(ds.name(), obj.get(ds.name()));
-                            } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
-                                builder.add(ds.name(), oldObj.get().get(ds.name()));
+                    try {
+                        boolean hint = false;
+                        JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
+                        JsonObject obj = rdr.readObject();
+                        Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
+                        JsonObjectBuilder builder = Json.createObjectBuilder();
+                        for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
+                            if (!ds.equals(DefaultSections.user)) {
+                                if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                                    builder.add(ds.name(), oldObj.get().get(ds.name()));
+                                    hint = true;
+                                }
+                            } else {
+                                if (obj.get(ds.name()) != null) {
+                                    builder.add(ds.name(), obj.get(ds.name()));
+                                } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                                    builder.add(ds.name(), oldObj.get().get(ds.name()));
+                                }
                             }
                         }
-                    }
-                    configuration.setConfigurationItem(builder.build().toString());
-                    if (hint) {
-                        if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
-                            LOGGER.info(getJocError().printMetaInfo());
-                            getJocError().clearMetaInfo();
+                        configuration.setConfigurationItem(builder.build().toString());
+                        if (hint) {
+                            if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                                LOGGER.info(getJocError().printMetaInfo());
+                                getJocError().clearMetaInfo();
+                            }
+                            LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
                         }
-                        LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
+                    } catch (Exception e) {
+                        //
                     }
                 }
                 break;
@@ -276,15 +280,19 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 String confJson = conf.getConfigurationItem();
                 if (confJson != null && !getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                     //delete all except user setting from conf.getConfigurationItem() 
-                    JsonReader rdr = Json.createReader(new StringReader(confJson));
-                    JsonObject obj = rdr.readObject();
-                    JsonObjectBuilder builder = Json.createObjectBuilder();
-                    EnumSet.allOf(DefaultSections.class).forEach(ds -> {
-                        if (ds.equals(DefaultSections.user) && obj.get(ds.name()) != null) {
-                            builder.add(ds.name(), obj.get(ds.name()));
-                        }
-                    });
-                    conf.setConfigurationItem(builder.build().toString());
+                    try {
+                        JsonReader rdr = Json.createReader(new StringReader(confJson));
+                        JsonObject obj = rdr.readObject();
+                        JsonObjectBuilder builder = Json.createObjectBuilder();
+                        EnumSet.allOf(DefaultSections.class).forEach(ds -> {
+                            if (ds.equals(DefaultSections.user) && obj.get(ds.name()) != null) {
+                                builder.add(ds.name(), obj.get(ds.name()));
+                            }
+                        });
+                        conf.setConfigurationItem(builder.build().toString());
+                    } catch (Exception e) {
+                        //
+                    }
                 }
             }
             entity.setConfiguration(conf);
