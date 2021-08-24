@@ -488,10 +488,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         }
 
                         sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
-                        sosHibernateSession2.setAutoCommit(false);
-                        Globals.beginTransaction(sosHibernateSession2);
 
                         for (DBItemDailyPlanOrders dbItemDailyPlanOrder : listOfPlannedOrders) {
+                            sosHibernateSession2.setAutoCommit(false);
+                            Globals.beginTransaction(sosHibernateSession2);
                             dbItemDailyPlanOrder.setModified(new Date());
                             if ((dailyplanModifyOrder.getScheduledFor() != null) && (scheduledForDate != null)) {
                                 Long expectedDuration = dbItemDailyPlanOrder.getExpectedEnd().getTime() - dbItemDailyPlanOrder.getPlannedStart()
@@ -537,6 +537,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                         }
                                     }
                                 } while (retry > 0);
+                                Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
                                 EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
                             }
@@ -545,7 +546,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either2 -> ProblemHelper
                                     .postExceptionEventIfExist(either2, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
                         }
-                        Globals.commit(sosHibernateSession2);
 
                     } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
                             | DBOpenSessionException | ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException
