@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.monitoring.MonitoringDBLayer;
 import com.sos.joc.db.monitoring.NotificationDBItemEntity;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.common.MonitoringNotificationTypeText;
 import com.sos.joc.model.monitoring.NotificationItem;
 import com.sos.joc.model.monitoring.NotificationItemAcknowledgementItem;
@@ -45,8 +47,21 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, NotificationsFilter.class);
             NotificationsFilter in = Globals.objectMapper.readValue(inBytes, NotificationsFilter.class);
+            
+            String controllerId = in.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            }
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getPermitted(accessToken, in));
+            JOCDefaultResponse response = initPermissions(null, permitted);
             if (response != null) {
                 return response;
             }
@@ -55,6 +70,10 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
             }
 
             List<Integer> types = getTypes(in);
+            Map<String, Set<Folder>> permittedFolders = folderPermissions.getListOfFolders(allowedControllers);
+            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                allowedControllers = Collections.emptySet();
+            }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
@@ -62,13 +81,16 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
             ScrollableResults sr = null;
             try {
                 if (in.getNotificationIds() == null || in.getNotificationIds().size() == 0) {
-                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), in.getControllerId(), types, in
+                    sr = dbLayer.getNotifications(JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), allowedControllers, types, in
                             .getLimit());
                 } else {
-                    sr = dbLayer.getNotifications(in.getNotificationIds(), types);
+                    sr = dbLayer.getNotifications(in.getNotificationIds(), allowedControllers, types);
                 }
                 while (sr.next()) {
-                    notifications.add(convert((NotificationDBItemEntity) sr.get(0)));
+                    NotificationItem item = convert((NotificationDBItemEntity) sr.get(0));
+                    if (canAdd(item.getWorkflow(), permittedFolders.get(item.getControllerId()))) {
+                        notifications.add(item);
+                    }
                 }
             } catch (Exception e) {
                 throw e;
@@ -169,24 +191,5 @@ public class NotificationsImpl extends JOCResourceImpl implements INotifications
         } catch (Throwable e) {
             return JobCriticality.NORMAL;
         }
-    }
-
-    private boolean getPermitted(String accessToken, NotificationsFilter in) {
-        String controllerId = in.getControllerId();
-        Set<String> allowedControllers = Collections.emptySet();
-        boolean permitted = false;
-        if (controllerId == null || controllerId.isEmpty()) {
-            controllerId = "";
-            allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
-                    availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
-            permitted = !allowedControllers.isEmpty();
-            if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                allowedControllers = Collections.emptySet();
-            }
-        } else {
-            allowedControllers = Collections.singleton(controllerId);
-            permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
-        }
-        return permitted;
     }
 }

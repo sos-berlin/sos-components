@@ -1,8 +1,10 @@
 package com.sos.joc.db.monitoring;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -22,13 +24,16 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getNotifications(Date dateFrom, String controllerId, List<Integer> types, Integer limit) throws SOSHibernateException {
+    public ScrollableResults getNotifications(Date dateFrom, Set<String> controllerIds, List<Integer> types, Integer limit) throws SOSHibernateException {
+        if (controllerIds == null) {
+            controllerIds = Collections.emptySet();
+        }
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
         if (dateFrom != null) {
             hql.append("and n.created >= :dateFrom ");
         }
-        if (!SOSString.isEmpty(controllerId)) {
-            hql.append("and o.controllerId=:controllerId ");
+        if (!controllerIds.isEmpty()) {
+            hql.append("and o.controllerId in (:controllerIds) ");
         }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
@@ -43,8 +48,8 @@ public class MonitoringDBLayer extends DBLayer {
         if (dateFrom != null) {
             query.setParameter("dateFrom", dateFrom);
         }
-        if (!SOSString.isEmpty(controllerId)) {
-            query.setParameter("controllerId", controllerId);
+        if (!controllerIds.isEmpty()) {
+            query.setParameterList("controllerId", controllerIds);
         }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
@@ -59,10 +64,15 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getNotifications(List<Long> notificationIds, List<Integer> types) throws SOSHibernateException {
+    public ScrollableResults getNotifications(List<Long> notificationIds, Set<String> controllerIds, List<Integer> types) throws SOSHibernateException {
         int size = notificationIds.size();
-
+        if (controllerIds == null) {
+            controllerIds = Collections.emptySet();
+        }
         StringBuilder hql = new StringBuilder(getNotificationsMainHQL());
+        if (!controllerIds.isEmpty()) {
+            hql.append("and o.controllerId in (:controllerIds) ");
+        }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
                 hql.append("and n.type=:type ");
@@ -77,6 +87,9 @@ public class MonitoringDBLayer extends DBLayer {
             hql.append("order by n.id desc");
         }
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
+        if (!controllerIds.isEmpty()) {
+            query.setParameterList("controllerId", controllerIds);
+        }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
                 query.setParameter("type", types.get(0));
