@@ -144,9 +144,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 if (plannedOrder != null && plannedOrder.getStartMode() == 1 && dailyplanModifyOrder.getCycle() != null) {
                     recreateCyclicOrder(dailyplanModifyOrder, listOfOrderIds, finalPlannedOrder, dbAuditlog);
                 } else {
-                    for (String orderId : listOfOrderIds) {
-                        modifyOrder(orderId, accessToken, dailyplanModifyOrder, dbAuditlog);
-                    }
+                    modifyOrder(listOfOrderIds, accessToken, dailyplanModifyOrder, dbAuditlog);
                 }
 
                 if (!errors.isEmpty()) {
@@ -380,203 +378,190 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void updateVariables(DailyPlanModifyOrder dailyplanModifyOrder, DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException,
-            IOException {
+    private void updateVariables(SOSHibernateSession sosHibernateSession, DailyPlanModifyOrder dailyplanModifyOrder,
+            DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException, IOException {
 
-        SOSHibernateSession sosHibernateSession = null;
+        DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
+        FilterOrderVariables filter = new FilterOrderVariables();
+        filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+        List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
+        DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+        if (listOfVariables.size() > 0) {
+            dbItemDailyPlanVariables = listOfVariables.get(0);
+        } else {
+            dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+            dbItemDailyPlanVariables.setCreated(new Date());
+        }
 
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
-            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
-            FilterOrderVariables filter = new FilterOrderVariables();
-            filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-            List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
-            DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
-            if (listOfVariables.size() > 0) {
-                dbItemDailyPlanVariables = listOfVariables.get(0);
-            } else {
-                dbItemDailyPlanVariables.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                dbItemDailyPlanVariables.setCreated(new Date());
-            }
+        if (dailyplanModifyOrder.getVariables() != null) {
 
-            if (dailyplanModifyOrder.getVariables() != null) {
-
-                Variables variables = new Variables();
-                if (dbItemDailyPlanVariables.getVariableValue() != null) {
-                    try {
-                        variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
-                    } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
-                        LOGGER.warn("Illegal value " + dbItemDailyPlanVariables.getVariableValue() + " in DPL_ORDER_VARIABLES for order: "
-                                + dbItemDailyPlanOrder.getOrderId());
-                        variables = new Variables();
-                    }
-                }
-                Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
-                for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
-                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
-                }
-
-                for (Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
-                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
-                }
-                variables.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
-                String variablesJson = Globals.objectMapper.writeValueAsString(variables);
-                dbItemDailyPlanVariables.setVariableValue(variablesJson);
-                dbItemDailyPlanVariables.setModified(new Date());
-            }
-
-            if (dailyplanModifyOrder.getRemoveVariables() != null) {
-                Variables variables;
-                if (dbItemDailyPlanVariables.getVariableValue() != null) {
+            Variables variables = new Variables();
+            if (dbItemDailyPlanVariables.getVariableValue() != null) {
+                try {
                     variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
-                } else {
+                } catch (com.fasterxml.jackson.databind.exc.MismatchedInputException e) {
+                    LOGGER.warn("Illegal value " + dbItemDailyPlanVariables.getVariableValue() + " in DPL_ORDER_VARIABLES for order: "
+                            + dbItemDailyPlanOrder.getOrderId());
                     variables = new Variables();
                 }
-                Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
-                for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
-                    if (dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {
-                        newAdditionalProperties.put(variable.getKey(), variable.getValue());
-                    }
-                }
-                variables.setAdditionalProperties(newAdditionalProperties);
-                String variablesJson = Globals.objectMapper.writeValueAsString(variables);
-                dbItemDailyPlanVariables.setVariableValue(variablesJson);
+            }
+            Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
+            for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
+                newAdditionalProperties.put(variable.getKey(), variable.getValue());
             }
 
-            if (dbItemDailyPlanVariables.getVariableValue() != null && !dbItemDailyPlanVariables.getVariableValue().isEmpty()) {
-                if (listOfVariables.size() > 0) {
-                    sosHibernateSession.update(dbItemDailyPlanVariables);
-                } else {
-                    sosHibernateSession.save(dbItemDailyPlanVariables);
-                }
+            for (Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
+                newAdditionalProperties.put(variable.getKey(), variable.getValue());
             }
-
-            Globals.commit(sosHibernateSession);
-
-        } finally
-
-        {
-            Globals.disconnect(sosHibernateSession);
+            variables.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+            String variablesJson = Globals.objectMapper.writeValueAsString(variables);
+            dbItemDailyPlanVariables.setVariableValue(variablesJson);
+            dbItemDailyPlanVariables.setModified(new Date());
         }
+
+        if (dailyplanModifyOrder.getRemoveVariables() != null) {
+            Variables variables;
+            if (dbItemDailyPlanVariables.getVariableValue() != null) {
+                variables = Globals.objectMapper.readValue(dbItemDailyPlanVariables.getVariableValue(), Variables.class);
+            } else {
+                variables = new Variables();
+            }
+            Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
+            for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
+                if (dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {
+                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
+                }
+            }
+            variables.getAdditionalProperties().clear();
+            variables.setAdditionalProperties(newAdditionalProperties);
+            String variablesJson = Globals.objectMapper.writeValueAsString(variables);
+            dbItemDailyPlanVariables.setVariableValue(variablesJson);
+        }
+
+        if (dbItemDailyPlanVariables.getVariableValue() != null && !dbItemDailyPlanVariables.getVariableValue().isEmpty()) {
+            if (listOfVariables.size() > 0) {
+                sosHibernateSession.update(dbItemDailyPlanVariables);
+            } else {
+                sosHibernateSession.save(dbItemDailyPlanVariables);
+            }
+        }
+
     }
 
-    private void modifyOrder(String orderId, String accessToken, DailyPlanModifyOrder dailyplanModifyOrder, DBItemJocAuditLog dbAuditlog)
+    private void modifyOrder(List<String> listOfOrderIds, String accessToken, DailyPlanModifyOrder dailyplanModifyOrder, DBItemJocAuditLog dbAuditlog)
             throws JocConfigurationException, DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
 
         SOSHibernateSession sosHibernateSession = null;
         try {
+
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
 
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(dailyplanModifyOrder.getControllerId());
-            filter.setOrderId(orderId);
+            filter.setListOfOrders(listOfOrderIds);
 
             final String dailyPlanDate = dailyplanModifyOrder.getDailyPlanDate();
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
 
             List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-            if (listOfPlannedOrders.size() == 1) {
+            if (listOfPlannedOrders.size() > 0) {
 
-                DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
-                dbItemDailyPlanOrder.setModified(new Date());
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(filter.getControllerId(),
+                        listOfPlannedOrders);
+                c.thenAccept(either -> {
 
-                if (dailyplanModifyOrder.getScheduledFor() != null) {
+                    SOSHibernateSession sosHibernateSession2 = null;
+                    try {
 
-                    Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(),
-                            dailyplanModifyOrder.getTimeZone());
-                    Date scheduledForDate = JobSchedulerDate.nowInUtc();
-                    if (!scheduledFor.equals(Optional.empty())) {
-                        scheduledForDate = Date.from(scheduledFor.get());
-                    }
+                        Date scheduledForDate = null;
+                        if (dailyplanModifyOrder.getScheduledFor() != null) {
 
-                    Long expectedDuration = dbItemDailyPlanOrder.getExpectedEnd().getTime() - dbItemDailyPlanOrder.getPlannedStart().getTime();
-                    dbItemDailyPlanOrder.setExpectedEnd(new Date(expectedDuration + scheduledForDate.getTime()));
-                    dbItemDailyPlanOrder.setPlannedStart(scheduledForDate);
-                    sosHibernateSession.update(dbItemDailyPlanOrder);
+                            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(),
+                                    dailyplanModifyOrder.getTimeZone());
+                            scheduledForDate = JobSchedulerDate.nowInUtc();
+                            if (!scheduledFor.equals(Optional.empty())) {
+                                scheduledForDate = Date.from(scheduledFor.get());
+                            }
+                        }
 
-                }
-                if ((dailyplanModifyOrder.getVariables() != null && dailyplanModifyOrder.getVariables() != null) || (dailyplanModifyOrder
-                        .getRemoveVariables() != null && dailyplanModifyOrder.getRemoveVariables() != null)) {
-                    updateVariables(dailyplanModifyOrder, dbItemDailyPlanOrder);
-                }
+                        sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+                        sosHibernateSession2.setAutoCommit(false);
+                        Globals.beginTransaction(sosHibernateSession2);
 
-                if (dbItemDailyPlanOrder.getSubmitted()) {
+                        for (DBItemDailyPlanOrders dbItemDailyPlanOrder : listOfPlannedOrders) {
+                            dbItemDailyPlanOrder.setModified(new Date());
+                            if ((dailyplanModifyOrder.getScheduledFor() != null) && (scheduledForDate != null)) {
+                                Long expectedDuration = dbItemDailyPlanOrder.getExpectedEnd().getTime() - dbItemDailyPlanOrder.getPlannedStart()
+                                        .getTime();
+                                dbItemDailyPlanOrder.setExpectedEnd(new Date(expectedDuration + scheduledForDate.getTime()));
+                                dbItemDailyPlanOrder.setPlannedStart(scheduledForDate);
+                                sosHibernateSession2.update(dbItemDailyPlanOrder);
+                            }
 
-                    List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
-                    DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
-                    dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());
-                    dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-                    listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
+                            if ((dailyplanModifyOrder.getVariables() != null && dailyplanModifyOrder.getVariables() != null) || (dailyplanModifyOrder
+                                    .getRemoveVariables() != null && dailyplanModifyOrder.getRemoveVariables() != null)) {
+                                updateVariables(sosHibernateSession2, dailyplanModifyOrder, dbItemDailyPlanOrder);
+                            }
 
-                    CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerControllerWithHistory(filter.getControllerId(),
-                            listOfDailyPlanItems);
-                    c.thenAccept(either -> {
-                        // ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filter.getControllerId());
-                        if (either.isRight()) {
-                            SOSHibernateSession sosHibernateSession2 = null;
-                            try {
-                                sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
-                                sosHibernateSession2.setAutoCommit(false);
-                                Globals.beginTransaction(sosHibernateSession2);
+                            if (dbItemDailyPlanOrder.getSubmitted()) {
+                                List<DBItemDailyPlanWithHistory> listOfDailyPlanItems = new ArrayList<DBItemDailyPlanWithHistory>();
+                                DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory = new DBItemDailyPlanWithHistory();
+                                dbItemDailyPlanWithHistory.setOrderId(dbItemDailyPlanOrder.getOrderId());
+                                dbItemDailyPlanWithHistory.setPlannedOrderId(dbItemDailyPlanOrder.getId());
+                                listOfDailyPlanItems.add(dbItemDailyPlanWithHistory);
+
                                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders2 = new DBLayerDailyPlannedOrders(sosHibernateSession2);
                                 DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession2);
 
                                 FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
                                 filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
 
-                                int retry = 5;
+                                int retry = 10;
                                 do {
                                     try {
                                         dbLayerDailyPlannedOrders2.delete(filterDailyPlannedOrders);
                                         DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
                                         dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
-                                        listOfPlannedOrders.clear();
-                                        listOfPlannedOrders.add(dbItemDailyPlanOrders);
                                         retry = 0;
                                     } catch (SOSHibernateLockAcquisitionException e) {
                                         retry = retry - 1;
-                                        java.lang.Thread.sleep(500);
+                                        try {
+                                            java.lang.Thread.sleep(500);
+                                        } catch (InterruptedException e1) {
+                                        }
                                         if (retry == 0) {
                                             throw e;
                                         }
                                     }
                                 } while (retry > 0);
-                                Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
                                 EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
-                            } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException
-                                    | ControllerConnectionRefusedException | DBMissingDataException | DBOpenSessionException | DBInvalidDataException
-                                    | IOException | ParseException | SOSException | URISyntaxException | InterruptedException | ExecutionException
-                                    | TimeoutException e) {
-                                ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), filter.getControllerId());
-                            } finally {
-                                Globals.disconnect(sosHibernateSession2);
                             }
+                            List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+                            auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
+                            OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either2 -> ProblemHelper
+                                    .postExceptionEventIfExist(either2, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
                         }
-                    });
+                        Globals.commit(sosHibernateSession2);
 
-                } else {
-                    EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
-                    Globals.commit(sosHibernateSession);
-                }
+                    } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
+                            | DBOpenSessionException | ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException
+                            | SOSException | URISyntaxException | InterruptedException | ExecutionException | TimeoutException e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), filter.getControllerId());
+                    } finally {
+                        Globals.disconnect(sosHibernateSession2);
+                    }
 
-                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-                auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
-                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
-                        either, accessToken, getJocError(), dailyplanModifyOrder.getControllerId()));
+                });
 
-            } else {
-                LOGGER.warn("Expected one record for order-id " + filter.getOrderId() + " found: " + listOfPlannedOrders.size());
-                throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId() + " found: " + listOfPlannedOrders.size());
             }
-        } finally {
+
+        } finally
+
+        {
             Globals.disconnect(sosHibernateSession);
         }
     }
