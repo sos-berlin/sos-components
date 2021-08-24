@@ -1,11 +1,17 @@
 package com.sos.joc.configurations.impl;
 
+import java.io.StringReader;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -15,6 +21,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configurations.resource.IJocConfigurationsResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -66,15 +73,26 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 //                    }
                     break;
                 case GLOBALS:
-                    if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-                        return accessDeniedResponse();
-                    }
+                    // read only user settings without permissions
+//                    if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+//                        return accessDeniedResponse();
+//                    }
                     configurationsFilter.setControllerId(ConfigurationGlobals.CONTROLLER_ID);
                     configurationsFilter.setAccount(ConfigurationGlobals.ACCOUNT);
                     //configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
                     configurationsFilter.setObjectType(null);
 
                     defaultGlobalSettings = new ConfigurationGlobals().getDefaults();
+                    if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                        // read only user settings without permissions
+                        if (defaultGlobalSettings != null) {
+                            for(DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
+                                if (!ds.equals(DefaultSections.user)) {
+                                    defaultGlobalSettings.removeAdditionalProperty(ds.name()); 
+                                }
+                            }
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -150,9 +168,24 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     }
                     switch (configuration.getConfigurationType()) {
                     case GLOBALS:
-                        if (getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-                            listOfConfigurations.add(configuration);
+                        if (!getJocPermissions(accessToken).getAdministration().getSettings().getView() && configuration
+                                .getConfigurationItem() != null) {
+                            // read only user settings without permissions
+                            try {
+                                JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
+                                JsonObject obj = rdr.readObject();
+                                JsonObjectBuilder builder = Json.createObjectBuilder();
+                                EnumSet.allOf(DefaultSections.class).forEach(ds -> {
+                                    if (ds.equals(DefaultSections.user) && obj.get(ds.name()) != null) {
+                                        builder.add(ds.name(), obj.get(ds.name()));
+                                    }
+                                });
+                                configuration.setConfigurationItem(builder.build().toString());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
+                        listOfConfigurations.add(configuration);
                         break;
                     default:
                         // if owner or shared or view permission

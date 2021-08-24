@@ -11,6 +11,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.joc.resource.IPropertiesResource;
 import com.sos.joc.model.Properties;
@@ -39,14 +40,19 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             entity.setApiVersion(Globals.apiVersion);
             entity.setInventoryVersion(Globals.inventoryVersion);
             
-            ConfigurationGlobalsJoc custerSettings = Globals.getConfigurationGlobalsJoc();
-            entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(custerSettings));
-            entity.setComments(ClusterSettings.getCommentsForAuditLog(custerSettings));
-            entity.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(custerSettings));
-            entity.setCopy(ClusterSettings.getCopyPasteSuffixPrefix(custerSettings));
-            entity.setRestore(ClusterSettings.getRestoreSuffixPrefix(custerSettings));
-            entity.setImport(ClusterSettings.getImportSuffixPrefix(custerSettings));
-            entity.setShowViews(ClusterSettings.getShowViews(custerSettings, true));
+            ConfigurationGlobalsJoc jocSettings = Globals.getConfigurationGlobalsJoc();
+            entity.setForceCommentsForAuditLog(ClusterSettings.getForceCommentsForAuditLog(jocSettings));
+            entity.setComments(ClusterSettings.getCommentsForAuditLog(jocSettings));
+            entity.setDefaultProfileAccount(ClusterSettings.getDefaultProfileAccount(jocSettings));
+            entity.setCopy(ClusterSettings.getCopyPasteSuffixPrefix(jocSettings));
+            entity.setRestore(ClusterSettings.getRestoreSuffixPrefix(jocSettings));
+            entity.setImport(ClusterSettings.getImportSuffixPrefix(jocSettings));
+            entity.setShowViews(ClusterSettings.getShowViews(jocSettings, true));
+            
+            ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
+            entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
+            entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
+            
             entity.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(entity);

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc.ShowViewName;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.model.ShowViewProperties;
 import com.sos.joc.model.SuffixPrefix;
@@ -82,6 +83,16 @@ public class ClusterSettings {
         svProp.setFileTransfers(showViews.get(ShowViewName.filetransfer));
         //svProp.setJobStreams(showViews.get(ShowViewName.jobstreams));
         return svProp;
+    }
+    
+    public static boolean getWelcomeDoNotRemindMe(ConfigurationGlobalsUser settings) {
+        String welcome = settings.getWelcomeDoNotRemindMe().getValue();
+        return welcome != null && welcome.equalsIgnoreCase("true");
+    }
+    
+    public static boolean getWelcomeGotIt(ConfigurationGlobalsUser settings) {
+        String welcome = settings.getWelcomeGotIt().getValue();
+        return welcome != null && welcome.equalsIgnoreCase("true");
     }
     
     private static SuffixPrefix getSuffixPrefix(ConfigurationEntry suf, ConfigurationEntry pref) {

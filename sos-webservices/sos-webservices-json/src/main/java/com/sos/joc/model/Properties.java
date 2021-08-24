@@ -33,7 +33,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "copy",
     "restore",
     "import",
-    "showViews"
+    "showViews",
+    "welcomeDoNotRemindMe",
+    "welcomeGotIt"
 })
 public class Properties {
 
@@ -124,6 +126,10 @@ public class Properties {
      */
     @JsonProperty("showViews")
     private ShowViewProperties showViews;
+    @JsonProperty("welcomeDoNotRemindMe")
+    private Boolean welcomeDoNotRemindMe = false;
+    @JsonProperty("welcomeGotIt")
+    private Boolean welcomeGotIt = false;
 
     /**
      * timestamp
@@ -369,14 +375,34 @@ public class Properties {
         this.showViews = showViews;
     }
 
+    @JsonProperty("welcomeDoNotRemindMe")
+    public Boolean getWelcomeDoNotRemindMe() {
+        return welcomeDoNotRemindMe;
+    }
+
+    @JsonProperty("welcomeDoNotRemindMe")
+    public void setWelcomeDoNotRemindMe(Boolean welcomeDoNotRemindMe) {
+        this.welcomeDoNotRemindMe = welcomeDoNotRemindMe;
+    }
+
+    @JsonProperty("welcomeGotIt")
+    public Boolean getWelcomeGotIt() {
+        return welcomeGotIt;
+    }
+
+    @JsonProperty("welcomeGotIt")
+    public void setWelcomeGotIt(Boolean welcomeGotIt) {
+        this.welcomeGotIt = welcomeGotIt;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("title", title).append("securityLevel", securityLevel).append("defaultProfileAccount", defaultProfileAccount).append("apiVersion", apiVersion).append("inventoryVersion", inventoryVersion).append("forceCommentsForAuditLog", forceCommentsForAuditLog).append("comments", comments).append("copy", copy).append("restore", restore).append("_import", _import).append("showViews", showViews).append("welcomeDoNotRemindMe", welcomeDoNotRemindMe).append("welcomeGotIt", welcomeGotIt).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(comments).append(restore).append(title).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(comments).append(restore).append(welcomeDoNotRemindMe).append(title).append(defaultProfileAccount).append(securityLevel).append(forceCommentsForAuditLog).append(apiVersion).append(_import).append(welcomeGotIt).append(inventoryVersion).append(showViews).append(copy).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -388,7 +414,7 @@ public class Properties {
             return false;
         }
         Properties rhs = ((Properties) other);
-        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(comments, rhs.comments).append(restore, rhs.restore).append(welcomeDoNotRemindMe, rhs.welcomeDoNotRemindMe).append(title, rhs.title).append(defaultProfileAccount, rhs.defaultProfileAccount).append(securityLevel, rhs.securityLevel).append(forceCommentsForAuditLog, rhs.forceCommentsForAuditLog).append(apiVersion, rhs.apiVersion).append(_import, rhs._import).append(welcomeGotIt, rhs.welcomeGotIt).append(inventoryVersion, rhs.inventoryVersion).append(showViews, rhs.showViews).append(copy, rhs.copy).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

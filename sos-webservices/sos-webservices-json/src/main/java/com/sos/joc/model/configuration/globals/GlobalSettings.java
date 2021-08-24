@@ -37,12 +37,16 @@ public class GlobalSettings {
     public void setAdditionalProperty(String name, GlobalSettingsSection value) {
         this.additionalProperties.put(name, value);
     }
+    
+    public void removeAdditionalProperty(String name) {
+        this.additionalProperties.remove(name);
+    }
 
     @Override
     public String toString() {
         return new ToStringBuilder(this).append("additionalProperties", additionalProperties).toString();
     }
-
+    
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(additionalProperties).toHashCode();

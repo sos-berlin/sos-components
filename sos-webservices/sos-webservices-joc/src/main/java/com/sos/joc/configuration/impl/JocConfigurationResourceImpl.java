@@ -1,11 +1,18 @@
 package com.sos.joc.configuration.impl;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 import javax.ws.rs.Path;
 
 import org.slf4j.Logger;
@@ -17,6 +24,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
@@ -86,9 +94,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
-                if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
-                    return accessDeniedResponse();
-                }
+                // store only user settings without permissions
+                // if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
+                // return accessDeniedResponse();
+                // }
                 if (isNew) {
                     List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurations(ConfigurationType.GLOBALS);
                     if (result == null || result.size() == 0) {
@@ -107,6 +116,37 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
                 dbItem.setShared(ConfigurationGlobals.SHARED);
                 dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
+                
+                if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
+                    // store only user settings without permissions
+                    JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
+                    JsonObject obj = rdr.readObject();
+                    Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
+                    JsonObjectBuilder builder = Json.createObjectBuilder();
+                    boolean hint = false;
+                    for (DefaultSections ds : EnumSet.allOf(DefaultSections.class)) {
+                        if (!ds.equals(DefaultSections.user)) {
+                            if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                                builder.add(ds.name(), oldObj.get().get(ds.name()));
+                                hint = true;
+                            }
+                        } else {
+                            if (obj.get(ds.name()) != null) {
+                                builder.add(ds.name(), obj.get(ds.name()));
+                            } else if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
+                                builder.add(ds.name(), oldObj.get().get(ds.name()));
+                            }
+                        }
+                    }
+                    configuration.setConfigurationItem(builder.build().toString());
+                    if (hint) {
+                        if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
+                            LOGGER.info(getJocError().printMetaInfo());
+                            getJocError().clearMetaInfo();
+                        }
+                        LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
+                    }
+                }
                 break;
             case CUSTOMIZATION:
                 if (isNew) {
@@ -165,7 +205,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             dbItem.setConfigurationItem(configuration.getConfigurationItem());
             Date now = Date.from(Instant.now());
             dbItem.setModified(now);
-
+            
             if (isNew) {
                 connection.save(dbItem);
             } else {
@@ -212,9 +252,9 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
-                if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-                    return accessDeniedResponse();
-                }
+//                if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+//                    return accessDeniedResponse();
+//                }
                 break;
             default:
                 String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
@@ -229,7 +269,25 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             
             Configuration200 entity = new Configuration200();
             entity.setDeliveryDate(Date.from(Instant.now()));
-            entity.setConfiguration(setConfigurationValues(dbItem, configuration.getControllerId()));
+            Configuration conf = setConfigurationValues(dbItem, configuration.getControllerId());
+            
+            if (confType.equals(ConfigurationType.GLOBALS)) {
+                //user setting from conf.getConfigurationItem() are always sent independent the settings:view permission
+                String confJson = conf.getConfigurationItem();
+                if (confJson != null && !getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                    //delete all except user setting from conf.getConfigurationItem() 
+                    JsonReader rdr = Json.createReader(new StringReader(confJson));
+                    JsonObject obj = rdr.readObject();
+                    JsonObjectBuilder builder = Json.createObjectBuilder();
+                    EnumSet.allOf(DefaultSections.class).forEach(ds -> {
+                        if (ds.equals(DefaultSections.user) && obj.get(ds.name()) != null) {
+                            builder.add(ds.name(), obj.get(ds.name()));
+                        }
+                    });
+                    conf.setConfigurationItem(builder.build().toString());
+                }
+            }
+            entity.setConfiguration(conf);
             return JOCDefaultResponse.responseStatus200(entity);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -477,6 +535,15 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             config.setControllerId(controllerId);
         }
         return config;
+    }
+    
+    private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
+        Optional<JsonObject> oldObj = Optional.empty();
+        if (oldConfiguration != null) {
+            JsonReader oldRdr = Json.createReader(new StringReader(oldConfiguration));
+            oldObj = Optional.of(oldRdr.readObject());
+        }
+        return oldObj;
     }
 
 }

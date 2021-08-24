@@ -19,7 +19,7 @@ public class ConfigurationGlobals {
     public static final ConfigurationObjectType OBJECT_TYPE = null;
 
     public enum DefaultSections {
-        dailyplan, cleanup, joc
+        dailyplan, cleanup, joc, user
     }
 
     private GlobalSettings defaults = null;
@@ -30,6 +30,7 @@ public class ConfigurationGlobals {
         addDefaultSection(DefaultSections.dailyplan, 0);
         addDefaultSection(DefaultSections.cleanup, 1);
         addDefaultSection(DefaultSections.joc, 2);
+        addDefaultSection(DefaultSections.user, 3);
     }
 
     public void setConfigurationValues(GlobalSettings values) {
@@ -94,6 +95,8 @@ public class ConfigurationGlobals {
             return new ConfigurationGlobalsCleanup();
         case joc:
             return new ConfigurationGlobalsJoc();
+        case user:
+            return new ConfigurationGlobalsUser();
         default:
             return null;
         }

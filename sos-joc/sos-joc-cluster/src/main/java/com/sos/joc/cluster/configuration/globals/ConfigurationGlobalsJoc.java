@@ -28,10 +28,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry enableRememberMe = new ConfigurationEntry("enable_remember_me", "true", GlobalSettingsSectionValueType.BOOLEAN);
 
-    private ConfigurationEntry welcomeGotIt = new ConfigurationEntry("welcome_got_it", "false", GlobalSettingsSectionValueType.BOOLEAN);
-    private ConfigurationEntry welcomeDoNotRemindMe = new ConfigurationEntry("welcome_do_not_remind_me", "false",
-            GlobalSettingsSectionValueType.BOOLEAN);
-
     private ConfigurationEntry copyPasteSuffix = new ConfigurationEntry("copy_paste_suffix", "copy", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry copyPastePrefix = new ConfigurationEntry("copy_paste_prefix", "copy", GlobalSettingsSectionValueType.STRING);
 
@@ -63,9 +59,6 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
         defaultProfileAccount.setOrdering(++index);
         enableRememberMe.setOrdering(++index);
-
-        welcomeGotIt.setOrdering(++index);
-        welcomeDoNotRemindMe.setOrdering(++index);
 
         copyPasteSuffix.setOrdering(++index);
         copyPastePrefix.setOrdering(++index);
