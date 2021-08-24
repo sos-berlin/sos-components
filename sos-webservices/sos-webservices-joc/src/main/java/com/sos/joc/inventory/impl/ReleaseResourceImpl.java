@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -38,8 +37,6 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.joc.model.inventory.release.ReleaseFilter;
 import com.sos.schema.JsonValidator;
-
-import io.vavr.control.Either;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseResource {
@@ -109,24 +106,48 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     
     private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions,
             JocError jocError, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
-        return toDelete.stream().filter(Objects::nonNull).map(requestFilter -> {
-            Either<Err419, Void> either = null;
+        
+        List<Err419> bulkErrors = new ArrayList<>();
+        for (RequestFilter requestFilter : toDelete) {
+            if (requestFilter == null) {
+                continue;
+            }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                 delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, true);
-                either = Either.right(null);
             } catch (DBMissingDataException ex) {
                 // ignore missing objects at deletion
-                either = Either.right(null);
             } catch (Exception ex) {
                 if (requestFilter.getPath() != null) {
-                    either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+                    bulkErrors.add(new BulkError().get(ex, jocError, requestFilter.getPath()));
                 } else {
-                    either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+                    bulkErrors.add(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
                 }
             }
-            return either;
-        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
+        }
+        return bulkErrors;
+        
+//      Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException: 
+//      Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
+//      so better a serial processing
+//        return toDelete.stream().filter(Objects::nonNull).map(requestFilter -> {
+//            Either<Err419, Void> either = null;
+//            try {
+//                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+//                delete(conf, dbLayer, dbAuditLog, withDeletionOfEmptyFolders, true);
+//                either = Either.right(null);
+//            } catch (DBMissingDataException ex) {
+//                // ignore missing objects at deletion
+//                either = Either.right(null);
+//            } catch (Exception ex) {
+//                if (requestFilter.getPath() != null) {
+//                    either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+//                } else {
+//                    either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+//                }
+//            }
+//            return either;
+//        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
     }
     
     public static void delete(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders,
@@ -150,8 +171,12 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     
     public static List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions,
             JocError jocError, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
-        return toUpdate.stream().filter(Objects::nonNull).map(requestFilter -> {
-            Either<Err419, Void> either = null;
+        
+        List<Err419> bulkErrors = new ArrayList<>();
+        for (RequestFilter requestFilter : toUpdate) {
+            if (requestFilter == null) {
+                continue;
+            }
             try {
                 DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
                 if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
@@ -164,17 +189,44 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
                     updateReleasedObject(conf, dbLayer, dbAuditLog);
                     JocInventory.postEvent(conf.getFolder());
                 }
-                either = Either.right(null);
             } catch (Exception ex) {
                 if (requestFilter.getPath() != null) {
-                    either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+                    bulkErrors.add(new BulkError().get(ex, jocError, requestFilter.getPath()));
                 } else {
-                    either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+                    bulkErrors.add(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
                 }
             }
-            return either;
-
-        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
+        }
+        return bulkErrors;
+        
+//        Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException: 
+//        Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
+//        so better a serial processing
+//        return toUpdate.stream().filter(Objects::nonNull).map(requestFilter -> {
+//            Either<Err419, Void> either = null;
+//            try {
+//                DBItemInventoryConfiguration conf = JocInventory.getConfiguration(dbLayer, requestFilter, folderPermissions);
+//                if (ConfigurationType.FOLDER.intValue() == conf.getType()) {
+//                    updateReleasedFolder(conf, dbLayer, dbAuditLog);
+//                    JocInventory.postEvent(conf.getFolder());
+//                } else if (!JocInventory.isReleasable(conf.getTypeAsEnum())) {
+//                    throw new ControllerInvalidResponseDataException(String.format("%s is not a 'Scheduling Object': %s", conf.getPath(), conf
+//                            .getTypeAsEnum()));
+//                } else {
+//                    updateReleasedObject(conf, dbLayer, dbAuditLog);
+//                    JocInventory.postEvent(conf.getFolder());
+//                }
+//                either = Either.right(null);
+//            } catch (Exception ex) {
+//                if (requestFilter.getPath() != null) {
+//                    either = Either.left(new BulkError().get(ex, jocError, requestFilter.getPath()));
+//                } else {
+//                    either = Either.left(new BulkError().get(ex, jocError, "Id: " + requestFilter.getId()));
+//                }
+//            }
+//            return either;
+//
+//        }).filter(Either::isLeft).map(Either::getLeft).collect(Collectors.toList());
     }
     
     private static void updateReleasedFolder(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog)
@@ -197,21 +249,26 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
     private static void updateReleasedObject(DBItemInventoryConfiguration conf, InventoryDBLayer dbLayer, DBItemJocAuditLog dbAuditLog)
             throws SOSHibernateException, JsonParseException, JsonMappingException, IOException {
         conf.setAuditLogId(dbAuditLog.getId());
+        
         DBItemInventoryReleasedConfiguration releaseItem = dbLayer.getReleasedItemByConfigurationId(conf.getId());
-        DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
+//      Less memory and performance but sometimes SOSHibernateObjectOperationStaleStateException: 
+//      Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)
+//      DBItemInventoryReleasedConfiguration contraintReleaseItem = dbLayer.getReleasedConfiguration(conf.getName(), conf.getType());
         
         if (releaseItem == null) {
-            if (contraintReleaseItem != null) {
-                dbLayer.getSession().delete(contraintReleaseItem);
-            }
-            DBItemInventoryReleasedConfiguration release = setReleaseItem(null, conf, dbAuditLog.getCreated());
-            dbLayer.getSession().save(release);
+            // delete all other db items with same objectType and name
+            dbLayer.deleteContraintViolatedReleasedConfigurations(null, conf.getName(), conf.getType());
+//            if (contraintReleaseItem != null) {
+//                dbLayer.getSession().delete(contraintReleaseItem);
+//            }
+            dbLayer.getSession().save(setReleaseItem(null, conf, dbAuditLog.getCreated()));
         } else {
-            if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
-                dbLayer.getSession().delete(contraintReleaseItem);
-            }
-            setReleaseItem(releaseItem, conf, dbAuditLog.getCreated());
-            dbLayer.getSession().update(releaseItem);
+            // delete all other db items with same objectType and name but different id
+            dbLayer.deleteContraintViolatedReleasedConfigurations(releaseItem.getId(), conf.getName(), conf.getType());
+//            if (contraintReleaseItem != null && contraintReleaseItem.getId() != releaseItem.getId()) {
+//                dbLayer.getSession().delete(contraintReleaseItem);
+//            }
+            dbLayer.getSession().update(setReleaseItem(releaseItem, conf, dbAuditLog.getCreated()));
         }
         conf.setReleased(true);
         conf.setModified(dbAuditLog.getCreated());
@@ -225,15 +282,15 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
 //        updateReleasedObject(conf, dbLayer, dbAuditLog);
 //    }
     
-    private static DBItemInventoryReleasedConfiguration setReleaseItem(DBItemInventoryReleasedConfiguration releaseItem, DBItemInventoryConfiguration conf, Date now)
-            throws JsonParseException, JsonMappingException, IOException {
+    private static DBItemInventoryReleasedConfiguration setReleaseItem(DBItemInventoryReleasedConfiguration releaseItem,
+            DBItemInventoryConfiguration conf, Date now) throws JsonParseException, JsonMappingException, IOException {
         if (releaseItem == null) {
             releaseItem = new DBItemInventoryReleasedConfiguration();
             releaseItem.setId(null);
             releaseItem.setCreated(now);
+            releaseItem.setCid(conf.getId());
         }
         releaseItem.setAuditLogId(conf.getAuditLogId());
-        releaseItem.setCid(conf.getId());
 //        IReleaseObject r = (IReleaseObject) Globals.objectMapper.readValue(conf.getContent(), JocInventory.CLASS_MAPPING.get(conf.getTypeAsEnum()));
 //        r.setPath(conf.getPath());
 //        releaseItem.setContent(Globals.objectMapper.writeValueAsString(r));

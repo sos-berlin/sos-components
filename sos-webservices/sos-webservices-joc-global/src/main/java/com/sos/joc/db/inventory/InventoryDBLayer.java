@@ -189,6 +189,31 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
+    
+    public int deleteContraintViolatedReleasedConfigurations(Long id, String name, Integer type) throws SOSHibernateException {
+        boolean isCalendar = JocInventory.isCalendar(type);
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+        hql.append(" where lower(name)=:name");
+        if (isCalendar) {
+            hql.append(" and type in (:types)");
+        } else {
+            hql.append(" and type=:type");
+        }
+        if (id != null) {
+            hql.append(" and id != :id");
+        }
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("name", name.toLowerCase());
+        if (isCalendar) {
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+        } else {
+            query.setParameter("type", type);
+        }
+        if (id != null) {
+            query.setParameter("id", id);
+        }
+        return getSession().executeUpdate(query);
+    }
 
     public List<String> getDeletedFolders() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select path from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
