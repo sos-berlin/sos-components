@@ -392,7 +392,6 @@ public class OrderListSynchronizer {
                         } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
                             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
                         } catch (JsonProcessingException e) {
-                            // TODO Auto-generated catch block
                             e.printStackTrace();
                         } finally {
                             Globals.disconnect(sosHibernateSession2);

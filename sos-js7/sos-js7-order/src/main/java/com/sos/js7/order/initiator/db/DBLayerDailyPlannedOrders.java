@@ -82,23 +82,30 @@ public class DBLayerDailyPlannedOrders {
 
     public int deleteCascading(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         int row = 0;
-        int retryCount = 0;
+        int retryCount = 20;
         do {
             try {
                 deleteVariables(filter);
                 row = delete(filter);
-                retryCount = 20;
-            } catch (SOSHibernateLockAcquisitionException e) {
-                if (retryCount < 10) {
-                    try {
-                        java.lang.Thread.sleep(1000);
-                    } catch (InterruptedException e1) {
-                    }
-                    retryCount = retryCount + 1;
-                    LOGGER.debug("Retry delete orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount);
+                if (retryCount != 20) {
+                    LOGGER.info("deadlock resolved successfully delete from dpl_variables");
                 }
+                retryCount = 0;
+            } catch (SOSHibernateLockAcquisitionException e) {
+                LOGGER.info("Try to resolve deadlock delete from dpl_variables");
+
+                try {
+                    java.lang.Thread.sleep(500);
+                } catch (InterruptedException e1) {
+                }
+                retryCount = retryCount - 1;
+                if (retryCount == 0) {
+                    throw e;
+                }
+                LOGGER.debug("Retry delete orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount);
+
             }
-        } while (retryCount < 10);
+        } while (retryCount > 0);
         return row;
     }
 
@@ -563,25 +570,30 @@ public class DBLayerDailyPlannedOrders {
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
 
         bindParameters(filter, query);
-        int retry=10;
-        int row=-1;
+        int retryCount = 20;
+        int row = -1;
         do {
             try {
                 row = sosHibernateSession.executeUpdate(query);
-                retry = 0;
+                if (retryCount != 20) {
+                    LOGGER.info("deadlock resolved successfully:" + hql);
+                }
+                retryCount = 0;
             } catch (SOSHibernateLockAcquisitionException e) {
-                retry = retry - 1;
+                LOGGER.info("Try to resolve deadlock:" + hql);
+                retryCount = retryCount - 1;
                 try {
                     java.lang.Thread.sleep(500);
-                } catch (InterruptedException e1) {}
-                if (retry == 0) {
+                } catch (InterruptedException e1) {
+                }
+                if (retryCount == 0) {
                     throw e;
                 }
+                LOGGER.debug("Retry update orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount);
+
             }
-        } while (retry > 0);
-        
-        
-        
+        } while (retryCount > 0);
+
         return row;
     }
 
