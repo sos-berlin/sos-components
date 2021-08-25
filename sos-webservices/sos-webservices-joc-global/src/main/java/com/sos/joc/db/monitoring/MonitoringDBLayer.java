@@ -24,7 +24,8 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit) throws SOSHibernateException {
+    public ScrollableResults getNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit)
+            throws SOSHibernateException {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
@@ -49,7 +50,7 @@ public class MonitoringDBLayer extends DBLayer {
             query.setParameter("dateFrom", dateFrom);
         }
         if (!controllerIds.isEmpty()) {
-            query.setParameterList("controllerId", controllerIds);
+            query.setParameterList("controllerIds", controllerIds);
         }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
@@ -64,7 +65,8 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types) throws SOSHibernateException {
+    public ScrollableResults getNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types)
+            throws SOSHibernateException {
         int size = notificationIds.size();
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
@@ -88,7 +90,7 @@ public class MonitoringDBLayer extends DBLayer {
         }
         Query<NotificationDBItemEntity> query = getSession().createQuery(hql.toString(), NotificationDBItemEntity.class);
         if (!controllerIds.isEmpty()) {
-            query.setParameterList("controllerId", controllerIds);
+            query.setParameterList("controllerIds", controllerIds);
         }
         if (types != null && types.size() > 0) {
             if (types.size() == 1) {
