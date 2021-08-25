@@ -525,6 +525,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                         dbLayerDailyPlannedOrders2.delete(filterDailyPlannedOrders);
                                         DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
                                         dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
+                                        if (retryCount != 20) {
+                                            LOGGER.info("deadlock resolved successfully update dpl_orders");
+                                        }
                                         retryCount = 0;
                                     } catch (SOSHibernateLockAcquisitionException e) {
                                         LOGGER.info("Try to resolve deadlock update dpl_orders");
