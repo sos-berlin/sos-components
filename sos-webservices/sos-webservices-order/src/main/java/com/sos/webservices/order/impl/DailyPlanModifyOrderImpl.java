@@ -519,24 +519,28 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                 FilterDailyPlannedOrders filterDailyPlannedOrders = new FilterDailyPlannedOrders();
                                 filterDailyPlannedOrders.setPlannedOrderId(dbItemDailyPlanOrder.getId());
 
-                                int retry = 10;
+                                int retryCount = 20;
                                 do {
                                     try {
                                         dbLayerDailyPlannedOrders2.delete(filterDailyPlannedOrders);
                                         DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
                                         dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
-                                        retry = 0;
+                                        retryCount = 0;
                                     } catch (SOSHibernateLockAcquisitionException e) {
-                                        retry = retry - 1;
+                                        LOGGER.info("Try to resolve deadlock update dpl_orders");
+                                        retryCount = retryCount - 1;
                                         try {
                                             java.lang.Thread.sleep(500);
                                         } catch (InterruptedException e1) {
                                         }
-                                        if (retry == 0) {
+                                        if (retryCount == 0) {
                                             throw e;
                                         }
+                                        LOGGER.debug("Retry update orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: "
+                                                + retryCount);
                                     }
-                                } while (retry > 0);
+                                } while (retryCount > 0);
+
                                 Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
                                 EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));

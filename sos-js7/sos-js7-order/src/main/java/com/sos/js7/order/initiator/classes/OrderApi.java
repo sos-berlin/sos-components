@@ -55,15 +55,12 @@ import reactor.core.publisher.Flux;
 public class OrderApi {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
-    
-   
-    
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
         OrderId orderId = OrderId.of(order.getId());
-        
-        Map<String,Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
-        
+
+        Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
+
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
@@ -72,9 +69,9 @@ public class OrderApi {
     }
 
     public static Set<PlannedOrder> addOrderToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
-            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, InterruptedException, ExecutionException {
+            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            InterruptedException, ExecutionException {
 
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
@@ -112,8 +109,8 @@ public class OrderApi {
 
                         OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
                         OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
-                        controllerApi.deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper
-                                .postProblemEventIfExist(e, accessToken, jocError, controllerId));
+                        controllerApi.deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(
+                                e, accessToken, jocError, controllerId));
                         Globals.commit(sosHibernateSession);
 
                     } catch (Exception e) {
