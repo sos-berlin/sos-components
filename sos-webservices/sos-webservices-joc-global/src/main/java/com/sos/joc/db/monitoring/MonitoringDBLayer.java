@@ -1,10 +1,10 @@
 package com.sos.joc.db.monitoring;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
@@ -24,7 +24,7 @@ public class MonitoringDBLayer extends DBLayer {
         super(session);
     }
 
-    public ScrollableResults getNotifications(Date dateFrom, Set<String> controllerIds, List<Integer> types, Integer limit) throws SOSHibernateException {
+    public ScrollableResults getNotifications(Date dateFrom, Collection<String> controllerIds, List<Integer> types, Integer limit) throws SOSHibernateException {
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();
         }
@@ -64,7 +64,7 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().scroll(query);
     }
 
-    public ScrollableResults getNotifications(List<Long> notificationIds, Set<String> controllerIds, List<Integer> types) throws SOSHibernateException {
+    public ScrollableResults getNotifications(List<Long> notificationIds, Collection<String> controllerIds, List<Integer> types) throws SOSHibernateException {
         int size = notificationIds.size();
         if (controllerIds == null) {
             controllerIds = Collections.emptySet();

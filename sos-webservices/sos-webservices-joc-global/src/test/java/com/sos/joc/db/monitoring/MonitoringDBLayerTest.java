@@ -2,6 +2,7 @@ package com.sos.joc.db.monitoring;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ public class MonitoringDBLayerTest {
             Integer limit = null;
 
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
-            sr = dbLayer.getNotifications(dateFrom, controllerId, null, limit);
+            sr = dbLayer.getNotifications(dateFrom, Collections.singleton(controllerId), null, limit);
             int size = 0;
             while (sr.next()) {
                 NotificationDBItemEntity item = (NotificationDBItemEntity) sr.get(0);

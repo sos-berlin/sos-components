@@ -65,7 +65,7 @@ public class BoardHelper {
                 Notice notice = new Notice();
                 notice.setId(n.id().string());
                 notice.setEndOfLife(Date.from(Instant.ofEpochMilli(n.endOfLife().toEpochMilli())));
-                List<OrderId> orderIds = JavaConverters.asJava(bs.expectingOrders(n.id()));
+                Set<OrderId> orderIds = JavaConverters.asJava(bs.expectingOrders(n.id()));
                 notice.setExpectingOrders(controllerState.ordersBy(o -> orderIds.contains(o.id())).map(o -> {
                     try {
                         return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null);
