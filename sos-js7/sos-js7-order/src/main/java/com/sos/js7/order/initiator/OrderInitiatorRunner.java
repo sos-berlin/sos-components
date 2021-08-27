@@ -1,7 +1,6 @@
 package com.sos.js7.order.initiator;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -33,13 +32,13 @@ import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.proxy.Proxy;
@@ -446,9 +445,9 @@ public class OrderInitiatorRunner extends TimerTask {
 
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate, orderInitiatorSettings);
 
-        if (o.getNonWorkingCalendars() != null) {
+        if (o.getNonWorkingDayCalendars() != null) {
             FrequencyResolver fr = new FrequencyResolver();
-            for (AssignedNonWorkingCalendars assignedNonWorkingCalendars : o.getNonWorkingCalendars()) {
+            for (AssignedNonWorkingDayCalendars assignedNonWorkingCalendars : o.getNonWorkingDayCalendars()) {
                 LOGGER.debug("Generate non working dates for:" + assignedNonWorkingCalendars.getCalendarPath());
                 listOfNonWorkingDays = new HashMap<String, String>();
                 Calendar calendar = getCalendar(controllerId, assignedNonWorkingCalendars.getCalendarName(),

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.common.IInventoryObject;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.common.IReleaseObject;
@@ -33,7 +33,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "submitOrderToControllerWhenPlanned",
     "planOrderAutomatically",
     "calendars",
-    "nonWorkingCalendars",
+    "nonWorkingDayCalendars",
     "variableSets"
 })
 public class Schedule implements IInventoryObject, IConfigurationObject, IReleaseObject
@@ -109,8 +109,8 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
+    @JsonProperty("nonWorkingDayCalendars")
+    private List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars = null;
     @JsonProperty("variableSets")
     private List<VariableSet> variableSets = null;
 
@@ -298,9 +298,9 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    public List<AssignedNonWorkingCalendars> getNonWorkingCalendars() {
-        return nonWorkingCalendars;
+    @JsonProperty("nonWorkingDayCalendars")
+    public List<AssignedNonWorkingDayCalendars> getNonWorkingDayCalendars() {
+        return nonWorkingDayCalendars;
     }
 
     /**
@@ -309,9 +309,9 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    public void setNonWorkingCalendars(List<AssignedNonWorkingCalendars> nonWorkingCalendars) {
-        this.nonWorkingCalendars = nonWorkingCalendars;
+    @JsonProperty("nonWorkingDayCalendars")
+    public void setNonWorkingDayCalendars(List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars) {
+        this.nonWorkingDayCalendars = nonWorkingDayCalendars;
     }
 
     @JsonProperty("variableSets")
@@ -326,12 +326,12 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("variableSets", variableSets).toString();
+        return new ToStringBuilder(this).append("version", version).append("path", path).append("workflowPath", workflowPath).append("workflowName", workflowName).append("title", title).append("documentationName", documentationName).append("submitOrderToControllerWhenPlanned", submitOrderToControllerWhenPlanned).append("planOrderAutomatically", planOrderAutomatically).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("variableSets", variableSets).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(nonWorkingCalendars).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
+        return new HashCodeBuilder().append(planOrderAutomatically).append(path).append(workflowPath).append(calendars).append(submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars).append(workflowName).append(documentationName).append(variableSets).append(title).append(version).toHashCode();
     }
 
     @Override
@@ -343,7 +343,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
             return false;
         }
         Schedule rhs = ((Schedule) other);
-        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
+        return new EqualsBuilder().append(planOrderAutomatically, rhs.planOrderAutomatically).append(path, rhs.path).append(workflowPath, rhs.workflowPath).append(calendars, rhs.calendars).append(submitOrderToControllerWhenPlanned, rhs.submitOrderToControllerWhenPlanned).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(variableSets, rhs.variableSets).append(title, rhs.title).append(version, rhs.version).isEquals();
     }
 
 }

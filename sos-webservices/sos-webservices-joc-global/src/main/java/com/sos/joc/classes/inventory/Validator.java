@@ -25,7 +25,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.ForkJoin;
@@ -209,8 +209,8 @@ public class Validator {
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
         Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).collect(Collectors.toSet());
-        if (schedule.getNonWorkingCalendars() != null && !schedule.getNonWorkingCalendars().isEmpty()) {
-            calendarNames.addAll(schedule.getNonWorkingCalendars().stream().map(AssignedNonWorkingCalendars::getCalendarName).collect(Collectors
+        if (schedule.getNonWorkingDayCalendars() != null && !schedule.getNonWorkingDayCalendars().isEmpty()) {
+            calendarNames.addAll(schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName).collect(Collectors
                     .toSet()));
         }
         List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());

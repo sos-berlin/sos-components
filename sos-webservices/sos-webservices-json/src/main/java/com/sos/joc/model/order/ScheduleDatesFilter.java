@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -22,7 +22,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "calendars",
-    "nonWorkingCalendars",
+    "nonWorkingDayCalendars",
     "dateFrom",
     "dateTo",
     "timeZone"
@@ -43,8 +43,8 @@ public class ScheduleDatesFilter {
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    private List<AssignedNonWorkingCalendars> nonWorkingCalendars = null;
+    @JsonProperty("nonWorkingDayCalendars")
+    private List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars = null;
     /**
      * date
      * <p>
@@ -102,9 +102,9 @@ public class ScheduleDatesFilter {
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    public List<AssignedNonWorkingCalendars> getNonWorkingCalendars() {
-        return nonWorkingCalendars;
+    @JsonProperty("nonWorkingDayCalendars")
+    public List<AssignedNonWorkingDayCalendars> getNonWorkingDayCalendars() {
+        return nonWorkingDayCalendars;
     }
 
     /**
@@ -113,9 +113,9 @@ public class ScheduleDatesFilter {
      * 
      * 
      */
-    @JsonProperty("nonWorkingCalendars")
-    public void setNonWorkingCalendars(List<AssignedNonWorkingCalendars> nonWorkingCalendars) {
-        this.nonWorkingCalendars = nonWorkingCalendars;
+    @JsonProperty("nonWorkingDayCalendars")
+    public void setNonWorkingDayCalendars(List<AssignedNonWorkingDayCalendars> nonWorkingDayCalendars) {
+        this.nonWorkingDayCalendars = nonWorkingDayCalendars;
     }
 
     /**
@@ -188,12 +188,12 @@ public class ScheduleDatesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("calendars", calendars).append("nonWorkingCalendars", nonWorkingCalendars).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("calendars", calendars).append("nonWorkingDayCalendars", nonWorkingDayCalendars).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dateTo).append(timeZone).append(nonWorkingCalendars).append(dateFrom).append(calendars).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(timeZone).append(dateFrom).append(calendars).append(nonWorkingDayCalendars).toHashCode();
     }
 
     @Override
@@ -205,7 +205,7 @@ public class ScheduleDatesFilter {
             return false;
         }
         ScheduleDatesFilter rhs = ((ScheduleDatesFilter) other);
-        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(nonWorkingCalendars, rhs.nonWorkingCalendars).append(dateFrom, rhs.dateFrom).append(calendars, rhs.calendars).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).append(calendars, rhs.calendars).append(nonWorkingDayCalendars, rhs.nonWorkingDayCalendars).isEquals();
     }
 
 }
