@@ -29,7 +29,7 @@ import com.sos.commons.exception.SOSMissingDataException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.Globals;
@@ -135,16 +135,16 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         FrequencyResolver fr = new FrequencyResolver();
         List<String> nonWorkingDays = new ArrayList<>();
         
-        if (in.getNonWorkingCalendars() != null && !in.getNonWorkingCalendars().isEmpty()) {
-            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingCalendars().stream().map(
-                    AssignedNonWorkingCalendars::getCalendarName));
+        if (in.getNonWorkingDayCalendars() != null && !in.getNonWorkingDayCalendars().isEmpty()) {
+            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingDayCalendars().stream().map(
+                    AssignedNonWorkingDayCalendars::getCalendarName));
 
             if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
                 Map<String, String> nameContentMap = nonWorkingDbCalendars.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
                         DBItemInventoryReleasedConfiguration::getContent));
 
-                for (AssignedNonWorkingCalendars c : in.getNonWorkingCalendars()) {
+                for (AssignedNonWorkingDayCalendars c : in.getNonWorkingDayCalendars()) {
                     if (!nameContentMap.containsKey(c.getCalendarName())) {
                         continue;
                     }

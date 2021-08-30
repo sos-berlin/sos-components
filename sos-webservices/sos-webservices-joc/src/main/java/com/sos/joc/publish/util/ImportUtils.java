@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
-import com.sos.inventory.model.calendar.AssignedNonWorkingCalendars;
+import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -139,8 +139,8 @@ public class ImportUtils {
                         	}
                     	});
                     } else  if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NONWORKINGDAYSCALENDAR)) {
-                    	List<AssignedNonWorkingCalendars> assignedNWDCalendars = 
-                    			((ScheduleEdit)configurationWithReference).getConfiguration().getNonWorkingCalendars();
+                    	List<AssignedNonWorkingDayCalendars> assignedNWDCalendars = 
+                    			((ScheduleEdit)configurationWithReference).getConfiguration().getNonWorkingDayCalendars();
                     	assignedNWDCalendars.stream().forEach(item -> {
                         	if (item.getCalendarName().equals(updateableItem.getOldName()) 
                         			|| item.getCalendarName().equals(updateableItem.getConfigurationObject().getName())) {
@@ -205,8 +205,8 @@ public class ImportUtils {
     			.filter(item -> ConfigurationType.SCHEDULE.equals(item.getObjectType())).map(item -> {
     	    		if (ConfigurationType.SCHEDULE.equals(item.getObjectType())) {
     	    			List<AssignedCalendars> assignedCalendars = ((ScheduleEdit)item).getConfiguration().getCalendars();
-    	    			List<AssignedNonWorkingCalendars> assignedNonWorkingDaysCalendars = 
-    	    					((ScheduleEdit)item).getConfiguration().getNonWorkingCalendars();
+    	    			List<AssignedNonWorkingDayCalendars> assignedNonWorkingDaysCalendars = 
+    	    					((ScheduleEdit)item).getConfiguration().getNonWorkingDayCalendars();
     	    			if (assignedCalendars != null) {
         	    			for (AssignedCalendars calendar : assignedCalendars) {
         	    				if (calendar.getCalendarName().equals(name)) {
@@ -215,7 +215,7 @@ public class ImportUtils {
         	    			}
     	    			}
     	    			if (assignedNonWorkingDaysCalendars != null) {
-        	    			for (AssignedNonWorkingCalendars calendar : assignedNonWorkingDaysCalendars) {
+        	    			for (AssignedNonWorkingDayCalendars calendar : assignedNonWorkingDaysCalendars) {
         	    				if (calendar.getCalendarName().equals(name)) {
         	    					return item;
         	    				}
