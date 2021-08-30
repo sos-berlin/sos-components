@@ -118,6 +118,8 @@ public abstract class FilterAttributesMapper {
                 return filter.getControllerId();
             case "commitId":
                 return filter.getCommitId();
+            case "auditlogId":
+                return filter.getAuditlogId();
             case "version":
                 return filter.getVersion();
             case "operation":

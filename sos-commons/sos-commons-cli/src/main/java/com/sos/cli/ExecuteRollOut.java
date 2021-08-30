@@ -206,18 +206,30 @@ public class ExecuteRollOut {
     }
     
     private static void updatePrivateConf (Config config, RolloutResponse response) throws Exception {
-        X509Certificate  certificate = KeyUtil.getX509Certificate(response.getJocKeyPair().getCertificate());
-        String subjectDN = certificate.getSubjectDN().getName();
-        if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
-            List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
-            dns.add(subjectDN);
-            ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
-            toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
-        } else {
-            List<String> newValues = new ArrayList<String>();
-            newValues.add(subjectDN);
-            ConfigValue value = ConfigValueFactory.fromIterable(newValues);
-            toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+        if (response.getJocKeyPair() != null) {
+            X509Certificate  certificate = KeyUtil.getX509Certificate(response.getJocKeyPair().getCertificate());
+            String subjectDN = certificate.getSubjectDN().getName();
+            if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
+                List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
+                dns.add(subjectDN);
+                ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
+                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+            } else {
+                List<String> newValues = new ArrayList<String>();
+                newValues.add(subjectDN);
+                ConfigValue value = ConfigValueFactory.fromIterable(newValues);
+                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+            }
+        } else if (response.getDNs() != null && !response.getDNs().isEmpty()){
+            if (config.hasPath(PRIVATE_CONF_JS7_PARAM_DN)) {
+                List<String> dns = config.getStringList(PRIVATE_CONF_JS7_PARAM_DN);
+                ConfigValue value = ConfigValueFactory.fromAnyRef(dns);
+                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+            } else {
+                List<String> newValues = new ArrayList<String>();
+                ConfigValue value = ConfigValueFactory.fromIterable(newValues);
+                toUpdate = config.withValue(PRIVATE_CONF_JS7_PARAM_DN, value);
+            }
         }
         saveConfigToFile(toUpdate);
     }
