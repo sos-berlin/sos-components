@@ -108,7 +108,7 @@ public class OrderApi {
                         Globals.beginTransaction(sosHibernateSession);
 
                         OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
-                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries);
+                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, true, null);
                         controllerApi.deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(
                                 e, accessToken, jocError, controllerId));
                         Globals.commit(sosHibernateSession);
@@ -120,7 +120,19 @@ public class OrderApi {
                         Globals.disconnect(sosHibernateSession);
                     }
                 } else {
-                    ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                    SOSHibernateSession sosHibernateSession = null;
+                    try {
+                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
+                        sosHibernateSession.setAutoCommit(false);
+                        Globals.beginTransaction(sosHibernateSession);
+                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, false, jocError.getCode() + ":" + either.getLeft().toString());
+                        Globals.commit(sosHibernateSession);
+                        ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
+                    } catch (SOSHibernateException e) {
+                        Globals.rollback(sosHibernateSession);
+                    } finally {
+                        Globals.disconnect(sosHibernateSession);
+                    }
                 }
             });
 
@@ -142,12 +154,15 @@ public class OrderApi {
 
     }
 
-    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries)
-            throws SOSHibernateException {
+    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries,
+            Boolean submitted, String message) throws SOSHibernateException {
 
         DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
         for (DBItemDailyPlanHistory dbItemDailyPlanHistory : listOfInsertHistoryEntries) {
-            dbItemDailyPlanHistory.setSubmitted(true);
+            dbItemDailyPlanHistory.setSubmitted(submitted);
+            if (message != null && !message.isEmpty()) {
+                dbItemDailyPlanHistory.setMessage(message);
+            }
             dbLayerDailyPlanHistory.updateDailyPlanHistory(dbItemDailyPlanHistory);
         }
 
