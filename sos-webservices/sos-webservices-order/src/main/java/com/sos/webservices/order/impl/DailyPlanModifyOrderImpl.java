@@ -488,9 +488,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         }
 
                         sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+                        sosHibernateSession2.setAutoCommit(false);
 
                         for (DBItemDailyPlanOrders dbItemDailyPlanOrder : listOfPlannedOrders) {
-                            sosHibernateSession2.setAutoCommit(false);
                             Globals.beginTransaction(sosHibernateSession2);
                             dbItemDailyPlanOrder.setModified(new Date());
                             if ((dailyplanModifyOrder.getScheduledFor() != null) && (scheduledForDate != null)) {
@@ -547,6 +547,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                 Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
                                 EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
+                            }else {
+                                Globals.commit(sosHibernateSession2);
                             }
                             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                             auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
