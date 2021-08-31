@@ -406,14 +406,47 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 }
             }
             Map<String, Object> newAdditionalProperties = new HashMap<String, Object>();
+            List<Map<String, Object>> newValList = new ArrayList<Map<String, Object>>();
+
             for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
-                newAdditionalProperties.put(variable.getKey(), variable.getValue());
+
+                if (variable.getValue() instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
+                    newValList.clear();
+                    for (Map<String, Object> par : valList) {
+                        for (Object key : par.keySet()) {
+                            if (key != null) {
+                                newValList.add(par);
+                            }
+                        }
+                    }
+                    newAdditionalProperties.put(variable.getKey(), newValList);
+                } else {
+                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
+                }
+
             }
 
             for (Entry<String, Object> variable : dailyplanModifyOrder.getVariables().getAdditionalProperties().entrySet()) {
-                newAdditionalProperties.put(variable.getKey(), variable.getValue());
+                if (variable.getValue() instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
+                    newValList.clear();
+                    for (Map<String, Object> par : valList) {
+                        for (Object key : par.keySet()) {
+                            if (key != null) {
+                                newValList.add(par);
+                            }
+                        }
+                    }
+                    newAdditionalProperties.put(variable.getKey(), newValList);
+                } else {
+                    newAdditionalProperties.put(variable.getKey(), variable.getValue());
+                }
             }
-            variables.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+            //variables.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+            variables.setAdditionalProperties(newAdditionalProperties);
             String variablesJson = Globals.objectMapper.writeValueAsString(variables);
             dbItemDailyPlanVariables.setVariableValue(variablesJson);
             dbItemDailyPlanVariables.setModified(new Date());
@@ -546,7 +579,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                                 Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
-                            }else {
+                            } else {
                                 Globals.commit(sosHibernateSession2);
                             }
                             EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
