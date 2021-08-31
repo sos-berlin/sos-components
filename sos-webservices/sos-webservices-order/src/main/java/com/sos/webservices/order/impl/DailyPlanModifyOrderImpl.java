@@ -546,10 +546,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
                                 Globals.commit(sosHibernateSession2);
                                 submitOrdersToController(listOfPlannedOrders);
-                                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
                             }else {
                                 Globals.commit(sosHibernateSession2);
                             }
+                            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
                             List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                             auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrder.getWorkflowPath(), dbItemDailyPlanOrder.getOrderId()));
                             OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either2 -> ProblemHelper

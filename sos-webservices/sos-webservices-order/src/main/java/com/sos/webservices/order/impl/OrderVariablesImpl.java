@@ -1,6 +1,5 @@
 package com.sos.webservices.order.impl;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -13,7 +12,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.common.VariableType;
 import com.sos.joc.model.order.OrderFilter;
 import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
 import com.sos.js7.order.initiator.db.FilterOrderVariables;
