@@ -310,10 +310,8 @@ public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDaily
                                     dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailyPlanHistory.getMessage());
                                 }
                             }
-                        } else {
-                            dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
-                        }
-
+                        } 
+                        dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
                         mapOfSubmissionTimesItems.put(submissionControllerDateKey, dailyPlanSubmissionTimes);
                     }
                 }

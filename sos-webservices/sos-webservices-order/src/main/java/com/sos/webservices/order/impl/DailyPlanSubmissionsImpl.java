@@ -19,6 +19,8 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
@@ -35,7 +37,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmissionsImpl.class);
     private static final String API_CALL = "./daily_plan/submissions";
- 
+
     @Override
     public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
         SOSHibernateSession sosHibernateSession = null;
@@ -45,8 +47,8 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(
-                    accessToken).getDailyPlan().getView());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(accessToken)
+                    .getDailyPlan().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
@@ -110,9 +112,9 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
                     DailyPlanSubmissionsFilter.class);
-            
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(
-                    accessToken).getDailyPlan().getManage());
+
+            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(accessToken)
+                    .getDailyPlan().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
@@ -148,6 +150,16 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             dbLayerDailyPlan.delete(filter);
             Globals.commit(sosHibernateSession);
 
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
+                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor()));
+            }
+            
+            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
+                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom()));
+            }
+            
+            
+
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -162,7 +174,5 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             Globals.disconnect(sosHibernateSession);
         }
     }
- 
 
-    
 }
