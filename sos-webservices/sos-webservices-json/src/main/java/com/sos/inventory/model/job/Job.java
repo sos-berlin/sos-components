@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "agentName",
     "executable",
+    "admissionTimeScheme",
     "returnCodeMeaning",
     "parallelism",
     "timeout",
@@ -58,6 +59,14 @@ public class Job implements IConfigurationObject
      */
     @JsonProperty("executable")
     private Executable executable;
+    /**
+     * admission time scheme
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("admissionTimeScheme")
+    private AdmissionTimeScheme admissionTimeScheme;
     /**
      * job
      * <p>
@@ -174,16 +183,18 @@ public class Job implements IConfigurationObject
      * @param executable
      * @param timeout
      * @param warnIfShorter
+     * @param admissionTimeScheme
      * @param returnCodeMeaning
      * @param graceTimeout
      * @param defaultArguments
      * @param jobClass
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
+    public Job(String agentName, Executable executable, AdmissionTimeScheme admissionTimeScheme, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
         super();
         this.agentName = agentName;
         this.executable = executable;
+        this.admissionTimeScheme = admissionTimeScheme;
         this.returnCodeMeaning = returnCodeMeaning;
         this.parallelism = parallelism;
         this.timeout = timeout;
@@ -237,6 +248,28 @@ public class Job implements IConfigurationObject
     @JsonProperty("executable")
     public void setExecutable(Executable executable) {
         this.executable = executable;
+    }
+
+    /**
+     * admission time scheme
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("admissionTimeScheme")
+    public AdmissionTimeScheme getAdmissionTimeScheme() {
+        return admissionTimeScheme;
+    }
+
+    /**
+     * admission time scheme
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("admissionTimeScheme")
+    public void setAdmissionTimeScheme(AdmissionTimeScheme admissionTimeScheme) {
+        this.admissionTimeScheme = admissionTimeScheme;
     }
 
     /**
@@ -487,12 +520,12 @@ public class Job implements IConfigurationObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobClass).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobClass).append(documentationName).toHashCode();
     }
 
     @Override
@@ -504,7 +537,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }

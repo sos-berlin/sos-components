@@ -33,7 +33,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "instructions",
     "title",
     "documentationName",
-    "jobs"
+    "jobs",
+    "timeZone"
 })
 public class Workflow implements IInventoryObject, IConfigurationObject, IDeployObject
 {
@@ -111,6 +112,8 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      */
     @JsonProperty("jobs")
     private Jobs jobs;
+    @JsonProperty("timeZone")
+    private String timeZone = "Etc/UTC";
 
     /**
      * No args constructor for use in serialization
@@ -125,13 +128,16 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * @param versionId
      * @param jobResourceNames
      * @param jobs
+     * @param timeZone
      * @param documentationName
-     * 
      * @param title
+     * @param version
      * @param orderPreparation
      */
-    public Workflow(String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
+    public Workflow(String version, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions,
+            String title, String documentationName, Jobs jobs, String timeZone) {
         super();
+        this.version = version;
         this.versionId = versionId;
         this.orderPreparation = orderPreparation;
         this.jobResourceNames = jobResourceNames;
@@ -139,6 +145,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
         this.title = title;
         this.documentationName = documentationName;
         this.jobs = jobs;
+        this.timeZone = timeZone;
     }
 
     /**
@@ -316,14 +323,24 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
         this.jobs = jobs;
     }
 
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(instructions).append(versionId).append(jobResourceNames).append(jobs).append(documentationName).append(tYPE).append(title).append(version).append(orderPreparation).toHashCode();
+        return new HashCodeBuilder().append(instructions).append(versionId).append(jobResourceNames).append(jobs).append(timeZone).append(documentationName).append(tYPE).append(title).append(version).append(orderPreparation).toHashCode();
     }
 
     @Override
@@ -335,7 +352,7 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(orderPreparation, rhs.orderPreparation).isEquals();
+        return new EqualsBuilder().append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourceNames, rhs.jobResourceNames).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(orderPreparation, rhs.orderPreparation).isEquals();
     }
 
 }

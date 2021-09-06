@@ -4,19 +4,18 @@ package com.sos.controller.model.workflow;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Requirements;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -53,6 +52,7 @@ public class WorkflowDeps
      * @param hasPostNoticeBoards
      * @param jobResourceNames
      * @param jobs
+     * @param timeZone
      * @param tYPE
      * @param title
      * @param versionDate
@@ -68,8 +68,8 @@ public class WorkflowDeps
      * @param state
      * @param documentationName
      */
-    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs) {
-        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs);
+    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, DeployType tYPE, String version, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs, String timeZone) {
+        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, tYPE, version, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs, timeZone);
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
     }
