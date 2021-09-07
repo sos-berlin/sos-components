@@ -148,7 +148,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-                    commitId = ((Workflow) config.getContent()).getVersionId();
+                    commitId = ((com.sos.sign.model.workflow.Workflow) config.getContent()).getVersionId();
                     break;
                 case LOCK:
                     break;
@@ -157,7 +157,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case JOBCLASS:
                     break;
                 default:
-                    commitId = ((Workflow) config.getContent()).getVersionId();
+                    commitId = ((com.sos.sign.model.workflow.Workflow) config.getContent()).getVersionId();
                 }
             }
 //            DeployAudit mainAudit = new DeployAudit(filter.getAuditLog(), String.format("%1$d object(s) imported with profile %2$s",
@@ -173,8 +173,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 switch (config.getObjectType()) {
                 case WORKFLOW:
                     WorkflowPublish workflowPublish = new WorkflowPublish();
-                    workflowPublish.setContent((Workflow) config.getContent());
+                    workflowPublish.setContent((com.sos.sign.model.workflow.Workflow) config.getContent());
                     workflowPublish.setSignedContent(signaturePath.getSignature().getSignatureString());
+                    workflowPublish.setPath(config.getPath());
                     DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.WORKFLOW);
                     objectsToCheckPathRenaming.add(workflowDbItem);
                     DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), workflowPublish, account,
@@ -186,6 +187,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     JobResourcePublish jobResourcePublish = new JobResourcePublish();
                     jobResourcePublish.setContent((JobResource) config.getContent());
                     jobResourcePublish.setSignedContent(signaturePath.getSignature().getSignatureString());
+                    jobResourcePublish.setPath(config.getPath());
                     DBItemInventoryConfiguration jobResourceDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBRESOURCE);
                     objectsToCheckPathRenaming.add(jobResourceDbItem);
                     DBItemDepSignatures jobResourceDbItemSignature = dbLayer.saveOrUpdateSignature(jobResourceDbItem.getId(), jobResourcePublish, account,

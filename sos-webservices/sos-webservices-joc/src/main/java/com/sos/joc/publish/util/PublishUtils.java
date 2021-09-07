@@ -1308,7 +1308,7 @@ public abstract class PublishUtils {
                     depHistory = null;
                 }
                 // if so, check if the paths of both are the same
-                if (depHistory != null && invConf != null && !depHistory.getName().equals(latestDepHistory.getName())) {
+                if (depHistory != null && invConf != null && !invConf.getName().equals(depHistory.getName())) {
                     // if not, delete the old deployed item via updateRepo before deploy of the new configuration
                     depHistory.setCommitId(versionId);
                     alreadyDeployedToDelete.add(depHistory);
