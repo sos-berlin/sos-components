@@ -1634,6 +1634,12 @@ public abstract class PublishUtils {
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
@@ -1643,6 +1649,12 @@ public abstract class PublishUtils {
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
+            signature.setSignatureString(outBuffer.toString());
+            signaturePath.setSignature(signature);
+            return signaturePath;
+        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
+            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
+                    ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
             signature.setSignatureString(outBuffer.toString());
             signaturePath.setSignature(signature);
             return signaturePath;
@@ -1832,6 +1844,7 @@ public abstract class PublishUtils {
                                 workflow.setVersionId(commitId);
                                 // determine agent names to be replaced
                                 if (controllerId != null && updateableAgentNames != null) {
+                                    workflow.setPath(deployable.getPath());
                                     replaceAgentNameWithAgentId(workflow, updateableAgentNames, controllerId);
                                 }
                                 workflow.setPath(Paths.get(deployable.getPath()).getFileName().toString());
@@ -1865,8 +1878,10 @@ public abstract class PublishUtils {
                                 FileOrderSource fileOrderSource = (FileOrderSource) deployable.getContent();
                                 // determine agent names to be replaced
                                 if (controllerId != null && updateableAgentNames != null) {
+                                    fileOrderSource.setPath(deployable.getPath());
                                     replaceAgentNameWithAgentId(fileOrderSource, updateableFOSAgentNames, controllerId);
                                 }
+                                fileOrderSource.setPath(Paths.get(deployable.getPath()).getFileName().toString());
                                 contentBytes = JsonSerializer.serializeAsBytes(fileOrderSource);
                                 break;
                             }
@@ -2342,19 +2357,23 @@ public abstract class PublishUtils {
             throws JsonParseException, JsonMappingException, IOException {
         Set<UpdateableWorkflowJobAgentName> filteredUpdateables = updateableAgentNames.stream().filter(item -> item.getWorkflowPath().equals(workflow
                 .getPath())).collect(Collectors.toSet());
-        workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
-            Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
-            job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
-                    .getControllerId())).findFirst().get().getAgentId());
-        });
+        if (!filteredUpdateables.isEmpty()) {
+            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
+                        .getControllerId())).findFirst().get().getAgentId());
+            });
+        }
     }
 
     private static void replaceAgentNameWithAgentId(FileOrderSource fileOrderSource, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String controllerId) throws JsonParseException, JsonMappingException, IOException {
         Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> item.getFileOrderSourceId()
                 .equals(fileOrderSource.getPath())).collect(Collectors.toSet());
-        fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get()
-                .getAgentId());
+        if (!filteredUpdateables.isEmpty()) {
+            fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get()
+                    .getAgentId());
+        }
     }
 
     public static String getValueAsStringWithleadingZeros(Integer i, int length) {
