@@ -24,6 +24,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -50,6 +51,7 @@ import js7.data.value.Value;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.order.JFreshOrder;
 import js7.proxy.javaapi.JControllerApi;
+import js7.proxy.javaapi.JControllerProxy;
 import reactor.core.publisher.Flux;
 
 public class OrderApi {
@@ -98,7 +100,8 @@ public class OrderApi {
             } else {
                 LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
             }
-            controllerApi.addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+            final JControllerProxy proxy = Proxy.of(controllerId);
+            proxy.api().addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
                 if (either.isRight()) {
 
                     SOSHibernateSession sosHibernateSession = null;
@@ -125,7 +128,8 @@ public class OrderApi {
                         sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
                         sosHibernateSession.setAutoCommit(false);
                         Globals.beginTransaction(sosHibernateSession);
-                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, false, jocError.getCode() + ":" + either.getLeft().toString());
+                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, false, jocError.getCode() + ":" + either.getLeft()
+                                .toString());
                         Globals.commit(sosHibernateSession);
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (SOSHibernateException e) {
