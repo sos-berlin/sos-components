@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
