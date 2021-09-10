@@ -117,6 +117,7 @@ public class JocInventory {
                     put(InstructionType.PROMPT, "classpath:/raml/inventory/schemas/instruction/prompt-schema.json");
                     put(InstructionType.POST_NOTICE, "classpath:/raml/inventory/schemas/instruction/postNotice-schema.json");
                     put(InstructionType.EXPECT_NOTICE, "classpath:/raml/inventory/schemas/instruction/expectNotice-schema.json");
+                    put(InstructionType.ADD_ORDER, "classpath:/raml/inventory/schemas/instruction/addOrder-schema.json");
                 }
             });
 
