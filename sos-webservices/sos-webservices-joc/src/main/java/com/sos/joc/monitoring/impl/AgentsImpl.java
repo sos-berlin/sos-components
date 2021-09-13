@@ -15,6 +15,7 @@ import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -51,10 +52,12 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             Map<String, Map<String, List<DBItemHistoryAgent>>> map = new HashMap<>();
+            // dateFrom, dateTo - already UTC time , use UTC instead of in.getTimeZone()
+            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), "UTC");
+            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
             ScrollableResults sr = null;
             try {
-                sr = dbLayer.getAgents(in.getControllerId(), JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), JobSchedulerDate
-                        .getDateTo(in.getDateTo(), in.getTimeZone()));
+                sr = dbLayer.getAgents(in.getControllerId(), dateFrom, dateTo);
                 while (sr.next()) {
                     DBItemHistoryAgent item = (DBItemHistoryAgent) sr.get(0);
 
@@ -76,7 +79,11 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
             AgentsAnswer answer = new AgentsAnswer();
             answer.setDeliveryDate(new Date());
-            answer.setControllers(getControllers(dbLayer, map, in.getDateFrom() != null, in.getDateTo() != null));
+            if (map.size() == 0) {
+                answer.setControllers(getPreviousControllers(dbLayer, dateFrom, dateTo));
+            } else {
+                answer.setControllers(getControllers(dbLayer, map, dateFrom, dateTo, in.getDateFrom() != null, in.getDateTo() != null));
+            }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -88,8 +95,61 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         }
     }
 
+    private List<AgentsControllerItem> getPreviousControllers(MonitoringDBLayer dbLayer, Date dateFrom, Date dateTo) throws SOSHibernateException {
+        final List<AgentsControllerItem> result = new ArrayList<>();
+        if (dateFrom != null && dateTo != null) {
+            Date now = new Date();
+            if (dateFrom.getTime() > now.getTime() && dateTo.getTime() > now.getTime()) {
+                return result;
+            }
+
+            Map<String, Map<String, Long>> previousAgents = getPreviousAgents(dbLayer, dateFrom);
+            if (previousAgents != null && previousAgents.size() > 0) {
+                for (Map.Entry<String, Map<String, Long>> entry : previousAgents.entrySet()) {
+                    AgentsControllerItem controller = new AgentsControllerItem();
+                    controller.setControllerId(entry.getKey());
+                    for (Map.Entry<String, Long> a : entry.getValue().entrySet()) {
+                        AgentItem agent = new AgentItem();
+                        agent.setAgentId(a.getKey());
+
+                        DBItemHistoryAgent item = dbLayer.getAgent(entry.getKey(), a.getKey(), a.getValue());
+                        if (item != null) {
+                            agent.setUrl(item.getUri());
+
+                            AgentItemEntryItem prev = new AgentItemEntryItem();
+                            prev.setReadyTime(item.getReadyTime());
+                            if (item.getShutdownTime() == null) {
+                                Date lkt = getLastKnownTime(item);
+                                if (lkt != null && !SOSDate.equals(lkt, item.getReadyTime())) {
+                                    prev.setLastKnownTime(lkt);
+                                }
+                            } else {
+                                prev.setLastKnownTime(item.getShutdownTime());
+                            }
+
+                            if (prev.getLastKnownTime() == null) {
+                                long diff = now.getTime() - dateFrom.getTime();
+                                prev.setTotalRunningTime(diff);
+                            } else {
+                                if (prev.getLastKnownTime().getTime() > dateFrom.getTime()) {
+                                    long diff = prev.getLastKnownTime().getTime() - dateFrom.getTime();
+                                    prev.setTotalRunningTime(diff);
+                                }
+                            }
+                            agent.setPreviousEntry(prev);
+
+                            controller.getAgents().add(agent);
+                        }
+                    }
+                    result.add(controller);
+                }
+            }
+        }
+        return result;
+    }
+
     private List<AgentsControllerItem> getControllers(MonitoringDBLayer dbLayer, Map<String, Map<String, List<DBItemHistoryAgent>>> map,
-            boolean getPrevious, boolean getLast) throws SOSHibernateException {
+            Date dateFrom, Date dateTo, boolean getPrevious, boolean getLast) throws SOSHibernateException {
 
         Map<String, Map<String, Long>> lastAgents = null;
         if (getLast) {
@@ -113,7 +173,13 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                     if (i == 0) {
                         agent.setUrl(item.getUri());
                         if (getPrevious) {
-                            setPreviousEntry(dbLayer, item, agent);
+                            AgentItemEntryItem prev = setPreviousEntry(dbLayer, item, agent);
+                            if (dateFrom != null && prev != null && prev.getLastKnownTime() != null) {
+                                if (prev.getReadyTime().getTime() < dateFrom.getTime() && prev.getLastKnownTime().getTime() > dateFrom.getTime()) {
+                                    long diff = prev.getLastKnownTime().getTime() - dateFrom.getTime();
+                                    totalRunningTime += diff;
+                                }
+                            }
                         }
                     }
                     Date lastKnownTime = getLastKnownTime(item);
@@ -128,6 +194,17 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                                         lastKnownTime = null;
                                     }
                                 }
+                            }
+                        }
+
+                        if (lastKnownTime == null && dateTo != null) {
+                            Date now = new Date();
+                            if (dateTo.getTime() < now.getTime()) {
+                                long diff = dateTo.getTime() - item.getReadyTime().getTime();
+                                totalRunningTime += diff;
+                            } else {
+                                long diff = now.getTime() - item.getReadyTime().getTime();
+                                totalRunningTime += diff;
                             }
                         }
                     }
@@ -159,19 +236,30 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         return result;
     }
 
-    private void setPreviousEntry(MonitoringDBLayer dbLayer, DBItemHistoryAgent item, AgentItem agent) {
+    private Map<String, Map<String, Long>> getPreviousAgents(MonitoringDBLayer dbLayer, Date dateFrom) throws SOSHibernateException {
+        Map<String, Map<String, Long>> result = new HashMap<>();
+        List<Object[]> l = dbLayer.getPreviousAgents(dateFrom);
+        for (Object[] o : l) {
+            result.put(o[1].toString(), Collections.singletonMap(o[2].toString(), (Long) o[0]));
+        }
+        return result;
+    }
+
+    private AgentItemEntryItem setPreviousEntry(MonitoringDBLayer dbLayer, DBItemHistoryAgent item, AgentItem agent) {
         try {
-            DBItemHistoryAgent previousItem = dbLayer.getPreviousAgent(item.getControllerId(), item.getAgentId(), item.getReadyEventId());
-            if (previousItem != null) {
-                AgentItemEntryItem previousEntry = new AgentItemEntryItem();
-                previousEntry.setReadyTime(previousItem.getReadyTime());
-                previousEntry.setLastKnownTime(getLastKnownTime(previousItem));
-                previousEntry.setTotalRunningTime(previousEntry.getLastKnownTime().getTime() - previousEntry.getReadyTime().getTime());
-                agent.setPreviousEntry(previousEntry);
+            DBItemHistoryAgent pa = dbLayer.getPreviousAgent(item.getControllerId(), item.getAgentId(), item.getReadyEventId());
+            if (pa != null) {
+                AgentItemEntryItem prev = new AgentItemEntryItem();
+                prev.setReadyTime(pa.getReadyTime());
+                prev.setLastKnownTime(getLastKnownTime(pa));
+                prev.setTotalRunningTime(prev.getLastKnownTime().getTime() - prev.getReadyTime().getTime());
+                agent.setPreviousEntry(prev);
+                return prev;
             }
         } catch (SOSHibernateException e1) {
 
         }
+        return null;
     }
 
     private Date getLastKnownTime(DBItemHistoryAgent item) {

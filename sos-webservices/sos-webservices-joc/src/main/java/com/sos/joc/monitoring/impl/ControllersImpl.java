@@ -15,6 +15,7 @@ import org.hibernate.ScrollableResults;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -50,10 +51,12 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             MonitoringDBLayer dbLayer = new MonitoringDBLayer(session);
             Map<String, List<DBItemHistoryController>> map = new HashMap<>();
+            // dateFrom, dateTo - already UTC time , use UTC instead of in.getTimeZone()
+            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), "UTC");
+            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
             ScrollableResults sr = null;
             try {
-                sr = dbLayer.getControllers(in.getControllerId(), JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone()), JobSchedulerDate
-                        .getDateTo(in.getDateTo(), in.getTimeZone()));
+                sr = dbLayer.getControllers(in.getControllerId(), dateFrom, dateTo);
 
                 while (sr.next()) {
                     DBItemHistoryController item = (DBItemHistoryController) sr.get(0);
@@ -72,7 +75,11 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
 
             ControllersAnswer answer = new ControllersAnswer();
             answer.setDeliveryDate(new Date());
-            answer.setControllers(getControllers(dbLayer, map, in.getDateFrom() != null, in.getDateTo() != null));
+            if (map.size() == 0) {
+                answer.setControllers(getPreviousControllers(dbLayer, dateFrom, dateTo));
+            } else {
+                answer.setControllers(getControllers(dbLayer, map, dateFrom, dateTo, in.getDateFrom() != null, in.getDateTo() != null));
+            }
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -84,8 +91,54 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
         }
     }
 
-    private List<ControllerItem> getControllers(MonitoringDBLayer dbLayer, Map<String, List<DBItemHistoryController>> map, boolean getPrevious,
-            boolean getLast) throws SOSHibernateException {
+    private List<ControllerItem> getPreviousControllers(MonitoringDBLayer dbLayer, Date dateFrom, Date dateTo) throws SOSHibernateException {
+        final List<ControllerItem> result = new ArrayList<>();
+        if (dateFrom != null && dateTo != null) {
+            Date now = new Date();
+            if (dateFrom.getTime() > now.getTime() && dateTo.getTime() > now.getTime()) {
+                return result;
+            }
+
+            Map<String, Long> previousControllers = getPreviousControllers(dbLayer, dateFrom);
+            if (previousControllers != null && previousControllers.size() > 0) {
+                for (Map.Entry<String, Long> entry : previousControllers.entrySet()) {
+                    DBItemHistoryController item = dbLayer.getController(entry.getKey(), entry.getValue());
+                    if (item != null) {
+                        ControllerItem controller = new ControllerItem();
+                        controller.setControllerId(item.getControllerId());
+                        controller.setUrl(item.getUri());
+
+                        ControllerItemEntryItem prev = new ControllerItemEntryItem();
+                        prev.setReadyTime(item.getReadyTime());
+                        if (item.getShutdownTime() == null) {
+                            Date lkt = getLastKnownTime(item);
+                            if (lkt != null && !SOSDate.equals(lkt, item.getReadyTime())) {
+                                prev.setLastKnownTime(lkt);
+                            }
+                        } else {
+                            prev.setLastKnownTime(item.getShutdownTime());
+                        }
+
+                        if (prev.getLastKnownTime() == null) {
+                            long diff = now.getTime() - dateFrom.getTime();
+                            prev.setTotalRunningTime(diff);
+                        } else {
+                            if (prev.getLastKnownTime().getTime() > dateFrom.getTime()) {
+                                long diff = prev.getLastKnownTime().getTime() - dateFrom.getTime();
+                                prev.setTotalRunningTime(diff);
+                            }
+                        }
+                        controller.setPreviousEntry(prev);
+                        result.add(controller);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<ControllerItem> getControllers(MonitoringDBLayer dbLayer, Map<String, List<DBItemHistoryController>> map, Date dateFrom, Date dateTo,
+            boolean getPrevious, boolean getLast) throws SOSHibernateException {
 
         Map<String, Long> lastControllers = null;
         if (getLast) {
@@ -105,7 +158,13 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
                 if (i == 0) {
                     controller.setUrl(item.getUri());
                     if (getPrevious) {
-                        setPreviousEntry(dbLayer, item, controller);
+                        ControllerItemEntryItem prev = setPreviousEntry(dbLayer, item, controller);
+                        if (dateFrom != null && prev != null && prev.getLastKnownTime() != null) {
+                            if (prev.getReadyTime().getTime() < dateFrom.getTime() && prev.getLastKnownTime().getTime() > dateFrom.getTime()) {
+                                long diff = prev.getLastKnownTime().getTime() - dateFrom.getTime();
+                                totalRunningTime += diff;
+                            }
+                        }
                     }
                 }
                 Date lastKnownTime = getLastKnownTime(item);
@@ -118,6 +177,17 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
                             if (last != null && last.equals(item.getReadyEventId())) {
                                 lastKnownTime = null;
                             }
+                        }
+                    }
+
+                    if (lastKnownTime == null && dateTo != null) {
+                        Date now = new Date();
+                        if (dateTo.getTime() < now.getTime()) {
+                            long diff = dateTo.getTime() - item.getReadyTime().getTime();
+                            totalRunningTime += diff;
+                        } else {
+                            long diff = now.getTime() - item.getReadyTime().getTime();
+                            totalRunningTime += diff;
                         }
                     }
                 }
@@ -134,7 +204,6 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
             }
             result.add(controller);
         }
-        ;
         return result;
     }
 
@@ -147,19 +216,30 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
         return result;
     }
 
-    private void setPreviousEntry(MonitoringDBLayer dbLayer, DBItemHistoryController item, ControllerItem controller) {
+    private Map<String, Long> getPreviousControllers(MonitoringDBLayer dbLayer, Date dateFrom) throws SOSHibernateException {
+        Map<String, Long> result = new HashMap<String, Long>();
+        List<Object[]> l = dbLayer.getPreviousControllers(dateFrom);
+        for (Object[] o : l) {
+            result.put(o[1].toString(), (Long) o[0]);
+        }
+        return result;
+    }
+
+    private ControllerItemEntryItem setPreviousEntry(MonitoringDBLayer dbLayer, DBItemHistoryController item, ControllerItem controller) {
         try {
-            DBItemHistoryController previousItem = dbLayer.getPreviousController(item.getControllerId(), item.getReadyEventId());
-            if (previousItem != null) {
-                ControllerItemEntryItem previousEntry = new ControllerItemEntryItem();
-                previousEntry.setReadyTime(previousItem.getReadyTime());
-                previousEntry.setLastKnownTime(getLastKnownTime(previousItem));
-                previousEntry.setTotalRunningTime(previousEntry.getLastKnownTime().getTime() - previousEntry.getReadyTime().getTime());
-                controller.setPreviousEntry(previousEntry);
+            DBItemHistoryController pc = dbLayer.getPreviousController(item.getControllerId(), item.getReadyEventId());
+            if (pc != null) {
+                ControllerItemEntryItem prev = new ControllerItemEntryItem();
+                prev.setReadyTime(pc.getReadyTime());
+                prev.setLastKnownTime(getLastKnownTime(pc));
+                prev.setTotalRunningTime(prev.getLastKnownTime().getTime() - prev.getReadyTime().getTime());
+                controller.setPreviousEntry(prev);
+                return prev;
             }
         } catch (SOSHibernateException e1) {
 
         }
+        return null;
     }
 
     private Date getLastKnownTime(DBItemHistoryController item) {

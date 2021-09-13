@@ -171,7 +171,7 @@ public class InventoryDBLayerTest {
 
     @Ignore
     @Test
-    public void testDocumentationUsed() {
+    public void testGetUsedJobsByDocName() {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -180,9 +180,9 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            String docName = "RenameFileJob";
+            String val = "RenameFileJob";
 
-            List<DBItemInventoryConfiguration> result = dbLayer.getUsedJobsByDocName(docName);
+            List<DBItemInventoryConfiguration> result = dbLayer.getUsedJobsByDocName(val);
             for (DBItemInventoryConfiguration entry : result) {
                 LOGGER.info(SOSString.toString(entry));
             }
@@ -204,6 +204,76 @@ public class InventoryDBLayerTest {
         }
     }
 
+    @Ignore
+    @Test
+    public void testGetUsedObjectsByDocName() {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            String val = "RenameFileJob";
+
+            List<DBItemInventoryConfiguration> result = dbLayer.getUsedObjectsByDocName(val);
+            for (DBItemInventoryConfiguration entry : result) {
+                LOGGER.info(SOSString.toString(entry));
+            }
+            LOGGER.info("SIZE=" + result.size());
+            session.commit();
+        } catch (Exception e) {
+            try {
+                session.rollback();
+            } catch (Throwable ex) {
+            }
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testGetUsedWorkflowsByJobResource() {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            factory = createFactory();
+            session = factory.openStatelessSession();
+            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
+            session.beginTransaction();
+
+            String val = "mail";
+
+            List<DBItemInventoryConfiguration> result = dbLayer.getUsedWorkflowsByJobResource(val);
+            for (DBItemInventoryConfiguration entry : result) {
+                LOGGER.info(SOSString.toString(entry));
+            }
+            LOGGER.info("SIZE=" + result.size());
+            session.commit();
+        } catch (Exception e) {
+            try {
+                session.rollback();
+            } catch (Throwable ex) {
+            }
+            e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+    
     private SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getJocClassMapping());
