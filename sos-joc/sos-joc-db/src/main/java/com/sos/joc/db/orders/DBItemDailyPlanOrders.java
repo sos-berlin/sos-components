@@ -108,9 +108,6 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
-   
-    @Transient
-    private boolean lastInList=false;
 
     public DBItemDailyPlanOrders() {
 
@@ -328,16 +325,6 @@ public class DBItemDailyPlanOrders extends DBItem {
         LOGGER.debug("timeZone: " + timeZone);
         LOGGER.debug("dailyPlanDate:" + format.format(plannedStart));
         return format.format(plannedStart);
-    }
-
-    
-    public boolean isLastInList() {
-        return lastInList;
-    }
-
-    
-    public void setLastInList(boolean lastInList) {
-        this.lastInList = lastInList;
     }
 
 }
