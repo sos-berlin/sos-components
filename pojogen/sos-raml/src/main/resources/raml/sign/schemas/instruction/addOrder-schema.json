@@ -1,0 +1,35 @@
+{
+  "title": "AddOrder",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.AddOrder",
+  "type": "object",
+  "required": [
+  	"orderId",
+  	"workflowPath"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'AdOrder'",
+  "propertyOrder": [
+  	"TYPE",
+    "orderId",
+    "workflowPath"
+  ],
+  "properties": {
+  	"orderId" : {
+  		"type" : "string"
+  	},
+  	"workflowPath" : {
+  		"type" : "string"
+  	},
+    "arguments": {
+    	"$ref": "../../../inventory/schemas/common/variables-schema.json"
+    },
+    "deleteWhenTerminated" : {
+    	"type" : "boolean"
+	}
+  },
+  "additionalProperties": false
+}
