@@ -920,10 +920,26 @@ public class JocInventory {
                     int i = items.indexOf(fileOrderSource);
                     if (i != -1) {
                         items.get(i).setContent(fileOrderSource.getContent());
-                        items.get(i).setReleased(false);
+                        items.get(i).setDeployed(false);
                     } else {
                         JocInventory.updateConfiguration(dbLayer, fileOrderSource);
                         events.add(fileOrderSource.getFolder());
+                    }
+                }
+            }
+            List<DBItemInventoryConfiguration> addOrderWorkflows = dbLayer.getUsedWorkflowsByAddOrdersWorkflowName(config.getName());
+            if (addOrderWorkflows != null && !addOrderWorkflows.isEmpty()) {
+                for (DBItemInventoryConfiguration addOrderWorkflow : addOrderWorkflows) {
+                    addOrderWorkflow.setContent(addOrderWorkflow.getContent().replaceAll("(\"workflowName\"\\s*:\\s*\")" + config.getName() + "\"",
+                            "$1" + newName + "\""));
+                    addOrderWorkflow.setDeployed(false);
+                    int i = items.indexOf(addOrderWorkflow);
+                    if (i != -1) {
+                        items.get(i).setContent(addOrderWorkflow.getContent());
+                        items.get(i).setDeployed(false);
+                    } else {
+                        JocInventory.updateConfiguration(dbLayer, addOrderWorkflow);
+                        events.add(addOrderWorkflow.getFolder());
                     }
                 }
             }

@@ -205,6 +205,11 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                     .entrySet()) {
                                 json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
+                            // addOrder Instructions
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
+                                    .entrySet()) {
+                                json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                            }
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames.size() > 0) {
                                 Workflow w = Globals.objectMapper.readValue(json, Workflow.class);
