@@ -52,6 +52,11 @@ public class AddOrder
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     private Boolean deleteWhenTerminated;
 
@@ -72,8 +77,8 @@ public class AddOrder
      * 
      * @param positionString
      */
-    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated) {
-        super();
+    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, List<Object> position, String positionString) {
+        super(, position, positionString);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
         this.arguments = arguments;
@@ -142,11 +147,21 @@ public class AddOrder
         this.arguments = arguments;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     public Boolean getDeleteWhenTerminated() {
         return deleteWhenTerminated;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     public void setDeleteWhenTerminated(Boolean deleteWhenTerminated) {
         this.deleteWhenTerminated = deleteWhenTerminated;

@@ -52,6 +52,11 @@ public class AddOrder
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     private Boolean deleteWhenTerminated;
 
@@ -140,11 +145,21 @@ public class AddOrder
         this.arguments = arguments;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     public Boolean getDeleteWhenTerminated() {
         return deleteWhenTerminated;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deleteWhenTerminated")
     public void setDeleteWhenTerminated(Boolean deleteWhenTerminated) {
         this.deleteWhenTerminated = deleteWhenTerminated;

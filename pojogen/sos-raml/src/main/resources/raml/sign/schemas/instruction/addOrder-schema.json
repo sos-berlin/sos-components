@@ -5,7 +5,8 @@
   "type": "object",
   "required": [
   	"orderId",
-  	"workflowPath"
+  	"workflowPath",
+  	"deleteWhenTerminated"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"
