@@ -78,7 +78,7 @@ public class AddOrder
      * @param positionString
      */
     public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, List<Object> position, String positionString) {
-        super(, position, positionString);
+        super();
         this.orderId = orderId;
         this.workflowPath = workflowPath;
         this.arguments = arguments;
