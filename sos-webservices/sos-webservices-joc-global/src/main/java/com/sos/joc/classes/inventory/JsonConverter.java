@@ -140,7 +140,7 @@ public class JsonConverter {
     }
     
     private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#I$epochSecond-%s\"";
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-%s\"";
         String timeZone = w.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
