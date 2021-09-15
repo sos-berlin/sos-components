@@ -74,7 +74,8 @@ public class InventorySearchDBLayerTest {
 
             RequestSearchAdvancedItem advanced = new RequestSearchAdvancedItem();
             // advanced.setJobCountFrom(Integer.valueOf(2));
-            advanced.setJobName("xx");
+            advanced.setJobName("Job");
+            advanced.setJobNameExactMatch(true);
             advanced.setAgentName(null);
             // advanced.setJobCriticality(JobCriticality.NORMAL);
             advanced.setJobResources(null);
@@ -89,7 +90,9 @@ public class InventorySearchDBLayerTest {
             InventorySearchDBLayer dbLayer = new InventorySearchDBLayer(session);
             session.beginTransaction();
 
-            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.SCHEDULE, search, folders, advanced);
+            List<InventorySearchItem> items = dbLayer.getAdvancedSearchInventoryConfigurations(ConfigurationType.WORKFLOW, search, folders, advanced);
+            // List<InventorySearchItem> items = dbLayer.getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType.WORKFLOW, search, folders,
+            // advanced,"js7.x");
             LOGGER.info("RESULT=" + items.size());
             for (InventorySearchItem item : items) {
                 LOGGER.info(SOSString.toString(item));
@@ -102,7 +105,6 @@ public class InventorySearchDBLayerTest {
             } catch (Throwable ex) {
             }
             e.printStackTrace();
-            // throw e;
         } finally {
             if (session != null) {
                 session.close();

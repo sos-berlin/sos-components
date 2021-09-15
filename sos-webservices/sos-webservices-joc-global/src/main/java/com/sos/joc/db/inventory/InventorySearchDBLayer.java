@@ -13,6 +13,10 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.JobCriticality;
+import com.sos.inventory.model.workflow.Workflow;
+import com.sos.joc.Globals;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher;
+import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventorySearchItem;
 import com.sos.joc.model.inventory.common.ConfigurationType;
@@ -78,7 +82,7 @@ public class InventorySearchDBLayer extends DBLayer {
             foldersQueryParameters(query, folders);
         }
         if (tmpShowLog) {
-            LOGGER.info("[getInventoryConfigurations]" + getSession().getSQLString(query));
+            LOGGER.info("[getBasicSearchInventoryConfigurations]" + getSession().getSQLString(query));
         }
         return getSession().getResultList(query);
     }
@@ -145,9 +149,27 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("controllerId", controllerId);
         }
         if (tmpShowLog) {
-            LOGGER.info("[getDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
+            LOGGER.info("[getBasicSearchDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
         }
         return getSession().getResultList(query);
+    }
+
+    public String getInventoryConfigurationsContent(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+        hql.append("where id=:id");
+
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        return query.getSingleResult();
+    }
+
+    public String getDeployedConfigurationsContent(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select content from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
+        hql.append("where inventoryConfigurationId=:id");
+
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("id", id);
+        return query.getSingleResult();
     }
 
     // TODO merge all functions ...
@@ -204,6 +226,8 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobCriticality = null;
         String agentName = null;
         String jobName = null;
+        boolean jobNameExactMatch = advanced.getJobNameExactMatch() != null && advanced.getJobNameExactMatch();
+        String jobNameForExactMatch = SOSString.isEmpty(advanced.getJobName()) ? "" : advanced.getJobName();
         String jobResources = null;
         String jobScript = null;
         String noticeBoards = null;
@@ -212,9 +236,11 @@ public class InventorySearchDBLayer extends DBLayer {
         String argumentValue = null;
         String envName = null;
         String envValue = null;
+        boolean isWorkflowType = false;
 
         switch (type) {
         case WORKFLOW:
+            isWorkflowType = true;
             if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
                 hql.append("and mt.name in (");
                 hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.jsonContent", "$.workflowName")).append(" ");
@@ -248,10 +274,15 @@ public class InventorySearchDBLayer extends DBLayer {
 
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            if (jobNameExactMatch) {
+                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+            } else {
+                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
+                    "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -324,10 +355,15 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            if (jobNameExactMatch) {
+                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+            } else {
+                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
+                    "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -369,7 +405,11 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("agentName", '%' + agentName.toLowerCase() + '%');
         }
         if (jobName != null) {
-            query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
+            if (jobNameExactMatch) {
+                query.setParameter("jobName", '%' + jobName + '%');
+            } else {
+                query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
+            }
         }
         if (jobCriticality != null) {
             query.setParameter("jobCriticality", '%' + jobCriticality.toLowerCase() + '%');
@@ -381,7 +421,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
         if (noticeBoards != null) {
-            query.setParameter("boards", '%' + noticeBoards.toLowerCase() + '%');
+            query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');
@@ -399,9 +439,44 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
         }
         if (tmpShowLog) {
-            LOGGER.info("[getAdvancedInventoryConfigurations]" + getSession().getSQLString(query));
+            LOGGER.info("[getAdvancedSearchInventoryConfigurations]" + getSession().getSQLString(query));
         }
-        return getSession().getResultList(query);
+        if (isWorkflowType && jobNameExactMatch) {
+            return checkJobNameExactMatch(getSession().getResultList(query), false, jobNameForExactMatch);
+        } else {
+            return getSession().getResultList(query);
+        }
+    }
+
+    // extra check because possible database case insensitivity
+    private List<InventorySearchItem> checkJobNameExactMatch(List<InventorySearchItem> workflows, boolean deployedOrReleased, String jobName)
+            throws SOSHibernateException {
+        if (workflows == null || workflows.size() == 0) {
+            return workflows;
+        }
+        List<InventorySearchItem> result = new ArrayList<>();
+        for (InventorySearchItem item : workflows) {
+            String content = null;
+            if (deployedOrReleased) {
+                content = getDeployedConfigurationsContent(item.getId());
+            } else {
+                content = getInventoryConfigurationsContent(item.getId());
+            }
+            if (!SOSString.isEmpty(content)) {
+                Workflow w;
+                try {
+                    w = (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
+                    WorkflowSearcher ws = new WorkflowSearcher(w);
+                    WorkflowJob job = ws.getJob(jobName);
+                    if (job != null) {
+                        result.add(item);
+                    }
+                } catch (Throwable e) {
+                    LOGGER.error(String.format("[workflow][id=%s]%s", item.getId(), e.toString()), e);
+                }
+            }
+        }
+        return result;
     }
 
     public List<InventorySearchItem> getAdvancedSearchDeployedOrReleasedConfigurations(ConfigurationType type, String search, List<String> folders,
@@ -471,6 +546,8 @@ public class InventorySearchDBLayer extends DBLayer {
         String jobCriticality = null;
         String agentName = null;
         String jobName = null;
+        boolean jobNameExactMatch = advanced.getJobNameExactMatch() != null && advanced.getJobNameExactMatch();
+        String jobNameForExactMatch = SOSString.isEmpty(advanced.getJobName()) ? "" : advanced.getJobName();
         String jobResources = null;
         String jobScript = null;
         String noticeBoards = null;
@@ -479,9 +556,11 @@ public class InventorySearchDBLayer extends DBLayer {
         String envValue = null;
         String argumentName = null;
         String argumentValue = null;
+        boolean isWorkflowType = false;
 
         switch (type) {
         case WORKFLOW:
+            isWorkflowType = true;
             if (!SOSString.isEmpty(advanced.getFileOrderSource())) {
                 hql.append("and mt.name in (");
                 hql.append("select ").append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "subt.content", "$.workflowName")).append(" ");
@@ -518,10 +597,15 @@ public class InventorySearchDBLayer extends DBLayer {
 
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            if (jobNameExactMatch) {
+                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+            } else {
+                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
+                    "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -600,10 +684,15 @@ public class InventorySearchDBLayer extends DBLayer {
             }
             jobCriticality = setHQLAndGetParameterValue(hql, advanced.getJobCriticality());
             agentName = setHQLAndGetParameterValue(hql, "and", "agentName", advanced.getAgentName(), "sw.jobs", "$.agentIds");
-            jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            if (jobNameExactMatch) {
+                jobName = setHQLAndGetParameterValueExactMatch(hql, "and", "jobName", jobNameForExactMatch, "sw.jobs", "$.names");
+            } else {
+                jobName = setHQLAndGetParameterValue(hql, "and", "jobName", advanced.getJobName(), "sw.jobs", "$.names");
+            }
             jobResources = setHQLAndGetParameterValue(hql, "and", "jobResources", advanced.getJobResources(), "sw.jobs", "$.jobResources");
             jobScript = setHQLAndGetParameterValue(hql, "and", "jobScript", advanced.getJobScript(), "sw.jobsScripts", "$.scripts");
-            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions", "$.noticeBoardNames");
+            noticeBoards = setHQLAndGetParameterValue(hql, "and", "noticeBoards", advanced.getNoticeBoards(), "sw.instructions",
+                    "$.noticeBoardNames");
             lock = setHQLAndGetParameterValue(hql, "and", "lock", advanced.getLock(), "sw.instructions", "$.lockIds");
             envName = setHQLAndGetParameterValue(hql, "and", "envName", advanced.getEnvName(), "sw.args", "$.jobEnvNames");
             envValue = setHQLAndGetParameterValue(hql, "and", "envValue", advanced.getEnvValue(), "sw.args", "$.jobEnvValues");
@@ -646,7 +735,11 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("agentName", '%' + agentName.toLowerCase() + '%');
         }
         if (jobName != null) {
-            query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
+            if (jobNameExactMatch) {
+                query.setParameter("jobName", '%' + jobName + '%');
+            } else {
+                query.setParameter("jobName", '%' + jobName.toLowerCase() + '%');
+            }
         }
         if (jobCriticality != null) {
             query.setParameter("jobCriticality", '%' + jobCriticality.toLowerCase() + '%');
@@ -658,7 +751,7 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("jobScript", '%' + jobScript.toLowerCase() + '%');
         }
         if (noticeBoards != null) {
-            query.setParameter("boards", '%' + noticeBoards.toLowerCase() + '%');
+            query.setParameter("noticeBoards", '%' + noticeBoards.toLowerCase() + '%');
         }
         if (lock != null) {
             query.setParameter("lock", '%' + lock.toLowerCase() + '%');
@@ -676,9 +769,13 @@ public class InventorySearchDBLayer extends DBLayer {
             query.setParameter("argumentValue", '%' + argumentValue.toLowerCase() + '%');
         }
         if (tmpShowLog) {
-            LOGGER.info("[getAdvancedInventoryConfigurations]" + getSession().getSQLString(query));
+            LOGGER.info("[getAdvancedSearchDeployedOrReleasedConfigurations]" + getSession().getSQLString(query));
         }
-        return getSession().getResultList(query);
+        if (isWorkflowType && jobNameExactMatch) {
+            return checkJobNameExactMatch(getSession().getResultList(query), true, jobNameForExactMatch);
+        } else {
+            return getSession().getResultList(query);
+        }
     }
 
     private String setHQLAndGetParameterValue(StringBuilder hql, JobCriticality criticality) {
@@ -717,6 +814,26 @@ public class InventorySearchDBLayer extends DBLayer {
             setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.args", "$.jobArgValues");
             setHQLAndGetParameterValue(hql, "or", "argumentValue", paramValue, "sw.instructionsArgs", "$.jobArgValues");
             hql.append(")");
+        }
+        return result;
+    }
+
+    private String setHQLAndGetParameterValueExactMatch(StringBuilder hql, String operator, String paramName, String paramValue, String columnName,
+            String jsonAttribute) {
+        String result = null;
+        if (!SOSString.isEmpty(paramValue)) {
+            String jsonFunc = SOSHibernateJsonValue.getFunction(ReturnType.JSON, columnName, jsonAttribute);
+            // hql.append("and ").append(SOSHibernateRegexp.getFunction(jsonFunc, ":jobName")).append(" ");
+            if (!SOSString.isEmpty(operator)) {
+                hql.append(operator).append(" ");// and,or ..
+            }
+            hql.append(jsonFunc).append(" ");
+            if (paramValue.equals(FIND_ALL)) {
+                hql.append("is not null ");
+            } else {
+                result = "\"" + paramValue + "\"";
+                hql.append("like :").append(paramName).append(" ");
+            }
         }
         return result;
     }

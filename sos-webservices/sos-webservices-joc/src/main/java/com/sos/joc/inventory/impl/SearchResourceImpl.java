@@ -223,6 +223,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setJobCountTo(in.getAdvanced().getJobCountTo());
         item.setJobCriticality(in.getAdvanced().getJobCriticality());
         item.setJobName(in.getAdvanced().getJobName());
+        item.setJobNameExactMatch(in.getAdvanced().getJobNameExactMatch());
         item.setJobResources(in.getAdvanced().getJobResources());
         item.setLock(in.getAdvanced().getLock());
         item.setSchedule(in.getAdvanced().getSchedule());

@@ -75,7 +75,7 @@ public class WorkflowSearcherTest {
         LOGGER.info("[getJobsByScript(job_[0-9]? script.*)][size] " + jobs.size());
         for (WorkflowJob j : jobs) {
             LOGGER.info("  JOB: " + j.getName());
-            //LOGGER.info("           " + j.getJob().getExecutable().getScript());
+            // LOGGER.info(" " + j.getJob().getExecutable().getScript());
         }
 
         jobs = ws.getJobsByArgument("xxx");
@@ -145,6 +145,20 @@ public class WorkflowSearcherTest {
         values = ws.getJobArguments("job_1", ".*");
         LOGGER.info(" ");
         LOGGER.info("[getJobArguments(job_1,.*)] " + values);
+    }
+
+    @Ignore
+    @Test
+    public void testJob() throws Exception {
+        Workflow w = (Workflow) Globals.objectMapper.readValue(getFileContent(WORKFLOW_FILE), Workflow.class);
+        WorkflowSearcher ws = new WorkflowSearcher(w);
+
+        WorkflowJob job = ws.getJob("Job_1");
+        LOGGER.info(" ");
+        LOGGER.info("[getJob(job_1)] " + SOSString.toString(job));
+
+        LOGGER.info("[matches]" + ("job_1".matches("Job_1")));
+        LOGGER.info("[matches]" + ("job_1".matches("(?i)Job_1")));// case insensitive
     }
 
     @Ignore
