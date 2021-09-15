@@ -189,7 +189,7 @@ public class InventoryDBLayer extends DBLayer {
         }
         return getSession().getSingleResult(query);
     }
-    
+
     public int deleteContraintViolatedReleasedConfigurations(Long id, String name, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
@@ -816,20 +816,46 @@ public class InventoryDBLayer extends DBLayer {
 
     public DBItemSearchWorkflow getSearchWorkflow(Long inventoryId, String hash) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS);
-            hql.append(" where inventoryConfigurationId=:inventoryId");
-            if (SOSString.isEmpty(hash)) {// draft
-                hql.append(" and deployed=false");
+            boolean isDraft = SOSString.isEmpty(hash);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" ");
+            hql.append("where inventoryConfigurationId=:inventoryId ");
+            if (isDraft) {
+                hql.append("and deployed=false ");
             } else {
-                hql.append(" and deployed=true");
-                hql.append(" and contentHash=:hash");
+                hql.append("and deployed=true ");
+                hql.append("and contentHash=:hash ");
             }
             Query<DBItemSearchWorkflow> query = getSession().createQuery(hql.toString());
             query.setParameter("inventoryId", inventoryId);
-            if (!SOSString.isEmpty(hash)) {
+            if (isDraft) {
+                // workaround for multiple draft entries - only 1 is allowed
+                List<DBItemSearchWorkflow> result = getSession().getResultList(query);
+                if (result == null || result.size() == 0) {
+                    return null;
+                }
+                if (result.size() == 1) {
+                    return result.get(0);
+                } else {
+                    List<DBItemSearchWorkflow> sorted = result.stream().sorted(Comparator.comparing(DBItemSearchWorkflow::getId)).collect(Collectors
+                            .toList());
+                    DBItemSearchWorkflow last = sorted.get(sorted.size() - 1);
+                    for (DBItemSearchWorkflow w : result) {
+                        if (!w.getId().equals(last.getId())) {
+                            getSession().delete(w);
+                        }
+                    }
+                    return last;
+                }
+
+            } else {
                 query.setParameter("hash", hash);
+                // return getSession().getSingleResult(query);
+                List<DBItemSearchWorkflow> result = getSession().getResultList(query);
+                if (result == null || result.size() == 0) {
+                    return null;
+                }
+                return result.get(0);
             }
-            return getSession().getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
