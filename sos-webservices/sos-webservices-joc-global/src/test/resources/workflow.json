@@ -79,7 +79,7 @@
 		"job_1": {
 			"agentId": "agent-1",
 			"executable": {
-				"TYPE": "ExecutableScript",
+				"TYPE": "ShellScriptExecutable",
 				"script": "job_1 script"
 			},
 			"defaultArguments": {
@@ -97,7 +97,7 @@
 		"job_2": {
 			"agentId": "agent-1",
 			"executable": {
-				"TYPE": "ExecutableScript",
+				"TYPE": "ShellScriptExecutable",
 				"script": "job_2 script"
 			},
 			"defaultArguments": {
@@ -115,7 +115,7 @@
 		"job_2_1_unused": {
 			"agentId": "agent-1",
 			"executable": {
-				"TYPE": "ExecutableScript",
+				"TYPE": "ShellScriptExecutable",
 				"script": "job_2 script"
 			},
 			"returnCodeMeaning": {
@@ -128,7 +128,7 @@
 		"job_3_unused": {
 			"agentId": "agent-2",
 			"executable": {
-				"TYPE": "ExecutableScript",
+				"TYPE": "ShellScriptExecutable",
 				"script": "job_3 script"
 			},
 			"returnCodeMeaning": {
