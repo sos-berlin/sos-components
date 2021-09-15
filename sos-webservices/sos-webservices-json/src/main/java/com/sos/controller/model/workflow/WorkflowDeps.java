@@ -68,8 +68,8 @@ public class WorkflowDeps
      * @param state
      * @param documentationName
      */
-    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, DeployType tYPE, String version, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs, String timeZone) {
-        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, tYPE, version, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs, timeZone);
+    public WorkflowDeps(BoardWorkflows expectedNoticeBoards, BoardWorkflows postNoticeBoards, String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, DeployType tYPE, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(path, isCurrentVersion, versionDate, state, fileOrderSources, forkListVariables, hasExpectedNoticeBoards, hasPostNoticeBoards, tYPE, version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.expectedNoticeBoards = expectedNoticeBoards;
         this.postNoticeBoards = postNoticeBoards;
     }

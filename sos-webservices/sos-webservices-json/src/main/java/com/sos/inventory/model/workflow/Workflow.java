@@ -28,13 +28,13 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "version",
     "versionId",
+    "timeZone",
+    "title",
+    "documentationName",
     "orderPreparation",
     "jobResourceNames",
     "instructions",
-    "title",
-    "documentationName",
-    "jobs",
-    "timeZone"
+    "jobs"
 })
 public class Workflow implements IInventoryObject, IConfigurationObject, IDeployObject
 {
@@ -64,6 +64,24 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      */
     @JsonProperty("versionId")
     private String versionId;
+    @JsonProperty("timeZone")
+    private String timeZone = "Etc/UTC";
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    private String title;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationName")
+    private String documentationName;
     /**
      * order or job requirements
      * <p>
@@ -88,22 +106,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     @JsonProperty("instructions")
     private List<Instruction> instructions = null;
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    private String title;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationName")
-    private String documentationName;
-    /**
      * workflow jobs
      * <p>
      * 
@@ -112,8 +114,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      */
     @JsonProperty("jobs")
     private Jobs jobs;
-    @JsonProperty("timeZone")
-    private String timeZone = "Etc/UTC";
 
     /**
      * No args constructor for use in serialization
@@ -130,22 +130,22 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
      * @param jobs
      * @param timeZone
      * @param documentationName
+     * 
      * @param title
      * @param version
      * @param orderPreparation
      */
-    public Workflow(String version, String versionId, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions,
-            String title, String documentationName, Jobs jobs, String timeZone) {
+    public Workflow(String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
         super();
         this.version = version;
         this.versionId = versionId;
+        this.timeZone = timeZone;
+        this.title = title;
+        this.documentationName = documentationName;
         this.orderPreparation = orderPreparation;
         this.jobResourceNames = jobResourceNames;
         this.instructions = instructions;
-        this.title = title;
-        this.documentationName = documentationName;
         this.jobs = jobs;
-        this.timeZone = timeZone;
     }
 
     /**
@@ -203,6 +203,60 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
         this.versionId = versionId;
     }
 
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public String getTitle() {
+        return title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("title")
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationName")
+    public String getDocumentationName() {
+        return documentationName;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("documentationName")
+    public void setDocumentationName(String documentationName) {
+        this.documentationName = documentationName;
+    }
+
     /**
      * order or job requirements
      * <p>
@@ -256,50 +310,6 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
     }
 
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationName")
-    public String getDocumentationName() {
-        return documentationName;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("documentationName")
-    public void setDocumentationName(String documentationName) {
-        this.documentationName = documentationName;
-    }
-
-    /**
      * workflow jobs
      * <p>
      * 
@@ -323,19 +333,9 @@ public class Workflow implements IInventoryObject, IConfigurationObject, IDeploy
         this.jobs = jobs;
     }
 
-    @JsonProperty("timeZone")
-    public String getTimeZone() {
-        return timeZone;
-    }
-
-    @JsonProperty("timeZone")
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("title", title).append("documentationName", documentationName).append("jobs", jobs).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("versionId", versionId).append("timeZone", timeZone).append("title", title).append("documentationName", documentationName).append("orderPreparation", orderPreparation).append("jobResourceNames", jobResourceNames).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override

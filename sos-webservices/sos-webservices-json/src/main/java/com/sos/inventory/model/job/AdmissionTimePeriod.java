@@ -24,21 +24,28 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class AdmissionTimePeriod {
 
+    /**
+     * only yet 'WeekdayPeriod'
+     * 
+     */
     @JsonProperty("TYPE")
+    @JsonPropertyDescription("only yet 'WeekdayPeriod'")
     private String tYPE;
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("secondOfWeek")
-    @JsonPropertyDescription("in seconds")
     private Integer secondOfWeek;
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("duration")
-    @JsonPropertyDescription("in seconds")
     private Integer duration;
 
     /**
@@ -61,18 +68,28 @@ public class AdmissionTimePeriod {
         this.duration = duration;
     }
 
+    /**
+     * only yet 'WeekdayPeriod'
+     * 
+     */
     @JsonProperty("TYPE")
     public String getTYPE() {
         return tYPE;
     }
 
+    /**
+     * only yet 'WeekdayPeriod'
+     * 
+     */
     @JsonProperty("TYPE")
     public void setTYPE(String tYPE) {
         this.tYPE = tYPE;
     }
 
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("secondOfWeek")
@@ -81,7 +98,9 @@ public class AdmissionTimePeriod {
     }
 
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("secondOfWeek")
@@ -90,7 +109,9 @@ public class AdmissionTimePeriod {
     }
 
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("duration")
@@ -99,7 +120,9 @@ public class AdmissionTimePeriod {
     }
 
     /**
-     * in seconds
+     * non negative integer
+     * <p>
+     * 
      * 
      */
     @JsonProperty("duration")

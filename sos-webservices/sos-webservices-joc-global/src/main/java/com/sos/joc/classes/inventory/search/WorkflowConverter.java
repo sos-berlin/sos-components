@@ -17,6 +17,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
@@ -319,6 +320,7 @@ public class WorkflowConverter {
         private List<String> lockIds;
         private Set<String> postNotices;
         private Set<String> expectNotices;
+        private Set<String> addOrders;
         private Map<String, Integer> locks;
 
         private List<String> jobArgNames;
@@ -334,6 +336,7 @@ public class WorkflowConverter {
             locks = new HashMap<String, Integer>();
             postNotices = new HashSet<String>();
             expectNotices = new HashSet<String>();
+            addOrders = new HashSet<String>();
 
             jobArgNames = new ArrayList<String>();
             jobArgValues = new ArrayList<String>();
@@ -343,6 +346,7 @@ public class WorkflowConverter {
             handleJobInstructions(instructions);
             handleLockInstructions(instructions);
             handleNoticeInstructions(instructions);
+            handleAddOrderInstructions(instructions);
             removeDuplicates();
             toJson();
         }
@@ -360,6 +364,7 @@ public class WorkflowConverter {
             jsonAddStringValues(builder, "postNotices", postNotices);
             jsonAddStringValues(builder, "expectNotices", expectNotices);
             jsonAddStringValues(builder, "noticeBoardNames", getNoticeBoardNames());
+            jsonAddStringValues(builder, "addOrders", addOrders);
             if (locks.size() > 0) {
                 builder.add("locks", getJsonObject(locks));
             }
@@ -407,6 +412,10 @@ public class WorkflowConverter {
 
         public Set<String> getNoticeBoardNames() {
             return Stream.of(postNotices, expectNotices).flatMap(n -> n.stream()).collect(Collectors.toSet());
+        }
+
+        public Set<String> getAddOrders() {
+            return addOrders;
         }
 
         public List<String> getJobArgNames() {
@@ -482,6 +491,20 @@ public class WorkflowConverter {
                 for (WorkflowInstruction<ExpectNotice> notice : eNotices) {
                     if (!SOSString.isEmpty(notice.getInstruction().getNoticeBoardName())) {
                         expectNotices.add(notice.getInstruction().getNoticeBoardName());
+                    }
+                }
+            }
+        }
+        
+        private void handleAddOrderInstructions(List<Instruction> instructions) {
+            if (instructions == null) {
+                return;
+            }
+            List<WorkflowInstruction<AddOrder>> aOrders = searcher.getAddOrderInstructions();
+            if (aOrders != null) {
+                for (WorkflowInstruction<AddOrder> aOrder : aOrders) {
+                    if (!SOSString.isEmpty(aOrder.getInstruction().getWorkflowName())) {
+                        addOrders.add(aOrder.getInstruction().getWorkflowName());
                     }
                 }
             }

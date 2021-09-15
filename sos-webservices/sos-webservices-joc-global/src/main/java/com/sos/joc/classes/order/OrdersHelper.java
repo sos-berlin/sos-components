@@ -26,6 +26,8 @@ import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.common.Variables;
+import com.sos.inventory.model.workflow.ListParameter;
+import com.sos.inventory.model.workflow.ListParameters;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
@@ -383,6 +385,7 @@ public class OrdersHelper {
         return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState));
     }
 
+    @SuppressWarnings("unchecked")
     public static Variables checkArguments(Variables arguments, Requirements orderRequirements) throws JocMissingRequiredParameterException,
             JocConfigurationException {
         final Map<String, Parameter> params = (orderRequirements != null && orderRequirements.getParameters() != null) ? orderRequirements
@@ -398,9 +401,9 @@ public class OrdersHelper {
             Set<String> keys = args.keySet().stream().filter(arg -> !params.containsKey(arg)).collect(Collectors.toSet());
             if (!keys.isEmpty()) {
                 if (keys.size() == 1) {
-                    throw new JocMissingRequiredParameterException("Variable " + keys.iterator().next() + " isn't declared in the workflow");
+                    throw new JocMissingRequiredParameterException("Variable '" + keys.iterator().next() + "' isn't declared in the workflow");
                 }
-                throw new JocMissingRequiredParameterException("Variables " + keys.toString() + " aren't declared in the workflow");
+                throw new JocMissingRequiredParameterException("Variables '" + keys.toString() + "' aren't declared in the workflow");
             }
         }
 
@@ -458,9 +461,9 @@ public class OrdersHelper {
                 case List:
                     if ((curArg instanceof List) == false) {
                         invalid = true;
-
-                        // TODO check list params types
-
+                    }
+                    if (!invalid) {
+                        checkListArguments((List<Map<String, Object>>) curArg, param.getValue().getListParameters(), param.getKey());
                     }
                     break;
                 }
@@ -471,6 +474,77 @@ public class OrdersHelper {
             }
         }
         return arguments;
+    }
+    
+    private static List<Map<String, Object>> checkListArguments(List<Map<String, Object>> listVariables, ListParameters listParameters,
+            String listKey) throws JocMissingRequiredParameterException, JocConfigurationException {
+        boolean invalid = false;
+        final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
+        for (Map<String, Object> listVariable : listVariables) {
+            Set<String> listKeys = listVariable.keySet().stream().filter(arg -> !listParams.containsKey(arg)).collect(Collectors.toSet());
+            if (!listKeys.isEmpty()) {
+                if (listKeys.size() == 1) {
+                    throw new JocMissingRequiredParameterException("Variable '" + listKeys.iterator().next() + "' of the list variable '" + listKey
+                            + "' isn't declared in the workflow");
+                }
+                throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the list variable '" + listKey
+                        + "' aren't declared in the workflow");
+            }
+            for (Map.Entry<String, ListParameter> p : listParams.entrySet()) {
+                if (!listVariable.containsKey(p.getKey())) { // required
+                    throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
+                            + "' is missing but required");
+                }
+
+                Object curListArg = listVariable.get(p.getKey());
+                switch (p.getValue().getType()) {
+                case String:
+                    if ((curListArg instanceof String) == false) {
+                        invalid = true;
+                    } else {
+                        String strListArg = (String) curListArg;
+                        if ((strListArg == null || strListArg.isEmpty())) {
+                            throw new JocMissingRequiredParameterException("Variable '" + p.getKey() + "' of list variable '" + listKey
+                                    + "' is empty but required");
+                        }
+                    }
+                    break;
+                case Boolean:
+                    if ((curListArg instanceof Boolean) == false) {
+                        if (curListArg instanceof String) {
+                            String strArg = (String) curListArg;
+                            if ("true".equals(strArg)) {
+                                listVariable.put(p.getKey(), Boolean.TRUE);
+                            } else if ("false".equals(strArg)) {
+                                listVariable.put(p.getKey(), Boolean.FALSE);
+                            } else {
+                                invalid = true;
+                            }
+                        } else {
+                            invalid = true;
+                        }
+                    }
+                    break;
+                case Number:
+                    if (curListArg instanceof Boolean) {
+                        invalid = true;
+                    } else if (curListArg instanceof String) {
+                        try {
+                            BigDecimal number = new BigDecimal((String) curListArg);
+                            listVariable.put(p.getKey(), number);
+                        } catch (NumberFormatException e) {
+                            invalid = true;
+                        }
+                    }
+                    break;
+                }
+                if (invalid) {
+                    throw new JocConfigurationException(String.format("Variable '%s' of list variable '%s': Wrong data type %s (%s is expected).", p
+                            .getKey(), listKey, curListArg.getClass().getSimpleName(), p.getValue().getType().value()));
+                }
+            }
+        }
+        return listVariables;
     }
 
     public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,

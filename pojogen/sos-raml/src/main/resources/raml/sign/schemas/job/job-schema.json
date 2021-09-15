@@ -23,6 +23,9 @@
 	    { "$ref": "../../../inventory/schemas/job/executableJava-schema.json" }
 	  ]
 	},
+	"admissionTimeScheme" : {
+		"$ref": "../../../inventory/schemas/job/admissionTimeScheme-schema.json" 
+	},
     "returnCodeMeaning": {
       "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
     },

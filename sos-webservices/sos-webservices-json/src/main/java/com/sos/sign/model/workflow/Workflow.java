@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "TYPE",
     "path",
     "versionId",
+    "timeZone",
     "orderPreparation",
     "jobResourcePaths",
     "instructions",
@@ -60,6 +61,8 @@ public class Workflow implements IDeployObject
      */
     @JsonProperty("versionId")
     private String versionId;
+    @JsonProperty("timeZone")
+    private String timeZone = "Etc/UTC";
     /**
      * order or job requirements
      * <p>
@@ -107,14 +110,16 @@ public class Workflow implements IDeployObject
      * @param versionId
      * @param jobResourcePaths
      * @param jobs
+     * @param timeZone
      * @param tYPE
      * @param orderPreparation
      */
-    public Workflow(DeployType tYPE, String path, String versionId, OrderPreparation orderPreparation, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
+    public Workflow(DeployType tYPE, String path, String versionId, String timeZone, OrderPreparation orderPreparation, List<String> jobResourcePaths, List<Instruction> instructions, Jobs jobs) {
         super();
         this.tYPE = tYPE;
         this.path = path;
         this.versionId = versionId;
+        this.timeZone = timeZone;
         this.orderPreparation = orderPreparation;
         this.jobResourcePaths = jobResourcePaths;
         this.instructions = instructions;
@@ -191,6 +196,16 @@ public class Workflow implements IDeployObject
     @JsonProperty("versionId")
     public void setVersionId(String versionId) {
         this.versionId = versionId;
+    }
+
+    @JsonProperty("timeZone")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    @JsonProperty("timeZone")
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     /**
@@ -271,12 +286,12 @@ public class Workflow implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("orderPreparation", orderPreparation).append("jobResourcePaths", jobResourcePaths).append("instructions", instructions).append("jobs", jobs).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("versionId", versionId).append("timeZone", timeZone).append("orderPreparation", orderPreparation).append("jobResourcePaths", jobResourcePaths).append("instructions", instructions).append("jobs", jobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(jobResourcePaths).append(jobs).append(tYPE).append(orderPreparation).toHashCode();
+        return new HashCodeBuilder().append(path).append(instructions).append(versionId).append(jobResourcePaths).append(jobs).append(timeZone).append(tYPE).append(orderPreparation).toHashCode();
     }
 
     @Override
@@ -288,7 +303,7 @@ public class Workflow implements IDeployObject
             return false;
         }
         Workflow rhs = ((Workflow) other);
-        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourcePaths, rhs.jobResourcePaths).append(jobs, rhs.jobs).append(tYPE, rhs.tYPE).append(orderPreparation, rhs.orderPreparation).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(instructions, rhs.instructions).append(versionId, rhs.versionId).append(jobResourcePaths, rhs.jobResourcePaths).append(jobs, rhs.jobs).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(orderPreparation, rhs.orderPreparation).isEquals();
     }
 
 }

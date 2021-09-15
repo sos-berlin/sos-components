@@ -21,13 +21,11 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
-import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -42,6 +40,8 @@ import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
@@ -49,12 +49,12 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocConfigurationException;
-import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.IConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
@@ -395,6 +395,17 @@ public class Validator {
                     Prompt prompt = inst.cast();
                     validateExpression(prompt.getQuestion());
                     break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    try {
+                        CheckJavaVariableName.test("orderName", ao.getOrderName());
+                    } catch (IllegalArgumentException e) {
+                        throw new SOSJsonSchemaException("$." + instPosition + "orderName:" + e.getMessage());
+                    }
+                    if (ao.getArguments() != null) {
+                        validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -518,7 +529,7 @@ public class Validator {
                         invalid = (curArg instanceof String) == false;
                         break;
                     case Number:
-                        invalid = (curArg instanceof String) || (curArg instanceof Boolean);
+                        invalid = (curArg instanceof String) || (curArg instanceof Boolean) || (curArg instanceof List);
                         break;
                     case Boolean:
                         invalid = (curArg instanceof Boolean) == false;

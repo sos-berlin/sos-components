@@ -1,12 +1,13 @@
 
 package com.sos.sign.model.instruction;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.job.Environment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -30,11 +31,12 @@ public class AddOrder
 {
 
     /**
-     * 
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
      * (Required)
      * 
      */
     @JsonProperty("orderId")
+    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$epochSecond-$orderName\"")
     private String orderId;
     /**
      * 
@@ -42,23 +44,21 @@ public class AddOrder
      * 
      */
     @JsonProperty("workflowPath")
+    @JsonAlias({
+        "workflowName"
+    })
     private String workflowPath;
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Variables arguments;
-    /**
-     * 
-     * (Required)
-     * 
-     */
+    private Environment arguments;
     @JsonProperty("deleteWhenTerminated")
-    private Boolean deleteWhenTerminated;
+    private Boolean deleteWhenTerminated = true;
 
     /**
      * No args constructor for use in serialization
@@ -75,7 +75,7 @@ public class AddOrder
      * @param arguments
      * @param tYPE
      */
-    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, InstructionType tYPE) {
+    public AddOrder(String orderId, String workflowPath, Environment arguments, Boolean deleteWhenTerminated, InstructionType tYPE) {
         super(tYPE);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
@@ -84,7 +84,7 @@ public class AddOrder
     }
 
     /**
-     * 
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
      * (Required)
      * 
      */
@@ -94,7 +94,7 @@ public class AddOrder
     }
 
     /**
-     * 
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
      * (Required)
      * 
      */
@@ -124,42 +124,32 @@ public class AddOrder
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public Variables getArguments() {
+    public Environment getArguments() {
         return arguments;
     }
 
     /**
-     * key-value pairs
+     * key-value pairs particularly to assign parameters to environment
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public void setArguments(Variables arguments) {
+    public void setArguments(Environment arguments) {
         this.arguments = arguments;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("deleteWhenTerminated")
     public Boolean getDeleteWhenTerminated() {
         return deleteWhenTerminated;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("deleteWhenTerminated")
     public void setDeleteWhenTerminated(Boolean deleteWhenTerminated) {
         this.deleteWhenTerminated = deleteWhenTerminated;

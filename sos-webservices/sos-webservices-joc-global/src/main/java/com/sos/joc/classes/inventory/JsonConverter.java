@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -32,11 +33,13 @@ import com.sos.sign.model.workflow.Parameters;
 
 public class JsonConverter {
     
-    private final static Predicate<String> hasForkListInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"" + InstructionType.FORKLIST.value() + "\"").asPredicate();
+    private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
+    private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
-    
+
     @SuppressWarnings("unchecked")
-    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId) throws JsonParseException, JsonMappingException, IOException {
+    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId) throws JsonParseException, JsonMappingException,
+            IOException {
         if (commitId != null && !commitId.isEmpty()) {
             json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
         }
@@ -51,13 +54,13 @@ public class JsonConverter {
         
         com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json, com.sos.sign.model.workflow.Workflow.class);
         Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
-        
+
         signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation()));
         
         if (signWorkflow.getInstructions() != null) {
-            // at the moment the converter is only necessary for ForkList instructions
-            if (hasForkListInstruction.test(json)) {
-                convertInstructions(invWorkflow.getInstructions(), signWorkflow.getInstructions());
+            // at the moment the converter is only necessary for ForkList, AddOrder instructions
+            if (hasInstructionToConvert.test(json)) {
+                convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions());
             }
         }
         
@@ -68,7 +71,7 @@ public class JsonConverter {
         return signWorkflow;
     }
     
-    private static void convertInstructions(List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions) {
+    private static void convertInstructions(Workflow w, List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions) {
         if (invInstructions != null) {
             for (int i = 0; i < invInstructions.size(); i++) {
                 Instruction invInstruction = invInstructions.get(i);
@@ -79,7 +82,7 @@ public class JsonConverter {
                     com.sos.sign.model.instruction.ForkList sfl = signInstruction.cast();
                     convertForkList(fl, sfl);
                     if (fl.getWorkflow() != null) {
-                        convertInstructions(fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions());
+                        convertInstructions(w, fl.getWorkflow().getInstructions(), sfl.getWorkflow().getInstructions());
                     }
                     break;
                 case FORK:
@@ -88,7 +91,7 @@ public class JsonConverter {
                     for (int j = 0; j < fj.getBranches().size(); j++) {
                         Branch invBranch = fj.getBranches().get(j);
                         if (invBranch.getWorkflow() != null) {
-                            convertInstructions(invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow().getInstructions());
+                            convertInstructions(w, invBranch.getWorkflow().getInstructions(), sfj.getBranches().get(j).getWorkflow().getInstructions());
                         }
                     }
                     break;
@@ -96,28 +99,31 @@ public class JsonConverter {
                     IfElse ifElse = invInstruction.cast();
                     com.sos.sign.model.instruction.IfElse sIfElse = signInstruction.cast();
                     if (ifElse.getThen() != null) {
-                        convertInstructions(ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions());
+                        convertInstructions(w, ifElse.getThen().getInstructions(), sIfElse.getThen().getInstructions());
                     }
                     if (ifElse.getElse() != null) {
-                        convertInstructions(ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions());
+                        convertInstructions(w, ifElse.getElse().getInstructions(), sIfElse.getElse().getInstructions());
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = invInstruction.cast();
                     com.sos.sign.model.instruction.TryCatch sTryCatch = signInstruction.cast();
                     if (tryCatch.getTry() != null) {
-                        convertInstructions(tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions());
+                        convertInstructions(w, tryCatch.getTry().getInstructions(), sTryCatch.getTry().getInstructions());
                     }
                     if (tryCatch.getCatch() != null) {
-                        convertInstructions(tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions());
+                        convertInstructions(w, tryCatch.getCatch().getInstructions(), sTryCatch.getCatch().getInstructions());
                     }
                     break;
                 case LOCK:
                     Lock lock = invInstruction.cast();
                     if (lock.getLockedWorkflow() != null) {
                         com.sos.sign.model.instruction.Lock sLock = signInstruction.cast();
-                        convertInstructions(lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions());
+                        convertInstructions(w, lock.getLockedWorkflow().getInstructions(), sLock.getLockedWorkflow().getInstructions());
                     }
+                    break;
+                case ADD_ORDER:
+                    convertAddOrder(w, invInstruction.cast(), signInstruction.cast());
                     break;
                 default:
                     break;
@@ -131,6 +137,15 @@ public class JsonConverter {
         sfl.setChildToArguments("(x) => $x");
         sfl.setChildToId("(x, i) => ($i + 1) ++ \".\" ++ $x." + fl.getChildToId());
         //sfl.setChildToId("(x) => $x." + fl.getChildToId());
+    }
+    
+    private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#I$epochSecond-%s\"";
+        String timeZone = w.getTimeZone();
+        if (timeZone == null || timeZone.isEmpty()) {
+            timeZone = "Etc/UTC";
+        }
+        sao.setOrderId(String.format(idPattern, timeZone, ao.getOrderName()));
     }
     
     public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {

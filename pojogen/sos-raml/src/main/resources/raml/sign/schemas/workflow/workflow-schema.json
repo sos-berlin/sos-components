@@ -17,6 +17,9 @@
     "TYPE",
     "path",
     "versionId",
+    "timeZone",
+    "orderPreparation",
+    "jobResourcePaths",
     "instructions",
     "jobs"
   ],
@@ -34,6 +37,10 @@
     "versionId": {
       "$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
+	"timeZone": {
+	  "type": "string",
+	  "default": "Etc/UTC"
+	},
     "orderPreparation": {
     	"$ref": "orderPreparation-schema.json"
     },

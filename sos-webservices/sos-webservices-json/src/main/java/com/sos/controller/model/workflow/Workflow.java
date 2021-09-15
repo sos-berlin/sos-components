@@ -107,10 +107,8 @@ public class Workflow
      * @param state
      * @param documentationName
      */
-    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables,
-            Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, DeployType tYPE, String version, String versionId, Requirements orderPreparation,
-            List<String> jobResourceNames, List<Instruction> instructions, String title, String documentationName, Jobs jobs, String timeZone) {
-        super(version, versionId, orderPreparation, jobResourceNames, instructions, title, documentationName, jobs, timeZone);
+    public Workflow(String path, Boolean isCurrentVersion, Date versionDate, SyncState state, List<FileOrderSource> fileOrderSources, Set<String> forkListVariables, Boolean hasExpectedNoticeBoards, Boolean hasPostNoticeBoards, DeployType tYPE, String version, String versionId, String timeZone, String title, String documentationName, Requirements orderPreparation, List<String> jobResourceNames, List<Instruction> instructions, Jobs jobs) {
+        super(version, versionId, timeZone, title, documentationName, orderPreparation, jobResourceNames, instructions, jobs);
         this.path = path;
         this.isCurrentVersion = isCurrentVersion;
         this.versionDate = versionDate;

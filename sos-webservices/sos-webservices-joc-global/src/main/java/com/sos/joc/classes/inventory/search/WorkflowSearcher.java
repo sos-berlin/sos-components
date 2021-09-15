@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -247,21 +248,22 @@ public class WorkflowSearcher {
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<Lock>> getLockInstructions() {
-        return getInstructions(InstructionType.LOCK).stream().map(l -> {
-            return (WorkflowInstruction<Lock>) l;
-        }).collect(Collectors.toList());
+        return getInstructions(InstructionType.LOCK).stream().map(l -> (WorkflowInstruction<Lock>) l).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<PostNotice>> getPostNoticeInstructions() {
-        return getInstructions(InstructionType.POST_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l)
-                .collect(Collectors.toList());
+        return getInstructions(InstructionType.POST_NOTICE).stream().map(l -> (WorkflowInstruction<PostNotice>) l).collect(Collectors.toList());
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<WorkflowInstruction<ExpectNotice>> getExpectNoticeInstructions() {
-        return getInstructions(InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<ExpectNotice>) l)
-                .collect(Collectors.toList());
+        return getInstructions(InstructionType.EXPECT_NOTICE).stream().map(l -> (WorkflowInstruction<ExpectNotice>) l).collect(Collectors.toList());
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<WorkflowInstruction<AddOrder>> getAddOrderInstructions() {
+        return getInstructions(InstructionType.ADD_ORDER).stream().map(l -> (WorkflowInstruction<AddOrder>) l).collect(Collectors.toList());
     }
 
     public List<WorkflowInstruction<Lock>> getLockInstructions(String lockIdRegex) {
@@ -459,6 +461,10 @@ public class WorkflowSearcher {
             case EXPECT_NOTICE:
                 result.add(new WorkflowInstruction<ExpectNotice>(getPosition(parentPosition, index, null), in.cast()));
                 break;
+            case ADD_ORDER:
+                result.add(new WorkflowInstruction<AddOrder>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            
             default:
 
                 break;

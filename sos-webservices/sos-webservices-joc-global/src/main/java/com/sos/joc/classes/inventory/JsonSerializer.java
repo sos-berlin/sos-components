@@ -14,6 +14,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.AdmissionTimeScheme;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.Executable;
 import com.sos.inventory.model.job.ExecutableJava;
@@ -128,6 +129,7 @@ public class JsonSerializer {
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
                     job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
+                    job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                 });
             }
         }
@@ -147,10 +149,18 @@ public class JsonSerializer {
                     emptyExecutableToNull(job.getExecutable(), job.getReturnCodeMeaning());
                     job.setReturnCodeMeaning(null);
                     job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
+                    job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
                 });
             }
         }
         return j;
+    }
+    
+    private static AdmissionTimeScheme emptyAdmissionTimeSchemeToNull(AdmissionTimeScheme obj) {
+        if (obj != null && obj.getPeriods() == null) {
+            return null;
+        }
+        return obj;
     }
     
     private static void emptyStringCollectionsToNull(Collection<String> coll) {
@@ -348,6 +358,10 @@ public class JsonSerializer {
                         cleanInventoryInstructions(lock.getLockedWorkflow().getInstructions());
                     }
                     break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    ao.setArguments(emptyEnvToNullAndQuoteStrings(ao.getArguments()));
+                    break;
                 default:
                     break;
                 }
@@ -411,6 +425,10 @@ public class JsonSerializer {
                     if (lock.getLockedWorkflow() != null) {
                         cleanSignedInstructions(lock.getLockedWorkflow().getInstructions());
                     }
+                    break;
+                case ADD_ORDER:
+                    com.sos.sign.model.instruction.AddOrder ao = inst.cast();
+                    ao.setArguments(emptyEnvToNullAndQuoteStrings(ao.getArguments()));
                     break;
                 default:
                     break;

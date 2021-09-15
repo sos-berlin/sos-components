@@ -5,8 +5,7 @@
   "type": "object",
   "required": [
   	"orderId",
-  	"workflowPath",
-  	"deleteWhenTerminated"
+  	"workflowPath"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"
@@ -20,16 +19,19 @@
   ],
   "properties": {
   	"orderId" : {
+  		"description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$epochSecond-$orderName\"",
   		"type" : "string"
   	},
   	"workflowPath" : {
+  		"alias": "workflowName",
   		"type" : "string"
   	},
     "arguments": {
-    	"$ref": "../../../inventory/schemas/common/variables-schema.json"
+    	"$ref": "../../../inventory/schemas/job/env-schema.json"
     },
     "deleteWhenTerminated" : {
-    	"type" : "boolean"
+    	"type" : "boolean",
+    	"default": true
 	}
   },
   "additionalProperties": false
