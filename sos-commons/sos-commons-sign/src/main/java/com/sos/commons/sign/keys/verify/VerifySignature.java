@@ -139,20 +139,6 @@ public class VerifySignature {
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
-    public static Boolean verifyX509Smime(X509Certificate certificate, String original, String signature)
-            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
-        Signature sig = null;
-        PublicKey publicKey = certificate.getPublicKey();
-        if (publicKey instanceof ECPublicKey) {
-            sig = Signature.getInstance(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM);
-        } else if (publicKey instanceof RSAPublicKey) {
-            sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
-        }
-        sig.initVerify(certificate);
-        sig.update(original.getBytes());
-        return sig.verify(java.util.Base64.getMimeDecoder().decode(signature.getBytes()));
-    }
-    
     public static Boolean verifyX509(String algorythm, X509Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
         Signature sig = Signature.getInstance(algorythm);
@@ -161,6 +147,22 @@ public class VerifySignature {
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
     }
     
+    public static Boolean verifyX509Mime(String algorythm, X509Certificate certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
+        Signature sig = Signature.getInstance(algorythm);
+        sig.initVerify(certificate);
+        sig.update(original.getBytes());
+        return sig.verify(java.util.Base64.getMimeDecoder().decode(normalizeSignature(signature).getBytes()));
+    }
+
+    public static Boolean verifyX509MimeWithCRLF(String algorythm, X509Certificate certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
+        Signature sig = Signature.getInstance(algorythm);
+        sig.initVerify(certificate);
+        sig.update(original.getBytes());
+        return sig.verify(java.util.Base64.getMimeDecoder().decode(signature.getBytes()));
+    }
+
     public static Boolean verifyX509(Certificate certificate, String original, String signature)
             throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
         Signature sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
@@ -189,7 +191,7 @@ public class VerifySignature {
     
     private static String normalizeSignature(String signature) {
         String normalizedSignature = signature.replace(SOSKeyConstants.SIGNATURE_HEADER, "").replace(SOSKeyConstants.SIGNATURE_FOOTER, "");
-        return normalizedSignature.replaceAll("\\n", "");
+        return normalizedSignature.replaceAll("[\\r\\n]", "");
     }
 
 }

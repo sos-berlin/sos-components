@@ -24,8 +24,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
-import com.sos.inventory.model.jobclass.JobClass;
-import com.sos.inventory.model.lock.Lock;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -44,13 +42,7 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.JocSecurityLevel;
-import com.sos.joc.model.inventory.board.BoardPublish;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
-import com.sos.joc.model.inventory.jobclass.JobClassPublish;
-import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
-import com.sos.joc.model.inventory.lock.LockPublish;
-import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.ArchiveFormat;
 import com.sos.joc.model.publish.ControllerObject;
@@ -64,9 +56,6 @@ import com.sos.joc.publish.util.ImportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
-import com.sos.sign.model.board.Board;
-import com.sos.sign.model.fileordersource.FileOrderSource;
-import com.sos.sign.model.jobresource.JobResource;
 import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
@@ -262,16 +251,16 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                 if (verified) {
                     PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                        API_CALL);
+                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                        .thenAccept(either -> {
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                             });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                        API_CALL);
+                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.RSA_SIGNER_ALGORITHM, signerDN)
+                        .thenAccept(either -> {
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                             });
                 }
                 break;
@@ -280,16 +269,16 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 verified = PublishUtils.verifyCertificateAgainstCAs(cert, caCertificates);
                 if (verified) {
                     PublishUtils.updateItemsAddOrUpdateWithX509CertificateFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate()).thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                        API_CALL);
+                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, keyPair.getCertificate())
+                        .thenAccept(either -> {
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                             });
                 } else {
                     signerDN = cert.getSubjectDN().getName();
                     PublishUtils.updateItemsAddOrUpdateWithX509SignerDNFromImport(commitIdForUpdate, importedObjects, controllerId, dbLayer,
-                            SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN).thenAccept(either -> {
-                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(),
-                                        API_CALL);
+                            filter.getSignatureAlgorithm() != null ? filter.getSignatureAlgorithm() : SOSKeyConstants.ECDSA_SIGNER_ALGORITHM, signerDN)
+                        .thenAccept(either -> {
+                                StoreDeployments.processAfterAdd(either, account, commitIdForUpdate, controllerId, getAccessToken(), getJocError(), API_CALL);
                             });
                 }
                 break;
