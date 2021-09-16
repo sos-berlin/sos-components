@@ -358,7 +358,7 @@ public class KeyTests {
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            InputStream signedInputStream = IOUtils.toInputStream(signature);
+            InputStream signedInputStream = IOUtils.toInputStream(signature, StandardCharsets.UTF_8);
             Boolean verified = VerifySignature.verifyPGP(publicKeyPath, originalPath, signedInputStream);
             if (verified) {
                 LOGGER.info("Created Signature verification was successful!");
@@ -388,7 +388,7 @@ public class KeyTests {
             assertNotEquals(signature, "");
             LOGGER.info("Signing was successful!");
             LOGGER.info(String.format("Signature:\n%1$s%2$s", signature.substring(0, 120), "..."));
-            signedInputStream = IOUtils.toInputStream(signature);
+            signedInputStream = IOUtils.toInputStream(signature, StandardCharsets.UTF_8);
             // As already used streams are closed the needed InputStream of the original has to be recreated before verify
             originalInputStream = getClass().getResourceAsStream(ORIGINAL_RESOURCE_PATH);
             Boolean verified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signedInputStream);
@@ -569,7 +569,7 @@ public class KeyTests {
     @Test
     public void test12cExtractPublicKeyFromPrivateKeyInputStreamFromString () {
         LOGGER.info("*********  Test 12c: Extract public key from private key InputStream (from String)  ************");
-        InputStream privateKeyStream = IOUtils.toInputStream(PRIVATEKEY_STRING);
+        InputStream privateKeyStream = IOUtils.toInputStream(PRIVATEKEY_STRING, StandardCharsets.UTF_8);
         try {
             String publicKey = KeyUtil.extractPublicKey(privateKeyStream);
             LOGGER.info("Public Key successfully restored from Private Key!");
@@ -789,7 +789,7 @@ public class KeyTests {
         assertTrue(valid);
         LOGGER.info("***************  check 4b: PGPPublicKey Object; valid false Test  ******************************");
         try {
-            pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(IOUtils.toInputStream("ThisIsNotAPGPKey"));
+            pgpPublicKey = KeyUtil.getPGPPublicKeyFromInputStream(IOUtils.toInputStream("ThisIsNotAPGPKey", StandardCharsets.UTF_8));
             valid = KeyUtil.isKeyNotNull(pgpPublicKey);
         } catch (IOException | PGPException e) {
             valid = false;

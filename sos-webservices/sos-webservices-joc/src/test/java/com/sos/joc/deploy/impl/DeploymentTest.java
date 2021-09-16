@@ -563,39 +563,39 @@ public class DeploymentTest {
         }
     }
 
-    private void exportSingleWorkflow(Set<ControllerObject> jsObjectsToExport) throws IOException {
-        ZipOutputStream zipOut = null;
-        OutputStream out = null;
-        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
-        if (notExists) {
-            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
-            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
-        }
-        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
-        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
-        for (ControllerObject jsObjectToExport : jsObjectsToExport) {
-            Workflow workflow = (Workflow) jsObjectToExport.getContent();
-            String signature = jsObjectToExport.getSignedContent();
-            String zipEntryNameWorkflow = jsObjectToExport.getPath().substring(1) + ".workflow.json";
-            String zipEntryNameWorkflowSignature = jsObjectToExport.getPath().substring(1) + ".workflow.json.asc";
-            ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
-            zipOut.putNextEntry(entryWorkflow);
-            String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
-            zipOut.write(workflowJson.getBytes());
-            zipOut.closeEntry();
-            if (signature != null) {
-                ZipEntry entrySignature = new ZipEntry(zipEntryNameWorkflowSignature);
-                zipOut.putNextEntry(entrySignature);
-                zipOut.write(signature.getBytes());
-                zipOut.closeEntry();
-            }
-        }
-        zipOut.flush();
-        if (zipOut != null) {
-            zipOut.close();
-        }
-    }
-
+//    private void exportSingleWorkflow(Set<ControllerObject> jsObjectsToExport) throws IOException {
+//        ZipOutputStream zipOut = null;
+//        OutputStream out = null;
+//        Boolean notExists = Files.notExists(Paths.get("target").resolve("created_test_files"));
+//        if (notExists) {
+//            Files.createDirectory(Paths.get("target").resolve("created_test_files"));
+//            LOGGER.info("subfolder \"created_test_files\" created in target folder.");
+//        }
+//        out = Files.newOutputStream(Paths.get("target").resolve("created_test_files").resolve(TARGET_FILENAME_SINGLE));
+//        zipOut = new ZipOutputStream(new BufferedOutputStream(out), StandardCharsets.UTF_8);
+//        for (ControllerObject jsObjectToExport : jsObjectsToExport) {
+//            Workflow workflow = (Workflow) jsObjectToExport.getContent();
+//            String signature = jsObjectToExport.getSignedContent();
+//            String zipEntryNameWorkflow = jsObjectToExport.getPath().substring(1) + ".workflow.json";
+//            String zipEntryNameWorkflowSignature = jsObjectToExport.getPath().substring(1) + ".workflow.json.asc";
+//            ZipEntry entryWorkflow = new ZipEntry(zipEntryNameWorkflow);
+//            zipOut.putNextEntry(entryWorkflow);
+//            String workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
+//            zipOut.write(workflowJson.getBytes());
+//            zipOut.closeEntry();
+//            if (signature != null) {
+//                ZipEntry entrySignature = new ZipEntry(zipEntryNameWorkflowSignature);
+//                zipOut.putNextEntry(entrySignature);
+//                zipOut.write(signature.getBytes());
+//                zipOut.closeEntry();
+//            }
+//        }
+//        zipOut.flush();
+//        if (zipOut != null) {
+//            zipOut.close();
+//        }
+//    }
+//
     private Set<Workflow> importWorkflows() throws IOException {
         Set<Workflow> workflows = new HashSet<Workflow>();
         LOGGER.info("archive to read from exists: " + Files.exists(Paths.get("target/created_test_files").resolve(TARGET_FILENAME)));
@@ -730,7 +730,7 @@ public class DeploymentTest {
         InputStream originalInputStream = null;
         String workflowJson = null;
         workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
-        originalInputStream = IOUtils.toInputStream(workflowJson);
+        originalInputStream = IOUtils.toInputStream(workflowJson, StandardCharsets.UTF_8);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
     }
@@ -738,7 +738,6 @@ public class DeploymentTest {
     private Signature signWorkflowECDSA(Workflow workflow) 
             throws IOException, PGPException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, SignatureException {
         Signature signature = new Signature();
-        String passphrase = null;
         String privateKeyString = new String(Files.readAllBytes(Paths.get("src/test/resources/sos.private-ec-key.pem")), StandardCharsets.UTF_8);
         PrivateKey privateKey = KeyUtil.getPrivateECDSAKeyFromString(privateKeyString);
         String workflowJson = null;
@@ -755,7 +754,7 @@ public class DeploymentTest {
         InputStream originalInputStream = null;
         String workflowJson = null;
         workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
-        originalInputStream = IOUtils.toInputStream(workflowJson);
+        originalInputStream = IOUtils.toInputStream(workflowJson, StandardCharsets.UTF_8);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
     }
@@ -786,7 +785,7 @@ public class DeploymentTest {
         InputStream originalInputStream = null;
         String agentJson = null;
         agentJson = Globals.prettyPrintObjectMapper.writeValueAsString(agent);
-        originalInputStream = IOUtils.toInputStream(agentJson);
+        originalInputStream = IOUtils.toInputStream(agentJson, StandardCharsets.UTF_8);
         signature.setSignatureString(SignObject.signPGP(privateKeyInputStream, originalInputStream, passphrase));
         return signature;
     }
@@ -803,11 +802,11 @@ public class DeploymentTest {
 
     private Boolean verifySignaturePGP(Workflow workflow, String signatureString) throws IOException, PGPException {
         InputStream publicKeyInputStream = getClass().getResourceAsStream(PUBLICKEY_RESOURCE_PATH);
-        InputStream signatureInputStream = IOUtils.toInputStream(signatureString);
+        InputStream signatureInputStream = IOUtils.toInputStream(signatureString, StandardCharsets.UTF_8);
         InputStream originalInputStream = null;
         String workflowJson = null;
         workflowJson = Globals.prettyPrintObjectMapper.writeValueAsString(workflow);
-        originalInputStream = IOUtils.toInputStream(workflowJson);
+        originalInputStream = IOUtils.toInputStream(workflowJson, StandardCharsets.UTF_8);
         Boolean isVerified = null;
         isVerified = VerifySignature.verifyPGP(publicKeyInputStream, originalInputStream, signatureInputStream);
         return isVerified;
