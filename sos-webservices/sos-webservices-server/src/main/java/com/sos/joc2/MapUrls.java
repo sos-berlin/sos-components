@@ -54,6 +54,15 @@ public class MapUrls {
             put("https://controller-2-0-standalone:4443", "http://centosdev_third.sos:5344");
         }
     });
+    // http://sp:5555
+    public static final Map<String, String> sp_local_urlMapper = Collections.unmodifiableMap(new HashMap<String, String>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("http://sp:5555", "http://sp:5555");
+        }
+    });
 
     public static final Map<String, Map<String, String>> urlMapperByUser = Collections.unmodifiableMap(new HashMap<String, Map<String, String>>() {
 
@@ -61,7 +70,7 @@ public class MapUrls {
 
         {
             put("oh", centosdev_secondary_urlMapper);
-            put("sp", centosdev_third_urlMapper);
+//            put("sp", centosdev_third_urlMapper);
         }
     });
     
@@ -71,7 +80,7 @@ public class MapUrls {
 
         {
             put("oh", JocSecurityLevel.LOW);
-            put("santiago", JocSecurityLevel.MEDIUM);
+            put("sp", JocSecurityLevel.HIGH);
         }
     });
     

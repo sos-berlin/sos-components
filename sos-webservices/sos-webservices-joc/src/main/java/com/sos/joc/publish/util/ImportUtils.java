@@ -875,41 +875,32 @@ public class ImportUtils {
             JsonMappingException, IOException {
         SignaturePath signaturePath = new SignaturePath();
         Signature signature = new Signature();
+        String sig = outBuffer.toString(); //.replaceAll("[\\r\\n]","");
+        signature.setSignatureString(sig);
+        signaturePath.setSignature(signature);
         if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
             signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
                     ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString().replaceAll("[\\r\\n]",""));
-            signaturePath.setSignature(signature);
             return signaturePath;
         }
         return null;

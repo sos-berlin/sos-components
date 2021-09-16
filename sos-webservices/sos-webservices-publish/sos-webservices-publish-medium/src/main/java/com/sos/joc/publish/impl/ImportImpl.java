@@ -53,7 +53,7 @@ import com.sos.schema.JsonValidator;
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final String API_CALL = "./inventory/import";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ImportCronImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
 
     @Override
 	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
