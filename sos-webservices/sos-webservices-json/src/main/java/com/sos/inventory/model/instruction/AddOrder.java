@@ -1,13 +1,12 @@
 
 package com.sos.inventory.model.instruction;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.inventory.model.job.Environment;
+import com.sos.inventory.model.common.Variables;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -16,7 +15,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 /**
  * AddOrder
  * <p>
- * instruction with fixed property 'TYPE':'AdOrder'
+ * instruction with fixed property 'TYPE':'AddOrder'
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -30,11 +29,6 @@ public class AddOrder
     extends Instruction
 {
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     private String orderName;
     /**
@@ -48,14 +42,14 @@ public class AddOrder
     })
     private String workflowName;
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Environment arguments;
+    private Variables arguments;
     @JsonProperty("deleteWhenTerminated")
     private Boolean deleteWhenTerminated = true;
 
@@ -73,7 +67,7 @@ public class AddOrder
      * @param arguments
      * @param orderName
      */
-    public AddOrder(String orderName, String workflowName, Environment arguments, Boolean deleteWhenTerminated) {
+    public AddOrder(String orderName, String workflowName, Variables arguments, Boolean deleteWhenTerminated) {
         super();
         this.orderName = orderName;
         this.workflowName = workflowName;
@@ -81,21 +75,11 @@ public class AddOrder
         this.deleteWhenTerminated = deleteWhenTerminated;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     public String getOrderName() {
         return orderName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("orderName")
     public void setOrderName(String orderName) {
         this.orderName = orderName;
@@ -122,24 +106,24 @@ public class AddOrder
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public Environment getArguments() {
+    public Variables getArguments() {
         return arguments;
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public void setArguments(Environment arguments) {
+    public void setArguments(Variables arguments) {
         this.arguments = arguments;
     }
 

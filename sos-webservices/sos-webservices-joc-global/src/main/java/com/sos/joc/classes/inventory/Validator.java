@@ -397,14 +397,16 @@ public class Validator {
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
-                    try {
-                        CheckJavaVariableName.test("orderName", ao.getOrderName());
-                    } catch (IllegalArgumentException e) {
-                        throw new SOSJsonSchemaException("$." + instPosition + "orderName:" + e.getMessage());
+                    if (ao.getOrderName() != null && !ao.getOrderName().isEmpty()) {
+                        try {
+                            CheckJavaVariableName.test("orderName", ao.getOrderName());
+                        } catch (IllegalArgumentException e) {
+                            throw new SOSJsonSchemaException("$." + instPosition + "orderName:" + e.getMessage());
+                        }
                     }
-                    if (ao.getArguments() != null) {
-                        validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
-                    }
+//                    if (ao.getArguments() != null) {
+//                        // TODO validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
+//                    }
                     break;
                 default:
                     break;

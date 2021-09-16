@@ -140,12 +140,21 @@ public class JsonConverter {
     }
     
     private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-%s\"";
         String timeZone = w.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
-        sao.setOrderId(String.format(idPattern, timeZone, ao.getOrderName()));
+        String orderName = ao.getOrderName();
+        if (orderName != null && !orderName.isEmpty()) {
+            orderName = "-" + orderName;
+            String idPattern =
+                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
+            sao.setOrderId(String.format(idPattern, timeZone, orderName));
+        } else {
+            String idPattern =
+                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+            sao.setOrderId(String.format(idPattern, timeZone));
+        }
     }
     
     public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {

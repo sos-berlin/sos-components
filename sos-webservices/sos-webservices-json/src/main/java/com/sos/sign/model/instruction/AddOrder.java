@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.InstructionType;
-import com.sos.inventory.model.job.Environment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -49,14 +49,14 @@ public class AddOrder
     })
     private String workflowPath;
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
-    private Environment arguments;
+    private Variables arguments;
     @JsonProperty("deleteWhenTerminated")
     private Boolean deleteWhenTerminated = true;
 
@@ -75,7 +75,7 @@ public class AddOrder
      * @param arguments
      * @param tYPE
      */
-    public AddOrder(String orderId, String workflowPath, Environment arguments, Boolean deleteWhenTerminated, InstructionType tYPE) {
+    public AddOrder(String orderId, String workflowPath, Variables arguments, Boolean deleteWhenTerminated, InstructionType tYPE) {
         super(tYPE);
         this.orderId = orderId;
         this.workflowPath = workflowPath;
@@ -124,24 +124,24 @@ public class AddOrder
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public Environment getArguments() {
+    public Variables getArguments() {
         return arguments;
     }
 
     /**
-     * key-value pairs particularly to assign parameters to environment
+     * key-value pairs
      * <p>
      * a map for arbitrary key-value pairs
      * 
      */
     @JsonProperty("arguments")
-    public void setArguments(Environment arguments) {
+    public void setArguments(Variables arguments) {
         this.arguments = arguments;
     }
 

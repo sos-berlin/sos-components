@@ -360,7 +360,7 @@ public class JsonSerializer {
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
-                    ao.setArguments(emptyEnvToNullAndQuoteStrings(ao.getArguments()));
+                    ao.setArguments(emptyVarsToNull(ao.getArguments()));
                     break;
                 default:
                     break;
@@ -428,7 +428,7 @@ public class JsonSerializer {
                     break;
                 case ADD_ORDER:
                     com.sos.sign.model.instruction.AddOrder ao = inst.cast();
-                    ao.setArguments(emptyEnvToNullAndQuoteStrings(ao.getArguments()));
+                    ao.setArguments(emptyVarsToNull(ao.getArguments()));
                     break;
                 default:
                     break;

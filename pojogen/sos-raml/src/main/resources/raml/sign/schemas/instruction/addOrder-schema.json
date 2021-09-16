@@ -27,7 +27,7 @@
   		"type" : "string"
   	},
     "arguments": {
-    	"$ref": "../../../inventory/schemas/job/env-schema.json"
+    	"$ref": "../../../inventory/schemas/common/variables-schema.json"
     },
     "deleteWhenTerminated" : {
     	"type" : "boolean",

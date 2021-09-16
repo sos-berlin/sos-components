@@ -480,6 +480,15 @@ public class OrdersHelper {
             String listKey) throws JocMissingRequiredParameterException, JocConfigurationException {
         boolean invalid = false;
         final Map<String, ListParameter> listParams = (listParameters != null) ? listParameters.getAdditionalProperties() : Collections.emptyMap();
+        if (listVariables.isEmpty() && !listParams.isEmpty()) {
+            Set<String> listKeys = listParams.keySet();
+            if (listKeys.size() == 1) {
+                throw new JocMissingRequiredParameterException("Variable '" + listKeys.iterator().next() + "' of the list variable '" + listKey
+                        + "' isn't declared in the workflow");
+            }
+            throw new JocMissingRequiredParameterException("Variables '" + listKeys.toString() + "' of the list variable '" + listKey
+                    + "' aren't declared in the workflow");
+        }
         for (Map<String, Object> listVariable : listVariables) {
             Set<String> listKeys = listVariable.keySet().stream().filter(arg -> !listParams.containsKey(arg)).collect(Collectors.toSet());
             if (!listKeys.isEmpty()) {
