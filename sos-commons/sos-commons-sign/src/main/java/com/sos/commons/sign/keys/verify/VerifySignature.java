@@ -2,6 +2,7 @@ package com.sos.commons.sign.keys.verify;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
@@ -39,9 +40,9 @@ public class VerifySignature {
 	private static final Logger LOGGER = LoggerFactory.getLogger(VerifySignature.class);
 	
 	public static Boolean verifyPGP(String publicKey, String original, String signature) throws IOException, PGPException {
-	  	InputStream publicKeyStream = IOUtils.toInputStream(publicKey); 
-        InputStream originalStream = IOUtils.toInputStream(original);
-	  	InputStream signatureStream = IOUtils.toInputStream(signature);
+	  	InputStream publicKeyStream = IOUtils.toInputStream(publicKey, StandardCharsets.UTF_8); 
+        InputStream originalStream = IOUtils.toInputStream(original, StandardCharsets.UTF_8);
+	  	InputStream signatureStream = IOUtils.toInputStream(signature, StandardCharsets.UTF_8);
 		return verifyPGP(publicKeyStream, originalStream, signatureStream);
 	}
 
@@ -55,7 +56,7 @@ public class VerifySignature {
     public static Boolean verifyPGP(Path publicKey, Path original, String signature) throws IOException, PGPException {
         InputStream publicKeyStream = Files.newInputStream(publicKey);
         InputStream originalStream = Files.newInputStream(original);
-        InputStream signatureStream = IOUtils.toInputStream(signature);
+        InputStream signatureStream = IOUtils.toInputStream(signature, StandardCharsets.UTF_8);
         return verifyPGP(publicKeyStream, originalStream, signatureStream);
     }
 
@@ -136,6 +137,20 @@ public class VerifySignature {
         sig.initVerify(certificate);
         sig.update(original.getBytes());
         return sig.verify(Base64.decode(normalizeSignature(signature).getBytes()));
+    }
+    
+    public static Boolean verifyX509Smime(X509Certificate certificate, String original, String signature)
+            throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, IOException, NoSuchProviderException {
+        Signature sig = null;
+        PublicKey publicKey = certificate.getPublicKey();
+        if (publicKey instanceof ECPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.ECDSA_SIGNER_ALGORITHM);
+        } else if (publicKey instanceof RSAPublicKey) {
+            sig = Signature.getInstance(SOSKeyConstants.RSA_SIGNER_ALGORITHM);
+        }
+        sig.initVerify(certificate);
+        sig.update(original.getBytes());
+        return sig.verify(java.util.Base64.getMimeDecoder().decode(signature.getBytes()));
     }
     
     public static Boolean verifyX509(String algorythm, X509Certificate certificate, String original, String signature)

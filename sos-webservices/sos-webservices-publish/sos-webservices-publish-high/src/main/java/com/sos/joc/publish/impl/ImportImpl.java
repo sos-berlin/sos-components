@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -48,17 +47,16 @@ import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.mapper.UpdateableConfigurationObject;
 import com.sos.joc.publish.resource.IImportResource;
 import com.sos.joc.publish.util.ImportUtils;
-import com.sos.joc.publish.util.PublishUtils;
 import com.sos.schema.JsonValidator;
 
 @Path("inventory")
 public class ImportImpl extends JOCResourceImpl implements IImportResource {
 
     private static final String API_CALL = "./inventory/import";
-    private static final Logger LOGGER = LoggerFactory.getLogger(ImportImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImportCronImpl.class);
 
     @Override
-	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
+	public JOCDefaultResponse postImportCronConfiguration(String xAccessToken, 
 			FormDataBodyPart body, 
             String format,
 			boolean overwrite,
@@ -114,14 +112,14 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             JocMetaInfo jocMetaInfo = new JocMetaInfo();
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                configurations = PublishUtils.readZipFileContent(stream, jocMetaInfo);
+                configurations = ImportUtils.readZipFileContent(stream, jocMetaInfo);
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                configurations = PublishUtils.readTarGzipFileContent(stream, jocMetaInfo);
+                configurations = ImportUtils.readTarGzipFileContent(stream, jocMetaInfo);
             } else {
             	throw new JocUnsupportedFileTypeException(
             	        String.format("The file %1$s to be uploaded must have one of the formats zip or tar.gz!", uploadFileName)); 
             }
-            if(!PublishUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+            if(!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                 // TODO: process transformation rules 
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));

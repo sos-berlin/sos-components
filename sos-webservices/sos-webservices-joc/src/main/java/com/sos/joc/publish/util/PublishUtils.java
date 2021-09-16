@@ -1,7 +1,6 @@
 package com.sos.joc.publish.util;
 
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,17 +35,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.bouncycastle.openpgp.PGPException;
@@ -63,10 +58,9 @@ import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
-import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.calendar.Calendar;
-import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -87,36 +81,24 @@ import com.sos.joc.event.bean.deploy.DeployHistoryWorkflowEvent;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
-import com.sos.joc.exceptions.DBOpenSessionException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocImportException;
 import com.sos.joc.exceptions.JocKeyNotParseableException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.exceptions.JocSosHibernateException;
-import com.sos.joc.exceptions.JocUnsupportedFileTypeException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.Version;
-import com.sos.joc.model.calendar.NonWorkingDaysCalendarEdit;
-import com.sos.joc.model.calendar.WorkingDaysCalendarEdit;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.ConfigurationObject;
-import com.sos.joc.model.inventory.board.BoardEdit;
 import com.sos.joc.model.inventory.board.BoardPublish;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.fileordersource.FileOrderSourceEdit;
 import com.sos.joc.model.inventory.fileordersource.FileOrderSourcePublish;
-import com.sos.joc.model.inventory.jobclass.JobClassEdit;
 import com.sos.joc.model.inventory.jobclass.JobClassPublish;
-import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
-import com.sos.joc.model.inventory.lock.LockEdit;
 import com.sos.joc.model.inventory.lock.LockPublish;
-import com.sos.joc.model.inventory.workflow.WorkflowEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
 import com.sos.joc.model.publish.Config;
@@ -129,8 +111,6 @@ import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
-import com.sos.joc.model.sign.Signature;
-import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ConfigurationObjectFileExtension;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.db.DBLayerDeploy;
@@ -143,7 +123,6 @@ import com.sos.sign.model.jobclass.JobClass;
 import com.sos.sign.model.jobresource.JobResource;
 import com.sos.sign.model.lock.Lock;
 import com.sos.sign.model.workflow.Workflow;
-import com.sos.webservices.order.initiator.model.ScheduleEdit;
 
 import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
@@ -165,7 +144,6 @@ import reactor.core.publisher.Flux;
 public abstract class PublishUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PublishUtils.class);
-    private static final String JOC_META_INFO_FILENAME = "meta_inf";
 
     public static String getExtensionFromFilename(String filename) {
         String extension = filename;
@@ -543,27 +521,19 @@ public abstract class PublishUtils {
         if (drafts != null) {
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
                     .map(item -> {
-                        try {
-                            LOGGER.debug("JSON send to controller: ");
-                            String json = JsonSerializer.serializeAsString(item.getKey().getContent());
-                            LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                    .getSignature()));
-                        } catch (JsonProcessingException e1) {
-                            throw new JocDeployException(e1);
-                        }
+                        LOGGER.debug("JSON send to controller: ");
+                        String json = item.getKey().getSignedContent();
+                        LOGGER.debug(json);
+                        return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                .getSignature()));
                     }).collect(Collectors.toSet()));
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.JOBRESOURCE))
                     .map(item -> {
-                        try {
-                            LOGGER.debug("JSON send to controller: ");
-                            String json = JsonSerializer.serializeAsString(item.getKey().getContent());
-                            LOGGER.debug(json);
-                            return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
-                                    .getSignature()));
-                        } catch (JsonProcessingException e1) {
-                            throw new JocDeployException(e1);
-                        }
+                        LOGGER.debug("JSON send to controller: ");
+                        String json = item.getKey().getSignedContent();
+                        LOGGER.debug(json);
+                        return JUpdateItemOperation.addOrChangeSigned(SignedString.of(json, SOSKeyConstants.PGP_ALGORITHM_NAME, item.getValue()
+                                .getSignature()));
                     }).collect(Collectors.toSet()));
             updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
                 try {
@@ -763,22 +733,14 @@ public abstract class PublishUtils {
             // workflows
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
                     .map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
-                                    .getKey().getContent()), item.getValue().getSignature(), signatureAlgorithm, certificate));
-                        } catch (IOException e) {
-                            throw new JocDeployException(e);
-                        }
+                        return JUpdateItemOperation.addOrChangeSigned(
+                                getSignedStringWithCertificate(item.getKey().getSignedContent(), item.getValue().getSignature(), signatureAlgorithm, certificate));
                     }).collect(Collectors.toSet()));
             // job resources
             updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
                     item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithCertificate(JsonSerializer.serializeAsString(item
-                                    .getContent()), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
-                        } catch (JsonProcessingException e) {
-                            throw new JocDeployException(e);
-                        }
+                        return JUpdateItemOperation.addOrChangeSigned(
+                                getSignedStringWithCertificate(item.getSignedContent(), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                     }).collect(Collectors.toSet()));
             // locks
             updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.LOCK)).map(
@@ -832,22 +794,14 @@ public abstract class PublishUtils {
             // workflows
             updateItemsOperationsSigned.addAll(drafts.entrySet().stream().filter(item -> item.getKey().getObjectType().equals(DeployType.WORKFLOW))
                     .map(item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item.getKey()
-                                    .getContent()), item.getValue().getSignature(), signatureAlgorithm, signerDN));
-                        } catch (JsonProcessingException e) {
-                            throw new JocDeployException(e);
-                        }
+                        return JUpdateItemOperation.addOrChangeSigned(
+                                getSignedStringWithSignerDN(item.getKey().getSignedContent(), item.getValue().getSignature(), signatureAlgorithm, signerDN));
                     }).collect(Collectors.toSet()));
             // job resources
             updateItemsOperationsSigned.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.JOBRESOURCE)).map(
                     item -> {
-                        try {
-                            return JUpdateItemOperation.addOrChangeSigned(getSignedStringWithSignerDN(JsonSerializer.serializeAsString(item
-                                    .getContent()), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
-                        } catch (JsonProcessingException e) {
-                            throw new JocDeployException(e);
-                        }
+                        return JUpdateItemOperation.addOrChangeSigned(
+                                getSignedStringWithSignerDN(item.getSignedContent(), drafts.get(item).getSignature(), signatureAlgorithm, signerDN));
                     }).collect(Collectors.toSet()));
             // locks
             updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(item -> {
@@ -990,24 +944,24 @@ public abstract class PublishUtils {
         try {
             DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId);
             deployedObjects = new HashSet<DBItemDeploymentHistory>();
-            for (ControllerObject draft : draftsWithSignature.keySet()) {
+            for (Map.Entry<ControllerObject,DBItemDepSignatures> entry : draftsWithSignature.entrySet()) {
                 DBItemDeploymentHistory newDeployedObject = new DBItemDeploymentHistory();
                 newDeployedObject.setAccount(account);
                 // TODO: get Version to set here
                 newDeployedObject.setVersion(null);
-                newDeployedObject.setType(draft.getObjectType().intValue());
+                newDeployedObject.setType(entry.getKey().getObjectType().intValue());
                 newDeployedObject.setCommitId(commitId);
                 newDeployedObject.setAuditlogId(auditlogId);
                 DBItemInventoryConfiguration original = null;
-                switch (draft.getObjectType()) {
+                switch (entry.getKey().getObjectType()) {
                 case WORKFLOW:
-                    String workflow = Globals.objectMapper.writeValueAsString(((WorkflowPublish) draft).getContent());
+                    String workflow = JsonSerializer.serializeAsString(((WorkflowPublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(workflow);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.WORKFLOW.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.WORKFLOW.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish) draft).getContent().getPath(), ConfigurationType.WORKFLOW
-                                .intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((WorkflowPublish) entry.getKey()).getContent().getPath(), 
+                                ConfigurationType.WORKFLOW.intValue());
                     }
                     if (original.getPath() != null && !original.getPath().isEmpty()) {
                         newDeployedObject.setPath(original.getPath());
@@ -1022,10 +976,10 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBRESOURCE:
-                    String jobResource = Globals.objectMapper.writeValueAsString(((JobResourcePublish) draft).getContent());
+                    String jobResource = JsonSerializer.serializeAsString(((JobResourcePublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(jobResource);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JOBRESOURCE.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.JOBRESOURCE.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1038,10 +992,10 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case LOCK:
-                    String lock = Globals.objectMapper.writeValueAsString(((LockPublish) draft).getContent());
+                    String lock = JsonSerializer.serializeAsString(((LockPublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(lock);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.LOCK.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.LOCK.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1054,10 +1008,10 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case FILEORDERSOURCE:
-                    String fileOrderSource = Globals.objectMapper.writeValueAsString(((FileOrderSourcePublish) draft).getContent());
+                    String fileOrderSource = JsonSerializer.serializeAsString(((FileOrderSourcePublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(fileOrderSource);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.FILEORDERSOURCE.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.FILEORDERSOURCE.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1070,12 +1024,12 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case NOTICEBOARD:
-                    String board = Globals.objectMapper.writeValueAsString(((BoardPublish) draft).getContent());
+                    String board = JsonSerializer.serializeAsString(((BoardPublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(board);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.NOTICEBOARD.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.NOTICEBOARD.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) draft).getContent().getPath(),
+                        original = dbLayerDeploy.getConfigurationByPath(((BoardPublish) entry.getKey()).getContent().getPath(),
                                 ConfigurationType.NOTICEBOARD.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
@@ -1089,13 +1043,13 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 case JOBCLASS:
-                    String jobclass = Globals.objectMapper.writeValueAsString(((JobClassPublish) draft).getContent());
+                    String jobclass = JsonSerializer.serializeAsString(((JobClassPublish) entry.getKey()).getContent());
                     newDeployedObject.setContent(jobclass);
-                    if (draft.getPath() != null) {
-                        original = dbLayerDeploy.getConfigurationByPath(draft.getPath(), ConfigurationType.JOBCLASS.intValue());
+                    if (entry.getKey().getPath() != null) {
+                        original = dbLayerDeploy.getConfigurationByPath(entry.getKey().getPath(), ConfigurationType.JOBCLASS.intValue());
                     } else {
-                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish) draft).getContent().getPath(), ConfigurationType.JOBCLASS
-                                .intValue());
+                        original = dbLayerDeploy.getConfigurationByPath(((JobClassPublish) entry.getKey()).getContent().getPath(), 
+                                ConfigurationType.JOBCLASS.intValue());
                     }
                     newDeployedObject.setPath(original.getPath());
                     if (original.getName() != null && !original.getName().isEmpty()) {
@@ -1108,7 +1062,7 @@ public abstract class PublishUtils {
                     newDeployedObject.setInventoryConfigurationId(original.getId());
                     break;
                 }
-                newDeployedObject.setSignedContent(draftsWithSignature.get(draft).getSignature());
+                newDeployedObject.setSignedContent(entry.getValue().getSignature());
                 if (newDeployedObject.getSignedContent() == null || newDeployedObject.getSignedContent().isEmpty()) {
                     newDeployedObject.setSignedContent(".");
                 }
@@ -1119,7 +1073,7 @@ public abstract class PublishUtils {
                 newDeployedObject.setState(DeploymentState.DEPLOYED.value());
                 dbLayerDeploy.getSession().save(newDeployedObject);
                 postDeployHistoryEvent(newDeployedObject);
-                DBItemDepSignatures signature = draftsWithSignature.get(draft);
+                DBItemDepSignatures signature = entry.getValue();
                 if (signature != null) {
                     signature.setDepHistoryId(newDeployedObject.getId());
                     dbLayerDeploy.getSession().update(signature);
@@ -1327,502 +1281,6 @@ public abstract class PublishUtils {
         return alreadyDeployedToDelete;
     }
 
-    public static Map<ControllerObject, SignaturePath> readZipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
-        Set<ControllerObject> objects = new HashSet<ControllerObject>();
-        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
-        ZipInputStream zipStream = null;
-        try {
-            zipStream = new ZipInputStream(inputStream);
-            ZipEntry entry = null;
-            while ((entry = zipStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                // process JOC meta info file
-                if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
-                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
-                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
-                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
-                    }
-                }
-                // process deployables only
-                ControllerObject fromArchive = createControllerObjectFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    objects.add(fromArchive);
-                }
-                SignaturePath signaturePath = createSignatureFromArchiveFileEntry(outBuffer, entryName);
-                if (signaturePath != null) {
-                    signaturePaths.add(signaturePath);
-                }
-            }
-            objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-                        .get());
-            });
-        } finally {
-            if (zipStream != null) {
-                try {
-                    zipStream.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-        return objectsWithSignature;
-    }
-
-    public static Set<ConfigurationObject> readZipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo) throws DBConnectionRefusedException,
-            DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException, JocConfigurationException,
-            DBOpenSessionException {
-        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
-        ZipInputStream zipStream = null;
-        try {
-            zipStream = new ZipInputStream(inputStream);
-            ZipEntry entry = null;
-            while ((entry = zipStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = zipStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                // process JOC meta info file
-                if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
-                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
-                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
-                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
-                    }
-                }
-                ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    objects.add(fromArchive);
-                }
-            }
-        } finally {
-            if (zipStream != null) {
-                try {
-                    zipStream.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-        return objects;
-    }
-
-    public static Map<ControllerObject, SignaturePath> readTarGzipFileContentWithSignatures(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
-        Set<ControllerObject> objects = new HashSet<ControllerObject>();
-        Set<SignaturePath> signaturePaths = new HashSet<SignaturePath>();
-        Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
-        GZIPInputStream gzipInputStream = null;
-        TarArchiveInputStream tarArchiveInputStream = null;
-        try {
-            gzipInputStream = new GZIPInputStream(inputStream);
-            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
-            ArchiveEntry entry = null;
-            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                // process JOC meta info file
-                if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
-                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
-                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
-                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
-                    }
-                }
-                // process deployables only
-                ControllerObject fromArchive = createControllerObjectFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    objects.add(fromArchive);
-                }
-                SignaturePath signaturePath = createSignatureFromArchiveFileEntry(outBuffer, entryName);
-                if (signaturePath != null) {
-                    signaturePaths.add(signaturePath);
-                }
-            }
-            objects.stream().forEach(item -> {
-                objectsWithSignature.put(item, signaturePaths.stream().filter(item2 -> item2.getObjectPath().equals(item.getPath())).findFirst()
-                        .get());
-            });
-        } finally {
-            try {
-                if (tarArchiveInputStream != null) {
-                    tarArchiveInputStream.close();
-                }
-                if (gzipInputStream != null) {
-                    gzipInputStream.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-        return objectsWithSignature;
-    }
-
-    public static Set<ConfigurationObject> readTarGzipFileContent(InputStream inputStream, JocMetaInfo jocMetaInfo)
-            throws DBConnectionRefusedException, DBInvalidDataException, SOSHibernateException, IOException, JocUnsupportedFileTypeException,
-            JocConfigurationException, DBOpenSessionException {
-        Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
-        GZIPInputStream gzipInputStream = null;
-        TarArchiveInputStream tarArchiveInputStream = null;
-        try {
-            gzipInputStream = new GZIPInputStream(inputStream);
-            tarArchiveInputStream = new TarArchiveInputStream(gzipInputStream);
-            ArchiveEntry entry = null;
-            while ((entry = tarArchiveInputStream.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                String entryName = entry.getName().replace('\\', '/');
-                ByteArrayOutputStream outBuffer = new ByteArrayOutputStream();
-                byte[] binBuffer = new byte[8192];
-                int binRead = 0;
-                while ((binRead = tarArchiveInputStream.read(binBuffer, 0, 8192)) >= 0) {
-                    outBuffer.write(binBuffer, 0, binRead);
-                }
-                // process JOC meta info file
-                if (entryName.equals(JOC_META_INFO_FILENAME)) {
-                    JocMetaInfo fromFile = Globals.prettyPrintObjectMapper.readValue(outBuffer.toString(), JocMetaInfo.class);
-                    if (!isJocMetaInfoNullOrEmpty(fromFile)) {
-                        jocMetaInfo.setJocVersion(fromFile.getJocVersion());
-                        jocMetaInfo.setInventorySchemaVersion(fromFile.getInventorySchemaVersion());
-                        jocMetaInfo.setApiVersion(fromFile.getApiVersion());
-                    }
-                }
-                ConfigurationObject fromArchive = createConfigurationObjectFromArchiveFileEntry(outBuffer, entryName);
-                if (fromArchive != null) {
-                    objects.add(fromArchive);
-                }
-            }
-        } finally {
-            try {
-                if (tarArchiveInputStream != null) {
-                    tarArchiveInputStream.close();
-                }
-                if (gzipInputStream != null) {
-                    gzipInputStream.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-        return objects;
-    }
-
-    private static ControllerObject createControllerObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
-            throws JsonParseException, JsonMappingException, IOException {
-        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-            WorkflowPublish workflowPublish = new WorkflowPublish();
-            Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Workflow.class);
-            if (checkObjectNotEmpty(workflow)) {
-                workflowPublish.setContent(workflow);
-            } else {
-                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""))));
-            }
-            workflowPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(),
-                    "")));
-            workflowPublish.setObjectType(DeployType.WORKFLOW);
-            return workflowPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
-            JobResourcePublish jobResourcePublish = new JobResourcePublish();
-            JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), JobResource.class);
-            if (checkObjectNotEmpty(jobResource)) {
-                jobResourcePublish.setContent(jobResource);
-            } else {
-                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(), ""))));
-            }
-            jobResourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(),
-                    "")));
-            jobResourcePublish.setObjectType(DeployType.JOBRESOURCE);
-            return jobResourcePublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-            LockPublish lockPublish = new LockPublish();
-            Lock lock = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Lock.class);
-            if (checkObjectNotEmpty(lock)) {
-                lockPublish.setContent(lock);
-            } else {
-                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""))));
-            }
-            lockPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), "")));
-            lockPublish.setObjectType(DeployType.LOCK);
-            return lockPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value())) {
-            BoardPublish boardPublish = new BoardPublish();
-            Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Board.class);
-            if (checkObjectNotEmpty(board)) {
-                boardPublish.setContent(board);
-            } else {
-                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""))));
-            }
-            boardPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), "")));
-            boardPublish.setObjectType(DeployType.NOTICEBOARD);
-            return boardPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-            JobClassPublish jobClassPublish = new JobClassPublish();
-            JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), JobClass.class);
-            if (checkObjectNotEmpty(jobClass)) {
-                jobClassPublish.setContent(jobClass);
-            } else {
-                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""))));
-            }
-            jobClassPublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(),
-                    "")));
-            jobClassPublish.setObjectType(DeployType.JOBCLASS);
-            return jobClassPublish;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-            FileOrderSourcePublish fileOrderSourcePublish = new FileOrderSourcePublish();
-            FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-                    FileOrderSource.class);
-            if (checkObjectNotEmpty(fileOrderSource)) {
-                fileOrderSourcePublish.setContent(fileOrderSource);
-            } else {
-                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.", Globals
-                        .normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value(), ""))));
-            }
-            fileOrderSourcePublish.setPath(Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION
-                    .value(), "")));
-            fileOrderSourcePublish.setObjectType(DeployType.FILEORDERSOURCE);
-            return fileOrderSourcePublish;
-        }
-        return null;
-    }
-
-    private static SignaturePath createSignatureFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName) throws JsonParseException,
-            JsonMappingException, IOException {
-        SignaturePath signaturePath = new SignaturePath();
-        Signature signature = new Signature();
-        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.WORKFLOW_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.WORKFLOW_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.JOBRESOURCE_PGP_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value())) {
-            signaturePath.setObjectPath(Globals.normalizePath("/" + entryName.replace(
-                    ControllerObjectFileExtension.JOBRESOURCE_X509_SIGNATURE_PEM_FILE_EXTENSION.value(), "")));
-            signature.setSignatureString(outBuffer.toString());
-            signaturePath.setSignature(signature);
-            return signaturePath;
-        }
-        return null;
-    }
-
-    private static ConfigurationObject createConfigurationObjectFromArchiveFileEntry(ByteArrayOutputStream outBuffer, String entryName)
-            throws JsonParseException, JsonMappingException, IOException {
-        // process deployables and releaseables
-        if (entryName.endsWith(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION.value(), ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            WorkflowEdit workflowEdit = new WorkflowEdit();
-            com.sos.inventory.model.workflow.Workflow workflow = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-                    com.sos.inventory.model.workflow.Workflow.class);
-            workflow = JsonSerializer.emptyValuesToNull(workflow);
-            if (checkObjectNotEmpty(workflow)) {
-                workflowEdit.setConfiguration(workflow);
-            } else {
-                throw new JocImportException(String.format("Workflow with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
-            workflowEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            workflowEdit.setPath(normalizedPath);
-            workflowEdit.setObjectType(ConfigurationType.WORKFLOW);
-            return workflowEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBRESOURCE_FILE_EXTENSION.value(),
-                    ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            JobResourceEdit jobResourceEdit = new JobResourceEdit();
-            com.sos.inventory.model.jobresource.JobResource jobResource = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
-                    .displayName()), com.sos.inventory.model.jobresource.JobResource.class);
-            if (checkObjectNotEmpty(jobResource)) {
-                jobResourceEdit.setConfiguration(jobResource);
-            } else {
-                throw new JocImportException(String.format("JobResource with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
-            jobResourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            jobResourceEdit.setPath(normalizedPath);
-            jobResourceEdit.setObjectType(ConfigurationType.JOBRESOURCE);
-            return jobResourceEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.LOCK_FILE_EXTENSION.value(), ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            LockEdit lockEdit = new LockEdit();
-            com.sos.inventory.model.lock.Lock lock = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-                    com.sos.inventory.model.lock.Lock.class);
-            if (checkObjectNotEmpty(lock)) {
-                lockEdit.setConfiguration(lock);
-            } else {
-                throw new JocImportException(String.format("Lock with path %1$s not imported. Object values could not be mapped.", normalizedPath));
-            }
-            lockEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            lockEdit.setPath(normalizedPath);
-            lockEdit.setObjectType(ConfigurationType.LOCK);
-            return lockEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.NOTICEBOARD_FILE_EXTENSION.value(), ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            BoardEdit boardEdit = new BoardEdit();
-            com.sos.inventory.model.board.Board board = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()),
-                    com.sos.inventory.model.board.Board.class);
-            if (checkObjectNotEmpty(board)) {
-                boardEdit.setConfiguration(board);
-            } else {
-                throw new JocImportException(String.format("Board with path %1$s not imported. Object values could not be mapped.", normalizedPath));
-            }
-            boardEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            boardEdit.setPath(normalizedPath);
-            boardEdit.setObjectType(ConfigurationType.NOTICEBOARD);
-            return boardEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.JOBCLASS_FILE_EXTENSION.value(), ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            JobClassEdit jobClassEdit = new JobClassEdit();
-            com.sos.inventory.model.jobclass.JobClass jobClass = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8
-                    .displayName()), com.sos.inventory.model.jobclass.JobClass.class);
-            if (checkObjectNotEmpty(jobClass)) {
-                jobClassEdit.setConfiguration(jobClass);
-            } else {
-                throw new JocImportException(String.format("JobClass with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
-            jobClassEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            jobClassEdit.setPath(normalizedPath);
-            jobClassEdit.setObjectType(ConfigurationType.JOBCLASS);
-            return jobClassEdit;
-        } else if (entryName.endsWith(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ControllerObjectFileExtension.FILEORDERSOURCE_FILE_EXTENSION
-                    .value(), ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
-            com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(
-                    StandardCharsets.UTF_8.displayName()), com.sos.inventory.model.fileordersource.FileOrderSource.class);
-            if (checkObjectNotEmpty(fileOrderSource)) {
-                fileOrderSourceEdit.setConfiguration(fileOrderSource);
-            } else {
-                throw new JocImportException(String.format("FileOrderSource with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
-            fileOrderSourceEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            fileOrderSourceEdit.setPath(normalizedPath);
-            fileOrderSourceEdit.setObjectType(ConfigurationType.FILEORDERSOURCE);
-            return fileOrderSourceEdit;
-        } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.value(),
-                    ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            ScheduleEdit scheduleEdit = new ScheduleEdit();
-            Schedule schedule = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Schedule.class);
-            if (checkObjectNotEmpty(schedule)) {
-                scheduleEdit.setConfiguration(schedule);
-            } else {
-                throw new JocImportException(String.format("Schedule with path %1$s not imported. Object values could not be mapped.",
-                        normalizedPath));
-            }
-            scheduleEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-            scheduleEdit.setPath(normalizedPath);
-            scheduleEdit.setObjectType(ConfigurationType.SCHEDULE);
-            return scheduleEdit;
-        } else if (entryName.endsWith(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value())) {
-            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(),
-                    ""));
-            if (normalizedPath.startsWith("//")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            Calendar cal = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Calendar.class);
-            if (checkObjectNotEmpty(cal)) {
-                if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                    WorkingDaysCalendarEdit wdcEdit = new WorkingDaysCalendarEdit();
-                    wdcEdit.setConfiguration(cal);
-                    wdcEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-                    wdcEdit.setPath(normalizedPath);
-                    wdcEdit.setObjectType(ConfigurationType.WORKINGDAYSCALENDAR);
-                    return wdcEdit;
-                } else if (CalendarType.WORKINGDAYSCALENDAR.equals(cal.getType())) {
-                    NonWorkingDaysCalendarEdit nwdcEdit = new NonWorkingDaysCalendarEdit();
-                    nwdcEdit.setConfiguration(cal);
-                    nwdcEdit.setName(Paths.get(normalizedPath).getFileName().toString());
-                    nwdcEdit.setPath(normalizedPath);
-                    nwdcEdit.setObjectType(ConfigurationType.NONWORKINGDAYSCALENDAR);
-                    return nwdcEdit;
-                }
-            } else {
-                throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
-                        + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
-            }
-        }
-        return null;
-    }
-
     public static StreamingOutput writeZipFileForSigning(Set<ControllerObject> deployables, Set<ConfigurationObject> releasables,
             Set<UpdateableWorkflowJobAgentName> updateableAgentNames, Set<UpdateableFileOrderSourceAgentName> updateableFOSAgentNames,
             String commitId, String controllerId, DBLayerDeploy dbLayer, Version jocVersion, Version apiVersion, Version inventoryVersion) {
@@ -1918,8 +1376,8 @@ public abstract class PublishUtils {
                         }
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
-                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = JOC_META_INFO_FILENAME;
+                    if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
                         zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo));
@@ -2010,8 +1468,8 @@ public abstract class PublishUtils {
                         }
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
-                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = JOC_META_INFO_FILENAME;
+                    if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         ZipEntry entry = new ZipEntry(zipEntryName);
                         zipOut.putNextEntry(entry);
                         zipOut.write(Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo));
@@ -2129,8 +1587,8 @@ public abstract class PublishUtils {
                         }
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
-                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = JOC_META_INFO_FILENAME;
+                    if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                         byte[] jocMetaInfoBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
@@ -2248,8 +1706,8 @@ public abstract class PublishUtils {
                         }
                     }
                     JocMetaInfo jocMetaInfo = createJocMetaInfo(jocVersion, apiVersion, inventoryVersion);
-                    if (!isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
-                        String zipEntryName = JOC_META_INFO_FILENAME;
+                    if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+                        String zipEntryName = ImportUtils.JOC_META_INFO_FILENAME;
                         TarArchiveEntry entry = new TarArchiveEntry(zipEntryName);
                         byte[] jocMetaInfoBytes = Globals.prettyPrintObjectMapper.writeValueAsBytes(jocMetaInfo);
                         entry.setSize(jocMetaInfoBytes.length);
@@ -2926,130 +2384,6 @@ public abstract class PublishUtils {
         }
     }
 
-    private static boolean checkObjectNotEmpty(Workflow workflow) {
-        if (workflow != null && workflow.getInstructions() == null && workflow.getJobs() == null && workflow.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.workflow.Workflow workflow) {
-        if (workflow != null && workflow.getDocumentationName() == null && workflow.getInstructions() == null && workflow.getJobs() == null
-                && workflow.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(JobResource jobResource) {
-        if (jobResource != null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobresource.JobResource jobResource) {
-        if (jobResource != null && jobResource.getDocumentationName() == null && jobResource.getEnv() == null && jobResource.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Board board) {
-        if (board != null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board.getPostOrderToNoticeId() == null
-                && board.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.board.Board board) {
-        if (board != null && board.getDocumentationName() == null && board.getEndOfLife() == null && board.getExpectOrderToNoticeId() == null && board
-                .getPostOrderToNoticeId() == null && board.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(JobClass jobClass) {
-        if (jobClass != null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null && jobClass.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.jobclass.JobClass jobClass) {
-        if (jobClass != null && jobClass.getDocumentationName() == null && jobClass.getMaxProcesses() == null && jobClass.getPriority() == null
-                && jobClass.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getAgentPath() == null && fileOrderSource.getDelay() == null && fileOrderSource
-                .getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource.getWorkflowPath() == null && fileOrderSource
-                        .getDirectory() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
-        if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource
-                .getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource
-                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Lock lock) {
-        if (lock != null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(com.sos.inventory.model.lock.Lock lock) {
-        if (lock != null && lock.getDocumentationName() == null && lock.getLimit() == null && lock.getTYPE() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Schedule schedule) {
-        if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
-                && schedule.getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null
-                && schedule.getNonWorkingDayCalendars() == null && schedule.getVariableSets() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    private static boolean checkObjectNotEmpty(Calendar calendar) {
-        if (calendar != null && calendar.getDocumentationName() == null && calendar.getExcludes() == null && calendar.getPath() == null && calendar
-                .getFrom() == null && calendar.getIncludes() == null && calendar.getName() == null && calendar.getTo() == null && calendar
-                        .getType() == null) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
     private static JocMetaInfo createJocMetaInfo(Version jocVersion, Version apiVersion, Version inventoryVersion) {
         JocMetaInfo jocMetaInfo = new JocMetaInfo();
         if (jocVersion != null) {
@@ -3062,16 +2396,6 @@ public abstract class PublishUtils {
             jocMetaInfo.setApiVersion(apiVersion.getVersion());
         }
         return jocMetaInfo;
-    }
-
-    public static boolean isJocMetaInfoNullOrEmpty(JocMetaInfo jocMetaInfo) {
-        if (jocMetaInfo == null || ((jocMetaInfo.getJocVersion() == null || jocMetaInfo.getJocVersion().isEmpty()) && (jocMetaInfo
-                .getInventorySchemaVersion() == null || jocMetaInfo.getInventorySchemaVersion().isEmpty()) && (jocMetaInfo.getApiVersion() == null
-                        || jocMetaInfo.getApiVersion().isEmpty()))) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public static Version readVersion(InputStream stream, String path) throws JocException {

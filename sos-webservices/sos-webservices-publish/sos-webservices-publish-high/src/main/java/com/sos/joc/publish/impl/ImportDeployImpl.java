@@ -26,7 +26,6 @@ import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.lock.Lock;
-import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -61,12 +60,14 @@ import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.db.DBLayerDeploy;
 import com.sos.joc.publish.resource.IImportDeploy;
 import com.sos.joc.publish.util.DeleteDeployments;
+import com.sos.joc.publish.util.ImportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
 import com.sos.sign.model.board.Board;
 import com.sos.sign.model.fileordersource.FileOrderSource;
 import com.sos.sign.model.jobresource.JobResource;
+import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -125,14 +126,14 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
 
             // process uploaded archive
             if (ArchiveFormat.ZIP.equals(filter.getFormat())) {
-                objectsWithSignature = PublishUtils.readZipFileContentWithSignatures(stream, jocMetaInfo);
+                objectsWithSignature = ImportUtils.readZipFileContentWithSignatures(stream, jocMetaInfo);
             } else if (ArchiveFormat.TAR_GZ.equals(filter.getFormat())) {
-                objectsWithSignature = PublishUtils.readTarGzipFileContentWithSignatures(stream, jocMetaInfo);
+                objectsWithSignature = ImportUtils.readTarGzipFileContentWithSignatures(stream, jocMetaInfo);
             } else {
                 throw new JocUnsupportedFileTypeException(String.format("The file %1$s to be uploaded must have one of the formats .zip or .tar.gz!",
                         uploadFileName));
             }
-            if (!PublishUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
+            if (!ImportUtils.isJocMetaInfoNullOrEmpty(jocMetaInfo)) {
                 // TODO: process transformation rules
                 LOGGER.info(String.format("Imported from JS7 JOC Cockpit version: %1$s", jocMetaInfo.getJocVersion()));
                 LOGGER.info(String.format("  with inventory schema version: %1$s", jocMetaInfo.getInventorySchemaVersion()));
@@ -148,7 +149,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-                    commitId = ((com.sos.sign.model.workflow.Workflow) config.getContent()).getVersionId();
+                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
                     break;
                 case LOCK:
                     break;
@@ -157,13 +158,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case JOBCLASS:
                     break;
                 default:
-                    commitId = ((com.sos.sign.model.workflow.Workflow) config.getContent()).getVersionId();
+                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
                 }
             }
-//            DeployAudit mainAudit = new DeployAudit(filter.getAuditLog(), String.format("%1$d object(s) imported with profile %2$s",
-//                    objectsWithSignature.size(), account));
-//            logAuditMessage(mainAudit);
-//            DBItemJocAuditLog dbItemAuditLog = storeAuditLogEntry(mainAudit);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(
                     Collectors.toSet());
@@ -172,59 +169,37 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 SignaturePath signaturePath = objectsWithSignature.get(config);
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-                    WorkflowPublish workflowPublish = new WorkflowPublish();
-                    workflowPublish.setContent((com.sos.sign.model.workflow.Workflow) config.getContent());
-                    workflowPublish.setSignedContent(signaturePath.getSignature().getSignatureString());
-                    workflowPublish.setPath(config.getPath());
                     DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.WORKFLOW);
                     objectsToCheckPathRenaming.add(workflowDbItem);
-                    DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), workflowPublish, account,
+                    DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), signaturePath, account,
                             DeployType.WORKFLOW);
-                    workflowPublish.setObjectType(DeployType.WORKFLOW);
-                    importedObjects.put(workflowPublish, workflowDbItemSignature);
+                    importedObjects.put(config, workflowDbItemSignature);
                     break;
                 case JOBRESOURCE:
-                    JobResourcePublish jobResourcePublish = new JobResourcePublish();
-                    jobResourcePublish.setContent((JobResource) config.getContent());
-                    jobResourcePublish.setSignedContent(signaturePath.getSignature().getSignatureString());
-                    jobResourcePublish.setPath(config.getPath());
                     DBItemInventoryConfiguration jobResourceDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBRESOURCE);
                     objectsToCheckPathRenaming.add(jobResourceDbItem);
-                    DBItemDepSignatures jobResourceDbItemSignature = dbLayer.saveOrUpdateSignature(jobResourceDbItem.getId(), jobResourcePublish, account,
+                    DBItemDepSignatures jobResourceDbItemSignature = dbLayer.saveOrUpdateSignature(jobResourceDbItem.getId(), signaturePath, account,
                             DeployType.JOBRESOURCE);
-                    jobResourcePublish.setObjectType(DeployType.JOBRESOURCE);
-                    importedObjects.put(jobResourcePublish, jobResourceDbItemSignature);
+                    importedObjects.put(config, jobResourceDbItemSignature);
                     break;
                 case LOCK:
-                    LockPublish lockPublish = new LockPublish();
-                    lockPublish.setContent((Lock) config.getContent());
                     DBItemInventoryConfiguration lockDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.LOCK);
                     objectsToCheckPathRenaming.add(lockDbItem);
-                    lockPublish.setObjectType(DeployType.LOCK);
-                    importedObjects.put(lockPublish, null);
+                    importedObjects.put(config, null);
                     break;
                 case FILEORDERSOURCE:
-                	FileOrderSourcePublish fosPublish = new FileOrderSourcePublish();
-                	fosPublish.setContent((FileOrderSource)config.getContent());
                 	DBItemInventoryConfiguration fosDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.FILEORDERSOURCE);
                 	objectsToCheckPathRenaming.add(fosDbItem);
-                	fosPublish.setObjectType(DeployType.FILEORDERSOURCE);
-                	importedObjects.put(fosPublish, null);
+                	importedObjects.put(config, null);
                 case NOTICEBOARD:
-                    BoardPublish boardPublish = new BoardPublish();
-                    boardPublish.setContent((Board) config.getContent());
                     DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.NOTICEBOARD);
                     objectsToCheckPathRenaming.add(boardDbItem);
-                    boardPublish.setObjectType(DeployType.NOTICEBOARD);
-                    importedObjects.put(boardPublish, null);
+                    importedObjects.put(config, null);
                     break;
                 case JOBCLASS:
-                    JobClassPublish jobClassPublish = new JobClassPublish();
-                    jobClassPublish.setContent((JobClass) config.getContent());
                     DBItemInventoryConfiguration jobClassDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBCLASS);
                     objectsToCheckPathRenaming.add(jobClassDbItem);
-                    jobClassPublish.setObjectType(DeployType.JOBCLASS);
-                    importedObjects.put(jobClassPublish, null);
+                    importedObjects.put(config, null);
                     break;
                 default:
                     break;
@@ -273,7 +248,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources));
                 JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
             }
-            //DeployAudit audit = new DeployAudit(filter.getAuditLog(), controllerId, commitId, "update", account);
             boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;

@@ -35,9 +35,7 @@ import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.util.encoders.Base64;
 
-import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.interfaces.StreamHandler;
 import com.sos.commons.sign.keys.key.KeyUtil;
 
@@ -46,8 +44,8 @@ public class SignObject {
 	private static final int BUFFER_SIZE = 4096;
 
 	public static String signPGP(String privateKey, String original, String passPhrase) throws IOException, PGPException {
-	  	InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
-	  	InputStream originalStream = IOUtils.toInputStream(original);
+	  	InputStream privateKeyStream = IOUtils.toInputStream(privateKey, StandardCharsets.UTF_8); 
+	  	InputStream originalStream = IOUtils.toInputStream(original, StandardCharsets.UTF_8);
 		return signPGP(privateKeyStream, originalStream, passPhrase);
 	}
 

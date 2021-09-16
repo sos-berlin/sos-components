@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.InvalidAlgorithmParameterException;
@@ -215,7 +216,7 @@ public abstract class KeyUtil {
     }
     
     public static String extractPublicKey(String privateKey) throws IOException, PGPException {
-            InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
+            InputStream privateKeyStream = IOUtils.toInputStream(privateKey, StandardCharsets.UTF_8); 
             return extractPublicKey(privateKeyStream);
     }
     
@@ -505,7 +506,7 @@ public abstract class KeyUtil {
                         }
                     } catch (IOException | PGPException publicFromPrivateException) {
                         try {
-                            return getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key)) != null;
+                            return getPGPPublicKeyFromInputStream(IOUtils.toInputStream(key, StandardCharsets.UTF_8)) != null;
                         } catch (IOException | PGPException publicPGPfromPublicException) {
                             return false;
                         }
@@ -570,7 +571,7 @@ public abstract class KeyUtil {
     }
 
     public static PGPPublicKey getPGPPublicKeyFromString (String publicKey) throws IOException, PGPException {
-        InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(IOUtils.toInputStream(publicKey));
+        InputStream publicKeyDecoderStream = PGPUtil.getDecoderStream(IOUtils.toInputStream(publicKey, StandardCharsets.UTF_8));
         JcaPGPPublicKeyRingCollection pgpPubKeyRing = new JcaPGPPublicKeyRingCollection(publicKeyDecoderStream);
         Iterator<PGPPublicKeyRing> publicKeyRingIterator = pgpPubKeyRing.getKeyRings();
         PGPPublicKey pgpPublicKey = null;
@@ -876,7 +877,7 @@ public abstract class KeyUtil {
     }
     
     public static PGPPrivateKey getPrivatePGPKey(String privateKey) throws IOException, PGPException {
-        InputStream privateKeyStream = IOUtils.toInputStream(privateKey); 
+        InputStream privateKeyStream = IOUtils.toInputStream(privateKey, StandardCharsets.UTF_8); 
         Security.addProvider(new BouncyCastleProvider());
         PGPSecretKey secretKey = readSecretKey(privateKeyStream);
         return secretKey.extractPrivateKey(new JcePBESecretKeyDecryptorBuilder().setProvider(
@@ -1020,7 +1021,7 @@ public abstract class KeyUtil {
     }
 
     public static X509Certificate getX509Certificate(String certificate) throws CertificateException, UnsupportedEncodingException {
-       InputStream certificateStream = IOUtils.toInputStream(certificate); 
+       InputStream certificateStream = IOUtils.toInputStream(certificate, StandardCharsets.UTF_8); 
         return getX509Certificate(certificateStream);
     }
     
@@ -1035,7 +1036,7 @@ public abstract class KeyUtil {
     }
 
     public static Certificate getCertificate(String certificate) throws CertificateException {
-        InputStream certificateStream = IOUtils.toInputStream(certificate); 
+        InputStream certificateStream = IOUtils.toInputStream(certificate, StandardCharsets.UTF_8); 
         return getCertificate(certificateStream);
     }
     

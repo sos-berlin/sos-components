@@ -61,6 +61,7 @@ import com.sos.joc.model.publish.ReleasablesFilter;
 import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
+import com.sos.joc.model.sign.SignaturePath;
 import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.util.PublishUtils;
@@ -1152,61 +1153,10 @@ public class DBLayerDeploy {
         }
     }
 
-    public DBItemInventoryConfiguration saveOrUpdateInventoryConfiguration(String path, ControllerObject jsObject, DeployType type, String account,
-            Long auditLogId) throws SOSHibernateException, JsonProcessingException {
-        StringBuilder hql = new StringBuilder(" from ");
-        hql.append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where path = :path");
-        Query<DBItemInventoryConfiguration> query = session.createQuery(hql.toString());
-        query.setParameter("path", path);
-        DBItemInventoryConfiguration existingJsObject = session.getSingleResult(query);
-        Path folderPath = null;
-        String name = null;
-        if (existingJsObject != null) {
-            existingJsObject.setModified(Date.from(Instant.now()));
-            existingJsObject.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
-            existingJsObject.setAuditLogId(auditLogId);
-            existingJsObject.setDeployed(false);
-            // save or update signature in different Table
-            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                saveOrUpdateSignature(existingJsObject.getId(), jsObject, account, type);
-            } else {
-                jsObject.setSignedContent(".");
-            }
-            session.update(existingJsObject);
-            return existingJsObject;
-        } else {
-            DBItemInventoryConfiguration newJsObject = new DBItemInventoryConfiguration();
-            Date now = Date.from(Instant.now());
-            newJsObject.setModified(now);
-            newJsObject.setCreated(now);
-            newJsObject.setContent(Globals.objectMapper.writeValueAsString(jsObject.getContent()));
-            folderPath = Paths.get(((WorkflowPublish) jsObject).getContent().getPath() + ControllerObjectFileExtension.WORKFLOW_FILE_EXTENSION)
-                    .getParent();
-            newJsObject.setFolder(folderPath.toString().replace('\\', '/'));
-            newJsObject.setPath(((WorkflowPublish) jsObject).getContent().getPath());
-            name = Paths.get(((WorkflowPublish) jsObject).getContent().getPath()).getFileName().toString();
-            newJsObject.setName(name);
-            newJsObject.setType(ConfigurationType.WORKFLOW);
-            newJsObject.setAuditLogId(auditLogId);
-            newJsObject.setDeployed(false);
-            newJsObject.setReleased(false);
-            session.save(newJsObject);
-            // save or update signature in different Table
-            if (jsObject.getSignedContent() != null && !jsObject.getSignedContent().isEmpty()) {
-                saveOrUpdateSignature(newJsObject.getId(), jsObject, account, type);
-            } else {
-                jsObject.setSignedContent(".");
-            }
-            return newJsObject;
-        }
-    }
-
-    public DBItemDepSignatures saveOrUpdateSignature(Long invConfId, ControllerObject jsObject, String account, DeployType type)
+    public DBItemDepSignatures saveOrUpdateSignature(Long invConfId, SignaturePath signaturePath, String account, DeployType type)
             throws SOSHibernateException {
         DBItemDepSignatures dbItemSig = getSignature(invConfId);
-        String signature = null;
-        signature = jsObject.getSignedContent();
+        String signature = signaturePath.getSignature().getSignatureString();
         if (signature != null && !signature.isEmpty()) {
             if (dbItemSig != null) {
                 dbItemSig.setAccount(account);
