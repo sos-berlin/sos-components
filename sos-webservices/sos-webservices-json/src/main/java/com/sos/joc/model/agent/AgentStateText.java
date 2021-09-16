@@ -12,6 +12,7 @@ public enum AgentStateText {
     RESETTING("RESETTING"),
     RESET("RESET"),
     COUPLINGFAILED("COUPLINGFAILED"),
+    SHUTDOWN("SHUTDOWN"),
     UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, AgentStateText> CONSTANTS = new HashMap<String, AgentStateText>();

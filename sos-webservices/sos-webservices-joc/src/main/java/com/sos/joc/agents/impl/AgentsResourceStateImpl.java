@@ -60,7 +60,7 @@ import scala.compat.java8.OptionConverters;
 public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsResourceState {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AgentsResourceStateImpl.class);
-    private static String API_CALL = "./agents";
+    private static final String API_CALL = "./agents";
     private static final Map<AgentStateText, Integer> agentStates = Collections.unmodifiableMap(new HashMap<AgentStateText, Integer>() {
 
         private static final long serialVersionUID = 1L;
@@ -70,6 +70,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
             put(AgentStateText.RESETTING, 1);
             put(AgentStateText.RESET, 1);
             put(AgentStateText.COUPLINGFAILED, 2);
+            put(AgentStateText.SHUTDOWN, 2);
             put(AgentStateText.UNKNOWN, 2);
         }
     });
@@ -149,16 +150,22 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         //if (!olderThan30sec || Proxies.isCoupled(controllerId)) {
                             if (either.isRight()) {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
-                                AgentRefState.CouplingState couplingState = either.get().asScala().couplingState();
-                                if (couplingState instanceof AgentRefState.CouplingFailed) {
+                                AgentRefState agentRefState = either.get().asScala();
+                                Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
+                                if (optProblem.isPresent()) {
                                     stateText = AgentStateText.COUPLINGFAILED;
-                                    agent.setErrorMessage(ProblemHelper.getErrorMessage(((AgentRefState.CouplingFailed) couplingState).problem()));
-                                } else if (couplingState instanceof AgentRefState.Coupled$) {
-                                    stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof AgentRefState.Resetting$) {
-                                    stateText = AgentStateText.RESETTING;
-                                } else if (couplingState instanceof AgentRefState.Reset$) {
-                                    stateText = AgentStateText.RESET;
+                                    agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
+                                } else {
+                                    AgentRefState.CouplingState couplingState = agentRefState.couplingState();
+                                    if (couplingState instanceof AgentRefState.Coupled$) {
+                                        stateText = AgentStateText.COUPLED;
+                                    } else if (couplingState instanceof AgentRefState.Resetting$) {
+                                        stateText = AgentStateText.RESETTING;
+                                    } else if (couplingState instanceof AgentRefState.Reset$) {
+                                        stateText = AgentStateText.RESET;
+                                    } else if (couplingState instanceof AgentRefState.ShutDown$) {
+                                        stateText = AgentStateText.SHUTDOWN;
+                                    }
                                 }
                             } else {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
