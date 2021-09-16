@@ -192,7 +192,12 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
                     }
                 }
                 if (lastKnownTime != null) {
-                    long diff = lastKnownTime.getTime() - item.getReadyTime().getTime();
+                    long diff = 0;
+                    if (dateTo != null && lastKnownTime.getTime() > dateTo.getTime()) {
+                        diff = dateTo.getTime() - item.getReadyTime().getTime();
+                    } else {
+                        diff = lastKnownTime.getTime() - item.getReadyTime().getTime();
+                    }
                     totalRunningTime += diff;
                 }
 

@@ -209,7 +209,12 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                         }
                     }
                     if (lastKnownTime != null) {
-                        long diff = lastKnownTime.getTime() - item.getReadyTime().getTime();
+                        long diff = 0;
+                        if (dateTo != null && lastKnownTime.getTime() > dateTo.getTime()) {
+                            diff = dateTo.getTime() - item.getReadyTime().getTime();
+                        } else {
+                            diff = lastKnownTime.getTime() - item.getReadyTime().getTime();
+                        }
                         totalRunningTime += diff;
                     }
                     AgentItemEntryItem entry = new AgentItemEntryItem();
