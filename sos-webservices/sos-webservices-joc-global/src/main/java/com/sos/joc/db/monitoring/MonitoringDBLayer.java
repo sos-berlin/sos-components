@@ -186,7 +186,7 @@ public class MonitoringDBLayer extends DBLayer {
             where.add("readyEventId >= :dateFrom");
         }
         if (dateTo != null) {
-            where.add("readyEventId <= :dateTo");
+            where.add("readyEventId < :dateTo");
         }
         if (where.size() > 0) {
             hql.append("where ").append(String.join(" and ", where)).append(" ");
@@ -269,7 +269,7 @@ public class MonitoringDBLayer extends DBLayer {
             where.add("readyEventId >= :dateFrom");
         }
         if (dateTo != null) {
-            where.add("readyEventId <= :dateTo");
+            where.add("readyEventId < :dateTo");
         }
         if (where.size() > 0) {
             hql.append("where ").append(String.join(" and ", where)).append(" ");
