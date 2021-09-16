@@ -1708,6 +1708,9 @@ public class HistoryModel {
             Map<String, CachedWorkflowJob> jobs = null;
             try {
                 Object[] result = dbLayer.getDeployedWorkflow(controllerConfiguration.getCurrent().getId(), workflowName, workflowVersionId);
+                if (result == null) {
+                    throw new Exception("the deployed workflow could not be found in the database");
+                }
                 path = result[0].toString();
                 Workflow w = getWorkflow(workflowName, workflowVersionId, result[1].toString());
                 if (w != null) {
