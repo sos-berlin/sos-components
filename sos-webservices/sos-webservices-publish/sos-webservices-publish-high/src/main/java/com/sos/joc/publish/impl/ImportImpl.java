@@ -56,7 +56,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportCronImpl.class);
 
     @Override
-	public JOCDefaultResponse postImportCronConfiguration(String xAccessToken, 
+	public JOCDefaultResponse postImportConfiguration(String xAccessToken, 
 			FormDataBodyPart body, 
             String format,
 			boolean overwrite,
