@@ -141,7 +141,7 @@ public class Validator {
                     }
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
-                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderPreparation(), new HashMap<String, String>());
+                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderPreparation(), new HashMap<String, String>(), dbLayer);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
                     validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
                     validateBoardRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
@@ -149,7 +149,7 @@ public class Validator {
                     validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
-                    String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer);
+                    String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
                     validateCalendarRefs(schedule, dbLayer);
                     if (json != null) {
                         Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
@@ -157,7 +157,7 @@ public class Validator {
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
-                    validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer);
+                    validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
                 }
             } finally {
                 Globals.disconnect(session);
@@ -199,10 +199,10 @@ public class Validator {
         }
     }
 
-    private static String validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer) throws JocConfigurationException, SOSHibernateException {
+    private static String validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer, String position) throws JocConfigurationException, SOSHibernateException {
         List<DBItemInventoryConfiguration> workflowPaths = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
         if (workflowPaths == null || !workflowPaths.stream().anyMatch(w -> workflowName.equals(w.getName()))) {
-            throw new JocConfigurationException("Missing assigned Workflow: " + workflowName);
+            throw new JocConfigurationException(position + ": Missing assigned Workflow: " + workflowName);
         }
         return workflowPaths.get(0).getContent();
     }
@@ -320,8 +320,9 @@ public class Validator {
         return jobResources;
     }
 
-    private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames, Requirements orderPreparation,
-            Map<String, String> labels) throws SOSJsonSchemaException, JsonProcessingException, IOException, JocConfigurationException {
+    private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames,
+            Requirements orderPreparation, Map<String, String> labels, InventoryDBLayer dbLayer) throws SOSJsonSchemaException,
+            JsonProcessingException, IOException, JocConfigurationException, SOSHibernateException {
         if (instructions != null) {
             int index = 0;
             for (Instruction inst : instructions) {
@@ -355,7 +356,8 @@ public class Validator {
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                         if (branch.getWorkflow() != null) {
-                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames, orderPreparation, labels);
+                            validateInstructions(branch.getWorkflow().getInstructions(), branchInstPosition + "instructions", jobNames,
+                                    orderPreparation, labels, dbLayer);
                         }
                         branchIndex++;
                     }
@@ -363,33 +365,38 @@ public class Validator {
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     if (fl.getWorkflow() != null) {
-                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation, labels);
+                        validateInstructions(fl.getWorkflow().getInstructions(), instPosition + "forklist.instructions", jobNames, orderPreparation,
+                                labels, dbLayer);
                     }
                     break;
                 case IF:
                     IfElse ifElse = inst.cast();
                     try {
-                        //PredicateParser.parse(ifElse.getPredicate());
+                        // PredicateParser.parse(ifElse.getPredicate());
                         validateExpression(ifElse.getPredicate());
                     } catch (Exception e) {
                         throw new SOSJsonSchemaException("$." + instPosition + "predicate:" + e.getMessage());
                     }
                     if (ifElse.getThen() != null) {
-                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation, labels);
+                        validateInstructions(ifElse.getThen().getInstructions(), instPosition + "then.instructions", jobNames, orderPreparation,
+                                labels, dbLayer);
                     }
                     if (ifElse.getElse() != null) {
-                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation, labels);
+                        validateInstructions(ifElse.getElse().getInstructions(), instPosition + "else.instructions", jobNames, orderPreparation,
+                                labels, dbLayer);
                     }
                     break;
                 case TRY:
                     TryCatch tryCatch = inst.cast();
-                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderPreparation, labels);
-                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderPreparation, labels);
+                    validateInstructions(tryCatch.getTry().getInstructions(), instPosition + "try.instructions", jobNames, orderPreparation, labels,
+                            dbLayer);
+                    validateInstructions(tryCatch.getCatch().getInstructions(), instPosition + "catch.instructions", jobNames, orderPreparation,
+                            labels, dbLayer);
                     break;
                 case LOCK:
                     Lock lock = inst.cast();
-                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames, orderPreparation,
-                            labels);
+                    validateInstructions(lock.getLockedWorkflow().getInstructions(), instPosition + "lockedWorkflow.instructions", jobNames,
+                            orderPreparation, labels, dbLayer);
                     break;
                 case PROMPT:
                     Prompt prompt = inst.cast();
@@ -401,12 +408,21 @@ public class Validator {
                         try {
                             CheckJavaVariableName.test("orderName", ao.getOrderName());
                         } catch (IllegalArgumentException e) {
-                            throw new SOSJsonSchemaException("$." + instPosition + "orderName:" + e.getMessage());
+                            throw new SOSJsonSchemaException("$." + instPosition + "orderName: " + e.getMessage());
                         }
                     }
-//                    if (ao.getArguments() != null) {
-//                        // TODO validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
-//                    }
+                    String json = validateWorkflowRef(ao.getWorkflowName(), dbLayer, "$." + instPosition + "workflowName");
+                    if (json != null) {
+                        Workflow workflowOfAddOrder = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
+                        try {
+                            OrdersHelper.checkArguments(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
+                        } catch (Exception e) {
+                            throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
+                        }
+                    }
+                    // if (ao.getArguments() != null) {
+                    // // TODO validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
+                    // }
                     break;
                 default:
                     break;
