@@ -1,7 +1,9 @@
 package com.sos.joc.workflow.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
@@ -84,6 +86,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 if (workflow.getIsCurrentVersion() && workflowFilter.getCompact() != Boolean.TRUE) {
                     workflow.setFileOrderSources(WorkflowsHelper.workflowToFileOrderSources(currentstate, controllerId, content.getPath(), dbLayer));
                 }
+                
                 workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
                 
                 if (workflowFilter.getCompact() == Boolean.TRUE) {
@@ -111,6 +114,19 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
                         workflow.getPostNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
                                 currentstate, folderPermissions, jocError));
+                    }
+                }
+                f.setWorkflowIds(dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId));
+                if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+                    workflow.setAddOrderFromWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folderPermissions, jocError));
+                } else {
+                    workflow.setAddOrderFromWorkflows(Collections.emptyList());
+                }
+                if (workflow.getAddOrderToWorkflows() != null) {
+                    f.setWorkflowIds(dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).collect(Collectors
+                            .toSet()), controllerId));
+                    if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
+                        workflow.setAddOrderToWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folderPermissions, jocError));
                     }
                 }
                 
