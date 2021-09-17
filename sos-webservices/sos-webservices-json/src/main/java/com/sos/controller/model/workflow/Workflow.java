@@ -102,7 +102,7 @@ public class Workflow
      * @param orderPreparation
      * @param path
      * @param fileOrderSources
-     * @param setHasAddOrderDependencies
+     * @param hasAddOrderDependencies
      * @param versionId
      * @param forkListVariables
      * @param isCurrentVersion
@@ -238,19 +238,19 @@ public class Workflow
         this.hasPostNoticeBoards = hasPostNoticeBoards;
     }
 
-    @JsonProperty("setHasAddOrderDependencies")
+    @JsonProperty("hasAddOrderDependencies")
     public Boolean getHasAddOrderDependencies() {
         return hasAddOrderDependencies;
     }
 
-    @JsonProperty("setHasAddOrderDependencies")
+    @JsonProperty("hasAddOrderDependencies")
     public void setHasAddOrderDependencies(Boolean hasAddOrderDependencies) {
         this.hasAddOrderDependencies = hasAddOrderDependencies;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("setHasAddOrderDependencies", hasAddOrderDependencies).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("isCurrentVersion", isCurrentVersion).append("versionDate", versionDate).append("state", state).append("fileOrderSources", fileOrderSources).append("forkListVariables", forkListVariables).append("hasExpectedNoticeBoards", hasExpectedNoticeBoards).append("hasPostNoticeBoards", hasPostNoticeBoards).append("hasAddOrderDependencies", hasAddOrderDependencies).toString();
     }
 
     @Override
