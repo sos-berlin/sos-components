@@ -370,13 +370,27 @@ public class HistoryMonitoringModel {
             insert(hob.getEventType(), hob.getOrderId(), hob.getHistoryId());
         }
 
-        for (HistoryOrderBean child : hob.getChildren()) {
+        List<HistoryOrderBean> children = hob.getChildren();
+        if (children == null) {
+            return;
+        }
+        for (HistoryOrderBean child : children) {
+            if (child == null) {
+                continue;
+            }
             orderStarted(child);
         }
     }
 
     private void orderJoined(HistoryOrderBean hob) throws SOSHibernateException {
-        for (HistoryOrderBean child : hob.getChildren()) {
+        List<HistoryOrderBean> children = hob.getChildren();
+        if (children == null) {
+            return;
+        }
+        for (HistoryOrderBean child : children) {
+            if (child == null) {
+                continue;
+            }
             if (!dbLayer.updateOrder(child)) {
                 insert(hob.getEventType(), child.getOrderId(), child.getHistoryId());
             }
