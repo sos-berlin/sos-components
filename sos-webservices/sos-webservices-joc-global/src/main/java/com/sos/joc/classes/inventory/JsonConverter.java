@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,10 @@ import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Parameter;
 import com.sos.sign.model.workflow.ParameterListType;
 import com.sos.sign.model.workflow.Parameters;
+
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
+import js7.data_for_java.value.JExpression;
 
 public class JsonConverter {
     
@@ -164,6 +169,36 @@ public class JsonConverter {
 //                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
 //            sao.setOrderId(String.format(idPattern, timeZone));
         }
+        
+        if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
+            sao.getArguments().getAdditionalProperties().replaceAll((k, v) -> quoteVariable(v));
+        }
+    }
+    
+    private static String quoteVariable(Object val) {
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> listVal = (List<Map<String, Object>>) val;
+            return listVal.stream().map(mp -> {
+                mp.replaceAll((k, v) -> quoteString(v.toString()).replace('=', '\0'));
+                return mp;
+            }).collect(Collectors.toList()).toString().replace('=', ':').replace('\0', '=');
+        }
+        return quoteString(val.toString());
+    }
+    
+    private static String quoteString(String str) {
+        if (str == null) {
+            return null;
+        }
+        Either<Problem, JExpression> e = JExpression.parse(str);
+        if (e.isLeft()) {
+            str = JExpression.quoteString(str);
+        }
+        return str;
     }
     
     public static OrderPreparation invOrderPreparationToSignOrderPreparation(Requirements orderPreparation) {
