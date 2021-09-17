@@ -19,6 +19,7 @@ import com.sos.controller.model.workflow.Workflow;
 import com.sos.controller.model.workflow.WorkflowDeps;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.instruction.AddOrder;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -104,6 +105,7 @@ public class WorkflowsHelper {
         List<Instruction> instructions = w.getInstructions();
         Set<String> expectedNoticeBoards = new LinkedHashSet<>();
         Set<String> postNoticeBoards = new LinkedHashSet<>();
+        Set<String> workflowNamesFromAddOrders = new LinkedHashSet<>();
         if (instructions != null) {
             instructions.add(createImplicitEndInstruction());
             w.setForkListVariables(new LinkedHashSet<>());
@@ -111,20 +113,25 @@ public class WorkflowsHelper {
             w.setInstructions(Collections.singletonList(createImplicitEndInstruction()));
         }
         Object[] o = {};
-        setWorkflowPositionsAndForkListVariables(o, w.getInstructions(), w.getForkListVariables(), expectedNoticeBoards, postNoticeBoards);
+        setWorkflowPositionsAndForkListVariables(o, w.getInstructions(), w.getForkListVariables(), expectedNoticeBoards, postNoticeBoards,
+                workflowNamesFromAddOrders);
         if (w.getForkListVariables() == null || w.getForkListVariables().isEmpty()) {
-            w.setForkListVariables(null); 
+            w.setForkListVariables(null);
         }
         if (w instanceof WorkflowDeps) {
-            setInitialDeps((WorkflowDeps) w, expectedNoticeBoards, postNoticeBoards);
+            setInitialDeps((WorkflowDeps) w, expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
         } else {
+            if (w.getHasAddOrderDependencies() != Boolean.TRUE) {
+                w.setHasAddOrderDependencies(!workflowNamesFromAddOrders.isEmpty());
+            }
             w.setHasExpectedNoticeBoards(!expectedNoticeBoards.isEmpty());
             w.setHasPostNoticeBoards(!postNoticeBoards.isEmpty());
         }
         return w;
     }
     
-    private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards) {
+    private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards,
+            Set<String> workflowNamesFromAddOrders) {
         if (w.getExpectedNoticeBoards() == null) {
             w.setExpectedNoticeBoards(new BoardWorkflows());
         }
@@ -133,10 +140,19 @@ public class WorkflowsHelper {
         }
         expectedNoticeBoards.forEach(board -> w.getExpectedNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
         postNoticeBoards.forEach(board -> w.getPostNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
+        if (workflowNamesFromAddOrders != null) {
+            w.setAddOrderToWorkflows(workflowNamesFromAddOrders.stream().map(name -> {
+                Workflow wf = new Workflow();
+                wf.setPath(name);
+                return wf;
+            }).collect(Collectors.toList()));
+        } else {
+            w.setAddOrderToWorkflows(Collections.emptyList());
+        }
     }
     
     private static void setWorkflowPositionsAndForkListVariables(Object[] parentPosition, List<Instruction> insts, Set<String> forkListVariables,
-            Set<String> expectedNoticeBoards, Set<String> postNoticeBoards) {
+            Set<String> expectedNoticeBoards, Set<String> postNoticeBoards, Set<String> workflowNamesFromAddOrders) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Object[] pos = extendArray(parentPosition, i);
@@ -148,13 +164,25 @@ public class WorkflowsHelper {
                 case FORK:
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
-                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                        if (b.getWorkflow().getInstructions() != null) {
+                            b.getWorkflow().getInstructions().add(createImplicitEndInstruction());
+                        } else {
+                            b.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                        }
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork+" + b.getId()), b.getWorkflow().getInstructions(),
+                                forkListVariables, expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
                     forkListVariables.add(fl.getChildren());
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                    if (fl.getWorkflow().getInstructions() != null) {
+                        fl.getWorkflow().getInstructions().add(createImplicitEndInstruction());
+                    } else {
+                        fl.getWorkflow().setInstructions(Collections.singletonList(createImplicitEndInstruction()));
+                    }
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "fork"), fl.getWorkflow().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     break;
                 case EXPECT_NOTICE:
                     ExpectNotice en = inst.cast();
@@ -166,22 +194,30 @@ public class WorkflowsHelper {
                     break;
                 case IF:
                     IfElse ie = inst.cast();
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "then"), ie.getThen().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "then"), ie.getThen().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     if (ie.getElse() != null) {
-                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "else"), ie.getElse().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "else"), ie.getElse().getInstructions(), forkListVariables,
+                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "try+0"), tc.getTry().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "try+0"), tc.getTry().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     if (tc.getCatch() != null) {
-                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch+0"), tc.getCatch().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch+0"), tc.getCatch().getInstructions(), forkListVariables,
+                                expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), forkListVariables, expectedNoticeBoards, postNoticeBoards);
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     break;
+                case ADD_ORDER:
+                    AddOrder ao = inst.cast();
+                    workflowNamesFromAddOrders.add(ao.getWorkflowName());
                 default:
                     break;
                 }

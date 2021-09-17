@@ -23,7 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "orderName",
     "workflowName",
     "arguments",
-    "deleteWhenTerminated"
+    "remainWhenTerminated"
 })
 public class AddOrder
     extends Instruction
@@ -50,8 +50,8 @@ public class AddOrder
     @JsonProperty("arguments")
     @JsonPropertyDescription("a map for arbitrary key-value pairs")
     private Variables arguments;
-    @JsonProperty("deleteWhenTerminated")
-    private Boolean deleteWhenTerminated = true;
+    @JsonProperty("remainWhenTerminated")
+    private Boolean remainWhenTerminated = false;
 
     /**
      * No args constructor for use in serialization
@@ -62,17 +62,17 @@ public class AddOrder
 
     /**
      * 
-     * @param deleteWhenTerminated
      * @param workflowName
      * @param arguments
+     * @param remainWhenTerminated
      * @param orderName
      */
-    public AddOrder(String orderName, String workflowName, Variables arguments, Boolean deleteWhenTerminated) {
+    public AddOrder(String orderName, String workflowName, Variables arguments, Boolean remainWhenTerminated) {
         super();
         this.orderName = orderName;
         this.workflowName = workflowName;
         this.arguments = arguments;
-        this.deleteWhenTerminated = deleteWhenTerminated;
+        this.remainWhenTerminated = remainWhenTerminated;
     }
 
     @JsonProperty("orderName")
@@ -127,24 +127,24 @@ public class AddOrder
         this.arguments = arguments;
     }
 
-    @JsonProperty("deleteWhenTerminated")
-    public Boolean getDeleteWhenTerminated() {
-        return deleteWhenTerminated;
+    @JsonProperty("remainWhenTerminated")
+    public Boolean getRemainWhenTerminated() {
+        return remainWhenTerminated;
     }
 
-    @JsonProperty("deleteWhenTerminated")
-    public void setDeleteWhenTerminated(Boolean deleteWhenTerminated) {
-        this.deleteWhenTerminated = deleteWhenTerminated;
+    @JsonProperty("remainWhenTerminated")
+    public void setRemainWhenTerminated(Boolean remainWhenTerminated) {
+        this.remainWhenTerminated = remainWhenTerminated;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderName", orderName).append("workflowName", workflowName).append("arguments", arguments).append("deleteWhenTerminated", deleteWhenTerminated).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderName", orderName).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowName).append(arguments).append(deleteWhenTerminated).append(orderName).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowName).append(arguments).append(remainWhenTerminated).append(orderName).toHashCode();
     }
 
     @Override
@@ -156,7 +156,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(deleteWhenTerminated, rhs.deleteWhenTerminated).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(orderName, rhs.orderName).isEquals();
     }
 
 }

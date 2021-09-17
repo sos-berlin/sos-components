@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "branches"
+    "branches",
+    "joinIfFailed"
 })
 public class ForkJoin
     extends Instruction
@@ -32,6 +33,8 @@ public class ForkJoin
      */
     @JsonProperty("branches")
     private List<Branch> branches = null;
+    @JsonProperty("joinIfFailed")
+    private Boolean joinIfFailed = false;
 
     /**
      * No args constructor for use in serialization
@@ -43,11 +46,12 @@ public class ForkJoin
     /**
      * 
      * @param branches
-     * 
+     * @param joinIfFailed
      */
-    public ForkJoin(List<Branch> branches) {
+    public ForkJoin(List<Branch> branches, Boolean joinIfFailed) {
         super();
         this.branches = branches;
+        this.joinIfFailed = joinIfFailed;
     }
 
     /**
@@ -70,14 +74,24 @@ public class ForkJoin
         this.branches = branches;
     }
 
+    @JsonProperty("joinIfFailed")
+    public Boolean getJoinIfFailed() {
+        return joinIfFailed;
+    }
+
+    @JsonProperty("joinIfFailed")
+    public void setJoinIfFailed(Boolean joinIfFailed) {
+        this.joinIfFailed = joinIfFailed;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("branches", branches).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("branches", branches).append("joinIfFailed", joinIfFailed).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(branches).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(branches).append(joinIfFailed).toHashCode();
     }
 
     @Override
@@ -89,7 +103,7 @@ public class ForkJoin
             return false;
         }
         ForkJoin rhs = ((ForkJoin) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(branches, rhs.branches).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(branches, rhs.branches).append(joinIfFailed, rhs.joinIfFailed).isEquals();
     }
 
 }
