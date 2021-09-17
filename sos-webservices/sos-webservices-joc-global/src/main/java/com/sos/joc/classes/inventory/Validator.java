@@ -49,7 +49,6 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.CheckJavaVariableName;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -404,13 +403,6 @@ public class Validator {
                     break;
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
-                    if (ao.getOrderName() != null && !ao.getOrderName().isEmpty()) {
-                        try {
-                            CheckJavaVariableName.test("orderName", ao.getOrderName());
-                        } catch (IllegalArgumentException e) {
-                            throw new SOSJsonSchemaException("$." + instPosition + "orderName: " + e.getMessage());
-                        }
-                    }
                     String json = validateWorkflowRef(ao.getWorkflowName(), dbLayer, "$." + instPosition + "workflowName");
                     if (json != null) {
                         Workflow workflowOfAddOrder = Globals.objectMapper.readValue(json, Workflow.class);

@@ -20,7 +20,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
-    "orderName",
     "workflowName",
     "arguments",
     "remainWhenTerminated"
@@ -29,8 +28,6 @@ public class AddOrder
     extends Instruction
 {
 
-    @JsonProperty("orderName")
-    private String orderName;
     /**
      * 
      * (Required)
@@ -65,24 +62,12 @@ public class AddOrder
      * @param workflowName
      * @param arguments
      * @param remainWhenTerminated
-     * @param orderName
      */
-    public AddOrder(String orderName, String workflowName, Variables arguments, Boolean remainWhenTerminated) {
+    public AddOrder(String workflowName, Variables arguments, Boolean remainWhenTerminated) {
         super();
-        this.orderName = orderName;
         this.workflowName = workflowName;
         this.arguments = arguments;
         this.remainWhenTerminated = remainWhenTerminated;
-    }
-
-    @JsonProperty("orderName")
-    public String getOrderName() {
-        return orderName;
-    }
-
-    @JsonProperty("orderName")
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
     }
 
     /**
@@ -139,12 +124,12 @@ public class AddOrder
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("orderName", orderName).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("workflowName", workflowName).append("arguments", arguments).append("remainWhenTerminated", remainWhenTerminated).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowName).append(arguments).append(remainWhenTerminated).append(orderName).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(workflowName).append(arguments).append(remainWhenTerminated).toHashCode();
     }
 
     @Override
@@ -156,7 +141,7 @@ public class AddOrder
             return false;
         }
         AddOrder rhs = ((AddOrder) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).append(orderName, rhs.orderName).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(workflowName, rhs.workflowName).append(arguments, rhs.arguments).append(remainWhenTerminated, rhs.remainWhenTerminated).isEquals();
     }
 
 }

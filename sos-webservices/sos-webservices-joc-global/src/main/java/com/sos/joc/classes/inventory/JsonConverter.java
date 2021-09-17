@@ -150,17 +150,13 @@ public class JsonConverter {
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
-        String orderName = ao.getOrderName();
-        if (orderName != null && !orderName.isEmpty()) {
-            orderName = "-" + orderName;
-            String idPattern =
-                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
-            sao.setOrderId(String.format(idPattern, orderName));
-            // now not yet supported
+//        String orderName = ao.getOrderName();
+//        if (orderName != null && !orderName.isEmpty()) {
+//            orderName = "-" + orderName;
 //            String idPattern =
 //                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
 //            sao.setOrderId(String.format(idPattern, timeZone, orderName));
-        } else {
+//        } else {
             String idPattern =
                     "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
             sao.setOrderId(idPattern);
@@ -168,7 +164,7 @@ public class JsonConverter {
 //            String idPattern =
 //                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
 //            sao.setOrderId(String.format(idPattern, timeZone));
-        }
+//        }
         
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
             sao.getArguments().getAdditionalProperties().replaceAll((k, v) -> quoteVariable(v));

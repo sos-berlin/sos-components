@@ -224,7 +224,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         OrderInitiatorSettings settings;
         if (Globals.configurationGlobals == null) {
             settings = new OrderInitiatorSettings();
-            settings.setTimeZone("Europe/Berlin");
+            settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             LOGGER.warn("Could not read settings. Using defaults");
         } else {

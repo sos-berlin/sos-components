@@ -151,21 +151,21 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             if (either.isRight()) {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
                                 AgentRefState agentRefState = either.get().asScala();
+                                AgentRefState.CouplingState couplingState = agentRefState.couplingState();
                                 Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                 if (optProblem.isPresent()) {
-                                    stateText = AgentStateText.COUPLINGFAILED;
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
-                                } else {
-                                    AgentRefState.CouplingState couplingState = agentRefState.couplingState();
-                                    if (couplingState instanceof AgentRefState.Coupled$) {
-                                        stateText = AgentStateText.COUPLED;
-                                    } else if (couplingState instanceof AgentRefState.Resetting$) {
-                                        stateText = AgentStateText.RESETTING;
-                                    } else if (couplingState instanceof AgentRefState.Reset$) {
-                                        stateText = AgentStateText.RESET;
-                                    } else if (couplingState instanceof AgentRefState.ShutDown$) {
-                                        stateText = AgentStateText.SHUTDOWN;
-                                    }
+                                }
+                                if (couplingState instanceof AgentRefState.Coupled$) {
+                                    stateText = AgentStateText.COUPLED;
+                                } else if (couplingState instanceof AgentRefState.Resetting$) {
+                                    stateText = AgentStateText.RESETTING;
+                                } else if (couplingState instanceof AgentRefState.Reset$) {
+                                    stateText = AgentStateText.RESET;
+                                } else if (couplingState instanceof AgentRefState.ShutDown$) {
+                                    stateText = AgentStateText.SHUTDOWN;
+                                } else if (optProblem.isPresent()) {
+                                    stateText = AgentStateText.COUPLINGFAILED;
                                 }
                             } else {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
