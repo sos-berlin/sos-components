@@ -152,7 +152,7 @@ public class Validator {
                     String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
                     validateCalendarRefs(schedule, dbLayer);
                     if (json != null) {
-                        Workflow workflowOfSchedule = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
+                        Workflow workflowOfSchedule = Globals.objectMapper.readValue(json, Workflow.class);
                         validateVariableSets(schedule.getVariableSets(), workflowOfSchedule.getOrderPreparation(), "$.variableSets");
                     }
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
@@ -413,16 +413,13 @@ public class Validator {
                     }
                     String json = validateWorkflowRef(ao.getWorkflowName(), dbLayer, "$." + instPosition + "workflowName");
                     if (json != null) {
-                        Workflow workflowOfAddOrder = (Workflow) Globals.objectMapper.readValue(json, Workflow.class);
+                        Workflow workflowOfAddOrder = Globals.objectMapper.readValue(json, Workflow.class);
                         try {
                             OrdersHelper.checkArguments(ao.getArguments(), workflowOfAddOrder.getOrderPreparation());
                         } catch (Exception e) {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
                     }
-                    // if (ao.getArguments() != null) {
-                    // // TODO validateExpression("$." + instPosition + "arguments", ao.getArguments().getAdditionalProperties());
-                    // }
                     break;
                 default:
                     break;

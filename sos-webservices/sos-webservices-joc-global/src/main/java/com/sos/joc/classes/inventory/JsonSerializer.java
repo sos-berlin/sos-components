@@ -436,7 +436,7 @@ public class JsonSerializer {
                 case ADD_ORDER:
                     com.sos.sign.model.instruction.AddOrder ao = inst.cast();
                     ao.setArguments(emptyVarsToNull(ao.getArguments()));
-                    ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
+                    //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 default:
                     break;
