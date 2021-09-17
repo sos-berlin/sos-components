@@ -26,6 +26,10 @@
 	"admissionTimeScheme" : {
 		"$ref": "../../../inventory/schemas/job/admissionTimeScheme-schema.json" 
 	},
+	"skipIfNoAdmissionForOrderDay": {
+		"type": "boolean",
+		"default": false
+	},
     "returnCodeMeaning": {
       "$ref": "../../../inventory/schemas/job/jobReturnCode-schema.json"
     },

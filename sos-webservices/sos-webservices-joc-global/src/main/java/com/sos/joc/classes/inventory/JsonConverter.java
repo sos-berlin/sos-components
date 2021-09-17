@@ -140,6 +140,7 @@ public class JsonConverter {
     }
     
     private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
+        sao.setDeleteWhenTerminated(!ao.getRemainWhenTerminated());
         String timeZone = w.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
@@ -148,12 +149,20 @@ public class JsonConverter {
         if (orderName != null && !orderName.isEmpty()) {
             orderName = "-" + orderName;
             String idPattern =
-                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
-            sao.setOrderId(String.format(idPattern, timeZone, orderName));
+                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
+            sao.setOrderId(String.format(idPattern, orderName));
+            // now not yet supported
+//            String idPattern =
+//                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
+//            sao.setOrderId(String.format(idPattern, timeZone, orderName));
         } else {
             String idPattern =
-                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
-            sao.setOrderId(String.format(idPattern, timeZone));
+                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+            sao.setOrderId(idPattern);
+            // now not yet supported
+//            String idPattern =
+//                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+//            sao.setOrderId(String.format(idPattern, timeZone));
         }
     }
     

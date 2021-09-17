@@ -24,6 +24,10 @@
     },
     "workflow": {
     	"$ref": "instructions-schema.json"
+    },
+    "joinIfFailed": {
+    	"type": "boolean",
+		"default": false
     }
   },
   "additionalProperties": false
