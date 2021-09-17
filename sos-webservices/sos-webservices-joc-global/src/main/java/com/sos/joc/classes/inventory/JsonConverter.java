@@ -140,7 +140,7 @@ public class JsonConverter {
     }
     
     private static void convertAddOrder(Workflow w, AddOrder ao, com.sos.sign.model.instruction.AddOrder sao) {
-        sao.setDeleteWhenTerminated(!ao.getRemainWhenTerminated());
+        sao.setDeleteWhenTerminated(ao.getRemainWhenTerminated() != Boolean.TRUE);
         String timeZone = w.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";

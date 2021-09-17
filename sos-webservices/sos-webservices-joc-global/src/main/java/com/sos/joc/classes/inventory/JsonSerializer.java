@@ -130,6 +130,7 @@ public class JsonSerializer {
                     job.setReturnCodeMeaning(null);
                     job.setSigkillDelay(defaultToNull(job.getSigkillDelay(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
+                    job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
                 });
             }
         }
@@ -150,6 +151,7 @@ public class JsonSerializer {
                     job.setReturnCodeMeaning(null);
                     job.setGraceTimeout(defaultToNull(job.getGraceTimeout(), 15));
                     job.setAdmissionTimeScheme(emptyAdmissionTimeSchemeToNull(job.getAdmissionTimeScheme()));
+                    job.setSkipIfNoAdmissionForOrderDay(defaultToNull(job.getSkipIfNoAdmissionForOrderDay(), Boolean.FALSE));
                 });
             }
         }
@@ -322,12 +324,14 @@ public class JsonSerializer {
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
+                    fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
                     if (fl.getWorkflow() != null) {
                         cleanInventoryInstructions(fl.getWorkflow().getInstructions());
                     }
                     break;
                 case FORK:
                     ForkJoin fj = inst.cast();
+                    fj.setJoinIfFailed(defaultToNull(fj.getJoinIfFailed(), Boolean.FALSE));
                     for (Branch branch : fj.getBranches()) {
                         if (branch.getWorkflow() != null) {
                             cleanInventoryInstructions(branch.getWorkflow().getInstructions());
@@ -361,6 +365,7 @@ public class JsonSerializer {
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     ao.setArguments(emptyVarsToNull(ao.getArguments()));
+                    ao.setRemainWhenTerminated(defaultToNull(ao.getRemainWhenTerminated(), Boolean.FALSE));
                     break;
                 default:
                     break;
@@ -390,6 +395,7 @@ public class JsonSerializer {
                     break;
                 case FORK:
                     com.sos.sign.model.instruction.ForkJoin fj = inst.cast();
+                    fj.setJoinIfFailed(defaultToNull(fj.getJoinIfFailed(), Boolean.FALSE));
                     for (com.sos.sign.model.workflow.Branch branch : fj.getBranches()) {
                         if (branch.getWorkflow() != null) {
                             cleanSignedInstructions(branch.getWorkflow().getInstructions());
@@ -398,6 +404,7 @@ public class JsonSerializer {
                     break;
                 case FORKLIST:
                     com.sos.sign.model.instruction.ForkList fl = inst.cast();
+                    fl.setJoinIfFailed(defaultToNull(fl.getJoinIfFailed(), Boolean.FALSE));
                     if (fl.getWorkflow() != null) {
                         cleanSignedInstructions(fl.getWorkflow().getInstructions());
                     }
@@ -429,6 +436,7 @@ public class JsonSerializer {
                 case ADD_ORDER:
                     com.sos.sign.model.instruction.AddOrder ao = inst.cast();
                     ao.setArguments(emptyVarsToNull(ao.getArguments()));
+                    ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
                     break;
                 default:
                     break;
