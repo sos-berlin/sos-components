@@ -269,45 +269,47 @@ public class WorkflowsHelper {
     
     public static Set<String> extractImplicitEnds(List<Instruction> insts) {
         Set<String> posSet = new HashSet<>();
-        extractImplicitEnds(insts, posSet);
+        extractImplicitEnds(insts, posSet, false);
         return posSet;
     }
     
-    private static void extractImplicitEnds(List<Instruction> insts, Set<String> posSet) {
+    private static void extractImplicitEnds(List<Instruction> insts, Set<String> posSet, boolean extract) {
         if (insts != null) {
             for (int i = 0; i < insts.size(); i++) {
                 Instruction inst = insts.get(i);
                 switch (inst.getTYPE()) {
                 case IMPLICIT_END:
-                    posSet.add(getJPositionString(inst.getPosition()));
+                    if (extract) {
+                        posSet.add(getJPositionString(inst.getPosition()));
+                    }
                     break;
                 case FORK:
                     ForkJoin f = inst.cast();
                     for (Branch b : f.getBranches()) {
-                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet);
+                        extractImplicitEnds(b.getWorkflow().getInstructions(), posSet, false);
                     }
                     break;
                 case FORKLIST:
                     ForkList fl = inst.cast();
-                    extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet);
+                    extractImplicitEnds(fl.getWorkflow().getInstructions(), posSet, false);
                     break;
                 case IF:
                     IfElse ie = inst.cast();
-                    extractImplicitEnds(ie.getThen().getInstructions(), posSet);
+                    extractImplicitEnds(ie.getThen().getInstructions(), posSet, true);
                     if (ie.getElse() != null) {
-                        extractImplicitEnds(ie.getElse().getInstructions(), posSet);
+                        extractImplicitEnds(ie.getElse().getInstructions(), posSet, true);
                     }
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    extractImplicitEnds(tc.getTry().getInstructions(), posSet);
+                    extractImplicitEnds(tc.getTry().getInstructions(), posSet, true);
                     if (tc.getCatch() != null) {
-                        extractImplicitEnds(tc.getCatch().getInstructions(), posSet);
+                        extractImplicitEnds(tc.getCatch().getInstructions(), posSet, true);
                     }
                     break;
                 case LOCK:
                     Lock l = inst.cast();
-                    extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet);
+                    extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, true);
                     break;
                 default:
                     break;
