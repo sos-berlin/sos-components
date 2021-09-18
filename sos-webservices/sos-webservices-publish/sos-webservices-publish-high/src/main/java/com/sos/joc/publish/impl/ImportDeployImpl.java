@@ -34,6 +34,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -159,6 +160,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 switch (config.getObjectType()) {
                 case WORKFLOW:
                     DBItemInventoryConfiguration workflowDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.WORKFLOW);
+                    if (workflowDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                     objectsToCheckPathRenaming.add(workflowDbItem);
                     DBItemDepSignatures workflowDbItemSignature = dbLayer.saveOrUpdateSignature(workflowDbItem.getId(), signaturePath, account,
                             DeployType.WORKFLOW);
@@ -166,6 +171,10 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case JOBRESOURCE:
                     DBItemInventoryConfiguration jobResourceDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBRESOURCE);
+                    if (jobResourceDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                     objectsToCheckPathRenaming.add(jobResourceDbItem);
                     DBItemDepSignatures jobResourceDbItemSignature = dbLayer.saveOrUpdateSignature(jobResourceDbItem.getId(), signaturePath, account,
                             DeployType.JOBRESOURCE);
@@ -173,20 +182,36 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     break;
                 case LOCK:
                     DBItemInventoryConfiguration lockDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.LOCK);
+                    if (lockDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                     objectsToCheckPathRenaming.add(lockDbItem);
                     importedObjects.put(config, null);
                     break;
                 case FILEORDERSOURCE:
                 	DBItemInventoryConfiguration fosDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.FILEORDERSOURCE);
+                    if (fosDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                 	objectsToCheckPathRenaming.add(fosDbItem);
                 	importedObjects.put(config, null);
                 case NOTICEBOARD:
                     DBItemInventoryConfiguration boardDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.NOTICEBOARD);
+                    if (boardDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                     objectsToCheckPathRenaming.add(boardDbItem);
                     importedObjects.put(config, null);
                     break;
                 case JOBCLASS:
                     DBItemInventoryConfiguration jobClassDbItem = dbLayer.getConfigurationByPath(config.getPath(), ConfigurationType.JOBCLASS);
+                    if (jobClassDbItem == null) {
+                        throw new JocDeployException(String.format(
+                                "The configuration with path %1$s does not exist in the current JOC instance. Deployment is not allowed!", config.getPath()));
+                    }
                     objectsToCheckPathRenaming.add(jobClassDbItem);
                     importedObjects.put(config, null);
                     break;
