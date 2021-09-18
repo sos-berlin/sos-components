@@ -158,7 +158,7 @@ public class JsonConverter {
 //            sao.setOrderId(String.format(idPattern, timeZone, orderName));
 //        } else {
             String idPattern =
-                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.([0-9]{10}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D0' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.[0-9]([0-9]{9}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
             sao.setOrderId(idPattern);
             // now, $epochSecond not yet supported
 //            String idPattern =
