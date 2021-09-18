@@ -1,6 +1,7 @@
 package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.URLDecoder;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
@@ -14,6 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.ws.rs.Path;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -34,6 +38,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
+import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -139,7 +144,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
                 switch (config.getObjectType()) {
                 case WORKFLOW:
-                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
+//                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
+                    commitId = getCommitId(config);
                     break;
                 case LOCK:
                     break;
@@ -148,7 +154,8 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                 case JOBCLASS:
                     break;
                 default:
-                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
+//                    commitId = Globals.objectMapper.readValue(config.getSignedContent(), Workflow.class).getVersionId();
+                    commitId = getCommitId(config);
                 }
             }
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
@@ -225,6 +232,9 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // call UpdateRepo for all provided Controllers
             String controllerId = filter.getControllerId();
             final String commitIdForUpdate = commitId;
+            if(commitIdForUpdate == null || commitIdForUpdate.isEmpty()) {
+                throw new JocDeployException("versionId could not be determinated, deployment not executed.");
+            }
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             JocKeyPair keyPair = dbLayerKeys.getKeyPair(account, JocSecurityLevel.HIGH);
             if (keyPair == null) {
@@ -339,6 +349,22 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             LOGGER.error(e.getMessage(), e);
             ProblemHelper.postProblemEventIfExist(Either.left(Problem.pure(e.toString())), getAccessToken(), getJocError(), null);
         }
+    }
+    
+    private String getCommitId (ControllerObject config) {
+        JsonReader jsonReader = null;
+        String commitId = null;
+        try {
+            jsonReader = Json.createReader(new StringReader(config.getSignedContent()));
+            JsonObject json = jsonReader.readObject();
+            commitId = json.getString("versionId", "");
+        } catch(Exception e) {
+            LOGGER.warn(String.format("Could not determine versionId of configuration from archive with path %1$s.", config.getPath()));
+        } finally {
+            jsonReader.close();
+        }
+        return commitId;
+        
     }
 
 }
