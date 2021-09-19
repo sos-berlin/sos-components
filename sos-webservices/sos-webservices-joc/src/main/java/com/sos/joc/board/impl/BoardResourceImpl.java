@@ -1,6 +1,7 @@
 package com.sos.joc.board.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 
 import javax.ws.rs.Path;
@@ -67,7 +68,8 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             }
             checkFolderPermissions(dc.getPath());
             
-            answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, addPermittedFolder(null)));
+            answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, addPermittedFolder(null), BoardHelper.getExpectingOrders(currentstate)
+                    .getOrDefault(dc.getName(), Collections.emptyList())));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;
         } catch (Throwable e) {

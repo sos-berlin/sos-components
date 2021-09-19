@@ -23,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "id",
     "endOfLife",
-    "expectingOrders"
+    "expectingOrders",
+    "state"
 })
 public class Notice {
 
@@ -40,6 +41,7 @@ public class Notice {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -47,6 +49,14 @@ public class Notice {
     private Date endOfLife;
     @JsonProperty("expectingOrders")
     private List<OrderV> expectingOrders = null;
+    /**
+     * NoticeState
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    private NoticeState state;
 
     /**
      * No args constructor for use in serialization
@@ -58,14 +68,16 @@ public class Notice {
     /**
      * 
      * @param id
+     * @param state
      * @param endOfLife
      * @param expectingOrders
      */
-    public Notice(String id, Date endOfLife, List<OrderV> expectingOrders) {
+    public Notice(String id, Date endOfLife, List<OrderV> expectingOrders, NoticeState state) {
         super();
         this.id = id;
         this.endOfLife = endOfLife;
         this.expectingOrders = expectingOrders;
+        this.state = state;
     }
 
     /**
@@ -96,6 +108,7 @@ public class Notice {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -107,6 +120,7 @@ public class Notice {
      * timestamp
      * <p>
      * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
+     * (Required)
      * 
      */
     @JsonProperty("endOfLife")
@@ -124,14 +138,36 @@ public class Notice {
         this.expectingOrders = expectingOrders;
     }
 
+    /**
+     * NoticeState
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public NoticeState getState() {
+        return state;
+    }
+
+    /**
+     * NoticeState
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("state")
+    public void setState(NoticeState state) {
+        this.state = state;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).toString();
+        return new ToStringBuilder(this).append("id", id).append("endOfLife", endOfLife).append("expectingOrders", expectingOrders).append("state", state).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(id).append(endOfLife).append(expectingOrders).toHashCode();
+        return new HashCodeBuilder().append(id).append(state).append(endOfLife).append(expectingOrders).toHashCode();
     }
 
     @Override
@@ -143,7 +179,7 @@ public class Notice {
             return false;
         }
         Notice rhs = ((Notice) other);
-        return new EqualsBuilder().append(id, rhs.id).append(endOfLife, rhs.endOfLife).append(expectingOrders, rhs.expectingOrders).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(state, rhs.state).append(endOfLife, rhs.endOfLife).append(expectingOrders, rhs.expectingOrders).isEquals();
     }
 
 }

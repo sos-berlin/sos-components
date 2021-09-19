@@ -3,6 +3,7 @@ package com.sos.controller.model.order;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -17,12 +18,20 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "TYPE"
+    "TYPE",
+    "noticeId"
 })
 public class OrderState {
 
     @JsonProperty("TYPE")
     private String tYPE;
+    /**
+     * set if state == ExpectingNotice
+     * 
+     */
+    @JsonProperty("noticeId")
+    @JsonPropertyDescription("set if state == ExpectingNotice")
+    private String noticeId;
 
     /**
      * No args constructor for use in serialization
@@ -34,10 +43,12 @@ public class OrderState {
     /**
      * 
      * @param tYPE
+     * @param noticeId
      */
-    public OrderState(String tYPE) {
+    public OrderState(String tYPE, String noticeId) {
         super();
         this.tYPE = tYPE;
+        this.noticeId = noticeId;
     }
 
     @JsonProperty("TYPE")
@@ -50,14 +61,32 @@ public class OrderState {
         this.tYPE = tYPE;
     }
 
+    /**
+     * set if state == ExpectingNotice
+     * 
+     */
+    @JsonProperty("noticeId")
+    public String getNoticeId() {
+        return noticeId;
+    }
+
+    /**
+     * set if state == ExpectingNotice
+     * 
+     */
+    @JsonProperty("noticeId")
+    public void setNoticeId(String noticeId) {
+        this.noticeId = noticeId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(noticeId).toHashCode();
     }
 
     @Override
@@ -69,7 +98,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).isEquals();
     }
 
 }

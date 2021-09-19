@@ -150,21 +150,15 @@ public class JsonConverter {
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
-//        String orderName = ao.getOrderName();
-//        if (orderName != null && !orderName.isEmpty()) {
-//            orderName = "-" + orderName;
-//            String idPattern =
-//                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1') ++ \"%s\"";
-//            sao.setOrderId(String.format(idPattern, timeZone, orderName));
-//        } else {
-            String idPattern =
-                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D0' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.[0-9]([0-9]{9}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+        String idPattern =
+                "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D' ++ replaceAll($epochMilli, '^[0-9]*([0-9]{10})$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";    
+//        String idPattern =
+//                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D0' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.[0-9]([0-9]{9}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
             sao.setOrderId(idPattern);
             // now, $epochSecond not yet supported
 //            String idPattern =
 //                    "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#D$epochSecond-\" ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
 //            sao.setOrderId(String.format(idPattern, timeZone));
-//        }
         
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {
             sao.getArguments().getAdditionalProperties().replaceAll((k, v) -> quoteVariable(v));

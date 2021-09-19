@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import com.sos.joc.model.common.Folder;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 
 @Path("notice")
 public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResource {
@@ -98,6 +100,7 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(controllerState.instant()));
             }
+            Map<String, List<JOrder>> expectingOrders = BoardHelper.getExpectingOrders(controllerState);
             JocError jocError = getJocError();
             if (contents != null) {
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
@@ -105,7 +108,8 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                         if (dc.getContent() == null || dc.getContent().isEmpty()) {
                             throw new DBMissingDataException("doesn't exist");
                         }
-                        return BoardHelper.getBoard(controllerState, dc, folders);
+                        return BoardHelper.getBoard(controllerState, dc, folders, expectingOrders.getOrDefault(dc.getName(), Collections
+                                .emptyList()));
                     } catch (Throwable e) {
                         if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
                             LOGGER.info(jocError.printMetaInfo());

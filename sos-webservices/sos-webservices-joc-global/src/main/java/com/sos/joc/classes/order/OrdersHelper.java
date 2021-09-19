@@ -325,11 +325,9 @@ public class OrdersHelper {
         }
         return null;
     }
-
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
-            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
-        // TODO mapping without ObjectMapper
-        OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
+    
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
+            throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
         o.setArguments(oItem.getArguments());
         o.setAttachedState(oItem.getAttachedState());
@@ -371,6 +369,13 @@ public class OrdersHelper {
         }
         o.setWorkflowId(wId);
         return o;
+    }
+
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
+            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+        // TODO mapping without ObjectMapper
+        OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
+        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, surveyDateMillis);
     }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
