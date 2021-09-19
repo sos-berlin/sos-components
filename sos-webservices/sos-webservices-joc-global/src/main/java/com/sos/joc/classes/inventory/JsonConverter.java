@@ -151,9 +151,7 @@ public class JsonConverter {
             timeZone = "Etc/UTC";
         }
         String idPattern =
-                "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D' ++ replaceAll($epochMilli, '^[0-9]*([0-9]{10})$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";    
-//        String idPattern =
-//                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D0' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.[0-9]([0-9]{9}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+                    "'#' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}).*$', '$1') ++ '#D99' ++ replaceAll($js7OrderId, '^#[0-9]{4}-[0-9]{2}-[0-9]{2}#.[0-9]([0-9]{8}).*$', '$1') ++ '-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
             sao.setOrderId(idPattern);
             // now, $epochSecond not yet supported
 //            String idPattern =

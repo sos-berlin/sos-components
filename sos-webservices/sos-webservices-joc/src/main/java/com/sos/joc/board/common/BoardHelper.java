@@ -148,7 +148,7 @@ public class BoardHelper {
         private static final long serialVersionUID = 1L;
 
         {
-            put(NoticeStateText.POSTED, 4);
+            put(NoticeStateText.POSTED, 6);
             put(NoticeStateText.EXPECTED, 8);
         }
     });
