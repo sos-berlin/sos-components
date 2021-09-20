@@ -59,7 +59,7 @@
         "default": "Etc/UTC"
 	},
     "orderIdExpression": {
-      "description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$epochSecond-$orderWatchId:$0\"",
+      "description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$js7EpochSecond-$orderWatchId:$0\"",
       "type": "string"
     },
     "delay": {

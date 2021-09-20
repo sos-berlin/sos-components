@@ -50,10 +50,10 @@ public class AgentCommandResourceImpl extends JOCResourceImpl implements IAgentC
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             storeAuditLog(agentCommand.getAuditLog(), agentCommand.getControllerId(), CategoryType.CONTROLLER);
             JControllerCommand resetAgentCommand = JControllerCommand.apply(new ControllerCommand.ResetAgent(AgentPath.of(agentCommand
-                    .getAgentId())));
+                    .getAgentId()), agentCommand.getForce() == Boolean.TRUE));
             LOGGER.debug("Reset Agent: " + resetAgentCommand.toJson());
             ControllerApi.of(controllerId).executeCommand(resetAgentCommand).thenAccept(e -> {
                 ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);

@@ -19,7 +19,7 @@
   ],
   "properties": {
   	"orderId" : {
-  		"description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$epochSecond-$orderName\"",
+  		"description": "'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$js7EpochSecond-$orderName\"",
   		"type" : "string"
   	},
   	"workflowPath" : {

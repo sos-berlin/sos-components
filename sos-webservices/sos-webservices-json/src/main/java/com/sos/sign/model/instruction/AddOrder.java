@@ -31,12 +31,12 @@ public class AddOrder
 {
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$js7EpochSecond-$orderName"
      * (Required)
      * 
      */
     @JsonProperty("orderId")
-    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$epochSecond-$orderName\"")
+    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#I$js7EpochSecond-$orderName\"")
     private String orderId;
     /**
      * 
@@ -84,7 +84,7 @@ public class AddOrder
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$js7EpochSecond-$orderName"
      * (Required)
      * 
      */
@@ -94,7 +94,7 @@ public class AddOrder
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$epochSecond-$orderName"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#I$js7EpochSecond-$orderName"
      * (Required)
      * 
      */

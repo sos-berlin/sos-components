@@ -89,11 +89,11 @@ public class FileOrderSource implements IDeployObject
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$epochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
      * 
      */
     @JsonProperty("orderIdExpression")
-    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$epochSecond-$orderWatchId:$1\"")
+    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$js7EpochSecond-$orderWatchId:$1\"")
     private String orderIdExpression;
     @JsonProperty("delay")
     private Long delay;
@@ -267,7 +267,7 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$epochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
      * 
      */
     @JsonProperty("orderIdExpression")
@@ -276,7 +276,7 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$epochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
      * 
      */
     @JsonProperty("orderIdExpression")

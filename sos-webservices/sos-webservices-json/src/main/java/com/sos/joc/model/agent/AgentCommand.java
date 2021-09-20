@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentId",
+    "force",
     "auditLog"
 })
 public class AgentCommand {
@@ -42,6 +43,8 @@ public class AgentCommand {
      */
     @JsonProperty("agentId")
     private String agentId;
+    @JsonProperty("force")
+    private Boolean force = false;
     /**
      * auditParams
      * <p>
@@ -99,6 +102,16 @@ public class AgentCommand {
         this.agentId = agentId;
     }
 
+    @JsonProperty("force")
+    public Boolean getForce() {
+        return force;
+    }
+
+    @JsonProperty("force")
+    public void setForce(Boolean force) {
+        this.force = force;
+    }
+
     /**
      * auditParams
      * <p>
@@ -123,12 +136,12 @@ public class AgentCommand {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("force", force).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(force).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -140,7 +153,7 @@ public class AgentCommand {
             return false;
         }
         AgentCommand rhs = ((AgentCommand) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(force, rhs.force).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }
