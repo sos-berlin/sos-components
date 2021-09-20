@@ -1,6 +1,7 @@
 package com.sos.joc.publish.util;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -44,22 +46,27 @@ public class DeleteDeployments {
         if (dbItems == null || dbItems.isEmpty()) {
             return true;
         }
-        Map<String, List<DBItemDeploymentHistory>> dbItemsPerController = dbItems.stream().filter(Objects::nonNull).filter(
-                item -> OperationType.UPDATE.value() == item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId));
-        final String commitId = UUID.randomUUID().toString();
-        Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>();
+        
+        Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> dbItemsPerController = dbItems.stream().filter(Objects::nonNull).filter(
+                item -> OperationType.UPDATE.value() == item.getOperation())
+                    .collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
+ 
+        List<DeployType> deleteOrder = Arrays.asList(DeployType.FILEORDERSOURCE, DeployType.WORKFLOW, DeployType.JOBRESOURCE, DeployType.NOTICEBOARD, DeployType.LOCK);
 
         // optimistic DB operations
-        for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
-            // store history entries optimistically
-            invConfigurationsToDelete.addAll(getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, entry.getValue(), commitId)));
-        }
-        // delete configurations optimistically
-        deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
-        // send commands to controllers
-        for (Map.Entry<String, List<DBItemDeploymentHistory>> entry : dbItemsPerController.entrySet()) {
-            PublishUtils.updateItemsDelete(commitId, entry.getValue(), entry.getKey()).thenAccept(either -> processAfterDelete(either, entry.getKey(), 
-                    account, commitId, accessToken, jocError));
+        for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
+            for (DeployType type : deleteOrder) {
+                final String commitId = UUID.randomUUID().toString();
+                List<DBItemDeploymentHistory> sortedItems = entry.getValue().getOrDefault(type, Collections.emptyList());
+                // store history entries optimistically
+                Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>(
+                        getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId))); 
+                // delete configurations optimistically
+                deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
+                // send commands to controllers
+                PublishUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
+                    .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError));
+            }
         }
         return true;
     }
@@ -245,9 +252,7 @@ public class DeleteDeployments {
         }
         // delete and put to trash
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        //Date now = Date.from(Instant.now());
         for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
-            //JocAuditLog.storeAuditLogDetail(new AuditLogDetail(invConfiguration.getPath(), invConfiguration.getType()), dbLayer.getSession(), auditlogId, now);
             invConfiguration.setAuditLogId(auditlogId);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
             if (withEvents) {

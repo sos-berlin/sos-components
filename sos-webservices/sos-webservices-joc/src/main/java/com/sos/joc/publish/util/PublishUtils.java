@@ -1182,7 +1182,7 @@ public abstract class PublishUtils {
         Set<DBItemDeploymentHistory> deletedObjects = new HashSet<DBItemDeploymentHistory>();
         InventoryDBLayer invDBLayer = new InventoryDBLayer(dbLayer.getSession());
         try {
-            if (toDelete != null) {
+            if (toDelete != null && !toDelete.isEmpty()) {
                 for (DBItemDeploymentHistory delete : toDelete) {
                     delete.setId(null);
                     delete.setCommitId(commitId);
