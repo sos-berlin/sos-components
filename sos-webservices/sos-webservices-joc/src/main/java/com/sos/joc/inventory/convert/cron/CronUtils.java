@@ -19,10 +19,12 @@ import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Frequencies;
 import com.sos.inventory.model.calendar.MonthDays;
-import com.sos.inventory.model.calendar.Months;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.calendar.WeekDays;
 import com.sos.inventory.model.calendar.WhenHolidayType;
+import com.sos.inventory.model.instruction.Instruction;
+import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.instruction.NamedJob;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.job.ExecutableType;
@@ -51,9 +53,11 @@ public class CronUtils {
     private static final String END_OF_DAY = "23:59:59";
     private static final String END_OF_HOUR = ":59:59";
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final String JOBNAME = "cronjob";
+    private static final String JOBTITLE = "cron job";
 
-    public static Map<WorkflowEdit, ScheduleEdit> cronFile2Workflows(InventoryDBLayer dbLayer, final BufferedReader in, Calendar calendar,
-            String timezone) throws Exception {
+    public static Map<WorkflowEdit, ScheduleEdit> cronFile2Workflows(InventoryDBLayer dbLayer, final BufferedReader in, Calendar calendar, String agentName,
+            String timezone, boolean isSystemCrontab) throws Exception {
         String workflowBaseName = "workflow_cron-";
         String scheduleBaseName = "schedule_cron-";
         Integer workflowNumber = dbLayer.getSuffixNumber("", "workflow_cron", ConfigurationType.WORKFLOW.intValue());
@@ -98,7 +102,12 @@ public class CronUtils {
                         String scheduleName = scheduleBaseName + scheduleNumber;
                         try {
                             Matcher cronRegExMatcher = cronRegExPattern.matcher(cronline);
-                            int commandIndex = 6;
+                            Integer commandIndex = null;
+                            if (isSystemCrontab) {
+                                commandIndex = 6;
+                            } else {
+                                commandIndex = 5;                                
+                            }
                             if (!cronRegExMatcher.matches()) {
                                 JocError error = new JocError("Fail to parse cron line \"" + cronline + "\"");
                                 throw new JocException(error);
@@ -106,8 +115,14 @@ public class CronUtils {
                             String command = cronRegExMatcher.group(commandIndex);
                             ExecutableScript script = new ExecutableScript(command, env, false, null, null);
                             script.setTYPE(ExecutableType.ShellScriptExecutable);
-                            Jobs jobs = createJob(script, calendar, timezone);
+                            Jobs jobs = createJob(script, calendar, agentName, timezone);
                             workflow.setJobs(jobs);
+                            List<Instruction> instructions = new ArrayList<Instruction>();
+                            NamedJob instruction = new NamedJob(JOBNAME);
+                            instruction.setLabel(JOBNAME);
+                            instruction.setTYPE(InstructionType.EXECUTE_NAMED);
+                            instructions.add(instruction);
+                            workflow.setInstructions(instructions);
                             List<AssignedCalendars> assignedCals = new ArrayList<AssignedCalendars>();
                             assignedCals.add(assignCalendar(calendar, timezone));
                             Schedule schedule = createSchedule(cronline, cronRegExMatcher, assignedCals);
@@ -139,26 +154,16 @@ public class CronUtils {
         return scheduledWorkflows;
     }
 
-    private static Jobs createJob(ExecutableScript script, Calendar calendar, String timezone) throws Exception {
+    private static Jobs createJob(ExecutableScript script, Calendar calendar, String agentName, String timezone) throws Exception {
         Jobs jobs = new Jobs();
         Job job = new Job();
-        jobs.getAdditionalProperties().put("cronjob", job);
-        job.setTitle("cron job");
+        jobs.getAdditionalProperties().put(JOBNAME, job);
+        job.setTitle(JOBTITLE);
         job.setTimeout(0);
         job.setExecutable(script);
+        job.setAgentName(agentName);
         return jobs;
     }
-
-    // private static Jobs createJob(ExecutableScript script, String jobname, String jobtitle, int jobtimeout, Calendar calendar, String timezone) throws
-    // Exception {
-    // Jobs jobs = new Jobs();
-    // Job job = new Job();
-    // jobs.getAdditionalProperties().put(jobname, job);
-    // job.setTitle(jobtitle);
-    // job.setTimeout(jobtimeout);
-    // job.setExecutable(script);
-    // return jobs;
-    // }
 
     private static final AssignedCalendars assignCalendar(Calendar calendar, String timezone) {
         AssignedCalendars assigned = new AssignedCalendars();
@@ -206,7 +211,6 @@ public class CronUtils {
             calIncludes = new Frequencies();
         }
         if (days != null && months != null && weekdays != null) {
-            Months month = new Months();
             Set<Integer> weekdaysSet = new HashSet<Integer>();
             weekdaysSet.add(0);
             weekdaysSet.add(1);
@@ -273,7 +277,6 @@ public class CronUtils {
                     String[] daySplit = modSplit[0].split("-");
                     Integer startDay = Integer.parseInt(daySplit[0]);
                     Integer endDay = Integer.parseInt(daySplit[1]);
-                    java.util.Calendar c = java.util.Calendar.getInstance();
                     for (int i = 1; i <= 12; i++) {
                         for (Integer j = startDay; j <= endDay; j += mod) {
                             processDates(calIncludes, i - 1, j, null);
@@ -284,7 +287,6 @@ public class CronUtils {
                     String[] daySplit = days.split("-");
                     Integer startDay = Integer.parseInt(daySplit[0]);
                     Integer endDay = Integer.parseInt(daySplit[1]);
-                    java.util.Calendar c = java.util.Calendar.getInstance();
                     for (int i = 1; i <= 12; i++) {
                         for (Integer j = startDay; j <= endDay; j++) {
                             processDates(calIncludes, i - 1, j, null);
@@ -352,7 +354,6 @@ public class CronUtils {
         if (months.contains("*/")) {
             int mod = Integer.parseInt(months.replace("*/", ""));
             for (Integer i = 1; i <= 12; i += mod) {
-                Date now = Date.from(Instant.now());
                 java.util.Calendar c = java.util.Calendar.getInstance();
                 int max = c.getActualMaximum(java.util.Calendar.DAY_OF_MONTH);
                 if (days.contains(",")) {
@@ -532,7 +533,6 @@ public class CronUtils {
             List<Integer> dayList = new ArrayList<Integer>();
             for (Integer i = 1; i <= maxDays; i += mod) {
                 c.set(java.util.Calendar.DAY_OF_MONTH, i);
-                Integer currentDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
                 if (weekDays.contains(c.get(java.util.Calendar.DAY_OF_WEEK) - 1)) {
                     int dayToAdd = c.get(java.util.Calendar.DAY_OF_MONTH);
                     dayList.add(dayToAdd);
@@ -548,7 +548,6 @@ public class CronUtils {
             List<Integer> dayList = new ArrayList<Integer>();
             for (int i = startDay; i <= endDay; i += mod) {
                 c.set(java.util.Calendar.DAY_OF_MONTH, i);
-                Integer currentDayOfWeek = c.get(java.util.Calendar.DAY_OF_WEEK) - 1;
                 if (weekDays.contains(c.get(java.util.Calendar.DAY_OF_WEEK) - 1)) {
                     int dayToAdd = c.get(java.util.Calendar.DAY_OF_MONTH);
                     dayList.add(dayToAdd);

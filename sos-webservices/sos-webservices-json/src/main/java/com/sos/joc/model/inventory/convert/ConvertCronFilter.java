@@ -3,7 +3,6 @@ package com.sos.joc.model.inventory.convert;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -21,25 +20,19 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "folder",
     "calendarName",
-    "suffix",
-    "prefix",
+    "agentName",
+    "systemCrontab",
     "auditLog"
 })
 public class ConvertCronFilter {
 
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
     @JsonProperty("folder")
-    @JsonPropertyDescription("absolute path of an object.")
-    private String folder;
+    private String folder = "/";
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendarName")
@@ -48,18 +41,13 @@ public class ConvertCronFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("suffix")
-    private String suffix;
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("prefix")
-    private String prefix;
+    @JsonProperty("agentName")
+    private String agentName;
+    @JsonProperty("systemCrontab")
+    private Boolean systemCrontab = false;
     /**
      * auditParams
      * <p>
@@ -69,23 +57,11 @@ public class ConvertCronFilter {
     @JsonProperty("auditLog")
     private AuditParams auditLog;
 
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
     @JsonProperty("folder")
     public String getFolder() {
         return folder;
     }
 
-    /**
-     * path
-     * <p>
-     * absolute path of an object.
-     * 
-     */
     @JsonProperty("folder")
     public void setFolder(String folder) {
         this.folder = folder;
@@ -95,6 +71,7 @@ public class ConvertCronFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendarName")
@@ -106,6 +83,7 @@ public class ConvertCronFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("calendarName")
@@ -117,44 +95,34 @@ public class ConvertCronFilter {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("suffix")
-    public String getSuffix() {
-        return suffix;
+    @JsonProperty("agentName")
+    public String getAgentName() {
+        return agentName;
     }
 
     /**
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
-    @JsonProperty("suffix")
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
+    @JsonProperty("agentName")
+    public void setAgentName(String agentName) {
+        this.agentName = agentName;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("prefix")
-    public String getPrefix() {
-        return prefix;
+    @JsonProperty("systemCrontab")
+    public Boolean getSystemCrontab() {
+        return systemCrontab;
     }
 
-    /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("prefix")
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
+    @JsonProperty("systemCrontab")
+    public void setSystemCrontab(Boolean systemCrontab) {
+        this.systemCrontab = systemCrontab;
     }
 
     /**
@@ -181,12 +149,12 @@ public class ConvertCronFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("calendarName", calendarName).append("suffix", suffix).append("prefix", prefix).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("folder", folder).append("calendarName", calendarName).append("agentName", agentName).append("systemCrontab", systemCrontab).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(calendarName).append(folder).append(suffix).append(auditLog).append(prefix).toHashCode();
+        return new HashCodeBuilder().append(systemCrontab).append(calendarName).append(agentName).append(folder).append(auditLog).toHashCode();
     }
 
     @Override
@@ -198,7 +166,7 @@ public class ConvertCronFilter {
             return false;
         }
         ConvertCronFilter rhs = ((ConvertCronFilter) other);
-        return new EqualsBuilder().append(calendarName, rhs.calendarName).append(folder, rhs.folder).append(suffix, rhs.suffix).append(auditLog, rhs.auditLog).append(prefix, rhs.prefix).isEquals();
+        return new EqualsBuilder().append(systemCrontab, rhs.systemCrontab).append(calendarName, rhs.calendarName).append(agentName, rhs.agentName).append(folder, rhs.folder).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

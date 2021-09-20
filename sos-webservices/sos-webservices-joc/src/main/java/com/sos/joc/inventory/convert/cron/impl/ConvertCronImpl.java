@@ -69,8 +69,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
 			FormDataBodyPart body, 
 			String folder,
             String calendarName,
-			String prefix, 
-			String suffix,
+            String agentName, 
+            Boolean systemCrontab,
 			String timeSpent,
 			String ticketLink,
 			String comment) throws Exception {
@@ -84,8 +84,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         filter.setAuditLog(auditLog);
         filter.setFolder(folder);
         filter.setCalendarName(calendarName);
-        filter.setPrefix(prefix);
-        filter.setSuffix(suffix);
+        filter.setAgentName(agentName);
+        filter.setSystemCrontab(systemCrontab);
 		return postConvertCron(xAccessToken, body, filter, auditLog);
 	}
 
@@ -105,6 +105,10 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
             stream = body.getEntityAs(InputStream.class);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            if (filter.getFolder() == null || filter.getFolder().isEmpty()) {
+                //default folder
+                filter.setFolder("/");
+            }
             
             // process uploaded cron file
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
@@ -114,7 +118,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             Calendar cal = Globals.objectMapper.readValue(calDbItem.getContent(), Calendar.class);
             cal.setName(calDbItem.getName());
             cal.setPath(calDbItem.getPath());
-            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, timezone);
+            Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, filter.getAgentName(), timezone,
+                    filter.getSystemCrontab());
             Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
             for (Map.Entry<WorkflowEdit, ScheduleEdit> entry : scheduledWorkflows.entrySet()) {
                 entry.getKey().setPath(Paths.get(filter.getFolder()).resolve(entry.getKey().getName()).toString().replace('\\', '/'));
@@ -175,7 +180,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
         item = setProperties(in, item, dbLayer, true);
         item.setCreated(Date.from(Instant.now()));
         item.setAuditLogId(dbAuditLog.getId());
-        item.setContent(Globals.objectMapper.writeValueAsString(in));
+        item.setContent(Globals.objectMapper.writeValueAsString(in.getConfiguration()));
         JocInventory.insertConfiguration(dbLayer, item, in.getConfiguration());
         if (JocInventory.isFolder(item.getType())) {
             JocInventory.postFolderEvent(item.getFolder());

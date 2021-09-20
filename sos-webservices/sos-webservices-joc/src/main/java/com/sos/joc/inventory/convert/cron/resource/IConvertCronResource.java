@@ -23,8 +23,8 @@ public interface IConvertCronResource {
             @FormDataParam("file") FormDataBodyPart body,
             @FormDataParam("folder") String targetFolder,
             @FormDataParam("calendarName") String calendarName,
-            @FormDataParam("prefix") String prefix,
-            @FormDataParam("suffix") String suffix,
+            @FormDataParam("agentName") String agentName,
+            @FormDataParam("systemCrontab") Boolean systemCrontab,
             @FormDataParam("timeSpent") String timeSpent,
             @FormDataParam("ticketLink") String ticketLink,
             @FormDataParam("comment") String comment) throws Exception;
