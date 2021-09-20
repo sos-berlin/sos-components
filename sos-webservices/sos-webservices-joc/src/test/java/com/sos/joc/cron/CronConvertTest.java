@@ -4,15 +4,9 @@ import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
@@ -43,7 +37,7 @@ public class CronConvertTest {
     @Ignore
     public void testParseFile () throws Exception {
         BufferedReader bufferedReader = 
-                Files.newBufferedReader(Paths.get(getClass().getClassLoader().getResource("cron/crontest").toURI()), StandardCharsets.UTF_8);
+                Files.newBufferedReader(Paths.get(getClass().getClassLoader().getResource("cron/crontest_system").toURI()), StandardCharsets.UTF_8);
         Calendar cal = new Calendar();
         try {
             factory = new SOSHibernateFactory("./src/test/resources/sp.hibernate.cfg.xml");

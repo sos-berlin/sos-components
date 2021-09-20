@@ -1,0 +1,32 @@
+# Comment should not be parsed
+ENV1=EnvVar1
+ENV2=EnvVar2
+ENV3=EnvVar3
+
+# cron entries for testing
+5 * * * * root echo 'run at minute 5 every hour'
+5 12 * * * root echo 'run at 12:05'
+5 8-16 * * * root echo 'run at minute 5 minutes after each full hour from 08:00 through 16:00'
+5 */2 * * * root echo 'run at minute 5 after every second hour'
+0,8,23,39 12-13 * * * root echo 'run at minute 0, 8, 23, and 39 from hour 12 through 13'
+0,8,23,39 * * * * root echo 'run run at minute 0, 8, 23, and 39 at every hour'
+0,8,23,39 12 * * * root echo 'run at minute 0, 8, 23, and 39 past hour 12'
+1-59/2 * * * * root echo 'run at every 2nd minute from 1 through 59'
+1-59/2 */2 * * * root echo 'run at every 2nd minute from 1 through 59 past every 2nd hour'
+1-59/2 12-13 * * * root echo 'run at every 2nd minute from 1 through 59 past every hour from 12 through 13'
+1-59/2 12-13,14-20/2 * * * root echo 'run at every 2nd minute from 1 through 59 past every hour from 12 through 13 and every 2nd hour from 14 through 20'
+* * * * * root echo 'run at every minute'
+* 12 * * * root echo 'run at every minute through hour 12'
+* 12-13 * * * root echo 'run at every minute from hour 12 through 13'
+* */3 * * * root echo 'run at every minute through every 3rd hour'
+*/5 * * * * root echo 'run at every 5th minute'
+*/5 12 * * * root echo 'run at every 5th minute through hour 12'
+*/5 12-13 * * * root echo 'run at every 5th minute from hour 12 through 13'
+15 12 6-12 * * root echo 'run at 12:15 on every day-of-month from 6 through 12'
+15 12 * 6-12 * root echo 'run at 12:15 in every month from June through December'
+15 12 * * 1-5 root echo 'run at 12:15 on every day-of-week from Monday through Friday'
+15 12 * 6-12 1-5 root echo 'run at 12:15 on every day-of-week from Monday through Friday in every month from June through December'
+15 12 6-12 * 1-5 root echo 'run at 12:15 on every day-of-month from 6 through 12 and on every day-of-week from Monday through Friday'
+15 12 6-12 6-12 * root echo 'run at 12:15 on every day-of-month from 6 through 12 in every month from June through December'
+15 12 6-12 6-12 1-5 root echo 'run at 12:15 on every day-of-month from 6 through 12 and on every day-of-week from Monday through Friday in every month from June through December'
+15 12 15 6-12 1,3,5 root echo 'run at 12:15 on day-of-month 15 and on Monday, Wednesday, and Friday in every month from June through December'

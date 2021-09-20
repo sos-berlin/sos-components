@@ -102,17 +102,15 @@ public class CronUtils {
                         String scheduleName = scheduleBaseName + scheduleNumber;
                         try {
                             Matcher cronRegExMatcher = cronRegExPattern.matcher(cronline);
-                            Integer commandIndex = null;
-                            if (isSystemCrontab) {
-                                commandIndex = 6;
-                            } else {
-                                commandIndex = 5;                                
-                            }
+                            Integer commandIndex = 6;
                             if (!cronRegExMatcher.matches()) {
                                 JocError error = new JocError("Fail to parse cron line \"" + cronline + "\"");
                                 throw new JocException(error);
                             }
                             String command = cronRegExMatcher.group(commandIndex);
+                            if (isSystemCrontab) {
+                                command = command.substring(command.indexOf(" ") +1, command.length());
+                            }
                             ExecutableScript script = new ExecutableScript(command, env, false, null, null);
                             script.setTYPE(ExecutableType.ShellScriptExecutable);
                             Jobs jobs = createJob(script, calendar, agentName, timezone);
