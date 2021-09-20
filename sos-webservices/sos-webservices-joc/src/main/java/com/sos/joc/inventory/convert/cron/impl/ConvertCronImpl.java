@@ -112,6 +112,8 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             InventoryDBLayer invDbLayer = new InventoryDBLayer(hibernateSession);
             DBItemInventoryConfiguration calDbItem = invDbLayer.getCalendarByName(filter.getCalendarName());
             Calendar cal = Globals.objectMapper.readValue(calDbItem.getContent(), Calendar.class);
+            cal.setName(calDbItem.getName());
+            cal.setPath(calDbItem.getPath());
             Map<WorkflowEdit, ScheduleEdit> scheduledWorkflows = CronUtils.cronFile2Workflows(invDbLayer, bufferedReader, cal, timezone);
             Set<ConfigurationObject> objects = new HashSet<ConfigurationObject>();
             for (Map.Entry<WorkflowEdit, ScheduleEdit> entry : scheduledWorkflows.entrySet()) {
