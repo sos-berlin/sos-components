@@ -131,6 +131,7 @@ import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
 import js7.data.item.VersionId;
+import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
@@ -852,26 +853,11 @@ public abstract class PublishUtils {
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String controllerId) {
         // keyAlgorithm obsolete
-        Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
-        Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
+        //Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
+        //Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
+        Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
         if (alreadyDeployedtoDelete != null) {
-            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
-                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
-                            .toSet()));
-            updateItemOperationsSigned.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
-                    .map(item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
-                            .toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
-                    item -> {
-                        try {
-                            Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
-                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
-                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
-                        } catch (Exception e) {
-                            throw new JocDeployException(e);
-                        }
-                    }).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
+            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.FILEORDERSOURCE.intValue())
                     .map(item -> {
                         try {
                             FileOrderSource fileOrderSource = Globals.objectMapper.readValue(item.getContent(), FileOrderSource.class);
@@ -881,7 +867,13 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            updateItemOperationsSimple.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
+            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.WORKFLOW.intValue()).map(
+                    item -> JUpdateItemOperation.deleteVersioned(WorkflowPath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
+                            .toSet()));
+            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.JOBRESOURCE.intValue())
+                    .map(item -> JUpdateItemOperation.deleteSimple(JobResourcePath.of(item.getName()))).filter(Objects::nonNull).collect(Collectors
+                            .toSet()));
+            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.NOTICEBOARD.intValue()).map(
                     item -> {
                         try {
                             Board board = Globals.objectMapper.readValue(item.getContent(), Board.class);
@@ -891,9 +883,19 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
+            updateItemOperations.addAll(alreadyDeployedtoDelete.stream().filter(item -> item.getType() == DeployType.LOCK.intValue()).map(
+                    item -> {
+                        try {
+                            Lock lock = Globals.objectMapper.readValue(item.getContent(), Lock.class);
+                            lock.setPath(Paths.get(item.getPath()).getFileName().toString());
+                            return JUpdateItemOperation.deleteSimple(LockPath.of(lock.getPath()));
+                        } catch (Exception e) {
+                            throw new JocDeployException(e);
+                        }
+                    }).collect(Collectors.toSet()));
         }
-        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperationsSimple), Flux.just(JUpdateItemOperation
-                .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemOperationsSigned)));
+        return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemOperations), Flux.just(JUpdateItemOperation
+                .addVersion(VersionId.of(commitId)))));
     }
 
     private static void updateVersionId(DBItemDeploymentHistory draft, String commitId) {

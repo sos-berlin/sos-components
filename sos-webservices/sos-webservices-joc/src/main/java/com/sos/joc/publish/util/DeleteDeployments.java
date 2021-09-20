@@ -1,6 +1,7 @@
 package com.sos.joc.publish.util;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -57,12 +59,16 @@ public class DeleteDeployments {
                 item -> OperationType.UPDATE.value() == item.getOperation())
                     .collect(Collectors.groupingBy(DBItemDeploymentHistory::getControllerId, Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
  
-
         // optimistic DB operations
         for (Map.Entry<String, Map<DeployType, List<DBItemDeploymentHistory>>> entry : dbItemsPerController.entrySet()) {
-            for (DeployType type : DELETE_ORDER) {
+            List<DBItemDeploymentHistory> fileOrderSourceItems = entry.getValue().getOrDefault(
+                    DeployType.FILEORDERSOURCE, Collections.emptyList());
+            if (fileOrderSourceItems.isEmpty() || entry.getValue().keySet().size() == 1) {
                 final String commitId = UUID.randomUUID().toString();
-                List<DBItemDeploymentHistory> sortedItems = entry.getValue().getOrDefault(type, Collections.emptyList());
+                List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
+                for (DeployType type : DELETE_ORDER) {
+                    sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
+                }
                 // store history entries optimistically
                 Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>(
                         getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId))); 
@@ -71,6 +77,37 @@ public class DeleteDeployments {
                 // send commands to controllers
                 PublishUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
                     .thenAccept(either -> processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError));
+            } else {
+                final String commitId = UUID.randomUUID().toString();
+                final String commitId2 = UUID.randomUUID().toString();
+                List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
+                for (DeployType type : DELETE_ORDER) {
+                    if (!type.equals(DeployType.FILEORDERSOURCE)) {
+                        sortedItems.addAll(entry.getValue().getOrDefault(type, Collections.emptyList()));
+                    }
+                }
+                // store history entries optimistically
+                Set<DBItemInventoryConfiguration> invConfigurationsToDelete2 = new HashSet<DBItemInventoryConfiguration>(
+                        getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, fileOrderSourceItems, commitId2)));
+                Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>(
+                        getInvConfigurationsForTrash(dbLayer, storeNewDepHistoryEntries(dbLayer, sortedItems, commitId)));
+                // delete configurations optimistically
+                deleteConfigurations(dbLayer, null, invConfigurationsToDelete2, commitId2, accessToken, jocError, auditlogId, withoutFolderDeletion);
+                deleteConfigurations(dbLayer, null, invConfigurationsToDelete, commitId, accessToken, jocError, auditlogId, withoutFolderDeletion);
+                // send commands to controllers
+                PublishUtils.updateItemsDelete(commitId2, fileOrderSourceItems, entry.getKey())
+                    .thenAccept(either2 -> {
+                        processAfterDelete(either2, entry.getKey(), account, commitId2, accessToken, jocError);
+                        try {
+                            TimeUnit.SECONDS.sleep(10);
+                        } catch (InterruptedException e) {
+                            //
+                        }
+                        PublishUtils.updateItemsDelete(commitId, sortedItems, entry.getKey())
+                        .thenAccept(either -> {
+                            processAfterDelete(either, entry.getKey(), account, commitId, accessToken, jocError);
+                        });
+                    });
             }
         }
         return true;
@@ -95,27 +132,65 @@ public class DeleteDeployments {
         }
    
         
-        Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> itemsToDeletePerController = new HashMap<String, Map<DeployType, List<DBItemDeploymentHistory>>>();
+        Map<String, Map<DeployType, List<DBItemDeploymentHistory>>> itemsToDeletePerController =
+                new HashMap<String, Map<DeployType, List<DBItemDeploymentHistory>>>();
         // optimistic DB operations
         for (String controllerId : controllerIds) {
             // determine all (latest) entries from the given folder
             itemsToDeletePerController.put(controllerId, dbLayer.getLatestDepHistoryItemsFromFolder(conf.getPath(), controllerId, conf.getRecursive())
-                    .stream().filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.groupingBy(DBItemDeploymentHistory::getTypeAsEnum)));
-            
+                    .stream().filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.groupingBy(
+                            DBItemDeploymentHistory::getTypeAsEnum)));
+
             if (!itemsToDeletePerController.get(controllerId).isEmpty()) {
-                for (DeployType type : DELETE_ORDER) {
+                
+                List<DBItemDeploymentHistory> fileOrderSourceItems = itemsToDeletePerController.get(controllerId).getOrDefault(
+                        DeployType.FILEORDERSOURCE, Collections.emptyList());
+                if (fileOrderSourceItems.isEmpty() || itemsToDeletePerController.keySet().size() == 1) {
                     final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-                    
-                    List<DBItemDeploymentHistory> sortedItems = itemsToDeletePerController.get(controllerId).getOrDefault(type, Collections.emptyList());
+                    List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
+                    for (DeployType type : DELETE_ORDER) {
+                        sortedItems.addAll(itemsToDeletePerController.get(controllerId).getOrDefault(type, Collections.emptyList()));
+                    }
                     // store history entries optimistically
-                    Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>(getInvConfigurationsForTrash(dbLayer, 
+                    Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>(getInvConfigurationsForTrash(dbLayer,
                             storeNewDepHistoryEntries(dbLayer, sortedItems, commitIdForDeleteFromFolder)));
                     // delete configurations optimistically
-                    deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder, accessToken, jocError, 
-                            auditlogId, withoutFolderDeletion, withEvents);
+                    deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder,
+                            accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
                     // send commands to controllers
                     PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
                             either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+                } else {
+                    final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
+                    final String commitIdForDeleteFromFolder2 = UUID.randomUUID().toString();
+                    List<DBItemDeploymentHistory> sortedItems = new ArrayList<>();
+                    for (DeployType type : DELETE_ORDER) {
+                        if (!type.equals(DeployType.FILEORDERSOURCE)) {
+                            sortedItems.addAll(itemsToDeletePerController.get(controllerId).getOrDefault(type, Collections.emptyList()));
+                        }
+                    }
+                    // store history entries optimistically
+                    Set<DBItemInventoryConfiguration> invConfigurationsToDelete2 = new HashSet<>(getInvConfigurationsForTrash(dbLayer, 
+                            storeNewDepHistoryEntries(dbLayer, fileOrderSourceItems, commitIdForDeleteFromFolder2)));
+                    Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<>(getInvConfigurationsForTrash(dbLayer, 
+                            storeNewDepHistoryEntries(dbLayer, sortedItems, commitIdForDeleteFromFolder)));
+                    // delete configurations optimistically
+                    deleteConfigurations(dbLayer, null, invConfigurationsToDelete2, commitIdForDeleteFromFolder2,
+                            accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
+                    deleteConfigurations(dbLayer, Collections.singletonList(conf), invConfigurationsToDelete, commitIdForDeleteFromFolder,
+                            accessToken, jocError, auditlogId, withoutFolderDeletion, withEvents);
+                    // send commands to controllers
+                    PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder2, fileOrderSourceItems, controllerId).thenAccept(
+                            either2 -> {
+                                processAfterDelete(either2, controllerId, account, commitIdForDeleteFromFolder2, accessToken, jocError);
+                                try {
+                                    TimeUnit.SECONDS.sleep(10);
+                                } catch (InterruptedException e) {
+                                    //
+                                }
+                                PublishUtils.updateItemsDelete(commitIdForDeleteFromFolder, sortedItems, controllerId).thenAccept(
+                                        either -> processAfterDelete(either, controllerId, account, commitIdForDeleteFromFolder, accessToken, jocError));
+                            });
                 }
             }
         }
