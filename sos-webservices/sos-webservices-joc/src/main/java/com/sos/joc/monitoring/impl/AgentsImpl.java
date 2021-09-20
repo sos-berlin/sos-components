@@ -236,7 +236,13 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         Map<String, Map<String, Long>> result = new HashMap<>();
         List<Object[]> l = dbLayer.getLastAgents();
         for (Object[] o : l) {
-            result.put(o[1].toString(), Collections.singletonMap(o[2].toString(), (Long) o[0]));
+            String controllerId = o[1].toString();
+            Map<String, Long> m = result.get(controllerId);
+            if (m == null) {
+                m = new HashMap<>();
+            }
+            m.put(o[2].toString(), (Long) o[0]);
+            result.put(controllerId, m);
         }
         return result;
     }
@@ -245,7 +251,13 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         Map<String, Map<String, Long>> result = new HashMap<>();
         List<Object[]> l = dbLayer.getPreviousAgents(dateFrom);
         for (Object[] o : l) {
-            result.put(o[1].toString(), Collections.singletonMap(o[2].toString(), (Long) o[0]));
+            String controllerId = o[1].toString();
+            Map<String, Long> m = result.get(controllerId);
+            if (m == null) {
+                m = new HashMap<>();
+            }
+            m.put(o[2].toString(), (Long) o[0]);
+            result.put(controllerId, m);
         }
         return result;
     }
