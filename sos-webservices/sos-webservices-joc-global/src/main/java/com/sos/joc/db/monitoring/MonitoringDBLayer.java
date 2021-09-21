@@ -248,15 +248,22 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public List<Object[]> getLastControllers() throws SOSHibernateException {
+    public List<Object[]> getLastControllers(Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select readyEventId,controllerId from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
         hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        if (dateTo != null) {
+            hql.append("where readyEventId > :dateTo ");
+        }
         hql.append("group by controllerId");
         hql.append(")");
 
-        return getSession().getResultList(getSession().createQuery(hql.toString()));
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        if (dateTo != null) {
+            query.setParameter("dateTo", getDateAsEventId(dateTo));
+        }
+        return getSession().getResultList(query);
     }
 
     public ScrollableResults getAgents(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
@@ -321,15 +328,22 @@ public class MonitoringDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public List<Object[]> getLastAgents() throws SOSHibernateException {
+    public List<Object[]> getLastAgents(Date dateTo) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
         hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        if (dateTo != null) {
+            hql.append("where readyEventId > :dateTo ");
+        }
         hql.append("group by controllerId,agentId");
         hql.append(")");
 
-        return getSession().getResultList(getSession().createQuery(hql.toString()));
+        Query<Object[]> query = getSession().createQuery(hql.toString());
+        if (dateTo != null) {
+            query.setParameter("dateTo", getDateAsEventId(dateTo));
+        }
+        return getSession().getResultList(query);
     }
 
     public List<Object[]> getPreviousAgents(Date dateFrom) throws SOSHibernateException {

@@ -142,7 +142,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
 
         Map<String, Long> lastControllers = null;
         if (getLast) {
-            lastControllers = getLastControllers(dbLayer);
+            lastControllers = getLastControllers(dbLayer, dateTo);
         }
 
         final List<ControllerItem> result = new ArrayList<>();
@@ -170,7 +170,7 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
                 Date lastKnownTime = getLastKnownTime(item);
                 if (i == lastIndex) {
                     if (item.getShutdownTime() == null) {
-                        if (lastControllers == null) {
+                        if (lastControllers == null || lastControllers.size() == 0) {
                             lastKnownTime = null;
                         } else {
                             Long last = lastControllers.get(item.getControllerId());
@@ -212,9 +212,9 @@ public class ControllersImpl extends JOCResourceImpl implements IControllers {
         return result;
     }
 
-    private Map<String, Long> getLastControllers(MonitoringDBLayer dbLayer) throws SOSHibernateException {
+    private Map<String, Long> getLastControllers(MonitoringDBLayer dbLayer, Date dateTo) throws SOSHibernateException {
         Map<String, Long> result = new HashMap<String, Long>();
-        List<Object[]> l = dbLayer.getLastControllers();
+        List<Object[]> l = dbLayer.getLastControllers(dateTo);
         for (Object[] o : l) {
             result.put(o[1].toString(), (Long) o[0]);
         }

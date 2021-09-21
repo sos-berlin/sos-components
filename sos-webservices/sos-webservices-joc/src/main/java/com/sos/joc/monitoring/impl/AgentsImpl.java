@@ -153,7 +153,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
 
         Map<String, Map<String, Long>> lastAgents = null;
         if (getLast) {
-            lastAgents = getLastAgents(dbLayer);
+            lastAgents = getLastAgents(dbLayer, dateTo);
         }
 
         final List<AgentsControllerItem> result = new ArrayList<>();
@@ -185,7 +185,7 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
                     Date lastKnownTime = getLastKnownTime(item);
                     if (i == lastIndex) {
                         if (item.getShutdownTime() == null) {
-                            if (lastAgents == null) {
+                            if (lastAgents == null || lastAgents.size() == 0) {
                                 lastKnownTime = null;
                             } else {
                                 Map<String, Long> last = lastAgents.get(item.getControllerId());
@@ -232,9 +232,9 @@ public class AgentsImpl extends JOCResourceImpl implements IAgents {
         return result;
     }
 
-    private Map<String, Map<String, Long>> getLastAgents(MonitoringDBLayer dbLayer) throws SOSHibernateException {
+    private Map<String, Map<String, Long>> getLastAgents(MonitoringDBLayer dbLayer, Date dateTo) throws SOSHibernateException {
         Map<String, Map<String, Long>> result = new HashMap<>();
-        List<Object[]> l = dbLayer.getLastAgents();
+        List<Object[]> l = dbLayer.getLastAgents(dateTo);
         for (Object[] o : l) {
             String controllerId = o[1].toString();
             Map<String, Long> m = result.get(controllerId);

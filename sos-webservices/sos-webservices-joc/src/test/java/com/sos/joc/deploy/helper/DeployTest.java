@@ -5,8 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.sign.keys.sign.SignObject;
 import com.sos.commons.sign.keys.verify.VerifySignature;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -28,10 +31,13 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.item.VersionId;
 import js7.data.lock.LockPath;
+import js7.data.order.OrderId;
+import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUnsignedSimpleItem;
 import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.lock.JLock;
+import js7.data_for_java.order.JFreshOrder;
 import js7.proxy.javaapi.JControllerApi;
 import reactor.core.publisher.Flux;
 
@@ -158,6 +164,52 @@ public class DeployTest {
             throw e;
         } finally {
             proxy.close();
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testAddOrders() throws Exception {
+        JProxyTestClass proxy = new JProxyTestClass();
+        try {
+            JControllerApi api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
+            int i = 0;
+            for (i = 0; i < 1; i++) {
+                if (i % 10 == 0) {
+                    TimeUnit.SECONDS.sleep(1);
+                }
+                addOrder(api, i);
+            }
+            long sleep = 5;
+            if (i > 100) {
+                if (i <= 1_000) {
+                    sleep = 30;
+                } else {
+                    sleep = 60;
+                }
+            }
+            TimeUnit.SECONDS.sleep(sleep);
+            LOGGER.info("stop");
+        } catch (Throwable e) {
+            throw e;
+        } finally {
+            proxy.close();
+        }
+    }
+
+    private void addOrder(JControllerApi api, int counter) {
+        try {
+            String orderId = "test-" + SOSDate.getCurrentDateAsString("yyyyMMddHHmmss") + "_" + counter;
+            JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of("shell"), Optional.empty(), Collections.emptyMap(), true);
+            api.addOrder(order).thenAccept(either -> {
+                if (either.isRight()) {
+                    LOGGER.info(String.format("[created]%s", orderId));
+                } else {
+                    LOGGER.error(String.format("[failed][%s]%s", orderId, SOSString.toString(either.getLeft())));
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
