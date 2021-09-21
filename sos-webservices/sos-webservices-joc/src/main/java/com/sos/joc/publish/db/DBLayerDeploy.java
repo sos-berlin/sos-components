@@ -44,12 +44,10 @@ import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
-import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.inventory.ConfigurationObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.publish.Config;
 import com.sos.joc.model.publish.Configuration;
 import com.sos.joc.model.publish.ControllerObject;
@@ -62,10 +60,8 @@ import com.sos.joc.model.publish.SetVersionFilter;
 import com.sos.joc.model.publish.SetVersionsFilter;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.model.sign.SignaturePath;
-import com.sos.joc.publish.common.ControllerObjectFileExtension;
 import com.sos.joc.publish.mapper.FilterAttributesMapper;
 import com.sos.joc.publish.util.PublishUtils;
-import com.sos.schema.exception.SOSJsonSchemaException;
 
 public class DBLayerDeploy {
 
@@ -2521,5 +2517,20 @@ public class DBLayerDeploy {
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
         query.setParameter("calendarName", "%\"" + calendarName + "\"%");
         return getSession().getResultList(query);
+    }
+    
+    public boolean checkCommitIdAlreadyExists (String commitId, String controllerId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
+        hql.append("where controllerId = :controllerId");
+        hql.append(" and commitId = :commitId");
+        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("commitId", commitId);
+        List<DBItemDeploymentHistory> results = getSession().getResultList(query);
+        if (results == null || results.isEmpty()) {
+            return false;
+        } else {
+            return true;
+        }
     }
 }

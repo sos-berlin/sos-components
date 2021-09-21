@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
@@ -38,7 +39,6 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.joc.DBItemJocConfiguration;
 import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocMissingKeyException;
@@ -62,7 +62,6 @@ import com.sos.joc.publish.util.ImportUtils;
 import com.sos.joc.publish.util.PublishUtils;
 import com.sos.joc.publish.util.StoreDeployments;
 import com.sos.schema.JsonValidator;
-import com.sos.sign.model.workflow.Workflow;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
@@ -139,6 +138,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             dbLayer = new DBLayerDeploy(hibernateSession);
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             Map<ControllerObject, DBItemDepSignatures> importedObjects = new HashMap<ControllerObject, DBItemDepSignatures>();
+            String controllerId = filter.getControllerId();
             String commitId = null;
             if (objectsWithSignature != null && !objectsWithSignature.isEmpty()) {
                 ControllerObject config = objectsWithSignature.keySet().stream().findFirst().get();
@@ -158,6 +158,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
                     commitId = getCommitId(config);
                 }
             }
+            checkCommitId(dbLayer, commitId, controllerId);
             Set<java.nio.file.Path> folders = new HashSet<java.nio.file.Path>();
             folders = objectsWithSignature.keySet().stream().map(config -> config.getPath()).map(path -> Paths.get(path).getParent()).collect(
                     Collectors.toSet());
@@ -230,7 +231,6 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             // Deploy
             final Date deploymentDate = Date.from(Instant.now());
             // call UpdateRepo for all provided Controllers
-            String controllerId = filter.getControllerId();
             final String commitIdForUpdate = commitId;
             if(commitIdForUpdate == null || commitIdForUpdate.isEmpty()) {
                 throw new JocDeployException("versionId could not be determinated, deployment not executed.");
@@ -365,6 +365,22 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
         }
         return commitId;
         
+    }
+    
+    private static final void checkCommitId(DBLayerDeploy dbLayer, String commitId, String controllerId) {
+        if (commitId == null) {
+            throw new JocDeployException("No versionId found in configuration. Deployment will not be processed.");
+        }else {
+            Boolean alreadyExists = false;
+            try {
+                alreadyExists = dbLayer.checkCommitIdAlreadyExists(commitId, controllerId);
+            } catch (SOSHibernateException e) {
+                throw new JocDeployException("Could not determine if versionId already exists in deployment history. Deployment will not be processed.");
+            }
+            if (alreadyExists) {
+                throw new JocDeployException("versionId already used at previous deployment to this controller. Deployment will not be processed."); 
+            }
+        }
     }
 
 }

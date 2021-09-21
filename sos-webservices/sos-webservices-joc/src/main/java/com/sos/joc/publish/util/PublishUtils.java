@@ -645,9 +645,6 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            // TODO: when implemented in controller
-            // job classes
-            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
@@ -718,8 +715,6 @@ public abstract class PublishUtils {
                             throw new JocDeployException(e);
                         }
                     }).collect(Collectors.toSet()));
-            // job classes
-            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateRepoOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateRepoOperationsSigned)));
@@ -744,7 +739,7 @@ public abstract class PublishUtils {
                                 getSignedStringWithCertificate(item.getSignedContent(), drafts.get(item).getSignature(), signatureAlgorithm, certificate));
                     }).collect(Collectors.toSet()));
             // locks
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.LOCK)).map(
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.LOCK)).map(
                     item -> {
                         try {
                             Lock lock = (Lock) item.getContent();
@@ -755,7 +750,7 @@ public abstract class PublishUtils {
                         }
                     }).collect(Collectors.toSet()));
             // file order sources
-            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(ConfigurationType.FILEORDERSOURCE))
+            updateItemsOperationsSimple.addAll(drafts.keySet().stream().filter(item -> item.getObjectType().equals(DeployType.FILEORDERSOURCE))
                     .map(item -> {
                         try {
                             FileOrderSource fileOrderSource = (FileOrderSource) item.getContent();
@@ -779,8 +774,6 @@ public abstract class PublishUtils {
                     throw new JocDeployException(e);
                 }
             }).collect(Collectors.toSet()));
-            // job classes
-            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
@@ -843,8 +836,6 @@ public abstract class PublishUtils {
                     throw new JocDeployException(e);
                 }
             }).filter(Objects::nonNull).collect(Collectors.toSet()));
-            // job classes
-            // TODO: when implemented in controller
         }
         return ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromIterable(updateItemsOperationsSimple), Flux.just(JUpdateItemOperation
                 .addVersion(VersionId.of(commitId))), Flux.fromIterable(updateItemsOperationsSigned)));
@@ -852,7 +843,6 @@ public abstract class PublishUtils {
 
     public static CompletableFuture<Either<Problem, Void>> updateItemsDelete(String commitId, List<DBItemDeploymentHistory> alreadyDeployedtoDelete,
             String controllerId) {
-        // keyAlgorithm obsolete
         //Set<JUpdateItemOperation> updateItemOperationsSigned = new HashSet<JUpdateItemOperation>();
         //Set<JUpdateItemOperation> updateItemOperationsSimple = new HashSet<JUpdateItemOperation>();
         Set<JUpdateItemOperation> updateItemOperations = new HashSet<JUpdateItemOperation>();
@@ -1097,7 +1087,7 @@ public abstract class PublishUtils {
                     depHistoryItem.setSignedContent(depSignatureItem.getSignature());
                 }
 
-                // Metode tries to change commitId and ControllerId but it can face into Constraint Violation
+                // Methode tries to change commitId and ControllerId but it can face Constraint Violation
                 boolean constraintViolation = new EqualsBuilder().append(commitId, depHistoryItem.getCommitId()).append(controllerId, depHistoryItem
                         .getControllerId()).isEquals();
 
@@ -2563,12 +2553,9 @@ public abstract class PublishUtils {
         newItem.setPath(cfg.getPath());
         newItem.setType(cfg.getType());
         newItem.setTitle(cfg.getTitle());
-        // TODO: type mapping
         try {
             newItem.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(cfg.getContent(), StoreDeployments.CLASS_MAPPING
                     .get(cfg.getType()), commitId));
-//            newItem.writeUpdateableContent((IDeployObject) Globals.objectMapper.readValue(cfg.getContent(), StoreDeployments.CLASS_MAPPING.get(cfg
-//                    .getType())));
         } catch (IOException e) {
             throw new JocException(e);
         }
