@@ -109,7 +109,7 @@ public class CronUtils {
                             }
                             String command = cronRegExMatcher.group(commandIndex);
                             if (isSystemCrontab) {
-                                command = command.substring(command.indexOf(" ") +1, command.length());
+                                command = command.split("\\s", 2)[1];
                             }
                             ExecutableScript script = new ExecutableScript(command, env, false, null, null);
                             script.setTYPE(ExecutableType.ShellScriptExecutable);
