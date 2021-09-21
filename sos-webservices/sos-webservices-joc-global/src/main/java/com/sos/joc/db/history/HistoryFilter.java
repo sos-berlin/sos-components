@@ -240,7 +240,7 @@ public class HistoryFilter {
     }
 
     public void setJobName(String jobName) {
-        this.jobName = jobName;
+        this.jobName = jobName == null ? null : jobName.trim();
     }
     
     public String getOrderId() {
