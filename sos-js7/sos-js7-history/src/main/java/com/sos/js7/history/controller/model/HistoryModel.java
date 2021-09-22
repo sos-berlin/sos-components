@@ -107,7 +107,7 @@ public class HistoryModel {
 
     private static final String KEY_DELIMITER = "|||";
     private static final String RETURN_CODE_KEY = "returnCode";
-    private static final String AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE = "Shutting down";
+    private static final String AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE = "shutting down";// lower case
 
     private final SOSHibernateFactory dbFactory;
     private HistoryConfiguration historyConfiguration;
@@ -762,7 +762,7 @@ public class HistoryModel {
     }
 
     private boolean isAgentCouplingFailedBecauseShutdown(DBItemHistoryAgent item) {
-        return item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().trim().equalsIgnoreCase(
+        return item.getCouplingFailedMessage() != null && item.getCouplingFailedMessage().toLowerCase().contains(
                 AGENT_COUPLING_FAILED_SHUTDOWN_MESSAGE);
     }
 
