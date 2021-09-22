@@ -329,7 +329,7 @@ public class DeleteDeployments {
         }
         // delete and put to trash
         InventoryDBLayer invDbLayer = new InventoryDBLayer(dbLayer.getSession());
-        for (DBItemInventoryConfiguration invConfiguration : itemsToDelete) {
+        for (DBItemInventoryConfiguration invConfiguration : itemsToDelete.stream().collect(Collectors.toSet())) {
             invConfiguration.setAuditLogId(auditlogId);
             JocInventory.deleteInventoryConfigurationAndPutToTrash(invConfiguration, invDbLayer);
             if (withEvents) {
