@@ -262,7 +262,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             // Delete from all known controllers
             final String commitIdForDelete = UUID.randomUUID().toString();
             final String commitIdForDeleteFromFolder = UUID.randomUUID().toString();
-            Set<DBItemInventoryConfiguration> invConfigurationsToDelete = new HashSet<DBItemInventoryConfiguration>();
+            List<DBItemInventoryConfiguration> invConfigurationsToDelete = new ArrayList<DBItemInventoryConfiguration>();
             Map<String, List<DBItemDeploymentHistory>> itemsFromFolderToDeletePerController = new HashMap<String, List<DBItemDeploymentHistory>>();
             List<DBItemDeploymentHistory> filteredDepHistoryItemsToDelete = Collections.emptyList();
             List<DBItemDeploymentHistory> filteredItemsFromFolderToDelete = Collections.emptyList();
