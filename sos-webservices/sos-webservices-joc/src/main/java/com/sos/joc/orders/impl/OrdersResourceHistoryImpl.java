@@ -1,5 +1,6 @@
 package com.sos.joc.orders.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -11,8 +12,11 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.hibernate.ScrollableResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -37,6 +41,8 @@ import com.sos.schema.JsonValidator;
 @Path(WebservicePaths.ORDERS)
 public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrdersResourceHistory {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersResourceHistoryImpl.class);
+
     @Override
     public JOCDefaultResponse postOrdersHistory(String accessToken, byte[] inBytes) {
         SOSHibernateSession session = null;
@@ -44,24 +50,23 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
             initLogging(IMPL_PATH, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, OrdersFilter.class);
             OrdersFilter in = Globals.objectMapper.readValue(inBytes, OrdersFilter.class);
-            
+
             String controllerId = in.getControllerId();
             Set<String> allowedControllers = Collections.emptySet();
             boolean permitted = false;
             if (controllerId == null || controllerId.isEmpty()) {
                 controllerId = "";
-                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(
-                        availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
-                                Collectors.toSet());
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
                 permitted = !allowedControllers.isEmpty();
                 if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
-                    allowedControllers = Collections.emptySet(); 
+                    allowedControllers = Collections.emptySet();
                 }
             } else {
                 allowedControllers = Collections.singleton(controllerId);
                 permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
             }
-            
+
             JOCDefaultResponse response = initPermissions(controllerId, permitted);
             if (response != null) {
                 return response;
@@ -106,7 +111,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                                 .collect(Collectors.toSet()));
                         folderPermissionsAreChecked = true;
                     }
-                    
+
                     // TODO consider these parameter in DB
                     dbFilter.setOrderId(in.getOrderId());
                     dbFilter.setWorkflowPath(in.getWorkflowPath());
@@ -118,36 +123,33 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     in.setLimit(WebserviceConstants.HISTORY_RESULTSET_LIMIT);
                 }
                 dbFilter.setLimit(in.getLimit());
-                
+
                 session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, dbFilter);
                 ScrollableResults sr = null;
-                try {
-                    sr = dbLayer.getMainOrders();
 
-                    // tmp outputs to check performance ...
-                    // int i = 0;
-                    // int logStep = 1_000;
-                    // String range = "order";
-                    // LOGGER.info(String.format("[%s]start read and map ..", range));
+                try {
+                    boolean profiler = true;
+                    Instant profilerStart = Instant.now();
+                    sr = dbLayer.getMainOrders();
+                    Instant profilerAfterSelect = Instant.now();
+                    Instant profilerFirstEntry = null;
+
+                    int i = 0;
                     while (sr.next()) {
-                        // i++;
+                        i++;
 
                         DBItemHistoryOrder item = (DBItemHistoryOrder) sr.get(0);
-                        // if (i == 1) {
-                        // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
-                        // }
+                        if (profiler && i == 1) {
+                            profilerFirstEntry = Instant.now();
+                        }
 
                         if (!folderPermissionsAreChecked && !canAdd(item.getWorkflowPath(), permittedFolders)) {
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));
-
-                        // if (i == 1 || i % logStep == 0) {
-                        // LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
-                        // }
                     }
-                    // LOGGER.info(String.format("[%s][%s]end read and map", range, i));
+                    logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
                 } catch (Exception e) {
                     throw e;
                 } finally {
@@ -169,5 +171,18 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private void logProfiler(boolean profiler, int i, Instant start, Instant afterSelect, Instant firstEntry) {
+        if (!profiler) {
+            return;
+        }
+        Instant end = Instant.now();
+        String firstEntryDuration = "0s";
+        if (firstEntry != null) {
+            firstEntryDuration = SOSDate.getDuration(start, firstEntry);
+        }
+        LOGGER.info(String.format("[order][history][%s][total=%s][select=%s, first entry=%s]", i, SOSDate.getDuration(start, end), SOSDate
+                .getDuration(start, afterSelect), firstEntryDuration));
     }
 }
