@@ -65,6 +65,7 @@ import com.sos.joc.model.order.OrderMarkText;
 import com.sos.joc.model.order.OrderState;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrderV;
+import com.sos.joc.model.order.OrderWaitingReason;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Workflow;
 
@@ -130,10 +131,10 @@ public class OrdersHelper {
             put("Planned", OrderStateText.PLANNED);
             put("Fresh", OrderStateText.SCHEDULED);
             put("Pending", OrderStateText.PENDING);
-            put("Awaiting", OrderStateText.WAITING); // obsolete?
+            // put("Awaiting", OrderStateText.WAITING); // obsolete?
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
-            put("Offering", OrderStateText.WAITING); // obsolete?
+            // put("Offering", OrderStateText.WAITING); // obsolete?
             put("ExpectingNotice", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
@@ -147,9 +148,9 @@ public class OrdersHelper {
             put("Finished", OrderStateText.FINISHED);
             put("Cancelled", OrderStateText.CANCELLED);
             put("ProcessingKilled", OrderStateText.CANCELLED);
-            put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
+            // put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
             put("Blocked", OrderStateText.BLOCKED);
-            put("Calling", OrderStateText.CALLING); // obsolete?
+            // put("Calling", OrderStateText.CALLING); // obsolete?
             put("Prompting", OrderStateText.PROMPTING);
         }
     });
@@ -273,6 +274,11 @@ public class OrdersHelper {
         OrderStateText groupedState = getGroupedState(state);
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
+        try {
+            oState.set_reason(OrderWaitingReason.fromValue(state));
+        } catch (IllegalArgumentException e) {
+            oState.set_reason(null);
+        }
         return oState;
     }
 
@@ -625,15 +631,15 @@ public class OrdersHelper {
             return either;
         };
 
-        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).map(mapper)
-                .collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
+        Map<Boolean, Set<Either<Err419, FreshOrder>>> addOrders = currentState.ordersBy(o -> temporaryOrderIds.contains(o.id().string())).parallel()
+                .map(mapper).collect(Collectors.groupingBy(Either::isRight, Collectors.toSet()));
 
         ModifyOrders modifyOrders = new ModifyOrders();
         modifyOrders.setControllerId(controllerId);
         modifyOrders.setOrderType(OrderModeType.FRESH_ONLY);
 
         if (addOrders.containsKey(true) && !addOrders.get(true).isEmpty()) {
-            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(
+            final Map<OrderId, JFreshOrder> freshOrders = addOrders.get(true).stream().parallel().map(Either::get).collect(Collectors.toMap(
                     FreshOrder::getOldOrderId, FreshOrder::getJFreshOrderWithDeleteOrderWhenTerminated));
 
             proxy.api().deleteOrdersWhenTerminated(freshOrders.keySet()).thenAccept(either -> {
@@ -659,7 +665,7 @@ public class OrdersHelper {
             });
         }
         if (addOrders.containsKey(false) && !addOrders.get(false).isEmpty()) {
-            return addOrders.get(false).stream().map(Either::getLeft).collect(Collectors.toList());
+            return addOrders.get(false).stream().parallel().map(Either::getLeft).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
@@ -750,7 +756,7 @@ public class OrdersHelper {
     }
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId) {
-        return storeAuditLogDetails(jOrders.stream().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
+        return storeAuditLogDetails(jOrders.stream().parallel().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
                 .string())).collect(Collectors.toList()), auditlogId);
     }
 
@@ -780,17 +786,17 @@ public class OrdersHelper {
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
 
-        Set<OrderId> setOfOrderIds = listOfDailyPlanOrders.stream().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
+        Set<OrderId> setOfOrderIds = listOfDailyPlanOrders.stream().parallel().filter(dbItem -> dbItem.getSubmitted()).map(dbItem -> OrderId.of(dbItem
                 .getOrderId())).collect(Collectors.toSet());
 
         JControllerProxy proxy = Proxy.of(controllerId);
-        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).map(JOrder::id).collect((Collectors
+        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).parallel().map(JOrder::id).collect((Collectors
                 .toSet())), JCancellationMode.freshOnly());
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
             List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
-        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
+        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().parallel().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
                 Collectors.toSet()), JCancellationMode.freshOnly());
     }
 

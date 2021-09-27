@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,6 +91,46 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             final boolean lookingForPending = withStatesFilter && states.contains(OrderStateText.PENDING);
             final boolean lookingForBlockedOrPending = lookingForBlocked || lookingForPending;
             final boolean lookingForScheduled = withStatesFilter && states.contains(OrderStateText.SCHEDULED);
+            
+            Function1<Order<Order.State>, Object> stateFilter = null;
+            if (withStatesFilter) {
+                
+                if (lookingForBlockedOrPending && !lookingForScheduled) {
+                    states.add(OrderStateText.SCHEDULED);
+                }
+                Map<OrderStateText, Set<Class<? extends Order.State>>> m = OrdersHelper.groupByStateClasses.entrySet().stream().collect(Collectors
+                        .groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
+                Iterator<Function1<Order<Order.State>, Object>> stateFilters = states.stream().filter(s -> m.containsKey(s)).flatMap(s -> m.get(s)
+                        .stream()).map(c -> JOrderPredicates.byOrderState(c)).iterator();
+
+                if (stateFilters.hasNext()) {
+                    stateFilter = stateFilters.next();
+                    while (stateFilters.hasNext()) {
+                        stateFilter = JOrderPredicates.or(stateFilter, stateFilters.next());
+                    }
+                }
+                if (states.contains(OrderStateText.SUSPENDED)) {
+                    if (stateFilter == null) {
+                        stateFilter = o -> o.isSuspended();
+                    } else {
+                        stateFilter = JOrderPredicates.or(o -> o.isSuspended(), stateFilter);
+                    }
+                } else {
+                    if (stateFilter == null) {
+                        stateFilter = o -> !o.isSuspended();
+                    } else {
+                        stateFilter = JOrderPredicates.and(o -> !o.isSuspended(), stateFilter);
+                    }
+                }
+                
+                if (!states.contains(OrderStateText.SCHEDULED)) {
+                    cycledOrderFilter = null;
+                    notCycledOrderFilter = stateFilter;
+                } else {
+                    notCycledOrderFilter = JOrderPredicates.and(notCycledOrderFilter, stateFilter);
+                }
+                
+            }
 
             JControllerState currentState = Proxy.of(ordersFilter.getControllerId()).currentState();
             Stream<JOrder> orderStream = Stream.empty();
@@ -108,24 +149,30 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                         .workflowId().path()));
                 orderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter));
-                cycledOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter));
+                if (cycledOrderFilter != null) {
+                    cycledOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter));
+                }
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 // orderStream = currentState.ordersBy(JOrderPredicates.none());
             } else if (folders != null && !folders.isEmpty()) {
                 orderStream = currentState.ordersBy(notCycledOrderFilter);
-                cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+                if (cycledOrderFilter != null) {
+                    cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+                }
             } else {
                 orderStream = currentState.ordersBy(notCycledOrderFilter);
-                cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+                if (cycledOrderFilter != null) {
+                    cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+                }
             }
 
             // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
                     Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
-            cycledOrderStream = cycledOrderColl.stream().map(t -> t.first());
-            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().filter(t -> !t.isEmpty()).map(t -> {
+            cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
+            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().parallel().filter(t -> !t.isEmpty()).map(t -> {
                 CyclicOrderInfos cycle = new CyclicOrderInfos();
                 cycle.setCount(t.size());
                 cycle.setFirstOrderId(t.first().id().string());
@@ -143,23 +190,23 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
                     .workflowId().path().string()));
 
-            orderStream = groupedByWorkflowPath.entrySet().stream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders)).flatMap(e -> e
+            orderStream = groupedByWorkflowPath.entrySet().stream().parallel().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders)).flatMap(e -> e
                     .getValue().stream());
 
-            if (withStatesFilter) {
-                // special BLOCKED/PENDING handling
-                if (lookingForBlockedOrPending && !lookingForScheduled) {
-                    states.add(OrderStateText.SCHEDULED);
-                }
-                if (states.contains(OrderStateText.SUSPENDED)) {
-                    orderStream = orderStream.filter(o -> o.asScala().isSuspended() || states.contains(OrdersHelper.getGroupedState(o.asScala()
-                            .state().getClass())));
-                } else {
-                    orderStream = orderStream.filter(o -> !o.asScala().isSuspended() && states.contains(OrdersHelper.getGroupedState(o.asScala()
-                            .state().getClass())));
-                }
-
-            }
+//            if (withStatesFilter) {
+//                // special BLOCKED/PENDING handling
+//                if (lookingForBlockedOrPending && !lookingForScheduled) {
+//                    states.add(OrderStateText.SCHEDULED);
+//                }
+//                if (states.contains(OrderStateText.SUSPENDED)) {
+//                    orderStream = orderStream.filter(o -> o.asScala().isSuspended() || states.contains(OrdersHelper.getGroupedState(o.asScala()
+//                            .state().getClass())));
+//                } else {
+//                    orderStream = orderStream.filter(o -> !o.asScala().isSuspended() && states.contains(OrdersHelper.getGroupedState(o.asScala()
+//                            .state().getClass())));
+//                }
+//
+//            }
 
             // OrderIds beat dateTo
             if (!withOrderIdFilter && (ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty())) {
@@ -167,18 +214,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 // only necessary if fresh orders in orderStream
                 if (!withStatesFilter || lookingForScheduled || lookingForPending) {
                     
-//                    if (ordersFilter.getScheduledNever() == Boolean.TRUE) {
-//                        Predicate<JOrder> neverFilter = o -> {
-//                            if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
-//                                if (!o.scheduledFor().isPresent() || o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS) {
-//                                    return false;
-//                                }
-//                            }
-//                            return true;
-//                        };
-//                        orderStream = orderStream.filter(neverFilter);
-//                    } else {
-                        // temp. workaround
                         String dateTo = ordersFilter.getDateTo();
                         if ("0d".equals(dateTo)) {
                             dateTo = "1d";
@@ -196,14 +231,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             }
                             return true;
                         };
-                        orderStream = orderStream.filter(dateToFilter);
-//                    }
+                        orderStream = orderStream.parallel().filter(dateToFilter);
                 }
             }
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
+                orderStream = orderStream.parallel().filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
             }
 
             Instant surveyDateInstant = currentState.instant();
@@ -212,7 +246,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             entity.setSurveyDate(Date.from(surveyDateInstant));
             //Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            Stream<Either<Exception, OrderV>> ordersV = orderStream.map(o -> {
+            Stream<Either<Exception, OrderV>> ordersV = orderStream.parallel().map(o -> {
                 Either<Exception, OrderV> either = null;
                 try {
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, surveyDateMillis);

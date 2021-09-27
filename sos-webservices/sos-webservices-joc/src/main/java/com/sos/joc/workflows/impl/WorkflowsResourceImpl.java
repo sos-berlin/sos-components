@@ -103,24 +103,25 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             workflowsFilter.setRegex(null);
         }
 
-        Stream<DeployedContent> contentsStream = contents.stream().sorted(Comparator.comparing(DeployedContent::getCreated).reversed()).distinct();
+        Stream<DeployedContent> contentsStream = contents.stream().parallel().sorted(Comparator.comparing(DeployedContent::getCreated).reversed())
+                .distinct();
 
         boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
                 .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
         if (withoutFilter) {
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
+            contentsStream = contentsStream.parallel().filter(w -> canAdd(w.getPath(), permittedFolders));
         }
         if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-            contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
+            contentsStream = contentsStream.parallel().filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
-                .workflowToFileOrderSources(currentstate, controllerId, contents.stream().filter(DeployedContent::isCurrentVersion).map(
+                .workflowToFileOrderSources(currentstate, controllerId, contents.stream().parallel().filter(DeployedContent::isCurrentVersion).map(
                         w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
 
-        return contentsStream.map(w -> {
+        return contentsStream.parallel().map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
                     throw new DBMissingDataException("doesn't exist");
@@ -186,8 +187,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         List<DeployedContent> contents = null;
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
-            Map<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors.groupingBy(
-                    w -> w.getVersionId() != null && !w.getVersionId().isEmpty(), Collectors.toSet()));
+            Map<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors
+                    .groupingBy(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(), Collectors.toSet()));
             if (workflowMap.containsKey(true)) {  // with versionId
                 dbFilter.setWorkflowIds(workflowMap.get(true));
                 contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
@@ -196,11 +197,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     // TODO check if workflows known in controller
 
                     dbFilter.setWorkflowIds((Set<WorkflowId>) null);
-                    dbFilter.setPaths(workflowMap.get(true).stream().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                    dbFilter.setPaths(workflowMap.get(true).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
                     List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
                     if (contents2 != null && !contents2.isEmpty()) {
-                        Set<String> commitIds = contents2.stream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
-                        contents = contents.stream().map(c -> {
+                        Set<String> commitIds = contents2.stream().parallel().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
+                        contents = contents.stream().parallel().map(c -> {
                             c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
                             return c;
                         }).collect(Collectors.toList());
@@ -208,7 +209,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 }
             }
             if (workflowMap.containsKey(false)) { // without versionId
-                dbFilter.setPaths(workflowMap.get(false).stream().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                dbFilter.setPaths(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
 
                 // TODO check if workflows known in controller
 

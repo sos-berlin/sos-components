@@ -1,6 +1,11 @@
 
 package com.sos.joc.model.order;
 
+import java.util.HashMap;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "severity",
-    "_text"
+    "_text",
+    "_reason"
 })
 public class OrderState {
 
@@ -38,6 +44,36 @@ public class OrderState {
      */
     @JsonProperty("_text")
     private OrderStateText _text;
+    /**
+     * order reason for WAITING state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    private OrderWaitingReason _reason;
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+
+    /**
+     * No args constructor for use in serialization
+     * 
+     */
+    public OrderState() {
+    }
+
+    /**
+     * 
+     * @param severity
+     * @param _reason
+     * @param _text
+     */
+    public OrderState(Integer severity, OrderStateText _text, OrderWaitingReason _reason) {
+        super();
+        this.severity = severity;
+        this._text = _text;
+        this._reason = _reason;
+    }
 
     /**
      * 
@@ -83,14 +119,46 @@ public class OrderState {
         this._text = _text;
     }
 
+    /**
+     * order reason for WAITING state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    public OrderWaitingReason get_reason() {
+        return _reason;
+    }
+
+    /**
+     * order reason for WAITING state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("_reason")
+    public void set_reason(OrderWaitingReason _reason) {
+        this._reason = _reason;
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
+    }
+
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).toString();
+        return new ToStringBuilder(this).append("severity", severity).append("_text", _text).append("_reason", _reason).append("additionalProperties", additionalProperties).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(severity).append(_text).toHashCode();
+        return new HashCodeBuilder().append(severity).append(additionalProperties).append(_text).append(_reason).toHashCode();
     }
 
     @Override
@@ -102,7 +170,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(severity, rhs.severity).append(_text, rhs._text).isEquals();
+        return new EqualsBuilder().append(severity, rhs.severity).append(additionalProperties, rhs.additionalProperties).append(_text, rhs._text).append(_reason, rhs._reason).isEquals();
     }
 
 }
