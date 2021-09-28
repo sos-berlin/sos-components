@@ -115,6 +115,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
             contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
+        
+        Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.stream().parallel().filter(DeployedContent::isCurrentVersion).map(
@@ -138,6 +140,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
 //                if (wIds != null && !wIds.isEmpty()) {
 //                    workflow.setHasAddOrderDependencies(true); 
 //                }
+                if (workflowNamesWithAddOrders.contains(w.getName())) {
+                    workflow.setHasAddOrderDependencies(true);
+                }
                 workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
                 if (workflowsFilter.getCompact() == Boolean.TRUE) {
                     workflow.setFileOrderSources(null);
