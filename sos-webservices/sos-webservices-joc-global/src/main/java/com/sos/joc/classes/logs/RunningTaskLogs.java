@@ -3,13 +3,13 @@ package com.sos.joc.classes.logs;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +28,7 @@ public class RunningTaskLogs {
     private static final Logger LOGGER = LoggerFactory.getLogger(RunningTaskLogs.class);
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(2);
     private static RunningTaskLogs runningTaskLogs;
-    private volatile Map<Long, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<Long, CopyOnWriteArraySet<RunningTaskLog>> events = new ConcurrentHashMap<>();
     private volatile Set<Long> completeLogs = new CopyOnWriteArraySet<>();
     private volatile Set<Long> registeredTaskIds = new CopyOnWriteArraySet<>();
     

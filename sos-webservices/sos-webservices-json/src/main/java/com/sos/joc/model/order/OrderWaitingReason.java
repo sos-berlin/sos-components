@@ -8,10 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderWaitingReason {
 
-    DELAYED_AFTER_ERROR("DelayedAfterError"),
-    FORKED("Forked"),
-    EXPECTING_NOTICE("ExpectingNotice"),
-    WAITING_FOR_LOCK("WaitingForLock");
+    DELAYED_AFTER_ERROR("DELAYED_AFTER_ERROR"),
+    FORKED("FORKED"),
+    EXPECTING_NOTICE("EXPECTING_NOTICE"),
+    WAITING_FOR_LOCK("WAITING_FOR_LOCK");
     private final String value;
     private final static Map<String, OrderWaitingReason> CONSTANTS = new HashMap<String, OrderWaitingReason>();
 

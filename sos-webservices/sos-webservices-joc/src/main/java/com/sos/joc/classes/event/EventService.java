@@ -2,9 +2,9 @@ package com.sos.joc.classes.event;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +115,7 @@ public class EventService {
     private AtomicBoolean isCurrentController = new AtomicBoolean(false);
     private JControllerEventBus evtBus = null;
     private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
-    private volatile Map<String, WorkflowId> orders = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, WorkflowId> orders = new ConcurrentHashMap<>();
 
     public EventService(String controllerId) {
         this.controllerId = controllerId;

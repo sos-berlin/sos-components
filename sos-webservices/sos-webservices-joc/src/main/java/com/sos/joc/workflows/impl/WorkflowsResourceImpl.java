@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -91,7 +92,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
             SOSShiroFolderPermissions folderPermissions, JocError jocError) {
         String controllerId = workflowsFilter.getControllerId();
-
         List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, folderPermissions);
         if (currentstate != null) {
             contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, folderPermissions));
@@ -103,24 +103,22 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             workflowsFilter.setRegex(null);
         }
 
-        Stream<DeployedContent> contentsStream = contents.stream().parallel().sorted(Comparator.comparing(DeployedContent::getCreated).reversed())
-                .distinct();
+        Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
 
         boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
                 .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
         if (withoutFilter) {
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            contentsStream = contentsStream.parallel().filter(w -> canAdd(w.getPath(), permittedFolders));
+            contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
         }
         if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
             Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-            contentsStream = contentsStream.parallel().filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
+            contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
         }
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
                 .workflowToFileOrderSources(currentstate, controllerId, contents.stream().parallel().filter(DeployedContent::isCurrentVersion).map(
                         w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
-
         return contentsStream.parallel().map(w -> {
             try {
                 if (w.getContent() == null || w.getContent().isEmpty()) {
@@ -135,10 +133,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                 }
-                List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
-                if (wIds != null && !wIds.isEmpty()) {
-                    workflow.setHasAddOrderDependencies(true); 
-                }
+                //TODO Needs at lot of time: determine if other workflows have an addOrder instruction for current workflow
+//                List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
+//                if (wIds != null && !wIds.isEmpty()) {
+//                    workflow.setHasAddOrderDependencies(true); 
+//                }
                 workflow = WorkflowsHelper.addWorkflowPositionsAndForkListVariablesAndExpectedNoticeBoards(workflow);
                 if (workflowsFilter.getCompact() == Boolean.TRUE) {
                     workflow.setFileOrderSources(null);
@@ -148,7 +147,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setJobs(null);
                     //workflow.setOrderPreparation(null);
                 }
-                
                 return workflow;
             } catch (Exception e) {
                 if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
@@ -158,7 +156,7 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 LOGGER.error(String.format("[%s] %s", w.getPath(), e.toString()));
                 return null;
             }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).filter(Objects::nonNull).sorted(Comparator.comparing(Workflow::getVersionDate).reversed()).collect(Collectors.toList());
     }
 
     private JControllerState getCurrentState(String controllerId) {
@@ -187,8 +185,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
         List<DeployedContent> contents = null;
 
         if (workflowIds != null && !workflowIds.isEmpty()) {
-            Map<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors
-                    .groupingBy(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(), Collectors.toSet()));
+            ConcurrentMap<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors
+                    .groupingByConcurrent(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(), Collectors.toSet()));
             if (workflowMap.containsKey(true)) {  // with versionId
                 dbFilter.setWorkflowIds(workflowMap.get(true));
                 contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
@@ -197,11 +195,11 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     // TODO check if workflows known in controller
 
                     dbFilter.setWorkflowIds((Set<WorkflowId>) null);
-                    dbFilter.setPaths(workflowMap.get(true).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                    dbFilter.setPaths(workflowMap.get(true).parallelStream().map(WorkflowId::getPath).collect(Collectors.toSet()));
                     List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
                     if (contents2 != null && !contents2.isEmpty()) {
-                        Set<String> commitIds = contents2.stream().parallel().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
-                        contents = contents.stream().parallel().map(c -> {
+                        Set<String> commitIds = contents2.parallelStream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
+                        contents = contents.parallelStream().map(c -> {
                             c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
                             return c;
                         }).collect(Collectors.toList());

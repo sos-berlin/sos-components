@@ -141,7 +141,7 @@ public class WorkflowsHelper {
         expectedNoticeBoards.forEach(board -> w.getExpectedNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
         postNoticeBoards.forEach(board -> w.getPostNoticeBoards().setAdditionalProperty(board, Collections.emptyList()));
         if (workflowNamesFromAddOrders != null) {
-            w.setAddOrderToWorkflows(workflowNamesFromAddOrders.stream().parallel().map(name -> {
+            w.setAddOrderToWorkflows(workflowNamesFromAddOrders.stream().map(name -> {
                 Workflow wf = new Workflow();
                 wf.setPath(name);
                 return wf;

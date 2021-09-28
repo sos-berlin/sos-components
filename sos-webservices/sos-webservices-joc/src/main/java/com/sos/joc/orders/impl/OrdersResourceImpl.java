@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -41,7 +42,6 @@ import com.sos.joc.model.order.OrdersV;
 import com.sos.joc.orders.resource.IOrdersResource;
 import com.sos.schema.JsonValidator;
 
-import io.vavr.control.Either;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
@@ -144,7 +144,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
                 Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
                         .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
-                Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(versionNotEmpty.negate()).map(w -> WorkflowPath.of(JocInventory
                         .pathToName(w.getPath()))).collect(Collectors.toSet());
                 Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                         .workflowId().path()));
@@ -166,13 +166,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
                 }
             }
-
+            
             // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
                     Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
             cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
-            Map<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().parallel().filter(t -> !t.isEmpty()).map(t -> {
+            ConcurrentMap<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().parallel().filter(t -> !t.isEmpty()).map(t -> {
                 CyclicOrderInfos cycle = new CyclicOrderInfos();
                 cycle.setCount(t.size());
                 cycle.setFirstOrderId(t.first().id().string());
@@ -184,29 +184,14 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     cycle.setLastStart(Date.from(t.last().scheduledFor().get()));
                 }
                 return cycle;
-            }).collect(Collectors.toMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
+            }).collect(Collectors.toConcurrentMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
 
             // merge cycledOrders to orderStream and grouping by workflow name for folder permissions
-            Map<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingBy(o -> o
+            ConcurrentMap<String, List<JOrder>> groupedByWorkflowPath = Stream.concat(orderStream, cycledOrderStream).collect(Collectors.groupingByConcurrent(o -> o
                     .workflowId().path().string()));
-
+            
             orderStream = groupedByWorkflowPath.entrySet().stream().parallel().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders)).flatMap(e -> e
                     .getValue().stream());
-
-//            if (withStatesFilter) {
-//                // special BLOCKED/PENDING handling
-//                if (lookingForBlockedOrPending && !lookingForScheduled) {
-//                    states.add(OrderStateText.SCHEDULED);
-//                }
-//                if (states.contains(OrderStateText.SUSPENDED)) {
-//                    orderStream = orderStream.filter(o -> o.asScala().isSuspended() || states.contains(OrdersHelper.getGroupedState(o.asScala()
-//                            .state().getClass())));
-//                } else {
-//                    orderStream = orderStream.filter(o -> !o.asScala().isSuspended() && states.contains(OrdersHelper.getGroupedState(o.asScala()
-//                            .state().getClass())));
-//                }
-//
-//            }
 
             // OrderIds beat dateTo
             if (!withOrderIdFilter && (ordersFilter.getDateTo() != null && !ordersFilter.getDateTo().isEmpty())) {
@@ -246,8 +231,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             entity.setSurveyDate(Date.from(surveyDateInstant));
             //Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            Stream<Either<Exception, OrderV>> ordersV = orderStream.parallel().map(o -> {
-                Either<Exception, OrderV> either = null;
+            Stream<OrderV> ordersV = orderStream.parallel().map(o -> {
+                //Either<Exception, OrderV> either = null;
                 try {
                     OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, surveyDateMillis);
                     // special BLOCKED handling
@@ -266,19 +251,25 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             order.setRequirements(OrdersHelper.getRequirements(o, currentState));
                         }
                     }
-                    either = Either.right(order);
+                    //either = Either.right(order);
+                    return order;
                 } catch (Exception e) {
                     if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
                         LOGGER.info(getJocError().printMetaInfo());
                         getJocError().clearMetaInfo();
                     }
-                    either = Either.left(e);
+                    //either = Either.left(e);
                     LOGGER.error(String.format("[%s] %s", o.id().string(), e.toString()));
                 }
-                return either;
-            });
-            entity.setOrders(ordersV.filter(Either::isRight).map(Either::get).filter(Objects::nonNull).sorted(Comparator.comparingLong(
-                    o -> o.getScheduledFor() == null ? surveyDateMillis : o.getScheduledFor())).collect(Collectors.toList()));
+                //return either;
+                return null;
+            }).filter(Objects::nonNull).sorted(Comparator.comparingLong(
+                    o -> o.getScheduledFor() == null ? surveyDateMillis : o.getScheduledFor()));
+            if (ordersFilter.getLimit() == null || ordersFilter.getLimit() < 0) {
+                entity.setOrders(ordersV.collect(Collectors.toList()));
+            } else {
+                entity.setOrders(ordersV.limit(ordersFilter.getLimit().longValue()).collect(Collectors.toList()));
+            }
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(entity));

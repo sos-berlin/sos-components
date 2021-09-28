@@ -64,10 +64,14 @@ public class JsonSerializer {
             return (T) emptyWorkflowValuesToNull((com.sos.sign.model.workflow.Workflow) config);
         } else if (com.sos.sign.model.jobresource.JobResource.class.isInstance(config)) {
             return (T) emptyJobResourceValuesToNull((com.sos.sign.model.jobresource.JobResource) config);
+        } else if (com.sos.sign.model.board.Board.class.isInstance(config)) {
+            return (T) emptyBoardValuesToNull((com.sos.sign.model.board.Board) config);
         } else if (com.sos.inventory.model.workflow.Workflow.class.isInstance(config)) {
             return (T) emptyWorkflowValuesToNull((com.sos.inventory.model.workflow.Workflow) config);
         } else if (com.sos.inventory.model.jobresource.JobResource.class.isInstance(config)) {
             return (T) emptyJobResourceValuesToNull((com.sos.inventory.model.jobresource.JobResource) config);
+        } else if (com.sos.inventory.model.board.Board.class.isInstance(config)) {
+            return (T) emptyBoardValuesToNull((com.sos.inventory.model.board.Board) config);
         }
         return config;
     }
@@ -114,6 +118,28 @@ public class JsonSerializer {
         jr.setVariables(emptyEnvToNull(jr.getVariables()));
         jr.setEnv(emptyEnvToNull(jr.getEnv()));
         return jr;
+    }
+    
+    private static com.sos.inventory.model.board.Board emptyBoardValuesToNull(com.sos.inventory.model.board.Board b)
+            throws JsonProcessingException {
+        if (b == null) {
+            return null;
+        }
+        if (b.getEndOfLife() != null) {
+            b.setEndOfLife(b.getEndOfLife().replaceAll("\\$epochMilli", "$js7EpochMilli"));
+        }
+        return b;
+    }
+    
+    private static com.sos.sign.model.board.Board emptyBoardValuesToNull(com.sos.sign.model.board.Board b)
+            throws JsonProcessingException {
+        if (b == null) {
+            return null;
+        }
+        if (b.getEndOfLife() != null) {
+            b.setEndOfLife(b.getEndOfLife().replaceAll("\\$epochMilli", "$js7EpochMilli"));
+        }
+        return b;
     }
     
     private static com.sos.sign.model.workflow.Jobs emptyJobsValuesToNull(com.sos.sign.model.workflow.Jobs j) {

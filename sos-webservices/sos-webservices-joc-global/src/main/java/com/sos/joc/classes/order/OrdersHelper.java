@@ -107,7 +107,6 @@ public class OrdersHelper {
                     put(Order.ExpectingNotice.class, OrderStateText.WAITING);
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
-                    // put(Order.Offering.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
@@ -131,10 +130,8 @@ public class OrdersHelper {
             put("Planned", OrderStateText.PLANNED);
             put("Fresh", OrderStateText.SCHEDULED);
             put("Pending", OrderStateText.PENDING);
-            // put("Awaiting", OrderStateText.WAITING); // obsolete?
             put("DelayedAfterError", OrderStateText.WAITING);
             put("Forked", OrderStateText.WAITING);
-            // put("Offering", OrderStateText.WAITING); // obsolete?
             put("ExpectingNotice", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
@@ -148,10 +145,20 @@ public class OrdersHelper {
             put("Finished", OrderStateText.FINISHED);
             put("Cancelled", OrderStateText.CANCELLED);
             put("ProcessingKilled", OrderStateText.CANCELLED);
-            // put("ProcessingCancelled", OrderStateText.CANCELLED); // obsolete?
             put("Blocked", OrderStateText.BLOCKED);
-            // put("Calling", OrderStateText.CALLING); // obsolete?
             put("Prompting", OrderStateText.PROMPTING);
+        }
+    });
+    
+    public static final Map<String, OrderWaitingReason> waitingReasons = Collections.unmodifiableMap(new HashMap<String, OrderWaitingReason>() {
+
+        private static final long serialVersionUID = 1L;
+
+        {
+            put("DelayedAfterError", OrderWaitingReason.DELAYED_AFTER_ERROR);
+            put("Forked", OrderWaitingReason.FORKED);
+            put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICE);
+            put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
         }
     });
 
@@ -274,11 +281,7 @@ public class OrdersHelper {
         OrderStateText groupedState = getGroupedState(state);
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
-        try {
-            oState.set_reason(OrderWaitingReason.fromValue(state));
-        } catch (IllegalArgumentException e) {
-            oState.set_reason(null);
-        }
+        oState.set_reason(waitingReasons.get(state));
         return oState;
     }
 

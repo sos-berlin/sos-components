@@ -224,7 +224,6 @@ public class JsonConverter {
                 p.setDefault(v.getDefault());
                 p.setFinal(v.getFinal());
                 if (v.getType() != null) {
-                    System.out.println(v.getType().getClass().getName());
                     if (v.getType() instanceof String) {
                         try {
                             p.setType(ParameterType.fromValue((String) v.getType()));
