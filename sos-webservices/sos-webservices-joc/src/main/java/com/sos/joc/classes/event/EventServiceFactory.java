@@ -3,13 +3,13 @@ package com.sos.joc.classes.event;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
@@ -32,7 +32,7 @@ public class EventServiceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
     private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static EventServiceFactory eventServiceFactory;
-    private volatile Map<String, EventService> eventServices = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
 //    private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
     protected static Lock lock = new ReentrantLock();
@@ -92,7 +92,7 @@ public class EventServiceFactory {
     
     public static void closeEventServices() {
         LOGGER.info("closing all event services");
-        EventServiceFactory.getInstance().eventServices.values().stream().forEach(service -> {
+        EventServiceFactory.getInstance().eventServices.values().parallelStream().forEach(service -> {
             service.close();
         });
         EventServiceFactory.isClosed.set(true);

@@ -6,14 +6,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue;
@@ -22,6 +23,7 @@ import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deploy.items.DeployedContent;
@@ -346,6 +348,40 @@ public class DeployedConfigurationDBLayer {
             query.setParameter("controllerId", controllerId);
             query.setParameter("workflowName", getRegexpParameter(workflowName, "\""));
             return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Set<String> getAddOrderWorkflows(String controllerId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" as addOrders from ");
+            hql.append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" dc left join ").append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" sw ");
+            hql.append("on dc.inventoryConfigurationId=sw.inventoryConfigurationId ");
+            hql.append("where dc.type=:type ");
+            hql.append("and dc.controllerId=:controllerId ");
+            hql.append("and sw.deployed=1 ");
+            hql.append("and ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "sw.instructions", "$.addOrders")).append(" is not null");
+            
+            Query<String> query = session.createQuery(hql.toString());
+            query.setParameter("type", DeployType.WORKFLOW.intValue());
+            query.setParameter("controllerId", controllerId);
+            List<String> result = session.getResultList(query);
+            if (result != null) {
+                return result.stream().map(s -> {
+                    try {
+                        return Arrays.asList(Globals.objectMapper.readValue(s, String[].class));
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }).filter(Objects::nonNull).flatMap(l -> l.stream()).collect(Collectors.toSet());
+            }
+            return Collections.emptySet();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

@@ -34,7 +34,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "folders",
     "dateTo",
     "timeZone",
-    "scheduledNever"
+    "scheduledNever",
+    "limit"
 })
 public class OrdersFilterV {
 
@@ -97,8 +98,20 @@ public class OrdersFilterV {
     @JsonProperty("timeZone")
     @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
     private String timeZone;
+    /**
+     * deprecated -> is State.PENDING
+     * 
+     */
     @JsonProperty("scheduledNever")
+    @JsonPropertyDescription("deprecated -> is State.PENDING")
     private Boolean scheduledNever = false;
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    @JsonPropertyDescription("-1=unlimited")
+    private Integer limit = -1;
 
     /**
      * controllerId
@@ -260,24 +273,50 @@ public class OrdersFilterV {
         this.timeZone = timeZone;
     }
 
+    /**
+     * deprecated -> is State.PENDING
+     * 
+     */
     @JsonProperty("scheduledNever")
     public Boolean getScheduledNever() {
         return scheduledNever;
     }
 
+    /**
+     * deprecated -> is State.PENDING
+     * 
+     */
     @JsonProperty("scheduledNever")
     public void setScheduledNever(Boolean scheduledNever) {
         this.scheduledNever = scheduledNever;
     }
 
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("compact", compact).append("regex", regex).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("scheduledNever", scheduledNever).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(regex).append(scheduledNever).append(folders).append(controllerId).append(compact).append(dateTo).append(timeZone).append(orderIds).append(states).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(regex).append(scheduledNever).append(folders).append(controllerId).append(compact).append(dateTo).append(limit).append(timeZone).append(orderIds).append(states).toHashCode();
     }
 
     @Override
@@ -289,7 +328,7 @@ public class OrdersFilterV {
             return false;
         }
         OrdersFilterV rhs = ((OrdersFilterV) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(regex, rhs.regex).append(scheduledNever, rhs.scheduledNever).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(states, rhs.states).isEquals();
     }
 
 }

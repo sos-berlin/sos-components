@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -53,10 +54,10 @@ public class Proxies {
     private static final Logger LOGGER = LoggerFactory.getLogger(Proxies.class);
     private static Proxies proxies;
     private static JProxyContext proxyContext = new JProxyContext();
-    private volatile Map<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
-    private volatile Map<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
-    private volatile Map<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
-    private volatile Map<String, Boolean> coupledStates = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<ProxyCredentials, ProxyContext> controllerFutures = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, Boolean> coupledStates = new ConcurrentHashMap<>();
 
     private Proxies() {
         EventBus.getInstance().register(this);
@@ -395,10 +396,11 @@ public class Proxies {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Proxies");
             if (urlMapper == null) {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().collect(Collectors
-                        .groupingBy(DBItemInventoryJSInstance::getControllerId));
+                        .groupingByConcurrent(DBItemInventoryJSInstance::getControllerId));
             } else {
                 controllerDbInstances = new InventoryInstancesDBLayer(sosHibernateSession).getInventoryInstances().stream().peek(i -> i.setUri(
-                        urlMapper.getOrDefault(i.getUri(), i.getUri()))).collect(Collectors.groupingBy(DBItemInventoryJSInstance::getControllerId));
+                        urlMapper.getOrDefault(i.getUri(), i.getUri()))).collect(Collectors.groupingByConcurrent(
+                                DBItemInventoryJSInstance::getControllerId));
             }
         } finally {
             Globals.disconnect(sosHibernateSession);

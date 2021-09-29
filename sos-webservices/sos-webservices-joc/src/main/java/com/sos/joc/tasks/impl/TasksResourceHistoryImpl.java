@@ -12,8 +12,11 @@ import java.util.stream.Collectors;
 import javax.ws.rs.Path;
 
 import org.hibernate.ScrollableResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -38,6 +41,8 @@ import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.TASKS)
 public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksResourceHistory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TasksResourceHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postTasksHistory(String accessToken, byte[] inBytes) {
@@ -140,6 +145,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                 ScrollableResults sr = null;
                 try {
+                    boolean profiler = true;
+                    Instant profilerStart = Instant.now();
                     if (getTaskFromHistoryIdAndNode) {
                         sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
                                 .getHistoryId() != null).collect(Collectors.groupingBy(TaskIdOfOrder::getHistoryId, Collectors.mapping(
@@ -147,20 +154,18 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     } else {
                         sr = dbLayer.getJobs();
                     }
+                    Instant profilerAfterSelect = Instant.now();
 
                     if (sr != null) {
-                        // tmp outputs to check performance...
-                        // int i = 0;
-                        // int logStep = 1_000;
-                        // String range = "task";
-                        // LOGGER.info(String.format("[%s]start read and map ..", range));
+                        Instant profilerFirstEntry = null;
+                        int i = 0;
                         while (sr.next()) {
-                            // i++;
+                            i++;
 
                             DBItemHistoryOrderStep step = (DBItemHistoryOrderStep) sr.get(0);
-                            // if (i == 1) {
-                            // LOGGER.info(String.format(" [%s][%s]first entry retrieved", range, i));
-                            // }
+                            if (profiler && i == 1) {
+                                profilerFirstEntry = Instant.now();
+                            }
 
                             if (in.getControllerId().isEmpty() && !getControllerPermissions(step.getControllerId(), accessToken).getOrders()
                                     .getView()) {
@@ -170,13 +175,8 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                                 continue;
                             }
                             history.add(HistoryMapper.map2TaskHistoryItem(step));
-
-                            // if (i == 1 || i % logStep == 0) {
-                            // LOGGER.info(String.format(" [%s][%s]entries processed", range, i));
-                            // }
-
                         }
-                        // LOGGER.info(String.format("[%s][%s]end read and map", range, i));
+                        logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
                     }
                 } catch (Exception e) {
                     throw e;
@@ -200,6 +200,19 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private void logProfiler(boolean profiler, int i, Instant start, Instant afterSelect, Instant firstEntry) {
+        if (!profiler) {
+            return;
+        }
+        Instant end = Instant.now();
+        String firstEntryDuration = "0s";
+        if (firstEntry != null) {
+            firstEntryDuration = SOSDate.getDuration(start, firstEntry);
+        }
+        LOGGER.info(String.format("[task][history][%s][total=%s][select=%s, first entry=%s]", i, SOSDate.getDuration(start, end), SOSDate.getDuration(
+                start, afterSelect), firstEntryDuration));
     }
 
 }

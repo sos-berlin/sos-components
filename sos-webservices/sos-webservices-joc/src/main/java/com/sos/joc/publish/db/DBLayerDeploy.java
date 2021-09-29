@@ -28,7 +28,6 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
@@ -2104,84 +2103,50 @@ public class DBLayerDeploy {
         if (allowedControllers == null) {
             allowedControllers = Collections.emptySet();
         }
-        if (filter.getCompactFilter() != null) {
-            StringBuilder hql = new StringBuilder();
-            hql.append("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
-            hql.append(" where dep.id = (").append(" select min(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history").append(
-                    " where history.commitId = dep.commitId");
-            if (filter.getCompactFilter().getAccount() != null) {
-                hql.append(" and history.account = :account");
+        StringBuilder hql = new StringBuilder();
+        hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getCompactFilter());
+        hql.append(presentFilterAttributes.stream().map(item -> {
+            if ("from".equals(item)) {
+                return FROM_DEP_DATE;
+            } else if ("to".equals(item)) {
+                return TO_DEP_DATE;
+            } else if ("limit".equals(item)) {
+                return null;
+            } else if ("controllerIds".equals(item)) {
+                return "controllerId in (:controllerIds)";
+            } else {
+                return item + " = :" + item;
             }
-            if (!allowedControllers.isEmpty()) {
-                hql.append(" and history.controllerId in (:controllerIds)");
+        }).filter(Objects::nonNull).collect(Collectors.joining(" and ", " where ", "")));
+        hql.append(" order by deploymentDate desc");
+        Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
+        for (String item : presentFilterAttributes) {
+            switch (item) {
+            case "from":
+            case "to":
+                query.setParameter(item + "Date", FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item),
+                        TemporalType.TIMESTAMP);
+                break;
+            case "deploymentDate":
+            case "deleteDate":
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item),
+                        TemporalType.TIMESTAMP);
+                break;
+            case "controllerIds":
+                query.setParameterList(item, allowedControllers);
+                break;
+            case "limit":
+//                query.setMaxResults((Integer) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
+                break;
+            default:
+                query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
+                break;
             }
-            if (filter.getCompactFilter().getFolder() != null) {
-                hql.append(" and history.folder = :folder");
-            }
-            if (filter.getCompactFilter().getDeployType() != null) {
-                hql.append(" and history.type = :type");
-            }
-            if (filter.getCompactFilter().getOperation() != null) {
-                hql.append(" and history.operation = :operation");
-            }
-            if (filter.getCompactFilter().getState() != null) {
-                hql.append(" and history.state = :state");
-            }
-            if (filter.getCompactFilter().getDeploymentDate() != null) {
-                hql.append(" and history.deploymentDate = :deploymentDate");
-            }
-            if (filter.getCompactFilter().getDeleteDate() != null) {
-                hql.append(" and history.deleteDate = :deleteDate");
-            }
-            if (filter.getCompactFilter().getFrom() != null) {
-                hql.append(" and history.deploymentDate >= :fromDate");
-            }
-            if (filter.getCompactFilter().getTo() != null) {
-                hql.append(" and history.deploymentDate < :toDate");
-            }
-            hql.append(") order by deploymentDate desc");
-            Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-
-            if (filter.getCompactFilter().getLimit() != null) {
-                query.setMaxResults(filter.getCompactFilter().getLimit());
-            }
-            if (filter.getCompactFilter().getAccount() != null) {
-                query.setParameter("account", filter.getCompactFilter().getAccount());
-            }
-            if (!allowedControllers.isEmpty()) {
-                query.setParameterList("controllerIds", allowedControllers);
-            }
-            if (filter.getCompactFilter().getFolder() != null) {
-                query.setParameter("folder", filter.getCompactFilter().getFolder());
-            }
-            if (filter.getCompactFilter().getDeployType() != null) {
-                query.setParameter("type", ConfigurationType.fromValue(filter.getCompactFilter().getDeployType()).intValue());
-            }
-            if (filter.getCompactFilter().getOperation() != null) {
-                query.setParameter("operation", OperationType.valueOf(filter.getCompactFilter().getOperation()).value());
-            }
-            if (filter.getCompactFilter().getState() != null) {
-                query.setParameter("state", DeploymentState.valueOf(filter.getCompactFilter().getState()).value());
-            }
-            if (filter.getCompactFilter().getDeploymentDate() != null) {
-                query.setParameter("deploymentDate", filter.getCompactFilter().getDeploymentDate());
-            }
-            if (filter.getCompactFilter().getDeleteDate() != null) {
-                query.setParameter("deleteDate", filter.getCompactFilter().getDeleteDate());
-            }
-            if (filter.getCompactFilter().getFrom() != null) {
-                query.setParameter("fromDate", JobSchedulerDate.getDateFrom(filter.getCompactFilter().getFrom(), filter.getCompactFilter()
-                        .getTimeZone()));
-            }
-            if (filter.getCompactFilter().getTo() != null) {
-                query.setParameter("toDate", JobSchedulerDate.getDateTo(filter.getCompactFilter().getTo(), filter.getCompactFilter().getTimeZone()));
-            }
-            return getSession().getResultList(query);
-        } else {
-            return Collections.emptyList();
         }
+        return getSession().getResultList(query);
     }
-
+    
     public List<DBItemDeploymentHistory> getDeploymentHistoryDetails(ShowDepHistoryFilter filter, Collection<String> allowedControllers)
             throws SOSHibernateException {
         if (allowedControllers == null) {

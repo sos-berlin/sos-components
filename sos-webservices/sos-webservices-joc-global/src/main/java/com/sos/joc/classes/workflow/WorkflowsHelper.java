@@ -54,8 +54,8 @@ public class WorkflowsHelper {
         if (versionId == null || versionId.isEmpty()) {
             return true;
         }
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).anyMatch(o -> o.workflowId().versionId().string().equals(
-                versionId));
+        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().anyMatch(o -> o.workflowId().versionId().string()
+                .equals(versionId));
     }
 
     public static boolean isCurrentVersion(WorkflowId workflowId, JControllerState currentState) {
@@ -66,30 +66,30 @@ public class WorkflowsHelper {
     }
 
     public static Stream<String> currentVersions(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(o -> o.workflowId().versionId().string());
+        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> o.workflowId().versionId().string());
     }
 
     public static Stream<JWorkflowId> currentJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(JOrder::workflowId);
+        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(JOrder::workflowId);
     }
 
     public static Stream<WorkflowId> currentWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).map(o -> new WorkflowId(o.workflowId().path().string(), o
-                .workflowId().versionId().string()));
+        return currentState.ordersBy(currentState.orderIsInCurrentVersionWorkflow()).parallel().map(o -> new WorkflowId(o.workflowId().path()
+                .string(), o.workflowId().versionId().string()));
     }
 
     public static Stream<String> oldVersions(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(o -> o.workflowId().versionId()
-                .string());
+        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> o.workflowId()
+                .versionId().string());
     }
 
     public static Stream<WorkflowId> oldWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(o -> new WorkflowId(o.workflowId()
-                .path().string(), o.workflowId().versionId().string()));
+        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(o -> new WorkflowId(o
+                .workflowId().path().string(), o.workflowId().versionId().string()));
     }
 
     public static Stream<JWorkflowId> oldJWorkflowIds(JControllerState currentState) {
-        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).map(JOrder::workflowId);
+        return currentState.ordersBy(JOrderPredicates.not(currentState.orderIsInCurrentVersionWorkflow())).parallel().map(JOrder::workflowId);
     }
 
     public static ImplicitEnd createImplicitEndInstruction() {
@@ -360,15 +360,15 @@ public class WorkflowsHelper {
     
     public static Map<String, List<FileOrderSource>> workflowToFileOrderSources(JControllerState controllerState, String controllerId,
             Set<String> workflowNames, DeployedConfigurationDBLayer dbLayer) {
-        Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.fileWatches().stream().map(f -> f
-                .workflowPath().string()).collect(Collectors.toSet());
-        
+        Set<String> syncFileOrderSources = controllerState == null ? Collections.emptySet() : controllerState.fileWatches().stream().parallel().map(
+                f -> f.workflowPath().string()).collect(Collectors.toSet());
+
         DeployedConfigurationFilter filter = new DeployedConfigurationFilter();
         filter.setControllerId(controllerId);
         filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
         List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
         if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
-            return fileOrderSources.stream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
+            return fileOrderSources.stream().parallel().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
                 try {
                     FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
                     if (!workflowNames.contains(f.getWorkflowName())) {
@@ -400,7 +400,7 @@ public class WorkflowsHelper {
             filter.setObjectTypes(Collections.singleton(DeployType.FILEORDERSOURCE.intValue()));
             List<DeployedContent> fileOrderSources = dbLayer.getDeployedInventory(filter);
             if (fileOrderSources != null && !fileOrderSources.isEmpty()) {
-                return fileOrderSources.stream().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
+                return fileOrderSources.stream().parallel().filter(dbItem -> dbItem.getContent() != null).map(dbItem -> {
                     try {
                         FileOrderSource f = Globals.objectMapper.readValue(dbItem.getContent(), FileOrderSource.class);
                         f.setPath(dbItem.getPath());
@@ -418,8 +418,8 @@ public class WorkflowsHelper {
     
     private static Set<String> workflowToFileWatchNames(JControllerState controllerState, String workflowPath) {
         String workflowName = JocInventory.pathToName(workflowPath);
-        return controllerState.fileWatches().stream().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path().string()).collect(
-                Collectors.toSet());
+        return controllerState.fileWatches().stream().parallel().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path()
+                .string()).collect(Collectors.toSet());
     }
     
 }
