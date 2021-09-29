@@ -367,20 +367,27 @@ public class DBLayerDailyPlannedOrders {
 
 	public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryListExecute(FilterDailyPlannedOrders filter,
 			final int limit) throws SOSHibernateException {
-		String groupBy = "";
+		String sqlStatement = "";
 		if (filter.isCyclicStart()) {
-			groupBy = " group by periodBegin,periodEnd,repeatInterval ";
+			String q = "Select min(p.id)" + " from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath") + "  group by periodBegin,periodEnd,repeatInterval ";
+			sqlStatement =  "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
+					+ "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
+					+ "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
+					+ "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
+					" from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder
+					+ " o on p.orderId = o.orderId where p.id in (" + q + ") " + filter.getOrderCriteria();
+		} else {
+			sqlStatement = "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
+					+ "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
+					+ "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
+					+ "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
+
+					" from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder
+					+ " o on p.orderId = o.orderId " + getWhere(filter, "p.schedulePath") + " "
+					+ filter.getOrderCriteria();
 		}
-		String q = "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
-				+ "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
-				+ "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
-				+ "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
 
-				" from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder
-				+ " o on p.orderId = o.orderId " + getWhere(filter, "p.schedulePath") + " " + groupBy + " "
-				+ filter.getOrderCriteria();
-
-		Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(q);
+		Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(sqlStatement);
 		query = bindParameters(filter, query);
 
 		if (limit > 0) {
