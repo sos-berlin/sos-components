@@ -111,7 +111,7 @@ public class OrdersFilterV {
      */
     @JsonProperty("limit")
     @JsonPropertyDescription("-1=unlimited")
-    private Integer limit = -1;
+    private Integer limit = 10000;
 
     /**
      * controllerId
