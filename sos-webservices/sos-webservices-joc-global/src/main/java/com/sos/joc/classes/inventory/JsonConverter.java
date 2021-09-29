@@ -51,13 +51,13 @@ public class JsonConverter {
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
             return (T) readAsConvertedWorkflow(json);
         } else {
-            return Globals.objectMapper.readValue(json.replaceAll("\\$epoch(Second|Milli)", "$js7Epoch$1"), clazz);
+            return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
     
     public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String json) throws JsonParseException, JsonMappingException, IOException {
         
-        com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("\\$epoch(Second|Milli)", "$js7Epoch$1"),
+        com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"),
                 com.sos.sign.model.workflow.Workflow.class);
         Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
 
