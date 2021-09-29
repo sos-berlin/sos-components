@@ -96,13 +96,16 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         sosHibernateSession.setAutoCommit(false);
         Globals.beginTransaction(sosHibernateSession);
         FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
-        filter.setOrderCriteria("plannedStart");
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
 
         if (filter != null) {
+            filter.setOrderCriteria("plannedStart");
+            filter.setSingleStart();
             listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
+            filter.setCyclicStart();
+            listOfPlannedOrders.addAll(dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0));
         }
         Globals.commit(sosHibernateSession);
 

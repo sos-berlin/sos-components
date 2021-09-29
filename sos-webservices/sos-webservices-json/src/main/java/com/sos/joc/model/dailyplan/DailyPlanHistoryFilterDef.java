@@ -24,7 +24,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "dateTo",
     "controllerId",
     "auditLogId",
-    "controllerIds"
+    "controllerIds",
+    "limit"
 })
 public class DailyPlanHistoryFilterDef {
 
@@ -66,6 +67,8 @@ public class DailyPlanHistoryFilterDef {
     private Long auditLogId;
     @JsonProperty("controllerIds")
     private List<String> controllerIds = null;
+    @JsonProperty("limit")
+    private Integer limit = 10000;
 
     @JsonProperty("submitted")
     public Boolean getSubmitted() {
@@ -175,14 +178,24 @@ public class DailyPlanHistoryFilterDef {
         this.controllerIds = controllerIds;
     }
 
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submitted", submitted).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerId", controllerId).append("auditLogId", auditLogId).append("controllerIds", controllerIds).toString();
+        return new ToStringBuilder(this).append("submitted", submitted).append("dateFrom", dateFrom).append("dateTo", dateTo).append("controllerId", controllerId).append("auditLogId", auditLogId).append("controllerIds", controllerIds).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(submitted).append(controllerId).append(controllerIds).append(auditLogId).append(dateTo).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(submitted).append(controllerId).append(controllerIds).append(auditLogId).append(dateTo).append(limit).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -194,7 +207,7 @@ public class DailyPlanHistoryFilterDef {
             return false;
         }
         DailyPlanHistoryFilterDef rhs = ((DailyPlanHistoryFilterDef) other);
-        return new EqualsBuilder().append(submitted, rhs.submitted).append(controllerId, rhs.controllerId).append(controllerIds, rhs.controllerIds).append(auditLogId, rhs.auditLogId).append(dateTo, rhs.dateTo).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(submitted, rhs.submitted).append(controllerId, rhs.controllerId).append(controllerIds, rhs.controllerIds).append(auditLogId, rhs.auditLogId).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

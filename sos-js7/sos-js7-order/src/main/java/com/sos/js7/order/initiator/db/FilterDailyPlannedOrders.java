@@ -53,8 +53,30 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private List<String> listOfScheduleNames;
     private String scheduleName;
     private String orderName;
+    private Integer startMode;
+ 
 
-    public Collection<String> getListOfOrders() {
+    public boolean isCyclicStart() {
+    	return startMode != null && startMode.equals(1);
+    }
+    
+    public void setCyclicStart() {
+    	startMode = 1;
+    }
+    
+    public void setSingleStart() {
+    	startMode = 0;
+    }
+    
+    public Integer getStartMode() {
+		return startMode;
+	}
+
+	public void setStartMode(Integer startMode) {
+		this.startMode = startMode;
+	}
+
+	public Collection<String> getListOfOrders() {
         return listOfOrders;
     }
 
