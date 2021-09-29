@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -159,22 +161,23 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
                     if (sr != null) {
                         Instant profilerFirstEntry = null;
                         int i = 0;
+                        Map<String, Boolean> checkedControllers = new HashMap<>();
+                        boolean isControllerIdEmpty = in.getControllerId().isEmpty();
+                        Map<String, Boolean> checkedFolders = new HashMap<>();
                         while (sr.next()) {
                             i++;
 
-                            DBItemHistoryOrderStep step = (DBItemHistoryOrderStep) sr.get(0);
+                            DBItemHistoryOrderStep item = (DBItemHistoryOrderStep) sr.get(0);
                             if (profiler && i == 1) {
                                 profilerFirstEntry = Instant.now();
                             }
-
-                            if (in.getControllerId().isEmpty() && !getControllerPermissions(step.getControllerId(), accessToken).getOrders()
-                                    .getView()) {
+                            if (isControllerIdEmpty && !getControllerPermissions(item, accessToken, checkedControllers)) {
                                 continue;
                             }
-                            if (!folderPermissionsAreChecked && !canAdd(step.getWorkflowPath(), permittedFolders)) {
+                            if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
                                 continue;
                             }
-                            history.add(HistoryMapper.map2TaskHistoryItem(step));
+                            history.add(HistoryMapper.map2TaskHistoryItem(item));
                         }
                         logProfiler(profiler, i, profilerStart, profilerAfterSelect, profilerFirstEntry);
                     }
@@ -200,6 +203,24 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private boolean getControllerPermissions(DBItemHistoryOrderStep item, String accessToken, Map<String, Boolean> checkedControllers) {
+        Boolean result = checkedControllers.get(item.getControllerId());
+        if (result == null) {
+            result = getControllerPermissions(item.getControllerId(), accessToken).getOrders().getView();
+            checkedControllers.put(item.getControllerId(), result);
+        }
+        return result;
+    }
+
+    private boolean canAdd(DBItemHistoryOrderStep item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+        Boolean result = checkedFolders.get(item.getWorkflowFolder());
+        if (result == null) {
+            result = canAdd(item.getWorkflowPath(), permittedFolders);
+            checkedFolders.put(item.getWorkflowFolder(), result);
+        }
+        return result;
     }
 
     private void logProfiler(boolean profiler, int i, Instant start, Instant afterSelect, Instant firstEntry) {
