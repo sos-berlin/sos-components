@@ -1,9 +1,11 @@
 package com.sos.joc.publish.history.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,13 +71,20 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerDeploy dbLayer = new DBLayerDeploy(hibernateSession);
-            List<DBItemDeploymentHistory> dbHistoryItems = null;
+            List<DBItemDeploymentHistory> dbHistoryItems = new ArrayList<DBItemDeploymentHistory>();
             folderPermissions.setSchedulerId(controllerId);
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+            dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
             if (filter.getCompactFilter() != null) {
-                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers).stream()
-                		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toList());
-                dbHistoryItems.stream().forEach(item -> {
+                Map<String, List<DBItemDeploymentHistory>> groupedDbHistoryItems = dbHistoryItems.stream()
+                        .collect(Collectors.groupingBy(DBItemDeploymentHistory::getCommitId));
+                dbHistoryItems = groupedDbHistoryItems.entrySet().stream().map(item -> item.getValue().get(0)).filter(item -> canAdd(item.getPath(), permittedFolders))
+                        .filter(Objects::nonNull).collect(Collectors.toList());
+                if (dbHistoryItems.size() > filter.getCompactFilter().getLimit()) {
+                    // reduce list size to limit from filter
+                    dbHistoryItems = dbHistoryItems.subList(0, filter.getCompactFilter().getLimit()-1);
+                }
+                dbHistoryItems.stream().forEachOrdered(item -> {
                     item.setId(null);
                     item.setType(null);
                     item.setPath(null);

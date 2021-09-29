@@ -5,7 +5,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.StreamingOutput;
@@ -101,8 +103,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                                 deployable.getContent(), controllerIdUsed, dbLayer));
                     }
                 });
-                JocAuditLog.storeAuditLogDetails(deployablesForSigning.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
-                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
+                final Stream<ControllerObject> stream = deployablesForSigning.stream();
+                CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
+                        dbAudit.getId(), dbAudit.getCreated()));
             } else { // shallow copy
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                 deployablesForShallowCopy = PublishUtils.getDeployableConfigurationObjectsFromDB(shallowCopy.getDeployables(), dbLayer);
@@ -110,11 +113,9 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 releasables = PublishUtils.getReleasableObjectsFromDB(shallowCopy.getReleasables(), dbLayer);
                 releasables = releasables.stream().filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
-                
-                JocAuditLog.storeAuditLogDetails(deployablesForShallowCopy.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
-                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
-                JocAuditLog.storeAuditLogDetails(releasables.stream().map(i -> new AuditLogDetail(i.getPath(), i.getObjectType()
-                        .intValue())), hibernateSession, dbAudit.getId(), dbAudit.getCreated());
+                final Stream<ConfigurationObject> stream = Stream.concat(deployablesForShallowCopy.stream(), releasables.stream());
+                CompletableFuture.runAsync(() -> JocAuditLog.storeAuditLogDetails(stream.map(i -> new AuditLogDetail(i.getPath(), i.getObjectType().intValue())),
+                        dbAudit.getId(), dbAudit.getCreated()));
             }
             // TODO: create time restricted token to export, too
             // TODO: get JOC Version and Schema Version for later appliance of transformation rules (import)
