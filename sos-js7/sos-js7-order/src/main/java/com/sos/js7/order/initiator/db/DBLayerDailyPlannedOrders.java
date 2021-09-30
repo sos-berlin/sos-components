@@ -2,6 +2,7 @@ package com.sos.js7.order.initiator.db;
 
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -530,6 +531,9 @@ public class DBLayerDailyPlannedOrders {
 		}
 	}
 
+	
+	
+	
 	public Long store(PlannedOrder plannedOrder, Long firstId, Integer nr, Integer size)
 			throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
 			JsonProcessingException {
@@ -569,14 +573,9 @@ public class DBLayerDailyPlannedOrders {
 		dbItemDailyPlannedOrders.setExpectedEnd(
 				new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
 		dbItemDailyPlannedOrders.setModified(JobSchedulerDate.nowInUtc());
-		sosHibernateSession.save(dbItemDailyPlannedOrders);
-
-		if (firstId == null) {
-			firstId = dbItemDailyPlannedOrders.getId();
-		}
-
-		String id = "0000000000" + String.valueOf(firstId);
-		id = id.substring(id.length() - 10);
+		
+        String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
+	
 		if (nr != 0) {
 			String nrAsString = "00000" + String.valueOf(nr);
 			nrAsString = nrAsString.substring(nrAsString.length() - 5);
@@ -587,10 +586,9 @@ public class DBLayerDailyPlannedOrders {
 			dbItemDailyPlannedOrders
 					.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<size>", sizeAsString));
 		}
-
 		dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<id.*>", id));
 		plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderId());
-		sosHibernateSession.update(dbItemDailyPlannedOrders);
+		sosHibernateSession.save(dbItemDailyPlannedOrders);
 		storeVariables(plannedOrder, dbItemDailyPlannedOrders.getId());
 		return dbItemDailyPlannedOrders.getId();
 	}
