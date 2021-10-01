@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +69,7 @@ public class BoardHelper {
         
         item.setState(SyncStateHelper.getState(stateText));
         
-        Map<String, List<OrderV>> expectNotices = expectingOrders.stream().map(o -> {
+        ConcurrentMap<String, List<OrderV>> expectNotices = expectingOrders.parallelStream().map(o -> {
             try {
                 OrderItem oItem = Globals.objectMapper.readValue(o.toJson(), OrderItem.class);
                 String noticeId = oItem.getState().getNoticeId();
@@ -77,7 +80,7 @@ public class BoardHelper {
             } catch (Exception e) {
                 return null;
             }
-        }).filter(Objects::nonNull).collect(Collectors.groupingBy(ExpectingOrder::getNoticeId, Collectors.mapping(ExpectingOrder::getOrderV,
+        }).filter(Objects::nonNull).collect(Collectors.groupingByConcurrent(ExpectingOrder::getNoticeId, Collectors.mapping(ExpectingOrder::getOrderV,
                 Collectors.toList())));
         
         List<Notice> notices = new ArrayList<>();
@@ -102,7 +105,7 @@ public class BoardHelper {
                 }
                 notice.setState(getState(NoticeStateText.POSTED));
                 Set<OrderId> orderIds = JavaConverters.asJava(bs.expectingOrders(n.id()));
-                notice.setExpectingOrders(controllerState.ordersBy(o -> orderIds.contains(o.id())).map(o -> {
+                notice.setExpectingOrders(controllerState.ordersBy(o -> orderIds.contains(o.id())).parallel().map(o -> {
                     try {
                         return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null);
                     } catch (Exception e) {
@@ -117,13 +120,14 @@ public class BoardHelper {
         return item;
     }
     
-    public static Map<String, List<JOrder>> getExpectingOrders(JControllerState controllerState) {
+    public static ConcurrentMap<String, List<JOrder>> getExpectingOrders(JControllerState controllerState, Integer limit) {
         if (controllerState == null) {
-            return Collections.emptyMap();
+            return new ConcurrentHashMap<>();
         }
-        return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotice.class)).map(order -> new ExpectingOrder(order,
-                ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition())).boardPath())).collect(Collectors
-                        .groupingBy(ExpectingOrder::getBoardPath, Collectors.mapping(ExpectingOrder::getJOrder, Collectors.toList())));
+        return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotice.class)).limit(limit.longValue()).parallel().map(
+                order -> new ExpectingOrder(order, ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition()))
+                        .boardPath())).collect(Collectors.groupingByConcurrent(ExpectingOrder::getBoardPath, Collectors.mapping(
+                                ExpectingOrder::getJOrder, Collectors.toList())));
     }
     
     public static JControllerState getCurrentState(String controllerId) {

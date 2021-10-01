@@ -226,7 +226,7 @@ public class JOCResourceImpl {
     protected static String getParent(String path) {
         Path p = Paths.get(path).getParent();
         if (p == null) {
-            return null;
+            return "/";
         } else {
             return p.toString().replace('\\', '/');
         }

@@ -68,7 +68,12 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             }
             checkFolderPermissions(dc.getPath());
             
-            answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, addPermittedFolder(null), BoardHelper.getExpectingOrders(currentstate)
+            Integer limit = 10000;
+            if (filter.getLimit() != null) {
+                limit = filter.getLimit();
+            }
+            
+            answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, addPermittedFolder(null), BoardHelper.getExpectingOrders(currentstate, limit)
                     .getOrDefault(dc.getName(), Collections.emptyList())));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

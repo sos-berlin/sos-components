@@ -135,7 +135,7 @@ public class OrderInitiatorRunner extends TimerTask {
 		if (withSubmit) {
 			s = " and submitting ";
 		}
-		LOGGER.info("Creating" + s + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller "
+		LOGGER.info("Creating " + s + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller "
 				+ controllerId + " day: " + dailyPlanDate);
 
 		if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {

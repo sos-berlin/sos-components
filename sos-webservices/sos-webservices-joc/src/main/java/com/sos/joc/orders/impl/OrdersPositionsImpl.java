@@ -27,7 +27,7 @@ public class OrdersPositionsImpl extends JOCResourceImpl implements IOrdersPosit
     public JOCDefaultResponse postOrderPositions(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, ModifyOrders.class);
+            JsonValidator.validate(filterBytes, ModifyOrders.class);
             ModifyOrders ordersFilter = Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
             String controllerId = ordersFilter.getControllerId();
             

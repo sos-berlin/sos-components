@@ -150,13 +150,12 @@ public class OrderListSynchronizer {
 				sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
 
 				FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+				filter.setOrderCriteria(null);
 				DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
 				Globals.beginTransaction(sosHibernateSession);
 				filter.setControllerId(plannedOrder.getControllerId());
 				filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
-				if (plannedOrder.getPeriod().getSingleStart() == null) {
-					filter.setCyclicStart();
-				}
+
 				List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan
 						.getDailyPlanWithHistoryList(filter, 0);
 				SOSDurations sosDurations = new SOSDurations();
@@ -320,14 +319,13 @@ public class OrderListSynchronizer {
 				int size = entry.getValue().size();
 				int nr = 1;
 				Long firstId = null;
+				LOGGER.debug("snchronizer: adding planned cylced order to database: " + size + " orders ");
 				for (PlannedOrder plannedOrder : entry.getValue()) {
 
 					DBItemDailyPlanOrders dbItemDailyPlan = null;
 					dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
 					if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-						LOGGER.trace("snchronizer: adding planned cylced order to database: " + nr + " of " + size + " "
-								+ plannedOrder.uniqueOrderkey());
 						plannedOrder
 								.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
 						Long fId = dbLayerDailyPlan.store(plannedOrder, firstId, nr, size);
@@ -351,8 +349,8 @@ public class OrderListSynchronizer {
 			DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException,
 			InterruptedException, ExecutionException, TimeoutException {
 		LOGGER.debug("... addPlannedOrderToControllerAndDB");
-
 		calculateDurations();
+
 		SOSHibernateSession sosHibernateSession = null;
 		try {
 			sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
