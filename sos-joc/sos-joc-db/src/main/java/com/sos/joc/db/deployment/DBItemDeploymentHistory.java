@@ -101,10 +101,24 @@ public class DBItemDeploymentHistory extends DBItem {
     @Column(name = "[AUDITLOG_ID]", nullable = false)
     private Long auditlogId;
 
+    @Transient
+    private long workflowCount = 0L;
+    
+    @Transient
+    private long lockCount = 0L;
+    
+    @Transient
+    private long fosCount = 0L;
+    
+    @Transient
+    private long jobResourceCount = 0L;
+    
+    @Transient
+    private long boardCount = 0L;
+
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -112,7 +126,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getAccount() {
         return account;
     }
-
     public void setAccount(String account) {
         this.account = account;
     }
@@ -120,7 +133,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getPath() {
         return path;
     }
-
     public void setPath(String path) {
         this.path = path;
     }
@@ -128,7 +140,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -136,7 +147,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String val) {
         title = val;
     }
@@ -147,7 +157,6 @@ public class DBItemDeploymentHistory extends DBItem {
         }
         return folder;
     }
-
     public void setFolder(String folder) {
         this.folder = folder;
     }
@@ -155,7 +164,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Integer getType() {
         return type;
     }
-
     public void setType(Integer type) {
         this.type = type;
     }
@@ -163,7 +171,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Long getInventoryConfigurationId() {
         return inventoryConfigurationId;
     }
-
     public void setInventoryConfigurationId(Long inventoryConfigurationId) {
         this.inventoryConfigurationId = inventoryConfigurationId;
     }
@@ -171,7 +178,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Long getControllerInstanceId() {
         return controllerInstanceId;
     }
-
     public void setControllerInstanceId(Long controllerInstanceId) {
         this.controllerInstanceId = controllerInstanceId;
     }
@@ -179,7 +185,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getControllerId() {
         return controllerId;
     }
-
     public void setControllerId(String controllerId) {
         this.controllerId = controllerId;
     }
@@ -187,7 +192,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getContent() {
         return content;
     }
-
     public void setContent(String content) {
         this.content = content;
     }
@@ -195,7 +199,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getSignedContent() {
         return signedContent;
     }
-
     public void setSignedContent(String signedContent) {
         this.signedContent = signedContent;
     }
@@ -203,7 +206,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getCommitId() {
         return commitId;
     }
-
     public void setCommitId(String commitId) {
         this.commitId = commitId;
     }
@@ -211,7 +213,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getVersion() {
         return version;
     }
-
     public void setVersion(String version) {
         this.version = version;
     }
@@ -219,7 +220,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Integer getOperation() {
         return operation;
     }
-
     public void setOperation(Integer operation) {
         this.operation = operation;
     }
@@ -227,7 +227,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Integer getState() {
         return state;
     }
-
     public void setState(Integer state) {
         this.state = state;
     }
@@ -235,7 +234,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Date getDeploymentDate() {
         return deploymentDate;
     }
-
     public void setDeploymentDate(Date deploymentDate) {
         this.deploymentDate = deploymentDate;
     }
@@ -243,7 +241,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getErrorMessage() {
         return errorMessage;
     }
-
     public void setErrorMessage(String errorMessage) {
         if (errorMessage != null && errorMessage.length() > 255) {
             errorMessage = errorMessage.substring(0, 254);
@@ -254,7 +251,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Date getDeleteDate() {
         return deleteDate;
     }
-
     public void setDeleteDate(Date deletedDate) {
         this.deleteDate = deletedDate;
     }
@@ -262,7 +258,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public String getInvContent() {
         return invContent;
     }
-
     public void setInvContent(String invContent) {
         this.invContent = invContent;
     }
@@ -270,7 +265,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public Long getAuditlogId() {
         return auditlogId;
     }
-
     public void setAuditlogId(Long auditlogId) {
         this.auditlogId = auditlogId;
     }
@@ -279,7 +273,6 @@ public class DBItemDeploymentHistory extends DBItem {
     public IDeployObject readUpdateableContent() {
         return updateableContent;
     }
-
     @Transient
     public void writeUpdateableContent(IDeployObject updateableContent) {
         this.updateableContent = updateableContent;
@@ -292,6 +285,51 @@ public class DBItemDeploymentHistory extends DBItem {
         } catch (Exception e) {
             return null;
         }
+    }
+    
+    @Transient
+    public long getWorkflowCount() {
+        return workflowCount;
+    }
+    @Transient
+    public void setWorkflowCount(long workflowCount) {
+        this.workflowCount = workflowCount;
+    }
+    
+    @Transient
+    public long getLockCount() {
+        return lockCount;
+    }
+    @Transient
+    public void setLockCount(long lockCount) {
+        this.lockCount = lockCount;
+    }
+    
+    @Transient
+    public long getFosCount() {
+        return fosCount;
+    }
+    @Transient
+    public void setFosCount(long fosCount) {
+        this.fosCount = fosCount;
+    }
+    
+    @Transient
+    public long getJobResourceCount() {
+        return jobResourceCount;
+    }
+    @Transient
+    public void setJobResourceCount(long jobResourceCount) {
+        this.jobResourceCount = jobResourceCount;
+    }
+    
+    @Transient
+    public long getBoardCount() {
+        return boardCount;
+    }
+    @Transient
+    public void setBoardCount(long boardCount) {
+        this.boardCount = boardCount;
     }
 
 }

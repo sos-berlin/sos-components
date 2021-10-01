@@ -102,7 +102,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             if (filter.getOverwrite() && (filter.getSuffix() != null || filter.getPrefix() != null)) {
             	throw new JocImportException("conflicting arguments: overwrite=true - no prefix/suffix allowed!");
             }
-
+            
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             Long auditLogId = dbAuditItem.getId();
             
@@ -150,8 +150,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     }
                                 }
                             }
-//                    		filteredConfigurations.stream().forEach(configuration 
-//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     } else {
                 		// filter according to folder permissions
@@ -168,8 +166,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     }
                                 }
                             }
-//                    		filteredConfigurations.stream().forEach(configuration 
-//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     }
             	} else {

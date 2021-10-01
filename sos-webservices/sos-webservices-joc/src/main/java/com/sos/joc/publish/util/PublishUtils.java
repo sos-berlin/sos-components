@@ -21,6 +21,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1938,10 +1939,21 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
+        List<DBItemDeploymentHistory> allEntries = new ArrayList<DBItemDeploymentHistory>();
+        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+        Map<String, List<DBItemDeploymentHistory>> groupedEntries = allEntries.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
         List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        folders.stream().forEach(item -> entries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-        return entries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        groupedEntries.entrySet().stream().map(item -> item.getValue()).forEach(item -> {
+            entries.add(item.stream().max(Comparator.comparing(DBItemDeploymentHistory::getId)).orElse(null));
+        });
+        return entries.stream().filter(Objects::nonNull).filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+            .filter(Objects::nonNull).collect(Collectors.toSet());       
+//        allEntries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
+//            .collect(Collectors.toSet());
+//        // TODO: improve performance
+//        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+//        return allEntries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
+//                .collect(Collectors.toSet());
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
