@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -80,17 +81,17 @@ public class CheckedOrdersPositions extends OrdersPositions {
 
         Stream<JOrder> orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
 
-        Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
-                Collectors.toSet()));
+        ConcurrentMap<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingByConcurrent(o -> OrdersHelper
+                .isSuspendedOrFailed(o), Collectors.toSet()));
 
         if (!suspendedOrFailedOrders.containsKey(Boolean.TRUE)) {
             throw new JocBadRequestException("The orders are neither failed nor suspended");
         }
 
-        orderStream = suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet()).stream().filter(o -> OrdersHelper.canAdd(WorkflowPaths.getPath(o
-                .workflowId()), permittedFolders));
+        orderStream = suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet()).stream().filter(o -> OrdersHelper.canAdd(
+                WorkflowPaths.getPath(o.workflowId()), permittedFolders));
 
-        Map<JWorkflowId, Set<JOrder>> map = orderStream.collect(Collectors.groupingBy(o -> o.workflowId(), Collectors.toSet()));
+        ConcurrentMap<JWorkflowId, Set<JOrder>> map = orderStream.collect(Collectors.groupingByConcurrent(o -> o.workflowId(), Collectors.toSet()));
 
         if (map.isEmpty()) {
             throw new JocFolderPermissionsException("Access denied");
@@ -102,6 +103,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             pc.setMessage("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
             setDisabledPositionChange(pc);
             setOrderIds(orders);
+            jOrders = map.values().stream().flatMap(l -> l.stream()).collect(Collectors.toSet());
             //throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
         } else {
 

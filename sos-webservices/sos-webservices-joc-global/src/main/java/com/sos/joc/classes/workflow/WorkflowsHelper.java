@@ -137,8 +137,8 @@ public class WorkflowsHelper {
         Requirements r = workflow.getOrderPreparation();
         if (r.getParameters() != null && r.getParameters().getAdditionalProperties() != null) {
             Parameters params = r.getParameters();
-            Set<String> finalKeys = params.getAdditionalProperties().entrySet().stream().filter(e -> e.getValue().getFinal() != null).map(Map.Entry::getKey).collect(Collectors
-                    .toSet());
+            Set<String> finalKeys = params.getAdditionalProperties().entrySet().stream().filter(e -> e.getValue().getFinal() != null).map(
+                    Map.Entry::getKey).collect(Collectors.toSet());
             for (String key : finalKeys) {
                 params.removeAdditionalProperty(key);
             }
