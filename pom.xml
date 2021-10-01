@@ -85,7 +85,7 @@
 		<typesafe.config.version>1.4.1</typesafe.config.version>
 		<keepass.java2.version>2.1.4</keepass.java2.version>
 		<sshj.version>0.31.0</sshj.version>
-        <apache.commons.net.version>3.3</apache.commons.net.version>
+        <apache.commons.net.version>3.8.0</apache.commons.net.version>
 		<!-- SP: for sos-webservice-server proof-of-concept with jetty -->
 		<jetty.version>9.4.41.v20210516</jetty.version>
         <javax.jms-api.version>2.0.1</javax.jms-api.version>
