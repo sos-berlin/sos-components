@@ -422,12 +422,10 @@ public class OrdersHelper {
         }
 
         boolean invalid = false;
-        boolean finalArgExists = false;
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getFinal() != null) {
                 if (args.containsKey(param.getKey())) {
-                    args.remove(param.getKey());
-                    finalArgExists = true;
+                    arguments.removeAdditionalProperty(param.getKey());
                 }
                 continue;
             }
@@ -491,9 +489,6 @@ public class OrdersHelper {
                             .getClass().getSimpleName().replaceFirst("Array", ""), param.getValue().getType().value()));
                 }
             }
-        }
-        if (finalArgExists) {
-            arguments.setAdditionalProperties(args);
         }
         return arguments;
     }
