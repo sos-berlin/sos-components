@@ -1,9 +1,9 @@
 package com.sos.joc.monitoring.configuration.monitor.jms;
 
 import javax.jms.DeliveryMode;
+import javax.jms.Message;
 import javax.jms.Session;
 
-import org.apache.activemq.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;

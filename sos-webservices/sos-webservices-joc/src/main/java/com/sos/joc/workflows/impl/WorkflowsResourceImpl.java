@@ -135,11 +135,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                 if (workflow.getIsCurrentVersion() && fileOrderSources != null) {
                     workflow.setFileOrderSources(fileOrderSources.get(JocInventory.pathToName(w.getPath())));
                 }
-                //TODO Needs at lot of time: determine if other workflows have an addOrder instruction for current workflow
-//                List<WorkflowId> wIds = dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId);
-//                if (wIds != null && !wIds.isEmpty()) {
-//                    workflow.setHasAddOrderDependencies(true); 
-//                }
                 if (workflowNamesWithAddOrders.contains(w.getName())) {
                     workflow.setHasAddOrderDependencies(true);
                 }

@@ -100,7 +100,12 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(controllerState.instant()));
             }
-            Map<String, List<JOrder>> expectingOrders = BoardHelper.getExpectingOrders(controllerState);
+            
+            Integer limit = 10000;
+            if (filter.getLimit() != null) {
+                limit = filter.getLimit();
+            }
+            Map<String, List<JOrder>> expectingOrders = BoardHelper.getExpectingOrders(controllerState, limit);
             JocError jocError = getJocError();
             if (contents != null) {
                 answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {

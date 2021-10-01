@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -136,6 +138,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                     Instant profilerFirstEntry = null;
 
                     int i = 0;
+                    Map<String, Boolean> checkedFolders = new HashMap<>();
                     while (sr.next()) {
                         i++;
 
@@ -143,8 +146,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                         if (profiler && i == 1) {
                             profilerFirstEntry = Instant.now();
                         }
-
-                        if (!folderPermissionsAreChecked && !canAdd(item.getWorkflowPath(), permittedFolders)) {
+                        if (!folderPermissionsAreChecked && !canAdd(item, permittedFolders, checkedFolders)) {
                             continue;
                         }
                         history.add(HistoryMapper.map2OrderHistoryItem(item));
@@ -171,6 +173,15 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private boolean canAdd(DBItemHistoryOrder item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+        Boolean result = checkedFolders.get(item.getWorkflowFolder());
+        if (result == null) {
+            result = canAdd(item.getWorkflowPath(), permittedFolders);
+            checkedFolders.put(item.getWorkflowFolder(), result);
+        }
+        return result;
     }
 
     private void logProfiler(boolean profiler, int i, Instant start, Instant afterSelect, Instant firstEntry) {

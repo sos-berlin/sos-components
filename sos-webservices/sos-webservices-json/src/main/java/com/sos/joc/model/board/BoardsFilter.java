@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.common.Folder;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -13,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * boards request filter
+ * notice boards request filter
  * <p>
  * 
  * 
@@ -22,7 +23,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "noticeBoardPaths",
-    "folders"
+    "folders",
+    "limit"
 })
 public class BoardsFilter {
 
@@ -45,6 +47,13 @@ public class BoardsFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    @JsonPropertyDescription("-1=unlimited")
+    private Integer limit = 10000;
 
     /**
      * controllerId
@@ -102,14 +111,32 @@ public class BoardsFilter {
         this.folders = folders;
     }
 
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPaths", noticeBoardPaths).append("folders", folders).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPaths", noticeBoardPaths).append("folders", folders).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeBoardPaths).append(folders).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(noticeBoardPaths).append(limit).append(folders).append(controllerId).toHashCode();
     }
 
     @Override
@@ -121,7 +148,7 @@ public class BoardsFilter {
             return false;
         }
         BoardsFilter rhs = ((BoardsFilter) other);
-        return new EqualsBuilder().append(noticeBoardPaths, rhs.noticeBoardPaths).append(folders, rhs.folders).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(folders, rhs.folders).append(controllerId, rhs.controllerId).isEquals();
     }
 
 }

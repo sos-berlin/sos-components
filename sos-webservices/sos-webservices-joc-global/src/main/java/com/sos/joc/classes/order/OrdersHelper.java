@@ -89,6 +89,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
@@ -386,12 +387,27 @@ public class OrdersHelper {
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, surveyDateMillis);
     }
+    
+    public static OrderPreparation getOrderPreparation(JWorkflow jWorkflow) throws JsonParseException, JsonMappingException, IOException {
+        return Globals.objectMapper.readValue(jWorkflow.toJson(), Workflow.class).getOrderPreparation();
+    }
+    
+    public static Requirements getRequirements(JWorkflow jWorkflow) throws JsonParseException, JsonMappingException, IOException {
+        return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jWorkflow));
+    }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
+    }
+    
+    public static JWorkflow getWorkflow(JWorkflowId jWorkflowId, JControllerState currentState) throws JsonParseException, JsonMappingException,
+            IOException {
+        Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jWorkflowId);
+        ProblemHelper.throwProblemIfExist(eW);
+        return eW.get();
     }
 
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,

@@ -74,8 +74,8 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             List<DBItemDeploymentHistory> dbHistoryItems = new ArrayList<DBItemDeploymentHistory>();
             folderPermissions.setSchedulerId(controllerId);
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
             if (filter.getCompactFilter() != null) {
+                dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
                 Map<String, List<DBItemDeploymentHistory>> groupedDbHistoryItems = dbHistoryItems.stream()
                         .collect(Collectors.groupingBy(DBItemDeploymentHistory::getCommitId));
                 dbHistoryItems = groupedDbHistoryItems.entrySet().stream().map(item -> item.getValue().get(0)).filter(item -> canAdd(item.getPath(), permittedFolders))

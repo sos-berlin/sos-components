@@ -3,6 +3,7 @@ package com.sos.joc.db.history;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -281,22 +282,27 @@ public class JobHistoryDBLayer {
     }
 
     private String getWhere(boolean orderLogs) {
-        String where = "";
+        StringBuilder where = new StringBuilder();
         String and = "";
         String clause = "";
 
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
-            where += and + " controllerId in (:controllerIds)";
+            where.append(and);
+            if (filter.getControllerIds().size() == 1) {
+                where.append(" controllerId = :controllerIds");
+            } else {
+                where.append(" controllerId in (:controllerIds)");
+            }
             and = " and";
         }
 
         if (filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
-            where += and + " agentId in (:agentIds)";
+            where.append(and).append(" agentId in (:agentIds)");
             and = " and";
         }
 
         if (filter.isMainOrder()) {
-            where += and + " parentId = 0";
+            where.append(and).append(" parentId = 0");
             and = " and";
         }
 
@@ -307,30 +313,31 @@ public class JobHistoryDBLayer {
         }
 
         if (filter.getHistoryIds() != null && !filter.getHistoryIds().isEmpty()) {
-            where += and + " id in (:historyIds)";
+            where.append(and).append(" id in (:historyIds)");
             and = " and";
         } else {
+            if (filter.getExecutedFrom() == null && filter.getExecutedTo() == null) {
+                filter.setExecutedFrom(new Date(0)); // set to 1970 to use startTime index
+            }
             if (filter.getExecutedFrom() != null) {
-                where += and + " startTime >= :startTimeFrom";
+                where.append(and).append(" startTime >= :startTimeFrom");
                 and = " and";
             }
-
             if (filter.getExecutedTo() != null) {
-                where += and + " startTime < :startTimeTo";
+                where.append(and).append(" startTime < :startTimeTo");
                 and = " and";
             }
-
             if (filter.getStates() != null && !filter.getStates().isEmpty()) {
                 clause = filter.getStates().stream().map(state -> STATEMAP.get(state)).collect(Collectors.joining(" or "));
                 if (filter.getStates().size() > 1) {
                     clause = "(" + clause + ")";
                 }
-                where += and + " " + clause;
+                where.append(and).append(" ").append(clause);
                 and = " and";
             }
 
             if (filter.getCriticalities() != null && !filter.getCriticalities().isEmpty()) {
-                where += and + " criticality in (:criticalities)";
+                where.append(and).append(" criticality in (:criticalities)");
                 and = " and";
             }
 
@@ -348,7 +355,7 @@ public class JobHistoryDBLayer {
                     l.add("(" + s + ")");
                 }
                 if (!l.isEmpty()) {
-                    where += and + " (" + String.join(" or ", l) + ")";
+                    where.append(and).append(" (" + String.join(" or ", l) + ")");
                     and = " and";
                 }
             } else if (filter.getOrders() != null && !filter.getOrders().isEmpty()) {
@@ -365,7 +372,7 @@ public class JobHistoryDBLayer {
                     l.add("(" + s + ")");
                 }
                 if (!l.isEmpty()) {
-                    where += and + " (" + String.join(" or ", l) + ")";
+                    where.append(and).append(" (" + String.join(" or ", l) + ")");
                     and = " and";
                 }
 
@@ -385,7 +392,7 @@ public class JobHistoryDBLayer {
                         l.add("(" + s + ")");
                     }
                     if (!l.isEmpty()) {
-                        where += and + " (" + String.join(" and ", l) + ")";
+                        where.append(and).append(" (" + String.join(" and ", l) + ")");
                         and = " and";
                     }
                 }
@@ -409,7 +416,7 @@ public class JobHistoryDBLayer {
                 // }
                 // }
                 if (filter.getExcludedWorkflows() != null && !filter.getExcludedWorkflows().isEmpty()) {
-                    where += and + " workflowPath not in (:excludedWorkflows)";
+                    where.append(and).append(" workflowPath not in (:excludedWorkflows)");
                     and = " and";
                 }
                 if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
@@ -424,38 +431,42 @@ public class JobHistoryDBLayer {
                     if (filter.getFolders().size() > 1) {
                         clause = "(" + clause + ")";
                     }
-                    where += and + " " + clause;
+                    where.append(and).append(" ").append(clause);
                     and = " and";
                 }
                 if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
                     if (filter.getOrderId().contains("*") || filter.getOrderId().contains("?")) {
-                        where += and + " orderId like :orderId";
+                        where.append(and).append(" orderId like :orderId");
                     } else {
-                        where += and + " orderId = :orderId";
+                        where.append(and).append(" orderId = :orderId");
                     }
                     and = " and";
                 }
                 if (filter.getWorkflowPath() != null && !filter.getWorkflowPath().isEmpty()) {
                     if (filter.getWorkflowPath().contains("*") || filter.getWorkflowPath().contains("?")) {
-                        where += and + " workflowPath like :workflowPath";
+                        where.append(and).append(" workflowPath like :workflowPath");
                     } else {
-                        where += and + " workflowPath = :workflowPath";
+                        where.append(and).append(" workflowPath = :workflowPath");
                     }
                     and = " and";
                 }
             }
         }
 
-        if (!where.trim().isEmpty()) {
-            where = " where " + where;
+        if (where.length() > 0) {
+            return " where " + where.toString();
         }
-        return where;
+        return where.toString();
     }
 
     private <T> Query<T> createQuery(String hql) throws SOSHibernateException {
         Query<T> query = session.createQuery(hql);
         if (filter.getControllerIds() != null && !filter.getControllerIds().isEmpty()) {
-            query.setParameterList("controllerIds", filter.getControllerIds());
+            if (filter.getControllerIds().size() == 1) {
+                query.setParameter("controllerIds", filter.getControllerIds());
+            } else {
+                query.setParameterList("controllerIds", filter.getControllerIds());
+            }
         }
         if (filter.getAgentIds() != null && !filter.getAgentIds().isEmpty()) {
             query.setParameterList("agentIds", filter.getAgentIds());
