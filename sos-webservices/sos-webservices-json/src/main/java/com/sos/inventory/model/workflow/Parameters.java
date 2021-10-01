@@ -38,6 +38,20 @@ public class Parameters {
     public void setAdditionalProperty(String name, Parameter value) {
         this.additionalProperties.put(name, value);
     }
+    
+    @JsonIgnore
+    public void setAdditionalProperties(Map<String, Parameter> params) {
+        if (params != null) {
+            this.additionalProperties.putAll(params);
+        }
+    }
+    
+    @JsonIgnore
+    public void removeAdditionalProperty(String name) {
+        if (name != null) {
+            this.additionalProperties.remove(name);
+        }
+    }
 
     @Override
     public String toString() {

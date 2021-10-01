@@ -53,6 +53,13 @@ public class Variables {
             this.additionalProperties.putAll(vars);
         }
     }
+    
+    @JsonIgnore
+    public void removeAdditionalProperty(String name) {
+        if (name != null) {
+            this.additionalProperties.remove(name);
+        }
+    }
 
     @Override
     public String toString() {

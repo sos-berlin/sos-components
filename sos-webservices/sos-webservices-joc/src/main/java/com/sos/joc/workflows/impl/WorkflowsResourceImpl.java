@@ -146,6 +146,8 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
                     workflow.setJobResourceNames(null);
                     workflow.setJobs(null);
                     //workflow.setOrderPreparation(null);
+                } else if (workflow.getOrderPreparation() != null) {
+                    workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }
                 return workflow;
             } catch (Exception e) {

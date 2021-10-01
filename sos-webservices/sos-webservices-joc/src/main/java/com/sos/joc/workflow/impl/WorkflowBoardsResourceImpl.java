@@ -96,6 +96,8 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     workflow.setJobResourceNames(null);
                     workflow.setJobs(null);
                     //workflow.setOrderPreparation(null);
+                } else if (workflow.getOrderPreparation() != null) {
+                    workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }
                 
                 JocError jocError = getJocError();

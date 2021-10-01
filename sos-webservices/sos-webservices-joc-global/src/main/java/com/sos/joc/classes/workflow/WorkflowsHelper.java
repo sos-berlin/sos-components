@@ -31,6 +31,9 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.Parameters;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -128,6 +131,20 @@ public class WorkflowsHelper {
             w.setHasPostNoticeBoards(!postNoticeBoards.isEmpty());
         }
         return w;
+    }
+    
+    public static Requirements removeFinals(Workflow workflow) {
+        Requirements r = workflow.getOrderPreparation();
+        if (r.getParameters() != null && r.getParameters().getAdditionalProperties() != null) {
+            Parameters params = r.getParameters();
+            Set<String> finalKeys = params.getAdditionalProperties().entrySet().stream().filter(e -> e.getValue().getFinal() != null).map(Map.Entry::getKey).collect(Collectors
+                    .toSet());
+            for (String key : finalKeys) {
+                params.removeAdditionalProperty(key);
+            }
+            r.setParameters(params);
+        }
+        return r;
     }
     
     private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards,

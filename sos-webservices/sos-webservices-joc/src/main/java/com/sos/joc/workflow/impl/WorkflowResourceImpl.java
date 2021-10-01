@@ -3,6 +3,7 @@ package com.sos.joc.workflow.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 
@@ -12,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.inventory.model.workflow.Parameter;
+import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -97,6 +100,8 @@ public class WorkflowResourceImpl extends JOCResourceImpl implements IWorkflowRe
                     workflow.setJobResourceNames(null);
                     workflow.setJobs(null);
                     //workflow.setOrderPreparation(null);
+                } else if (workflow.getOrderPreparation() != null) {
+                    workflow.setOrderPreparation(WorkflowsHelper.removeFinals(workflow));
                 }
                 entity.setWorkflow(workflow);
             } else {
