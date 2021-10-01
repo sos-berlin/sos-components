@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -21,12 +24,14 @@ import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DepHistory;
 import com.sos.joc.model.publish.DepHistoryItem;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
 import com.sos.joc.model.publish.ShowDepHistoryFilter;
 import com.sos.joc.publish.db.DBLayerDeploy;
+import com.sos.joc.publish.history.DepHistoryItemsCount;
 import com.sos.joc.publish.history.resource.IShowDeploymentHistory;
 import com.sos.schema.JsonValidator;
 
@@ -34,6 +39,7 @@ import com.sos.schema.JsonValidator;
 public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowDeploymentHistory {
 
     private static final String API_CALL = "./inventory/deployment/history";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShowDeploymentHistoryImpl.class);
 
     @Override
     public JOCDefaultResponse postShowDeploymentHistory(String xAccessToken, byte[] showDepHistoryFilter) throws Exception {
@@ -78,7 +84,16 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                 dbHistoryItems = dbLayer.getDeploymentHistoryCommits(filter, allowedControllers);
                 Map<String, List<DBItemDeploymentHistory>> groupedDbHistoryItems = dbHistoryItems.stream()
                         .collect(Collectors.groupingBy(DBItemDeploymentHistory::getCommitId));
-                dbHistoryItems = groupedDbHistoryItems.entrySet().stream().map(item -> item.getValue().get(0)).filter(item -> canAdd(item.getPath(), permittedFolders))
+                dbHistoryItems = groupedDbHistoryItems.entrySet().stream().map(item -> {
+                    DepHistoryItemsCount counter = countItems(item.getValue());
+                    DBItemDeploymentHistory entry = item.getValue().get(0);
+                    entry.setWorkflowCount(counter.getCountWorkflows());
+                    entry.setFosCount(counter.getCountFileOrderSources());
+                    entry.setJobResourceCount(counter.getCountJobResources());
+                    entry.setBoardCount(counter.getCountBoards());
+                    entry.setLockCount(counter.getCountLocks());
+                    return entry;
+                }).filter(item -> canAdd(item.getPath(), permittedFolders))
                         .filter(Objects::nonNull).collect(Collectors.toList());
                 if (dbHistoryItems.size() > filter.getCompactFilter().getLimit()) {
                     // reduce list size to limit from filter
@@ -109,6 +124,16 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                  hibernateSession.close();
              }
         }
+    }
+    
+    private DepHistoryItemsCount countItems (List<DBItemDeploymentHistory> groupedDbHistoryItems) {
+        DepHistoryItemsCount counter = new DepHistoryItemsCount();
+        counter.setCountWorkflows(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count());
+        counter.setCountLocks(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.LOCK.intValue() == item.getType()).count());
+        counter.setCountFileOrderSources(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.FILEORDERSOURCE.intValue() == item.getType()).count());
+        counter.setCountJobResources(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.JOBRESOURCE.intValue() == item.getType()).count());
+        counter.setCountBoards(groupedDbHistoryItems.stream().filter(item -> ConfigurationType.NOTICEBOARD.intValue() == item.getType()).count());
+        return counter;
     }
     
     private DepHistory getDepHistoryFromDBItems(List<DBItemDeploymentHistory> dbHistoryItems) {
@@ -142,6 +167,21 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
             depHistoryItem.setErrorMessage(dbItem.getErrorMessage());
         }
         depHistoryItem.setVersion(dbItem.getVersion());
+        if (dbItem.getWorkflowCount() > 0L) {
+            depHistoryItem.setWorkflowCount(dbItem.getWorkflowCount());
+        }
+        if (dbItem.getFosCount() > 0L) {
+            depHistoryItem.setFileOrderSourceCount(dbItem.getFosCount());
+        }
+        if (dbItem.getJobResourceCount() > 0L) {
+            depHistoryItem.setJobResourceCount(dbItem.getJobResourceCount());
+        }
+        if (dbItem.getBoardCount() > 0L) {
+            depHistoryItem.setBoardCount(dbItem.getBoardCount());
+        }
+        if (dbItem.getLockCount() > 0L) {
+            depHistoryItem.setLockCount(dbItem.getLockCount());
+        }
         return depHistoryItem;
         
     }

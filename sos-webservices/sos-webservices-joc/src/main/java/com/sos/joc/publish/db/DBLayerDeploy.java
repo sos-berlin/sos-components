@@ -1384,13 +1384,14 @@ public class DBLayerDeploy {
             throw new JocSosHibernateException(e);
         }
     }
-
+    
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder) {
         return getLatestDepHistoryItemsFromFolder(folder, false);
     }
 
     public List<DBItemDeploymentHistory> getLatestDepHistoryItemsFromFolder(String folder, boolean recursive) {
         try {
+            // TODO: improve performance
             StringBuilder hql = new StringBuilder("select dep from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep");
             hql.append(" where dep.id = (").append("select max(history.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as history");
             hql.append(" where history.state = 0");
@@ -1403,6 +1404,37 @@ public class DBLayerDeploy {
             }
             hql.append(" and history.path = dep.path");
             hql.append(" and history.type = dep.type").append(")");
+            Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
+            if (recursive) {
+                if (!"/".equals(folder)) {
+                    query.setParameter("likefolder", MatchMode.START.toMatchString(folder + "/"));
+                    query.setParameter("folder", folder);
+                }
+            } else {
+                query.setParameter("folder", folder);
+            }
+            return session.getResultList(query);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder) {
+        return getDepHistoryItemsFromFolder(folder, false);
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder, boolean recursive) {
+        try {
+            // TODO: improve performance
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            hql.append(" where state = 0");
+            if (recursive) {
+                if (!"/".equals(folder)) {
+                    hql.append(" and (folder = :folder or folder like :likefolder)");
+                }
+            } else {
+                hql.append(" and folder = :folder");
+            }
             Query<DBItemDeploymentHistory> query = session.createQuery(hql.toString());
             if (recursive) {
                 if (!"/".equals(folder)) {

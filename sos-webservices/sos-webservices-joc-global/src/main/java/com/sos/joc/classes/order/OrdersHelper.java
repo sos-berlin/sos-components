@@ -89,7 +89,6 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
-import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
@@ -388,14 +387,6 @@ public class OrdersHelper {
         return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, surveyDateMillis);
     }
     
-    public static OrderPreparation getOrderPreparation(JWorkflow jWorkflow) throws JsonParseException, JsonMappingException, IOException {
-        return Globals.objectMapper.readValue(jWorkflow.toJson(), Workflow.class).getOrderPreparation();
-    }
-    
-    public static Requirements getRequirements(JWorkflow jWorkflow) throws JsonParseException, JsonMappingException, IOException {
-        return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jWorkflow));
-    }
-
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
@@ -403,16 +394,9 @@ public class OrdersHelper {
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
     
-    public static JWorkflow getWorkflow(JWorkflowId jWorkflowId, JControllerState currentState) throws JsonParseException, JsonMappingException,
-            IOException {
-        Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jWorkflowId);
-        ProblemHelper.throwProblemIfExist(eW);
-        return eW.get();
-    }
-
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
-        return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState));
+        return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState), false);
     }
 
     @SuppressWarnings("unchecked")
@@ -438,8 +422,13 @@ public class OrdersHelper {
         }
 
         boolean invalid = false;
+        boolean finalArgExists = false;
         for (Map.Entry<String, Parameter> param : params.entrySet()) {
             if (param.getValue().getFinal() != null) {
+                if (args.containsKey(param.getKey())) {
+                    args.remove(param.getKey());
+                    finalArgExists = true;
+                }
                 continue;
             }
             if (param.getValue().getDefault() == null && !args.containsKey(param.getKey())) { // required
@@ -502,6 +491,9 @@ public class OrdersHelper {
                             .getClass().getSimpleName().replaceFirst("Array", ""), param.getValue().getType().value()));
                 }
             }
+        }
+        if (finalArgExists) {
+            arguments.setAdditionalProperties(args);
         }
         return arguments;
     }

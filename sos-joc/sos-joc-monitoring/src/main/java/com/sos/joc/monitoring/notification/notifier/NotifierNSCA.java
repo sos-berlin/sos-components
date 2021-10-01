@@ -98,11 +98,7 @@ public class NotifierNSCA extends ANotifier {
 
     @Override
     public StringBuilder getSendInfo() {
-        StringBuilder sb = new StringBuilder("[").append(monitor.getInfo()).append("]");
-
-        // TODO
-
-        return sb;
+        return new StringBuilder("[").append(monitor.getInfo()).append("]");
     }
 
     private void init() throws Exception {

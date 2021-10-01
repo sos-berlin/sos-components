@@ -31,7 +31,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deploymentDate",
     "deleteDate",
     "invConfigurationId",
-    "deploymentId"
+    "deploymentId",
+    "workflowCount",
+    "jobResourceCount",
+    "fileOrderSourceCount",
+    "boardCount",
+    "lockCount"
 })
 public class DepHistoryItem {
 
@@ -129,6 +134,46 @@ public class DepHistoryItem {
      */
     @JsonProperty("deploymentId")
     private Long deploymentId;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowCount")
+    private Long workflowCount;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobResourceCount")
+    private Long jobResourceCount;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("fileOrderSourceCount")
+    private Long fileOrderSourceCount;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardCount")
+    private Long boardCount;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("lockCount")
+    private Long lockCount;
 
     /**
      * string without < and >
@@ -402,14 +447,124 @@ public class DepHistoryItem {
         this.deploymentId = deploymentId;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowCount")
+    public Long getWorkflowCount() {
+        return workflowCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("workflowCount")
+    public void setWorkflowCount(Long workflowCount) {
+        this.workflowCount = workflowCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobResourceCount")
+    public Long getJobResourceCount() {
+        return jobResourceCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("jobResourceCount")
+    public void setJobResourceCount(Long jobResourceCount) {
+        this.jobResourceCount = jobResourceCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("fileOrderSourceCount")
+    public Long getFileOrderSourceCount() {
+        return fileOrderSourceCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("fileOrderSourceCount")
+    public void setFileOrderSourceCount(Long fileOrderSourceCount) {
+        this.fileOrderSourceCount = fileOrderSourceCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardCount")
+    public Long getBoardCount() {
+        return boardCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("boardCount")
+    public void setBoardCount(Long boardCount) {
+        this.boardCount = boardCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("lockCount")
+    public Long getLockCount() {
+        return lockCount;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("lockCount")
+    public void setLockCount(Long lockCount) {
+        this.lockCount = lockCount;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("errorMessage", errorMessage).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("invConfigurationId", invConfigurationId).append("deploymentId", deploymentId).toString();
+        return new ToStringBuilder(this).append("account", account).append("path", path).append("folder", folder).append("controllerId", controllerId).append("commitId", commitId).append("version", version).append("deployType", deployType).append("operation", operation).append("state", state).append("errorMessage", errorMessage).append("deploymentDate", deploymentDate).append("deleteDate", deleteDate).append("invConfigurationId", invConfigurationId).append("deploymentId", deploymentId).append("workflowCount", workflowCount).append("jobResourceCount", jobResourceCount).append("fileOrderSourceCount", fileOrderSourceCount).append("boardCount", boardCount).append("lockCount", lockCount).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(errorMessage).append(commitId).append(invConfigurationId).append(version).append(deployType).append(path).append(folder).append(deploymentDate).append(deploymentId).append(state).append(operation).append(account).append(deleteDate).toHashCode();
+        return new HashCodeBuilder().append(lockCount).append(jobResourceCount).append(boardCount).append(controllerId).append(fileOrderSourceCount).append(errorMessage).append(commitId).append(invConfigurationId).append(version).append(deployType).append(path).append(folder).append(workflowCount).append(deploymentDate).append(deploymentId).append(state).append(operation).append(account).append(deleteDate).toHashCode();
     }
 
     @Override
@@ -421,7 +576,7 @@ public class DepHistoryItem {
             return false;
         }
         DepHistoryItem rhs = ((DepHistoryItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(errorMessage, rhs.errorMessage).append(commitId, rhs.commitId).append(invConfigurationId, rhs.invConfigurationId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).append(state, rhs.state).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
+        return new EqualsBuilder().append(lockCount, rhs.lockCount).append(jobResourceCount, rhs.jobResourceCount).append(boardCount, rhs.boardCount).append(controllerId, rhs.controllerId).append(fileOrderSourceCount, rhs.fileOrderSourceCount).append(errorMessage, rhs.errorMessage).append(commitId, rhs.commitId).append(invConfigurationId, rhs.invConfigurationId).append(version, rhs.version).append(deployType, rhs.deployType).append(path, rhs.path).append(folder, rhs.folder).append(workflowCount, rhs.workflowCount).append(deploymentDate, rhs.deploymentDate).append(deploymentId, rhs.deploymentId).append(state, rhs.state).append(operation, rhs.operation).append(account, rhs.account).append(deleteDate, rhs.deleteDate).isEquals();
     }
 
 }

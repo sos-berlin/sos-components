@@ -77,12 +77,7 @@ public class NotifierMail extends ANotifier {
 
     @Override
     public StringBuilder getSendInfo() {
-        StringBuilder sb = new StringBuilder("[").append(monitor.getInfo()).append("]");
-        if (mail != null) {
-            // TODO
-        }
-
-        return sb;
+        return new StringBuilder("[").append(monitor.getInfo()).append("]");
     }
 
     private void init(Configuration conf) throws Exception {

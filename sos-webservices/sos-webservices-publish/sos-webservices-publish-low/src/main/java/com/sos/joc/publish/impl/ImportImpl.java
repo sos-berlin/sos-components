@@ -151,8 +151,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     }
                                 }
                             }
-//                    		filteredConfigurations.stream().forEach(configuration 
-//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     } else {
                 		// filter according to folder permissions
@@ -169,8 +167,6 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
                                     }
                                 }
                             }
-//                    		filteredConfigurations.stream().forEach(configuration 
-//                    				-> dbLayer.saveOrUpdateInventoryConfiguration(configuration, account, auditLogId, filter.getOverwrite(), agentNames));
                     	}
                     }
             	} else {
