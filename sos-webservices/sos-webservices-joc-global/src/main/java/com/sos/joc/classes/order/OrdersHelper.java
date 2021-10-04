@@ -624,30 +624,30 @@ public class OrdersHelper {
                 Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(order.workflowId());
                 ProblemHelper.throwProblemIfExist(e);
                 String workflowPath = WorkflowPaths.getPath(e.get().id());
+                if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
+                    throw new JocFolderPermissionsException(workflowPath);
+                }
 
                 // TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
 
                 // modify parameters if necessary
-                if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
-                        || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
-                                .isEmpty())) {
+//                if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
+//                        || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
+//                                .isEmpty())) {
                     Variables vars = scalaValuedArgumentsToVariables(args);
-                    if (!folderPermissions.isPermittedForFolder(Paths.get(workflowPath).getParent().toString().replace('\\', '/'))) {
-                        throw new JocFolderPermissionsException(workflowPath);
-                    }
                     Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
                     if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
-                        vars.getAdditionalProperties().putAll(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+                        vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
                     }
                     if (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
                             .isEmpty()) {
                         dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().forEach((k, v) -> {
-                            vars.getAdditionalProperties().remove(k);
+                            vars.removeAdditionalProperty(k);
                         });
                     }
                     args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
                             .getOrderPreparation())));
-                }
+//                }
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
