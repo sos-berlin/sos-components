@@ -89,6 +89,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
@@ -335,10 +336,13 @@ public class OrdersHelper {
         return null;
     }
     
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
-            throws IOException, JocFolderPermissionsException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders,
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
-        o.setArguments(oItem.getArguments());
+        WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
+        if (finalParameters != null) {
+            o.setArguments(removeFinalParameters(oItem.getArguments(), finalParameters.get(jOrder.workflowId())));
+        }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
@@ -371,7 +375,6 @@ public class OrdersHelper {
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
             o.setScheduledFor(surveyDateMillis);
         }
-        WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         wId.setPath(WorkflowPaths.getPath(oItem.getWorkflowPosition().getWorkflowId()));
         if (listOfFolders != null && !canAdd(wId.getPath(), listOfFolders)) {
             throw new JocFolderPermissionsException("Access denied for folder: " + getParent(wId.getPath()));
@@ -380,11 +383,11 @@ public class OrdersHelper {
         return o;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Long surveyDateMillis)
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
             throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, surveyDateMillis);
+        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, finalParameters, surveyDateMillis);
     }
     
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
@@ -397,6 +400,33 @@ public class OrdersHelper {
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState), false);
+    }
+    
+    public static List<String> getFinalParameters(JWorkflowId jWorkflowId, JControllerState currentState) {
+        try {
+            Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jWorkflowId);
+            ProblemHelper.throwProblemIfExist(eW);
+            OrderPreparation op = Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
+            if (op != null && op.getParameters() != null && op.getParameters().getAdditionalProperties() != null) {
+                op.getParameters().getAdditionalProperties().forEach((k, v) -> {
+                    if (v.getFinal() != null) {
+
+                    }
+                });
+                return op.getParameters().getAdditionalProperties().entrySet().parallelStream().filter(e -> e.getValue().getFinal() != null).map(
+                        Map.Entry::getKey).collect(Collectors.toList());
+            }
+            return Collections.emptyList();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+    
+    public static Variables removeFinalParameters(Variables variables, Collection<String> finalParameters) {
+        if (finalParameters != null && variables != null && variables.getAdditionalProperties() != null) {
+            finalParameters.forEach(p -> variables.removeAdditionalProperty(p));
+        }
+        return variables;
     }
 
     @SuppressWarnings("unchecked")

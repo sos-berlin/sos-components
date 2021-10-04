@@ -170,7 +170,7 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                         dateTo = "1d";
                     }
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, body.getTimeZone());
-                    final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
+                    final Instant until = (dateToInstant.isBefore(now)) ? now : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
                         Optional<Instant> scheduledFor = o.scheduledFor();
                         return !scheduledFor.isPresent() || !scheduledFor.get().isAfter(until);
@@ -229,10 +229,10 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
     }
 
-    private static boolean orderIsPermitted(JWorkflowId w, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
-    }
+//    private static boolean orderIsPermitted(JWorkflowId w, Set<Folder> listOfFolders) {
+//        if (listOfFolders == null || listOfFolders.isEmpty()) {
+//            return true;
+//        }
+//        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
+//    }
 }

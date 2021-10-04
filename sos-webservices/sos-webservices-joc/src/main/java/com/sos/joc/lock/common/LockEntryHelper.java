@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +40,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.lock.JLockState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.workflow.JWorkflow;
+import js7.data_for_java.workflow.JWorkflowId;
 import scala.collection.JavaConverters;
 import scala.compat.java8.OptionConverters;
 
@@ -101,11 +105,15 @@ public class LockEntryHelper {
             
             final Collection<OrderId> lockQueuedOrderIds = jLockState.queuedOrderIds();
             Set<JOrder> lockQueuedJOrders = controllerState.ordersBy(o -> lockQueuedOrderIds.contains(o.id())).collect(Collectors.toSet());
+            
+            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = Stream.of(lockJOrders, lockQueuedJOrders).flatMap(l -> l.stream())
+                    .map(JOrder::workflowId).distinct().collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(
+                            w, controllerState)));
 
             for (JOrder jo : lockJOrders) {
                 ordersHoldingLocksCount++;
                 LockOrder lo = new LockOrder();
-                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, finalParamsPerWorkflow, null));
                 lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
                 LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());
@@ -119,7 +127,7 @@ public class LockEntryHelper {
             for (JOrder jo : lockQueuedJOrders) {
                 ordersWaitingForLocksCount++;
                 LockOrder lo = new LockOrder();
-                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, null));
+                lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, false, null, finalParamsPerWorkflow, null));
                 lo.setLock(getWorkflowLock(controllerState, jo, lo.getOrder().getWorkflowId(), queuedWorkflowLocks, lockId));
 
                 LockWorkflow lw = getLockWorkflow(workflows, lo.getOrder().getWorkflowId());

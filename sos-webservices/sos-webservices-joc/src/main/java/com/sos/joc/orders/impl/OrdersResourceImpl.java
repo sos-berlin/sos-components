@@ -233,11 +233,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         dateTo = "1d";
                     }
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
-                    final Instant until = (dateToInstant.isBefore(Instant.now())) ? Instant.now() : dateToInstant;
+                    final Instant until = (dateToInstant.isBefore(surveyDateInstant)) ? surveyDateInstant : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
                         if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                             if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
-                                if (lookingForPending && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
+                                if ((!withStatesFilter || lookingForPending) && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
                                     return true;
                                 }
                                 return false;
@@ -273,11 +273,12 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     getCyclicOrderInfos).collect(Collectors.toConcurrentMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
 
             // merge cycledOrders to orderStream and grouping by folders for folder permissions
-            ConcurrentMap<String, List<JOrder>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(Collectors
-                    .groupingByConcurrent(o -> o.workflowId().path().string()));
-            orderStream = groupedByFolders.entrySet().stream().parallel().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders)).flatMap(
-                    e -> e.getValue().stream());
-            
+            ConcurrentMap<String, ConcurrentMap<JWorkflowId, List<JOrder>>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
+                    Collectors.groupingByConcurrent(o -> o.workflowId().path().string(), Collectors.groupingByConcurrent(JOrder::workflowId)));
+            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.values().parallelStream().flatMap(e -> e.keySet()
+                    .stream()).collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
+            orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e
+                    .getKey()), folders)).flatMap(e -> e.getValue().values().stream().flatMap(l -> l.stream()));
 
             if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
                 Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
@@ -297,7 +298,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, surveyDateMillis);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, finalParamsPerWorkflow, surveyDateMillis);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {
