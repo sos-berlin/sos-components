@@ -77,12 +77,15 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Set<String> orders = ordersFilter.getOrderIds();
             Set<WorkflowId> workflowIds = ordersFilter.getWorkflowIds();
             boolean withOrderIdFilter = orders != null && !orders.isEmpty();
-            if (withOrderIdFilter) {
-                ordersFilter.setFolders(null);
-            }
+            boolean withWorkflowIdFilter = workflowIds != null && !workflowIds.isEmpty();
             if (ordersFilter.getLimit() == null) {
                 ordersFilter.setLimit(10000); 
             }
+            if (withOrderIdFilter) {
+                ordersFilter.setFolders(null);
+                ordersFilter.setLimit(-1);
+            }
+            
             boolean withFolderFilter = ordersFilter.getFolders() != null && !ordersFilter.getFolders().isEmpty();
             final Set<Folder> folders = addPermittedFolder(ordersFilter.getFolders());
             
@@ -250,6 +253,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }
             }
             
+            if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
+                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+                cycledOrderStream = cycledOrderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id()
+                        .string()));
+                orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
+            }
+            
             // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
@@ -273,26 +283,35 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     getCyclicOrderInfos).collect(Collectors.toConcurrentMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
 
             // merge cycledOrders to orderStream and grouping by folders for folder permissions
-            ConcurrentMap<String, ConcurrentMap<JWorkflowId, List<JOrder>>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
-                    Collectors.groupingByConcurrent(o -> o.workflowId().path().string(), Collectors.groupingByConcurrent(JOrder::workflowId)));
-            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.values().parallelStream().flatMap(e -> e.keySet()
-                    .stream()).collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
-            orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e
-                    .getKey()), folders)).flatMap(e -> e.getValue().values().stream().flatMap(l -> l.stream()));
-
-            if (ordersFilter.getRegex() != null && !ordersFilter.getRegex().isEmpty()) {
-                Predicate<String> regex = Pattern.compile(ordersFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-                orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
+//            ConcurrentMap<String, ConcurrentMap<JWorkflowId, List<JOrder>>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
+//                    Collectors.groupingByConcurrent(o -> o.workflowId().path().string(), Collectors.groupingByConcurrent(JOrder::workflowId)));
+//            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.values().parallelStream().flatMap(e -> e.keySet()
+//                    .stream()).collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
+//            orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e
+//                    .getKey()), folders)).flatMap(e -> e.getValue().values().stream().flatMap(l -> l.stream()));
+            
+            ConcurrentMap<JWorkflowId, List<JOrder>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
+                  Collectors.groupingByConcurrent(JOrder::workflowId));
+            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.keySet().parallelStream().collect(Collectors
+                    .toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
+            
+            ToLongFunction<JOrder> compareScheduleFor = o -> o.scheduledFor().isPresent() ? o.scheduledFor().get().toEpochMilli() : surveyDateMillis;
+            
+            if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
+                // consider limit per workflow (not over all)
+                orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+                        folders)).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(
+                                ordersFilter.getLimit().longValue()));
+            } else {
+                orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+                        folders)).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor).reversed());
+                if (ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
+                    orderStream = orderStream.limit(ordersFilter.getLimit().longValue());
+                }
             }
 
             OrdersV entity = new OrdersV();
             entity.setSurveyDate(Date.from(surveyDateInstant));
-            
-            ToLongFunction<JOrder> compareScheduleFor = o -> o.scheduledFor().isPresent() ? o.scheduledFor().get().toEpochMilli() : surveyDateMillis;
-            orderStream = orderStream.sorted(Comparator.comparingLong(compareScheduleFor).reversed());
-            if (ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
-                orderStream = orderStream.limit(ordersFilter.getLimit().longValue());
-            }
             
             Map<JWorkflowId, Requirements> orderPreparations = new HashMap<>();
             
