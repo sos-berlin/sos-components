@@ -31,7 +31,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
     private static final String API_CALL = "./order";
     private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.SCHEDULED,
-            OrderStateText.BLOCKED, OrderStateText.SUSPENDED);
+            OrderStateText.BLOCKED);
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {

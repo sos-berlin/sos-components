@@ -1,13 +1,10 @@
 package com.sos.joc.keys.db;
 
-import java.security.cert.X509Certificate;
-
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
-import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.deployment.DBItemDepKeys;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
