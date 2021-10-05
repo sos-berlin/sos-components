@@ -147,7 +147,7 @@ public class TasksResourceHistoryImpl extends JOCResourceImpl implements ITasksR
 
                 ScrollableResults sr = null;
                 try {
-                    boolean profiler = true;
+                    boolean profiler = false;
                     Instant profilerStart = Instant.now();
                     if (getTaskFromHistoryIdAndNode) {
                         sr = dbLayer.getJobsFromHistoryIdAndPosition(in.getHistoryIds().stream().filter(Objects::nonNull).filter(t -> t
