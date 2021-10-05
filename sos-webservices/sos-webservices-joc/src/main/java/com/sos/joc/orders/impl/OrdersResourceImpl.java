@@ -167,11 +167,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     
                     if (freshOrderFilter != null) {
-                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notSuspendFilter, o -> o.id().string().matches(".*#C[0-9]+-.*")));
+                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
                         if (states.contains(OrderStateText.SUSPENDED)) {
                             freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
                         } else {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notSuspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> !o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
                         }
                     }
                     
@@ -188,8 +188,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                 } else {
-                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(notSuspendFilter, o -> o.id()
-                            .string().matches(".*#C[0-9]+-.*")));
+                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(o -> o.id()
+                            .string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
                     notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
                 }
             }

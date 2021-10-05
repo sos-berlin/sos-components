@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "noticeBoardPaths",
     "folders",
+    "compact",
     "limit"
 })
 public class BoardsFilter {
@@ -47,6 +48,15 @@ public class BoardsFilter {
      */
     @JsonProperty("folders")
     private List<Folder> folders = new ArrayList<Folder>();
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
     /**
      * -1=unlimited
      * 
@@ -112,6 +122,28 @@ public class BoardsFilter {
     }
 
     /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
+    /**
      * -1=unlimited
      * 
      */
@@ -131,12 +163,12 @@ public class BoardsFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPaths", noticeBoardPaths).append("folders", folders).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPaths", noticeBoardPaths).append("folders", folders).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeBoardPaths).append(limit).append(folders).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(noticeBoardPaths).append(limit).append(folders).append(controllerId).append(compact).toHashCode();
     }
 
     @Override
@@ -148,7 +180,7 @@ public class BoardsFilter {
             return false;
         }
         BoardsFilter rhs = ((BoardsFilter) other);
-        return new EqualsBuilder().append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(folders, rhs.folders).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(noticeBoardPaths, rhs.noticeBoardPaths).append(limit, rhs.limit).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(compact, rhs.compact).isEquals();
     }
 
 }

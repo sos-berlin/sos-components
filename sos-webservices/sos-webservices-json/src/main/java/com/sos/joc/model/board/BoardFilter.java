@@ -20,6 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "noticeBoardPath",
+    "compact",
     "limit"
 })
 public class BoardFilter {
@@ -42,6 +43,15 @@ public class BoardFilter {
      */
     @JsonProperty("noticeBoardPath")
     private String noticeBoardPath;
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
     /**
      * -1=unlimited
      * 
@@ -99,6 +109,28 @@ public class BoardFilter {
     }
 
     /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
+    /**
      * -1=unlimited
      * 
      */
@@ -118,12 +150,12 @@ public class BoardFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("noticeBoardPath", noticeBoardPath).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(noticeBoardPath).append(limit).append(controllerId).toHashCode();
+        return new HashCodeBuilder().append(noticeBoardPath).append(limit).append(controllerId).append(compact).toHashCode();
     }
 
     @Override
@@ -135,7 +167,7 @@ public class BoardFilter {
             return false;
         }
         BoardFilter rhs = ((BoardFilter) other);
-        return new EqualsBuilder().append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).append(controllerId, rhs.controllerId).isEquals();
+        return new EqualsBuilder().append(noticeBoardPath, rhs.noticeBoardPath).append(limit, rhs.limit).append(controllerId, rhs.controllerId).append(compact, rhs.compact).isEquals();
     }
 
 }
