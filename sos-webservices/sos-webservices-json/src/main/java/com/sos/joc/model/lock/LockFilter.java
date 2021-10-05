@@ -3,6 +3,7 @@ package com.sos.joc.model.lock;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -18,7 +19,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "lockPath"
+    "lockPath",
+    "compact",
+    "limit"
 })
 public class LockFilter {
 
@@ -40,6 +43,22 @@ public class LockFilter {
      */
     @JsonProperty("lockPath")
     private String lockPath;
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    @JsonPropertyDescription("controls if the object's data is compact or detailed")
+    private Boolean compact = false;
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    @JsonPropertyDescription("-1=unlimited")
+    private Integer limit = 10000;
 
     /**
      * controllerId
@@ -89,14 +108,54 @@ public class LockFilter {
         this.lockPath = lockPath;
     }
 
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public Boolean getCompact() {
+        return compact;
+    }
+
+    /**
+     * compact parameter
+     * <p>
+     * controls if the object's data is compact or detailed
+     * 
+     */
+    @JsonProperty("compact")
+    public void setCompact(Boolean compact) {
+        this.compact = compact;
+    }
+
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public Integer getLimit() {
+        return limit;
+    }
+
+    /**
+     * -1=unlimited
+     * 
+     */
+    @JsonProperty("limit")
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("lockPath", lockPath).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("lockPath", lockPath).append("compact", compact).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(lockPath).toHashCode();
+        return new HashCodeBuilder().append(limit).append(controllerId).append(lockPath).append(compact).toHashCode();
     }
 
     @Override
@@ -108,7 +167,7 @@ public class LockFilter {
             return false;
         }
         LockFilter rhs = ((LockFilter) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(lockPath, rhs.lockPath).isEquals();
+        return new EqualsBuilder().append(limit, rhs.limit).append(controllerId, rhs.controllerId).append(lockPath, rhs.lockPath).append(compact, rhs.compact).isEquals();
     }
 
 }
