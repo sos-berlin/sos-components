@@ -105,6 +105,13 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> stateFilter = null;
             Function1<Order<Order.State>, Object> freshOrderFilter = null;
             
+            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+                    Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
+                            Order.ProcessingKilled$.class));
+            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+            Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+
+            
             if (!withOrderIdFilter) {
                 if (withStatesFilter) {
 
@@ -126,15 +133,14 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     
                     if (states.contains(OrderStateText.SUSPENDED)) {
                         if (stateFilter == null) {
-                            stateFilter = JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(Order.Fresh$.class)), o -> o
-                                    .isSuspended());
+                            stateFilter = JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(Order.Fresh$.class)), suspendFilter);
                         } else {
                             stateFilter = JOrderPredicates.or(JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(
-                                    Order.Fresh$.class)), o -> o.isSuspended()), stateFilter);
+                                    Order.Fresh$.class)), suspendFilter), stateFilter);
                         }
                     } else {
                         if (stateFilter != null) {
-                            stateFilter = JOrderPredicates.and(o -> !o.isSuspended(), stateFilter);
+                            stateFilter = JOrderPredicates.and(notSuspendFilter, stateFilter);
                         }
                     }
 
@@ -161,11 +167,11 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     
                     if (freshOrderFilter != null) {
-                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, o -> !o.isSuspended() && o.id().string().matches(".*#C[0-9]+-.*"));
+                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notSuspendFilter, o -> o.id().string().matches(".*#C[0-9]+-.*")));
                         if (states.contains(OrderStateText.SUSPENDED)) {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, o -> o.isSuspended() || !o.id().string().matches(".*#C[0-9]+-.*"));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
                         } else {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, o -> !o.isSuspended() && !o.id().string().matches(".*#C[0-9]+-.*"));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notSuspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
                         }
                     }
                     
@@ -182,8 +188,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                 } else {
-                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended() && o.id()
-                            .string().matches(".*#C[0-9]+-.*"));
+                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(notSuspendFilter, o -> o.id()
+                            .string().matches(".*#C[0-9]+-.*")));
                     notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
                 }
             }

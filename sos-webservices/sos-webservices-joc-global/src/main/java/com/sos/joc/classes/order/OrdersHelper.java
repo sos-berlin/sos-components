@@ -181,7 +181,6 @@ public class OrdersHelper {
             put(OrderStateText.INPROGRESS, 3);
             put(OrderStateText.FINISHED, 6);
             put(OrderStateText.BLOCKED, 7);
-            put(OrderStateText.CALLING, 9); // obsolete?
             put(OrderStateText.PROMPTING, 12);
             put(OrderStateText.UNKNOWN, 2);
         }
@@ -276,10 +275,10 @@ public class OrdersHelper {
 
     public static OrderState getState(String state, Boolean isSuspended) {
         OrderState oState = new OrderState();
-        if (isSuspended == Boolean.TRUE) {
-            state = "Suspended";
-        }
         OrderStateText groupedState = getGroupedState(state);
+        if (isSuspended == Boolean.TRUE && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
+            groupedState = OrderStateText.SUSPENDED;
+        }
         oState.set_text(groupedState);
         oState.setSeverity(severityByGroupedStates.get(groupedState));
         oState.set_reason(waitingReasons.get(state));
@@ -383,8 +382,9 @@ public class OrdersHelper {
         return o;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
-            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders,
+            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws JsonParseException, JsonMappingException, IOException,
+            JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, finalParameters, surveyDateMillis);

@@ -45,6 +45,7 @@ import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflowId;
+import scala.Function1;
 
 @Path("orders")
 public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implements IOrdersResourceOverviewSnapshot {
@@ -105,38 +106,44 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             Map<Class<? extends Order.State>, Integer> orderStates = null;
             int suspendedOrders = 0;
             Stream<JOrder> freshOrders = null;
+            
+            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+                    Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
+                            Order.ProcessingKilled$.class));
+            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+            Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
 
             if (withWorkFlowFilter) {
                 if (!workflowIds.isEmpty()) {
-                    orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && workflowIds.contains(o.workflowId()));
+                    orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o.workflowId())));
                     if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
-                                JOrderPredicates.and(o -> !o.isSuspended(), o -> workflowIds.contains(o.workflowId()))));
+                                JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o.workflowId()))));
                         // freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
                         // && workflowIds.contains(o.workflowId()));
                     }
-                    suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && workflowIds.contains(o.workflowId())).mapToInt(e -> 1).sum();
+                    suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds.contains(o.workflowId()))).mapToInt(e -> 1).sum();
                 } else {
                     // no folder permissions
                     orderStates = Collections.emptyMap();
                 }
             } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended() && orderIsPermitted(o.workflowId(), permittedFolders));
+                orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders)));
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
-                            JOrderPredicates.and(o -> !o.isSuspended(), o -> orderIsPermitted(o.workflowId(), permittedFolders))));
+                            JOrderPredicates.and(notSuspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders))));
 //                    freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
 //                            && orderIsPermitted(o.workflowId(), permittedFolders));
                 }
-                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended() && orderIsPermitted(o.workflowId(), permittedFolders)).mapToInt(
+                suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders))).mapToInt(
                         e -> 1).sum();
             } else {
-                orderStates = controllerState.orderStateToCount(o -> !o.isSuspended());
+                orderStates = controllerState.orderStateToCount(notSuspendFilter);
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
-                    freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended()));
+                    freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), notSuspendFilter));
                     //freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended());
                 }
-                suspendedOrders = controllerState.ordersBy(o -> o.isSuspended()).mapToInt(e -> 1).sum();
+                suspendedOrders = controllerState.ordersBy(suspendFilter).mapToInt(e -> 1).sum();
             }
 
             int numOfBlockedOrders = 0;
