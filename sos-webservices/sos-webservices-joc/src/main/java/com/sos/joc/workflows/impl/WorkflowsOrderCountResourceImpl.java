@@ -15,9 +15,6 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -52,7 +49,6 @@ import scala.Function1;
 public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements IWorkflowsOrderCountResource {
 
     private static final String API_CALL = "./workflows/order_count";
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowsOrderCountResourceImpl.class);
 
     @Override
     public JOCDefaultResponse postOrderCount(String accessToken, byte[] filterBytes) {
@@ -69,13 +65,8 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
             }
             Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
 
-            WorkflowsOrderCount workflows = new WorkflowsOrderCount();
-            workflows.setSurveyDate(Date.from(Instant.now()));
-            final JControllerState currentstate = getCurrentState(controllerId);
+            final JControllerState currentstate = Proxy.of(controllerId).currentState();;
             final Instant surveyInstant = currentstate.instant();
-            if (currentstate != null) {
-                workflows.setSurveyDate(Date.from(surveyInstant));
-            }
             
             Predicate<JOrder> dateToFilter = o -> true;
             if (workflowsFilter.getDateTo() != null && !workflowsFilter.getDateTo().isEmpty()) {
@@ -88,7 +79,7 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
                     dateToFilter = o -> {
                         if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                             if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
-                                if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
+                                if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
                                     return true;
                                 }
                                 return false;
@@ -129,6 +120,8 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
 
             workflows2.forEach(w -> groupedOrdersCount.putIfAbsent(JWorkflowId.apply(w), Collections.emptyMap()));
             
+            WorkflowsOrderCount workflows = new WorkflowsOrderCount();
+            workflows.setSurveyDate(Date.from(surveyInstant));
             workflows.setWorkflows(groupedOrdersCount.entrySet().stream().map(e -> {
                 WorkflowOrderCount w = new WorkflowOrderCount();
                 w.setPath(e.getKey().path().string());
@@ -157,10 +150,10 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
         }
         if (OrderStateText.SCHEDULED.equals(groupedState) && order.scheduledFor().isPresent()) {
             Instant scheduledInstant = order.scheduledFor().get();
-            if (scheduledInstant.isBefore(surveyInstant)) {
-                groupedState = OrderStateText.BLOCKED;
-            } else if (JobSchedulerDate.NEVER_MILLIS.equals(scheduledInstant.toEpochMilli())) {
+            if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
                 groupedState = OrderStateText.PENDING;
+            } else if (scheduledInstant.isBefore(surveyInstant)) {
+                groupedState = OrderStateText.BLOCKED;
             }
         }
         return groupedState;
@@ -192,15 +185,5 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
             summary.setPrompting(0);
         }
         return summary;
-    }
-    
-    private JControllerState getCurrentState(String controllerId) {
-        JControllerState currentstate = null;
-        try {
-            currentstate = Proxy.of(controllerId).currentState();
-        } catch (Exception e) {
-            LOGGER.warn(e.toString());
-        }
-        return currentstate;
     }
 }
