@@ -131,7 +131,7 @@ public class OrdersResourceHistoryImpl extends JOCResourceImpl implements IOrder
                 ScrollableResults sr = null;
 
                 try {
-                    boolean profiler = true;
+                    boolean profiler = false;
                     Instant profilerStart = Instant.now();
                     sr = dbLayer.getMainOrders();
                     Instant profilerAfterSelect = Instant.now();
