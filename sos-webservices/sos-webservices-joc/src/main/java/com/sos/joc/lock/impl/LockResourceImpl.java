@@ -73,7 +73,7 @@ public class LockResourceImpl extends JOCResourceImpl implements ILockResource {
             }
             checkFolderPermissions(dc.getPath());
             
-            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId());
+            LockEntryHelper helper = new LockEntryHelper(filter.getControllerId(), filter.getCompact(), filter.getLimit());
             answer.setLock(helper.getLockEntry(currentstate, dc));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;

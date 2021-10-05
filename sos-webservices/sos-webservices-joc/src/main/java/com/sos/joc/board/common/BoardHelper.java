@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +75,8 @@ public class BoardHelper {
                 if (noticeId == null) {
                     return null;
                 }
-                return new ExpectingOrder(OrdersHelper.mapJOrderToOrderV(o, oItem, true, permittedFolders, null), noticeId);
+                // TODO remove final Parameters
+                return new ExpectingOrder(OrdersHelper.mapJOrderToOrderV(o, oItem, true, permittedFolders, null, null), noticeId);
             } catch (Exception e) {
                 return null;
             }
@@ -107,7 +107,8 @@ public class BoardHelper {
                 Set<OrderId> orderIds = JavaConverters.asJava(bs.expectingOrders(n.id()));
                 notice.setExpectingOrders(controllerState.ordersBy(o -> orderIds.contains(o.id())).parallel().map(o -> {
                     try {
-                        return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null);
+                        // TODO remove final Parameters
+                        return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null, null);
                     } catch (Exception e) {
                         return null;
                     }

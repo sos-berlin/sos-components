@@ -2,6 +2,7 @@ package com.sos.joc.order.impl;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
     private static final String API_CALL = "./order";
     private final List<OrderStateText> orderStateWithRequirements = Arrays.asList(OrderStateText.PENDING, OrderStateText.SCHEDULED,
-            OrderStateText.BLOCKED, OrderStateText.SUSPENDED);
+            OrderStateText.BLOCKED);
 
     @Override
     public JOCDefaultResponse postOrder(String accessToken, byte[] filterBytes) {
@@ -50,8 +51,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), surveyDateInstant
-                        .toEpochMilli());
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), Collections
+                        .singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(), currentState)), surveyDateInstant
+                                .toEpochMilli());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));

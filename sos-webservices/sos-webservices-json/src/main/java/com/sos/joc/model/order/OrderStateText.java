@@ -19,7 +19,6 @@ public enum OrderStateText {
     FINISHED(8),
     BROKEN(12),
     INPROGRESS(13),
-    CALLING(14),
     SCHEDULED(15),
     PROMPTING(16),
     UNKNOWN(99);

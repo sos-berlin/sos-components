@@ -6,12 +6,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -31,6 +32,7 @@ import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocFolderPermissionsException;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.OrdersPositions;
 import com.sos.joc.model.order.PositionChange;
 import com.sos.joc.model.order.PositionChangeCode;
@@ -38,12 +40,15 @@ import com.sos.joc.model.order.Positions;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.order.Order;
 import js7.data.order.OrderId;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+import scala.Function1;
 
 public class CheckedOrdersPositions extends OrdersPositions {
     
@@ -77,35 +82,44 @@ public class CheckedOrdersPositions extends OrdersPositions {
             singleOrder = true;
             return get(orders.iterator().next(), currentState, permittedFolders, null, true);
         }
+        
+        Function1<Order<Order.State>, Object> stateFilter = o -> o.isSuspended();
+        Iterator<Function1<Order<Order.State>, Object>> failedStates = OrdersHelper.groupByStateClasses.entrySet().stream().filter(e -> e.getValue()
+                .equals(OrderStateText.FAILED)).map(Map.Entry::getKey).map(JOrderPredicates::byOrderState).iterator();
+        
+        while (failedStates.hasNext()) {
+            stateFilter = JOrderPredicates.or(stateFilter, failedStates.next());
+        }
+        
+        stateFilter = JOrderPredicates.and(stateFilter, o -> orders.contains(o.id().string()));
+        ConcurrentMap<JWorkflowId, Set<JOrder>> suspendedOrFailedOrders = currentState.ordersBy(stateFilter).collect(Collectors.groupingByConcurrent(
+                JOrder::workflowId, Collectors.toSet()));
 
-        Stream<JOrder> orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
-
-        Map<Boolean, Set<JOrder>> suspendedOrFailedOrders = orderStream.collect(Collectors.groupingBy(o -> OrdersHelper.isSuspendedOrFailed(o),
-                Collectors.toSet()));
-
-        if (!suspendedOrFailedOrders.containsKey(Boolean.TRUE)) {
+        if (suspendedOrFailedOrders.isEmpty()) {
             throw new JocBadRequestException("The orders are neither failed nor suspended");
         }
+        
+        Set<JWorkflowId> notPermittedWorkflows = suspendedOrFailedOrders.keySet().stream().filter(wId -> !OrdersHelper.canAdd(WorkflowPaths.getPath(
+                wId), permittedFolders)).collect(Collectors.toSet());
+        for (JWorkflowId notPermittedWorkflow : notPermittedWorkflows) {
+            suspendedOrFailedOrders.remove(notPermittedWorkflow);
+        }
 
-        orderStream = suspendedOrFailedOrders.getOrDefault(Boolean.TRUE, Collections.emptySet()).stream().filter(o -> OrdersHelper.canAdd(WorkflowPaths.getPath(o
-                .workflowId()), permittedFolders));
-
-        Map<JWorkflowId, Set<JOrder>> map = orderStream.collect(Collectors.groupingBy(o -> o.workflowId(), Collectors.toSet()));
-
-        if (map.isEmpty()) {
+        if (suspendedOrFailedOrders.isEmpty()) {
             throw new JocFolderPermissionsException("Access denied");
         }
         
-        if (map.size() > 1) {
+        if (suspendedOrFailedOrders.size() > 1) {
             PositionChange pc = new PositionChange();
             pc.setCode(PositionChangeCode.NOT_ONE_WORKFLOW);
-            pc.setMessage("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
+            pc.setMessage("The orders must be from the same workflow. Found workflows are: " + suspendedOrFailedOrders.keySet().toString());
             setDisabledPositionChange(pc);
             setOrderIds(orders);
+            jOrders = suspendedOrFailedOrders.values().stream().flatMap(l -> l.stream()).collect(Collectors.toSet());
             //throw new JocBadRequestException("The orders must be from the same workflow. Found workflows are: " + map.keySet().toString());
         } else {
 
-            JWorkflowId workflowId = map.keySet().iterator().next();
+            JWorkflowId workflowId = suspendedOrFailedOrders.keySet().iterator().next();
             Either<Problem, JWorkflow> e = currentState.repo().idToWorkflow(workflowId);
             ProblemHelper.throwProblemIfExist(e);
             JsonNode node = Globals.objectMapper.readTree(e.get().withPositions().toJson());
@@ -118,7 +132,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             final Map<String, Integer> counterPerPos = new HashMap<>();
             final Set<Positions> pos = new LinkedHashSet<>();
             final Set<String> orderIds = new HashSet<>();
-            jOrders = map.get(workflowId);
+            jOrders = suspendedOrFailedOrders.get(workflowId);
             jOrders.forEach(o -> {
                 orderIds.add(o.id().string());
                 e.get().reachablePositions(o.workflowPosition().position()).stream().forEachOrdered(jPos -> {
@@ -136,7 +150,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             });
 
             setOrderIds(orderIds);
-            int countOrders = map.get(workflowId).size();
+            int countOrders = suspendedOrFailedOrders.get(workflowId).size();
             Set<String> commonPos = counterPerPos.entrySet().stream().filter(entry -> entry.getValue() == countOrders).map(Map.Entry::getKey).collect(
                     Collectors.toSet());
 

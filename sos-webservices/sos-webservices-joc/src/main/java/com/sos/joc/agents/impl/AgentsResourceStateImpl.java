@@ -135,7 +135,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                         List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                return OrdersHelper.mapJOrderToOrderV(o, false, permittedFolders, surveyDateMillis);
+                                // TODO remove final Parameters
+                                return OrdersHelper.mapJOrderToOrderV(o, false, permittedFolders, null, surveyDateMillis);
                             } catch (Exception e) {
                                 return null;
                             }
