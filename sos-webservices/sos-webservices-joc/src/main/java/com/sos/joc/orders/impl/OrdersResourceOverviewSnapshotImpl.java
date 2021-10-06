@@ -119,8 +119,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                         freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
                                 JOrderPredicates.and(notSuspendFilter, o -> workflowIds.contains(o.workflowId()))));
-                        // freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
-                        // && workflowIds.contains(o.workflowId()));
                     }
                     suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> workflowIds.contains(o.workflowId()))).mapToInt(e -> 1).sum();
                 } else {
@@ -132,8 +130,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
                             JOrderPredicates.and(notSuspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders))));
-//                    freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended()
-//                            && orderIsPermitted(o.workflowId(), permittedFolders));
                 }
                 suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders))).mapToInt(
                         e -> 1).sum();
@@ -141,7 +137,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 orderStates = controllerState.orderStateToCount(notSuspendFilter);
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
                     freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), notSuspendFilter));
-                    //freshOrders = controllerState.ordersBy(JOrderPredicates.byOrderState(Order.Fresh$.class)).filter(o -> !o.asScala().isSuspended());
                 }
                 suspendedOrders = controllerState.ordersBy(suspendFilter).mapToInt(e -> 1).sum();
             }
@@ -162,15 +157,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
                 }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
 
-                // obsolete with introducing states: PENDING, SCHEDULED
-                // if (body.getScheduledNever() == Boolean.TRUE) {
-                // Predicate<JOrder> neverFilter = o -> {
-                // Optional<Instant> scheduledFor = o.scheduledFor();
-                // return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
-                // };
-                // numOfFreshOrders = freshOrderSet.stream().filter(neverFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
-                // e -> 1).sum();
-                // } else
                 if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
                     String dateTo = body.getDateTo();
                     if ("0d".equals(dateTo)) {

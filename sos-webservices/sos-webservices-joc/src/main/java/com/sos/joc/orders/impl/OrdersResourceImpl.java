@@ -133,10 +133,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     
                     if (states.contains(OrderStateText.SUSPENDED)) {
                         if (stateFilter == null) {
-                            stateFilter = JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(Order.Fresh$.class)), suspendFilter);
+                            stateFilter = suspendFilter;
                         } else {
-                            stateFilter = JOrderPredicates.or(JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(
-                                    Order.Fresh$.class)), suspendFilter), stateFilter);
+                            stateFilter = JOrderPredicates.or(suspendFilter, stateFilter);
                         }
                     } else {
                         if (stateFilter != null) {
@@ -167,11 +166,14 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     
                     if (freshOrderFilter != null) {
-                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
+                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"),
+                                notSuspendFilter));
                         if (states.contains(OrderStateText.SUSPENDED)) {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, o -> !o.id().string()
+                                    .matches(".*#C[0-9]+-.*")));
                         } else {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> !o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> !o.id().string().matches(
+                                    ".*#C[0-9]+-.*"), notSuspendFilter));
                         }
                     }
                     
