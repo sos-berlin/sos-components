@@ -4,9 +4,10 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -100,30 +101,51 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(controllerState.instant()));
             }
+            final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
             
-            Integer limit = 10000;
-            if (filter.getLimit() != null) {
-                limit = filter.getLimit();
-            }
-            Map<String, List<JOrder>> expectingOrders = BoardHelper.getExpectingOrders(controllerState, limit);
             JocError jocError = getJocError();
             if (contents != null) {
-                answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
-                    try {
-                        if (dc.getContent() == null || dc.getContent().isEmpty()) {
-                            throw new DBMissingDataException("doesn't exist");
+                Set<String> boardNames = contents.stream().map(DeployedContent::getName).collect(Collectors.toSet());
+                if (filter.getCompact() == Boolean.TRUE) {
+                    ConcurrentMap<String, ConcurrentMap<String, Integer>> numOfExpectings = BoardHelper.getNumOfExpectingOrders(controllerState,
+                            boardNames, folderPermissions.getListOfFolders());
+                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
+                        try {
+                            if (dc.getContent() == null || dc.getContent().isEmpty()) {
+                                throw new DBMissingDataException("doesn't exist");
+                            }
+                            return BoardHelper.getCompactBoard(controllerState, dc, numOfExpectings.getOrDefault(dc.getName(),
+                                    new ConcurrentHashMap<>()));
+                        } catch (Throwable e) {
+                            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                                LOGGER.info(jocError.printMetaInfo());
+                                jocError.clearMetaInfo();
+                            }
+                            LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
+                            return null;
                         }
-                        return BoardHelper.getBoard(controllerState, dc, folders, expectingOrders.getOrDefault(dc.getName(), Collections
-                                .emptyList()));
-                    } catch (Throwable e) {
-                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                            LOGGER.info(jocError.printMetaInfo());
-                            jocError.clearMetaInfo();
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
+                } else {
+                    Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
+                    ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> expectings = BoardHelper.getExpectingOrders(controllerState,
+                            boardNames, folderPermissions.getListOfFolders());
+                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
+                        try {
+                            if (dc.getContent() == null || dc.getContent().isEmpty()) {
+                                throw new DBMissingDataException("doesn't exist");
+                            }
+                            return BoardHelper.getBoard(controllerState, dc, expectings.getOrDefault(dc.getName(), new ConcurrentHashMap<>()), limit,
+                                    surveyDateMillis);
+                        } catch (Throwable e) {
+                            if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                                LOGGER.info(jocError.printMetaInfo());
+                                jocError.clearMetaInfo();
+                            }
+                            LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
+                            return null;
                         }
-                        LOGGER.error(String.format("[%s] %s", dc.getPath(), e.toString()));
-                        return null;
-                    }
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                    }).filter(Objects::nonNull).collect(Collectors.toList()));
+                }
             }
             answer.setDeliveryDate(now);
             return answer;

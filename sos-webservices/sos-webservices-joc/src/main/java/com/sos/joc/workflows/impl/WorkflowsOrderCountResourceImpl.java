@@ -107,8 +107,9 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
                     JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), JOrderPredicates.not(suspendFilter)));
             Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
 
-            Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).filter(dateToFilter);
-            Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).filter(
+            Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).parallel().filter(
+                    dateToFilter);
+            Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).parallel().filter(
                     dateToFilter);
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),

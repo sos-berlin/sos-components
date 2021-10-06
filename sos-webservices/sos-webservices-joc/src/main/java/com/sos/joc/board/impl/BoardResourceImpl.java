@@ -3,6 +3,9 @@ package com.sos.joc.board.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.Path;
 
@@ -22,6 +25,7 @@ import com.sos.joc.model.board.BoardFilter;
 import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.controller.JControllerState;
+import js7.data_for_java.order.JOrder;
 
 @Path("notice")
 public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource {
@@ -54,8 +58,11 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             Board answer = new Board();
             answer.setSurveyDate(Date.from(Instant.now()));
             final JControllerState currentstate = BoardHelper.getCurrentState(filter.getControllerId());
+            long surveyDateMillis = Instant.now().toEpochMilli();
             if (currentstate != null) {
-                answer.setSurveyDate(Date.from(currentstate.instant()));
+                Instant surveyInstant = currentstate.instant();
+                answer.setSurveyDate(Date.from(surveyInstant));
+                surveyDateMillis = surveyInstant.toEpochMilli();
             }
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
             DeployedConfigurationDBLayer dbLayer = new DeployedConfigurationDBLayer(session);
@@ -68,13 +75,16 @@ public class BoardResourceImpl extends JOCResourceImpl implements IBoardResource
             }
             checkFolderPermissions(dc.getPath());
             
-            Integer limit = 10000;
-            if (filter.getLimit() != null) {
-                limit = filter.getLimit();
+            if (filter.getCompact() == Boolean.TRUE) {
+                ConcurrentMap<String, Integer> numOfExpectings = BoardHelper.getNumOfExpectingOrders(currentstate, Collections.singleton(dc
+                        .getName()), folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
+                answer.setNoticeBoard(BoardHelper.getCompactBoard(currentstate, dc, numOfExpectings));
+            } else {
+                Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
+                ConcurrentMap<String, List<JOrder>> expectings = BoardHelper.getExpectingOrders(currentstate, Collections.singleton(dc
+                        .getName()), folderPermissions.getListOfFolders()).getOrDefault(dc.getName(), new ConcurrentHashMap<>());
+                answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, expectings, limit, surveyDateMillis));
             }
-            
-            answer.setNoticeBoard(BoardHelper.getBoard(currentstate, dc, addPermittedFolder(null), BoardHelper.getExpectingOrders(currentstate, limit)
-                    .getOrDefault(dc.getName(), Collections.emptyList())));
             answer.setDeliveryDate(Date.from(Instant.now()));
             return answer;
         } catch (Throwable e) {

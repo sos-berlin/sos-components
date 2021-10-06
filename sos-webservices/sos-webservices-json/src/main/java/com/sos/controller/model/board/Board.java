@@ -3,15 +3,16 @@ package com.sos.controller.model.board;
 
 import java.util.Date;
 import java.util.List;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.controller.model.common.SyncState;
-import com.sos.inventory.model.deploy.DeployType;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
@@ -25,6 +26,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "versionDate",
     "state",
+    "numOfNotices",
+    "numOfExpectingOrders",
     "notices"
 })
 public class Board
@@ -57,6 +60,22 @@ public class Board
      */
     @JsonProperty("state")
     private SyncState state;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNotices")
+    private Integer numOfNotices;
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    private Integer numOfExpectingOrders;
     @JsonProperty("notices")
     private List<Notice> notices = null;
 
@@ -69,22 +88,26 @@ public class Board
 
     /**
      * 
-     * @param notices
-     * @param path
-     * @param postOrderToNoticeId
+     * @param numOfNotices
      * @param expectOrderToNoticeId
-     * @param state
-     * @param documentationName
      * @param title
      * @param versionDate
      * @param version
      * @param endOfLife
+     * @param notices
+     * @param path
+     * @param numOfExpectingOrders
+     * @param postOrderToNoticeId
+     * @param state
+     * @param documentationName
      */
-    public Board(String path, Date versionDate, SyncState state, List<Notice> notices, DeployType tYPE, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
+    public Board(String path, Date versionDate, SyncState state, Integer numOfNotices, Integer numOfExpectingOrders, List<Notice> notices, String postOrderToNoticeId, String endOfLife, String expectOrderToNoticeId, String version, String title, String documentationName) {
         super(postOrderToNoticeId, endOfLife, expectOrderToNoticeId, version, title, documentationName);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;
+        this.numOfNotices = numOfNotices;
+        this.numOfExpectingOrders = numOfExpectingOrders;
         this.notices = notices;
     }
 
@@ -154,6 +177,50 @@ public class Board
         this.state = state;
     }
 
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNotices")
+    public Integer getNumOfNotices() {
+        return numOfNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfNotices")
+    public void setNumOfNotices(Integer numOfNotices) {
+        this.numOfNotices = numOfNotices;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    public Integer getNumOfExpectingOrders() {
+        return numOfExpectingOrders;
+    }
+
+    /**
+     * non negative integer
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfExpectingOrders")
+    public void setNumOfExpectingOrders(Integer numOfExpectingOrders) {
+        this.numOfExpectingOrders = numOfExpectingOrders;
+    }
+
     @JsonProperty("notices")
     public List<Notice> getNotices() {
         return notices;
@@ -166,12 +233,12 @@ public class Board
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("notices", notices).toString();
+        return new ToStringBuilder(this).appendSuper(super.toString()).append("path", path).append("versionDate", versionDate).append("state", state).append("numOfNotices", numOfNotices).append("numOfExpectingOrders", numOfExpectingOrders).append("notices", notices).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notices).append(path).append(state).append(versionDate).toHashCode();
+        return new HashCodeBuilder().appendSuper(super.hashCode()).append(notices).append(path).append(numOfExpectingOrders).append(numOfNotices).append(state).append(versionDate).toHashCode();
     }
 
     @Override
@@ -183,7 +250,7 @@ public class Board
             return false;
         }
         Board rhs = ((Board) other);
-        return new EqualsBuilder().appendSuper(super.equals(other)).append(notices, rhs.notices).append(path, rhs.path).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
+        return new EqualsBuilder().appendSuper(super.equals(other)).append(notices, rhs.notices).append(path, rhs.path).append(numOfExpectingOrders, rhs.numOfExpectingOrders).append(numOfNotices, rhs.numOfNotices).append(state, rhs.state).append(versionDate, rhs.versionDate).isEquals();
     }
 
 }
