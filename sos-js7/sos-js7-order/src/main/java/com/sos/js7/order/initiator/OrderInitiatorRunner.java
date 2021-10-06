@@ -250,9 +250,7 @@ public class OrderInitiatorRunner extends TimerTask {
 		}
 	}
 
-	// change vom 29.09. zurückgedreht  
-//    public void createPlan(java.util.Calendar calendar)
-    public void createPlan_new(java.util.Calendar calendar)
+    public void createPlan(java.util.Calendar calendar)
 			throws ControllerConnectionResetException, ControllerConnectionRefusedException, ParseException,
 			SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
@@ -312,9 +310,8 @@ public class OrderInitiatorRunner extends TimerTask {
 		}
 	}
 
-    // change vom 29.09. zurückgedreht  
-//	public void createPlan_old_____first_create_then_submit(java.util.Calendar calendar)
-    public void createPlan(java.util.Calendar calendar)
+    public void createPlan_old_____first_create_then_submit(java.util.Calendar calendar)
+    //public void createPlan(java.util.Calendar calendar)
 			throws ControllerConnectionResetException, ControllerConnectionRefusedException, ParseException,
 			SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
