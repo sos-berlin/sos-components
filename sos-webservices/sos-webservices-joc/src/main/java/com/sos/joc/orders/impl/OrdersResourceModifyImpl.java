@@ -39,6 +39,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -271,13 +272,15 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (Action.CANCEL_DAILYPLAN.equals(action)) {
             category = CategoryType.DAILYPLAN;
         }
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), category);
+        String controllerId = modifyOrders.getControllerId();
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, category);
 
         Set<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
         boolean withOrders = orders != null && !orders.isEmpty();
+        boolean withFolderFilter = modifyOrders.getFolders() != null && !modifyOrders.getFolders().isEmpty();
+        Set<Folder> permittedFolders = addPermittedFolder(modifyOrders.getFolders());
 
-        String controllerId = modifyOrders.getControllerId();
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Stream<JOrder> orderStream = Stream.empty();
 
@@ -297,14 +300,26 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
             orderStream = currentState.ordersBy(workflowFilter);
-        }
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no permission
+        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            if (permittedFolders.isEmpty()) {
+                // no folder permissions
+            } else {
+                Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream().collect(Collectors.toList()), currentState,
+                        permittedFolders);
+                if (workflowIds2 != null && !workflowIds2.isEmpty()) {
+                    orderStream = currentState.ordersBy(o -> workflowIds2.contains(o.workflowId()));
+                }
+            }
+        } 
 
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders(), withOrders);
 
         if (Action.CANCEL_DAILYPLAN.equals(action)) {
             updateUnknownOrders(controllerId, orders, jOrders);
         }
-
+        if (!withFolderFilter) {
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
                     either -> {
@@ -316,7 +331,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     });
         } else {
             throwControllerObjectNotExistException(action);
-        }
+        }}
     }
 
     public void postResumeOrders(ModifyOrders modifyOrders) throws Exception {
@@ -585,7 +600,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         switch (action) {
         case CANCEL_DAILYPLAN:
             if (modifyOrders.getOrderIds() != null) {
-                Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet());
+                Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet());
                 orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
 
                 updateDailyPlan(orders);
@@ -637,7 +652,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             // only for non-temporary and non-file orders
             LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet()));
+            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet()));
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }

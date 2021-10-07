@@ -67,8 +67,9 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
     private Boards getBoards(BoardsFilter filter) throws Exception {
         SOSHibernateSession session = null;
         try {
+            String controllerId = filter.getControllerId();
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
-            dbFilter.setControllerId(filter.getControllerId());
+            dbFilter.setControllerId(controllerId);
             dbFilter.setObjectTypes(Collections.singleton(DeployType.NOTICEBOARD.intValue()));
 
             List<String> paths = filter.getNoticeBoardPaths();
@@ -93,23 +94,24 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
             } else {
                 contents = dbLayer.getDeployedInventory(dbFilter);
             }
-
+            
             Boards answer = new Boards();
             Date now = Date.from(Instant.now());
             answer.setSurveyDate(now);
-            final JControllerState controllerState = BoardHelper.getCurrentState(filter.getControllerId());
+            final JControllerState controllerState = BoardHelper.getCurrentState(controllerId);
             if (controllerState != null) {
                 answer.setSurveyDate(Date.from(controllerState.instant()));
             }
             final long surveyDateMillis = controllerState != null ? controllerState.instant().toEpochMilli() : Instant.now().toEpochMilli();
+            final Set<Folder> permittedFolders = withFolderFilter ? null : folders;
             
             JocError jocError = getJocError();
             if (contents != null) {
                 Set<String> boardNames = contents.stream().map(DeployedContent::getName).collect(Collectors.toSet());
                 if (filter.getCompact() == Boolean.TRUE) {
                     ConcurrentMap<String, ConcurrentMap<String, Integer>> numOfExpectings = BoardHelper.getNumOfExpectingOrders(controllerState,
-                            boardNames, folderPermissions.getListOfFolders());
-                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
+                            boardNames, folders);
+                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                         try {
                             if (dc.getContent() == null || dc.getContent().isEmpty()) {
                                 throw new DBMissingDataException("doesn't exist");
@@ -128,8 +130,8 @@ public class BoardsResourceImpl extends JOCResourceImpl implements IBoardsResour
                 } else {
                     Integer limit = filter.getLimit() != null ? filter.getLimit() : 10000;
                     ConcurrentMap<String, ConcurrentMap<String, List<JOrder>>> expectings = BoardHelper.getExpectingOrders(controllerState,
-                            boardNames, folderPermissions.getListOfFolders());
-                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), folders)).map(dc -> {
+                            boardNames, folders);
+                    answer.setNoticeBoards(contents.stream().filter(dc -> canAdd(dc.getPath(), permittedFolders)).map(dc -> {
                         try {
                             if (dc.getContent() == null || dc.getContent().isEmpty()) {
                                 throw new DBMissingDataException("doesn't exist");

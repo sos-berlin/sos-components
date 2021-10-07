@@ -1,8 +1,6 @@
 package com.sos.joc.board.common;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,13 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.controller.model.board.Board;
 import com.sos.controller.model.board.Notice;
 import com.sos.controller.model.board.NoticeState;
 import com.sos.controller.model.board.NoticeStateText;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
@@ -188,12 +187,21 @@ public class BoardHelper {
         if (controllerState == null) {
             return Stream.empty();
         }
+        Function<JOrder, ExpectingOrder> mapper = order -> {
+            BoardPath boardPath = ((ExpectNotice) controllerState.asScala().instruction(order.asScala().workflowPosition())).boardPath();
+            if (boardPaths.contains(boardPath.string())) {
+                return new ExpectingOrder(order, boardPath);
+            }
+            return null;
+        };
+        if (permittedFolders == null || permittedFolders.isEmpty()) {
+            return controllerState.ordersBy(JOrderPredicates.byOrderState(Order.ExpectingNotice.class)).parallel().map(mapper).filter(
+                    Objects::nonNull);
+        }
         ConcurrentMap<JWorkflowId, List<JOrder>> ordersPerWorkflow = controllerState.ordersBy(JOrderPredicates.byOrderState(
                 Order.ExpectingNotice.class)).parallel().collect(Collectors.groupingByConcurrent(JOrder::workflowId));
-
-        return ordersPerWorkflow.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()), permittedFolders))
-                .flatMap(e -> e.getValue().stream()).map(order -> new ExpectingOrder(order, ((ExpectNotice) controllerState.asScala().instruction(
-                        order.asScala().workflowPosition())).boardPath())).filter(eo -> boardPaths.contains(eo.getBoardPath()));
+        return ordersPerWorkflow.entrySet().parallelStream().filter(e -> JOCResourceImpl.canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+                permittedFolders)).flatMap(e -> e.getValue().stream()).map(mapper).filter(Objects::nonNull);
     }
     
     private static Board init(DeployedContent dc) throws JsonParseException, JsonMappingException, IOException {
@@ -230,21 +238,5 @@ public class BoardHelper {
 //            return l1;
 //        });
 //    }
-    
-    private static boolean canAdd(String path, Set<Folder> listOfFolders) {
-        if (path == null || !path.startsWith("/")) {
-            return false;
-        }
-        return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
-    }
-    
-    protected static String getParent(String path) {
-        Path p = Paths.get(path).getParent();
-        if (p == null) {
-            return "/";
-        } else {
-            return p.toString().replace('\\', '/');
-        }
-    }
 
 }
