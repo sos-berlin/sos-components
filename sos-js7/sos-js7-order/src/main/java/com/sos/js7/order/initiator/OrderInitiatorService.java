@@ -72,7 +72,7 @@ public class OrderInitiatorService extends AJocClusterService {
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
         AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s]stop", getIdentifier(), mode));
+        LOGGER.info(String.format("[%s][%s] stop", getIdentifier(), mode));
         if (timer != null) {
             timer.cancel();
             timer.purge();

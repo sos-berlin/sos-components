@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 
 public class DBLayerDailyPlanSubmissions {
@@ -32,8 +34,9 @@ public class DBLayerDailyPlanSubmissions {
 
     public int delete(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
 
+        deleteOrders(filter);
+        
         String hql = " from " + DBItemDailyPlanSubmissions + getWhere(filter);
-
         Query<DBItemDailyPlanSubmissions> query = sosHibernateSession.createQuery(hql);
         query = bindParameters(filter, query);
         query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -45,6 +48,25 @@ public class DBLayerDailyPlanSubmissions {
         bindParameters(filter, query);
         int row = sosHibernateSession.executeUpdate(query);
         return row;
+    }
+    
+    private int deleteOrders(FilterDailyPlanSubmissions filter) throws SOSHibernateException{
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" ");
+        hql.append("where submitted=false ");
+        hql.append("and submissionHistoryId in (");
+        hql.append("select id from "+DBLayer.DAILY_PLAN_SUBMISSIONS_DBITEM).append(" ");
+        hql.append(getWhere(filter));
+        hql.append(")");
+        
+        Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(hql);
+        query = bindParameters(filter, query);
+        query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        query.setHint("javax.persistence.lock.timeout", LOCK_TIMEOUT);
+        sosHibernateSession.getResultList(query);
+
+        query = sosHibernateSession.createQuery("delete "+hql.toString());
+        bindParameters(filter, query);
+        return sosHibernateSession.executeUpdate(query);
     }
 
     private String getWhere(FilterDailyPlanSubmissions filter) {
