@@ -452,9 +452,12 @@ public class JOCResourceImpl {
         }
     }
 
-    protected static boolean canAdd(String path, Set<Folder> listOfFolders) {
+    public static boolean canAdd(String path, Set<Folder> listOfFolders) {
         if (path == null || !path.startsWith("/")) {
             return false;
+        }
+        if (listOfFolders == null || listOfFolders.isEmpty()) {
+            return true;
         }
         return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }

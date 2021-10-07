@@ -24,6 +24,7 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.OrderStateText;
@@ -68,68 +69,16 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
             final JControllerState currentstate = Proxy.of(controllerId).currentState();;
             final Instant surveyInstant = currentstate.instant();
             
-            Predicate<JOrder> dateToFilter = o -> true;
-            if (workflowsFilter.getDateTo() != null && !workflowsFilter.getDateTo().isEmpty()) {
-                    String dateTo = workflowsFilter.getDateTo();
-                    if ("0d".equals(dateTo)) {
-                        dateTo = "1d";
-                    }
-                    Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, workflowsFilter.getTimeZone());
-                    final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
-                    dateToFilter = o -> {
-                        if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
-                            if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
-                                if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
-                                    return true;
-                                }
-                                return false;
-                            }
-                        }
-                        return true;
-                    };
-            }
-            
-            Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> canAdd(WorkflowPaths
-                    .getPath(w), permittedFolders)).map(w -> {
-                        if (w.getVersionId() == null || w.getVersionId().isEmpty()) {
-                            return currentstate.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
-                        } else {
-                            return currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
-                        }
-                    }).filter(Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
-            
-            Function1<Order<Order.State>, Object> workflowFilter = o -> workflows2.contains(o.workflowId());
-            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
-                    Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
-                            Order.ProcessingKilled$.class));
-            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
-            Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
-                    JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), JOrderPredicates.not(suspendFilter)));
-            Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
-
-            Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).parallel().filter(
-                    dateToFilter);
-            Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).parallel().filter(
-                    dateToFilter);
-            Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
-            Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
-                    Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
-            cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
-            ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> groupedOrdersCount = Stream.concat(notCycledOrderStream, cycledOrderStream)
-                    .collect(Collectors.groupingByConcurrent(JOrder::workflowId, Collectors.groupingBy(o -> groupingByState(o, surveyInstant),
-                            Collectors.reducing(0, e -> 1, Integer::sum))));
-
-            workflows2.forEach(w -> groupedOrdersCount.putIfAbsent(JWorkflowId.apply(w), Collections.emptyMap()));
-            
             WorkflowsOrderCount workflows = new WorkflowsOrderCount();
             workflows.setSurveyDate(Date.from(surveyInstant));
-            workflows.setWorkflows(groupedOrdersCount.entrySet().stream().map(e -> {
-                WorkflowOrderCount w = new WorkflowOrderCount();
-                w.setPath(e.getKey().path().string());
-                w.setVersionId(e.getKey().versionId().string());
-                w.setNumOfOrders(getNumOfOrders(e.getValue()));
-                return w;
-            }).collect(Collectors.toList()));
+            workflows.setWorkflows(WorkflowsHelper.getGroupedOrdersCountPerWorkflow(currentstate, workflowsFilter, permittedFolders).entrySet()
+                    .stream().map(e -> {
+                        WorkflowOrderCount w = new WorkflowOrderCount();
+                        w.setPath(e.getKey().path().string());
+                        w.setVersionId(e.getKey().versionId().string());
+                        w.setNumOfOrders(getNumOfOrders(e.getValue()));
+                        return w;
+                    }).collect(Collectors.toList()));
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(workflows);
@@ -142,22 +91,6 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
         } finally {
             Globals.disconnect(connection);
         }
-    }
-    
-    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant) {
-        OrderStateText groupedState = OrdersHelper.getGroupedState(order.asScala().state().getClass());
-        if (order.asScala().isSuspended() && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
-            groupedState = OrderStateText.SUSPENDED;
-        }
-        if (OrderStateText.SCHEDULED.equals(groupedState) && order.scheduledFor().isPresent()) {
-            Instant scheduledInstant = order.scheduledFor().get();
-            if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
-                groupedState = OrderStateText.PENDING;
-            } else if (scheduledInstant.isBefore(surveyInstant)) {
-                groupedState = OrderStateText.BLOCKED;
-            }
-        }
-        return groupedState;
     }
     
     private static OrdersSummary getNumOfOrders(Map<OrderStateText, Integer> map) {
