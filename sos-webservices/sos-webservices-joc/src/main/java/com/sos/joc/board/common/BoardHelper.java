@@ -184,7 +184,7 @@ public class BoardHelper {
     
     private static Stream<ExpectingOrder> getExpectingOrdersStream(JControllerState controllerState, Collection<String> boardPaths,
             Set<Folder> permittedFolders) {
-        if (controllerState == null) {
+        if (controllerState == null || boardPaths == null || boardPaths.isEmpty()) {
             return Stream.empty();
         }
         Function<JOrder, ExpectingOrder> mapper = order -> {
