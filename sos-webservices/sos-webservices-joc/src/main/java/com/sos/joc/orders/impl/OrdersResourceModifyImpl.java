@@ -308,16 +308,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
         } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
-            if (permittedFolders.isEmpty()) {
-                // no folder permissions
-            } else {
-                Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
-                        .collect(Collectors.toList()), currentState, permittedFolders);
-                if (workflowIds2 != null && !workflowIds2.isEmpty()) {
-                    Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
-                    orderStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
-                            getDateToFilter(modifyOrders, surveyInstant));
-                }
+            Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
+                    .collect(Collectors.toList()), currentState, permittedFolders);
+            if (workflowIds2 != null && !workflowIds2.isEmpty()) {
+                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                orderStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
+                        getDateToFilter(modifyOrders, surveyInstant));
             }
         }
 
@@ -341,10 +337,46 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postResumeOrders(ModifyOrders modifyOrders) throws Exception {
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), CategoryType.CONTROLLER);
-
+        
+        String controllerId = modifyOrders.getControllerId();
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        
+        JControllerState currentState = Proxy.of(controllerId).currentState();
+        Instant surveyInstant = currentState.instant();
+        
         Set<String> orders = modifyOrders.getOrderIds();
-        checkRequiredParameter("orderIds", orders);
+        List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
+        boolean withOrders = orders != null && !orders.isEmpty();
+        boolean withFolderFilter = modifyOrders.getFolders() != null && !modifyOrders.getFolders().isEmpty();
+        Set<Folder> permittedFolders = addPermittedFolder(modifyOrders.getFolders());
+        
+        if (withOrders) {
+            //
+        } else if (workflowIds != null && !workflowIds.isEmpty()) {
+            Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
+            Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
+                    .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+            Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                    .pathToName(w.getPath()))).collect(Collectors.toSet());
+            Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+                    .workflowId().path()));
+            orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(getDateToFilter(
+                    modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no permission
+        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+            Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
+                    .collect(Collectors.toList()), currentState, permittedFolders);
+            if (workflowIds2 != null && !workflowIds2.isEmpty()) {
+                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
+                        getDateToFilter(modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+            }
+        }
+        
+        if (orders == null || orders.isEmpty()) {
+           return; 
+        }
 
         Optional<JPosition> positionOpt = Optional.empty();
         if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
@@ -358,8 +390,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         boolean withVariables = modifyOrders.getVariables() != null && modifyOrders.getVariables().getAdditionalProperties() != null && !modifyOrders
                 .getVariables().getAdditionalProperties().isEmpty();
 
-        String controllerId = modifyOrders.getControllerId();
-        JControllerState currentState = Proxy.of(controllerId).currentState();
         CheckedOrdersPositions cop = new CheckedOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
         final Set<JOrder> jOrders = cop.getJOrders();
         List<JHistoryOperation> historyOperations = Collections.emptyList();
