@@ -307,7 +307,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     getDateToFilter(modifyOrders, surveyInstant));
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
-        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
             Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
                     .collect(Collectors.toList()), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
