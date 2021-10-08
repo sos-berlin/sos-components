@@ -622,7 +622,7 @@ public class WorkflowsHelper {
                 Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, workflowsFilter.getTimeZone());
                 final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
                 dateToFilter = o -> {
-                    if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                    if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                         if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
                             if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
                                 return true;

@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "controllerId",
     "orderIds",
     "workflowIds",
+    "states",
     "folders",
     "dateTo",
     "timeZone",
@@ -56,6 +57,8 @@ public class ModifyOrders {
     private Set<String> orderIds = new LinkedHashSet<String>();
     @JsonProperty("workflowIds")
     private List<WorkflowId> workflowIds = new ArrayList<WorkflowId>();
+    @JsonProperty("states")
+    private List<OrderStateText> states = new ArrayList<OrderStateText>();
     /**
      * folders
      * <p>
@@ -160,6 +163,16 @@ public class ModifyOrders {
     @JsonProperty("workflowIds")
     public void setWorkflowIds(List<WorkflowId> workflowIds) {
         this.workflowIds = workflowIds;
+    }
+
+    @JsonProperty("states")
+    public List<OrderStateText> getStates() {
+        return states;
+    }
+
+    @JsonProperty("states")
+    public void setStates(List<OrderStateText> states) {
+        this.states = states;
     }
 
     /**
@@ -324,12 +337,12 @@ public class ModifyOrders {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("position", position).append("variables", variables).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("orderIds", orderIds).append("workflowIds", workflowIds).append("states", states).append("folders", folders).append("dateTo", dateTo).append("timeZone", timeZone).append("orderType", orderType).append("kill", kill).append("position", position).append("variables", variables).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflowIds).append(orderType).append(variables).append(folders).append(controllerId).append(auditLog).append(dateTo).append(timeZone).append(orderIds).append(position).append(kill).toHashCode();
+        return new HashCodeBuilder().append(workflowIds).append(orderType).append(variables).append(folders).append(controllerId).append(auditLog).append(timeZone).append(kill).append(states).append(dateTo).append(orderIds).append(position).toHashCode();
     }
 
     @Override
@@ -341,7 +354,7 @@ public class ModifyOrders {
             return false;
         }
         ModifyOrders rhs = ((ModifyOrders) other);
-        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(orderIds, rhs.orderIds).append(position, rhs.position).append(kill, rhs.kill).isEquals();
+        return new EqualsBuilder().append(workflowIds, rhs.workflowIds).append(orderType, rhs.orderType).append(variables, rhs.variables).append(folders, rhs.folders).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(timeZone, rhs.timeZone).append(kill, rhs.kill).append(states, rhs.states).append(dateTo, rhs.dateTo).append(orderIds, rhs.orderIds).append(position, rhs.position).isEquals();
     }
 
 }

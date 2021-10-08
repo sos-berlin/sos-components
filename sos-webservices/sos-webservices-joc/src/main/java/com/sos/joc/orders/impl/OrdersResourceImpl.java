@@ -245,7 +245,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(surveyDateInstant)) ? surveyDateInstant : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
-                        if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                        if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                             if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
                                 if ((!withStatesFilter || lookingForPending) && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
                                     return true;
@@ -318,7 +318,10 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {
-                            orderPreparations.put(o.workflowId(), OrdersHelper.getRequirements(o, currentState));
+                            Requirements orderPreparation = OrdersHelper.getRequirements(o, currentState);
+                            if (orderPreparation != null) {
+                                orderPreparations.put(o.workflowId(), orderPreparation);
+                            }
                         }
                         order.setRequirements(orderPreparations.get(o.workflowId()));
                     }
