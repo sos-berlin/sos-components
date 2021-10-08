@@ -162,9 +162,10 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     
                     if (freshOrderFilter != null) {
-                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), freshOrderFilter);
+                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                                .isSuspended()), freshOrderFilter);
                     } else if (lookingForScheduled && lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = JOrderPredicates.byOrderState(Order.Fresh$.class);
+                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended());
                     }
                     
                     if (freshOrderFilter != null) {
