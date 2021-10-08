@@ -9,6 +9,7 @@ import javax.persistence.Table;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.MonitoringConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_NOTIFICATION_ACKNOWLEDGEMENTS)
@@ -53,7 +54,7 @@ public class DBItemNotificationAcknowledgement extends DBItem {
     }
 
     public void setComment(String val) {
-        comment = normalizeValue(val, 4_000);
+        comment = normalizeValue(val, MonitoringConstants.MAX_LEN_COMMENT);
     }
 
     public void setCreated(Date val) {

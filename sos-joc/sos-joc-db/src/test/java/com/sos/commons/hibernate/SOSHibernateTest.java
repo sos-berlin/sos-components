@@ -1,5 +1,7 @@
 package com.sos.commons.hibernate;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -13,6 +15,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
@@ -21,6 +24,14 @@ public class SOSHibernateTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateTest.class);
 
     /* HQL Queries */
+
+    @Ignore
+    @Test
+    public void test() throws IOException {
+        String s = SOSPath.readFile(Paths.get("my_file.txt"), StandardCharsets.UTF_8);
+        String n = DBItemHistoryOrderStep.normalizeErrorText(s);
+        LOGGER.info(n.length() + ":" + n);
+    }
 
     @Ignore
     @Test

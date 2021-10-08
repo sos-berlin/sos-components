@@ -14,6 +14,7 @@ import com.sos.history.JobWarning;
 import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.HistoryConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_MONITORING_ORDER_STEPS)
@@ -236,7 +237,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     }
 
     public void setStartVariables(String val) {
-        startVariables = normalizeValue(val, 2_000);
+        startVariables = normalizeValue(val, HistoryConstants.MAX_LEN_START_VARIABLES);
     }
 
     public Date getEndTime() {
@@ -301,7 +302,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Transient
     public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, 50);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
     }
 
     public String getErrorCode() {
@@ -314,7 +315,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Transient
     public static String normalizeErrorText(String val) {
-        return normalizeValue(val, 500);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {
@@ -352,7 +353,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Transient
     public static String normalizeWarnText(String val) {
-        return normalizeValue(val, 500);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_WARN_TEXT);
     }
 
     public String getWarnText() {
