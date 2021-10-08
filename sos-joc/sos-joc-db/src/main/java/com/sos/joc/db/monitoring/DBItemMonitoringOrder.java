@@ -13,6 +13,7 @@ import org.hibernate.annotations.Type;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.model.order.OrderStateText;
 
 @Entity
@@ -286,7 +287,7 @@ public class DBItemMonitoringOrder extends DBItem {
     }
 
     public void setStartVariables(String val) {
-        startVariables = normalizeValue(val, 2_000);
+        startVariables = normalizeValue(val, HistoryConstants.MAX_LEN_START_VARIABLES);
     }
 
     public Long getCurrentHistoryOrderStepId() {
@@ -401,7 +402,7 @@ public class DBItemMonitoringOrder extends DBItem {
 
     @Transient
     public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, 50);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
     }
 
     public String getErrorCode() {
@@ -414,7 +415,7 @@ public class DBItemMonitoringOrder extends DBItem {
 
     @Transient
     public static String normalizeErrorText(String val) {
-        return normalizeValue(val, 500);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {

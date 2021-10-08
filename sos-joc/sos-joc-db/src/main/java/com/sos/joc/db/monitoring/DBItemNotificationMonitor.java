@@ -15,6 +15,8 @@ import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.HistoryConstants;
+import com.sos.joc.db.common.MonitoringConstants;
 import com.sos.monitoring.MonitorType;
 
 @Entity
@@ -111,7 +113,7 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setConfiguration(String val) {
-        configuration = normalizeValue(val, 500);
+        configuration = normalizeValue(val, MonitoringConstants.MAX_LEN_CONFIGURATION);
     }
 
     public String getMessage() {
@@ -119,7 +121,7 @@ public class DBItemNotificationMonitor extends DBItem {
     }
 
     public void setMessage(String val) {
-        message = normalizeValue(val, 4_000);
+        message = normalizeValue(val, MonitoringConstants.MAX_LEN_MESSAGE);
     }
 
     public void setError(boolean val) {
@@ -136,7 +138,7 @@ public class DBItemNotificationMonitor extends DBItem {
 
     @Transient
     public static String normalizeErrorText(String val) {
-        return normalizeValue(val, 500);
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {

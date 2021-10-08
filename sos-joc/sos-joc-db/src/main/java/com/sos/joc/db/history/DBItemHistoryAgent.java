@@ -9,6 +9,7 @@ import javax.persistence.Table;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.HistoryConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_HISTORY_AGENTS)
@@ -115,7 +116,7 @@ public class DBItemHistoryAgent extends DBItem {
     }
 
     public void setCouplingFailedMessage(String val) {
-        couplingFailedMessage = normalizeValue(val, 500);
+        couplingFailedMessage = normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public Date getShutdownTime() {

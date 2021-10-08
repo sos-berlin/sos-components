@@ -13,6 +13,7 @@ import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.model.order.OrderStateText;
 
 @Entity
@@ -133,7 +134,7 @@ public class DBItemHistoryOrderState extends DBItem {
     }
 
     public void setStateCode(String val) {
-        stateCode = normalizeValue(val, 50);
+        stateCode = normalizeValue(val, HistoryConstants.MAX_LEN_STATE_CODE);
     }
 
     public String getStateText() {
@@ -141,7 +142,7 @@ public class DBItemHistoryOrderState extends DBItem {
     }
 
     public void setStateText(String val) {
-        stateText = normalizeValue(val, 255);
+        stateText = normalizeValue(val, HistoryConstants.MAX_LEN_STATE_TEXT);
     }
 
     public void setCreated(Date val) {
