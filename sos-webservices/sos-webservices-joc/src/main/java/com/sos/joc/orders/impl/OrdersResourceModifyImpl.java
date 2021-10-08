@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.CheckedOrdersPositions;
@@ -39,6 +41,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -52,6 +55,7 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.order.CancelDailyPlanOrders;
 import com.sos.joc.model.order.ModifyOrders;
+import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Positions;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
@@ -271,20 +275,23 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (Action.CANCEL_DAILYPLAN.equals(action)) {
             category = CategoryType.DAILYPLAN;
         }
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), category);
+        String controllerId = modifyOrders.getControllerId();
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, category);
 
         Set<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
         boolean withOrders = orders != null && !orders.isEmpty();
+        boolean withFolderFilter = modifyOrders.getFolders() != null && !modifyOrders.getFolders().isEmpty();
+        Set<Folder> permittedFolders = addPermittedFolder(modifyOrders.getFolders());
 
-        String controllerId = modifyOrders.getControllerId();
         JControllerState currentState = Proxy.of(controllerId).currentState();
+        Instant surveyInstant = currentState.instant();
         Stream<JOrder> orderStream = Stream.empty();
 
         if (withOrders) {
             orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
-            // determine possibly fresh cyclic orders in case of CANCEL
-            if (Action.CANCEL.equals(action) || Action.CANCEL_DAILYPLAN.equals(action)) {
+            // determine possibly fresh cyclic orders in case of CANCEL or SUSPEND
+            if (Action.SUSPEND.equals(action) || Action.CANCEL.equals(action) || Action.CANCEL_DAILYPLAN.equals(action)) {
                 // determine cyclic ids
                 orderStream = Stream.concat(orderStream, cyclicFreshOrderIds(orders, currentState));
             }
@@ -296,7 +303,18 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
-            orderStream = currentState.ordersBy(workflowFilter);
+            orderStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
+                    getDateToFilter(modifyOrders, surveyInstant));
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no permission
+        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+            Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
+                    .collect(Collectors.toList()), currentState, permittedFolders);
+            if (workflowIds2 != null && !workflowIds2.isEmpty()) {
+                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                orderStream = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
+                        getDateToFilter(modifyOrders, surveyInstant));
+            }
         }
 
         final Set<JOrder> jOrders = getJOrders(action, orderStream, controllerId, folderPermissions.getListOfFolders(), withOrders);
@@ -304,7 +322,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (Action.CANCEL_DAILYPLAN.equals(action)) {
             updateUnknownOrders(controllerId, orders, jOrders);
         }
-
         if (!jOrders.isEmpty() || Action.CANCEL_DAILYPLAN.equals(action)) {
             command(currentState, action, modifyOrders, dbAuditLog, jOrders.stream().map(JOrder::id).collect(Collectors.toSet())).thenAccept(
                     either -> {
@@ -320,10 +337,46 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     public void postResumeOrders(ModifyOrders modifyOrders) throws Exception {
-        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), modifyOrders.getControllerId(), CategoryType.CONTROLLER);
-
+        
+        String controllerId = modifyOrders.getControllerId();
+        DBItemJocAuditLog dbAuditLog = storeAuditLog(modifyOrders.getAuditLog(), controllerId, CategoryType.CONTROLLER);
+        
+        JControllerState currentState = Proxy.of(controllerId).currentState();
+        Instant surveyInstant = currentState.instant();
+        
         Set<String> orders = modifyOrders.getOrderIds();
-        checkRequiredParameter("orderIds", orders);
+        List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
+        boolean withOrders = orders != null && !orders.isEmpty();
+        boolean withFolderFilter = modifyOrders.getFolders() != null && !modifyOrders.getFolders().isEmpty();
+        Set<Folder> permittedFolders = addPermittedFolder(modifyOrders.getFolders());
+        
+        if (withOrders) {
+            //
+        } else if (workflowIds != null && !workflowIds.isEmpty()) {
+            Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
+            Set<VersionedItemId<WorkflowPath>> workflowPaths = workflowIds.stream().filter(versionNotEmpty).map(w -> JWorkflowId.of(JocInventory
+                    .pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+            Set<WorkflowPath> workflowPaths2 = workflowIds.stream().filter(w -> !versionNotEmpty.test(w)).map(w -> WorkflowPath.of(JocInventory
+                    .pathToName(w.getPath()))).collect(Collectors.toSet());
+            Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
+                    .workflowId().path()));
+            orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(getDateToFilter(
+                    modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no permission
+        } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
+            Set<VersionedItemId<WorkflowPath>> workflowIds2 = WorkflowsHelper.getWorkflowIdsFromFolders(controllerId, permittedFolders.stream()
+                    .collect(Collectors.toList()), currentState, permittedFolders);
+            if (workflowIds2 != null && !workflowIds2.isEmpty()) {
+                Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
+                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyInstant, workflowFilter)).parallel().filter(
+                        getDateToFilter(modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+            }
+        }
+        
+        if (orders == null || orders.isEmpty()) {
+           return; 
+        }
 
         Optional<JPosition> positionOpt = Optional.empty();
         if (modifyOrders.getPosition() != null && !modifyOrders.getPosition().isEmpty()) {
@@ -337,8 +390,6 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         boolean withVariables = modifyOrders.getVariables() != null && modifyOrders.getVariables().getAdditionalProperties() != null && !modifyOrders
                 .getVariables().getAdditionalProperties().isEmpty();
 
-        String controllerId = modifyOrders.getControllerId();
-        JControllerState currentState = Proxy.of(controllerId).currentState();
         CheckedOrdersPositions cop = new CheckedOrdersPositions().get(orders, currentState, folderPermissions.getListOfFolders());
         final Set<JOrder> jOrders = cop.getJOrders();
         List<JHistoryOperation> historyOperations = Collections.emptyList();
@@ -585,7 +636,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         switch (action) {
         case CANCEL_DAILYPLAN:
             if (modifyOrders.getOrderIds() != null) {
-                Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet());
+                Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet());
                 orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
 
                 updateDailyPlan(orders);
@@ -637,7 +688,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             // only for non-temporary and non-file orders
             LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F)[0-9]+-.*")).collect(Collectors.toSet()));
+            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet()));
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
@@ -731,6 +782,118 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             } finally {
                 Globals.disconnect(sosHibernateSession);
             }
+        }
+    }
+    
+    private static Predicate<JOrder> getDateToFilter(ModifyOrders modifyOrders, Instant surveyInstant) {
+        Predicate<JOrder> dateToFilter = o -> true;
+        if (modifyOrders.getDateTo() != null && !modifyOrders.getDateTo().isEmpty()) {
+                String dateTo = modifyOrders.getDateTo();
+                if ("0d".equals(dateTo)) {
+                    dateTo = "1d";
+                }
+                Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, modifyOrders.getTimeZone());
+                final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
+                dateToFilter = o -> {
+                    if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                        if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
+                            if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
+                                return true;
+                            }
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+        }
+        return dateToFilter;
+    }
+    
+    private static Function1<Order<Order.State>, Object> getWorkflowStateFilter(ModifyOrders modifyOrders, Instant surveyInstant,
+            Function1<Order<Order.State>, Object> workflowFilter) {
+        List<OrderStateText> states = modifyOrders.getStates();
+        Function1<Order<Order.State>, Object> stateFilter = null;
+   
+        if (states != null && !states.isEmpty()) {
+            
+            final long surveyDateMillis = surveyInstant.toEpochMilli();
+            final boolean lookingForBlocked = states.contains(OrderStateText.BLOCKED);
+            final boolean lookingForPending = states.contains(OrderStateText.PENDING);
+            final boolean lookingForScheduled = states.contains(OrderStateText.SCHEDULED);
+            
+            Function1<Order<Order.State>, Object> freshOrderFilter = null;
+            
+            Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+                    Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
+                            Order.ProcessingKilled$.class));
+            Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+            Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+            
+            states.remove(OrderStateText.SCHEDULED);
+            states.remove(OrderStateText.PENDING);
+            states.remove(OrderStateText.BLOCKED);
+            
+            Map<OrderStateText, Set<Class<? extends Order.State>>> m = OrdersHelper.groupByStateClasses.entrySet().stream().collect(Collectors
+                    .groupingBy(Map.Entry::getValue, Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
+            Iterator<Function1<Order<Order.State>, Object>> stateFilters = states.stream().filter(s -> m.containsKey(s)).flatMap(s -> m.get(s)
+                    .stream()).map(JOrderPredicates::byOrderState).iterator();
+
+            if (stateFilters.hasNext()) {
+                stateFilter = stateFilters.next();
+                while (stateFilters.hasNext()) {
+                    stateFilter = JOrderPredicates.or(stateFilter, stateFilters.next());
+                }
+            }
+            
+            if (states.contains(OrderStateText.SUSPENDED)) {
+                if (stateFilter == null) {
+                    stateFilter = suspendFilter;
+                } else {
+                    stateFilter = JOrderPredicates.or(suspendFilter, stateFilter);
+                }
+            } else {
+                if (stateFilter != null) {
+                    stateFilter = JOrderPredicates.and(notSuspendFilter, stateFilter);
+                }
+            }
+            
+            if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() >= surveyDateMillis && o
+                        .scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+            } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+            } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() >= surveyDateMillis;
+            } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() < surveyDateMillis;
+            } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
+            } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && (o.scheduledFor().get().toEpochMilli() < surveyDateMillis || o
+                        .scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS);
+            }
+            
+            if (freshOrderFilter != null) {
+                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                        .isSuspended()), freshOrderFilter);
+            } else if (lookingForScheduled && lookingForBlocked && lookingForPending) {
+                freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended());
+            }
+            
+            if (stateFilter == null) {
+                if (freshOrderFilter != null) {
+                    stateFilter = freshOrderFilter;
+                }
+            } else {
+                if (freshOrderFilter != null) {
+                    stateFilter = JOrderPredicates.or(stateFilter, freshOrderFilter);
+                }
+            }
+        }
+        if (stateFilter == null) {
+            return workflowFilter;
+        } else {
+            return JOrderPredicates.and(workflowFilter, stateFilter);
         }
     }
 

@@ -5,13 +5,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -110,6 +110,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             Order.ProcessingKilled$.class));
             Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
+            Function1<Order<Order.State>, Object> cyclicFilter = o -> o.id().string().matches(".*#C[0-9]+-.*");
+            Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
 
             
             if (!withOrderIdFilter) {
@@ -133,10 +135,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     
                     if (states.contains(OrderStateText.SUSPENDED)) {
                         if (stateFilter == null) {
-                            stateFilter = JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(Order.Fresh$.class)), suspendFilter);
+                            stateFilter = suspendFilter;
                         } else {
-                            stateFilter = JOrderPredicates.or(JOrderPredicates.and(JOrderPredicates.not(JOrderPredicates.byOrderState(
-                                    Order.Fresh$.class)), suspendFilter), stateFilter);
+                            stateFilter = JOrderPredicates.or(suspendFilter, stateFilter);
                         }
                     } else {
                         if (stateFilter != null) {
@@ -161,17 +162,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
                     
                     if (freshOrderFilter != null) {
-                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), freshOrderFilter);
+                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                                .isSuspended()), freshOrderFilter);
                     } else if (lookingForScheduled && lookingForBlocked && lookingForPending) {
-                        freshOrderFilter = JOrderPredicates.byOrderState(Order.Fresh$.class);
+                        freshOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o.isSuspended());
                     }
                     
                     if (freshOrderFilter != null) {
-                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
+                        cycledOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(cyclicFilter, notSuspendFilter));
                         if (states.contains(OrderStateText.SUSPENDED)) {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, o -> !o.id().string().matches(".*#C[0-9]+-.*")));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.or(suspendFilter, notCyclicFilter));
                         } else {
-                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(o -> !o.id().string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
+                            freshOrderFilter = JOrderPredicates.and(freshOrderFilter, JOrderPredicates.and(notCyclicFilter, notSuspendFilter));
                         }
                     }
                     
@@ -188,8 +190,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     }
 
                 } else {
-                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(o -> o.id()
-                            .string().matches(".*#C[0-9]+-.*"), notSuspendFilter));
+                    cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates.and(cyclicFilter,
+                            notSuspendFilter));
                     notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
                 }
             }
@@ -244,7 +246,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, ordersFilter.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(surveyDateInstant)) ? surveyDateInstant : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
-                        if (OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                        if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
                             if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
                                 if ((!withStatesFilter || lookingForPending) && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS) {
                                     return true;
@@ -288,38 +290,28 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             ConcurrentMap<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().parallel().filter(t -> !t.isEmpty()).map(
                     getCyclicOrderInfos).collect(Collectors.toConcurrentMap(CyclicOrderInfos::getFirstOrderId, Function.identity()));
 
-            // merge cycledOrders to orderStream and grouping by folders for folder permissions
-//            ConcurrentMap<String, ConcurrentMap<JWorkflowId, List<JOrder>>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
-//                    Collectors.groupingByConcurrent(o -> o.workflowId().path().string(), Collectors.groupingByConcurrent(JOrder::workflowId)));
-//            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.values().parallelStream().flatMap(e -> e.keySet()
-//                    .stream()).collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
-//            orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e
-//                    .getKey()), folders)).flatMap(e -> e.getValue().values().stream().flatMap(l -> l.stream()));
-            
-            ConcurrentMap<JWorkflowId, List<JOrder>> groupedByFolders = Stream.concat(orderStream, cycledOrderStream).collect(
+            // merge cycledOrders to orderStream and grouping by WorkflowId for folder permissions
+            ConcurrentMap<JWorkflowId, List<JOrder>> groupedByWorkflowIds = Stream.concat(orderStream, cycledOrderStream).collect(
                   Collectors.groupingByConcurrent(JOrder::workflowId));
-            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByFolders.keySet().parallelStream().collect(Collectors
+            ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = groupedByWorkflowIds.keySet().parallelStream().collect(Collectors
                     .toConcurrentMap(Function.identity(), w -> OrdersHelper.getFinalParameters(w, currentState)));
             
             ToLongFunction<JOrder> compareScheduleFor = o -> o.scheduledFor().isPresent() ? o.scheduledFor().get().toEpochMilli() : surveyDateMillis;
             
             if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                 // consider limit per workflow (not over all)
-                orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
                         folders)).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(
                                 ordersFilter.getLimit().longValue()));
             } else {
-                orderStream = groupedByFolders.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
                         folders)).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor).reversed());
                 if (ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                     orderStream = orderStream.limit(ordersFilter.getLimit().longValue());
                 }
             }
 
-            OrdersV entity = new OrdersV();
-            entity.setSurveyDate(Date.from(surveyDateInstant));
-            
-            Map<JWorkflowId, Requirements> orderPreparations = new HashMap<>();
+            ConcurrentMap<JWorkflowId, Requirements> orderPreparations = new ConcurrentHashMap<>();
             
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
@@ -327,7 +319,10 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {
-                            orderPreparations.put(o.workflowId(), OrdersHelper.getRequirements(o, currentState));
+                            Requirements orderPreparation = OrdersHelper.getRequirements(o, currentState);
+                            if (orderPreparation != null) {
+                                orderPreparations.put(o.workflowId(), orderPreparation);
+                            }
                         }
                         order.setRequirements(orderPreparations.get(o.workflowId()));
                     }
@@ -342,6 +337,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 }   
             };
             
+            OrdersV entity = new OrdersV();
+            entity.setSurveyDate(Date.from(surveyDateInstant));
             entity.setOrders(orderStream.parallel().map(mapJOrderToOrderV).filter(Objects::nonNull).collect(Collectors.toList()));
             entity.setDeliveryDate(Date.from(Instant.now()));
 

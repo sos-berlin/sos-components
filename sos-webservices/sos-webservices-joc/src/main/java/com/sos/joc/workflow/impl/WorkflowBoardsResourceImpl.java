@@ -3,6 +3,7 @@ package com.sos.joc.workflow.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
@@ -23,6 +24,7 @@ import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.workflow.Workflow;
 import com.sos.joc.model.workflow.WorkflowFilter;
 import com.sos.joc.model.workflow.WorkflowsFilter;
@@ -104,23 +106,24 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                 WorkflowsFilter f = new WorkflowsFilter();
                 f.setControllerId(controllerId);
                 f.setCompact(true);
+                final Set<Folder> folders = folderPermissions.getListOfFolders();
                 for (String boardName : workflow.getExpectedNoticeBoards().getAdditionalProperties().keySet()) {
                     f.setWorkflowIds(dbLayer.getUsedWorkflowsByPostNoticeBoard(JocInventory.pathToName(boardName), controllerId));
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
                         workflow.getExpectedNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
-                                currentstate, folderPermissions, jocError));
+                                currentstate, folders, jocError));
                     }
                 }
                 for (String boardName : workflow.getPostNoticeBoards().getAdditionalProperties().keySet()) {
                     f.setWorkflowIds(dbLayer.getUsedWorkflowsByExpectedNoticeBoard(JocInventory.pathToName(boardName), controllerId));
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
                         workflow.getPostNoticeBoards().setAdditionalProperty(boardName, WorkflowsResourceImpl.getWorkflows(f, dbLayer,
-                                currentstate, folderPermissions, jocError));
+                                currentstate, folders, jocError));
                     }
                 }
                 f.setWorkflowIds(dbLayer.getAddOrderWorkflowsByWorkflow(JocInventory.pathToName(workflow.getPath()), controllerId));
                 if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                    workflow.setAddOrderFromWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folderPermissions, jocError));
+                    workflow.setAddOrderFromWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
                 } else {
                     workflow.setAddOrderFromWorkflows(Collections.emptyList());
                 }
@@ -128,7 +131,7 @@ public class WorkflowBoardsResourceImpl extends JOCResourceImpl implements IWork
                     f.setWorkflowIds(dbLayer.getWorkflowsIds(workflow.getAddOrderToWorkflows().stream().map(w -> w.getPath()).collect(Collectors
                             .toSet()), controllerId));
                     if (f.getWorkflowIds() != null && !f.getWorkflowIds().isEmpty()) {
-                        workflow.setAddOrderToWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folderPermissions, jocError));
+                        workflow.setAddOrderToWorkflows(WorkflowsResourceImpl.getWorkflows(f, dbLayer, currentstate, folders, jocError));
                     }
                 }
                 

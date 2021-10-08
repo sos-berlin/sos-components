@@ -368,35 +368,36 @@ public class DBLayerDailyPlannedOrders {
 
 	public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryListExecute(FilterDailyPlannedOrders filter,
 			final int limit) throws SOSHibernateException {
-		String sqlStatement = "";
+		StringBuilder hql = new StringBuilder();
 		if (filter.isCyclicStart()) {
-			String q = "Select min(p.id)" + " from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath") + "  group by periodBegin,periodEnd,repeatInterval ";
-			sqlStatement =  "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
-					+ "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
-					+ "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
-					+ "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
-					" from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder
-					+ " o on p.orderId = o.orderId where p.id in (" + q + ") " + filter.getOrderCriteria();
+			StringBuilder q = new StringBuilder("select min(p.id) ");
+			q.append("from ").append(DBItemDailyPlannedOrders).append(" p ");
+			q.append(getWhere(filter, "p.schedulePath")).append(" ");
+			q.append("group by periodBegin,periodEnd,repeatInterval ");
+			
+			hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath");
+			hql.append(",p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
+			hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
+			hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
+			hql.append("from ").append(DBItemDailyPlannedOrders).append(" p left outer join ").append(DBItemHistoryOrder).append(" o on p.orderId = o.orderId ");
+			hql.append(getWhere(filter, "p.schedulePath")).append(" ");
+            hql.append("and p.id in (").append(q).append(") ");
+			hql.append(filter.getOrderCriteria());
 		} else {
-			sqlStatement = "Select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath,"
-					+ "    p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval,"
-					+ "    p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated, "
-					+ "    o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state " +
-
-					" from " + DBItemDailyPlannedOrders + " p left outer join " + DBItemHistoryOrder
-					+ " o on p.orderId = o.orderId " + getWhere(filter, "p.schedulePath") + " "
-					+ filter.getOrderCriteria();
+		    hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId,p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName, p.scheduleName as scheduleName, p.schedulePath as schedulePath");
+		    hql.append(",p.calendarId as calendarId,p.submitted as submitted,p.submitTime as submitTime,p.periodBegin as periodBegin,p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
+		    hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
+		    hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
+		    hql.append("from ").append(DBItemDailyPlannedOrders).append(" p left outer join ").append(DBItemHistoryOrder).append(" o on p.orderId = o.orderId ");
+		    hql.append(getWhere(filter, "p.schedulePath")).append(" ");
+		    hql.append(filter.getOrderCriteria());
 		}
 
-		Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(sqlStatement);
+		Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(hql.toString(),DBItemDailyPlanWithHistory.class);
 		query = bindParameters(filter, query);
-
 		if (limit > 0) {
 			query.setMaxResults(limit);
 		}
-
-		query.setResultTransformer(Transformers.aliasToBean(DBItemDailyPlanWithHistory.class));
-
 		return sosHibernateSession.getResultList(query);
 	}
 

@@ -1,16 +1,24 @@
 package com.sos.joc.classes.workflow;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
 import com.sos.controller.model.fileordersource.FileOrderSource;
@@ -31,18 +39,26 @@ import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.PostNotice;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.workflow.Branch;
-import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.Parameters;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
+import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.model.workflow.WorkflowIdsFilter;
+import com.sos.joc.model.workflow.WorkflowsFilter;
 
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
+import js7.data.item.VersionedItemId;
+import js7.data.order.Order;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -50,6 +66,7 @@ import js7.data_for_java.order.JOrderPredicates;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
+import scala.Function1;
 
 public class WorkflowsHelper {
 
@@ -145,6 +162,159 @@ public class WorkflowsHelper {
             r.setParameters(params);
         }
         return r;
+    }
+    
+    public static Set<VersionedItemId<WorkflowPath>> getWorkflowIdsFromFolders(String controllerId, List<Folder> folders, JControllerState currentstate,
+            Set<Folder> permittedFolders) {
+
+        WorkflowsFilter workflowsFilter = new WorkflowsFilter();
+        workflowsFilter.setControllerId(controllerId);
+        workflowsFilter.setFolders(folders);
+        SOSHibernateSession connection = null;
+        try {
+            connection = Globals.createSosHibernateStatelessConnection("getWorkflowIdsFromFolder");
+            List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, new DeployedConfigurationDBLayer(connection),
+                    currentstate, permittedFolders);
+            return contents.parallelStream().map(w -> currentstate.repo().idToWorkflow(JWorkflowId.of(w.getName(), w.getCommitId()))).filter(
+                    Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
+    public static List<DeployedContent> getDeployedContents(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
+            JControllerState currentstate, Set<Folder> permittedFolders) {
+
+        List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, permittedFolders);
+        if (currentstate != null) {
+            contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, permittedFolders));
+        }
+
+        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            workflowsFilter.setFolders(null);
+            workflowsFilter.setRegex(null);
+        }
+        
+        return contents;
+    }
+    
+    public static Stream<DeployedContent> getDeployedContentsStream(WorkflowsFilter workflowsFilter, List<DeployedContent> contents,
+            Set<Folder> permittedFolders) {
+
+        Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
+        boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
+                .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
+        if (withoutFilter) {
+            contentsStream = contentsStream.filter(w -> JOCResourceImpl.canAdd(w.getPath(), permittedFolders));
+        }
+        if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
+            Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
+            contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
+        }
+
+        return contentsStream;
+    }
+    
+    private static List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
+            Set<Folder> permittedFolders) {
+        DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+        dbFilter.setControllerId(workflowsFilter.getControllerId());
+        dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+
+        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            workflowsFilter.setFolders(null);
+            workflowsFilter.setRegex(null);
+        }
+        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
+        List<DeployedContent> contents = null;
+
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            ConcurrentMap<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> JOCResourceImpl.canAdd(w.getPath(),
+                    permittedFolders)).collect(Collectors.groupingByConcurrent(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(),
+                            Collectors.toSet()));
+            if (workflowMap.containsKey(true)) {  // with versionId
+                dbFilter.setWorkflowIds(workflowMap.get(true));
+                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+                if (contents != null && !contents.isEmpty()) {
+
+                    // TODO check if workflows known in controller
+
+                    dbFilter.setWorkflowIds((Set<WorkflowId>) null);
+                    dbFilter.setPaths(workflowMap.get(true).parallelStream().map(WorkflowId::getPath).collect(Collectors.toSet()));
+                    List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
+                    if (contents2 != null && !contents2.isEmpty()) {
+                        Set<String> commitIds = contents2.parallelStream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
+                        contents = contents.parallelStream().map(c -> {
+                            c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
+                            return c;
+                        }).collect(Collectors.toList());
+                    }
+                }
+            }
+            if (workflowMap.containsKey(false)) { // without versionId
+                dbFilter.setPaths(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
+
+                // TODO check if workflows known in controller
+
+                if (contents == null) {
+                    contents = dbLayer.getDeployedInventory(dbFilter);
+                } else {
+                    contents.addAll(dbLayer.getDeployedInventory(dbFilter));
+                }
+            }
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no folder permissions
+        } else if (permittedFolders != null && !permittedFolders.isEmpty()) {
+            dbFilter.setFolders(permittedFolders);
+            contents = dbLayer.getDeployedInventory(dbFilter);
+        } else {
+            contents = dbLayer.getDeployedInventory(dbFilter);
+        }
+        if (contents == null) {
+            return Collections.emptyList();
+        }
+        return contents;
+    }
+
+    private static List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
+            DeployedConfigurationDBLayer dbLayer, Set<Folder> permittedFolders) {
+
+        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
+        List<DeployedContent> contents = null;
+        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
+
+        if (workflowIds != null && !workflowIds.isEmpty()) {
+            workflowsFilter.setRegex(null);
+            // only permanent info
+        } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
+            // no folder permissions
+        } else {
+            
+            Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
+            if (wIds == null || wIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            
+            DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
+            dbFilter.setControllerId(workflowsFilter.getControllerId());
+            dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
+            dbFilter.setWorkflowIds(wIds);
+
+            if (permittedFolders != null && !permittedFolders.isEmpty()) {
+                dbFilter.setFolders(permittedFolders);
+                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+            } else {
+                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+            }
+        }
+
+        if (contents == null) {
+            return Collections.emptyList();
+        }
+
+        return contents;
     }
     
     private static void setInitialDeps(WorkflowDeps w, Set<String> expectedNoticeBoards, Set<String> postNoticeBoards,
@@ -437,6 +607,82 @@ public class WorkflowsHelper {
         String workflowName = JocInventory.pathToName(workflowPath);
         return controllerState.fileWatches().stream().parallel().filter(f -> f.workflowPath().string().equals(workflowName)).map(f -> f.path()
                 .string()).collect(Collectors.toSet());
+    }
+    
+    public static ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> getGroupedOrdersCountPerWorkflow(JControllerState currentstate,
+            WorkflowIdsFilter workflowsFilter, Set<Folder> permittedFolders) {
+
+        final Instant surveyInstant = currentstate.instant();
+        Predicate<JOrder> dateToFilter = o -> true;
+        if (workflowsFilter.getDateTo() != null && !workflowsFilter.getDateTo().isEmpty()) {
+                String dateTo = workflowsFilter.getDateTo();
+                if ("0d".equals(dateTo)) {
+                    dateTo = "1d";
+                }
+                Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, workflowsFilter.getTimeZone());
+                final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
+                dateToFilter = o -> {
+                    if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
+                        if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
+                            if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
+                                return true;
+                            }
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+        }
+        
+        Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(WorkflowPaths
+                .getPath(w), permittedFolders)).map(w -> {
+                    if (w.getVersionId() == null || w.getVersionId().isEmpty()) {
+                        return currentstate.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
+                    } else {
+                        return currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
+                    }
+                }).filter(Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
+        
+        Function1<Order<Order.State>, Object> workflowFilter = o -> workflows2.contains(o.workflowId());
+        Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
+                Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
+                        Order.ProcessingKilled$.class));
+        Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
+        Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
+                JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), JOrderPredicates.not(suspendFilter)));
+        Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
+
+        Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).parallel().filter(
+                dateToFilter);
+        Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).parallel().filter(
+                dateToFilter);
+        Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
+        Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
+                Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
+        cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
+        ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> groupedOrdersCount = Stream.concat(notCycledOrderStream, cycledOrderStream)
+                .collect(Collectors.groupingByConcurrent(JOrder::workflowId, Collectors.groupingBy(o -> groupingByState(o, surveyInstant),
+                        Collectors.reducing(0, e -> 1, Integer::sum))));
+        
+        workflows2.forEach(w -> groupedOrdersCount.putIfAbsent(JWorkflowId.apply(w), Collections.emptyMap()));
+        
+        return groupedOrdersCount;
+    }
+    
+    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant) {
+        OrderStateText groupedState = OrdersHelper.getGroupedState(order.asScala().state().getClass());
+        if (order.asScala().isSuspended() && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
+            groupedState = OrderStateText.SUSPENDED;
+        }
+        if (OrderStateText.SCHEDULED.equals(groupedState) && order.scheduledFor().isPresent()) {
+            Instant scheduledInstant = order.scheduledFor().get();
+            if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
+                groupedState = OrderStateText.PENDING;
+            } else if (scheduledInstant.isBefore(surveyInstant)) {
+                groupedState = OrderStateText.BLOCKED;
+            }
+        }
+        return groupedState;
     }
     
 }

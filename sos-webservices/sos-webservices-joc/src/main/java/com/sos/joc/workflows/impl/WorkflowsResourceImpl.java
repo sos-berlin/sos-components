@@ -1,17 +1,12 @@
 package com.sos.joc.workflows.impl;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,8 +19,6 @@ import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;
-import com.sos.controller.model.workflow.WorkflowId;
-import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,7 +26,6 @@ import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
-import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocError;
@@ -72,8 +64,9 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             if (currentstate != null) {
                 workflows.setSurveyDate(Date.from(currentstate.instant()));
             }
+            final Set<Folder> folders = folderPermissions.getPermittedFolders(workflowsFilter.getFolders());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folderPermissions,
+            workflows.setWorkflows(getWorkflows(workflowsFilter, new DeployedConfigurationDBLayer(connection), currentstate, folders,
                     getJocError()));
             workflows.setDeliveryDate(Date.from(Instant.now()));
 
@@ -90,36 +83,16 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
     }
 
     public static List<Workflow> getWorkflows(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer, JControllerState currentstate,
-            SOSShiroFolderPermissions folderPermissions, JocError jocError) {
-        String controllerId = workflowsFilter.getControllerId();
-        List<DeployedContent> contents = getPermanentDeployedContent(workflowsFilter, dbLayer, folderPermissions);
-        if (currentstate != null) {
-            contents.addAll(getOlderWorkflows(workflowsFilter, currentstate, dbLayer, folderPermissions));
-        }
-
-        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-        if (workflowIds != null && !workflowIds.isEmpty()) {
-            workflowsFilter.setFolders(null);
-            workflowsFilter.setRegex(null);
-        }
-
-        Stream<DeployedContent> contentsStream = contents.parallelStream().distinct();
-
-        boolean withoutFilter = (workflowsFilter.getFolders() == null || workflowsFilter.getFolders().isEmpty()) && (workflowsFilter
-                .getWorkflowIds() == null || workflowsFilter.getWorkflowIds().isEmpty());
-        if (withoutFilter) {
-            Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
-            contentsStream = contentsStream.filter(w -> canAdd(w.getPath(), permittedFolders));
-        }
-        if (workflowsFilter.getRegex() != null && !workflowsFilter.getRegex().isEmpty()) {
-            Predicate<String> regex = Pattern.compile(workflowsFilter.getRegex().replaceAll("%", ".*"), Pattern.CASE_INSENSITIVE).asPredicate();
-            contentsStream = contentsStream.filter(w -> regex.test(w.getName()) || regex.test(w.getTitle()));
-        }
+            Set<Folder> permittedFolders, JocError jocError) {
         
+        List<DeployedContent> contents = WorkflowsHelper.getDeployedContents(workflowsFilter, dbLayer, currentstate, permittedFolders);
+        Stream<DeployedContent> contentsStream = WorkflowsHelper.getDeployedContentsStream(workflowsFilter, contents, permittedFolders);
+        
+        String controllerId = workflowsFilter.getControllerId();
         Set<String> workflowNamesWithAddOrders = dbLayer.getAddOrderWorkflows(controllerId);
 
         Map<String, List<FileOrderSource>> fileOrderSources = (workflowsFilter.getCompact() == Boolean.TRUE) ? null : WorkflowsHelper
-                .workflowToFileOrderSources(currentstate, controllerId, contents.stream().parallel().filter(DeployedContent::isCurrentVersion).map(
+                .workflowToFileOrderSources(currentstate, controllerId, contents.parallelStream().filter(DeployedContent::isCurrentVersion).map(
                         w -> JocInventory.pathToName(w.getPath())).collect(Collectors.toSet()), dbLayer);
         return contentsStream.parallel().map(w -> {
             try {
@@ -169,108 +142,6 @@ public class WorkflowsResourceImpl extends JOCResourceImpl implements IWorkflows
             LOGGER.warn(e.toString());
         }
         return currentstate;
-    }
-
-    private static List<DeployedContent> getPermanentDeployedContent(WorkflowsFilter workflowsFilter, DeployedConfigurationDBLayer dbLayer,
-            SOSShiroFolderPermissions folderPermissions) {
-        DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
-        dbFilter.setControllerId(workflowsFilter.getControllerId());
-        dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
-
-        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-        if (workflowIds != null && !workflowIds.isEmpty()) {
-            workflowsFilter.setFolders(null);
-            workflowsFilter.setRegex(null);
-        }
-        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
-        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders(), folderPermissions);
-        List<DeployedContent> contents = null;
-
-        if (workflowIds != null && !workflowIds.isEmpty()) {
-            ConcurrentMap<Boolean, Set<WorkflowId>> workflowMap = workflowIds.stream().parallel().filter(w -> canAdd(w.getPath(), folders)).collect(Collectors
-                    .groupingByConcurrent(w -> w.getVersionId() != null && !w.getVersionId().isEmpty(), Collectors.toSet()));
-            if (workflowMap.containsKey(true)) {  // with versionId
-                dbFilter.setWorkflowIds(workflowMap.get(true));
-                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
-                if (contents != null && !contents.isEmpty()) {
-
-                    // TODO check if workflows known in controller
-
-                    dbFilter.setWorkflowIds((Set<WorkflowId>) null);
-                    dbFilter.setPaths(workflowMap.get(true).parallelStream().map(WorkflowId::getPath).collect(Collectors.toSet()));
-                    List<DeployedContent> contents2 = dbLayer.getDeployedInventory(dbFilter);
-                    if (contents2 != null && !contents2.isEmpty()) {
-                        Set<String> commitIds = contents2.parallelStream().map(c -> c.getPath() + "," + c.getCommitId()).collect(Collectors.toSet());
-                        contents = contents.parallelStream().map(c -> {
-                            c.setIsCurrentVersion(commitIds.contains(c.getPath() + "," + c.getCommitId()));
-                            return c;
-                        }).collect(Collectors.toList());
-                    }
-                }
-            }
-            if (workflowMap.containsKey(false)) { // without versionId
-                dbFilter.setPaths(workflowMap.get(false).stream().parallel().map(WorkflowId::getPath).collect(Collectors.toSet()));
-
-                // TODO check if workflows known in controller
-
-                if (contents == null) {
-                    contents = dbLayer.getDeployedInventory(dbFilter);
-                } else {
-                    contents.addAll(dbLayer.getDeployedInventory(dbFilter));
-                }
-            }
-        } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-            // no folder permissions
-        } else if (folders != null && !folders.isEmpty()) {
-            dbFilter.setFolders(folders);
-            contents = dbLayer.getDeployedInventory(dbFilter);
-        } else {
-            contents = dbLayer.getDeployedInventory(dbFilter);
-        }
-        if (contents == null) {
-            return Collections.emptyList();
-        }
-        return contents;
-    }
-
-    private static List<DeployedContent> getOlderWorkflows(WorkflowsFilter workflowsFilter, JControllerState currentState,
-            DeployedConfigurationDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions) {
-
-        List<WorkflowId> workflowIds = workflowsFilter.getWorkflowIds();
-        final Set<Folder> folders = addPermittedFolder(workflowsFilter.getFolders(), folderPermissions);
-        List<DeployedContent> contents = null;
-        boolean withFolderFilter = workflowsFilter.getFolders() != null && !workflowsFilter.getFolders().isEmpty();
-
-        if (workflowIds != null && !workflowIds.isEmpty()) {
-            workflowsFilter.setRegex(null);
-            // only permanent info
-        } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
-            // no folder permissions
-        } else {
-            
-            Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
-            if (wIds == null || wIds.isEmpty()) {
-                return Collections.emptyList();
-            }
-            
-            DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
-            dbFilter.setControllerId(workflowsFilter.getControllerId());
-            dbFilter.setObjectTypes(Arrays.asList(DeployType.WORKFLOW.intValue()));
-            dbFilter.setWorkflowIds(wIds);
-
-            if (folders != null && !folders.isEmpty()) {
-                dbFilter.setFolders(folders);
-                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
-            } else {
-                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
-            }
-        }
-
-        if (contents == null) {
-            return Collections.emptyList();
-        }
-
-        return contents;
     }
 
 }

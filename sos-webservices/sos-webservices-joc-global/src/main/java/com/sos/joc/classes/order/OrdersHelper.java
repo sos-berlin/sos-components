@@ -344,13 +344,18 @@ public class OrdersHelper {
         }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
+        
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
             o.setLastOutcome(outcomes.get(outcomes.size() - 1).getOutcome());
+            if (compact != Boolean.TRUE) {
+                o.setHistoricOutcome(outcomes);
+            }
+        } else {
+            o.setHistoricOutcome(null);
+            o.setLastOutcome(null); 
         }
-        if (compact != Boolean.TRUE) {
-            o.setHistoricOutcome(outcomes);
-        }
+        
         Either<Problem, AgentPath> opt = jOrder.attached();
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
