@@ -150,7 +150,7 @@ public class OrdersHelper {
             put("Prompting", OrderStateText.PROMPTING);
         }
     });
-    
+
     public static final Map<String, OrderWaitingReason> waitingReasons = Collections.unmodifiableMap(new HashMap<String, OrderWaitingReason>() {
 
         private static final long serialVersionUID = 1L;
@@ -334,7 +334,7 @@ public class OrdersHelper {
         }
         return null;
     }
-    
+
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders,
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
@@ -344,7 +344,7 @@ public class OrdersHelper {
         }
         o.setAttachedState(oItem.getAttachedState());
         o.setOrderId(oItem.getId());
-        
+
         List<HistoricOutcome> outcomes = oItem.getHistoricOutcomes();
         if (outcomes != null && !outcomes.isEmpty()) {
             o.setLastOutcome(outcomes.get(outcomes.size() - 1).getOutcome());
@@ -353,9 +353,9 @@ public class OrdersHelper {
             }
         } else {
             o.setHistoricOutcome(null);
-            o.setLastOutcome(null); 
+            o.setLastOutcome(null);
         }
-        
+
         Either<Problem, AgentPath> opt = jOrder.attached();
         if (opt.isRight()) {
             o.setAgentId(opt.get().string());
@@ -394,19 +394,19 @@ public class OrdersHelper {
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
         return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, finalParameters, surveyDateMillis);
     }
-    
+
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jOrder.workflowId());
         ProblemHelper.throwProblemIfExist(eW);
         return Globals.objectMapper.readValue(eW.get().toJson(), Workflow.class).getOrderPreparation();
     }
-    
+
     public static Requirements getRequirements(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
             IOException {
         return JsonConverter.signOrderPreparationToInvOrderPreparation(getOrderPreparation(jOrder, currentState), false);
     }
-    
+
     public static List<String> getFinalParameters(JWorkflowId jWorkflowId, JControllerState currentState) {
         try {
             Either<Problem, JWorkflow> eW = currentState.repo().idToWorkflow(jWorkflowId);
@@ -426,7 +426,7 @@ public class OrdersHelper {
             return Collections.emptyList();
         }
     }
-    
+
     public static Variables removeFinalParameters(Variables variables, Collection<String> finalParameters) {
         if (finalParameters != null && variables != null && variables.getAdditionalProperties() != null) {
             finalParameters.forEach(p -> variables.removeAdditionalProperty(p));
@@ -527,7 +527,7 @@ public class OrdersHelper {
         }
         return arguments;
     }
-    
+
     private static List<Map<String, Object>> checkListArguments(List<Map<String, Object>> listVariables, ListParameters listParameters,
             String listKey) throws JocMissingRequiredParameterException, JocConfigurationException {
         boolean invalid = false;
@@ -636,30 +636,33 @@ public class OrdersHelper {
                 // TODO order.asScala().deleteWhenTerminated() == true then ControllerApi.deleteOrdersWhenTerminated will not be necessary
 
                 // modify parameters if necessary
-//                if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
-//                        || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
-//                                .isEmpty())) {
-                    Variables vars = scalaValuedArgumentsToVariables(args);
-                    Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
-                    if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
-                        vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
-                    }
-                    if (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
-                            .isEmpty()) {
-                        dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().forEach((k, v) -> {
-                            vars.removeAdditionalProperty(k);
-                        });
-                    }
-                    args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
-                            .getOrderPreparation())));
-//                }
+                // if ((dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty())
+                // || (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
+                // .isEmpty())) {
+                Variables vars = scalaValuedArgumentsToVariables(args);
+                Workflow workflow = Globals.objectMapper.readValue(e.get().toJson(), Workflow.class);
+                if (dailyplanModifyOrder.getVariables() != null && !dailyplanModifyOrder.getVariables().getAdditionalProperties().isEmpty()) {
+                    vars.setAdditionalProperties(dailyplanModifyOrder.getVariables().getAdditionalProperties());
+                }
+                if (dailyplanModifyOrder.getRemoveVariables() != null && !dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties()
+                        .isEmpty()) {
+                    dailyplanModifyOrder.getRemoveVariables().getAdditionalProperties().forEach((k, v) -> {
+                        vars.removeAdditionalProperty(k);
+                    });
+                }
+                args = variablesToScalaValuedArguments(checkArguments(vars, JsonConverter.signOrderPreparationToInvOrderPreparation(workflow
+                        .getOrderPreparation())));
+                // }
                 // modify scheduledFor if necessary
                 Optional<Instant> scheduledFor = order.scheduledFor();
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
                     scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder.getTimeZone());
                 }
-                if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
-                    scheduledFor = Optional.empty();
+//                if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
+//                    scheduledFor = Optional.of(Instant.now());
+//                }
+                if (!scheduledFor.isPresent()) {
+                    scheduledFor = Optional.of(Instant.now());
                 }
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
@@ -730,9 +733,12 @@ public class OrdersHelper {
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
         String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
         String orderId = String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName());
+        Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
+        if (!scheduledFor.isPresent()) {
+            scheduledFor = Optional.of(Instant.now());
+        }
         return mapToFreshOrder(OrderId.of(orderId), WorkflowPath.of(JocInventory.pathToName(order.getWorkflowPath())),
-                variablesToScalaValuedArguments(order.getArguments()), JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order
-                        .getTimeZone()));
+                variablesToScalaValuedArguments(order.getArguments()), scheduledFor);
     }
 
     private static JFreshOrder mapToFreshOrder(OrderId orderId, WorkflowPath workflowPath, Map<String, Value> args, Optional<Instant> scheduledFor) {
@@ -797,8 +803,8 @@ public class OrdersHelper {
     }
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId) {
-        return storeAuditLogDetails(jOrders.stream().parallel().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o.id()
-                .string())).collect(Collectors.toList()), auditlogId);
+        return storeAuditLogDetails(jOrders.stream().parallel().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o
+                .id().string())).collect(Collectors.toList()), auditlogId);
     }
 
     public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId) {
@@ -831,14 +837,14 @@ public class OrdersHelper {
                 .getOrderId())).collect(Collectors.toSet());
 
         JControllerProxy proxy = Proxy.of(controllerId);
-        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).parallel().map(JOrder::id).collect((Collectors
-                .toSet())), JCancellationMode.freshOnly());
+        return proxy.api().cancelOrders(proxy.currentState().ordersBy(o -> setOfOrderIds.contains(o.id())).parallel().map(JOrder::id).collect(
+                (Collectors.toSet())), JCancellationMode.freshOnly());
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerControllerWithHistory(String controllerId,
             List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
-        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().parallel().map(dbItem -> OrderId.of(dbItem.getOrderId())).collect(
-                Collectors.toSet()), JCancellationMode.freshOnly());
+        return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().parallel().map(dbItem -> OrderId.of(dbItem.getOrderId()))
+                .collect(Collectors.toSet()), JCancellationMode.freshOnly());
     }
 
 }

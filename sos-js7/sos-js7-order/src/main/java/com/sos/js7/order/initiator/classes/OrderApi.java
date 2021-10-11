@@ -57,6 +57,8 @@ public class OrderApi {
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
+        } else {
+            scheduledFor = Optional.of(Instant.now());
         }
         return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }

@@ -858,19 +858,21 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             }
             
             if (lookingForScheduled && !lookingForBlocked && !lookingForPending) {
-                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() >= surveyDateMillis && o
-                        .scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+                freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
+                        .toEpochMilli() >= surveyDateMillis && o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
             } else if (lookingForScheduled && lookingForBlocked && !lookingForPending) {
-                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() != JobSchedulerDate.NEVER_MILLIS;
+                freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
+                        .toEpochMilli() != JobSchedulerDate.NEVER_MILLIS);
             } else if (lookingForScheduled && !lookingForBlocked && lookingForPending) {
-                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() >= surveyDateMillis;
+                freshOrderFilter = o -> o.scheduledFor().isEmpty() || (!o.scheduledFor().isEmpty() && o.scheduledFor().get()
+                        .toEpochMilli() >= surveyDateMillis);
             } else if (!lookingForScheduled && lookingForBlocked && !lookingForPending) {
                 freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() < surveyDateMillis;
             } else if (!lookingForScheduled && !lookingForBlocked && lookingForPending) {
                 freshOrderFilter = o -> !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
             } else if (!lookingForScheduled && lookingForBlocked && lookingForPending) {
-                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && (o.scheduledFor().get().toEpochMilli() < surveyDateMillis || o
-                        .scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS);
+                freshOrderFilter = o -> !o.scheduledFor().isEmpty() && (o.scheduledFor().get().toEpochMilli() < surveyDateMillis || o.scheduledFor()
+                        .get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS);
             }
             
             if (freshOrderFilter != null) {
