@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
-import org.hibernate.transform.Transformers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -535,7 +534,7 @@ public class DBLayerDailyPlannedOrders {
 	
 	
 	
-	public Long store(PlannedOrder plannedOrder, Long firstId, Integer nr, Integer size)
+	public Long store(PlannedOrder plannedOrder, String id, Integer nr, Integer size)
 			throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
 			JsonProcessingException {
 
@@ -575,8 +574,6 @@ public class DBLayerDailyPlannedOrders {
 				new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
 		dbItemDailyPlannedOrders.setModified(JobSchedulerDate.nowInUtc());
 		
-        String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-	
 		if (nr != 0) {
 			String nrAsString = "00000" + String.valueOf(nr);
 			nrAsString = nrAsString.substring(nrAsString.length() - 5);
@@ -642,7 +639,7 @@ public class DBLayerDailyPlannedOrders {
 
 	public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
 			SOSHibernateException, ParseException, JsonProcessingException {
-		store(plannedOrder, null, 0, 0);
+		store(plannedOrder, Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3), 0, 0);
 	}
 
 	public DBItemDailyPlanOrders insertFrom(DBItemDailyPlanOrders dbItemDailyPlanOrders) throws SOSHibernateException {

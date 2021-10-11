@@ -2,6 +2,7 @@ package com.sos.js7.order.initiator;
 
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -318,7 +319,7 @@ public class OrderListSynchronizer {
 			for (Entry<CycleOrderKey, List<PlannedOrder>> entry : mapOfCycledOrders.entrySet()) {
 				int size = entry.getValue().size();
 				int nr = 1;
-				Long firstId = null;
+				String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
 				LOGGER.debug("snchronizer: adding planned cylced order to database: " + size + " orders ");
 				for (PlannedOrder plannedOrder : entry.getValue()) {
 
@@ -326,12 +327,8 @@ public class OrderListSynchronizer {
 					dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
 
 					if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-						plannedOrder
-								.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-						Long fId = dbLayerDailyPlan.store(plannedOrder, firstId, nr, size);
-						if (firstId == null) {
-							firstId = fId;
-						}
+						plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
+						dbLayerDailyPlan.store(plannedOrder, id, nr, size);
 						nr = nr + 1;
 						plannedOrder.setStoredInDb(true);
 					}
