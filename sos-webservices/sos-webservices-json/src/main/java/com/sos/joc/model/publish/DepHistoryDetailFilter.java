@@ -107,7 +107,7 @@ public class DepHistoryDetailFilter {
      */
     @JsonProperty("limit")
     @JsonPropertyDescription("Only for db history URIs. Restricts the number of delivered items; -1=unlimited")
-    private Integer limit = 10000;
+    private Integer limit = 5000;
 
     @JsonProperty("account")
     public String getAccount() {

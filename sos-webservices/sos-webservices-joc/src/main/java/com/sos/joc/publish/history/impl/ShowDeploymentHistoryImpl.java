@@ -97,7 +97,7 @@ public class ShowDeploymentHistoryImpl extends JOCResourceImpl implements IShowD
                         .filter(Objects::nonNull).collect(Collectors.toList());
                 if (dbHistoryItems.size() > filter.getCompactFilter().getLimit()) {
                     // reduce list size to limit from filter
-                    dbHistoryItems = dbHistoryItems.subList(0, filter.getCompactFilter().getLimit()-1);
+                    dbHistoryItems = dbHistoryItems.subList(0, filter.getCompactFilter().getLimit());
                 }
                 dbHistoryItems.stream().forEachOrdered(item -> {
                     item.setId(null);
