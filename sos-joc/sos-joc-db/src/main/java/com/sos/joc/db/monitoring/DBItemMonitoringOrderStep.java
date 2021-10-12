@@ -15,6 +15,7 @@ import com.sos.inventory.model.job.JobCriticality;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.HistoryConstants;
+import com.sos.joc.db.common.MonitoringConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_MONITORING_ORDER_STEPS)
@@ -353,7 +354,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Transient
     public static String normalizeWarnText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_WARN_TEXT);
+        return normalizeValue(val, MonitoringConstants.MAX_LEN_WARN_TEXT);
     }
 
     public String getWarnText() {

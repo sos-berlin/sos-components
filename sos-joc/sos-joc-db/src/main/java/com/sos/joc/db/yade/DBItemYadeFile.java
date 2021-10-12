@@ -14,6 +14,7 @@ import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.YadeConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_YADE_FILES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[TRANSFER_ID]", "[SOURCE_PATH]" }) })
@@ -132,7 +133,7 @@ public class DBItemYadeFile extends DBItem {
 
     @Transient
     public static String normalizeErrorText(String val) {
-        return normalizeValue(val, 4000);
+        return normalizeValue(val, YadeConstants.MAX_LEN_ERROR_MESSAGE);
     }
 
     public Date getCreated() {

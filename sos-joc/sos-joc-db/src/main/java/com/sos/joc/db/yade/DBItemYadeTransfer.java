@@ -13,6 +13,7 @@ import javax.persistence.Transient;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.YadeConstants;
 
 @Entity
 @Table(name = DBLayer.TABLE_YADE_TRANSFERS)
@@ -229,7 +230,7 @@ public class DBItemYadeTransfer extends DBItem {
 
     @Transient
     public static String normalizeErrorText(String val) {
-        return normalizeValue(val, 4000);
+        return normalizeValue(val, YadeConstants.MAX_LEN_ERROR_MESSAGE);
     }
 
     public Date getCreated() {
