@@ -21,6 +21,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanOrdersResource;
@@ -63,8 +64,9 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
 
             for (String controllerId : allowedControllers) {
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, dailyPlanOrderFilter);
-                addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
+                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
+                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, filter);
+                addOrders(sosHibernateSession, filter, controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems, true);
             }
 
             PlannedOrders plannedOrders = new PlannedOrders();

@@ -91,11 +91,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     }
 
     protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession sosHibernateSession, String controllerId,
-            DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
+            FilterDailyPlannedOrders filter) throws SOSHibernateException {
 
         sosHibernateSession.setAutoCommit(false);
         Globals.beginTransaction(sosHibernateSession);
-        FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
@@ -168,8 +167,9 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected void addOrders(String controllerId, DailyPlanOrderFilter dailyPlanOrderFilter, List<DBItemDailyPlanWithHistory> listOfPlannedOrders,
-            ArrayList<PlannedOrderItem> listOfPlannedOrderItems) {
+    protected void addOrders(SOSHibernateSession session, FilterDailyPlannedOrders filter, String controllerId,
+            DailyPlanOrderFilter dailyPlanOrderFilter, List<DBItemDailyPlanWithHistory> listOfPlannedOrders,
+            ArrayList<PlannedOrderItem> listOfPlannedOrderItems, boolean getCyclicDetails) {
 
         if (listOfPlannedOrders != null) {
             DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
@@ -201,16 +201,37 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 }
             }
 
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+
             for (Entry<CycleOrderKey, List<PlannedOrderItem>> entry : mapOfCycledOrders.entrySet()) {
                 if (entry.getValue().size() > 0) {
                     PlannedOrderItem firstP = entry.getValue().get(0);
-                    PlannedOrderItem lastP = entry.getValue().get(entry.getValue().size() - 1);
                     firstP.setCyclicOrder(new CyclicOrderInfos());
-                    firstP.getCyclicOrder().setCount(entry.getValue().size());
                     firstP.getCyclicOrder().setFirstOrderId(firstP.getOrderId());
                     firstP.getCyclicOrder().setFirstStart(firstP.getPlannedStartTime());
-                    firstP.getCyclicOrder().setLastOrderId(lastP.getOrderId());
-                    firstP.getCyclicOrder().setLastStart(lastP.getPlannedStartTime());
+
+                    Object[] info = null;
+                    if (getCyclicDetails) {
+                        try {
+                            // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+                            // #2021-10-12#C4038226057-
+                            String mainOrderId = firstP.getOrderId().substring(0, 24);
+                            info = dbLayer.getCyclicOrderLastEntryAndCountTotal(controllerId, mainOrderId, filter.getOrderPlannedStartFrom(), filter
+                                    .getOrderPlannedStartTo());
+                        } catch (SOSHibernateException e) {
+                            LOGGER.warn(e.toString(), e);
+                        }
+                    }
+                    if (info == null) {
+                        firstP.getCyclicOrder().setCount(entry.getValue().size());
+                        PlannedOrderItem lastP = entry.getValue().get(entry.getValue().size() - 1);
+                        firstP.getCyclicOrder().setLastOrderId(lastP.getOrderId());
+                        firstP.getCyclicOrder().setLastStart(lastP.getPlannedStartTime());
+                    } else {
+                        firstP.getCyclicOrder().setCount(Integer.parseInt(info[2].toString()));
+                        firstP.getCyclicOrder().setLastOrderId((String) info[0]);
+                        firstP.getCyclicOrder().setLastStart((Date) info[1]);
+                    }
                     listOfPlannedOrderItems.add(firstP);
                 }
             }

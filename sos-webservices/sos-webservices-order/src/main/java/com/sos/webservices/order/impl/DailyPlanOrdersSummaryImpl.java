@@ -20,6 +20,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.DailyPlanOrdersSummary;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
+import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
 import com.sos.webservices.order.resource.IDailyPlanOrdersSummaryResource;
@@ -66,8 +67,10 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             for (String controllerId : allowedControllers) {
                 ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
 
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, dailyPlanOrderFilter);
-                addOrders(controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems);
+                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
+
+                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, filter);
+                addOrders(sosHibernateSession, filter, controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems, false);
 
                 for (PlannedOrderItem p : listOfPlannedOrderItems) {
                     if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value()) && !(DailyPlanOrderStateText.FINISHED
