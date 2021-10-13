@@ -71,7 +71,7 @@ public abstract class FilterAttributesMapper {
         return filterAttributes;
     }
 
-    public static Set<String> getDefaultAttributesFromFilter (DepHistoryCompactFilter filter) {
+    public static Set<String> getDefaultAttributesFromFilter (DepHistoryCompactFilter filter, Collection<String> allowedControllers) {
         Set<String> filterAttributes = new HashSet<String>();
         if (filter.getAccount() != null) {
             filterAttributes.add("account");
@@ -79,7 +79,7 @@ public abstract class FilterAttributesMapper {
         if (filter.getFolder() != null) {
             filterAttributes.add("folder");
         }
-        if (filter.getControllerId() != null) {
+        if (!allowedControllers.isEmpty()) {
             filterAttributes.add("controllerId");
         }
         if (filter.getDeploymentDate() != null) {

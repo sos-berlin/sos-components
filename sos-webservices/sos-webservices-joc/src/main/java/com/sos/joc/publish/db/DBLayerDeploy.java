@@ -2137,20 +2137,22 @@ public class DBLayerDeploy {
         }
         StringBuilder hql = new StringBuilder();
         hql.append("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getCompactFilter());
-        hql.append(presentFilterAttributes.stream().map(item -> {
-            if ("from".equals(item)) {
-                return FROM_DEP_DATE;
-            } else if ("to".equals(item)) {
-                return TO_DEP_DATE;
-            } else if ("limit".equals(item)) {
-                return null;
-            } else if ("controllerIds".equals(item)) {
-                return "controllerId in (:controllerIds)";
-            } else {
-                return item + " = :" + item;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.joining(" and ", " where ", "")));
+        Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getCompactFilter(), allowedControllers);
+        if (presentFilterAttributes.contains("from") || presentFilterAttributes.contains("to") || presentFilterAttributes.contains("controllerId")) {
+            hql.append(presentFilterAttributes.stream().map(item -> {
+                if ("from".equals(item)) {
+                    return FROM_DEP_DATE;
+                } else if ("to".equals(item)) {
+                    return TO_DEP_DATE;
+                } else if ("limit".equals(item)) {
+                    return null;
+                } else if ("controllerId".equals(item)) {
+                    return "controllerId in (:controllerIds)";
+                } else {
+                    return item + " = :" + item;
+                }
+            }).filter(Objects::nonNull).collect(Collectors.joining(" and ", " where ", "")));
+        }
         hql.append(" order by deploymentDate desc");
         Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
         for (String item : presentFilterAttributes) {
@@ -2165,8 +2167,8 @@ public class DBLayerDeploy {
                 query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item),
                         TemporalType.TIMESTAMP);
                 break;
-            case "controllerIds":
-                query.setParameterList(item, allowedControllers);
+            case "controllerId":
+                query.setParameterList("controllerIds", allowedControllers);
                 break;
             case "limit":
 //                query.setMaxResults((Integer) FilterAttributesMapper.getValueByFilterAttribute(filter.getCompactFilter(), item));
@@ -2194,8 +2196,8 @@ public class DBLayerDeploy {
                     return TO_DEP_DATE;
                 } else if ("limit".equals(item)) {
                     return null;
-                } else if ("controllerIds".equals(item)) {
-                    return "controllerId in (:controllerIds)";
+                } else if ("controllerId".equals(item)) {
+                    return "controllerId = :controllerId";
                 } else {
                     return item + " = :" + item;
                 }
