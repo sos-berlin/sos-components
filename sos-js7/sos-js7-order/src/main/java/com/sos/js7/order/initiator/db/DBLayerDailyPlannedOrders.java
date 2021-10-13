@@ -404,23 +404,25 @@ public class DBLayerDailyPlannedOrders {
 
     public Object[] getCyclicOrderLastEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select b.ORDER_ID, b.PLANNED_START,a.TOTAL ");
-        hql.append("from ( ");
-        hql.append("select max(ID) as ID ");
-        hql.append(",count(ID) as TOTAL ");
-        hql.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_TABLE).append(" ");
-        hql.append("where ORDER_ID like :orderId ");
-        hql.append("and CONTROLLER_ID = :controllerId ");
+        StringBuilder sql = new StringBuilder("select ");
+        sql.append(quote("b.ORDER_ID")).append(",").append(quote("b.PLANNED_START")).append(",").append(quote("a.TOTAL")).append(" ");
+        sql.append("from ( ");
+        sql.append("select max(").append(quote("ID")).append(") as ").append(quote("ID"));
+        sql.append(",count(").append(quote("ID")).append(") as ").append(quote("TOTAL")).append(" ");
+        sql.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_TABLE).append(" ");
+        sql.append("where ").append(quote("ORDER_ID")).append(" like :orderId ");
+        sql.append("and ").append(quote("CONTROLLER_ID")).append("= :controllerId ");
         if (plannedStartFrom != null) {
-            hql.append("and PLANNED_START >= :plannedStartFrom ");
+            sql.append("and ").append(quote("PLANNED_START")).append(" >= :plannedStartFrom ");
         }
         if (plannedStartTo != null) {
-            hql.append("and PLANNED_START < :plannedStartTo");
+            sql.append("and ").append(quote("PLANNED_START")).append(" < :plannedStartTo");
         }
-        hql.append(") a ");
-        hql.append("join ").append(DBLayer.DAILY_PLAN_ORDERS_TABLE).append(" b on a.ID=b.ID");
+        sql.append(") a ");
+        sql.append("join ").append(DBLayer.DAILY_PLAN_ORDERS_TABLE).append(" b ");
+        sql.append("on ").append(quote("a.ID")).append("=").append(quote("b.ID"));
 
-        Query<Object[]> query = sosHibernateSession.createNativeQuery(hql.toString());
+        Query<Object[]> query = sosHibernateSession.createNativeQuery(sql.toString());
         query.setParameter("orderId", orderId + "%");
         query.setParameter("controllerId", controllerId);
         if (plannedStartFrom != null) {
@@ -434,6 +436,10 @@ public class DBLayerDailyPlannedOrders {
             return null;
         }
         return result.get(0);
+    }
+
+    private String quote(String fieldName) {
+        return sosHibernateSession.getFactory().quoteColumn(fieldName);
     }
 
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
