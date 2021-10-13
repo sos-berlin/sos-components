@@ -23,7 +23,6 @@ import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanOrders;
 import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
 import com.sos.joc.db.orders.DBItemDailyPlanVariables;
@@ -44,7 +43,6 @@ public class DBLayerDailyPlannedOrders {
 
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
-    private static final String DBItemHistoryOrder = DBItemHistoryOrder.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerDailyPlannedOrders(SOSHibernateSession session) {
@@ -364,10 +362,10 @@ public class DBLayerDailyPlannedOrders {
         StringBuilder hql = new StringBuilder();
         if (filter.isCyclicStart()) {
             StringBuilder q = new StringBuilder("select min(p.id) ");
-            q.append("from ").append(DBItemDailyPlannedOrders).append(" p ");
+            q.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" p ");
             q.append(getWhere(filter, "p.schedulePath")).append(" ");
-            q.append("group by periodBegin,periodEnd,repeatInterval ");
-
+            q.append("group by orderName,periodBegin,periodEnd,repeatInterval ");
+            
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
             hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");
@@ -375,8 +373,8 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
             hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBItemDailyPlannedOrders).append(" p left outer join ");
-            hql.append(DBItemHistoryOrder).append(" o on p.orderId = o.orderId ");
+            hql.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" p left outer join ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" o on p.orderId = o.orderId ");
             hql.append(getWhere(filter, "p.schedulePath")).append(" ");
             hql.append("and p.id in (").append(q).append(") ");
             hql.append(filter.getOrderCriteria());
@@ -388,8 +386,8 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
             hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBItemDailyPlannedOrders).append(" p left outer join ");
-            hql.append(DBItemHistoryOrder).append(" o on p.orderId = o.orderId ");
+            hql.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" p left outer join ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" o on p.orderId = o.orderId ");
             hql.append(getWhere(filter, "p.schedulePath")).append(" ");
             hql.append(filter.getOrderCriteria());
         }
