@@ -7,25 +7,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GlobalSettingsReader {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalSettingsReader.class);
 
-
     public OrderInitiatorSettings getSettings(AConfigurationSection section) {
-        ConfigurationGlobalsDailyPlan configuration = (ConfigurationGlobalsDailyPlan) section;
+        ConfigurationGlobalsDailyPlan conf = (ConfigurationGlobalsDailyPlan) section;
 
         OrderInitiatorSettings settings = new OrderInitiatorSettings();
-        settings.setTimeZone(configuration.getTimeZone().getValue());
-        settings.setPeriodBegin(configuration.getPeriodBegin().getValue());
-        settings.setDailyPlanStartTime(configuration.getStartTime().getValue());
-        settings.setDayAheadPlan(configuration.getDaysAheadPlan().getValue());
-        settings.setDayAheadSubmit(configuration.getDaysAheadSubmit().getValue());
+        settings.setTimeZone(conf.getTimeZone().getValue());
+        settings.setPeriodBegin(conf.getPeriodBegin().getValue());
+        settings.setDailyPlanStartTime(conf.getStartTime().getValue());
+        settings.setDayAheadPlan(conf.getDaysAheadPlan().getValue());
+        settings.setDayAheadSubmit(conf.getDaysAheadSubmit().getValue());
 
-        LOGGER.debug("Property timeZone:" + configuration.getTimeZone().getValue());
-        LOGGER.debug("Property periodBegin:" + configuration.getPeriodBegin().getValue());
-        LOGGER.debug("Property start_time:" + configuration.getStartTime().getValue());
-        LOGGER.debug("Property day_ahead_plan:" + configuration.getDaysAheadPlan().getValue());
-        LOGGER.debug("Property day_ahead_submit:" + configuration.getDaysAheadSubmit().getValue());
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("time_zone=%s, period_begin=%s, start_time=%s, day_ahead_plan=%s, day_ahead_submit=%s", conf.getTimeZone()
+                    .getValue(), conf.getPeriodBegin().getValue(), conf.getStartTime().getValue(), conf.getDaysAheadPlan().getValue(), conf
+                            .getDaysAheadSubmit().getValue()));
+        }
         return settings;
     }
 }

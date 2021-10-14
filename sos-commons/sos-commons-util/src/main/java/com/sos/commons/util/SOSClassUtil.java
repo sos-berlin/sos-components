@@ -32,10 +32,14 @@ public class SOSClassUtil {
     }
 
     public static void printStackTrace() {
-        printStackTrace(true);
+        printStackTrace(true, null);
     }
 
     public static void printStackTrace(boolean onlySOS) {
+        printStackTrace(onlySOS, null);
+    }
+
+    public static void printStackTrace(boolean onlySOS, final Logger logger) {
         StackTraceElement trace[] = new Throwable().getStackTrace();
         for (int i = 1; i < trace.length; i++) {
             StackTraceElement el = trace[i];
@@ -44,7 +48,8 @@ public class SOSClassUtil {
                     continue;
                 }
             }
-            LOGGER.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
+            Logger log = logger == null ? LOGGER : logger;
+            log.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
         }
     }
 

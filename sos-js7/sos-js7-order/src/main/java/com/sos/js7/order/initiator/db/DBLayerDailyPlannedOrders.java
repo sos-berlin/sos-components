@@ -52,7 +52,7 @@ public class DBLayerDailyPlannedOrders {
     public void setSession(SOSHibernateSession session) {
         this.sosHibernateSession = session;
     }
-    
+
     public DBItemDailyPlanOrders getPlanDbItem(final Long id) throws Exception {
         return (DBItemDailyPlanOrders) sosHibernateSession.get(DBItemDailyPlanOrders.class, id);
     }
@@ -533,9 +533,9 @@ public class DBLayerDailyPlannedOrders {
         Query<DBItemDailyPlanOrders> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
-        List<DBItemDailyPlanOrders> uniqueDailyPlanItem = sosHibernateSession.getResultList(query);
-        if (uniqueDailyPlanItem.size() > 0) {
-            return sosHibernateSession.getResultList(query).get(0);
+        List<DBItemDailyPlanOrders> result = sosHibernateSession.getResultList(query);
+        if (result != null && result.size() > 0) {
+            return result.get(0);
         } else {
             return null;
         }

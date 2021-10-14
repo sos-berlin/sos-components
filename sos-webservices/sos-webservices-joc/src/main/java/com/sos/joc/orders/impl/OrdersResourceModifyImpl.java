@@ -239,11 +239,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private void updateUnknownOrders(String controllerId, Set<String> orders, Set<JOrder> jOrders) throws SOSHibernateException {
         List<String> listOfOrderIds = new ArrayList<String>();
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/modify updateUnknownOrders");
-            sosHibernateSession.setAutoCommit(false);
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL + "/modify updateUnknownOrders");
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(controllerId);
@@ -254,6 +253,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     listOfOrderIds.add(orderId);
                 }
             }
+            Globals.disconnect(session);
+            session = null; // to avoid nested openSessions
 
             for (String orderId : orders) {
                 addCyclicOrderIds(listOfOrderIds, orderId, controllerId, dbLayerDailyPlannedOrders);
@@ -263,11 +264,14 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             listOfOrderIds.removeAll(orderIds);
             updateDailyPlan(listOfOrderIds);
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 
     public void postOrdersModify(Action action, ModifyOrders modifyOrders) throws Exception {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[postOrdersModify]action=%s", action));
+        }
         CategoryType category = CategoryType.CONTROLLER;
         if (Action.CANCEL_DAILYPLAN.equals(action)) {
             category = CategoryType.DAILYPLAN;
@@ -692,7 +696,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private static void updateDailyPlan(Collection<String> orderIds) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
+        // SOSClassUtil.printStackTrace(true, LOGGER);
+        SOSHibernateSession session = null;
         if (!orderIds.isEmpty()) {
             try {
                 GlobalSettingsReader reader = new GlobalSettingsReader();
@@ -707,16 +712,20 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     settings.setPeriodBegin("00:00");
                 }
 
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
-                sosHibernateSession.setAutoCommit(false);
-                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-                Globals.beginTransaction(sosHibernateSession);
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 filter.setListOfOrders(orderIds);
                 filter.setSubmitted(false);
-                dbLayerDailyPlannedOrders.setSubmitted(filter);
-                Globals.commit(sosHibernateSession);
-                List<DBItemDailyPlanOrders> listOfOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+
+                session = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
+                session.setAutoCommit(false);
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                Globals.beginTransaction(session);
+                dbLayer.setSubmitted(filter);
+                Globals.commit(session);
+                List<DBItemDailyPlanOrders> listOfOrders = dbLayer.getDailyPlanList(filter, 0);
+                Globals.disconnect(session);
+                session = null;
+
                 Set<String> dailyPlanDays = new HashSet<String>();
                 for (DBItemDailyPlanOrders order : listOfOrders) {
                     String dailyPlanDate = order.getDailyPlanDate(settings.getTimeZone());
@@ -727,10 +736,10 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
 
             } catch (Exception e) {
-                Globals.rollback(sosHibernateSession);
+                Globals.rollback(session);
                 throw e;
             } finally {
-                Globals.disconnect(sosHibernateSession);
+                Globals.disconnect(session);
             }
         } else {
             LOGGER.debug("No orderIds to be updated in daily plan");
