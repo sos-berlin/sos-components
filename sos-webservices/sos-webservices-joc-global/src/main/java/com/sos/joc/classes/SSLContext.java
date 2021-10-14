@@ -11,6 +11,8 @@ import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.Optional;
 
+import javax.net.ssl.KeyManagerFactory;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
@@ -90,6 +92,9 @@ public class SSLContext {
         if (keystore != null || truststore != null) {
             try {
                 SSLContextBuilder sslContextBuilder = SSLContexts.custom();
+                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", "PKIX"));
+                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", "PKIX"));
+                LOGGER.info("KeyManagerFactory.getDefaultAlgorithm(): " + KeyManagerFactory.getDefaultAlgorithm());
                 if (keystore != null) {
                     sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
                 }
