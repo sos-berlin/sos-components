@@ -73,77 +73,78 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
         OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
 
-        SOSHibernateSession sosHibernateSession = null;
-
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            sosHibernateSession.setAutoCommit(false);
-
-            if (dailyPlanOrderFilter.getFilter() == null) {
-                dailyPlanOrderFilter.setFilter(new DailyPlanOrderFilterDef());
-            }
-
-            Globals.beginTransaction(sosHibernateSession);
-
-            FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
-            folderPermissionEvaluator.setListOfWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
-            folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
-            folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
-
-            for (String controllerId : allowedControllers) {
-
-                DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderFilter.getAuditLog(), controllerId, CategoryType.DAILYPLAN);
-                FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-
-                folderPermissions.setSchedulerId(controllerId);
-                folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
-
-                if (folderPermissionEvaluator.isHasPermission()) {
-
-                    List<String> orderIds = new ArrayList<String>();
-
-                    if (dailyPlanOrderFilter.getFilter().getOrderIds() != null) {
-                        orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
-
-                        for (String orderId : orderIds) {
-                            dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, controllerId,
-                                    orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
-                        }
-                    }
-
-                    filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
-                    filter.setSubmitted(false);
-                    filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), orderInitiatorSettings.getTimeZone(),
-                            orderInitiatorSettings.getPeriodBegin());
-                    filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
-
-                    filter.setListOfWorkflowNames(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
-                    filter.setListOfScheduleNames(folderPermissionEvaluator.getListOfPermittedScheduleNames());
-                    filter.setControllerId(controllerId);
-
-                    List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-
-                    Globals.commit(sosHibernateSession);
-                    orderInitiatorRunner.submitOrders(controllerId, getJocError(), getAccessToken(), listOfPlannedOrders);
-
-                    EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
-
-                    List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-
-                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
-                        auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getControllerId()));
-                    }
-
-                    OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
-                            .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
-
-                }
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+        if (dailyPlanOrderFilter.getFilter() == null) {
+            dailyPlanOrderFilter.setFilter(new DailyPlanOrderFilterDef());
         }
+
+        FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
+        folderPermissionEvaluator.setListOfWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
+        folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
+        folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+        folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+
+        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(null);
+        for (String controllerId : allowedControllers) {
+
+            DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderFilter.getAuditLog(), controllerId, CategoryType.DAILYPLAN);
+            FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+
+            folderPermissions.setSchedulerId(controllerId);
+            folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
+
+            if (folderPermissionEvaluator.isHasPermission()) {
+
+                List<String> orderIds = new ArrayList<String>();
+
+                if (dailyPlanOrderFilter.getFilter().getOrderIds() != null) {
+                    orderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
+
+                    for (String orderId : orderIds) {
+                        dbLayerDailyPlannedOrders.addCyclicOrderIds(dailyPlanOrderFilter.getFilter().getOrderIds(), orderId, controllerId,
+                                orderInitiatorSettings.getTimeZone(), orderInitiatorSettings.getPeriodBegin());
+                    }
+                }
+
+                filter.setListOfOrders(dailyPlanOrderFilter.getFilter().getOrderIds());
+                filter.setSubmitted(false);
+                filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), orderInitiatorSettings.getTimeZone(),
+                        orderInitiatorSettings.getPeriodBegin());
+                filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
+
+                filter.setListOfWorkflowNames(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
+                filter.setListOfScheduleNames(folderPermissionEvaluator.getListOfPermittedScheduleNames());
+                filter.setControllerId(controllerId);
+
+                SOSHibernateSession session = null;
+                List<DBItemDailyPlanOrders> listOfPlannedOrders = null;
+                try {
+                    session = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    // sosHibernateSession.setAutoCommit(false);
+                    // Globals.beginTransaction(sosHibernateSession);
+
+                    dbLayerDailyPlannedOrders.setSession(session);
+                    listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                    // Globals.commit(sosHibernateSession);
+                } finally {
+                    Globals.disconnect(session);
+                }
+
+                orderInitiatorRunner.submitOrders(controllerId, getJocError(), getAccessToken(), listOfPlannedOrders);
+
+                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
+
+                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+
+                for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                    auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getControllerId()));
+                }
+
+                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
+                        .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
+
+            }
+        }
+
     }
 
     @Override

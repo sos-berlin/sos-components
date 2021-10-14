@@ -214,6 +214,10 @@ public class OrderInitiatorRunner extends TimerTask {
 
 				orderListSynchronizer.add(controllerId, p);
 			}
+			//disconnect here to avoid nested sessions
+			Globals.disconnect(sosHibernateSession);
+			sosHibernateSession = null;
+			
 			if (orderListSynchronizer.getListOfPlannedOrders().size() > 0) {
 				orderListSynchronizer.submitOrdersToController(controllerId);
 			}

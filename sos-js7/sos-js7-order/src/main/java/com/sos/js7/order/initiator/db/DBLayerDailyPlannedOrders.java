@@ -43,12 +43,16 @@ public class DBLayerDailyPlannedOrders {
 
     private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrders.class.getSimpleName();
     private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariables.class.getSimpleName();
-    private final SOSHibernateSession sosHibernateSession;
+    private SOSHibernateSession sosHibernateSession;
 
     public DBLayerDailyPlannedOrders(SOSHibernateSession session) {
         this.sosHibernateSession = session;
     }
 
+    public void setSession(SOSHibernateSession session) {
+        this.sosHibernateSession = session;
+    }
+    
     public DBItemDailyPlanOrders getPlanDbItem(final Long id) throws Exception {
         return (DBItemDailyPlanOrders) sosHibernateSession.get(DBItemDailyPlanOrders.class, id);
     }

@@ -259,7 +259,9 @@ public class OrderListSynchronizer {
 				Globals.beginTransaction(sosHibernateSession);
 				listOfInsertHistoryEntries = insertHistory(sosHibernateSession, addedOrders);
 				Globals.commit(sosHibernateSession);
-
+				Globals.disconnect(sosHibernateSession); //disconnect here, not wait for the controller operations
+				sosHibernateSession = null;
+				
 				OrderApi.addOrderToController(controllerId, jocError, accessToken, addedOrders,
 						listOfInsertHistoryEntries);
 
