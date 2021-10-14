@@ -16,6 +16,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -51,7 +52,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
     }
 
-    protected FilterDailyPlannedOrders getOrderFilter(String controllerId, DailyPlanOrderFilter dailyPlanOrderFilter) throws SOSHibernateException {
+    protected FilterDailyPlannedOrders getOrderFilter(String controllerId, DailyPlanOrderFilter dailyPlanOrderFilter, boolean selectCyclicOrders)
+            throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
         FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
@@ -67,9 +69,21 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             if (dailyPlanOrderFilter.getFilter().getOrderIds() != null && !dailyPlanOrderFilter.getFilter().getOrderIds().isEmpty()) {
 
                 List<String> listOfOrderIds = new ArrayList<String>();
-                listOfOrderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
-                for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
-                    addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
+                if (selectCyclicOrders) {
+                    listOfOrderIds.addAll(dailyPlanOrderFilter.getFilter().getOrderIds());
+                    for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
+                        addCyclicOrderIds(listOfOrderIds, orderId, controllerId);
+                    }
+                } else {
+                    List<String> cyclicMainParts = new ArrayList<String>();
+                    for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
+                        if (isCyclicOrder(orderId)) {
+                            cyclicMainParts.add(getCyclicOrderMainPart(orderId));
+                        } else {
+                            listOfOrderIds.add(orderId);
+                        }
+                    }
+                    filter.setListOfCyclicOrdersMainParts(cyclicMainParts);
                 }
                 filter.setListOfOrders(listOfOrderIds);
             }
@@ -88,6 +102,16 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             return null;
         }
         return filter;
+    }
+
+    private boolean isCyclicOrder(String orderId) {
+        return orderId.matches(WebserviceConstants.CYCLIC_ORDER_ID_REGEX);
+    }
+
+    // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+    // #2021-10-12#C4038226057-
+    private String getCyclicOrderMainPart(String orderId) {
+        return orderId.substring(0, 24);
     }
 
     protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession sosHibernateSession, String controllerId,
@@ -213,9 +237,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     Object[] info = null;
                     if (getCyclicDetails) {
                         try {
-                            // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
-                            // #2021-10-12#C4038226057-
-                            String mainOrderId = firstP.getOrderId().substring(0, 24);
+                            String mainOrderId = getCyclicOrderMainPart(firstP.getOrderId());
                             info = dbLayer.getCyclicOrderLastEntryAndCountTotal(controllerId, mainOrderId, filter.getOrderPlannedStartFrom(), filter
                                     .getOrderPlannedStartTo());
                         } catch (SOSHibernateException e) {
@@ -241,11 +263,12 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     protected DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYCLIC_ORDERS");
+            // re - a new session will be opened in the dbLayerDailyPlannedOrders.addCyclicOrderIds
+            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("ADD_CYCLIC_ORDERS");
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             return dbLayerDailyPlannedOrders.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            // Globals.disconnect(sosHibernateSession);
         }
     }
 }

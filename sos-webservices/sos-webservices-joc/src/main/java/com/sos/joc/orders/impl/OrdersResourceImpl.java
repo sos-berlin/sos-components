@@ -31,6 +31,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
@@ -110,7 +111,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                             Order.ProcessingKilled$.class));
             Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
-            Function1<Order<Order.State>, Object> cyclicFilter = o -> o.id().string().matches(".*#C[0-9]+-.*");
+            Function1<Order<Order.State>, Object> cyclicFilter = o -> o.id().string().matches(WebserviceConstants.CYCLIC_ORDER_ID_REGEX);
             Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
 
             

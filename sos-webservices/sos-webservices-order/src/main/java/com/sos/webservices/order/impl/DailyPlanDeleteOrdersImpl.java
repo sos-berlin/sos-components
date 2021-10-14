@@ -67,9 +67,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             setSettings();
 
             deleteOrdersFromPlan(allowedControllers, dailyPlanOrderFilter);
-                 
+
             EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
-            
+
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
@@ -80,9 +80,32 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-   
-    
     private void deleteOrdersFromPlan(Set<String> allowedControllers, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
+            DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
+            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
+            DBInvalidDataException, InterruptedException, ExecutionException {
+
+        for (String controllerId : allowedControllers) {
+            FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, false);
+            filter.addState(DailyPlanOrderStateText.PLANNED);
+
+            SOSHibernateSession session = null;
+            try {
+                session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
+                session.setAutoCommit(false);
+                Globals.beginTransaction(session);
+                dbLayerDailyPlannedOrders.deleteCascading(filter);
+                Globals.commit(session);
+            } finally {
+                Globals.disconnect(session);
+            }
+        }
+
+    }
+
+    /** opens nested sessions: 1)in this method 2) in getOrderFilter */
+    private void deleteOrdersFromPlanOld(Set<String> allowedControllers, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, InterruptedException, ExecutionException {
@@ -94,8 +117,8 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             sosHibernateSession.setAutoCommit(false);
             for (String controllerId : allowedControllers) {
                 Globals.beginTransaction(sosHibernateSession);
- 
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter);
+
+                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter,true);
                 filter.addState(DailyPlanOrderStateText.PLANNED);
                 dbLayerDailyPlannedOrders.deleteCascading(filter);
                 Globals.commit(sosHibernateSession);

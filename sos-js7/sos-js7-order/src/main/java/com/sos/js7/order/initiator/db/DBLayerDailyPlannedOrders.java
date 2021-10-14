@@ -136,6 +136,18 @@ public class DBLayerDailyPlannedOrders {
         return " (" + s + ") ";
     }
 
+    private String getCyclicOrderListSql(List<String> list) {
+        StringBuilder sql = new StringBuilder(" (");
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sql.append(" or ");
+            }
+            sql.append("p.orderId like '" + list.get(i) + "%'");
+        }
+        sql.append(")");
+        return sql.toString();
+    }
+
     public String getWhere(FilterDailyPlannedOrders filter) {
         return getWhere(filter, "");
     }
@@ -287,8 +299,20 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
+        boolean hasCyclics = filter.getListOfCyclicOrdersMainParts() != null && filter.getListOfCyclicOrdersMainParts().size() > 0;
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
-            where += and + getOrderListSql(filter.getListOfOrders());
+            where += and;
+            if (hasCyclics) {
+                where += " ( ";
+            }
+            where += getOrderListSql(filter.getListOfOrders());
+            if (hasCyclics) {
+                where += " or " + getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts());
+                where += ") ";
+            }
+            and = " and ";
+        } else if (hasCyclics) {
+            where += and + getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts());
             and = " and ";
         }
 
@@ -365,7 +389,7 @@ public class DBLayerDailyPlannedOrders {
             q.append("from ").append(DBLayer.DAILY_PLAN_ORDERS_DBITEM).append(" p ");
             q.append(getWhere(filter, "p.schedulePath")).append(" ");
             q.append("group by orderName,periodBegin,periodEnd,repeatInterval ");
-            
+
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
             hql.append(",p.scheduleName as scheduleName, p.schedulePath as schedulePath");

@@ -17,7 +17,6 @@ import com.sos.joc.db.SOSFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
 
 import js7.data.order.OrderId;
 
@@ -36,6 +35,7 @@ public class FilterDailyPlannedOrders extends SOSFilter {
     private String orderId;
     private Boolean submitted;
     private Collection<String> listOfOrders;
+    private List<String> listOfCyclicOrdersMainParts;
 
     private List<DailyPlanOrderStateText> states;
     private Set<Folder> setOfWorkflowFolders;
@@ -84,6 +84,14 @@ public class FilterDailyPlannedOrders extends SOSFilter {
         this.listOfOrders = listOfOrders;
     }
 
+    public List<String> getListOfCyclicOrdersMainParts() {
+        return listOfCyclicOrdersMainParts;
+    }
+
+    public void setListOfCyclicOrdersMainParts(List<String> val) {
+        listOfCyclicOrdersMainParts = val;
+    }
+    
     public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
             this.dailyPlanDate = dailyPlanDate;
