@@ -33,6 +33,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -619,7 +620,7 @@ public class OrdersHelper {
         String controllerId = dailyplanModifyOrder.getControllerId();
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
-        Instant now = Instant.now();
+        // Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
@@ -658,9 +659,9 @@ public class OrdersHelper {
                 if (dailyplanModifyOrder.getScheduledFor() != null) {
                     scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyplanModifyOrder.getScheduledFor(), dailyplanModifyOrder.getTimeZone());
                 }
-//                if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
-//                    scheduledFor = Optional.of(Instant.now());
-//                }
+                // if (scheduledFor.isPresent() && scheduledFor.get().isBefore(now)) {
+                // scheduledFor = Optional.of(Instant.now());
+                // }
                 if (!scheduledFor.isPresent()) {
                     scheduledFor = Optional.of(Instant.now());
                 }
@@ -845,6 +846,16 @@ public class OrdersHelper {
             List<DBItemDailyPlanWithHistory> listOfPlannedOrders) {
         return ControllerApi.of(controllerId).cancelOrders(listOfPlannedOrders.stream().parallel().map(dbItem -> OrderId.of(dbItem.getOrderId()))
                 .collect(Collectors.toSet()), JCancellationMode.freshOnly());
+    }
+
+    // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+    // #2021-10-12#C4038226057-
+    public static String getCyclicOrderIdMainPart(String orderId) {
+        return orderId.substring(0, 24);
+    }
+
+    public static boolean isCyclicOrderId(String orderId) {
+        return orderId.matches(WebserviceConstants.CYCLIC_ORDER_ID_REGEX);
     }
 
 }

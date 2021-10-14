@@ -16,7 +16,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -77,8 +76,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 } else {
                     List<String> cyclicMainParts = new ArrayList<String>();
                     for (String orderId : dailyPlanOrderFilter.getFilter().getOrderIds()) {
-                        if (isCyclicOrder(orderId)) {
-                            cyclicMainParts.add(getCyclicOrderMainPart(orderId));
+                        if (OrdersHelper.isCyclicOrderId(orderId)) {
+                            cyclicMainParts.add(OrdersHelper.getCyclicOrderIdMainPart(orderId));
                         } else {
                             listOfOrderIds.add(orderId);
                         }
@@ -102,16 +101,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             return null;
         }
         return filter;
-    }
-
-    private boolean isCyclicOrder(String orderId) {
-        return orderId.matches(WebserviceConstants.CYCLIC_ORDER_ID_REGEX);
-    }
-
-    // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
-    // #2021-10-12#C4038226057-
-    private String getCyclicOrderMainPart(String orderId) {
-        return orderId.substring(0, 24);
     }
 
     protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession sosHibernateSession, String controllerId,
@@ -237,7 +226,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                     Object[] info = null;
                     if (getCyclicDetails) {
                         try {
-                            String mainOrderId = getCyclicOrderMainPart(firstP.getOrderId());
+                            String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(firstP.getOrderId());
                             info = dbLayer.getCyclicOrderLastEntryAndCountTotal(controllerId, mainOrderId, filter.getOrderPlannedStartFrom(), filter
                                     .getOrderPlannedStartTo());
                         } catch (SOSHibernateException e) {
