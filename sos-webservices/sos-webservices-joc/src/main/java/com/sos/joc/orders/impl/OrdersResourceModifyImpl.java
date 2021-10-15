@@ -262,7 +262,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
             Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
             listOfOrderIds.removeAll(orderIds);
-            updateDailyPlan(listOfOrderIds);
+            updateDailyPlan("updateUnknownOrders", listOfOrderIds);
         } finally {
             Globals.disconnect(session);
         }
@@ -640,7 +640,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Set<String> orders = modifyOrders.getOrderIds().stream().filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet());
                 orders.removeAll(oIds.stream().map(OrderId::string).collect(Collectors.toSet()));
 
-                updateDailyPlan(orders);
+                updateDailyPlan("command", orders);
             }
 
             if (oIds.isEmpty()) {
@@ -689,17 +689,22 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         try {
             // only for non-temporary and non-file orders
             LOGGER.debug("Cancel orders. Calling updateDailyPlan");
-            updateDailyPlan(oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors.toSet()));
+            updateDailyPlan("updateDailyPlan", oIds.stream().map(OrderId::string).filter(s -> !s.matches(".*#(T|F|D)[0-9]+-.*")).collect(Collectors
+                    .toSet()));
         } catch (Exception e) {
             ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
         }
     }
 
-    private static void updateDailyPlan(Collection<String> orderIds) throws SOSHibernateException {
+    private static void updateDailyPlan(String caller, Collection<String> orderIds) throws SOSHibernateException {
         // SOSClassUtil.printStackTrace(true, LOGGER);
         SOSHibernateSession session = null;
         if (!orderIds.isEmpty()) {
             try {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[updateDailyPlan][caller=%s][orderIds]%s", caller, String.join(",", orderIds)));
+                }
+
                 GlobalSettingsReader reader = new GlobalSettingsReader();
                 OrderInitiatorSettings settings;
                 if (Globals.configurationGlobals != null) {
@@ -742,7 +747,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Globals.disconnect(session);
             }
         } else {
-            LOGGER.debug("No orderIds to be updated in daily plan");
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[updateDailyPlan][caller=%s]No orderIds to be updated in daily plan", caller));
+            }
         }
     }
 
