@@ -28,6 +28,7 @@ import com.sos.controller.model.workflow.WorkflowDeps;
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -405,6 +406,10 @@ public class WorkflowsHelper {
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     workflowNamesFromAddOrders.add(ao.getWorkflowName());
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
+                            expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                 default:
                     break;
                 }
@@ -446,6 +451,10 @@ public class WorkflowsHelper {
 //                case LOCK:
 //                    Lock l = inst.cast();
 //                    setPositions(extendArray(pos, "lock"), l.getLockedWorkflow().getInstructions(), posSet);
+//                    break;
+//                case CYCLE:
+//                    Cycle c = inst.cast();
+//                    setPositions(extendArray(pos, "cycle"), l.getCycleWorkflow().getInstructions(), posSet);
 //                    break;
 //                default:
 //                    break;
@@ -497,6 +506,10 @@ public class WorkflowsHelper {
                 case LOCK:
                     Lock l = inst.cast();
                     extractImplicitEnds(l.getLockedWorkflow().getInstructions(), posSet, true);
+                    break;
+                case CYCLE:
+                    Cycle c = inst.cast();
+                    extractImplicitEnds(c.getCycleWorkflow().getInstructions(), posSet, true);
                     break;
                 default:
                     break;

@@ -21,7 +21,8 @@ public enum InstructionType {
     POST_NOTICE("PostNotice"),
     EXPECT_NOTICE("ExpectNotice"),
     IMPLICIT_END("ImplicitEnd"),
-    ADD_ORDER("AddOrder");
+    ADD_ORDER("AddOrder"),
+    CYCLE("Cycle");
     private final String value;
     private final static Map<String, InstructionType> CONSTANTS = new HashMap<String, InstructionType>();
 

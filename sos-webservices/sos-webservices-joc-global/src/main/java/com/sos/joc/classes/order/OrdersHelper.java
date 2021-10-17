@@ -620,7 +620,7 @@ public class OrdersHelper {
         String controllerId = dailyplanModifyOrder.getControllerId();
         JControllerProxy proxy = Proxy.of(controllerId);
         JControllerState currentState = proxy.currentState();
-        // Instant now = Instant.now();
+        Instant now = Instant.now();
         List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
         Function<JOrder, Either<Err419, FreshOrder>> mapper = order -> {
@@ -663,7 +663,7 @@ public class OrdersHelper {
                 // scheduledFor = Optional.of(Instant.now());
                 // }
                 if (!scheduledFor.isPresent()) {
-                    scheduledFor = Optional.of(Instant.now());
+                    scheduledFor = Optional.of(now);
                 }
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);

@@ -26,6 +26,7 @@ import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -412,6 +413,11 @@ public class Validator {
                             throw new JocConfigurationException("$." + instPosition + "arguments: " + e.getMessage());
                         }
                     }
+                    break;
+                case CYCLE:
+                    Cycle cycle = inst.cast();
+                    validateInstructions(cycle.getCycleWorkflow().getInstructions(), instPosition + "cycleWorkflow.instructions", jobNames,
+                            orderPreparation, labels, dbLayer);
                     break;
                 default:
                     break;

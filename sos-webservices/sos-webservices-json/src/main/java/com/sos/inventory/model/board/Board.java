@@ -77,7 +77,7 @@ public class Board implements IInventoryObject, IConfigurationObject, IDeployObj
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.0.0";
+    private String version = "1.1.0";
     /**
      * string without < and >
      * <p>

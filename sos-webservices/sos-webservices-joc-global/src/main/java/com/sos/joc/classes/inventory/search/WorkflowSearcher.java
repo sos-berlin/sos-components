@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ExpectNotice;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -463,6 +464,15 @@ public class WorkflowSearcher {
                 break;
             case ADD_ORDER:
                 result.add(new WorkflowInstruction<AddOrder>(getPosition(parentPosition, index, null), in.cast()));
+                break;
+            case CYCLE:
+                Cycle c = in.cast();
+                if (c.getCycleWorkflow() != null) {
+                    String position = getPosition(parentPosition, index, "cycle");
+                    result.add(new WorkflowInstruction<Cycle>(position, c));
+
+                    handleInstructions(result, c.getCycleWorkflow().getInstructions(), position);
+                }
                 break;
             
             default:

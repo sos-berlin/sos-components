@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.Fail;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
@@ -393,6 +394,12 @@ public class JsonSerializer {
                     ao.setArguments(emptyVarsToNull(ao.getArguments()));
                     ao.setRemainWhenTerminated(defaultToNull(ao.getRemainWhenTerminated(), Boolean.FALSE));
                     break;
+                case CYCLE:
+                    Cycle cycle = inst.cast();
+                    if (cycle.getCycleWorkflow() != null) {
+                        cleanInventoryInstructions(cycle.getCycleWorkflow().getInstructions());
+                    }
+                    break;
                 default:
                     break;
                 }
@@ -466,6 +473,12 @@ public class JsonSerializer {
                         ao.setArguments(new Variables());
                     }
                     //Is not optional: ao.setDeleteWhenTerminated(defaultToNull(ao.getDeleteWhenTerminated(), Boolean.TRUE));
+                    break;
+                case CYCLE:
+                    com.sos.sign.model.instruction.Cycle cycle = inst.cast();
+                    if (cycle.getCycleWorkflow() != null) {
+                        cleanSignedInstructions(cycle.getCycleWorkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;

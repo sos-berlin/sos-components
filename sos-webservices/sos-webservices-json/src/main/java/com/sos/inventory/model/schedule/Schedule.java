@@ -47,7 +47,7 @@ public class Schedule implements IInventoryObject, IConfigurationObject, IReleas
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.0.0";
+    private String version = "1.1.0";
     /**
      * path
      * <p>

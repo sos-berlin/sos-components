@@ -48,7 +48,7 @@ public class JobClass implements IInventoryObject, IConfigurationObject, IDeploy
      */
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
-    private String version = "1.0.0";
+    private String version = "1.1.0";
     @JsonProperty("maxProcesses")
     private Integer maxProcesses = 30;
     /**

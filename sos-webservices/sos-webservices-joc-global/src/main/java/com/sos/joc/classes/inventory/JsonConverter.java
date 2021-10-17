@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.inventory.model.instruction.AddOrder;
+import com.sos.inventory.model.instruction.Cycle;
 import com.sos.inventory.model.instruction.ForkJoin;
 import com.sos.inventory.model.instruction.ForkList;
 import com.sos.inventory.model.instruction.IfElse;
@@ -40,6 +41,7 @@ public class JsonConverter {
     
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
+    private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
     @SuppressWarnings("unchecked")
@@ -67,6 +69,9 @@ public class JsonConverter {
             // at the moment the converter is only necessary for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
                 convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions());
+            }
+            if (hasCycleInstruction.test(json)) {
+                signWorkflow.setCalendarPath("dailyPlan"); 
             }
         }
         
@@ -130,6 +135,13 @@ public class JsonConverter {
                     break;
                 case ADD_ORDER:
                     convertAddOrder(w, invInstruction.cast(), signInstruction.cast());
+                    break;
+                case CYCLE:
+                    Cycle cycle = invInstruction.cast();
+                    if (cycle.getCycleWorkflow() != null) {
+                        com.sos.sign.model.instruction.Cycle sCycle = signInstruction.cast();
+                        convertInstructions(w, cycle.getCycleWorkflow().getInstructions(), sCycle.getCycleWorkflow().getInstructions());
+                    }
                     break;
                 default:
                     break;

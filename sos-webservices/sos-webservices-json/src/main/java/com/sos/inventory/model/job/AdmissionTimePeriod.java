@@ -32,21 +32,21 @@ public class AdmissionTimePeriod {
     @JsonPropertyDescription("only yet 'WeekdayPeriod'")
     private String tYPE;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("secondOfWeek")
-    private Integer secondOfWeek;
+    private Long secondOfWeek;
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("duration")
-    private Integer duration;
+    private Long duration;
 
     /**
      * No args constructor for use in serialization
@@ -61,7 +61,7 @@ public class AdmissionTimePeriod {
      * @param tYPE
      * @param secondOfWeek
      */
-    public AdmissionTimePeriod(String tYPE, Integer secondOfWeek, Integer duration) {
+    public AdmissionTimePeriod(String tYPE, Long secondOfWeek, Long duration) {
         super();
         this.tYPE = tYPE;
         this.secondOfWeek = secondOfWeek;
@@ -87,46 +87,46 @@ public class AdmissionTimePeriod {
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("secondOfWeek")
-    public Integer getSecondOfWeek() {
+    public Long getSecondOfWeek() {
         return secondOfWeek;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("secondOfWeek")
-    public void setSecondOfWeek(Integer secondOfWeek) {
+    public void setSecondOfWeek(Long secondOfWeek) {
         this.secondOfWeek = secondOfWeek;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("duration")
-    public Integer getDuration() {
+    public Long getDuration() {
         return duration;
     }
 
     /**
-     * non negative integer
+     * non negative long
      * <p>
      * 
      * 
      */
     @JsonProperty("duration")
-    public void setDuration(Integer duration) {
+    public void setDuration(Long duration) {
         this.duration = duration;
     }
 

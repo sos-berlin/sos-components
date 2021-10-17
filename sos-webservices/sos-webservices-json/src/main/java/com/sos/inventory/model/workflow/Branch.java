@@ -3,8 +3,10 @@ package com.sos.inventory.model.workflow;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.inventory.model.instruction.Instructions;
+import com.sos.inventory.model.job.Environment;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -12,7 +14,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({
     "id",
-    "workflow"
+    "workflow",
+    "result"
 })
 public class Branch {
 
@@ -32,6 +35,15 @@ public class Branch {
      */
     @JsonProperty("workflow")
     private Instructions workflow;
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("result")
+    @JsonPropertyDescription("a map for arbitrary key-value pairs")
+    private Environment result;
 
     /**
      * No args constructor for use in serialization
@@ -42,13 +54,15 @@ public class Branch {
 
     /**
      * 
+     * @param result
      * @param workflow
      * @param id
      */
-    public Branch(String id, Instructions workflow) {
+    public Branch(String id, Instructions workflow, Environment result) {
         super();
         this.id = id;
         this.workflow = workflow;
+        this.result = result;
     }
 
     /**
@@ -95,14 +109,36 @@ public class Branch {
         this.workflow = workflow;
     }
 
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("result")
+    public Environment getResult() {
+        return result;
+    }
+
+    /**
+     * key-value pairs particularly to assign parameters to environment
+     * <p>
+     * a map for arbitrary key-value pairs
+     * 
+     */
+    @JsonProperty("result")
+    public void setResult(Environment result) {
+        this.result = result;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("workflow", workflow).toString();
+        return new ToStringBuilder(this).append("id", id).append("workflow", workflow).append("result", result).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(workflow).append(id).toHashCode();
+        return new HashCodeBuilder().append(result).append(id).append(workflow).toHashCode();
     }
 
     @Override
@@ -114,7 +150,7 @@ public class Branch {
             return false;
         }
         Branch rhs = ((Branch) other);
-        return new EqualsBuilder().append(workflow, rhs.workflow).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(result, rhs.result).append(id, rhs.id).append(workflow, rhs.workflow).isEquals();
     }
 
 }
