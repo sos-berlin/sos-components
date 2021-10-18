@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class TestOrderInitiatorService {
  
 
     @Test
+    @Ignore
     public void test3() throws Exception {
         Globals.sosCockpitProperties = new JocCockpitProperties();
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
