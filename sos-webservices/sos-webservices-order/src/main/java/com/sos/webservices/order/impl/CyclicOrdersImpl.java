@@ -12,7 +12,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
@@ -75,10 +75,10 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
             filter.setControllerId(ordersFilterV.getControllerId());
             filter.setOrderId(orderId);
 
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+            List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
 
             if (listOfPlannedOrders.size() == 1) {
-                DBItemDailyPlanOrders dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
+                DBItemDailyPlanOrder dbItemDailyPlanOrder = listOfPlannedOrders.get(0);
                 if (dbItemDailyPlanOrder.getStartMode() == 1) {
 
                     FilterDailyPlannedOrders filterCyclic = new FilterDailyPlannedOrders();
@@ -90,8 +90,8 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
                     filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(settings.getTimeZone()), settings.getTimeZone(), settings.getPeriodBegin());
 
-                    List<DBItemDailyPlanOrders> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
-                    for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
+                    List<DBItemDailyPlanOrder> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
+                    for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
                         if (!dbItemDailyPlanOrders.getOrderId().equals(orderId)) {
                             orderIds.add(dbItemDailyPlanOrders.getOrderId());
                         }

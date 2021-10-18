@@ -18,15 +18,15 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_HISTORY_TABLE)
-@SequenceGenerator(name = DBLayer.DAILY_PLAN_HISTORY_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_HISTORY_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_DPL_HISTORY)
+@SequenceGenerator(name = DBLayer.TABLE_DPL_HISTORY_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_HISTORY_SEQUENCE, allocationSize = 1)
 
 public class DBItemDailyPlanHistory extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_HISTORY_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_HISTORY_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
@@ -41,10 +41,10 @@ public class DBItemDailyPlanHistory extends DBItem {
 
     @Column(name = "[WORKFLOW_PATH]", nullable = true)
     private String workflowPath;
-    
+
     @Column(name = "[WORKFLOW_FOLDER]", nullable = true)
     private String workflowFolder;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[SCHEDULED_FOR]", nullable = true)
     private Date scheduledFor;
@@ -140,32 +140,26 @@ public class DBItemDailyPlanHistory extends DBItem {
         this.submitted = submitted;
     }
 
-    
     public String getWorkflowPath() {
         return workflowPath;
     }
 
-    
     public void setWorkflowPath(String workflowPath) {
         this.workflowPath = workflowPath;
     }
 
-    
     public Date getScheduledFor() {
         return scheduledFor;
     }
 
-    
     public void setScheduledFor(Date scheduledFor) {
         this.scheduledFor = scheduledFor;
     }
 
-    
     public String getWorkflowFolder() {
         return workflowFolder;
     }
 
-    
     public void setWorkflowFolder(String workflowFolder) {
         this.workflowFolder = workflowFolder;
     }

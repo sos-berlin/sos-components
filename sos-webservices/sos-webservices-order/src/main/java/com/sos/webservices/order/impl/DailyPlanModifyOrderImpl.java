@@ -44,8 +44,8 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.db.orders.DBItemDailyPlanVariables;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
+import com.sos.joc.db.orders.DBItemDailyPlanVariable;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
@@ -133,13 +133,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     listOfOrderIds.add(orderId);
                 }
 
-                DBItemDailyPlanOrders plannedOrder = null;
+                DBItemDailyPlanOrder plannedOrder = null;
 
                 for (String orderId : orderIds) {
                     plannedOrder = addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder.getControllerId());
                 }
 
-                final DBItemDailyPlanOrders finalPlannedOrder = plannedOrder;
+                final DBItemDailyPlanOrder finalPlannedOrder = plannedOrder;
 
                 if (plannedOrder != null && plannedOrder.getStartMode() == 1 && dailyplanModifyOrder.getCycle() != null) {
                     recreateCyclicOrder(dailyplanModifyOrder, listOfOrderIds, finalPlannedOrder, dbAuditlog);
@@ -190,7 +190,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void removeRecreateCyclicOrder(boolean submitted, DailyPlanModifyOrder dailyplanModifyOrder,
-            final DBItemDailyPlanOrders finalPlannedOrder, List<String> listOfOrderIds, DBItemJocAuditLog dbAuditlog) {
+            final DBItemDailyPlanOrder finalPlannedOrder, List<String> listOfOrderIds, DBItemJocAuditLog dbAuditlog) {
         SOSHibernateSession sosHibernateSession = null;
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
         String dDate = dailyplanModifyOrder.getDailyPlanDate();
@@ -222,8 +222,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void executeRecreateCyclicOrder(DailyPlanModifyOrder dailyplanModifyOrder, final DBItemDailyPlanOrders finalPlannedOrder,
-            List<DBItemDailyPlanVariables> listOfVariables, DBItemJocAuditLog dbAuditlog) {
+    private void executeRecreateCyclicOrder(DailyPlanModifyOrder dailyplanModifyOrder, final DBItemDailyPlanOrder finalPlannedOrder,
+            List<DBItemDailyPlanVariable> listOfVariables, DBItemJocAuditLog dbAuditlog) {
         SOSHibernateSession sosHibernateSession = null;
         sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
         String dDate = dailyplanModifyOrder.getDailyPlanDate();
@@ -316,7 +316,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void recreateCyclicOrder(DailyPlanModifyOrder dailyplanModifyOrder, List<String> listOfOrderIds,
-            final DBItemDailyPlanOrders finalPlannedOrder, DBItemJocAuditLog dbAuditlog) throws SOSHibernateException,
+            final DBItemDailyPlanOrder finalPlannedOrder, DBItemJocAuditLog dbAuditlog) throws SOSHibernateException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
         SOSHibernateSession sosHibernateSession = null;
@@ -327,7 +327,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
             filterOrderVariables.setPlannedOrderId(finalPlannedOrder.getId());
 
-            List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
+            List<DBItemDailyPlanVariable> listOfVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
 
             removeRecreateCyclicOrder(false, dailyplanModifyOrder, finalPlannedOrder, listOfOrderIds, dbAuditlog);
 
@@ -338,7 +338,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             filter.setListOfOrders(listOfOrderIds);
             filter.setSubmitted(true);
 
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+            List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
             if (listOfPlannedOrders.size() > 0) {
                 CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfPlannedOrders);
                 c.thenAccept(either -> {
@@ -358,7 +358,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void submitOrdersToController(List<DBItemDailyPlanOrders> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
+    private void submitOrdersToController(List<DBItemDailyPlanOrder> listOfPlannedOrders) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
@@ -379,13 +379,13 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
     }
 
     private void updateVariables(SOSHibernateSession sosHibernateSession, DailyPlanModifyOrder dailyplanModifyOrder,
-            DBItemDailyPlanOrders dbItemDailyPlanOrder) throws SOSHibernateException, IOException {
+            DBItemDailyPlanOrder dbItemDailyPlanOrder) throws SOSHibernateException, IOException {
 
         DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
         FilterOrderVariables filter = new FilterOrderVariables();
         filter.setPlannedOrderId(dbItemDailyPlanOrder.getId());
-        List<DBItemDailyPlanVariables> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
-        DBItemDailyPlanVariables dbItemDailyPlanVariables = new DBItemDailyPlanVariables();
+        List<DBItemDailyPlanVariable> listOfVariables = dbLayerOrderVariables.getOrderVariables(filter, 0);
+        DBItemDailyPlanVariable dbItemDailyPlanVariables = new DBItemDailyPlanVariable();
         if (listOfVariables.size() > 0) {
             dbItemDailyPlanVariables = listOfVariables.get(0);
         } else {
@@ -499,7 +499,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
             final String dailyPlanDate = dailyplanModifyOrder.getDailyPlanDate();
 
-            List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+            List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
             if (listOfPlannedOrders.size() > 0) {
 
                 CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(filter.getControllerId(),
@@ -523,7 +523,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         sosHibernateSession2 = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
                         sosHibernateSession2.setAutoCommit(false);
 
-                        for (DBItemDailyPlanOrders dbItemDailyPlanOrder : listOfPlannedOrders) {
+                        for (DBItemDailyPlanOrder dbItemDailyPlanOrder : listOfPlannedOrders) {
                             Globals.beginTransaction(sosHibernateSession2);
                             dbItemDailyPlanOrder.setModified(new Date());
                             if ((dailyplanModifyOrder.getScheduledFor() != null) && (scheduledForDate != null)) {
@@ -556,7 +556,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                 do {
                                     try {
                                         dbLayerDailyPlannedOrders2.delete(filterDailyPlannedOrders);
-                                        DBItemDailyPlanOrders dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
+                                        DBItemDailyPlanOrder dbItemDailyPlanOrders = dbLayerDailyPlannedOrders2.insertFrom(dbItemDailyPlanOrder);
                                         dbLayerOrderVariables.update(dbItemDailyPlanWithHistory.getPlannedOrderId(), dbItemDailyPlanOrders.getId());
                                         if (retryCount != 20) {
                                             LOGGER.info("deadlock resolved successfully update dpl_orders");

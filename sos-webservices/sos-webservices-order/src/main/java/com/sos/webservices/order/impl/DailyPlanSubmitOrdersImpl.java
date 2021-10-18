@@ -27,7 +27,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -116,7 +116,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 filter.setControllerId(controllerId);
 
                 SOSHibernateSession session = null;
-                List<DBItemDailyPlanOrders> listOfPlannedOrders = null;
+                List<DBItemDailyPlanOrder> listOfPlannedOrders = null;
                 try {
                     session = Globals.createSosHibernateStatelessConnection(API_CALL);
                     // sosHibernateSession.setAutoCommit(false);
@@ -135,7 +135,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
 
-                for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+                for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedOrders) {
                     auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getControllerId()));
                 }
 

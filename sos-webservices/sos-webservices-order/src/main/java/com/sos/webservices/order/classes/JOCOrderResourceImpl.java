@@ -19,7 +19,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
@@ -249,7 +249,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
     }
 
-    protected DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+    protected DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             // re - a new session will be opened in the dbLayerDailyPlannedOrders.addCyclicOrderIds

@@ -1,13 +1,9 @@
 package com.sos.js7.order.initiator.classes;
 
 import com.sos.controller.model.order.FreshOrder;
-import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.calendar.Period;
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 
 public class PlannedOrder {
 
@@ -34,7 +30,7 @@ public class PlannedOrder {
     public PlannedOrder() {
     }
 
-    public PlannedOrder(DBItemDailyPlanOrders dbItemDailyPlannedOrders) {
+    public PlannedOrder(DBItemDailyPlanOrder dbItemDailyPlannedOrders) {
         this.freshOrder = new FreshOrder();
         freshOrder.setId(dbItemDailyPlannedOrders.getOrderId());
         freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());

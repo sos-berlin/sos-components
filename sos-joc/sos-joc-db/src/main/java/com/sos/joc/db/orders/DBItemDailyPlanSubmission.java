@@ -12,21 +12,19 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.Type;
-
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_SUBMISSIONS_TABLE)
-@SequenceGenerator(name = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_DPL_SUBMISSIONS)
+@SequenceGenerator(name = DBLayer.TABLE_DPL_SUBMISSIONS_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_SUBMISSIONS_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlanSubmissions extends DBItem {
+public class DBItemDailyPlanSubmission extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_SUBMISSIONS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_SUBMISSIONS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
@@ -35,7 +33,6 @@ public class DBItemDailyPlanSubmissions extends DBItem {
 
     @Column(name = "[USER_ACCOUNT]", nullable = false)
     private String userAccount;
- 
 
     @Temporal(TemporalType.DATE)
     @Column(name = "[SUBMISSION_FOR_DATE]", nullable = false)
@@ -44,7 +41,6 @@ public class DBItemDailyPlanSubmissions extends DBItem {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "[CREATED]", nullable = false)
     private Date created;
-
 
     public Long getId() {
         return id;
@@ -61,7 +57,7 @@ public class DBItemDailyPlanSubmissions extends DBItem {
     public void setControllerId(String jobschedulerId) {
         this.controllerId = jobschedulerId;
     }
-    
+
     public String getUserAccount() {
         return userAccount;
     }
@@ -85,9 +81,5 @@ public class DBItemDailyPlanSubmissions extends DBItem {
     public void setCreated(Date created) {
         this.created = created;
     }
-
- 
-
-  
 
 }

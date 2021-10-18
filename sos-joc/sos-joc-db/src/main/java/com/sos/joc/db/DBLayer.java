@@ -45,9 +45,9 @@ import com.sos.joc.db.monitoring.DBItemNotificationAcknowledgement;
 import com.sos.joc.db.monitoring.DBItemNotificationMonitor;
 import com.sos.joc.db.monitoring.DBItemNotificationWorkflow;
 import com.sos.joc.db.orders.DBItemDailyPlanHistory;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
-import com.sos.joc.db.orders.DBItemDailyPlanVariables;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmission;
+import com.sos.joc.db.orders.DBItemDailyPlanVariable;
 import com.sos.joc.db.search.DBItemSearchWorkflow;
 import com.sos.joc.db.search.DBItemSearchWorkflow2DeploymentHistory;
 import com.sos.joc.db.xmleditor.DBItemXmlEditorConfiguration;
@@ -134,21 +134,21 @@ public class DBLayer implements Serializable {
     public static final String TABLE_MON_NOT_ACKNOWLEDGEMENTS = "MON_NOT_ACKNOWLEDGEMENTS";
 
     /** Daily plan tables */
-    public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";
-    public static final String DAILY_PLAN_ORDERS_TABLE_SEQUENCE = "SEQ_DPL_ORDERS";
-    public static final String DAILY_PLAN_ORDERS_DBITEM = DBItemDailyPlanOrders.class.getSimpleName();
+    public static final String DBITEM_DPL_ORDER = DBItemDailyPlanOrder.class.getSimpleName();
+    public static final String TABLE_DPL_ORDERS = "DPL_ORDERS";
+    public static final String TABLE_DPL_ORDERS_SEQUENCE = "SEQ_DPL_ORDERS";
 
-    public static final String DAILY_PLAN_SUBMISSIONS_TABLE = "DPL_SUBMISSIONS";
-    public static final String DAILY_PLAN_SUBMISSIONS_SEQUENCE = "SEQ_DPL_SUBMISSIONS";
-    public static final String DAILY_PLAN_SUBMISSIONS_DBITEM = DBItemDailyPlanSubmissions.class.getSimpleName();
+    public static final String DBITEM_DPL_SUBMISSION = DBItemDailyPlanSubmission.class.getSimpleName();
+    public static final String TABLE_DPL_SUBMISSIONS = "DPL_SUBMISSIONS";
+    public static final String TABLE_DPL_SUBMISSIONS_SEQUENCE = "SEQ_DPL_SUBMISSIONS";
 
-    public static final String DAILY_PLAN_HISTORY_TABLE = "DPL_HISTORY";
-    public static final String DAILY_PLAN_HISTORY_SEQUENCE = "SEQ_DPL_HISTORY";
-    public static final String DAILY_PLAN_HISTORY_DBITEM = DBItemDailyPlanHistory.class.getSimpleName();
+    public static final String DBITEM_DPL_HISTORY = DBItemDailyPlanHistory.class.getSimpleName();
+    public static final String TABLE_DPL_HISTORY = "DPL_HISTORY";
+    public static final String TABLE_DPL_HISTORY_SEQUENCE = "SEQ_DPL_HISTORY";
 
-    public static final String DAILY_PLAN_VARIABLES_TABLE = "DPL_ORDER_VARIABLES";
-    public static final String DAILY_PLAN_VARIABLES_TABLE_SEQUENCE = "SEQ_DPL_ORDER_VARS";
-    public static final String DAILY_PLAN_VARIABLES_DBITEM = DBItemDailyPlanVariables.class.getSimpleName();
+    public static final String DBITEM_DPL_ORDER_VARIABLE = DBItemDailyPlanVariable.class.getSimpleName();
+    public static final String TABLE_DPL_ORDER_VARIABLES = "DPL_ORDER_VARIABLES";
+    public static final String TABLE_DPL_ORDER_VARIABLES_SEQUENCE = "SEQ_DPL_ORDER_VARS";
 
     /** Inventory tables */
     public static final String DBITEM_INV_OPERATING_SYSTEMS = DBItemInventoryOperatingSystem.class.getSimpleName();
@@ -316,9 +316,9 @@ public class DBLayer implements Serializable {
     public static SOSClassList getOrderInitatorClassMapping() {
         SOSClassList cl = new SOSClassList();
         cl.add(DBItemInventoryJSInstance.class);
-        cl.add(DBItemDailyPlanSubmissions.class);
-        cl.add(DBItemDailyPlanOrders.class);
-        cl.add(DBItemDailyPlanVariables.class);
+        cl.add(DBItemDailyPlanSubmission.class);
+        cl.add(DBItemDailyPlanOrder.class);
+        cl.add(DBItemDailyPlanVariable.class);
         cl.add(DBItemDailyPlanHistory.class);
         return cl;
     }

@@ -42,7 +42,7 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.history.common.HistorySeverity;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.joc.db.orders.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -830,7 +830,7 @@ public class OrdersHelper {
     }
 
     public static CompletableFuture<Either<Problem, Void>> removeFromJobSchedulerController(String controllerId,
-            List<DBItemDailyPlanOrders> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+            List<DBItemDailyPlanOrder> listOfDailyPlanOrders) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             ExecutionException {
 

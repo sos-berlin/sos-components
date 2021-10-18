@@ -27,17 +27,17 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.orders.classes.DailyPlanDate;
 
 @Entity
-@Table(name = DBLayer.DAILY_PLAN_ORDERS_TABLE, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_NAME]",
+@Table(name = DBLayer.TABLE_DPL_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_NAME]",
         "[ORDER_ID]" }) })
-@SequenceGenerator(name = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE, sequenceName = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE, allocationSize = 1)
+@SequenceGenerator(name = DBLayer.TABLE_DPL_ORDERS_SEQUENCE, sequenceName = DBLayer.TABLE_DPL_ORDERS_SEQUENCE, allocationSize = 1)
 
-public class DBItemDailyPlanOrders extends DBItem {
+public class DBItemDailyPlanOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBItemDailyPlanOrders.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBItemDailyPlanOrder.class);
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.DAILY_PLAN_ORDERS_TABLE_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DPL_ORDERS_SEQUENCE)
     @Column(name = "[ID]")
     private Long id;
 
@@ -112,7 +112,7 @@ public class DBItemDailyPlanOrders extends DBItem {
     @Column(name = "[MODIFIED]", nullable = true)
     private Date modified;
 
-    public DBItemDailyPlanOrders() {
+    public DBItemDailyPlanOrder() {
 
     }
 

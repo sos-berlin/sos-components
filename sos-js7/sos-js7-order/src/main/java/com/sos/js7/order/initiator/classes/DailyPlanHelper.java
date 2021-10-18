@@ -1,6 +1,5 @@
 package com.sos.js7.order.initiator.classes;
 
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 
 public class DailyPlanHelper {
@@ -102,16 +101,16 @@ public class DailyPlanHelper {
         return calendar;
     }
 
-    public static OrderCounter getOrderCount(List<DBItemDailyPlanOrders> listOfPlannedOrders) {
+    public static OrderCounter getOrderCount(List<DBItemDailyPlanOrder> listOfPlannedOrders) {
         OrderCounter o = new OrderCounter();
         o.countSingle = 0L;
         o.countCycled = 0L;
         o.countCycledAll = 0L;
 
         DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
-        Map<CycleOrderKey, List<DBItemDailyPlanOrders>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrders>>();
+        Map<CycleOrderKey, List<DBItemDailyPlanOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrder>>();
 
-        for (DBItemDailyPlanOrders dbItemDailyPlanOrders : listOfPlannedOrders) {
+        for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedOrders) {
 
             if ((dbItemDailyPlanOrders.getStartMode() == 1)) {
                 CycleOrderKey cycleOrderKey = new CycleOrderKey();
@@ -121,7 +120,7 @@ public class DailyPlanHelper {
                 cycleOrderKey.setOrderName(dbItemDailyPlanOrders.getOrderName());
                 cycleOrderKey.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
                 if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<DBItemDailyPlanOrders>());
+                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<DBItemDailyPlanOrder>());
                     o.countCycled = o.countCycled + 1;
                 }
 
@@ -198,7 +197,7 @@ public class DailyPlanHelper {
     }
 
     private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone, String periodBegin) {
-        
+
         String orderId = "";
         String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone, periodBegin);
         if (startMode == 0) {
@@ -214,7 +213,7 @@ public class DailyPlanHelper {
         String orderName = "";
         if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();
-        }else {
+        } else {
             orderName = variableSet.getOrderName();
         }
         if (orderName.length() > 30) {

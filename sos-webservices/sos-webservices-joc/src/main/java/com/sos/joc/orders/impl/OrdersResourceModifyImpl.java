@@ -45,7 +45,7 @@ import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
-import com.sos.joc.db.orders.DBItemDailyPlanOrders;
+import com.sos.joc.db.orders.DBItemDailyPlanOrder;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
@@ -220,7 +220,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         }
     }
 
-    private DBItemDailyPlanOrders addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId,
+    private DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId,
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders) throws SOSHibernateException {
         OrderInitiatorSettings settings;
         if (Globals.configurationGlobals == null) {
@@ -727,12 +727,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 Globals.beginTransaction(session);
                 dbLayer.setSubmitted(filter);
                 Globals.commit(session);
-                List<DBItemDailyPlanOrders> listOfOrders = dbLayer.getDailyPlanList(filter, 0);
+                List<DBItemDailyPlanOrder> listOfOrders = dbLayer.getDailyPlanList(filter, 0);
                 Globals.disconnect(session);
                 session = null;
 
                 Set<String> dailyPlanDays = new HashSet<String>();
-                for (DBItemDailyPlanOrders order : listOfOrders) {
+                for (DBItemDailyPlanOrder order : listOfOrders) {
                     String dailyPlanDate = order.getDailyPlanDate(settings.getTimeZone());
                     if (!dailyPlanDays.contains(dailyPlanDate)) {
                         dailyPlanDays.add(dailyPlanDate);
@@ -787,9 +787,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 filter.setDailyPlanDate(cancelDailyPlanOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
                 filter.setSubmitted(true);
 
-                List<DBItemDailyPlanOrders> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
+                List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
                 if (listOfPlannedOrders != null) {
-                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrders::getOrderId).collect(Collectors
+                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors
                             .toSet()));
                 }
             } finally {

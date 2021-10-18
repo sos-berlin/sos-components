@@ -1,13 +1,9 @@
 package com.sos.webservices.order.impl;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import javax.ws.rs.Path;
 
@@ -17,8 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
-import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmissions;
+import com.sos.joc.db.orders.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.JocException;
@@ -79,8 +74,8 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             DailyPlanSubmissions dailyPlanSubmissions = new DailyPlanSubmissions();
             List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
 
-            List<DBItemDailyPlanSubmissions> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
-            for (DBItemDailyPlanSubmissions dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
+            List<DBItemDailyPlanSubmission> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
+            for (DBItemDailyPlanSubmission dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
                 DailyPlanSubmissionsItem p = new DailyPlanSubmissionsItem();
                 p.setSubmissionHistoryId(dbItemDailySubmissionHistory.getId());
                 p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
