@@ -4,7 +4,6 @@ package com.sos.sign.model.workflow;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.sign.model.instruction.Instructions;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,14 +23,12 @@ public class Branch {
     @JsonProperty("id")
     private String id;
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    private Instructions workflow;
+    private BranchWorkflow workflow;
 
     /**
      * No args constructor for use in serialization
@@ -45,7 +42,7 @@ public class Branch {
      * @param workflow
      * @param id
      */
-    public Branch(String id, Instructions workflow) {
+    public Branch(String id, BranchWorkflow workflow) {
         super();
         this.id = id;
         this.workflow = workflow;
@@ -72,26 +69,22 @@ public class Branch {
     }
 
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public Instructions getWorkflow() {
+    public BranchWorkflow getWorkflow() {
         return workflow;
     }
 
     /**
-     * instructions
-     * <p>
      * 
      * (Required)
      * 
      */
     @JsonProperty("workflow")
-    public void setWorkflow(Instructions workflow) {
+    public void setWorkflow(BranchWorkflow workflow) {
         this.workflow = workflow;
     }
 

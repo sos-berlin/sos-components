@@ -44,6 +44,7 @@ import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.inventory.model.workflow.Branch;
+import com.sos.inventory.model.workflow.BranchWorkflow;
 import com.sos.inventory.model.workflow.Jobs;
 import com.sos.inventory.model.workflow.Parameter;
 import com.sos.inventory.model.workflow.ParameterType;
@@ -355,21 +356,25 @@ public class Validator {
                     String branchPosition = instPosition + "branches";
                     Map<String, String> resultKeys = new HashMap<>();
                     for (Branch branch : fj.getBranches()) {
-                        if (branch.getResult() != null && branch.getResult().getAdditionalProperties() != null) {
-                            String branchInstPosition = branchPosition + "[" + branchIndex + "]";
-                            for (Map.Entry<String, String> entry : branch.getResult().getAdditionalProperties().entrySet()) {
-                                validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
-                                if (resultKeys.containsKey(entry.getKey())) {
-                                    throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry.getKey()
-                                            + "': already used in " + resultKeys.get(entry.getKey()));
-                                } else {
-                                    resultKeys.put(entry.getKey(), branchInstPosition);
+                        BranchWorkflow bw = branch.getWorkflow();
+                        if (bw != null) {
+                            if (bw.getResult() != null && bw.getResult().getAdditionalProperties() != null) {
+                                String branchInstPosition = branchPosition + "[" + branchIndex + "].workflow";
+                                for (Map.Entry<String, String> entry : bw.getResult().getAdditionalProperties().entrySet()) {
+                                    validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
+                                    if (resultKeys.containsKey(entry.getKey())) {
+                                        throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry.getKey()
+                                                + "': already used in " + resultKeys.get(entry.getKey()));
+                                    } else {
+                                        resultKeys.put(entry.getKey(), branchInstPosition);
+                                    }
                                 }
                             }
                         }
                         branchIndex++;
                     }
                     resultKeys = null;
+                    branchIndex = 0;
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                         if (branch.getWorkflow() != null) {
