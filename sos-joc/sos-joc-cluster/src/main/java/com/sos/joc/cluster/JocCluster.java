@@ -43,6 +43,7 @@ import com.sos.joc.db.joc.DBItemJocInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.configuration.ConfigurationGlobalsChanged;
+import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
 import com.sos.joc.model.configuration.ConfigurationType;
 import com.sos.joc.model.configuration.globals.GlobalSettings;
 
@@ -114,6 +115,9 @@ public class JocCluster {
                 instance.getInstance(mode, jocStartTime);
                 jocTimeZone = jocConfig.getTimeZone();
                 configurations = getStoredSettings();
+                if (StartupMode.automatic.equals(mode)) {
+                    EventBus.getInstance().post(new DailyPlanCalendarEvent());
+                }
                 instanceProcessed = true;
             } catch (Throwable e) {
                 LOGGER.error(e.toString());

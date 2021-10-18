@@ -29,6 +29,7 @@ import scala.concurrent.duration.FiniteDuration;
 public class CalendarsHelper {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(CalendarsHelper.class);
+    public static final String dailyPlanCalendarName = "dailyPlan";
     
     public CalendarsHelper() {
         EventBus.getInstance().register(this);
@@ -36,6 +37,7 @@ public class CalendarsHelper {
     
     @Subscribe({ DailyPlanCalendarEvent.class })
     public void initDailyPlanCalendar() {
+        //TODO check if Calendar exists
         updateDailyPlanCalendar(null, null, null);
     }
     
@@ -59,7 +61,7 @@ public class CalendarsHelper {
         } else {
             throw new IllegalArgumentException("Time zone (" + timezone + ") is not available");
         }
-        Calendar c = Calendar.apply(CalendarPath.of("dailyPlan"), _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
+        Calendar c = Calendar.apply(CalendarPath.of(dailyPlanCalendarName), _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
                 "yyyy-MM-dd", scala.Option.empty());
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
         
