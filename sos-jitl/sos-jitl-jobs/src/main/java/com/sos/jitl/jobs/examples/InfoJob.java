@@ -16,6 +16,8 @@ import com.sos.jitl.jobs.common.JobDetailValue;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
 import js7.data.value.Value;
@@ -84,11 +86,11 @@ public class InfoJob extends ABlockingInternalJob<InfoJobArguments> {
 
         step.getLogger().info("----------ORDER JOB RESOURCES-----------------");
         step.getLogger().info("-ENGINE JOB RESOURCES-----------------");
-        Map<JobResourcePath, Map<String, Value>> jobResources = step.getInternalStep().jobResourceToNameToValue();
+        Map<JobResourcePath, Map<String, Either<Problem, Value>>> jobResources = step.getInternalStep().jobResourceToNameToCheckedValue();
         jobResources.entrySet().stream().forEach(e -> {
             step.getLogger().info(" " + e.getKey().string() + ":");
-            e.getValue().entrySet().stream().forEach(ee -> {
-                step.getLogger().info("[scala]%s=%s", ee.getKey(), ee.getValue());
+            e.getValue().entrySet().stream().filter(ee -> ee.getValue().isRight()).forEach(ee -> {
+                step.getLogger().info("[scala]%s=%s", ee.getKey(), ee.getValue().get());
             });
         });
         // Either<Problem,Value> checkedValue = step.byJobResourceAndName(JobResourcePath.of("MY-JOB-RESOURCE"), "stringSetting");

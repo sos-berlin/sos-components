@@ -2521,7 +2521,7 @@ public abstract class PublishUtils {
     private static SignedString getSignedStringWithSignerDN(String jsonContent, String signature, String signatureAlgorithm, String signerDN) {
         LOGGER.debug("JSON send to controller: ");
         LOGGER.debug(jsonContent);
-        return SignedString.x509WithSignedId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
+        return SignedString.x509WithSignerId(jsonContent, signature, signatureAlgorithm, SignerId.of(signerDN));
     }
 
     private static Optional<String> getFileOrderSourcePattern(FileOrderSource fileOrderSource) {

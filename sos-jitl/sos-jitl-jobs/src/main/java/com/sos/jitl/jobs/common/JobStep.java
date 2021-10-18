@@ -21,6 +21,8 @@ import com.sos.jitl.jobs.common.JobArgument.ValueSource;
 import com.sos.jitl.jobs.common.JobLogger.LogLevel;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.job.JobResourcePath;
 import js7.data.order.HistoricOutcome;
 import js7.data.order.Outcome;
@@ -326,7 +328,7 @@ public class JobStep<A extends JobArguments> {
         if (jobName == null) {
             if (internalStep == null) {
                 return null;
-            }
+            } 
             jobName = Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
         }
         return jobName;
@@ -338,7 +340,7 @@ public class JobStep<A extends JobArguments> {
                 return null;
             }
             try {
-                jobInstructionLabel = internalStep.instructionLabel().get().toString();
+                jobInstructionLabel = internalStep.instructionLabel().get().string();
             } catch (Throwable e) {
             }
         }
@@ -360,7 +362,7 @@ public class JobStep<A extends JobArguments> {
             if (internalStep == null) {
                 return null;
             }
-            workflowVersionId = internalStep.order().workflowId().versionId().toString();
+            workflowVersionId = internalStep.order().workflowId().versionId().string();
         }
         return workflowVersionId;
     }
@@ -595,7 +597,7 @@ public class JobStep<A extends JobArguments> {
         if (internalStep == null) {
             return resultMap;
         }
-        Map<JobResourcePath, Map<String, Value>> jobResources = internalStep.jobResourceToNameToValue();
+        Map<JobResourcePath, Map<String, Either<Problem, Value>>> jobResources = internalStep.jobResourceToNameToCheckedValue();
         if (jobResources == null || jobResources.size() == 0) {
             return resultMap;
         }
@@ -603,8 +605,8 @@ public class JobStep<A extends JobArguments> {
         jobResources.entrySet().stream().forEach(e -> {
             String resourceName = e.getKey().string();
             e.getValue().entrySet().stream().forEach(ee -> {
-                if (!resultMap.containsKey(ee.getKey())) {
-                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, Job.getValue(ee.getValue())));
+                if (!resultMap.containsKey(ee.getKey()) && ee.getValue().isRight()) {
+                    resultMap.put(ee.getKey(), new JobDetailValue(resourceName, Job.getValue(ee.getValue().get())));
                 }
             });
         });
