@@ -41,6 +41,9 @@
 	  "type": "string",
 	  "default": "Etc/UTC"
 	},
+    "calendarPath": {
+      "$ref": "../../../inventory/schemas/common/string255-schema.json"
+    },
     "orderPreparation": {
     	"$ref": "orderPreparation-schema.json"
     },

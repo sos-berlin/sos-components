@@ -30,6 +30,9 @@
           },
           "workflow": {
             "$ref": "instructions-schema.json"
+          },
+          "result": {
+            "$ref": "../../../inventory/schemas/job/env-schema.json"
           }
         },
     	"additionalProperties": false

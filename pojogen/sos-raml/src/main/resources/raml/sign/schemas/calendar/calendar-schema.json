@@ -1,0 +1,51 @@
+{
+  "title": "Calendar",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.calendar.Calendar",
+  "type": "object",
+  "required": [
+    "TYPE",
+    "path",
+    "timezone",
+    "dateOffset",
+    "orderIdToDatePattern",
+    "periodDatePattern"
+  ],
+  "propertyOrder": [
+    "TYPE",
+    "path",
+    "timezone",
+    "dateOffset",
+    "orderIdToDatePattern",
+    "periodDatePattern"
+  ],
+  
+  "description": "deploy object with fixed property 'TYPE':'Calendar'",
+  "properties": {
+    "TYPE": {
+    	"type": "string",
+  		"default": "Calendar" 
+    },
+    "path": {
+    	"type": "string",
+  		"default": "DailyPlan"
+    },
+    "timezone": {
+        "description": "see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+  		"type": "string",
+  		"default": "Etc/UTC"
+    },
+    "dateOffset": {
+		"$ref": "../../../inventory/schemas/common/nonNegativeLong-schema.json"
+	},
+    "orderIdToDatePattern": {
+    	"type": "string",
+    	"default": "#([^#]+)#.*"
+    },
+    "periodDatePattern": {
+    	"type": "string",
+    	"default": "yyyy-MM-dd"
+    }
+  },
+  "additionalProperties": false
+}

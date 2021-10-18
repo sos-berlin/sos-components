@@ -1,0 +1,28 @@
+{
+  "title": "Cycle",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "javaType": "com.sos.sign.model.instruction.Cycle",
+  "type": "object",
+  "required": [
+  	"cycleWorkflow"
+  ],
+  "extends" : {
+    "$ref": "instruction-schema.json"
+  },
+  
+  "description": "instruction with fixed property 'TYPE':'Cycle'",
+  "propertyOrder": [
+  	"TYPE",
+  	"cycleWorkflow",
+  	"schedule"
+  ],
+  "properties": {
+  	"cycleWorkflow" : {
+  		"$ref": "instructions-schema.json"
+  	},
+  	"schedule" : {
+  		"$ref": "../../../inventory/schemas/instruction/schedule/schedule-schema.json"
+  	}
+  },
+  "additionalProperties": false
+}
