@@ -170,6 +170,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                                 String curPeriodBegin = curDailyPlan.getString("period_begin", oldPeriodBegin);
                                 if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
                                     updateControllerCalendar = true;
+                                    LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");
                                 }
                             }
                         }
