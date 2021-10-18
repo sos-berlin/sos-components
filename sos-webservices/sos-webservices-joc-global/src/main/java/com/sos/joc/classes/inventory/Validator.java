@@ -353,6 +353,23 @@ public class Validator {
                     ForkJoin fj = inst.cast();
                     int branchIndex = 0;
                     String branchPosition = instPosition + "branches";
+                    Map<String, String> resultKeys = new HashMap<>();
+                    for (Branch branch : fj.getBranches()) {
+                        if (branch.getResult() != null && branch.getResult().getAdditionalProperties() != null) {
+                            String branchInstPosition = branchPosition + "[" + branchIndex + "]";
+                            for (Map.Entry<String, String> entry : branch.getResult().getAdditionalProperties().entrySet()) {
+                                validateExpression("$." + branchInstPosition + ".result", entry.getKey(), entry.getValue());
+                                if (resultKeys.containsKey(entry.getKey())) {
+                                    throw new JocConfigurationException("$." + branchInstPosition + ".result: duplicate key '" + entry.getKey()
+                                            + "': already used in " + resultKeys.get(entry.getKey()));
+                                } else {
+                                    resultKeys.put(entry.getKey(), branchInstPosition);
+                                }
+                            }
+                        }
+                        branchIndex++;
+                    }
+                    resultKeys = null;
                     for (Branch branch : fj.getBranches()) {
                         String branchInstPosition = branchPosition + "[" + branchIndex + "].";
                         if (branch.getWorkflow() != null) {
