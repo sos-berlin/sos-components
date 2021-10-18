@@ -108,7 +108,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<DBItemNotificationMonitor> getNotificationMonitors(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_MONITOR).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
         hql.append("where notificationId=:notificationId");
 
         Query<DBItemNotificationMonitor> query = getSession().createQuery(hql.toString());
@@ -118,7 +118,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemNotificationAcknowledgement getNotificationAcknowledgement(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENT).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
         hql.append("where notificationId=:notificationId");
 
         Query<DBItemNotificationAcknowledgement> query = getSession().createQuery(hql.toString());
@@ -128,7 +128,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemNotification getNotification(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOTIFICATION).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where id=:notificationId");
 
         Query<DBItemNotification> query = getSession().createQuery(hql.toString());
@@ -167,17 +167,17 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",a.account as acknowledgementAccount");
         hql.append(",a.comment as acknowledgementComment");
         hql.append(",a.created as acknowledgementCreated ");
-        hql.append("from ").append(DBITEM_MON_NOTIFICATION).append(" n ");
-        hql.append(",").append(DBITEM_MON_NOT_WORKFLOW).append(" w ");
-        hql.append("left join ").append(DBITEM_MON_ORDER).append(" o on w.orderHistoryId=o.historyId ");
-        hql.append("left join ").append(DBITEM_MON_ORDER_STEP).append(" os on w.orderStepHistoryId=os.historyId ");
-        hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENT).append(" a on n.id=a.notificationId ");
+        hql.append("from ").append(DBITEM_MON_NOTIFICATIONS).append(" n ");
+        hql.append(",").append(DBITEM_MON_NOT_WORKFLOWS).append(" w ");
+        hql.append("left join ").append(DBITEM_MON_ORDERS).append(" o on w.orderHistoryId=o.historyId ");
+        hql.append("left join ").append(DBITEM_MON_ORDER_STEPS).append(" os on w.orderStepHistoryId=os.historyId ");
+        hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" a on n.id=a.notificationId ");
         hql.append("where n.id=w.notificationId ");
         return hql;
     }
 
     public ScrollableResults getControllers(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         List<String> where = new ArrayList<>();
         if (!SOSString.isEmpty(controllerId)) {
             where.add("controllerId=:controllerId");
@@ -207,7 +207,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemHistoryController getController(String controllerId, Long readyEventId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and readyEventId = :readyEventId ");
 
@@ -218,11 +218,11 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemHistoryController getPreviousController(String controllerId, Long readyEventId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and readyEventId = ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and readyEventId < :readyEventId ");
         hql.append(")");
@@ -235,10 +235,10 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<Object[]> getPreviousControllers(Date dateFrom) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select readyEventId,controllerId from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        StringBuilder hql = new StringBuilder("select readyEventId,controllerId from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where readyEventId < :readyEventId ");
         hql.append("group by controllerId");
         hql.append(")");
@@ -249,10 +249,10 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<Object[]> getLastControllers(Date dateTo) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select readyEventId,controllerId from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        StringBuilder hql = new StringBuilder("select readyEventId,controllerId from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         if (dateTo != null) {
             hql.append("where readyEventId > :dateTo ");
         }
@@ -267,7 +267,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public ScrollableResults getAgents(String controllerId, Date dateFrom, Date dateTo) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         List<String> where = new ArrayList<>();
         if (!SOSString.isEmpty(controllerId)) {
             where.add("controllerId=:controllerId");
@@ -297,7 +297,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemHistoryAgent getAgent(String controllerId, String agentId, Long readyEventId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and agentId=:agentId ");
         hql.append("and readyEventId = :readyEventId ");
@@ -310,11 +310,11 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemHistoryAgent getPreviousAgent(String controllerId, String agentId, Long readyEventId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and readyEventId= ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where controllerId=:controllerId ");
         hql.append("and agentId=:agentId ");
         hql.append("and readyEventId < :readyEventId ");
@@ -329,10 +329,10 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<Object[]> getLastAgents(Date dateTo) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         if (dateTo != null) {
             hql.append("where readyEventId > :dateTo ");
         }
@@ -347,10 +347,10 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<Object[]> getPreviousAgents(Date dateFrom) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId < :readyEventId ");
         hql.append("group by controllerId,agentId");
         hql.append(")");
@@ -361,12 +361,12 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<Object[]> getPreviousAgents() throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        StringBuilder hql = new StringBuilder("select readyEventId,controllerId,agentId from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId in ");
         hql.append("(");
-        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append("select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId not in ");
-        hql.append(" (select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENT).append(" group by controllerId,agentId)");
+        hql.append(" (select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_AGENTS).append(" group by controllerId,agentId)");
         hql.append("group by controllerId,agentId");
         hql.append(")");
 

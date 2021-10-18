@@ -43,7 +43,7 @@ public class DBLayerCleanup {
     }
 
     public DBItemJocVariable getVariable(String name) throws SOSHibernateException {
-        String hql = String.format("select name,textValue from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLE);
+        String hql = String.format("select name,textValue from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<Object[]> query = session.createQuery(hql);
         query.setParameter("name", name);
         Object[] o = session.getSingleResult(query);
@@ -57,7 +57,7 @@ public class DBLayerCleanup {
     }
 
     public int deleteVariable(String name) throws SOSHibernateException {
-        String hql = String.format("delete from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLE);
+        String hql = String.format("delete from %s where name = :name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = session.createQuery(hql);
         query.setParameter("name", name);
         return session.executeUpdate(query);
@@ -72,7 +72,7 @@ public class DBLayerCleanup {
     }
 
     public int updateVariable(String name, String value) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLE).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLES).append(" ");
         hql.append("set textValue=:textValue ");
         hql.append("where name=:name");
         Query<DBItemJocVariable> query = session.createQuery(hql.toString());

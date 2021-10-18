@@ -68,9 +68,9 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_DPL_ORDER_VARIABLE).append(" ");
+        hql.append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("where plannedOrderId in (");
-        hql.append("    select id from ").append(DBLayer.DBITEM_DPL_ORDER).append(" ");
+        hql.append("    select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("    where submissionHistoryId in (:ids)");
         hql.append(")");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
@@ -89,7 +89,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
         hql.append("where orderId in (");
-        hql.append("    select orderId from ").append(DBLayer.DBITEM_DPL_ORDER).append(" ");
+        hql.append("    select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("    where submissionHistoryId in (:ids)");
         hql.append(")");
         query = getDbLayer().getSession().createQuery(hql.toString());
@@ -106,7 +106,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_DPL_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submissionHistoryId in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
@@ -122,7 +122,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_DPL_SUBMISSION).append(" ");
+        hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where id in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
@@ -137,7 +137,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
     private List<Long> getSubmissionIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_DPL_SUBMISSION).append(" ");
+        hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where created < :created ");
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("created", datetime.getDatetime());

@@ -25,7 +25,7 @@ public class HistoryMastersDBLayer {
 			throws DBConnectionRefusedException, DBInvalidDataException {
 		try {
 			StringBuilder sql = new StringBuilder();
-			sql.append("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLER);
+			sql.append("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS);
 			sql.append(" where controllerId = :controllerId");
 			sql.append(" and hostname = :hostname");
 			sql.append(" and port = :port");

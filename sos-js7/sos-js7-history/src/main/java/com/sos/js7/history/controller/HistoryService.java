@@ -232,7 +232,7 @@ public class HistoryService extends AJocClusterService {
             session = factory.openStatelessSession(IDENTIFIER);
             session.beginTransaction();
 
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
             hql.append(" where memberId <> :memberId");
             Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
             query.setParameter("memberId", getJocConfig().getMemberId());
@@ -263,7 +263,7 @@ public class HistoryService extends AJocClusterService {
                 if (toDelete.size() == result.size()) {
                     session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.TABLE_HISTORY_TEMP_LOGS);
                 } else {
-                    hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
+                    hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
                     hql.append(" where historyOrderMainParentId in (:historyOrderMainParentIds)");
                     query = session.createQuery(hql.toString());
                     query.setParameterList("historyOrderMainParentIds", toDelete);
@@ -299,7 +299,7 @@ public class HistoryService extends AJocClusterService {
         try {
             session = factory.openStatelessSession();
             session.beginTransaction();
-            List<Long> result = session.getResultList("select id from " + DBLayer.DBITEM_HISTORY_ORDER + " where parentId=0 and logId=0");
+            List<Long> result = session.getResultList("select id from " + DBLayer.DBITEM_HISTORY_ORDERS + " where parentId=0 and logId=0");
             session.commit();
 
             if (result != null && result.size() > 0) {
@@ -332,7 +332,7 @@ public class HistoryService extends AJocClusterService {
             if (Files.exists(dir)) {
                 session.beginTransaction();
 
-                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG);
+                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
                 hql.append(" where historyOrderMainParentId=:historyOrderMainParentId");
                 Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
                 query.setParameter("historyOrderMainParentId", historyOrderMainParentId);

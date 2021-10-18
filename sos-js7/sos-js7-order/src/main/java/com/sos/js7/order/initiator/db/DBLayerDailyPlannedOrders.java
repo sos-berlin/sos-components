@@ -390,7 +390,7 @@ public class DBLayerDailyPlannedOrders {
         StringBuilder hql = new StringBuilder();
         if (filter.isCyclicStart()) {
             StringBuilder q = new StringBuilder("select min(p.id) ");
-            q.append("from ").append(DBLayer.DBITEM_DPL_ORDER).append(" p ");
+            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
             q.append(getWhere(filter, "p.schedulePath")).append(" ");
             q.append("group by orderName,periodBegin,periodEnd,repeatInterval ");
 
@@ -401,8 +401,8 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
             hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDER).append(" p left outer join ");
-            hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" o on p.orderId = o.orderId ");
+            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
             hql.append(getWhere(filter, "p.schedulePath")).append(" ");
             hql.append("and p.id in (").append(q).append(") ");
             hql.append(filter.getOrderCriteria());
@@ -414,8 +414,8 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",p.periodEnd as periodEnd,p.repeatInterval as repeatInterval");
             hql.append(",p.plannedStart as plannedStart, p.expectedEnd as expectedEnd,p.created as plannedOrderCreated");
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
-            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDER).append(" p left outer join ");
-            hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" o on p.orderId = o.orderId ");
+            hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
+            hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
             hql.append(getWhere(filter, "p.schedulePath")).append(" ");
             hql.append(filter.getOrderCriteria());
         }

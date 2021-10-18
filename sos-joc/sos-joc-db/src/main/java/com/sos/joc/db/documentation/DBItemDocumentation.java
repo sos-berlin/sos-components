@@ -20,14 +20,14 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION, uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]" }) })
-@SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_INV_DOCUMENTATIONS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[PATH]" }) })
+@SequenceGenerator(name = DBLayer.TABLE_INV_DOCUMENTATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_INV_DOCUMENTATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentation extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_DOCUMENTATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 
@@ -109,7 +109,7 @@ public class DBItemDocumentation extends DBItem {
     public void setType(String val) {
         this.type = val;
     }
-    
+
     public String getDocRef() {
         return docRef;
     }
@@ -117,7 +117,7 @@ public class DBItemDocumentation extends DBItem {
     public void setDocRef(String val) {
         this.docRef = val;
     }
-    
+
     public boolean getIsRef() {
         return isRef;
     }

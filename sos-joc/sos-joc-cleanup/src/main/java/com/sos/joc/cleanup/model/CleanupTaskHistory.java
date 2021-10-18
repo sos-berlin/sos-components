@@ -133,7 +133,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         getDbLayer().getSession().beginTransaction();
         if (tempLogsDate == null) {
             StringBuilder hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_LOG).append(" ");
+            hql.append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
             hql.append("where historyOrderId in (:orderIds)");
             Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
@@ -143,9 +143,9 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                     DBLayer.TABLE_HISTORY_LOGS, r, totalOrderLogs));
         } else {
             StringBuilder hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
+            hql.append(DBLayer.DBITEM_HISTORY_TEMP_LOGS).append(" ");
             hql.append("where historyOrderMainParentId in (");
-            hql.append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+            hql.append("select id from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
             hql.append("where id in (:orderIds) ");
             hql.append("and startTime < :startTime");
             hql.append(")");
@@ -211,7 +211,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private List<Long> getMainOrderIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where startTime < :startTime ");
         hql.append("and parentId=0");
 
@@ -237,7 +237,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private List<Long> getOrderIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where startTime < :startTime ");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
@@ -256,7 +256,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private List<Long> getMainParentIdsFromTempLogs(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select historyOrderMainParentId ");
-        hql.append("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
+        hql.append("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS).append(" ");
         hql.append("group by historyOrderMainParentId");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
@@ -274,7 +274,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
     private List<Long> getChildOrderIds(TaskDateTime datetime, List<Long> mainOrderIds) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where parentId in (:mainOrderIds)");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
@@ -298,7 +298,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STATE).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STATES).append(" ");
         hql.append("where historyOrderId in (:orderIds)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
@@ -314,7 +314,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
         hql.append("where historyOrderId in (:orderIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
@@ -331,7 +331,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         if (deleteLogs) {
             getDbLayer().getSession().beginTransaction();
             hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_LOG).append(" ");
+            hql.append(DBLayer.DBITEM_HISTORY_LOGS).append(" ");
             hql.append("where historyOrderId in (:orderIds)");
             query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
@@ -349,7 +349,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         if (deleteTmpLogs) {
             getDbLayer().getSession().beginTransaction();
             hql = new StringBuilder("delete from ");
-            hql.append(DBLayer.DBITEM_HISTORY_TEMP_LOG).append(" ");
+            hql.append(DBLayer.DBITEM_HISTORY_TEMP_LOGS).append(" ");
             hql.append("where historyOrderMainParentId in (:orderIds)");
             query = getDbLayer().getSession().createQuery(hql.toString());
             query.setParameterList("orderIds", orderIds);
@@ -366,7 +366,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where id in (:orderIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
@@ -388,7 +388,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         getDbLayer().getSession().beginTransaction();
 
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLER).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" ");
         hql.append("where readyEventId < :eventId");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("eventId", eventId);
@@ -396,7 +396,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         log.append("[").append(DBLayer.TABLE_HISTORY_CONTROLLERS).append("=").append(r).append("]");
 
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_HISTORY_AGENT).append(" ");
+        hql.append(DBLayer.DBITEM_HISTORY_AGENTS).append(" ");
         hql.append("where readyEventId < :eventId");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameter("eventId", eventId);

@@ -41,12 +41,12 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     private int deleteOrderVariabless(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLE).append(" ");
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("where plannedOrderId in (");
-        hql.append("select id from ").append(DBLayer.DBITEM_DPL_ORDER).append(" ");
+        hql.append("select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submitted=false ");
         hql.append("and submissionHistoryId in (");
-        hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSION).append(" ");
+        hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append(getWhere(filter));
         hql.append(")");
         hql.append(")");
@@ -57,10 +57,10 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     private int deleteOrders(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submitted=false ");
         hql.append("and submissionHistoryId in (");
-        hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSION).append(" ");
+        hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append(getWhere(filter));
         hql.append(")");
 
@@ -70,7 +70,7 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     private int deleteSubmissions(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        String hql = " from " + DBLayer.DBITEM_DPL_SUBMISSION + getWhere(filter);
+        String hql = " from " + DBLayer.DBITEM_DPL_SUBMISSIONS + getWhere(filter);
         Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
         query = bindParameters(filter, query);
         query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
@@ -155,7 +155,7 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public List<DBItemDailyPlanSubmission> getDailyPlanSubmissions(FilterDailyPlanSubmissions filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBLayer.DBITEM_DPL_SUBMISSION + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
+        String q = "from " + DBLayer.DBITEM_DPL_SUBMISSIONS + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
         Query<DBItemDailyPlanSubmission> query = session.createQuery(q);
         query = bindParameters(filter, query);
 
@@ -166,7 +166,7 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public int deleteSubmission(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        String hql = "delete from " + DBLayer.DBITEM_DPL_SUBMISSION + getWhere(filter);
+        String hql = "delete from " + DBLayer.DBITEM_DPL_SUBMISSIONS + getWhere(filter);
         Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
         bindParameters(filter, query);
         int row = session.executeUpdate(query);

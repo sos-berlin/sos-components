@@ -44,8 +44,8 @@ public class SOSHibernateTest {
 
             StringBuilder hql = new StringBuilder("select ho.orderId as orderId "); // set aliases for all properties
             hql.append(",hos.id as stepId,hos.jobName as jobName ");
-            hql.append("from " + DBLayer.DBITEM_HISTORY_ORDER).append(" ho ");
-            hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" hos ");
+            hql.append("from " + DBLayer.DBITEM_HISTORY_ORDERS).append(" ho ");
+            hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" hos ");
             hql.append("where ho.id=hos.historyOrderId ");
 
             Query<MyJoinEntity> query = session.createQuery(hql.toString(), MyJoinEntity.class); // pass MyJoinEntity as resultType
@@ -78,8 +78,8 @@ public class SOSHibernateTest {
 
             StringBuilder hql = new StringBuilder("select ho.orderId ");
             hql.append(",hos.id, hos.jobName ");
-            hql.append("from " + DBLayer.DBITEM_HISTORY_ORDER).append(" ho ");
-            hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" hos ");
+            hql.append("from " + DBLayer.DBITEM_HISTORY_ORDERS).append(" ho ");
+            hql.append(",").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" hos ");
             hql.append("where ho.id=hos.historyOrderId ");
 
             Query<Object[]> query = session.createQuery(hql.toString());
@@ -114,7 +114,7 @@ public class SOSHibernateTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP);
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS);
             Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
             query.setMaxResults(10); // only for this test
 

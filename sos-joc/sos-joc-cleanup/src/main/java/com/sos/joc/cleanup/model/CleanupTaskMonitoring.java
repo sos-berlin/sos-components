@@ -147,7 +147,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private List<Long> getMainOrderIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select historyId from ");
-        hql.append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("where startTime < :startTime ");
         hql.append("and parentId=0");
 
@@ -173,7 +173,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private List<Long> getChildOrderIds(TaskDateTime datetime, List<Long> mainOrderIds) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select historyId from ");
-        hql.append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("where parentId in (:mainOrderIds)");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());
@@ -196,7 +196,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_ORDER_STEP).append(" ");
+        hql.append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("where historyOrderId in (:orderIds)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
@@ -212,7 +212,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
 
         getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        hql.append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("where historyId in (:orderIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
@@ -232,7 +232,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         getDbLayer().getSession().beginTransaction();
 
         StringBuilder hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_NOT_MONITOR).append(" ");
+        hql.append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
         hql.append("where notificationId in (:notificationIds)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
@@ -241,7 +241,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         log.append(getDeleted(DBLayer.TABLE_MON_NOT_MONITORS, r, totalNotificationMonitors));
 
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_NOT_WORKFLOW).append(" ");
+        hql.append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" ");
         hql.append("where notificationId in (:notificationIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
@@ -250,7 +250,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         log.append(getDeleted(DBLayer.TABLE_MON_NOT_WORKFLOWS, r, totalNotificationWorkflows));
 
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENT).append(" ");
+        hql.append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENTS).append(" ");
         hql.append("where notificationId in (:notificationIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
@@ -259,7 +259,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         log.append(getDeleted(DBLayer.TABLE_MON_NOT_ACKNOWLEDGEMENTS, r, totalNotificationAcknowledgements));
 
         hql = new StringBuilder("delete from ");
-        hql.append(DBLayer.DBITEM_MON_NOTIFICATION).append(" ");
+        hql.append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where id in (:notificationIds) ");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("notificationIds", notificationIds);
@@ -275,7 +275,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
     private List<Long> getNotificationIds(TaskDateTime datetime) throws SOSHibernateException {
         getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
-        hql.append(DBLayer.DBITEM_MON_NOTIFICATION).append(" ");
+        hql.append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" ");
         hql.append("where created < :startTime ");
 
         Query<Long> query = getDbLayer().getSession().createQuery(hql.toString());

@@ -40,7 +40,7 @@ public class DocumentationDBLayer {
     public String getPath(String docRef) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select path from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("select path from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             sql.append(" where docRef = :docRef");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("docRef", docRef);
@@ -59,7 +59,7 @@ public class DocumentationDBLayer {
         }
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select docRef from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("select docRef from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             sql.append(" where path = :path");
             Query<String> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
@@ -74,7 +74,7 @@ public class DocumentationDBLayer {
     public String getDocumentationByRef(String reference, String path) {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select path from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("select path from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             sql.append(" where docRef = :reference");
             sql.append(" and path != :path");
             Query<String> query = session.createQuery(sql.toString());
@@ -92,7 +92,7 @@ public class DocumentationDBLayer {
     public DBItemDocumentation getDocumentationByRef(String reference) {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             sql.append(" where docRef = :reference");
             Query<DBItemDocumentation> query = session.createQuery(sql.toString());
             query.setParameter("reference", reference);
@@ -109,7 +109,7 @@ public class DocumentationDBLayer {
         if (reference == null || reference.isEmpty()) {
             return null;
         }
-        StringBuilder hql = new StringBuilder("select docRef from ").append(DBLayer.DBITEM_DOCUMENTATION);
+        StringBuilder hql = new StringBuilder("select docRef from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
         hql.append(" where lower(docRef) = :docRef or lower(docRef) like :likeDocRef");
         hql.append(" group by docRef");
         Query<String> query = getSession().createQuery(hql.toString());
@@ -143,7 +143,7 @@ public class DocumentationDBLayer {
     public DBItemDocumentation getDocumentation(String path) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             sql.append(" where path = :path");
             Query<DBItemDocumentation> query = session.createQuery(sql.toString());
             query.setParameter("path", path);
@@ -176,7 +176,7 @@ public class DocumentationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             List<String> clauses = new ArrayList<>();
             if (paths != null && !paths.isEmpty()) {
                 clauses.add("path in (:paths)");
@@ -211,7 +211,7 @@ public class DocumentationDBLayer {
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             List<String> clauses = new ArrayList<>();
             if (folder != null && !folder.isEmpty()) {
                 if (recursive) {
@@ -261,7 +261,7 @@ public class DocumentationDBLayer {
             DBInvalidDataException {
         try {
             StringBuilder sql = new StringBuilder();
-            sql.append("select folder from ").append(DBLayer.DBITEM_DOCUMENTATION);
+            sql.append("select folder from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
             List<String> clauses = new ArrayList<>();
             if (folderName != null && !folderName.isEmpty() && !folderName.equals("/")) {
                 clauses.add("( folder = :folderName or folder like :likeFolderName )");

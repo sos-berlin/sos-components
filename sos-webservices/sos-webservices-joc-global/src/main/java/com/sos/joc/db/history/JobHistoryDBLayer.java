@@ -61,7 +61,7 @@ public class JobHistoryDBLayer {
 
     public List<DBItemHistoryOrderStep> getOrderSteps(Long historyOrderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP)
+            Query<DBItemHistoryOrderStep> query = session.createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
                     .append(" where historyOrderId = :historyOrderId").toString());
             query.setParameter("historyOrderId", historyOrderId);
             return executeResultList(query);
@@ -74,7 +74,7 @@ public class JobHistoryDBLayer {
 
     public ScrollableResults getJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            Query<DBItemHistoryOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
+            Query<DBItemHistoryOrderStep> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(
                     getOrderStepsWhere()).append(" order by startTime desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
@@ -112,7 +112,7 @@ public class JobHistoryDBLayer {
             if (!where.trim().isEmpty()) {
                 where = " where " + where;
             }
-            StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(where).append(
+            StringBuilder hql = new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(where).append(
                     " order by startTime desc");
             Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
             return executeScroll(query);
@@ -128,11 +128,11 @@ public class JobHistoryDBLayer {
         try {
             filter.setState(state);
             if (permittedFolders == null || permittedFolders.size() == 0) {
-                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(
-                        getOrderStepsWhere()).toString());
+                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
+                        .append(getOrderStepsWhere()).toString());
                 return session.getSingleResult(query);
             } else {
-                Query<String> query = createQuery(new StringBuilder().append("select workflowFolder from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP)
+                Query<String> query = createQuery(new StringBuilder().append("select workflowFolder from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS)
                         .append(getOrderStepsWhere()).toString());
                 List<String> result = executeResultList(query);
                 if (result == null) {
@@ -152,7 +152,7 @@ public class JobHistoryDBLayer {
         try {
             boolean isMainOrder = filter.isMainOrder();
             filter.setMainOrder(true);
-            Query<DBItemHistoryOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
+            Query<DBItemHistoryOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                     getOrdersWhere()).append(" order by startTime desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
@@ -170,7 +170,7 @@ public class JobHistoryDBLayer {
         try {
             boolean isMainOrder = filter.isMainOrder();
             filter.setMainOrder(true);
-            Query<DBItemHistoryOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
+            Query<DBItemHistoryOrder> query = createQuery(new StringBuilder().append("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                     getOrdersWhere()).append(" order by startTime desc").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());
@@ -187,7 +187,7 @@ public class JobHistoryDBLayer {
 
     public List<DBItemHistoryOrder> getOrderForkChilds(Long orderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
             hql.append("where parentId=:orderId");
             Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
             query.setParameter("orderId", orderId);
@@ -201,7 +201,7 @@ public class JobHistoryDBLayer {
 
     public List<DBItemHistoryOrderState> getOrderStates(Long historyOrderId) throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STATE).append(" ");
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STATES).append(" ");
             hql.append("where historyOrderId=:historyOrderId");
             Query<DBItemHistoryOrderState> query = session.createQuery(hql.toString());
             query.setParameter("historyOrderId", historyOrderId);
@@ -218,12 +218,12 @@ public class JobHistoryDBLayer {
         try {
             filter.setState(state);
             if (permittedFoldersMap == null || permittedFoldersMap.isEmpty()) {
-                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
+                Query<Long> query = createQuery(new StringBuilder().append("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                         getOrdersWhere()).toString());
                 return session.getSingleResult(query);
             } else {
                 Query<HistoryGroupedSummary> query = createQuery(new StringBuilder().append("select new ").append(HistoryGroupedSummary.class
-                        .getName()).append("(count(id), controllerId, workflowFolder) from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(
+                        .getName()).append("(count(id), controllerId, workflowFolder) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(
                                 getOrdersWhere()).append(" group by controllerId, workflowFolder").toString());
 
                 List<HistoryGroupedSummary> result = executeResultList(query);
@@ -255,7 +255,7 @@ public class JobHistoryDBLayer {
     public Map<String, List<JobsPerAgent>> getCountJobs() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             Query<JobsPerAgent> query = createQuery(new StringBuilder().append("select new ").append(JobsPerAgent.class.getName()).append(
-                    "(agentId, error, count(id)) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(getOrderStepsWhere()).append(
+                    "(agentId, error, count(id)) from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(getOrderStepsWhere()).append(
                             " group by agentId, error").toString());
             if (filter.getLimit() > 0) {
                 query.setMaxResults(filter.getLimit());

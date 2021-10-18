@@ -14,14 +14,14 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_DOCUMENTATION_IMAGES)
-@SequenceGenerator(name = DBLayer.TABLE_DOCUMENTATION_IMAGES_SEQUENCE, sequenceName = DBLayer.TABLE_DOCUMENTATION_IMAGES_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES)
+@SequenceGenerator(name = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE, sequenceName = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE, allocationSize = 1)
 public class DBItemDocumentationImage extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_DOCUMENTATION_IMAGES_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

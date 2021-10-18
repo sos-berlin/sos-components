@@ -78,7 +78,7 @@ public class DBLayerMonitoring {
     }
 
     public DBItemHistoryOrder getHistoryOrder(Long historyId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where id=:historyId");
 
         Query<DBItemHistoryOrder> query = session.createQuery(hql.toString());
@@ -87,7 +87,7 @@ public class DBLayerMonitoring {
     }
 
     private DBItemHistoryOrderStep getHistoryOrderStep(Long historyId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEP).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
         hql.append("where id=:historyId");
 
         Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
@@ -96,7 +96,7 @@ public class DBLayerMonitoring {
     }
 
     public boolean updateOrderOnResumed(HistoryOrderBean hob) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
         hql.append(",severity=:severity ");
         hql.append(",state=:state ");
@@ -115,7 +115,7 @@ public class DBLayerMonitoring {
     }
 
     public boolean updateOrderOnForked(HistoryOrderBean hob) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
         hql.append(",hasChildren=true ");
         hql.append(",severity=:severity ");
@@ -135,7 +135,7 @@ public class DBLayerMonitoring {
     }
 
     public boolean updateOrder(HistoryOrderBean hob) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
 
         if (hob.getEndTime() != null) {
@@ -186,7 +186,7 @@ public class DBLayerMonitoring {
     }
 
     public boolean updateOrderOnOrderStep(Long historyId, Long currentHistoryOrderStepId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("set modified=:modified ");
         hql.append(",currentHistoryOrderStepId=:currentHistoryOrderStepId ");
         hql.append("where historyId=:historyId");
@@ -202,7 +202,7 @@ public class DBLayerMonitoring {
 
     public int setOrderStepEnd(HistoryOrderStepResult result) throws SOSHibernateException {
 
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEP).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("set endTime=:endTime ");
         hql.append(",endVariables=:endVariables ");
         hql.append(",returnCode=:returnCode ");
@@ -242,7 +242,7 @@ public class DBLayerMonitoring {
     }
 
     public int updateOrderStepOnLongerThan(Long historyId, HistoryOrderStepResultWarn warn) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEP).append(" ");
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("set modified=:modified ");
         hql.append(",warn=:warnReason ");
         hql.append(",warnText=:warnText ");
@@ -259,14 +259,14 @@ public class DBLayerMonitoring {
     }
 
     public DBItemJocVariable getVariable() throws SOSHibernateException {
-        String hql = String.format("from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
+        String hql = String.format("from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = session.createQuery(hql);
         query.setParameter("name", jocVariableName);
         return session.getSingleResult(query);
     }
 
     public int deleteVariable() throws SOSHibernateException {
-        String hql = String.format("delete from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLE);
+        String hql = String.format("delete from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<DBItemJocVariable> query = session.createQuery(hql);
         query.setParameter("name", jocVariableName);
         return session.executeUpdate(query);
@@ -308,7 +308,7 @@ public class DBLayerMonitoring {
     }
 
     public DBItemMonitoringOrder getMonitoringOrder(Long historyId, boolean forceHistory) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_ORDER).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrder> query = getSession().createQuery(hql.toString());
@@ -321,7 +321,7 @@ public class DBLayerMonitoring {
     }
 
     public DBItemMonitoringOrderStep getMonitoringOrderStep(Long historyId, boolean forceHistory) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_ORDER_STEP).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("where historyId=:historyId");
 
         Query<DBItemMonitoringOrderStep> query = getSession().createQuery(hql.toString());
@@ -335,8 +335,8 @@ public class DBLayerMonitoring {
 
     public List<String> getNotificationNotificationIds(NotificationType type, NotificationRange range, Long orderId, Long stepId)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("select n.notificationId from ").append(DBLayer.DBITEM_MON_NOTIFICATION).append(" n ");
-        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOW).append(" w ");
+        StringBuilder hql = new StringBuilder("select n.notificationId from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n ");
+        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" w ");
         hql.append("where n.id=w.notificationId ");
         hql.append("and n.type=:type ");
         hql.append("and n.range=:range ");
@@ -356,12 +356,12 @@ public class DBLayerMonitoring {
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder(
                 "select n.id as id, n.type as type, n.notificationId as notificationId, w.orderStepHistoryId as stepId ");
-        hql.append("from ").append(DBLayer.DBITEM_MON_NOTIFICATION).append(" n ");
-        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOW).append(" w ");
+        hql.append("from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n ");
+        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" w ");
         hql.append("where n.id=w.notificationId ");
         hql.append("and n.id = (");
-        hql.append("select max(n2.id) from ").append(DBLayer.DBITEM_MON_NOTIFICATION).append(" n2 ");
-        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOW).append(" w2 ");
+        hql.append("select max(n2.id) from ").append(DBLayer.DBITEM_MON_NOTIFICATIONS).append(" n2 ");
+        hql.append(",").append(DBLayer.DBITEM_MON_NOT_WORKFLOWS).append(" w2 ");
         hql.append("where n2.id=w2.notificationId ");
         hql.append("and n2.range=:range ");
         hql.append("and n2.notificationId = :notificationId ");
