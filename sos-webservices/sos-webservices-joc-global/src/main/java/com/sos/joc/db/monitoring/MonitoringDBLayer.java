@@ -108,7 +108,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public List<DBItemNotificationMonitor> getNotificationMonitors(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION_MONITOR).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_MONITOR).append(" ");
         hql.append("where notificationId=:notificationId");
 
         Query<DBItemNotificationMonitor> query = getSession().createQuery(hql.toString());
@@ -118,7 +118,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemNotificationAcknowledgement getNotificationAcknowledgement(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION_ACKNOWLEDGEMENT).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOT_ACKNOWLEDGEMENT).append(" ");
         hql.append("where notificationId=:notificationId");
 
         Query<DBItemNotificationAcknowledgement> query = getSession().createQuery(hql.toString());
@@ -128,7 +128,7 @@ public class MonitoringDBLayer extends DBLayer {
     }
 
     public DBItemNotification getNotification(Long notificationId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_NOTIFICATION).append(" ");
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_MON_NOTIFICATION).append(" ");
         hql.append("where id=:notificationId");
 
         Query<DBItemNotification> query = getSession().createQuery(hql.toString());
@@ -167,11 +167,11 @@ public class MonitoringDBLayer extends DBLayer {
         hql.append(",a.account as acknowledgementAccount");
         hql.append(",a.comment as acknowledgementComment");
         hql.append(",a.created as acknowledgementCreated ");
-        hql.append("from ").append(DBITEM_NOTIFICATION).append(" n ");
-        hql.append(",").append(DBITEM_NOTIFICATION_WORKFLOW).append(" w ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER).append(" o on w.orderHistoryId=o.historyId ");
-        hql.append("left join ").append(DBITEM_MONITORING_ORDER_STEP).append(" os on w.orderStepHistoryId=os.historyId ");
-        hql.append("left join ").append(DBITEM_NOTIFICATION_ACKNOWLEDGEMENT).append(" a on n.id=a.notificationId ");
+        hql.append("from ").append(DBITEM_MON_NOTIFICATION).append(" n ");
+        hql.append(",").append(DBITEM_MON_NOT_WORKFLOW).append(" w ");
+        hql.append("left join ").append(DBITEM_MON_ORDER).append(" o on w.orderHistoryId=o.historyId ");
+        hql.append("left join ").append(DBITEM_MON_ORDER_STEP).append(" os on w.orderStepHistoryId=os.historyId ");
+        hql.append("left join ").append(DBITEM_MON_NOT_ACKNOWLEDGEMENT).append(" a on n.id=a.notificationId ");
         hql.append("where n.id=w.notificationId ");
         return hql;
     }

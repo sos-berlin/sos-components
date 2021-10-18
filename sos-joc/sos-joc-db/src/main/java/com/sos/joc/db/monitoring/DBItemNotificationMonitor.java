@@ -20,14 +20,14 @@ import com.sos.joc.db.common.MonitoringConstants;
 import com.sos.monitoring.MonitorType;
 
 @Entity
-@Table(name = DBLayer.TABLE_NOTIFICATION_MONITORS)
-@SequenceGenerator(name = DBLayer.TABLE_NOTIFICATION_MONITORS_SEQUENCE, sequenceName = DBLayer.TABLE_NOTIFICATION_MONITORS_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_MON_NOT_MONITORS)
+@SequenceGenerator(name = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE, sequenceName = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE, allocationSize = 1)
 public class DBItemNotificationMonitor extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_NOTIFICATION_MONITORS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_MON_NOT_MONITORS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

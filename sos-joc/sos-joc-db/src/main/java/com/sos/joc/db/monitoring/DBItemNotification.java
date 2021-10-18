@@ -19,14 +19,14 @@ import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationType;
 
 @Entity
-@Table(name = DBLayer.TABLE_NOTIFICATIONS)
-@SequenceGenerator(name = DBLayer.TABLE_NOTIFICATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_NOTIFICATIONS_SEQUENCE, allocationSize = 1)
+@Table(name = DBLayer.TABLE_MON_NOTIFICATIONS)
+@SequenceGenerator(name = DBLayer.TABLE_MON_NOTIFICATIONS_SEQUENCE, sequenceName = DBLayer.TABLE_MON_NOTIFICATIONS_SEQUENCE, allocationSize = 1)
 public class DBItemNotification extends DBItem {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_NOTIFICATIONS_SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = DBLayer.TABLE_MON_NOTIFICATIONS_SEQUENCE)
     @Column(name = "[ID]", nullable = false)
     private Long id;
 

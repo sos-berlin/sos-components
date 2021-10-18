@@ -18,7 +18,7 @@ import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.common.MonitoringConstants;
 
 @Entity
-@Table(name = DBLayer.TABLE_MONITORING_ORDER_STEPS)
+@Table(name = DBLayer.TABLE_MON_ORDER_STEPS)
 public class DBItemMonitoringOrderStep extends DBItem {
 
     private static final long serialVersionUID = 1L;

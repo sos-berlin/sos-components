@@ -12,7 +12,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.common.MonitoringConstants;
 
 @Entity
-@Table(name = DBLayer.TABLE_NOTIFICATION_ACKNOWLEDGEMENTS)
+@Table(name = DBLayer.TABLE_MON_NOT_ACKNOWLEDGEMENTS)
 public class DBItemNotificationAcknowledgement extends DBItem {
 
     private static final long serialVersionUID = 1L;

@@ -9,7 +9,7 @@ import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 
 @Entity
-@Table(name = DBLayer.TABLE_NOTIFICATION_WORKFLOWS)
+@Table(name = DBLayer.TABLE_MON_NOT_WORKFLOWS)
 public class DBItemNotificationWorkflow extends DBItem {
 
     private static final long serialVersionUID = 1L;

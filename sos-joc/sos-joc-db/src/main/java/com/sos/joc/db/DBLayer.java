@@ -113,25 +113,25 @@ public class DBLayer implements Serializable {
     public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
 
     /** MONITORING Tables */
-    public static final String DBITEM_MONITORING_ORDER = DBItemMonitoringOrder.class.getSimpleName();
-    public static final String TABLE_MONITORING_ORDERS = "MON_ORDERS";
+    public static final String DBITEM_MON_ORDER = DBItemMonitoringOrder.class.getSimpleName();
+    public static final String TABLE_MON_ORDERS = "MON_ORDERS";
 
-    public static final String DBITEM_MONITORING_ORDER_STEP = DBItemMonitoringOrderStep.class.getSimpleName();
-    public static final String TABLE_MONITORING_ORDER_STEPS = "MON_ORDER_STEPS";
+    public static final String DBITEM_MON_ORDER_STEP = DBItemMonitoringOrderStep.class.getSimpleName();
+    public static final String TABLE_MON_ORDER_STEPS = "MON_ORDER_STEPS";
 
-    public static final String DBITEM_NOTIFICATION = DBItemNotification.class.getSimpleName();
-    public static final String TABLE_NOTIFICATIONS = "MON_NOTIFICATIONS";
-    public static final String TABLE_NOTIFICATIONS_SEQUENCE = "SEQ_MON_N";
+    public static final String DBITEM_MON_NOTIFICATION = DBItemNotification.class.getSimpleName();
+    public static final String TABLE_MON_NOTIFICATIONS = "MON_NOTIFICATIONS";
+    public static final String TABLE_MON_NOTIFICATIONS_SEQUENCE = "SEQ_MON_N";
 
-    public static final String DBITEM_NOTIFICATION_MONITOR = DBItemNotificationMonitor.class.getSimpleName();
-    public static final String TABLE_NOTIFICATION_MONITORS = "MON_NOT_MONITORS";
-    public static final String TABLE_NOTIFICATION_MONITORS_SEQUENCE = "SEQ_MON_NM";
+    public static final String DBITEM_MON_NOT_MONITOR = DBItemNotificationMonitor.class.getSimpleName();
+    public static final String TABLE_MON_NOT_MONITORS = "MON_NOT_MONITORS";
+    public static final String TABLE_MON_NOT_MONITORS_SEQUENCE = "SEQ_MON_NM";
 
-    public static final String DBITEM_NOTIFICATION_WORKFLOW = DBItemNotificationWorkflow.class.getSimpleName();
-    public static final String TABLE_NOTIFICATION_WORKFLOWS = "MON_NOT_WORKFLOWS";
+    public static final String DBITEM_MON_NOT_WORKFLOW = DBItemNotificationWorkflow.class.getSimpleName();
+    public static final String TABLE_MON_NOT_WORKFLOWS = "MON_NOT_WORKFLOWS";
 
-    public static final String DBITEM_NOTIFICATION_ACKNOWLEDGEMENT = DBItemNotificationAcknowledgement.class.getSimpleName();
-    public static final String TABLE_NOTIFICATION_ACKNOWLEDGEMENTS = "MON_NOT_ACKNOWLEDGEMENTS";
+    public static final String DBITEM_MON_NOT_ACKNOWLEDGEMENT = DBItemNotificationAcknowledgement.class.getSimpleName();
+    public static final String TABLE_MON_NOT_ACKNOWLEDGEMENTS = "MON_NOT_ACKNOWLEDGEMENTS";
 
     /** Daily plan tables */
     public static final String DAILY_PLAN_ORDERS_TABLE = "DPL_ORDERS";

@@ -17,7 +17,7 @@ import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.model.order.OrderStateText;
 
 @Entity
-@Table(name = DBLayer.TABLE_MONITORING_ORDERS)
+@Table(name = DBLayer.TABLE_MON_ORDERS)
 public class DBItemMonitoringOrder extends DBItem {
 
     private static final long serialVersionUID = 1L;
