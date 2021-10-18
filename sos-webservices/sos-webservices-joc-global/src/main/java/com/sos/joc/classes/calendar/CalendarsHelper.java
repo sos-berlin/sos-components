@@ -65,14 +65,20 @@ public class CalendarsHelper {
                 "yyyy-MM-dd", scala.Option.empty());
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
         
-        for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
-            if (curControllerId != null && controllerId.equals(curControllerId)) {
-                ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken,
-                        jocError, controllerId));
-            } else {
-                ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, null, null, null));
-            }
-        }
+        LOGGER.info("Try to submit DailyPlan-Calendar: " + c.toString());
+        
+        Proxies.getControllerDbInstances().keySet().forEach(controllerId -> {
+            ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> {
+                if (curControllerId != null && controllerId.equals(curControllerId)) {
+                    ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
+                } else {
+                    ProblemHelper.postProblemEventIfExist(e, null, null, null);
+                }
+                if (e.isRight()) {
+                    LOGGER.info("DailyPlan-Calendar submitted to " + controllerId); 
+                }
+            });
+        });
     }
     
     public static void deploy(com.sos.sign.model.calendar.Calendar cal) {
