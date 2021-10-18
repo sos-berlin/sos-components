@@ -82,7 +82,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
                     //configurationsFilter.setObjectType(ConfigurationGlobals.OBJECT_TYPE);
                     configurationsFilter.setObjectType(null);
 
-                    defaultGlobalSettings = new ConfigurationGlobals().getDefaults();
+                    defaultGlobalSettings = new ConfigurationGlobals().getClonedDefaults();
                     if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
                         // read only user settings without permissions
                         if (defaultGlobalSettings != null) {

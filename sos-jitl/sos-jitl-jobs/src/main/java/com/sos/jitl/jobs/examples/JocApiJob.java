@@ -1,9 +1,6 @@
 package com.sos.jitl.jobs.examples;
 
-import java.util.Map;
-
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
-import com.sos.jitl.jobs.common.Job;
 import com.sos.jitl.jobs.common.JobApiExecutor;
 import com.sos.jitl.jobs.common.JobStep;
 

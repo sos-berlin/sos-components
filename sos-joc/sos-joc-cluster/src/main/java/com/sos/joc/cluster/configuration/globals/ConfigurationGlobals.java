@@ -79,6 +79,10 @@ public class ConfigurationGlobals {
     public GlobalSettings getDefaults() {
         return defaults;
     }
+    
+    public GlobalSettings getClonedDefaults() {
+        return clone(defaults);
+    }
 
     private void addDefaultSection(DefaultSections section, int ordering) {
         defaults.setAdditionalProperty(section.name(), getClassInstance(section).toDefaults(ordering));

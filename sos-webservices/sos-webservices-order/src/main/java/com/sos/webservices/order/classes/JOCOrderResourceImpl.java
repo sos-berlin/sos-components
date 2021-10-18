@@ -41,7 +41,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     protected void setSettings() {
         if (Globals.configurationGlobals == null) {
             settings = new OrderInitiatorSettings();
-            settings.setTimeZone("Europe/Berlin");
+            settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             LOGGER.warn("Could not read settings. Using defaults");
         } else {

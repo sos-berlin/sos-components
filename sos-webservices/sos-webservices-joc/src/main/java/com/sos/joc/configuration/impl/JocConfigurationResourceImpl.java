@@ -23,6 +23,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.calendar.CalendarsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
@@ -91,6 +92,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
             }
             String oldConfiguration = null;
+            boolean updateControllerCalendar = false;
             
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
@@ -120,7 +122,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     // store only user settings without permissions
                     try {
-                        boolean hint = false;
+                        boolean onlyUserSection = false;
                         JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
                         JsonObject obj = rdr.readObject();
                         Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
@@ -129,7 +131,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                             if (!ds.equals(DefaultSections.user)) {
                                 if (oldObj.isPresent() && oldObj.get().get(ds.name()) != null) {
                                     builder.add(ds.name(), oldObj.get().get(ds.name()));
-                                    hint = true;
+                                    onlyUserSection = true;
                                 }
                             } else {
                                 if (obj.get(ds.name()) != null) {
@@ -140,12 +142,36 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                             }
                         }
                         configuration.setConfigurationItem(builder.build().toString());
-                        if (hint) {
+                        if (onlyUserSection) {
                             if (getJocError() != null && !getJocError().getMetaInfo().isEmpty()) {
                                 LOGGER.info(getJocError().printMetaInfo());
                                 getJocError().clearMetaInfo();
                             }
                             LOGGER.info("Due to missing permissions only settings of the 'user' section were considered.");
+                        }
+                    } catch (Exception e) {
+                        //
+                    }
+                } else {
+                    // Calendar for controller
+                    try {
+                        Optional<JsonObject> oldObj = getOldJsonObject(oldConfiguration);
+                        updateControllerCalendar = !oldObj.isPresent() || oldObj.get().get(DefaultSections.dailyplan.name()) == null;
+                        if (!updateControllerCalendar) {
+                            JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
+                            JsonObject obj = rdr.readObject();
+                            
+                            JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
+                            JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
+                            if (curDailyPlan != null) {
+                                String oldTimeZone = oldDailyPlan.getString("time_zone", "");
+                                String oldPeriodBegin = oldDailyPlan.getString("period_begin", "");
+                                String curTimeZone = curDailyPlan.getString("time_zone", oldTimeZone);
+                                String curPeriodBegin = curDailyPlan.getString("period_begin", oldPeriodBegin);
+                                if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
+                                    updateControllerCalendar = true;
+                                }
+                            }
                         }
                     } catch (Exception e) {
                         //
@@ -217,7 +243,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
            
             if (oldConfiguration != null && configuration.getConfigurationType().equals(ConfigurationType.GLOBALS)) {
-                postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem(), getJocError());
+                postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem(),
+                        updateControllerCalendar, accessToken, getJocError());
             }
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
@@ -478,7 +505,8 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         return Globals.objectMapper.readValue(body, Configuration.class);
     }
     
-    private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings, JocError jocError) {
+    private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings, boolean updateControllerCalendar,
+            String accessToken, JocError jocError) {
         try {
             GlobalSettings old = getSettings(oldSettings);
             GlobalSettings current = getSettings(currentSettings);
@@ -509,6 +537,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 ConfigurationGlobals configurations = new ConfigurationGlobals();
                 configurations.setConfigurationValues(current);
                 Globals.configurationGlobals = configurations;
+                
+                if (updateControllerCalendar) {
+                    CalendarsHelper.updateDailyPlanCalendar(controllerId, accessToken, jocError);
+                }
 
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
             }

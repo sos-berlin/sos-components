@@ -713,7 +713,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     settings = reader.getSettings(configuration);
                 } else {
                     settings = new OrderInitiatorSettings();
-                    settings.setTimeZone("Europe/Berlin");
+                    settings.setTimeZone("Etc/UTC");
                     settings.setPeriodBegin("00:00");
                 }
 
@@ -777,7 +777,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     settings = reader.getSettings(configuration);
                 } else {
                     settings = new OrderInitiatorSettings();
-                    settings.setTimeZone("Europe/Berlin");
+                    settings.setTimeZone("Etc/UTC");
                     settings.setPeriodBegin("00:00");
                 }
                 DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);

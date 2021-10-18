@@ -36,6 +36,7 @@ import com.sos.joc.classes.JocWebserviceDataContainer;
 import com.sos.joc.classes.SSLContext;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
 import com.sos.joc.db.DBLayer;
@@ -468,6 +469,11 @@ public class Globals {
     public static ConfigurationGlobalsUser getConfigurationGlobalsUser() {
         return Globals.configurationGlobals == null ? new ConfigurationGlobalsUser() : (ConfigurationGlobalsUser) Globals.configurationGlobals
                 .getConfigurationSection(DefaultSections.user);
+    }
+    
+    public static ConfigurationGlobalsDailyPlan getConfigurationGlobalsDailyPlan() {
+        return Globals.configurationGlobals == null ? new ConfigurationGlobalsDailyPlan() : (ConfigurationGlobalsDailyPlan) Globals.configurationGlobals
+                .getConfigurationSection(DefaultSections.dailyplan);
     }
     
     // -1: current version is older, 0: current version is equal, 1: current version is younger
