@@ -93,8 +93,10 @@ public class SSLContext {
         if (keystore != null || truststore != null) {
             try {
                 SSLContextBuilder sslContextBuilder = SSLContexts.custom();
-                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory.getDefaultAlgorithm()));
-                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm", TrustManagerFactory.getDefaultAlgorithm()));
+                sslContextBuilder.setKeyManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_keymanagerfactory_algorithm", KeyManagerFactory
+                        .getDefaultAlgorithm()));
+                sslContextBuilder.setTrustManagerFactoryAlgorithm(sosJocProperties.getProperty("ssl_trustmanagerfactory_algorithm",
+                        TrustManagerFactory.getDefaultAlgorithm()));
                 if (keystore != null) {
                     sslContextBuilder.loadKeyMaterial(keystore, keyPassChars);
                 }

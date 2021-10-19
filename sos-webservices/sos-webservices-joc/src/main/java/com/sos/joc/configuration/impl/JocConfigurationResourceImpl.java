@@ -164,10 +164,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                             JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
                             JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
                             if (curDailyPlan != null) {
-                                String oldTimeZone = oldDailyPlan.getString("time_zone", "");
-                                String oldPeriodBegin = oldDailyPlan.getString("period_begin", "");
-                                String curTimeZone = curDailyPlan.getString("time_zone", oldTimeZone);
-                                String curPeriodBegin = curDailyPlan.getString("period_begin", oldPeriodBegin);
+                                String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan
+                                        .getJsonObject("time_zone").getString("value", "");
+                                String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? ""
+                                        : oldDailyPlan.getJsonObject("period_begin").getString("value", "");
+                                String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject(
+                                        "time_zone").getString("value", oldTimeZone);
+                                String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
+                                        .getJsonObject("period_begin").getString("value", oldPeriodBegin);
                                 if (!curTimeZone.equals(oldTimeZone) || !curPeriodBegin.equals(oldPeriodBegin)) {
                                     updateControllerCalendar = true;
                                     LOGGER.info("DailyPlan settings are changed. Calendar has to be updated.");

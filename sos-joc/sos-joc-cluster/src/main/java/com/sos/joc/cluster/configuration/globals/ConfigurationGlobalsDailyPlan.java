@@ -6,8 +6,8 @@ import com.sos.joc.model.configuration.globals.GlobalSettingsSectionValueType;
 
 public class ConfigurationGlobalsDailyPlan extends AConfigurationSection {
 
-    private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", "UTC", GlobalSettingsSectionValueType.TIMEZONE);
-    private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "00:00", GlobalSettingsSectionValueType.TIME);
+    private ConfigurationEntry timeZone = new ConfigurationEntry("time_zone", "Etc/UTC", GlobalSettingsSectionValueType.TIMEZONE);
+    private ConfigurationEntry periodBegin = new ConfigurationEntry("period_begin", "00:00:00", GlobalSettingsSectionValueType.TIME);
     private ConfigurationEntry startTime = new ConfigurationEntry("start_time", "", GlobalSettingsSectionValueType.TIME);
 
     private ConfigurationEntry daysAheadPlan = new ConfigurationEntry("days_ahead_plan", "7", GlobalSettingsSectionValueType.NONNEGATIVEINTEGER);
