@@ -18,6 +18,7 @@ import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.event.bean.proxy.ProxyRemoved;
+import com.sos.joc.event.bean.proxy.ProxyStarted;
 import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
@@ -67,6 +68,24 @@ public class CalendarsHelper {
                 //
             }
         }
+    }
+    
+    @Subscribe({ ProxyStarted.class })
+    public static void updateProxy(ProxyStarted evt) {
+            ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
+            Flux<JUpdateItemOperation> itemOperation = getItemOperation(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf
+                    .getPeriodBegin())));
+            try {
+                ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
+                    if (e.isRight()) {
+                        LOGGER.info("DailyPlan-Calendar submitted to " + evt.getControllerId());
+                    } else {
+                        failedControllerIds.add(evt.getControllerId());
+                    }
+                });
+            } catch (Exception e) {
+                failedControllerIds.add(evt.getControllerId());
+            }
     }
     
     public static synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
