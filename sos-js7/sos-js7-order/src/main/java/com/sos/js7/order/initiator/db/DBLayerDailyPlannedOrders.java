@@ -40,21 +40,21 @@ public class DBLayerDailyPlannedOrders {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlannedOrders.class);
 
     private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
+    private static final String WHERE_PARAM_CURRENT_TIME = "currentTime";
 
-    private static final String DBItemDailyPlannedOrders = DBItemDailyPlanOrder.class.getSimpleName();
-    private static final String DBItemDailyPlanVariables = DBItemDailyPlanVariable.class.getSimpleName();
-    private SOSHibernateSession sosHibernateSession;
+    private SOSHibernateSession session;
+    private boolean whereHasCurrentTime;
 
     public DBLayerDailyPlannedOrders(SOSHibernateSession session) {
-        this.sosHibernateSession = session;
+        this.session = session;
     }
 
     public void setSession(SOSHibernateSession session) {
-        this.sosHibernateSession = session;
+        this.session = session;
     }
 
     public DBItemDailyPlanOrder getPlanDbItem(final Long id) throws Exception {
-        return (DBItemDailyPlanOrder) sosHibernateSession.get(DBItemDailyPlanOrder.class, id);
+        return (DBItemDailyPlanOrder) session.get(DBItemDailyPlanOrder.class, id);
     }
 
     public FilterDailyPlannedOrders resetFilter() {
@@ -69,13 +69,13 @@ public class DBLayerDailyPlannedOrders {
     public int deleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
         int row = 0;
 
-        String q = "select id from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
-        String hql = "delete from " + DBItemDailyPlanVariables + " where plannedOrderId in (" + q + ")";
+        String q = "select id from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true);
+        String hql = "delete from " + DBLayer.DBITEM_DPL_ORDER_VARIABLES + " where plannedOrderId in (" + q + ")";
 
-        Query<DBItemDailyPlanVariable> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
         query = bindParameters(filter, query);
 
-        row = sosHibernateSession.executeUpdate(query);
+        row = session.executeUpdate(query);
         return row;
     }
 
@@ -110,20 +110,20 @@ public class DBLayerDailyPlannedOrders {
 
     public int delete(FilterDailyPlannedOrders filter) throws SOSHibernateException {
 
-        String hql = "delete " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
-        Query<DBItemDailyPlanOrder> query = sosHibernateSession.createQuery(hql);
+        String hql = "delete " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true);
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
         bindParameters(filter, query);
 
-        int row = sosHibernateSession.executeUpdate(query);
+        int row = session.executeUpdate(query);
         return row;
     }
 
     public long deleteInterval(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String hql = "delete from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath");
+        String hql = "delete from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true);
         int row = 0;
-        Query<DBItemDailyPlanOrder> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
 
-        row = sosHibernateSession.executeUpdate(query);
+        row = session.executeUpdate(query);
         return row;
     }
 
@@ -153,177 +153,221 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public String getWhere(FilterDailyPlannedOrders filter) {
-        return getWhere(filter, "");
+        return getWhere(filter, "", true);
     }
 
-    private String getWhere(FilterDailyPlannedOrders filter, String pathField) {
-        String where = "";
+    private String getWhere(FilterDailyPlannedOrders filter, String pathField, boolean useHistoryOrderState) {
+        whereHasCurrentTime = false;
+
+        StringBuilder where = new StringBuilder();
         String and = "";
 
         if (filter.getPlannedStart() != null) {
-            where += and + " p.plannedStart = :plannedStart";
+            where.append(and).append(" p.plannedStart = :plannedStart");
             and = " and ";
         }
 
         if (filter.getPeriodBegin() != null) {
-            where += and + " p.periodBegin = :periodBegin";
+            where.append(and).append(" p.periodBegin = :periodBegin");
             and = " and ";
         }
 
         if (filter.getPeriodEnd() != null) {
-            where += and + " p.periodEnd = :periodEnd";
+            where.append(and).append(" p.periodEnd = :periodEnd");
             and = " and ";
         }
 
         if (filter.getRepeatInterval() != null) {
-            where += and + " p.repeatInterval = :repeatInterval";
+            where.append(and).append(" p.repeatInterval = :repeatInterval");
             and = " and ";
         }
 
         if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartTo() != null) {
-            where += and + " p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo";
+            where.append(and).append(" p.plannedStart >= :plannedStartFrom and p.plannedStart < :plannedStartTo");
             and = " and ";
         }
         if (filter.getControllerId() != null && !"".equals(filter.getControllerId())) {
-            where += and + " p.controllerId = :controllerId";
+            where.append(and).append(" p.controllerId = :controllerId");
             and = " and ";
         }
 
         if (filter.getWorkflowName() != null && !"".equals(filter.getWorkflowName())) {
-            where += and + " p.workflowName = :workflowName";
+            where.append(and).append(" p.workflowName = :workflowName");
             and = " and ";
         }
 
         if (filter.getScheduleName() != null && !"".equals(filter.getScheduleName())) {
-            where += and + " p.scheduleName = :scheduleName";
+            where.append(and).append(" p.scheduleName = :scheduleName");
             and = " and ";
         }
 
         if (filter.getOrderName() != null && !"".equals(filter.getOrderName())) {
-            where += and + " p.orderName = :orderName";
+            where.append(and).append(" p.orderName = :orderName");
             and = " and ";
         }
 
         if (filter.getCalendarId() != null) {
-            where += and + " p.calendarId = :calendarId";
+            where.append(and).append(" p.calendarId = :calendarId");
             and = " and ";
         }
         if (filter.getSubmitted() != null) {
-            where += and + "  p.submitted = :submitted";
+            where.append(and).append("  p.submitted = :submitted");
             and = " and ";
         }
 
         if (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getListOfWorkflowNames(), "p.workflowName");
+            where.append(and).append(SearchStringHelper.getStringListSql(filter.getListOfWorkflowNames(), "p.workflowName"));
             and = " and ";
         }
         if (filter.getListOfScheduleNames() != null && filter.getListOfScheduleNames().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getListOfScheduleNames(), "p.scheduleName");
+            where.append(and).append(SearchStringHelper.getStringListSql(filter.getListOfScheduleNames(), "p.scheduleName"));
             and = " and ";
         }
 
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
-            where += String.format(and + " p.orderId %s :orderId", SearchStringHelper.getSearchOperator(filter.getOrderId()));
+            where.append(String.format(and + " p.orderId %s :orderId", SearchStringHelper.getSearchOperator(filter.getOrderId())));
             and = " and ";
         }
         if (filter.getPlannedOrderId() != null) {
-            where += and + "p.id=:plannedOrderId";
+            where.append(and).append("p.id=:plannedOrderId");
             and = " and ";
         }
 
         if (filter.getStartMode() != null) {
-            where += and + "p.startMode=:startMode";
+            where.append(and).append("p.startMode=:startMode");
             and = " and ";
         }
 
-        if (filter.getIsLate() != null) {
-            if (filter.isLate()) {
-                where += and + " (o.state is null and p.plannedStart < current_time()  or " + "o.state <> " + DailyPlanOrderStateText.PLANNED
-                        .intValue() + " and o.startTime - p.plannedStart >= " + DAILY_PLAN_LATE_TOLERANCE + ")  ";
-            } else {
-                where += and + " (o.state is null and p.plannedStart > current_time() or " + "o.state is not null and o.state <> "
-                        + DailyPlanOrderStateText.PLANNED.intValue() + " and o.startTime - p.plannedStart < " + DAILY_PLAN_LATE_TOLERANCE + ") ";
-            }
-
-            and = " and ";
-        }
+        boolean isLate = filter.getIsLate() != null && filter.isLate();
         if (filter.getStates() != null && filter.getStates().size() > 0) {
-            where += and + "(";
-            for (DailyPlanOrderStateText state : filter.getStates()) {
-                if (state.intValue() == DailyPlanOrderStateText.PLANNED.intValue()) {
-                    where += " p.submitted=0 or";
-                } else {
-                    if ((state.intValue() == DailyPlanOrderStateText.SUBMITTED.intValue())) {
-                        where += " ((o.state is null or o.state <> " + DailyPlanOrderStateText.FINISHED.intValue() + ") and (p.submitted=1))" + " or";
-                    } else {
-                        where += " o.state = " + state.intValue() + " or";
+            where.append(and).append(" ");
+
+            DailyPlanOrderStateText state = filter.getStates().get(0);
+            switch (state) {
+            case PLANNED:
+                where.append("p.submitted=0 ");
+                if (useHistoryOrderState) {
+                    if (isLate) {
+                        whereHasCurrentTime = true;
+
+                        where.append("and (");
+                        // TODO o.state ???=
+                        where.append("(");
+                        where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
+                        where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                        where.append(") ");
+                        where.append("or ");
+                        where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
+                        where.append(") ");
                     }
                 }
+                break;
+            case FINISHED:
+                where.append("p.submitted=1 ");
+                if (useHistoryOrderState) {
+                    where.append("and o.state=").append(state.intValue()).append(" ");
+                    if (isLate) {
+                        where.append("and (o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE).append(") ");
+                    }
+                }
+                break;
+            case SUBMITTED:
+                where.append("p.submitted=1 ");
+                if (useHistoryOrderState) {
+                    if (isLate) {
+                        whereHasCurrentTime = true;
+
+                        where.append("and (");
+                        where.append("(");
+                        where.append("o.state <> ").append(DailyPlanOrderStateText.FINISHED.intValue()).append(" ");
+                        where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                        where.append(") ");
+                        where.append("or ");
+                        where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
+                        where.append(") ");
+                    } else {
+                        where.append("and (o.state <> ").append(DailyPlanOrderStateText.FINISHED.intValue()).append(" or o.state is null) ");
+                    }
+                }
+                break;
             }
-            where += " 1=0)";
             and = " and ";
+        } else if (isLate) {
+            if (useHistoryOrderState) {
+                whereHasCurrentTime = true;
+
+                where.append(and).append("(");
+                where.append("(");
+                where.append("o.state <> ").append(DailyPlanOrderStateText.PLANNED.intValue()).append(" ");
+                where.append("and  o.startTime - p.plannedStart >= ").append(DAILY_PLAN_LATE_TOLERANCE);
+                where.append(") ");
+                where.append("or ");
+                where.append("(o.state is null and p.plannedStart < :").append(WHERE_PARAM_CURRENT_TIME).append(") ");
+                where.append(") ");
+                and = " and ";
+            }
         }
 
         if (filter.getListOfSubmissionIds() != null && filter.getListOfSubmissionIds().size() > 0) {
-            where += and + SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId");
+            where.append(and).append(SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId"));
             and = " and ";
         }
 
         if (!"".equals(pathField) && filter.getSetOfScheduleFolders() != null && filter.getSetOfScheduleFolders().size() > 0) {
-            where += and + "(";
+            where.append(and).append("(");
             for (Folder filterFolder : filter.getSetOfScheduleFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder
-                            + "')";
+                    where.append(" (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder
+                            + "')");
                 } else {
-                    where += String.format("p.scheduleFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
-                            filterFolder.getFolder()));
+                    where.append(String.format("p.scheduleFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
+                            filterFolder.getFolder())));
                 }
-                where += " or ";
+                where.append(" or ");
             }
-            where += " 0=1)";
+            where.append(" 0=1)");
             and = " and ";
         }
 
         if (!"".equals(pathField) && filter.getSetOfWorkflowFolders() != null && filter.getSetOfWorkflowFolders().size() > 0) {
-            where += and + "(";
+            where.append(and).append("(");
             for (Folder filterFolder : filter.getSetOfWorkflowFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder
-                            + "')";
+                    where.append(" (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder
+                            + "')");
                 } else {
-                    where += String.format("p.workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
-                            filterFolder.getFolder()));
+                    where.append(String.format("p.workflowFolder" + " %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(
+                            filterFolder.getFolder())));
                 }
-                where += " or ";
+                where.append(" or ");
             }
-            where += " 0=1)";
+            where.append(" 0=1)");
             and = " and ";
         }
 
         boolean hasCyclics = filter.getListOfCyclicOrdersMainParts() != null && filter.getListOfCyclicOrdersMainParts().size() > 0;
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
-            where += and;
+            where.append(and);
             if (hasCyclics) {
-                where += " ( ";
+                where.append(" ( ");
             }
-            where += getOrderListSql(filter.getListOfOrders());
+            where.append(getOrderListSql(filter.getListOfOrders()));
             if (hasCyclics) {
-                where += " or " + getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts());
-                where += ") ";
+                where.append(" or ").append(getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts()));
+                where.append(") ");
             }
             and = " and ";
         } else if (hasCyclics) {
-            where += and + getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts());
+            where.append(and).append(getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts()));
             and = " and ";
         }
 
-        if (!"".equals(where.trim())) {
-            where = "where " + where;
+        if (!"".equals(where.toString().trim())) {
+            return "where " + where.toString();
         }
-        return where;
+        return where.toString();
     }
 
     private <T> Query<T> bindParameters(FilterDailyPlannedOrders filter, Query<T> query) {
@@ -381,6 +425,10 @@ public class DBLayerDailyPlannedOrders {
             query.setParameter("orderName", filter.getOrderName());
         }
 
+        if (whereHasCurrentTime) {
+            query.setParameter(WHERE_PARAM_CURRENT_TIME, new Date());
+        }
+
         return query;
 
     }
@@ -391,8 +439,8 @@ public class DBLayerDailyPlannedOrders {
         if (filter.isCyclicStart()) {
             StringBuilder q = new StringBuilder("select min(p.id) ");
             q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-            q.append(getWhere(filter, "p.schedulePath")).append(" ");
-            q.append("group by orderName,periodBegin,periodEnd,repeatInterval ");
+            q.append(getWhere(filter, "p.schedulePath", false)).append(" ");
+            q.append("group by repeatInterval,periodBegin,periodEnd,orderName ");
 
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
@@ -403,7 +451,7 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
             hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
             hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            hql.append(getWhere(filter, "p.schedulePath")).append(" ");
+            hql.append(getWhere(filter, "p.schedulePath", true)).append(" ");
             hql.append("and p.id in (").append(q).append(") ");
             hql.append(filter.getOrderCriteria());
         } else {
@@ -416,16 +464,16 @@ public class DBLayerDailyPlannedOrders {
             hql.append(",o.id as orderHistoryId, o.startTime as startTime, o.endTime as endTime, o.state as state ");
             hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
             hql.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            hql.append(getWhere(filter, "p.schedulePath")).append(" ");
+            hql.append(getWhere(filter, "p.schedulePath", true)).append(" ");
             hql.append(filter.getOrderCriteria());
         }
 
-        Query<DBItemDailyPlanWithHistory> query = sosHibernateSession.createQuery(hql.toString(), DBItemDailyPlanWithHistory.class);
+        Query<DBItemDailyPlanWithHistory> query = session.createQuery(hql.toString(), DBItemDailyPlanWithHistory.class);
         query = bindParameters(filter, query);
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        return sosHibernateSession.getResultList(query);
+        return session.getResultList(query);
     }
 
     public Object[] getCyclicOrderLastEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
@@ -448,7 +496,7 @@ public class DBLayerDailyPlannedOrders {
         sql.append("join ").append(DBLayer.TABLE_DPL_ORDERS).append(" b ");
         sql.append("on ").append(quote("a.ID")).append("=").append(quote("b.ID"));
 
-        Query<Object[]> query = sosHibernateSession.createNativeQuery(sql.toString());
+        Query<Object[]> query = session.createNativeQuery(sql.toString());
         query.setParameter("orderId", orderId + "%");
         query.setParameter("controllerId", controllerId);
         if (plannedStartFrom != null) {
@@ -457,7 +505,7 @@ public class DBLayerDailyPlannedOrders {
         if (plannedStartTo != null) {
             query.setParameter("plannedStartTo", plannedStartTo);
         }
-        List<Object[]> result = sosHibernateSession.getResultList(query);
+        List<Object[]> result = session.getResultList(query);
         if (result == null || result.size() == 0) {
             return null;
         }
@@ -465,7 +513,7 @@ public class DBLayerDailyPlannedOrders {
     }
 
     private String quote(String fieldName) {
-        return sosHibernateSession.getFactory().quoteColumn(fieldName);
+        return session.getFactory().quoteColumn(fieldName);
     }
 
     public List<DBItemDailyPlanWithHistory> getDailyPlanWithHistoryList(FilterDailyPlannedOrders filter, final int limit)
@@ -494,14 +542,15 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public List<DBItemDailyPlanOrder> getDailyPlanListExecute(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter, "p.schedulePath") + filter.getOrderCriteria() + filter.getSortMode();
-        Query<DBItemDailyPlanOrder> query = sosHibernateSession.createQuery(q);
+        String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter, "p.schedulePath", true) + filter.getOrderCriteria() + filter
+                .getSortMode();
+        Query<DBItemDailyPlanOrder> query = session.createQuery(q);
         query = bindParameters(filter, query);
 
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        return sosHibernateSession.getResultList(query);
+        return session.getResultList(query);
     }
 
     public List<DBItemDailyPlanOrder> getDailyPlanList(FilterDailyPlannedOrders filter, final int limit) throws SOSHibernateException {
@@ -529,33 +578,15 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public DBItemDailyPlanOrder getUniqueDailyPlan(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String q = "from " + DBItemDailyPlannedOrders + " p " + getWhere(filter);
-        Query<DBItemDailyPlanOrder> query = sosHibernateSession.createQuery(q);
+        String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter);
+        Query<DBItemDailyPlanOrder> query = session.createQuery(q);
         query = bindParameters(filter, query);
 
-        List<DBItemDailyPlanOrder> result = sosHibernateSession.getResultList(query);
+        List<DBItemDailyPlanOrder> result = session.getResultList(query);
         if (result != null && result.size() > 0) {
             return result.get(0);
         } else {
             return null;
-        }
-    }
-
-    public Date getMaxPlannedStart(String jobschedulerId) {
-        String q = "select max(plannedStart) from " + DBItemDailyPlannedOrders + " where jobschedulerId=:jobschedulerId";
-        Query<Date> query;
-        try {
-            query = sosHibernateSession.createQuery(q);
-            query.setParameter("jobschedulerId", jobschedulerId);
-            Date d = sosHibernateSession.getSingleValue(query);
-
-            if (d != null) {
-                return d;
-            } else {
-                return new Date();
-            }
-        } catch (SOSHibernateException e) {
-            return new Date();
         }
     }
 
@@ -587,58 +618,58 @@ public class DBLayerDailyPlannedOrders {
             dbItemDailyPlanVariables.setModified(JobSchedulerDate.nowInUtc());
             dbItemDailyPlanVariables.setPlannedOrderId(id);
             dbItemDailyPlanVariables.setVariableValue(variablesJson);
-            sosHibernateSession.save(dbItemDailyPlanVariables);
+            session.save(dbItemDailyPlanVariables);
         }
     }
 
     public Long store(PlannedOrder plannedOrder, String id, Integer nr, Integer size) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException, ParseException, JsonProcessingException {
 
-        DBItemDailyPlanOrder dbItemDailyPlannedOrders = new DBItemDailyPlanOrder();
-        dbItemDailyPlannedOrders.setSchedulePath(plannedOrder.getSchedule().getPath());
-        dbItemDailyPlannedOrders.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
-        dbItemDailyPlannedOrders.setOrderName(plannedOrder.getOrderName());
-        dbItemDailyPlannedOrders.setOrderId(plannedOrder.getFreshOrder().getId());
+        DBItemDailyPlanOrder item = new DBItemDailyPlanOrder();
+        item.setSchedulePath(plannedOrder.getSchedule().getPath());
+        item.setScheduleName(Paths.get(plannedOrder.getSchedule().getPath()).getFileName().toString());
+        item.setOrderName(plannedOrder.getOrderName());
+        item.setOrderId(plannedOrder.getFreshOrder().getId());
 
         Date start = new Date(plannedOrder.getFreshOrder().getScheduledFor());
-        dbItemDailyPlannedOrders.setPlannedStart(start);
+        item.setPlannedStart(start);
         if (plannedOrder.getPeriod().getSingleStart() == null) {
-            dbItemDailyPlannedOrders.setStartMode(1);
-            dbItemDailyPlannedOrders.setPeriodBegin(start, plannedOrder.getPeriod().getBegin());
-            dbItemDailyPlannedOrders.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
-            dbItemDailyPlannedOrders.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
+            item.setStartMode(1);
+            item.setPeriodBegin(start, plannedOrder.getPeriod().getBegin());
+            item.setPeriodEnd(start, plannedOrder.getPeriod().getEnd());
+            item.setRepeatInterval(plannedOrder.getPeriod().getRepeat());
         } else {
-            dbItemDailyPlannedOrders.setStartMode(0);
+            item.setStartMode(0);
         }
 
         String workflowFolder = Paths.get(plannedOrder.getSchedule().getWorkflowPath()).getParent().toString().replace('\\', '/');
         String scheduleFolder = Paths.get(plannedOrder.getSchedule().getPath()).getParent().toString().replace('\\', '/');
 
-        dbItemDailyPlannedOrders.setControllerId(plannedOrder.getControllerId());
-        dbItemDailyPlannedOrders.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-        dbItemDailyPlannedOrders.setWorkflowFolder(workflowFolder);
-        dbItemDailyPlannedOrders.setScheduleFolder(scheduleFolder);
-        dbItemDailyPlannedOrders.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
-        dbItemDailyPlannedOrders.setSubmitted(false);
-        dbItemDailyPlannedOrders.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
-        dbItemDailyPlannedOrders.setCalendarId(plannedOrder.getCalendarId());
-        dbItemDailyPlannedOrders.setCreated(JobSchedulerDate.nowInUtc());
-        dbItemDailyPlannedOrders.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
-        dbItemDailyPlannedOrders.setModified(JobSchedulerDate.nowInUtc());
+        item.setControllerId(plannedOrder.getControllerId());
+        item.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+        item.setWorkflowFolder(workflowFolder);
+        item.setScheduleFolder(scheduleFolder);
+        item.setWorkflowName(plannedOrder.getFreshOrder().getWorkflowPath());
+        item.setSubmitted(false);
+        item.setSubmissionHistoryId(plannedOrder.getSubmissionHistoryId());
+        item.setCalendarId(plannedOrder.getCalendarId());
+        item.setCreated(JobSchedulerDate.nowInUtc());
+        item.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
+        item.setModified(JobSchedulerDate.nowInUtc());
 
         if (nr != 0) {
             String nrAsString = "00000" + String.valueOf(nr);
             nrAsString = nrAsString.substring(nrAsString.length() - 5);
 
             String sizeAsString = String.valueOf(size);
-            dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<nr.....>", nrAsString));
-            dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<size>", sizeAsString));
+            item.setOrderId(item.getOrderId().replaceAll("<nr.....>", nrAsString));
+            item.setOrderId(item.getOrderId().replaceAll("<size>", sizeAsString));
         }
-        dbItemDailyPlannedOrders.setOrderId(dbItemDailyPlannedOrders.getOrderId().replaceAll("<id.*>", id));
-        plannedOrder.getFreshOrder().setId(dbItemDailyPlannedOrders.getOrderId());
-        sosHibernateSession.save(dbItemDailyPlannedOrders);
-        storeVariables(plannedOrder, dbItemDailyPlannedOrders.getId());
-        return dbItemDailyPlannedOrders.getId();
+        item.setOrderId(item.getOrderId().replaceAll("<id.*>", id));
+        plannedOrder.getFreshOrder().setId(item.getOrderId());
+        session.save(item);
+        storeVariables(plannedOrder, item.getId());
+        return item.getId();
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -647,22 +678,22 @@ public class DBLayerDailyPlannedOrders {
         filter.setSubmitTime(null);
         if (filter.getSubmitted()) {
             filter.setSubmitted(null);
-            hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
+            hql = "update  " + DBLayer.DBITEM_DPL_ORDERS + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
             filter.setSubmitTime(JobSchedulerDate.nowInUtc());
         } else {
             filter.setSubmitted(null);
-            hql = "update  " + DBItemDailyPlannedOrders + " p set submitted=0,submitTime=null  " + getWhere(filter);
+            hql = "update  " + DBLayer.DBITEM_DPL_ORDERS + " p set submitted=0,submitTime=null  " + getWhere(filter);
         }
         LOGGER.debug("Update submitting on controller:" + hql);
 
-        Query<DBItemDailyPlanSubmission> query = sosHibernateSession.createQuery(hql);
+        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
 
         bindParameters(filter, query);
         int retryCount = 20;
         int row = -1;
         do {
             try {
-                row = sosHibernateSession.executeUpdate(query);
+                row = session.executeUpdate(query);
                 if (retryCount != 20) {
                     LOGGER.info("deadlock resolved successfully:" + hql);
                 }
@@ -690,25 +721,25 @@ public class DBLayerDailyPlannedOrders {
         store(plannedOrder, Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3), 0, 0);
     }
 
-    public DBItemDailyPlanOrder insertFrom(DBItemDailyPlanOrder dbItemDailyPlanOrders) throws SOSHibernateException {
-        dbItemDailyPlanOrders.setSubmitted(false);
-        dbItemDailyPlanOrders.setCreated(JobSchedulerDate.nowInUtc());
-        dbItemDailyPlanOrders.setModified(JobSchedulerDate.nowInUtc());
-        sosHibernateSession.save(dbItemDailyPlanOrders);
-        String newOrderId = DailyPlanHelper.modifiedOrderId(dbItemDailyPlanOrders.getOrderId(), dbItemDailyPlanOrders.getId());
-        dbItemDailyPlanOrders.setOrderId(newOrderId);
-        sosHibernateSession.update(dbItemDailyPlanOrders);
+    public DBItemDailyPlanOrder insertFrom(DBItemDailyPlanOrder item) throws SOSHibernateException {
+        item.setSubmitted(false);
+        item.setCreated(JobSchedulerDate.nowInUtc());
+        item.setModified(JobSchedulerDate.nowInUtc());
+        session.save(item);
+        String newOrderId = DailyPlanHelper.modifiedOrderId(item.getOrderId(), item.getId());
+        item.setOrderId(newOrderId);
+        session.update(item);
 
-        return dbItemDailyPlanOrders;
+        return item;
     }
 
     public DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
             throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addCyclicOrderIds");
+            session = Globals.createSosHibernateStatelessConnection("addCyclicOrderIds");
 
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(controllerId);
@@ -745,7 +776,7 @@ public class DBLayerDailyPlannedOrders {
                 throw new DBMissingDataException("Expected one record for order-id " + filter.getOrderId());
             }
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 
