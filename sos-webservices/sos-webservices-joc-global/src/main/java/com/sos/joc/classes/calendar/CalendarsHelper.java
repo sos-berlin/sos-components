@@ -1,8 +1,7 @@
 package com.sos.joc.classes.calendar;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -17,7 +16,8 @@ import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
-import com.sos.joc.exceptions.JocDeployException;
+import com.sos.joc.event.bean.proxy.ProxyCoupled;
+import com.sos.joc.event.bean.proxy.ProxyRemoved;
 import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
@@ -32,6 +32,7 @@ import scala.concurrent.duration.FiniteDuration;
 public class CalendarsHelper {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(CalendarsHelper.class);
+    private static volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
     public static final String dailyPlanCalendarName = "dailyPlan";
     
     public CalendarsHelper() {
@@ -39,12 +40,36 @@ public class CalendarsHelper {
     }
     
     @Subscribe({ DailyPlanCalendarEvent.class })
-    public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
+    public static void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         //TODO check if Calendar exists
         updateDailyPlanCalendar(null, null, null);
     }
     
-    public static void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
+    @Subscribe({ ProxyRemoved.class })
+    public static void removeProxy(ProxyRemoved evt) {
+        failedControllerIds.remove(evt.getControllerId());
+    }
+    
+    @Subscribe({ ProxyCoupled.class })
+    public static void updateProxy(ProxyCoupled evt) {
+        if (failedControllerIds.contains(evt.getControllerId())) {
+            ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
+            Flux<JUpdateItemOperation> itemOperation = getItemOperation(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf
+                    .getPeriodBegin())));
+            try {
+                ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
+                    if (e.isRight()) {
+                        LOGGER.info("DailyPlan-Calendar submitted to " + evt.getControllerId());
+                        failedControllerIds.remove(evt.getControllerId());
+                    }
+                });
+            } catch (Exception e) {
+                //
+            }
+        }
+    }
+    
+    public static synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
         ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
 
         try {
@@ -55,22 +80,11 @@ public class CalendarsHelper {
         }
     }
     
-    public static void deployDailyPlanCalendar(String timezone, long dateOffset, String curControllerId, String accessToken, JocError jocError) {
+    public static synchronized void deployDailyPlanCalendar(String timezone, long dateOffset, String curControllerId, String accessToken, JocError jocError) {
 
-        scala.util.Either<Problem, Timezone> t = Timezone.checked(timezone);
-        Timezone _timezone = null;
-        if (t.isRight()) {
-            _timezone = t.toOption().get();
-        } else {
-            throw new IllegalArgumentException("Time zone (" + timezone + ") is not available");
-        }
-        Calendar c = Calendar.apply(CalendarPath.of(dailyPlanCalendarName), _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
-                "yyyy-MM-dd", scala.Option.empty());
-        Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
+        Flux<JUpdateItemOperation> itemOperation = getItemOperation(timezone, dateOffset);
         
-        LOGGER.info("Try to submit DailyPlan-Calendar: " + c.toString());
-        
-        Set<String> failedControllerIds = new HashSet<>();
+        failedControllerIds.clear();
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             try {
                 ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> {
@@ -81,6 +95,8 @@ public class CalendarsHelper {
                     }
                     if (e.isRight()) {
                         LOGGER.info("DailyPlan-Calendar submitted to " + controllerId); 
+                    } else {
+                        failedControllerIds.add(controllerId);
                     }
                 });
             } catch (Exception e) {
@@ -93,13 +109,28 @@ public class CalendarsHelper {
             }
         };
         
-        if (!failedControllerIds.isEmpty()) {
-            throw new JocDeployException("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
-        }
+//        if (!failedControllerIds.isEmpty()) {
+//            LOGGER.warn("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
+//            //throw new JocDeployException("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
+//        }
     }
     
-    public static void deploy(com.sos.sign.model.calendar.Calendar cal) {
+    public synchronized void deploy(com.sos.sign.model.calendar.Calendar cal) {
         // TODO for maybe other Calendars than dailyPlan
+    }
+    
+    private static Flux<JUpdateItemOperation> getItemOperation(String timezone, long dateOffset) {
+        scala.util.Either<Problem, Timezone> t = Timezone.checked(timezone);
+        Timezone _timezone = null;
+        if (t.isRight()) {
+            _timezone = t.toOption().get();
+        } else {
+            throw new IllegalArgumentException("Time zone (" + timezone + ") is not available");
+        }
+        Calendar c = Calendar.apply(CalendarPath.of(dailyPlanCalendarName), _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
+                "yyyy-MM-dd", scala.Option.empty());
+        LOGGER.info("Try to submit DailyPlan-Calendar: " + c.toString());
+        return Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
     }
     
     private static long convertPeriodBeginToLong(String periodBegin) {
