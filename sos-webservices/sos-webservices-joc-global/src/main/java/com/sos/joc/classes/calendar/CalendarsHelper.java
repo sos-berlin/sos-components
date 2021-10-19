@@ -1,6 +1,8 @@
 package com.sos.joc.classes.calendar;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -15,6 +17,7 @@ import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
+import com.sos.joc.exceptions.JocDeployException;
 import com.sos.joc.exceptions.JocError;
 
 import js7.base.problem.Problem;
@@ -36,7 +39,7 @@ public class CalendarsHelper {
     }
     
     @Subscribe({ DailyPlanCalendarEvent.class })
-    public void initDailyPlanCalendar() {
+    public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         //TODO check if Calendar exists
         updateDailyPlanCalendar(null, null, null);
     }
@@ -67,18 +70,32 @@ public class CalendarsHelper {
         
         LOGGER.info("Try to submit DailyPlan-Calendar: " + c.toString());
         
-        Proxies.getControllerDbInstances().keySet().forEach(controllerId -> {
-            ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> {
-                if (curControllerId != null && controllerId.equals(curControllerId)) {
-                    ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
-                } else {
-                    ProblemHelper.postProblemEventIfExist(e, null, null, null);
+        Set<String> failedControllerIds = new HashSet<>();
+        for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+            try {
+                ControllerApi.of(controllerId).updateItems(itemOperation).thenAccept(e -> {
+                    if (curControllerId != null && controllerId.equals(curControllerId)) {
+                        ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);
+                    } else {
+                        ProblemHelper.postProblemEventIfExist(e, null, null, null);
+                    }
+                    if (e.isRight()) {
+                        LOGGER.info("DailyPlan-Calendar submitted to " + controllerId); 
+                    }
+                });
+            } catch (Exception e) {
+                failedControllerIds.add(controllerId);
+                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                    LOGGER.info(jocError.printMetaInfo());
+                    jocError.clearMetaInfo();
                 }
-                if (e.isRight()) {
-                    LOGGER.info("DailyPlan-Calendar submitted to " + controllerId); 
-                }
-            });
-        });
+                LOGGER.error("", e);
+            }
+        };
+        
+        if (!failedControllerIds.isEmpty()) {
+            throw new JocDeployException("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
+        }
     }
     
     public static void deploy(com.sos.sign.model.calendar.Calendar cal) {
