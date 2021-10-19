@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.util.SOSShell;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.proxy.Proxies;
@@ -57,6 +58,7 @@ public class JocServletContainer extends ServletContainer {
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Globals.setProperties();
         WorkflowPaths.init();
+        DailyPlanCalendar.getInstance();
         CompletableFuture.runAsync(() -> {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();

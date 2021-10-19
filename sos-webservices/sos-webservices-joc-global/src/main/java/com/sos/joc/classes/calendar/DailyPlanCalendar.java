@@ -32,27 +32,35 @@ import scala.concurrent.duration.FiniteDuration;
 
 public class DailyPlanCalendar {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
-    private static volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
     public static final String dailyPlanCalendarName = "dailyPlan";
+    private static DailyPlanCalendar instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
+    private volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
     
-    public DailyPlanCalendar() {
+    private DailyPlanCalendar() {
         EventBus.getInstance().register(this);
     }
     
+    public static synchronized DailyPlanCalendar getInstance() {
+        if (instance == null) {
+            instance = new DailyPlanCalendar();
+        }
+        return instance;
+    }
+    
     @Subscribe({ DailyPlanCalendarEvent.class })
-    public static void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
+    public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         //TODO check if Calendar exists
         updateDailyPlanCalendar(null, null, null);
     }
     
     @Subscribe({ ProxyRemoved.class })
-    public static void removeProxy(ProxyRemoved evt) {
+    public void removeProxy(ProxyRemoved evt) {
         failedControllerIds.remove(evt.getControllerId());
     }
     
     @Subscribe({ ProxyCoupled.class })
-    public static void updateProxy(ProxyCoupled evt) {
+    public void updateProxy(ProxyCoupled evt) {
         if (failedControllerIds.contains(evt.getControllerId())) {
             Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
             try {
@@ -69,7 +77,7 @@ public class DailyPlanCalendar {
     }
     
     @Subscribe({ ProxyStarted.class })
-    public static void updateProxy(ProxyStarted evt) {
+    public void updateProxy(ProxyStarted evt) {
         Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
         try {
             ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
@@ -84,7 +92,7 @@ public class DailyPlanCalendar {
         }
     }
     
-    public static synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
+    public synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
         try {
             Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
             deployDailyPlanCalendar(itemOperation, controllerId, accessToken, jocError);
@@ -93,7 +101,7 @@ public class DailyPlanCalendar {
         }
     }
 
-    private static void deployDailyPlanCalendar(Flux<JUpdateItemOperation> itemOperation, String curControllerId, String accessToken,
+    private void deployDailyPlanCalendar(Flux<JUpdateItemOperation> itemOperation, String curControllerId, String accessToken,
             JocError jocError) {
 
         failedControllerIds.clear();

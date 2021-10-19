@@ -544,7 +544,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 Globals.configurationGlobals = configurations;
                 
                 if (updateControllerCalendar) {
-                    DailyPlanCalendar.updateDailyPlanCalendar(controllerId, accessToken, jocError);
+                    DailyPlanCalendar.getInstance().updateDailyPlanCalendar(controllerId, accessToken, jocError);
                 }
 
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
