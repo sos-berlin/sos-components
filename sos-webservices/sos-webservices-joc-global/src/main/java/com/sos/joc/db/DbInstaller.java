@@ -40,6 +40,11 @@ public class DbInstaller {
         try {
             Path createTableSignalFile = Paths.get(System.getProperty("user.dir"), "etc", "createTables");
             boolean createTables = Files.exists(createTableSignalFile);
+            try {
+                Files.deleteIfExists(createTableSignalFile);
+            } catch (IOException e) {
+                LOGGER.warn("Problem deleting signal file " + createTableSignalFile.toString(), e);
+            }
             
             if (Globals.sosCockpitProperties == null) {
                 Globals.sosCockpitProperties = new JocCockpitProperties();
@@ -83,11 +88,6 @@ public class DbInstaller {
                     Globals.sosCockpitProperties.updateProperty("create_db_tables", "false");
                 } catch (IOException e) {
                     LOGGER.warn("Problem updating the joc.properties file", e);
-                }
-                try {
-                    Files.deleteIfExists(createTableSignalFile);
-                } catch (IOException e) {
-                    LOGGER.warn("Problem deleting signal file " + createTableSignalFile.toString(), e);
                 }
             }
             
