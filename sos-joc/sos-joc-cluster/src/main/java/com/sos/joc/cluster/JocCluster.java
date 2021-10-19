@@ -71,6 +71,7 @@ public class JocCluster {
     private String lastActiveMemberId;
     private boolean skipPerform;
     private boolean instanceProcessed;
+    private boolean firstStep = true;
 
     public JocCluster(final SOSHibernateFactory factory, final JocClusterConfiguration jocClusterConfiguration,
             final JocConfiguration jocConfiguration, final Date jocStartDateTime) {
@@ -379,7 +380,8 @@ public class JocCluster {
     }
     
     private void postDailyPlanCalendarEvent(StartupMode mode) {
-        if (StartupMode.automatic.equals(mode) && handler.isActive()) {
+        if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
+            firstStep = false;
             try {
                 LOGGER.info("[post]DailyPlanCalendarEvent");
                 EventBus.getInstance().post(new DailyPlanCalendarEvent());
