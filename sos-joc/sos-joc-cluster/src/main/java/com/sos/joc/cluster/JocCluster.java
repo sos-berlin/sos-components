@@ -115,9 +115,6 @@ public class JocCluster {
                 instance.getInstance(mode, jocStartTime);
                 jocTimeZone = jocConfig.getTimeZone();
                 configurations = getStoredSettings();
-                if (StartupMode.automatic.equals(mode)) {
-                    EventBus.getInstance().post(new DailyPlanCalendarEvent());
-                }
                 instanceProcessed = true;
             } catch (Throwable e) {
                 LOGGER.error(e.toString());
@@ -358,12 +355,12 @@ public class JocCluster {
                     }
                 }
             }
-            postActiveClusterChangedEvent();
+            postActiveClusterChangedEvent(mode);
             lastActiveMemberId = activeMemberId;
         }
     }
 
-    private void postActiveClusterChangedEvent() {
+    private void postActiveClusterChangedEvent(StartupMode mode) {
         if (activeMemberId != null) {
             if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
                 try {
@@ -373,6 +370,10 @@ public class JocCluster {
                     LOGGER.info(String.format("[post]%s", SOSString.toString(event)));
 
                     EventBus.getInstance().post(event);
+                    
+                    if (StartupMode.automatic.equals(mode)) {
+                        EventBus.getInstance().post(new DailyPlanCalendarEvent());
+                    }
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);
                 }
@@ -582,7 +583,7 @@ public class JocCluster {
 
                     LOGGER.info("[" + mode + "][switch][end][new]" + newMemberId);
                     activeMemberId = newMemberId;
-                    postActiveClusterChangedEvent();
+                    postActiveClusterChangedEvent(mode);
                     lastActiveMemberId = activeMemberId;
                 }
             } else {
