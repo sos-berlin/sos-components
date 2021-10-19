@@ -355,12 +355,13 @@ public class JocCluster {
                     }
                 }
             }
-            postActiveClusterChangedEvent(mode);
+            postActiveClusterChangedEvent();
+            postDailyPlanCalendarEvent(mode);
             lastActiveMemberId = activeMemberId;
         }
     }
 
-    private void postActiveClusterChangedEvent(StartupMode mode) {
+    private void postActiveClusterChangedEvent() {
         if (activeMemberId != null) {
             if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
                 try {
@@ -370,13 +371,20 @@ public class JocCluster {
                     LOGGER.info(String.format("[post]%s", SOSString.toString(event)));
 
                     EventBus.getInstance().post(event);
-                    
-                    if (StartupMode.automatic.equals(mode)) {
-                        EventBus.getInstance().post(new DailyPlanCalendarEvent());
-                    }
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);
                 }
+            }
+        }
+    }
+    
+    private void postDailyPlanCalendarEvent(StartupMode mode) {
+        if (StartupMode.automatic.equals(mode) && handler.isActive()) {
+            try {
+                LOGGER.info("[post]DailyPlanCalendarEvent");
+                EventBus.getInstance().post(new DailyPlanCalendarEvent());
+            } catch (Exception e) {
+                LOGGER.error(e.toString(), e);
             }
         }
     }
@@ -583,7 +591,7 @@ public class JocCluster {
 
                     LOGGER.info("[" + mode + "][switch][end][new]" + newMemberId);
                     activeMemberId = newMemberId;
-                    postActiveClusterChangedEvent(mode);
+                    postActiveClusterChangedEvent();
                     lastActiveMemberId = activeMemberId;
                 }
             } else {
