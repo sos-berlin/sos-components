@@ -27,7 +27,7 @@ import com.sos.inventory.model.workflow.ParameterType;
 import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
-import com.sos.joc.classes.calendar.CalendarsHelper;
+import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.sign.model.workflow.ListParameters;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Parameter;
@@ -72,7 +72,7 @@ public class JsonConverter {
                 convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions());
             }
             if (hasCycleInstruction.test(json)) {
-                signWorkflow.setCalendarPath(CalendarsHelper.dailyPlanCalendarName); 
+                signWorkflow.setCalendarPath(DailyPlanCalendar.dailyPlanCalendarName); 
             }
         }
         

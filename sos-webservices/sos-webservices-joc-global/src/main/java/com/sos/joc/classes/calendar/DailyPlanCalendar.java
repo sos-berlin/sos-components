@@ -30,13 +30,13 @@ import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 import scala.concurrent.duration.FiniteDuration;
 
-public class CalendarsHelper {
+public class DailyPlanCalendar {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(CalendarsHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
     private static volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
     public static final String dailyPlanCalendarName = "dailyPlan";
     
-    public CalendarsHelper() {
+    public DailyPlanCalendar() {
         EventBus.getInstance().register(this);
     }
     
@@ -54,13 +54,11 @@ public class CalendarsHelper {
     @Subscribe({ ProxyCoupled.class })
     public static void updateProxy(ProxyCoupled evt) {
         if (failedControllerIds.contains(evt.getControllerId())) {
-            ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
-            Flux<JUpdateItemOperation> itemOperation = getItemOperation(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf
-                    .getPeriodBegin())));
+            Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
             try {
                 ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
                     if (e.isRight()) {
-                        LOGGER.info("DailyPlan-Calendar submitted to " + evt.getControllerId());
+                        LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
                         failedControllerIds.remove(evt.getControllerId());
                     }
                 });
@@ -72,37 +70,32 @@ public class CalendarsHelper {
     
     @Subscribe({ ProxyStarted.class })
     public static void updateProxy(ProxyStarted evt) {
-            ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
-            Flux<JUpdateItemOperation> itemOperation = getItemOperation(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf
-                    .getPeriodBegin())));
-            try {
-                ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
-                    if (e.isRight()) {
-                        LOGGER.info("DailyPlan-Calendar submitted to " + evt.getControllerId());
-                    } else {
-                        failedControllerIds.add(evt.getControllerId());
-                    }
-                });
-            } catch (Exception e) {
-                failedControllerIds.add(evt.getControllerId());
-            }
+        Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
+        try {
+            ControllerApi.of(evt.getControllerId()).updateItems(itemOperation).thenAccept(e -> {
+                if (e.isRight()) {
+                    LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
+                } else {
+                    failedControllerIds.add(evt.getControllerId());
+                }
+            });
+        } catch (Exception e) {
+            failedControllerIds.add(evt.getControllerId());
+        }
     }
     
     public static synchronized void updateDailyPlanCalendar(String controllerId, String accessToken, JocError jocError) {
-        ConfigurationGlobalsDailyPlan conf = Globals.getConfigurationGlobalsDailyPlan();
-
         try {
-            deployDailyPlanCalendar(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf.getPeriodBegin())), controllerId,
-                    accessToken, jocError);
+            Flux<JUpdateItemOperation> itemOperation = getItemOperation(Globals.getConfigurationGlobalsDailyPlan());
+            deployDailyPlanCalendar(itemOperation, controllerId, accessToken, jocError);
         } catch (Exception e) {
             LOGGER.warn(e.toString());
         }
     }
-    
-    public static synchronized void deployDailyPlanCalendar(String timezone, long dateOffset, String curControllerId, String accessToken, JocError jocError) {
 
-        Flux<JUpdateItemOperation> itemOperation = getItemOperation(timezone, dateOffset);
-        
+    private static void deployDailyPlanCalendar(Flux<JUpdateItemOperation> itemOperation, String curControllerId, String accessToken,
+            JocError jocError) {
+
         failedControllerIds.clear();
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             try {
@@ -113,7 +106,7 @@ public class CalendarsHelper {
                         ProblemHelper.postProblemEventIfExist(e, null, null, null);
                     }
                     if (e.isRight()) {
-                        LOGGER.info("DailyPlan-Calendar submitted to " + controllerId); 
+                        LOGGER.info("DailyPlanCalendar submitted to " + controllerId); 
                     } else {
                         failedControllerIds.add(controllerId);
                     }
@@ -134,8 +127,12 @@ public class CalendarsHelper {
 //        }
     }
     
-    public synchronized void deploy(com.sos.sign.model.calendar.Calendar cal) {
-        // TODO for maybe other Calendars than dailyPlan
+//    public synchronized void deploy(com.sos.sign.model.calendar.Calendar cal) {
+//        // TODO for maybe other Calendars than dailyPlan
+//    }
+    
+    private static Flux<JUpdateItemOperation> getItemOperation(ConfigurationGlobalsDailyPlan conf) {
+        return getItemOperation(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf.getPeriodBegin())));
     }
     
     private static Flux<JUpdateItemOperation> getItemOperation(String timezone, long dateOffset) {
@@ -148,7 +145,7 @@ public class CalendarsHelper {
         }
         Calendar c = Calendar.apply(CalendarPath.of(dailyPlanCalendarName), _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
                 "yyyy-MM-dd", scala.Option.empty());
-        LOGGER.info("Try to submit DailyPlan-Calendar: " + c.toString());
+        LOGGER.info("Try to submit DailyPlanCalendar: " + c.toString());
         return Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
     }
     

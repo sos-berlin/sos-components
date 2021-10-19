@@ -23,7 +23,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
-import com.sos.joc.classes.calendar.CalendarsHelper;
+import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.configuration.resource.IJocConfigurationResource;
@@ -544,7 +544,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 Globals.configurationGlobals = configurations;
                 
                 if (updateControllerCalendar) {
-                    CalendarsHelper.updateDailyPlanCalendar(controllerId, accessToken, jocError);
+                    DailyPlanCalendar.updateDailyPlanCalendar(controllerId, accessToken, jocError);
                 }
 
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
