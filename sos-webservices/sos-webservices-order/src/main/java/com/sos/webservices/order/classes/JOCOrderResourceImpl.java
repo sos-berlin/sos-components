@@ -205,9 +205,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                         mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
                     }
 
-                    if (!DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
-                        mapOfCycledOrders.get(cycleOrderKey).add(p);
-                    }
+                    // TODO why check by FINISHED
+                    // if (!DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
+                    mapOfCycledOrders.get(cycleOrderKey).add(p);
+                    // }
 
                 } else {
                     listOfPlannedOrderItems.add(p);
