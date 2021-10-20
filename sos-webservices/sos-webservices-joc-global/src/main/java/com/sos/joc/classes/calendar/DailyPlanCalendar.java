@@ -36,6 +36,7 @@ public class DailyPlanCalendar {
     private static DailyPlanCalendar instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
     private volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
+    private boolean initIsCalled = false;
     
     private DailyPlanCalendar() {
         EventBus.getInstance().register(this);
@@ -51,7 +52,10 @@ public class DailyPlanCalendar {
     @Subscribe({ DailyPlanCalendarEvent.class })
     public void initDailyPlanCalendar(DailyPlanCalendarEvent evt) {
         //TODO check if Calendar exists
-        updateDailyPlanCalendar(null, null, null);
+        if (!initIsCalled) {
+            initIsCalled = true;
+            updateDailyPlanCalendar(null, null, null);
+        }
     }
     
     @Subscribe({ ProxyRemoved.class })
