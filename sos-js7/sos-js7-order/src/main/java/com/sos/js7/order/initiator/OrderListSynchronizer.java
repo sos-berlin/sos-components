@@ -341,23 +341,31 @@ public class OrderListSynchronizer {
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
         calculateDurations();
 
-        SOSHibernateSession sosHibernateSession = null;
+        // SOSHibernateSession sosHibernateSession = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
 
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+            // DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
             if (orderInitiatorSettings.isOverwrite()) {
                 LOGGER.debug("Overwrite orders");
+                SOSHibernateSession session = null;
                 List<DBItemDailyPlanOrder> listOfDailyPlanOrders = new ArrayList<DBItemDailyPlanOrder>();
-                for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+                try {
+                    session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDBOverwrite");
+                    DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
-                    filter.setControllerId(controllerId);
-                    String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
-                    filter.addWorkflowName(workflowName);
-                    List<DBItemDailyPlanOrder> l = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                    listOfDailyPlanOrders.addAll(l);
+                    for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+                        final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                        filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+
+                        filter.setControllerId(controllerId);
+                        String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
+                        filter.addWorkflowName(workflowName);
+                        List<DBItemDailyPlanOrder> l = dbLayer.getDailyPlanList(filter, 0);
+                        listOfDailyPlanOrders.addAll(l);
+                    }
+                } finally {
+                    Globals.disconnect(session);
                 }
                 CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfDailyPlanOrders);
                 c.thenAccept(either -> {
@@ -408,7 +416,7 @@ public class OrderListSynchronizer {
                 }
             }
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            // Globals.disconnect(sosHibernateSession);
         }
 
     }
