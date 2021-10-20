@@ -69,7 +69,7 @@ public class DailyPlanCalendar {
             JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
             try {
                 JControllerProxy proxy = Proxy.of(evt.getControllerId());
-                if (dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
+                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
                     proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
                         ProblemHelper.postProblemEventIfExist(e, null, null, null);
                         if (e.isRight()) {
@@ -89,7 +89,7 @@ public class DailyPlanCalendar {
         JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
         try {
             JControllerProxy proxy = Proxy.of(evt.getControllerId());
-            if (dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
+            if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
                 proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
                     if (e.isRight()) {
                         LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
@@ -111,6 +111,24 @@ public class DailyPlanCalendar {
             LOGGER.warn(e.toString());
         }
     }
+    
+    public synchronized void deleteDailyPlanCalendar() {
+        Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.deleteSimple(dailyPlanCalendarPath));
+        for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
+            try {
+                JControllerProxy proxy = Proxy.of(controllerId);
+                proxy.api().updateItems(itemOperation).thenAccept(e -> {
+                    ProblemHelper.postProblemEventIfExist(e, null, null, null);
+                    if (e.isRight()) {
+                        LOGGER.info("DailyPlanCalendar deleted on " + controllerId);
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.error(e.toString());
+            }
+        }
+        ;
+    }
 
     private void deployDailyPlanCalendar(JCalendar calendar, String curControllerId, String accessToken, JocError jocError) {
 
@@ -119,7 +137,7 @@ public class DailyPlanCalendar {
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             try {
                 JControllerProxy proxy = Proxy.of(controllerId);
-                if (dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
+                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
                     proxy.api().updateItems(itemOperation).thenAccept(e -> {
                         if (curControllerId != null && controllerId.equals(curControllerId)) {
                             ProblemHelper.postProblemEventIfExist(e, accessToken, jocError, controllerId);

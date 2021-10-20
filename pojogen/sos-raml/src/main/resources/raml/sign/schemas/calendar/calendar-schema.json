@@ -16,7 +16,7 @@
     "path",
     "timezone",
     "dateOffset",
-    "orderIdToDatePattern",
+    "orderIdPattern",
     "periodDatePattern"
   ],
   
@@ -38,7 +38,7 @@
     "dateOffset": {
 		"$ref": "../../../inventory/schemas/common/nonNegativeLong-schema.json"
 	},
-    "orderIdToDatePattern": {
+    "orderIdPattern": {
     	"type": "string",
     	"default": "#([^#]+)#.*"
     },
