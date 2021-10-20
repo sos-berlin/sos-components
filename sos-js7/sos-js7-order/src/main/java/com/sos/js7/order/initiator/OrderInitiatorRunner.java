@@ -556,14 +556,14 @@ public class OrderInitiatorRunner extends TimerTask {
 
         Date actDate = dailyPlanDate;
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate, orderInitiatorSettings);
-        SOSHibernateSession sosHibernateSession = null;
+        // SOSHibernateSession sosHibernateSession = null;
 
         try {
             Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
 
             Set<String> scheduleAdded = new HashSet<String>();
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
+            // not used
+            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
             DBItemDailyPlanSubmission dbItemDailyPlanSubmissionHistory = null;
             if (currentstate == null) {
                 currentstate = getCurrentState(controllerId);
@@ -678,7 +678,7 @@ public class OrderInitiatorRunner extends TimerTask {
 
             return orderListSynchronizer;
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            // Globals.disconnect(sosHibernateSession);
         }
     }
 
