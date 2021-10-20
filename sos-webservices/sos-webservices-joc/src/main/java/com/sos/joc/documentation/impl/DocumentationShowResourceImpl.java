@@ -61,7 +61,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             String path = dbLayer.getPath(docRef);
             if (path == null) {
-                throw new DBMissingDataException("A documentation with reference (" + docRef + ") could be determine");
+                throw new DBMissingDataException("A documentation with the name (" + docRef + ") could not be found");
             }
             return path;
         } finally {
@@ -105,7 +105,7 @@ public class DocumentationShowResourceImpl extends JOCResourceImpl implements ID
 //            // TODO look into object's JSON to get the documentation's path
 //            String path = null; //dbLayer.getDocumentationName(documentationFilter);
 //            if (path == null) {
-//                throw new DBMissingDataException("The documentation couldn't determine");
+//                throw new DBMissingDataException("The documentation couldn't found");
 //            }
 //            //checkFolderPermissions(path); or better checkFolderPermissions(documentationFilter.getPath()); ???
 //            return accessToken + JOCJsonCommand.urlEncodedPath(path);

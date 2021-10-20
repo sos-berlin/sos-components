@@ -391,10 +391,10 @@ public class WorkflowsHelper {
                     break;
                 case TRY:
                     TryCatch tc = inst.cast();
-                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "try+0"), tc.getTry().getInstructions(), forkListVariables,
+                    setWorkflowPositionsAndForkListVariables(extendArray(pos, "try"), tc.getTry().getInstructions(), forkListVariables,
                             expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     if (tc.getCatch() != null) {
-                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch+0"), tc.getCatch().getInstructions(), forkListVariables,
+                        setWorkflowPositionsAndForkListVariables(extendArray(pos, "catch"), tc.getCatch().getInstructions(), forkListVariables,
                                 expectedNoticeBoards, postNoticeBoards, workflowNamesFromAddOrders);
                     }
                     break;
@@ -443,9 +443,9 @@ public class WorkflowsHelper {
 //                    break;
 //                case TRY:
 //                    TryCatch tc = inst.cast();
-//                    setPositions(extendArray(pos, "try+0"), tc.getTry().getInstructions(), posSet);
+//                    setPositions(extendArray(pos, "try"), tc.getTry().getInstructions(), posSet);
 //                    if (tc.getCatch() != null) {
-//                        setPositions(extendArray(pos, "catch+0"), tc.getCatch().getInstructions(), posSet);
+//                        setPositions(extendArray(pos, "catch"), tc.getCatch().getInstructions(), posSet);
 //                    }
 //                    break;
 //                case LOCK:

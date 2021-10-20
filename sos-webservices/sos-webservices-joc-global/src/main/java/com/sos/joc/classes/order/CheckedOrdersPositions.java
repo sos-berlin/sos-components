@@ -310,10 +310,10 @@ public class CheckedOrdersPositions extends OrdersPositions {
             IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        String positionStringWithTryCatch = positionString.replaceAll("(try|catch)\\+\\d+", "$1");
+        String positionStringWithoutCounter = positionString.replaceAll("([^\\+]+)\\+?.*", "$1");
 
-        if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithTryCatch) || implicitEnds.contains(
-                positionString) || implicitEnds.contains(positionStringWithTryCatch)) {
+        if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
+                positionString) || implicitEnds.contains(positionStringWithoutCounter)) {
             OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
             historicOutcomes = oItem.getHistoricOutcomes();
             if (historicOutcomes != null) {

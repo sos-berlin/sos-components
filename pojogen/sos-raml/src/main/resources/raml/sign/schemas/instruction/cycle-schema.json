@@ -4,7 +4,8 @@
   "javaType": "com.sos.sign.model.instruction.Cycle",
   "type": "object",
   "required": [
-  	"cycleWorkflow"
+  	"cycleWorkflow",
+  	"schedule"
   ],
   "extends" : {
     "$ref": "instruction-schema.json"
