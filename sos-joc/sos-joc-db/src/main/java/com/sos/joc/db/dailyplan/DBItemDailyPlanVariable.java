@@ -1,4 +1,4 @@
-package com.sos.joc.db.orders;
+package com.sos.joc.db.dailyplan;
 
 import java.util.Date;
 

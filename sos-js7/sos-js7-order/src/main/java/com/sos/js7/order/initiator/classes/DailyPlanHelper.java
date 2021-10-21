@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
-import com.sos.joc.db.orders.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
 
 public class DailyPlanHelper {

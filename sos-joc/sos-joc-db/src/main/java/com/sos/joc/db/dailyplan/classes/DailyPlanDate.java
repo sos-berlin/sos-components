@@ -1,4 +1,4 @@
-package com.sos.joc.db.orders.classes;
+package com.sos.joc.db.dailyplan.classes;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

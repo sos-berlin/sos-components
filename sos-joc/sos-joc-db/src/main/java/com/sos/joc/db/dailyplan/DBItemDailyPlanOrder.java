@@ -1,4 +1,4 @@
-package com.sos.joc.db.orders;
+package com.sos.joc.db.dailyplan;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.orders.classes.DailyPlanDate;
+import com.sos.joc.db.dailyplan.classes.DailyPlanDate;
 
 @Entity
 @Table(name = DBLayer.TABLE_DPL_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_NAME]",

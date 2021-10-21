@@ -6,12 +6,12 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.orders.DBItemDailyPlanSubmission;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 
 public class DBLayerOrderVariables {
 
-    private static final String DBItemDailyPlanVariables = com.sos.joc.db.orders.DBItemDailyPlanVariable.class.getSimpleName();
-    private static final String DBItemDailyPlan = com.sos.joc.db.orders.DBItemDailyPlanOrder.class.getSimpleName();
+    private static final String DBItemDailyPlanVariables = com.sos.joc.db.dailyplan.DBItemDailyPlanVariable.class.getSimpleName();
+    private static final String DBItemDailyPlan = com.sos.joc.db.dailyplan.DBItemDailyPlanOrder.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerOrderVariables(SOSHibernateSession session) {
@@ -61,7 +61,7 @@ public class DBLayerOrderVariables {
         return query;
     }
 
-    public List<com.sos.joc.db.orders.DBItemDailyPlanVariable> getOrderVariables(FilterOrderVariables filter, final int limit)
+    public List<com.sos.joc.db.dailyplan.DBItemDailyPlanVariable> getOrderVariables(FilterOrderVariables filter, final int limit)
             throws SOSHibernateException {
         String q = "";
         if (filter.getPlannedOrderId() != null) {
@@ -70,7 +70,7 @@ public class DBLayerOrderVariables {
             q = "select v from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter
                     .getSortMode();
         }
-        Query<com.sos.joc.db.orders.DBItemDailyPlanVariable> query = sosHibernateSession.createQuery(q);
+        Query<com.sos.joc.db.dailyplan.DBItemDailyPlanVariable> query = sosHibernateSession.createQuery(q);
         query = bindParameters(filter, query);
 
         if (limit > 0) {
