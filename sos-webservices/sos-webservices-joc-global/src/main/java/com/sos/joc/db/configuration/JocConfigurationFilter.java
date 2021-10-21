@@ -1,8 +1,8 @@
 package com.sos.joc.db.configuration;
 
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 
-public class JocConfigurationFilter extends SOSFilter{
+public class JocConfigurationFilter extends DBFilter{
 
     private Long id;
     private String controllerId;

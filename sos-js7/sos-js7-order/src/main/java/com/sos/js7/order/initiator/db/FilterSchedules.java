@@ -7,10 +7,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 import com.sos.joc.model.common.Folder;
 
-public class FilterSchedules extends SOSFilter {
+public class FilterSchedules extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterSchedules.class);
     private List<String> listOfControllerIds;

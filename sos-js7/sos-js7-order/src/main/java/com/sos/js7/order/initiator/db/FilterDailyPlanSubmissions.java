@@ -6,9 +6,9 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 
-public class FilterDailyPlanSubmissions extends SOSFilter {
+public class FilterDailyPlanSubmissions extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlanSubmissions.class);
 

@@ -3,9 +3,9 @@ package com.sos.js7.order.initiator.db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 
-public class FilterOrderVariables extends SOSFilter {
+public class FilterOrderVariables extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterOrderVariables.class);
     private Long plannedOrderId;

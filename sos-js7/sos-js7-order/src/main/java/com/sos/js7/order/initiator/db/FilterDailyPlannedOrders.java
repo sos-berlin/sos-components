@@ -13,14 +13,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.JobSchedulerDate;
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 
 import js7.data.order.OrderId;
 
-public class FilterDailyPlannedOrders extends SOSFilter {
+public class FilterDailyPlannedOrders extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
     private String dailyPlanDate;

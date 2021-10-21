@@ -2,10 +2,10 @@ package com.sos.js7.order.initiator.db;
 
 import java.util.List;
 
-import com.sos.joc.db.SOSFilter;
+import com.sos.joc.db.DBFilter;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
-public class FilterInventoryConfigurations extends SOSFilter {
+public class FilterInventoryConfigurations extends DBFilter {
 
     
     private ConfigurationType  type;

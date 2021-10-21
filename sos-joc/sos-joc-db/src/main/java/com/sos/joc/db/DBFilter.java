@@ -1,6 +1,6 @@
 package com.sos.joc.db;
 
-public abstract class SOSFilter {
+public abstract class DBFilter {
 
     private String sortMode = "asc";
     private String orderCriteria;
