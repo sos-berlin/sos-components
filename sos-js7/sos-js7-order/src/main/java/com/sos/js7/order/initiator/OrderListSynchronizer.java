@@ -314,7 +314,7 @@ public class OrderListSynchronizer {
                 int size = entry.getValue().size();
                 int nr = 1;
                 String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-                LOGGER.debug("snchronizer: adding planned cylced order to database: " + size + " orders ");
+                LOGGER.debug("synchronizer: adding planned cycled order to database: " + size + " orders ");
                 for (PlannedOrder plannedOrder : entry.getValue()) {
 
                     DBItemDailyPlanOrder dbItemDailyPlan = null;
