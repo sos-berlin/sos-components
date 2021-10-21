@@ -60,6 +60,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
+import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -626,6 +627,7 @@ public class WorkflowsHelper {
             WorkflowIdsFilter workflowsFilter, Set<Folder> permittedFolders) {
 
         final Instant surveyInstant = currentstate.instant();
+        long surveyDateMillis = surveyInstant.toEpochMilli();
         Predicate<JOrder> dateToFilter = o -> true;
         if (workflowsFilter.getDateTo() != null && !workflowsFilter.getDateTo().isEmpty()) {
                 String dateTo = workflowsFilter.getDateTo();
@@ -647,42 +649,51 @@ public class WorkflowsHelper {
                 };
         }
         
-        Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(WorkflowPaths
-                .getPath(w), permittedFolders)).map(w -> {
+        Set<VersionedItemId<WorkflowPath>> workflows2 = workflowsFilter.getWorkflowIds().parallelStream().filter(w -> JOCResourceImpl.canAdd(
+                WorkflowPaths.getPath(w), permittedFolders)).map(w -> {
                     if (w.getVersionId() == null || w.getVersionId().isEmpty()) {
                         return currentstate.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(w.getPath())));
                     } else {
                         return currentstate.repo().idToWorkflow(JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()));
                     }
                 }).filter(Either::isRight).map(Either::get).map(JWorkflow::id).map(JWorkflowId::asScala).collect(Collectors.toSet());
-        
+
         Function1<Order<Order.State>, Object> workflowFilter = o -> workflows2.contains(o.workflowId());
         Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                 Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                         Order.ProcessingKilled$.class));
         Function1<Order<Order.State>, Object> suspendFilter = JOrderPredicates.and(o -> o.isSuspended(), JOrderPredicates.not(finishedFilter));
         Function1<Order<Order.State>, Object> cycledOrderFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class),
-                JOrderPredicates.and(o -> o.id().string().matches(".*#C[0-9]+-.*"), JOrderPredicates.not(suspendFilter)));
+                JOrderPredicates.and(o -> OrdersHelper.isCyclicOrderId(o.id().string()), JOrderPredicates.not(suspendFilter)));
         Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
+        
+        Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                .isSuspended() && !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() < surveyDateMillis);
 
+        Set<JOrder> blockedOrders = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter)).collect(Collectors.toSet());
+        ConcurrentMap<OrderId, JOrder> blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(blockedOrders, currentstate);
+        Set<OrderId> blockedButWaitingForAdmissionOrderIds = blockedButWaitingForAdmissionOrders.keySet();
+        
         Stream<JOrder> cycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter)).parallel().filter(
                 dateToFilter);
         Stream<JOrder> notCycledOrderStream = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, notCycledOrderFilter)).parallel().filter(
                 dateToFilter);
         Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
-        Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
-                Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
+        Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id())).collect(
+                Collectors.groupingBy(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()), Collectors.toCollection(() -> new TreeSet<>(
+                        comp)))).values();
         cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
-        ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> groupedOrdersCount = Stream.concat(notCycledOrderStream, cycledOrderStream)
-                .collect(Collectors.groupingByConcurrent(JOrder::workflowId, Collectors.groupingBy(o -> groupingByState(o, surveyInstant),
-                        Collectors.reducing(0, e -> 1, Integer::sum))));
-        
+        notCycledOrderStream = Stream.concat(notCycledOrderStream, blockedButWaitingForAdmissionOrders.values().stream()).distinct();
+        ConcurrentMap<JWorkflowId, Map<OrderStateText, Integer>> groupedOrdersCount = Stream.concat(notCycledOrderStream, cycledOrderStream).collect(
+                Collectors.groupingByConcurrent(JOrder::workflowId, Collectors.groupingBy(o -> groupingByState(o, surveyInstant,
+                        blockedButWaitingForAdmissionOrderIds), Collectors.reducing(0, e -> 1, Integer::sum))));
+
         workflows2.forEach(w -> groupedOrdersCount.putIfAbsent(JWorkflowId.apply(w), Collections.emptyMap()));
         
         return groupedOrdersCount;
     }
     
-    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant) {
+    private static OrderStateText groupingByState(JOrder order, Instant surveyInstant, Set<OrderId> blockedButWaitingForAdmissionOrderIds) {
         OrderStateText groupedState = OrdersHelper.getGroupedState(order.asScala().state().getClass());
         if (order.asScala().isSuspended() && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
             groupedState = OrderStateText.SUSPENDED;
@@ -692,7 +703,11 @@ public class WorkflowsHelper {
             if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
                 groupedState = OrderStateText.PENDING;
             } else if (scheduledInstant.isBefore(surveyInstant)) {
-                groupedState = OrderStateText.BLOCKED;
+                if (blockedButWaitingForAdmissionOrderIds.contains(order.id())) {
+                    groupedState = OrderStateText.INPROGRESS;
+                } else {
+                    groupedState = OrderStateText.BLOCKED;
+                }
             }
         }
         return groupedState;

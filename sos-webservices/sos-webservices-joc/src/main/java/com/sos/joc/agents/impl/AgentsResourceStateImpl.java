@@ -48,6 +48,7 @@ import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefState;
 import js7.data.controller.ControllerCommand;
 import js7.data.order.Order;
+import js7.data.order.OrderId;
 import js7.data_for_java.agent.JAgentRefState;
 import js7.data_for_java.controller.JControllerCommand;
 import js7.data_for_java.controller.JControllerState;
@@ -133,10 +134,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     } else {
                         Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
                         List<JOrder> jOrders = jOrderStream.collect(Collectors.toList());
+                        Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(jOrders.stream().map(JOrder::id).collect(Collectors
+                                .toSet()), currentState);
                         ordersPerAgent.putAll(jOrders.stream().map(o -> {
                             try {
-                                // TODO remove final Parameters
-                                return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, null, surveyDateMillis);
+                                // TODO remove final Parameters 
+                                return OrdersHelper.mapJOrderToOrderV(o, true, permittedFolders, waitingOrders, null, surveyDateMillis);
                             } catch (Exception e) {
                                 return null;
                             }

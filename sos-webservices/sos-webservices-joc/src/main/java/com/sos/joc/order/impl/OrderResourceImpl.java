@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -51,9 +52,10 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
 
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), Collections
-                        .singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(), currentState)), surveyDateInstant
-                                .toEpochMilli());
+                Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), waitingOrders,
+                        Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(), currentState)),
+                        surveyDateInstant.toEpochMilli());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));

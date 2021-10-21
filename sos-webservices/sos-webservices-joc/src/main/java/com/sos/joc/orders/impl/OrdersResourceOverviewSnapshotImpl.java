@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -21,7 +22,6 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
-import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -39,12 +39,16 @@ import com.sos.joc.model.order.OrdersSummary;
 import com.sos.joc.orders.resource.IOrdersResourceOverviewSnapshot;
 import com.sos.schema.JsonValidator;
 
+import io.vavr.control.Either;
+import js7.base.problem.Problem;
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
+import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
 import js7.data_for_java.order.JOrderPredicates;
+import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import scala.Function1;
 
@@ -70,8 +74,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             boolean withFolderFilter = body.getFolders() != null && !body.getFolders().isEmpty();
             Set<Folder> permittedFolders = addPermittedFolder(body.getFolders());
 
-            return JOCDefaultResponse.responseStatus200(getSnapshot(body, checkFolderPermission(body.getWorkflowIds(), permittedFolders),
-                    permittedFolders, withWorkFlowFilter, withFolderFilter));
+            JControllerState controllerState = Proxy.of(body.getControllerId()).currentState();
+            Set<VersionedItemId<WorkflowPath>> checkedWorkflows = checkFolderPermission(controllerState, body.getWorkflowIds(), permittedFolders);
+
+            return JOCDefaultResponse.responseStatus200(getSnapshot(controllerState, body, checkedWorkflows, permittedFolders, withWorkFlowFilter,
+                    withFolderFilter));
 
         } catch (ControllerConnectionResetException e) {
             e.addErrorMetaInfo(getJocError());
@@ -85,9 +92,10 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
     }
 
-    private static OrdersSnapshot getSnapshot(OrdersFilterV body, Set<VersionedItemId<WorkflowPath>> workflowIds, Set<Folder> permittedFolders,
-            boolean withWorkFlowFilter, boolean withFolderFilter) throws ControllerConnectionResetException, DBMissingDataException, JocConfigurationException,
-            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, ExecutionException {
+    private static OrdersSnapshot getSnapshot(JControllerState controllerState, OrdersFilterV body, Set<VersionedItemId<WorkflowPath>> workflowIds,
+            Set<Folder> permittedFolders, boolean withWorkFlowFilter, boolean withFolderFilter) throws ControllerConnectionResetException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
 
         OrdersSummary summary = new OrdersSummary();
         summary.setBlocked(0);
@@ -103,12 +111,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         OrdersSnapshot entity = new OrdersSnapshot();
 
         try {
-            JControllerState controllerState = Proxy.of(body.getControllerId()).currentState();
             final Instant now = controllerState.instant();
             Map<Class<? extends Order.State>, Integer> orderStates = null;
             int suspendedOrders = 0;
             Stream<JOrder> freshOrders = null;
-            
+
             Function1<Order<Order.State>, Object> finishedFilter = JOrderPredicates.or(JOrderPredicates.or(JOrderPredicates.byOrderState(
                     Order.Finished$.class), JOrderPredicates.byOrderState(Order.Cancelled$.class)), JOrderPredicates.byOrderState(
                             Order.ProcessingKilled$.class));
@@ -147,14 +154,6 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     // no folder permissions
                     orderStates = Collections.emptyMap();
                 }
-//                orderStates = controllerState.orderStateToCount(JOrderPredicates.and(notSuspendFilter, o -> orderIsPermitted(o.workflowId(),
-//                        permittedFolders)));
-//                if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
-//                    freshOrders = controllerState.ordersBy(JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), JOrderPredicates
-//                            .and(notSuspendFilter, o -> orderIsPermitted(o.workflowId(), permittedFolders))));
-//                }
-//                suspendedOrders = controllerState.ordersBy(JOrderPredicates.and(suspendFilter, o -> orderIsPermitted(o.workflowId(),
-//                        permittedFolders))).mapToInt(e -> 1).sum();
             } else {
                 orderStates = controllerState.orderStateToCount(notSuspendFilter);
                 if (orderStates.getOrDefault(Order.Fresh$.class, 0) > 0) {
@@ -166,13 +165,25 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             int numOfBlockedOrders = 0;
             int numOfPendingOrders = 0;
             int numOfFreshOrders = 0;
+            int numOfWaitingForAdmissionOrders = 0;
             if (freshOrders != null) {
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
 
-                numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
+                Set<OrderId> blockedOrderIds = freshOrderSet.stream().filter(o -> {
                     Optional<Instant> scheduledFor = o.scheduledFor();
                     return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
-                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                }).map(o -> o.id()).collect(Collectors.toSet());
+
+                Set<OrderId> waitingForAdmissionOrderIds = OrdersHelper.getWaitingForAdmissionOrderIds(blockedOrderIds, controllerState);
+                blockedOrderIds.removeAll(waitingForAdmissionOrderIds);
+                numOfWaitingForAdmissionOrders = waitingForAdmissionOrderIds.size();
+
+                // numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
+                // Optional<Instant> scheduledFor = o.scheduledFor();
+                // return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
+                // }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+
+                numOfBlockedOrders = blockedOrderIds.stream().map(oId -> oId.string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
 
                 numOfPendingOrders = freshOrderSet.stream().filter(o -> {
                     Optional<Instant> scheduledFor = o.scheduledFor();
@@ -203,13 +214,13 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
             map.put(OrderStateText.PENDING, numOfPendingOrders);
-            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders);
+            map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders - numOfWaitingForAdmissionOrders);
             OrdersHelper.groupByStateClasses.values().stream().distinct().forEach(state -> map.putIfAbsent(state, 0));
 
             summary.setBlocked(map.getOrDefault(OrderStateText.BLOCKED, 0));
             summary.setScheduled(map.getOrDefault(OrderStateText.SCHEDULED, 0));
             summary.setPending(map.getOrDefault(OrderStateText.PENDING, 0));
-            summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0));
+            summary.setInProgress(map.getOrDefault(OrderStateText.INPROGRESS, 0) + numOfWaitingForAdmissionOrders);
             summary.setRunning(map.getOrDefault(OrderStateText.RUNNING, 0));
             summary.setFailed(map.getOrDefault(OrderStateText.FAILED, 0));
             summary.setSuspended(suspendedOrders);
@@ -229,25 +240,23 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
         return entity;
     }
 
-    private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(Set<WorkflowId> workflowIds, Set<Folder> permittedFolders) {
+    private static Set<VersionedItemId<WorkflowPath>> checkFolderPermission(JControllerState controllerState, Set<WorkflowId> workflowIds,
+            Set<Folder> permittedFolders) {
         Stream<WorkflowId> workflowStream = workflowIds != null ? workflowIds.stream() : Stream.empty();
         if (permittedFolders != null && !permittedFolders.isEmpty()) {
             workflowStream = workflowStream.filter(w -> folderIsPermitted(w.getPath(), permittedFolders));
         }
-        return workflowStream.map(w -> JWorkflowId.of(JocInventory.pathToName(w.getPath()), w.getVersionId()).asScala()).collect(Collectors.toSet());
+        return workflowStream.map(wId -> {
+            if (wId.getVersionId() == null) {
+                Either<Problem, JWorkflow> wE = controllerState.repo().pathToWorkflow(WorkflowPath.of(JocInventory.pathToName(wId.getPath())));
+                if (wE.isRight()) {
+                    return wE.get().id().asScala();
+                } else {
+                    return null;
+                }
+            } else {
+                return JWorkflowId.of(JocInventory.pathToName(wId.getPath()), wId.getVersionId()).asScala();
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toSet());
     }
-
-    private static boolean orderIsPermitted(VersionedItemId<WorkflowPath> w, Set<Folder> listOfFolders) {
-        if (listOfFolders == null || listOfFolders.isEmpty()) {
-            return true;
-        }
-        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
-    }
-
-//    private static boolean orderIsPermitted(JWorkflowId w, Set<Folder> listOfFolders) {
-//        if (listOfFolders == null || listOfFolders.isEmpty()) {
-//            return true;
-//        }
-//        return canAdd(WorkflowPaths.getPath(new WorkflowId(w.path().string(), w.versionId().string())), listOfFolders);
-//    }
 }

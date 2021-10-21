@@ -47,6 +47,7 @@ import com.sos.schema.JsonValidator;
 
 import js7.data.item.VersionedItemId;
 import js7.data.order.Order;
+import js7.data.order.OrderId;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JOrder;
@@ -99,6 +100,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             final boolean lookingForBlocked = withStatesFilter && states.contains(OrderStateText.BLOCKED);
             final boolean lookingForPending = withStatesFilter && states.contains(OrderStateText.PENDING);
             final boolean lookingForScheduled = withStatesFilter && states.contains(OrderStateText.SCHEDULED);
+            final boolean lookingForInProgress = withStatesFilter && states.contains(OrderStateText.INPROGRESS);
 
             Function1<Order<Order.State>, Object> cycledOrderFilter = null;
             Function1<Order<Order.State>, Object> notCycledOrderFilter = null;
@@ -112,6 +114,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Function1<Order<Order.State>, Object> notSuspendFilter = JOrderPredicates.not(suspendFilter);
             Function1<Order<Order.State>, Object> cyclicFilter = o -> OrdersHelper.isCyclicOrderId(o.id().string());
             Function1<Order<Order.State>, Object> notCyclicFilter = JOrderPredicates.not(cyclicFilter);
+            Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
+                    .isSuspended() && !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() < surveyDateMillis);
 
             if (!withOrderIdFilter) {
                 if (withStatesFilter) {
@@ -196,12 +200,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                     notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
                 }
             }
+            
             Stream<JOrder> orderStream = Stream.empty();
             Stream<JOrder> cycledOrderStream = Stream.empty();
+            Stream<JOrder> blockedOrderStream = Stream.empty();
 
             if (withOrderIdFilter) {
                 ordersFilter.setRegex(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
+                blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
+//                blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(currentState.ordersBy(JOrderPredicates.and(o -> orders
+//                        .contains(o.id().string()), blockedFilter)), currentState);
+
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
                 Predicate<WorkflowId> versionNotEmpty = w -> w.getVersionId() != null && !w.getVersionId().isEmpty();
@@ -217,6 +227,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 if (cycledOrderFilter != null) {
                     cycledOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, cycledOrderFilter));
                 }
+                if (!withStatesFilter || lookingForBlocked || lookingForInProgress) {
+                    blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter));
+                }
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 // orderStream = currentState.ordersBy(JOrderPredicates.none());
@@ -227,12 +240,18 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 if (cycledOrderFilter != null) {
                     cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
                 }
+                if (!withStatesFilter || lookingForBlocked || lookingForInProgress) {
+                    blockedOrderStream = currentState.ordersBy(blockedFilter);
+                }
             } else {
                 if (notCycledOrderFilter != null) {
                     orderStream = currentState.ordersBy(notCycledOrderFilter);
                 }
                 if (cycledOrderFilter != null) {
                     cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
+                }
+                if (!withStatesFilter || lookingForBlocked || lookingForInProgress) {
+                    blockedOrderStream = currentState.ordersBy(blockedFilter);
                 }
             }
 
@@ -270,24 +289,30 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                         .string()));
                 orderStream = orderStream.filter(o -> regex.test(WorkflowPaths.getPath(o.workflowId().path().string()) + "/" + o.id().string()));
             }
-
+            
+            Set<JOrder> blockedOrders = blockedOrderStream.collect(Collectors.toSet());
+            ConcurrentMap<OrderId, JOrder> blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(blockedOrders, currentState);
+            Set<OrderId> blockedButWaitingForAdmissionOrderIds = blockedButWaitingForAdmissionOrders.keySet();
+            if (lookingForBlocked && !lookingForInProgress) {
+                orderStream = orderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id()));
+            } else {
+                orderStream = Stream.concat(orderStream, blockedButWaitingForAdmissionOrders.values().stream()).distinct();
+            }
+            
             // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
-            Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24),
-                    Collectors.toCollection(() -> new TreeSet<>(comp)))).values();
+            Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id()))
+                    .collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24), Collectors.toCollection(() -> new TreeSet<>(comp))))
+                    .values();
             cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
 
             Function<TreeSet<JOrder>, CyclicOrderInfos> getCyclicOrderInfos = t -> {
                 CyclicOrderInfos cycle = new CyclicOrderInfos();
                 cycle.setCount(t.size());
                 cycle.setFirstOrderId(t.first().id().string());
-                if (t.first().scheduledFor().isPresent()) {
-                    cycle.setFirstStart(Date.from(t.first().scheduledFor().get()));
-                }
+                t.first().scheduledFor().ifPresent(opt -> cycle.setFirstStart(Date.from(opt)));
                 cycle.setLastOrderId(t.last().id().string());
-                if (t.last().scheduledFor().isPresent()) {
-                    cycle.setLastStart(Date.from(t.last().scheduledFor().get()));
-                }
+                t.last().scheduledFor().ifPresent(opt -> cycle.setLastStart(Date.from(opt)));
                 return cycle;
             };
             ConcurrentMap<String, CyclicOrderInfos> cycleInfos = cycledOrderColl.stream().parallel().filter(t -> !t.isEmpty()).map(
@@ -303,9 +328,9 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             if (withWorkflowIdFilter && ordersFilter.getLimit() != null && ordersFilter.getLimit() > -1) {
                 // consider limit per workflow (not over all)
-                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
-                        folders)).flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(
-                                ordersFilter.getLimit().longValue()));
+                orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey()), folders))
+                        .flatMap(e -> e.getValue().stream().sorted(Comparator.comparingLong(compareScheduleFor).reversed()).limit(ordersFilter
+                                .getLimit().longValue()));
             } else {
                 orderStream = groupedByWorkflowIds.entrySet().parallelStream().filter(e -> canAdd(WorkflowPaths.getPath(e.getKey().path().string()),
                         folders)).flatMap(e -> e.getValue().stream()).sorted(Comparator.comparingLong(compareScheduleFor).reversed());
@@ -318,7 +343,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, finalParamsPerWorkflow, surveyDateMillis);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, blockedButWaitingForAdmissionOrderIds,
+                            finalParamsPerWorkflow, surveyDateMillis);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {

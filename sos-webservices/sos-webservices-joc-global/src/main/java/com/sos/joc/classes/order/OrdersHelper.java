@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -89,6 +90,7 @@ import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
 import js7.data_for_java.order.JOrder;
+import js7.data_for_java.order.JOrderObstacle;
 import js7.data_for_java.workflow.JWorkflow;
 import js7.data_for_java.workflow.JWorkflowId;
 import js7.data_for_java.workflow.position.JPosition;
@@ -337,7 +339,8 @@ public class OrdersHelper {
     }
 
     public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders,
-            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws IOException, JocFolderPermissionsException {
+            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
+            throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
         WorkflowId wId = oItem.getWorkflowPosition().getWorkflowId();
         if (finalParameters != null) {
@@ -365,7 +368,11 @@ public class OrdersHelper {
         o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
-            o.setState(getState("Blocked", oItem.getIsSuspended()));
+            if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
+                o.setState(getState("Ready", oItem.getIsSuspended()));
+            } else {
+                o.setState(getState("Blocked", oItem.getIsSuspended()));
+            }
         } else if (scheduledFor != null && JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor) && "Fresh".equals(oItem.getState().getTYPE())) {
             o.setState(getState("Pending", oItem.getIsSuspended()));
         } else {
@@ -388,12 +395,12 @@ public class OrdersHelper {
         return o;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders,
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
             Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws JsonParseException, JsonMappingException, IOException,
             JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, finalParameters, surveyDateMillis);
+        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters, surveyDateMillis);
     }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
@@ -848,7 +855,7 @@ public class OrdersHelper {
                 .collect(Collectors.toSet()), JCancellationMode.freshOnly());
     }
 
-    // 2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
+    // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
     // #2021-10-12#C4038226057-
     public static String getCyclicOrderIdMainPart(String orderId) {
         return orderId.substring(0, 24);
@@ -856,6 +863,24 @@ public class OrdersHelper {
 
     public static boolean isCyclicOrderId(String orderId) {
         return orderId.matches(WebserviceConstants.CYCLIC_ORDER_ID_REGEX);
+    }
+    
+    public static Set<OrderId> getWaitingForAdmissionOrderIds(Collection<OrderId> blockedOrderIds, JControllerState controllerState) {
+        if (!blockedOrderIds.isEmpty()) {
+            Either<Problem, Map<OrderId, Set<JOrderObstacle>>> obstaclesE = controllerState.ordersToObstacles(blockedOrderIds, controllerState
+                    .instant());
+            if (obstaclesE.isRight()) {
+                Map<OrderId, Set<JOrderObstacle>> obstacles = obstaclesE.get();
+                return obstacles.entrySet().stream().filter(e -> e.getValue().parallelStream().anyMatch(
+                        ob -> (ob instanceof JOrderObstacle.WaitingForAdmission))).map(Map.Entry::getKey).collect(Collectors.toSet());
+            }
+        }
+        return Collections.emptySet();
+    }
+    
+    public static ConcurrentMap<OrderId, JOrder> getWaitingForAdmissionOrders(Collection<JOrder> blockedOrders, JControllerState controllerState) {
+       Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
+       return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
     }
 
 }
