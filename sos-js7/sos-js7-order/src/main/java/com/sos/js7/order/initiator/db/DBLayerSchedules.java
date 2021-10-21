@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -18,18 +19,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.deployment.DBItemDeploymentHistory;
-import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.joc.model.publish.DeploymentState;
 
 public class DBLayerSchedules {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerSchedules.class);
     private final SOSHibernateSession sosHibernateSession;
 
     public DBLayerSchedules(SOSHibernateSession session) {
@@ -77,71 +78,81 @@ public class DBLayerSchedules {
 
     public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
             JsonParseException, JsonMappingException, IOException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        if (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0) {
+            InventoryDBLayer dbLayer = new InventoryDBLayer(sosHibernateSession);
+            List<DBItemInventoryReleasedConfiguration> result = dbLayer.getUsedReleasedSchedulesByWorkflowNames(filter.getListOfWorkflowNames());
 
-        String q = "from " + DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
-        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(q);
+            List<String> scheduleNames = filter.getListOfScheduleNames();
+            if (scheduleNames == null) {
+                scheduleNames = new ArrayList<>();
+            }
+            if (result != null && result.size() > 0) {
+                for (DBItemInventoryReleasedConfiguration item : result) {
+                    if (scheduleNames.contains(item.getName())) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[schedulesByWorkflowNames][%s][skip][already added]%s", item.getName(), SOSString.toString(
+                                    item)));
+                        }
+                    } else {
+                        scheduleNames.add(item.getName());
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[schedulesByWorkflowNames][%s][added]%s", item.getName(), SOSString.toString(item)));
+                        }
+                    }
+                }
+            } else {
+                LOGGER.debug("[schedulesByWorkflowNames]not found");
+            }
+            filter.setListOfScheduleNames(scheduleNames);
+        }
 
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+        hql.append(getWhere(filter));
+        hql.append(filter.getOrderCriteria());
+        hql.append(filter.getSortMode());
+        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(hql.toString());
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        List<DBItemInventoryReleasedConfiguration> filteredResultset = new ArrayList<DBItemInventoryReleasedConfiguration>();
-        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
 
+        List<DBItemInventoryReleasedConfiguration> filtered = new ArrayList<DBItemInventoryReleasedConfiguration>();
         ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        boolean selectedByWorkflowNames = (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0);
-
-        if (selectedByWorkflowNames) {
-            InventoryDBLayer inventoryDBLayer = new InventoryDBLayer(sosHibernateSession);
-           
-            List<DBItemInventoryReleasedConfiguration> resultsetByWorkflowNames = inventoryDBLayer.getUsedReleasedSchedulesByWorkflowNames(filter.getListOfWorkflowNames());
-            resultset.addAll(resultsetByWorkflowNames);      
-        }
-
-        FilterInventoryConfigurations filterInventoryConfigurations = new FilterInventoryConfigurations();
-        filterInventoryConfigurations.setType(ConfigurationType.WORKFLOW);
-
-        FilterDeployHistory filterDeployHistory = new FilterDeployHistory();
-        filterDeployHistory.setListOfControllerIds(filter.getListOfControllerIds());
-        filterDeployHistory.setOrderCriteria("deploymentDate");
-        filterDeployHistory.setSortMode("desc");
-        filterDeployHistory.setType(ConfigurationType.WORKFLOW);
-        filterDeployHistory.setState(DeploymentState.DEPLOYED);
-
-        DBLayerDeployHistory dbLayerDeploy = new DBLayerDeployHistory(sosHibernateSession);
-        DBLayerInventoryConfigurations dbLayerInventoryConfigurations = new DBLayerInventoryConfigurations(sosHibernateSession);
-        List<DBItemInventoryConfiguration> listOfWorkflows = dbLayerInventoryConfigurations.getInventoryConfigurations(filterInventoryConfigurations,
-                0);
-
-        Map<String, String> workflowPaths = new HashMap<String, String>();
-        for (DBItemInventoryConfiguration dbItemInventoryConfiguration : listOfWorkflows) {
-            filterDeployHistory.setInventoryId(dbItemInventoryConfiguration.getId());
-            List<DBItemDeploymentHistory> l = dbLayerDeploy.getDeployments(filterDeployHistory, 0);
-            if (l.size() > 0) {
-                if (l.get(0).getOperation() == 0) {
-                    workflowPaths.put(dbItemInventoryConfiguration.getName(), dbItemInventoryConfiguration.getPath());
-                }
-            }
-        }
-
-        for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : resultset) {
+        List<DBItemInventoryReleasedConfiguration> result = sosHibernateSession.getResultList(query);
+        for (DBItemInventoryReleasedConfiguration item : result) {
             Schedule schedule;
-            if (dbItemInventoryConfiguration.getSchedule() != null) {
-                schedule = dbItemInventoryConfiguration.getSchedule();
+            if (item.getSchedule() != null) {
+                schedule = item.getSchedule();
             } else {
-                schedule = objectMapper.readValue(dbItemInventoryConfiguration.getContent(), Schedule.class);
-                schedule.setPath(dbItemInventoryConfiguration.getPath());
+                schedule = objectMapper.readValue(item.getContent(), Schedule.class);
+                schedule.setPath(item.getPath());
+            }
+            if (schedule == null) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[filtered][skip][schedule is null]%s", SOSString.toString(item)));
+                }
+                continue;
             }
 
-            if (schedule != null) {
-                schedule.setWorkflowPath(workflowPaths.get(schedule.getWorkflowName()));
-                dbItemInventoryConfiguration.setSchedule(schedule);
-                filteredResultset.add(dbItemInventoryConfiguration);
+            String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
+            if (path == null) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[filtered][skip][deployment path not found]%s", SOSString.toString(item)));
+                }
+            } else {
+                schedule.setWorkflowPath(path);
+                item.setSchedule(schedule);
+                filtered.add(item);
             }
         }
-
-        return filteredResultset;
+        if (isDebugEnabled) {
+            for (DBItemInventoryReleasedConfiguration item : filtered) {
+                LOGGER.debug(String.format("[filtered]%s", SOSString.toString(item)));
+            }
+        }
+        return filtered;
     }
-    
+
     public Map<String, String> getSchedulePathNameMap(Collection<String> scheduleNamesOrPaths) throws SOSHibernateException {
 
         if (scheduleNamesOrPaths == null || scheduleNamesOrPaths.isEmpty()) {

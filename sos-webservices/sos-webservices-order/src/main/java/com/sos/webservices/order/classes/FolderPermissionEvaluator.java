@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -17,6 +20,8 @@ import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 public class FolderPermissionEvaluator {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FolderPermissionEvaluator.class);
 
     private List<String> listOfWorkflowPaths;
     private List<String> listOfSchedulePaths;
@@ -36,7 +41,7 @@ public class FolderPermissionEvaluator {
 
         boolean withSchedulePathFilter = listOfSchedulePaths != null && !listOfSchedulePaths.isEmpty();
         boolean withWorkflowPathFilter = listOfWorkflowPaths != null && !listOfWorkflowPaths.isEmpty();
-        
+
         listOfPermittedWorkflowNames = new ArrayList<String>();
         listOfPermittedScheduleNames = new ArrayList<String>();
 
@@ -59,15 +64,26 @@ public class FolderPermissionEvaluator {
         if (listOfWorkflowPaths != null && !listOfWorkflowPaths.isEmpty()) {
             for (String path : listOfWorkflowPaths) {
                 if (path == null || path.isEmpty()) {
+                    LOGGER.debug("path is empty");
                     continue;
                 }
-                Path p = Paths.get(WorkflowPaths.getPath(path));
+                String wpath = WorkflowPaths.getPathOrNull(path);
+                if (wpath == null) {// to avoid a NPE exception by p.getParent() for not deployed workflows
+                    LOGGER.debug(String.format("[%s][skip]deployment path not found", path));
+                    continue;
+                }
+                LOGGER.debug(String.format("[path=%s]wpath=%s", path, wpath));
+                Path p = Paths.get(wpath);
                 if (folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
                     listOfPermittedWorkflowNames.add(p.getFileName().toString());
                 }
             }
         }
 
+        // TODO hasPermission
+        // currently e.g. see listOfPermittedWorkflowNames
+        // 2 workflows selected : 1 is valid, 2 is not valid - this is allowed
+        // 1 workflow selected (and listOfPermittedScheduleNames is not empty): 1 is not valid - this is not allowed
         if (listOfScheduleFolders != null && !listOfScheduleFolders.isEmpty()) {
             Set<Folder> permittedSchedulefolders = addPermittedFolder(listOfScheduleFolders, folderPermissions);
             if (permittedSchedulefolders.isEmpty()) {
