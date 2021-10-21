@@ -99,7 +99,7 @@ public class EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
     private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
-    private static boolean isTraceEnabled = LOGGER.isTraceEnabled();
+    //private static boolean isTraceEnabled = LOGGER.isTraceEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken, OrderSuspended$
     // OrderResumed, OrderResumptionMarked, OrderCancellationMarked extends OrderActorEvent
@@ -314,8 +314,8 @@ public class EventService {
             long eventId = stampedEvt.eventId() / 1000000; //eventId per second
             Object key = event.key();
             Event evt = event.event();
-            if (isTraceEnabled) {
-                LOGGER.trace(evt.toString());
+            if (isDebugEnabled) {
+                LOGGER.debug(evt.toString());
             }
 
             if (evt instanceof OrderEvent) {

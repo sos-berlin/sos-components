@@ -233,16 +233,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permissions
                 // orderStream = currentState.ordersBy(JOrderPredicates.none());
-            } else if (folders != null && !folders.isEmpty()) {
-                if (notCycledOrderFilter != null) {
-                    orderStream = currentState.ordersBy(notCycledOrderFilter);
-                }
-                if (cycledOrderFilter != null) {
-                    cycledOrderStream = currentState.ordersBy(cycledOrderFilter);
-                }
-                if (!withStatesFilter || lookingForBlocked || lookingForInProgress) {
-                    blockedOrderStream = currentState.ordersBy(blockedFilter);
-                }
             } else {
                 if (notCycledOrderFilter != null) {
                     orderStream = currentState.ordersBy(notCycledOrderFilter);
