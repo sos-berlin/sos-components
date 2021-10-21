@@ -68,6 +68,12 @@ public class WorkflowPaths {
         return WorkflowPaths.getInstance()._getPath(name);
     }
 
+    // TODO tmp solution, should be replaced by Optional<String> getPath
+    public static String getPathOrNull(String name) {
+        String val = WorkflowPaths.getInstance()._getPath(name);
+        return val == null || !val.startsWith("/") ? null : val;
+    }
+
     public static WorkflowId getWorkflowId(WorkflowId workflowId) {
         return WorkflowPaths.getInstance()._getWorkflowId(workflowId);
     }
