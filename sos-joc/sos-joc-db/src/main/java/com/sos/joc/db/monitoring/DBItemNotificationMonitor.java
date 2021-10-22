@@ -79,25 +79,11 @@ public class DBItemNotificationMonitor extends DBItem {
         return type;
     }
 
-    @Transient
-    public MonitorType getTypeAsEnum() {
-        try {
-            return MonitorType.fromValue(type);
-        } catch (Throwable e) {
-            return MonitorType.COMMAND;
-        }
-    }
-
     public void setType(Integer val) {
         if (val == null) {
             val = MonitorType.COMMAND.intValue();
         }
         type = val;
-    }
-
-    @Transient
-    public void setType(MonitorType val) {
-        setType(val == null ? null : val.intValue());
     }
 
     public String getName() {
@@ -136,11 +122,6 @@ public class DBItemNotificationMonitor extends DBItem {
         errorText = normalizeErrorText(val);
     }
 
-    @Transient
-    public static String normalizeErrorText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
-    }
-
     public String getErrorText() {
         return errorText;
     }
@@ -151,6 +132,25 @@ public class DBItemNotificationMonitor extends DBItem {
 
     public Date getCreated() {
         return created;
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
+    }
+
+    @Transient
+    public MonitorType getTypeAsEnum() {
+        try {
+            return MonitorType.fromValue(type);
+        } catch (Throwable e) {
+            return MonitorType.COMMAND;
+        }
+    }
+
+    @Transient
+    public void setType(MonitorType val) {
+        setType(val == null ? null : val.intValue());
     }
 
 }

@@ -64,15 +64,6 @@ public class DBItemNotification extends DBItem {
         return type;
     }
 
-    @Transient
-    public NotificationType getTypeAsEnum() {
-        try {
-            return NotificationType.fromValue(type);
-        } catch (Throwable e) {
-            return NotificationType.ERROR;
-        }
-    }
-
     public void setType(Integer val) {
         if (val == null) {
             val = NotificationType.ERROR.intValue();
@@ -80,22 +71,8 @@ public class DBItemNotification extends DBItem {
         type = val;
     }
 
-    @Transient
-    public void setType(NotificationType val) {
-        setType(val == null ? null : val.intValue());
-    }
-
     public Integer getRange() {
         return range;
-    }
-
-    @Transient
-    public NotificationRange getRangeAsEnum() {
-        try {
-            return NotificationRange.fromValue(range);
-        } catch (Throwable e) {
-            return NotificationRange.WORKFLOW;
-        }
     }
 
     public void setRange(Integer val) {
@@ -103,11 +80,6 @@ public class DBItemNotification extends DBItem {
             val = NotificationRange.WORKFLOW.intValue();
         }
         range = val;
-    }
-
-    @Transient
-    public void setRange(NotificationRange val) {
-        setRange(val == null ? null : val.intValue());
     }
 
     public String getNotificationId() {
@@ -145,4 +117,31 @@ public class DBItemNotification extends DBItem {
         return created;
     }
 
+    @Transient
+    public NotificationType getTypeAsEnum() {
+        try {
+            return NotificationType.fromValue(type);
+        } catch (Throwable e) {
+            return NotificationType.ERROR;
+        }
+    }
+
+    @Transient
+    public void setType(NotificationType val) {
+        setType(val == null ? null : val.intValue());
+    }
+
+    @Transient
+    public NotificationRange getRangeAsEnum() {
+        try {
+            return NotificationRange.fromValue(range);
+        } catch (Throwable e) {
+            return NotificationRange.WORKFLOW;
+        }
+    }
+
+    @Transient
+    public void setRange(NotificationRange val) {
+        setRange(val == null ? null : val.intValue());
+    }
 }

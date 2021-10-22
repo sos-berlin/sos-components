@@ -127,7 +127,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     }
 
     public void setWorkflowPosition(String val) {
-        workflowPosition = val;
+        workflowPosition = normalizeWorkflowPosition(val);
     }
 
     public Long getHistoryOrderMainParentId() {
@@ -186,15 +186,6 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     public Integer getJobCriticality() {
         return jobCriticality;
-    }
-
-    @Transient
-    public JobCriticality getJobCriticalityAsEnum() {
-        try {
-            return JobCriticality.fromValue(jobCriticality);
-        } catch (IllegalArgumentException e) {
-            return JobCriticality.NORMAL;
-        }
     }
 
     public void setJobCriticality(Integer val) {
@@ -301,22 +292,12 @@ public class DBItemMonitoringOrderStep extends DBItem {
         errorCode = normalizeErrorCode(val);
     }
 
-    @Transient
-    public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
-    }
-
     public String getErrorCode() {
         return errorCode;
     }
 
     public void setErrorText(String val) {
         errorText = normalizeErrorText(val);
-    }
-
-    @Transient
-    public static String normalizeErrorText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {
@@ -330,31 +311,12 @@ public class DBItemMonitoringOrderStep extends DBItem {
         warn = val;
     }
 
-    @Transient
-    public void setWarn(JobWarning val) {
-        setWarn(val == null ? null : val.intValue());
-    }
-
     public Integer getWarn() {
         return warn;
     }
 
-    @Transient
-    public JobWarning getWarnAsEnum() {
-        try {
-            return JobWarning.fromValue(warn);
-        } catch (IllegalArgumentException e) {
-            return JobWarning.NONE;
-        }
-    }
-
     public void setWarnText(String val) {
         warnText = normalizeWarnText(val);
-    }
-
-    @Transient
-    public static String normalizeWarnText(String val) {
-        return normalizeValue(val, MonitoringConstants.MAX_LEN_WARN_TEXT);
     }
 
     public String getWarnText() {
@@ -383,5 +345,48 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Transient
+    public static String normalizeErrorCode(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
+    }
+
+    @Transient
+    public static String normalizeWarnText(String val) {
+        return normalizeValue(val, MonitoringConstants.MAX_LEN_WARN_TEXT);
+    }
+
+    @Transient
+    public static String normalizeWorkflowPosition(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_WORKFLOW_POSITION);
+    }
+
+    @Transient
+    public JobCriticality getJobCriticalityAsEnum() {
+        try {
+            return JobCriticality.fromValue(jobCriticality);
+        } catch (IllegalArgumentException e) {
+            return JobCriticality.NORMAL;
+        }
+    }
+
+    @Transient
+    public void setWarn(JobWarning val) {
+        setWarn(val == null ? null : val.intValue());
+    }
+
+    @Transient
+    public JobWarning getWarnAsEnum() {
+        try {
+            return JobWarning.fromValue(warn);
+        } catch (IllegalArgumentException e) {
+            return JobWarning.NONE;
+        }
     }
 }

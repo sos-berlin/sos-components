@@ -257,7 +257,7 @@ public class DBLayerHistory {
         Query<DBItemHistoryOrderStep> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         query.setParameter("historyOrderId", historyOrderId);
-        query.setParameter("workflowPosition", workflowPosition);
+        query.setParameter("workflowPosition", DBItemHistoryOrder.normalizeWorkflowPosition(workflowPosition));
         query.setReadOnly(true);
 
         List<DBItemHistoryOrderStep> result = executeQueryList("getOrderStepByWorkflowPosition", query);
@@ -379,7 +379,7 @@ public class DBLayerHistory {
         query.setParameter("modified", new Date());
         if (endTime != null) {
             query.setParameter("endTime", endTime);
-            query.setParameter("endWorkflowPosition", endWorkflowPosition);
+            query.setParameter("endWorkflowPosition", DBItemHistoryOrder.normalizeWorkflowPosition(endWorkflowPosition));
             query.setParameter("endHistoryOrderStepId", endHistoryOrderStepId);
             query.setParameter("endEventId", endEventId);
         }
