@@ -310,7 +310,7 @@ public class CheckedOrdersPositions extends OrdersPositions {
             IOException, JocBadRequestException {
         Set<String> allowedPositions = getPositions().stream().map(Positions::getPositionString).collect(Collectors.toCollection(LinkedHashSet::new));
         Variables variables = new Variables();
-        String positionStringWithoutCounter = positionString.replaceAll("([^\\+]+)\\+?.*", "$1");
+        String positionStringWithoutCounter = positionString.replaceAll("/(try|catch|cycle)\\+?[^:]*", "$1");
 
         if (allowedPositions.contains(positionString) || allowedPositions.contains(positionStringWithoutCounter) || implicitEnds.contains(
                 positionString) || implicitEnds.contains(positionStringWithoutCounter)) {
