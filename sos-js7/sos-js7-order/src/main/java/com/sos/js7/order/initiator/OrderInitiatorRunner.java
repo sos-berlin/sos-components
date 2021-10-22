@@ -362,26 +362,27 @@ public class OrderInitiatorRunner extends TimerTask {
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
 
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            List<DBItemDailyPlanSubmission> listOfSubmissions = getSubmissionsForDate(calendar, controllerId);
+        List<DBItemDailyPlanSubmission> submissions = getSubmissionsForDate(calendar, controllerId);
+        for (DBItemDailyPlanSubmission item : submissions) {
+            List<DBItemDailyPlanOrder> plannedOrders;
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitDaysAhead");
-            for (DBItemDailyPlanSubmission dbItemDailyPlanSubmissions : listOfSubmissions) {
+            SOSHibernateSession session = null;
+            try {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.addSubmissionHistoryId(dbItemDailyPlanSubmissions.getId());
+                filter.addSubmissionHistoryId(item.getId());
                 filter.setSubmitted(false);
-                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-                List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
 
-                OrderCounter o = DailyPlanHelper.getOrderCount(listOfPlannedOrders);
-
-                LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: "
-                        + DailyPlanHelper.getDayOfYear(calendar));
-                submitOrders(controllerId, listOfPlannedOrders);
+                session = Globals.createSosHibernateStatelessConnection("submitDaysAhead");
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                plannedOrders = dbLayer.getDailyPlanList(filter, 0);
+            } finally {
+                Globals.disconnect(session);
             }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+
+            OrderCounter o = DailyPlanHelper.getOrderCount(plannedOrders);
+            LOGGER.info("Submitting " + o.getCount() + " orders " + o.cycledOrdersDesc() + " for controller " + controllerId + " day: "
+                    + DailyPlanHelper.getDayOfYear(calendar));
+            submitOrders(controllerId, plannedOrders);
         }
     }
 
