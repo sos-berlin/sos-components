@@ -19,7 +19,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "TYPE",
-    "noticeId"
+    "noticeId",
+    "cycleState"
 })
 public class OrderState {
 
@@ -32,6 +33,15 @@ public class OrderState {
     @JsonProperty("noticeId")
     @JsonPropertyDescription("set if state == ExpectingNotice")
     private String noticeId;
+    /**
+     * OrderCycleState
+     * <p>
+     * set if state == BetweenCycles
+     * 
+     */
+    @JsonProperty("cycleState")
+    @JsonPropertyDescription("set if state == BetweenCycles")
+    private OrderCycleState cycleState;
 
     /**
      * No args constructor for use in serialization
@@ -44,11 +54,13 @@ public class OrderState {
      * 
      * @param tYPE
      * @param noticeId
+     * @param cycleState
      */
-    public OrderState(String tYPE, String noticeId) {
+    public OrderState(String tYPE, String noticeId, OrderCycleState cycleState) {
         super();
         this.tYPE = tYPE;
         this.noticeId = noticeId;
+        this.cycleState = cycleState;
     }
 
     @JsonProperty("TYPE")
@@ -79,14 +91,36 @@ public class OrderState {
         this.noticeId = noticeId;
     }
 
+    /**
+     * OrderCycleState
+     * <p>
+     * set if state == BetweenCycles
+     * 
+     */
+    @JsonProperty("cycleState")
+    public OrderCycleState getCycleState() {
+        return cycleState;
+    }
+
+    /**
+     * OrderCycleState
+     * <p>
+     * set if state == BetweenCycles
+     * 
+     */
+    @JsonProperty("cycleState")
+    public void setCycleState(OrderCycleState cycleState) {
+        this.cycleState = cycleState;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).append("cycleState", cycleState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(noticeId).toHashCode();
+        return new HashCodeBuilder().append(tYPE).append(noticeId).append(cycleState).toHashCode();
     }
 
     @Override
@@ -98,7 +132,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).isEquals();
+        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).append(cycleState, rhs.cycleState).isEquals();
     }
 
 }

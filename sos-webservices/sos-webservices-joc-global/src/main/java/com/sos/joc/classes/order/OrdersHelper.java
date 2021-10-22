@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
 import com.sos.controller.model.workflow.HistoricOutcome;
@@ -369,6 +370,20 @@ public class OrdersHelper {
         }
         o.setPosition(oItem.getWorkflowPosition().getPosition());
         o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
+        o.setCycleState(oItem.getState().getCycleState());
+        int positionsSize = o.getPosition().size();
+        if ("Processing".equals(oItem.getState().getTYPE()) && positionsSize > 2) {
+            try {
+                String lastPosition = (String) o.getPosition().get(positionsSize - 2);
+                if (lastPosition.startsWith("cycle+")) {
+                    lastPosition = "{" + lastPosition.substring(6).replaceAll("(i|end|next)=", "\"$1\":").replaceFirst("i", "index").replaceFirst(
+                            "next", "since") + "}";
+                    o.setCycleState(Globals.objectMapper.readValue(lastPosition, OrderCycleState.class));
+                }
+            } catch (Exception e) {
+                //
+            }
+        }
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
             if (blockedButWaitingForAdmissionOrderIds != null && blockedButWaitingForAdmissionOrderIds.contains(jOrder.id())) {
