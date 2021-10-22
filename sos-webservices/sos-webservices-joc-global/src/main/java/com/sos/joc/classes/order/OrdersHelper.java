@@ -42,9 +42,9 @@ import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.workflow.WorkflowPaths;
-import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.history.common.HistorySeverity;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -112,6 +112,7 @@ public class OrdersHelper {
                     put(Order.DelayedAfterError.class, OrderStateText.WAITING);
                     put(Order.Forked.class, OrderStateText.WAITING);
                     put(Order.WaitingForLock$.class, OrderStateText.WAITING);
+                    put(Order.BetweenCycles.class, OrderStateText.WAITING);
                     put(Order.Broken.class, OrderStateText.FAILED);
                     put(Order.Failed$.class, OrderStateText.FAILED);
                     put(Order.FailedInFork$.class, OrderStateText.FAILED);
@@ -138,6 +139,7 @@ public class OrdersHelper {
             put("Forked", OrderStateText.WAITING);
             put("ExpectingNotice", OrderStateText.WAITING);
             put("WaitingForLock", OrderStateText.WAITING);
+            put("BetweenCycles", OrderStateText.WAITING);
             put("Broken", OrderStateText.FAILED);
             put("Failed", OrderStateText.FAILED);
             put("FailedInFork", OrderStateText.FAILED);
@@ -163,6 +165,7 @@ public class OrdersHelper {
             put("Forked", OrderWaitingReason.FORKED);
             put("ExpectingNotice", OrderWaitingReason.EXPECTING_NOTICE);
             put("WaitingForLock", OrderWaitingReason.WAITING_FOR_LOCK);
+            put("BetweenCycles", OrderWaitingReason.BETWEEN_CYCLES);
         }
     });
 

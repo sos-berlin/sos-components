@@ -211,7 +211,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
             }
 
             final Map<OrderStateText, Integer> map = orderStates.entrySet().stream().collect(Collectors.groupingBy(
-                    entry -> OrdersHelper.groupByStateClasses.get(entry.getKey()), Collectors.summingInt(entry -> entry.getValue())));
+                    entry -> OrdersHelper.groupByStateClasses.getOrDefault(entry.getKey(), OrderStateText.UNKNOWN), Collectors.summingInt(
+                            entry -> entry.getValue())));
             map.put(OrderStateText.BLOCKED, numOfBlockedOrders);
             map.put(OrderStateText.PENDING, numOfPendingOrders);
             map.put(OrderStateText.SCHEDULED, numOfFreshOrders - numOfBlockedOrders - numOfWaitingForAdmissionOrders);
@@ -230,6 +231,10 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
 
             entity.setSurveyDate(Date.from(now));
             entity.setDeliveryDate(Date.from(Instant.now()));
+            
+//            if (map.get(OrderStateText.UNKNOWN) != null) {
+//                //LOGGER
+//            }
 
         } catch (ControllerConnectionRefusedException e) {
             entity.setDeliveryDate(Date.from(Instant.now()));

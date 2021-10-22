@@ -209,8 +209,6 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
                 ordersFilter.setRegex(null);
                 orderStream = currentState.ordersBy(o -> orders.contains(o.id().string()));
                 blockedOrderStream = currentState.ordersBy(JOrderPredicates.and(o -> orders.contains(o.id().string()), blockedFilter));
-//                blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(currentState.ordersBy(JOrderPredicates.and(o -> orders
-//                        .contains(o.id().string()), blockedFilter)), currentState);
 
             } else if (workflowIds != null && !workflowIds.isEmpty()) {
                 ordersFilter.setRegex(null);
@@ -285,7 +283,7 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             Set<OrderId> blockedButWaitingForAdmissionOrderIds = blockedButWaitingForAdmissionOrders.keySet();
             if (lookingForBlocked && !lookingForInProgress) {
                 orderStream = orderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id()));
-            } else {
+            } else if (!lookingForBlocked && lookingForInProgress) {
                 orderStream = Stream.concat(orderStream, blockedButWaitingForAdmissionOrders.values().stream()).distinct();
             }
             

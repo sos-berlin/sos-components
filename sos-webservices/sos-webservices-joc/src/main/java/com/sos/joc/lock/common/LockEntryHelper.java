@@ -2,13 +2,11 @@ package com.sos.joc.lock.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
@@ -122,9 +120,6 @@ public class LockEntryHelper {
                     List<JOrder> lockQueuedJOrders = controllerState.ordersBy(o -> lockQueuedOrderIds.contains(o.id())).sorted(Comparator
                             .comparingLong(compareScheduleFor).reversed()).collect(Collectors.toList());
 
-                    Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Stream.of(lockJOrders, lockQueuedJOrders).flatMap(l -> l
-                            .stream()).map(JOrder::id).collect(Collectors.toSet()), controllerState);
-
                     ConcurrentMap<JWorkflowId, Collection<String>> finalParamsPerWorkflow = Stream.of(lockJOrders, lockQueuedJOrders).flatMap(l -> l
                             .stream()).map(JOrder::workflowId).distinct().collect(Collectors.toConcurrentMap(Function.identity(), w -> OrdersHelper
                                     .getFinalParameters(w, controllerState)));
@@ -133,7 +128,7 @@ public class LockEntryHelper {
                         ordersHoldingLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersHoldingLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, waitingOrders, finalParamsPerWorkflow,
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, null, finalParamsPerWorkflow,
                                     surveyDateMillis));
                         }
                         lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
@@ -150,7 +145,7 @@ public class LockEntryHelper {
                         ordersWaitingForLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersWaitingForLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, waitingOrders, finalParamsPerWorkflow,
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, null, finalParamsPerWorkflow,
                                     surveyDateMillis));
                         }
                         lo.setLock(getWorkflowLock(controllerState, jo, queuedWorkflowLocks, lockId));
