@@ -95,22 +95,8 @@ public class DBItemHistoryOrderState extends DBItem {
         return state;
     }
 
-    @Transient
-    public OrderStateText getStateAsEnum() {
-        try {
-            return OrderStateText.fromValue(state);
-        } catch (Throwable e) {
-            return OrderStateText.UNKNOWN;
-        }
-    }
-
     public void setState(Integer val) {
         state = val;
-    }
-
-    @Transient
-    public void setState(OrderStateText val) {
-        setState(val == null ? null : val.intValue());
     }
 
     public Date getStateTime() {
@@ -151,6 +137,20 @@ public class DBItemHistoryOrderState extends DBItem {
 
     public Date getCreated() {
         return created;
+    }
+
+    @Transient
+    public OrderStateText getStateAsEnum() {
+        try {
+            return OrderStateText.fromValue(state);
+        } catch (Throwable e) {
+            return OrderStateText.UNKNOWN;
+        }
+    }
+
+    @Transient
+    public void setState(OrderStateText val) {
+        setState(val == null ? null : val.intValue());
     }
 
 }

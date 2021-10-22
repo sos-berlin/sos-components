@@ -189,7 +189,7 @@ public class DBItemHistoryOrderStep extends DBItem {
     }
 
     public void setWorkflowPosition(String val) {
-        workflowPosition = val;
+        workflowPosition = normalizeWorkflowPosition(val);
     }
 
     public String getWorkflowFolder() {
@@ -274,22 +274,8 @@ public class DBItemHistoryOrderStep extends DBItem {
         return criticality;
     }
 
-    @Transient
-    public JobCriticality getCriticalityAsEnum() {
-        try {
-            return JobCriticality.fromValue(criticality);
-        } catch (IllegalArgumentException e) {
-            return JobCriticality.NORMAL;
-        }
-    }
-
     public void setCriticality(Integer val) {
         criticality = val;
-    }
-
-    @Transient
-    public void setCriticality(JobCriticality val) {
-        setCriticality(val == null ? JobCriticality.NORMAL.intValue() : val.intValue());
     }
 
     public String getAgentId() {
@@ -380,11 +366,6 @@ public class DBItemHistoryOrderStep extends DBItem {
         severity = val;
     }
 
-    @Transient
-    public void setSeverity(OrderStateText val) {
-        setSeverity(HistorySeverity.map2DbSeverity(val));
-    }
-
     public void setError(boolean val) {
         error = val;
     }
@@ -413,22 +394,12 @@ public class DBItemHistoryOrderStep extends DBItem {
         errorCode = normalizeErrorCode(val);
     }
 
-    @Transient
-    public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
-    }
-
     public String getErrorCode() {
         return errorCode;
     }
 
     public void setErrorText(String val) {
         errorText = normalizeErrorText(val);
-    }
-
-    @Transient
-    public static String normalizeErrorText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {
@@ -468,5 +439,39 @@ public class DBItemHistoryOrderStep extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Transient
+    public static String normalizeErrorCode(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
+    }
+
+    @Transient
+    public static String normalizeWorkflowPosition(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_WORKFLOW_POSITION);
+    }
+
+    @Transient
+    public JobCriticality getCriticalityAsEnum() {
+        try {
+            return JobCriticality.fromValue(criticality);
+        } catch (IllegalArgumentException e) {
+            return JobCriticality.NORMAL;
+        }
+    }
+
+    @Transient
+    public void setCriticality(JobCriticality val) {
+        setCriticality(val == null ? JobCriticality.NORMAL.intValue() : val.intValue());
+    }
+
+    @Transient
+    public void setSeverity(OrderStateText val) {
+        setSeverity(HistorySeverity.map2DbSeverity(val));
     }
 }

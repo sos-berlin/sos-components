@@ -49,10 +49,10 @@ public class DBItemHistoryOrder extends DBItem {
     private String workflowPosition; // event
 
     @Column(name = "[WORKFLOW_FOLDER]", nullable = false)
-    private String workflowFolder;// extracted from workflowPath
+    private String workflowFolder;
 
     @Column(name = "[WORKFLOW_NAME]", nullable = false)
-    private String workflowName;// extracted from workflowPath
+    private String workflowName;
 
     @Column(name = "[WORKFLOW_TITLE]", nullable = true)
     private String workflowTitle;// TODO
@@ -206,7 +206,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setWorkflowPosition(String val) {
-        workflowPosition = val;
+        workflowPosition = normalizeWorkflowPosition(val);
     }
 
     public String getWorkflowFolder() {
@@ -313,7 +313,7 @@ public class DBItemHistoryOrder extends DBItem {
     }
 
     public void setStartWorkflowPosition(String val) {
-        startWorkflowPosition = val;
+        startWorkflowPosition = normalizeWorkflowPosition(val);
     }
 
     public void setStartEventId(Long val) {
@@ -356,7 +356,7 @@ public class DBItemHistoryOrder extends DBItem {
         if (SOSString.isEmpty(val)) {
             val = null;
         }
-        endWorkflowPosition = val;
+        endWorkflowPosition = normalizeWorkflowPosition(val);
     }
 
     public void setEndEventId(Long val) {
@@ -383,31 +383,12 @@ public class DBItemHistoryOrder extends DBItem {
         severity = val;
     }
 
-    @Transient
-    public void setSeverity(OrderStateText val) {
-        setSeverity(HistorySeverity.map2DbSeverity(val));
-    }
-
     public Integer getState() {
         return state;
     }
 
-    @Transient
-    public OrderStateText getStateAsEnum() {
-        try {
-            return OrderStateText.fromValue(state);
-        } catch (Throwable e) {
-            return OrderStateText.UNKNOWN;
-        }
-    }
-
     public void setState(Integer val) {
         state = val;
-    }
-
-    @Transient
-    public void setState(OrderStateText val) {
-        setState(val == null ? null : val.intValue());
     }
 
     public Date getStateTime() {
@@ -470,22 +451,12 @@ public class DBItemHistoryOrder extends DBItem {
         errorCode = normalizeErrorCode(val);
     }
 
-    @Transient
-    public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
-    }
-
     public String getErrorCode() {
         return errorCode;
     }
 
     public void setErrorText(String val) {
         errorText = normalizeErrorText(val);
-    }
-
-    @Transient
-    public static String normalizeErrorText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {
@@ -525,6 +496,40 @@ public class DBItemHistoryOrder extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Transient
+    public static String normalizeErrorCode(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
+    }
+
+    @Transient
+    public static String normalizeWorkflowPosition(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_WORKFLOW_POSITION);
+    }
+
+    @Transient
+    public void setSeverity(OrderStateText val) {
+        setSeverity(HistorySeverity.map2DbSeverity(val));
+    }
+
+    @Transient
+    public OrderStateText getStateAsEnum() {
+        try {
+            return OrderStateText.fromValue(state);
+        } catch (Throwable e) {
+            return OrderStateText.UNKNOWN;
+        }
+    }
+
+    @Transient
+    public void setState(OrderStateText val) {
+        setState(val == null ? null : val.intValue());
     }
 
 }

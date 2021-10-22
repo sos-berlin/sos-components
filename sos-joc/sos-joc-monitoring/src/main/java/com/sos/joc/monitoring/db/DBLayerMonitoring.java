@@ -163,7 +163,7 @@ public class DBLayerMonitoring {
 
         if (hob.getEndTime() != null) {
             query.setParameter("endTime", hob.getEndTime());
-            query.setParameter("endWorkflowPosition", hob.getEndWorkflowPosition());
+            query.setParameter("endWorkflowPosition", DBItemMonitoringOrder.normalizeWorkflowPosition(hob.getEndWorkflowPosition()));
             query.setParameter("endHistoryOrderStepId", hob.getEndHistoryOrderStepId());
         }
         if (hob.getCurrentHistoryOrderStepId() != null) {

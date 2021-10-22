@@ -180,7 +180,7 @@ public class DBItemMonitoringOrder extends DBItem {
     }
 
     public void setWorkflowPosition(String val) {
-        workflowPosition = val;
+        workflowPosition = normalizeWorkflowPosition(val);
     }
 
     public String getWorkflowFolder() {
@@ -279,7 +279,7 @@ public class DBItemMonitoringOrder extends DBItem {
     }
 
     public void setStartWorkflowPosition(String val) {
-        startWorkflowPosition = val;
+        startWorkflowPosition = normalizeWorkflowPosition(val);
     }
 
     public String getStartVariables() {
@@ -317,7 +317,7 @@ public class DBItemMonitoringOrder extends DBItem {
         if (SOSString.isEmpty(val)) {
             val = null;
         }
-        endWorkflowPosition = val;
+        endWorkflowPosition = normalizeWorkflowPosition(val);
     }
 
     public void setEndHistoryOrderStepId(Long val) {
@@ -341,15 +341,6 @@ public class DBItemMonitoringOrder extends DBItem {
 
     public Integer getState() {
         return state;
-    }
-
-    @Transient
-    public OrderStateText getStateAsEnum() {
-        try {
-            return OrderStateText.fromValue(state);
-        } catch (Throwable e) {
-            return OrderStateText.UNKNOWN;
-        }
     }
 
     public void setState(Integer val) {
@@ -400,22 +391,12 @@ public class DBItemMonitoringOrder extends DBItem {
         errorCode = normalizeErrorCode(val);
     }
 
-    @Transient
-    public static String normalizeErrorCode(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
-    }
-
     public String getErrorCode() {
         return errorCode;
     }
 
     public void setErrorText(String val) {
         errorText = normalizeErrorText(val);
-    }
-
-    @Transient
-    public static String normalizeErrorText(String val) {
-        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
     }
 
     public String getErrorText() {
@@ -444,6 +425,30 @@ public class DBItemMonitoringOrder extends DBItem {
 
     public Date getModified() {
         return modified;
+    }
+
+    @Transient
+    public static String normalizeErrorCode(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_CODE);
+    }
+
+    @Transient
+    public static String normalizeErrorText(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_ERROR_TEXT);
+    }
+
+    @Transient
+    public static String normalizeWorkflowPosition(String val) {
+        return normalizeValue(val, HistoryConstants.MAX_LEN_WORKFLOW_POSITION);
+    }
+
+    @Transient
+    public OrderStateText getStateAsEnum() {
+        try {
+            return OrderStateText.fromValue(state);
+        } catch (Throwable e) {
+            return OrderStateText.UNKNOWN;
+        }
     }
 
 }
