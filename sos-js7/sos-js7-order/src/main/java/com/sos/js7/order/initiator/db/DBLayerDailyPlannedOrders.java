@@ -438,9 +438,10 @@ public class DBLayerDailyPlannedOrders {
         StringBuilder hql = new StringBuilder();
         if (filter.isCyclicStart()) {
             StringBuilder q = new StringBuilder("select min(p.id) ");
-            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
-            q.append(getWhere(filter, "p.schedulePath", false)).append(" ");
-            q.append("group by repeatInterval,periodBegin,periodEnd,orderName ");
+            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
+            q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
+            q.append(getWhere(filter, "p.schedulePath", true)).append(" ");
+            q.append("group by p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName ");
 
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
             hql.append(",p.workflowName as workflowName, p.workflowPath as workflowPath,p.orderId as orderId,p.orderName as orderName");
