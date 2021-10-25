@@ -53,9 +53,9 @@ public class OrderResourceImpl extends JOCResourceImpl implements IOrderResource
             if (optional.isPresent()) {
                 JOrder jOrder = optional.get();
                 Set<OrderId> waitingOrders = OrdersHelper.getWaitingForAdmissionOrderIds(Collections.singleton(jOrder.id()), currentState);
-                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, orderFilter.getCompact(), folderPermissions.getListOfFolders(), waitingOrders,
-                        Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(), currentState)),
-                        surveyDateInstant.toEpochMilli());
+                OrderV o = OrdersHelper.mapJOrderToOrderV(jOrder, currentState, orderFilter.getCompact(), folderPermissions.getListOfFolders(),
+                        waitingOrders, Collections.singletonMap(jOrder.workflowId(), OrdersHelper.getFinalParameters(jOrder.workflowId(),
+                                currentState)), surveyDateInstant.toEpochMilli());
                 checkFolderPermissions(o.getWorkflowId().getPath());
                 if (orderStateWithRequirements.contains(o.getState().get_text())) {
                     o.setRequirements(OrdersHelper.getRequirements(jOrder, currentState));

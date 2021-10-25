@@ -86,6 +86,7 @@ import js7.data.value.NumberValue;
 import js7.data.value.ObjectValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
+import js7.data.workflow.instructions.ImplicitEnd;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
@@ -342,7 +343,7 @@ public class OrdersHelper {
         return null;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, Boolean compact, Set<Folder> listOfFolders,
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, OrderItem oItem, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
             Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
             throws IOException, JocFolderPermissionsException {
         OrderV o = new OrderV();
@@ -372,17 +373,21 @@ public class OrdersHelper {
         o.setPositionString(JPosition.apply(jOrder.asScala().position()).toString());
         o.setCycleState(oItem.getState().getCycleState());
         int positionsSize = o.getPosition().size();
-        if ("Processing".equals(oItem.getState().getTYPE()) && positionsSize > 2) {
-            try {
-                String lastPosition = (String) o.getPosition().get(positionsSize - 2);
-                if (lastPosition.startsWith("cycle+")) {
-                    lastPosition = "{" + lastPosition.substring(6).replaceAll("(i|end|next)=", "\"$1\":").replaceFirst("i", "index").replaceFirst(
-                            "next", "since") + "}";
-                    o.setCycleState(Globals.objectMapper.readValue(lastPosition, OrderCycleState.class));
+        if ("Processing".equals(oItem.getState().getTYPE())) {
+            if (positionsSize > 2) {
+                try {
+                    String lastPosition = (String) o.getPosition().get(positionsSize - 2);
+                    if (lastPosition.startsWith("cycle+")) {
+                        lastPosition = "{" + lastPosition.substring(6).replaceAll("(i|end|next)=", "\"$1\":").replaceFirst("i", "index").replaceFirst(
+                                "next", "since") + "}";
+                        o.setCycleState(Globals.objectMapper.readValue(lastPosition, OrderCycleState.class));
+                    }
+                } catch (Exception e) {
+                    //
                 }
-            } catch (Exception e) {
-                //
             }
+        } else if (oItem.getId().contains("|")) { //is (not running) child order
+            orderIsInImplicitEnd(jOrder, controllerState).ifPresent(b -> o.setPositionIsImplicitEnd(b ? true: null));
         }
         Long scheduledFor = oItem.getScheduledFor();
         if (scheduledFor != null && surveyDateMillis != null && scheduledFor < surveyDateMillis && "Fresh".equals(oItem.getState().getTYPE())) {
@@ -400,6 +405,8 @@ public class OrdersHelper {
             o.setQuestion(((Order.Prompting) jOrder.asScala().state()).question().convertToString());
         }
         o.setMarked(getMark(jOrder.asScala().mark()));
+        //o.setIsCancelable(jOrder.asScala().isCancelable() ? null : false);
+        //o.setIsSuspendible(jOrder.asScala().isSuspendible() ? null : false);
         o.setScheduledFor(scheduledFor);
         o.setScheduledNever(JobSchedulerDate.NEVER_MILLIS.equals(scheduledFor));
         if (scheduledFor == null && surveyDateMillis != null && OrderStateText.SCHEDULED.equals(o.getState().get_text())) {
@@ -413,12 +420,20 @@ public class OrdersHelper {
         return o;
     }
 
-    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Set<Folder> listOfFolders, Set<OrderId> blockedButWaitingForAdmissionOrderIds,
-            Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis) throws JsonParseException, JsonMappingException, IOException,
-            JocFolderPermissionsException {
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, JControllerState controllerState, Boolean compact, Set<Folder> listOfFolders,
+            Set<OrderId> blockedButWaitingForAdmissionOrderIds, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
+            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
         // TODO mapping without ObjectMapper
         OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
-        return mapJOrderToOrderV(jOrder, oItem, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters, surveyDateMillis);
+        return mapJOrderToOrderV(jOrder, oItem, controllerState, compact, listOfFolders, blockedButWaitingForAdmissionOrderIds, finalParameters,
+                surveyDateMillis);
+    }
+    
+    public static OrderV mapJOrderToOrderV(JOrder jOrder, Boolean compact, Map<JWorkflowId, Collection<String>> finalParameters, Long surveyDateMillis)
+            throws JsonParseException, JsonMappingException, IOException, JocFolderPermissionsException {
+        // TODO mapping without ObjectMapper
+        OrderItem oItem = Globals.objectMapper.readValue(jOrder.toJson(), OrderItem.class);
+        return mapJOrderToOrderV(jOrder, oItem, null, compact, null, null, finalParameters, surveyDateMillis);
     }
 
     public static OrderPreparation getOrderPreparation(JOrder jOrder, JControllerState currentState) throws JsonParseException, JsonMappingException,
@@ -899,6 +914,13 @@ public class OrdersHelper {
     public static ConcurrentMap<OrderId, JOrder> getWaitingForAdmissionOrders(Collection<JOrder> blockedOrders, JControllerState controllerState) {
        Set<OrderId> ids = getWaitingForAdmissionOrderIds(blockedOrders.stream().map(JOrder::id).collect(Collectors.toSet()), controllerState);
        return blockedOrders.parallelStream().filter(o -> ids.contains(o.id())).collect(Collectors.toConcurrentMap(JOrder::id, Function.identity()));
+    }
+    
+    public static Optional<Boolean> orderIsInImplicitEnd(JOrder o, JControllerState controllerState) {
+        if (controllerState == null || o == null) {
+            return Optional.empty();
+        }
+        return Optional.of(controllerState.asScala().instruction(o.asScala().workflowPosition()) instanceof ImplicitEnd);
     }
 
 }

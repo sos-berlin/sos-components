@@ -128,8 +128,7 @@ public class LockEntryHelper {
                         ordersHoldingLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersHoldingLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, null, finalParamsPerWorkflow,
-                                    surveyDateMillis));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis));
                         }
                         lo.setLock(getWorkflowLock(sharedAcquired, lockId, jo.id().string()));
 
@@ -145,8 +144,7 @@ public class LockEntryHelper {
                         ordersWaitingForLocksCount++;
                         LockOrder lo = new LockOrder();
                         if (ordersWaitingForLocksCount <= limit) {
-                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, null, null, finalParamsPerWorkflow,
-                                    surveyDateMillis));
+                            lo.setOrder(OrdersHelper.mapJOrderToOrderV(jo, true, finalParamsPerWorkflow, surveyDateMillis));
                         }
                         lo.setLock(getWorkflowLock(controllerState, jo, queuedWorkflowLocks, lockId));
 

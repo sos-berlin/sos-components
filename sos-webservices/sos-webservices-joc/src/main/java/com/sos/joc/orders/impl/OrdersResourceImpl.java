@@ -331,8 +331,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
 
             Function<JOrder, OrderV> mapJOrderToOrderV = o -> {
                 try {
-                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, ordersFilter.getCompact(), null, blockedButWaitingForAdmissionOrderIds,
-                            finalParamsPerWorkflow, surveyDateMillis);
+                    OrderV order = OrdersHelper.mapJOrderToOrderV(o, currentState, ordersFilter.getCompact(), null,
+                            blockedButWaitingForAdmissionOrderIds, finalParamsPerWorkflow, surveyDateMillis);
                     order.setCyclicOrder(cycleInfos.get(order.getOrderId()));
                     if (orderStateWithRequirements.contains(order.getState().get_text())) {
                         if (!orderPreparations.containsKey(o.workflowId())) {

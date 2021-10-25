@@ -47,7 +47,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "lastOutcome",
     "historicOutcome",
     "requirements",
-    "cyclicOrder"
+    "cyclicOrder",
+    "positionIsImplicitEnd"
 })
 public class OrderV {
 
@@ -126,11 +127,11 @@ public class OrderV {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
-    @JsonPropertyDescription("set if state == BetweenCycles")
+    @JsonPropertyDescription("set if state == BetweenCycles or processing inside a cycle")
     private OrderCycleState cycleState;
     /**
      * position
@@ -205,6 +206,8 @@ public class OrderV {
      */
     @JsonProperty("cyclicOrder")
     private CyclicOrderInfos cyclicOrder;
+    @JsonProperty("positionIsImplicitEnd")
+    private Boolean positionIsImplicitEnd;
 
     /**
      * No args constructor for use in serialization
@@ -230,12 +233,13 @@ public class OrderV {
      * @param arguments
      * @param state
      * @param position
+     * @param positionIsImplicitEnd
      * @param deliveryDate
      * @param workflowId
      * @param cycleState
      * @param cyclicOrder
      */
-    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, OrderCycleState cycleState, List<Object> position, String positionString, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder) {
+    public OrderV(Date deliveryDate, Date surveyDate, String orderId, Variables arguments, WorkflowId workflowId, OrderState state, OrderMark marked, OrderAttachedState attachedState, String agentId, OrderCycleState cycleState, List<Object> position, String positionString, Long scheduledFor, Boolean scheduledNever, String question, Outcome lastOutcome, List<HistoricOutcome> historicOutcome, Requirements requirements, CyclicOrderInfos cyclicOrder, Boolean positionIsImplicitEnd) {
         super();
         this.deliveryDate = deliveryDate;
         this.surveyDate = surveyDate;
@@ -256,6 +260,7 @@ public class OrderV {
         this.historicOutcome = historicOutcome;
         this.requirements = requirements;
         this.cyclicOrder = cyclicOrder;
+        this.positionIsImplicitEnd = positionIsImplicitEnd;
     }
 
     /**
@@ -453,7 +458,7 @@ public class OrderV {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
@@ -464,7 +469,7 @@ public class OrderV {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
@@ -658,14 +663,24 @@ public class OrderV {
         this.cyclicOrder = cyclicOrder;
     }
 
+    @JsonProperty("positionIsImplicitEnd")
+    public Boolean getPositionIsImplicitEnd() {
+        return positionIsImplicitEnd;
+    }
+
+    @JsonProperty("positionIsImplicitEnd")
+    public void setPositionIsImplicitEnd(Boolean positionIsImplicitEnd) {
+        this.positionIsImplicitEnd = positionIsImplicitEnd;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("cycleState", cycleState).append("position", position).append("positionString", positionString).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("orderId", orderId).append("arguments", arguments).append("workflowId", workflowId).append("state", state).append("marked", marked).append("attachedState", attachedState).append("agentId", agentId).append("cycleState", cycleState).append("position", position).append("positionString", positionString).append("scheduledFor", scheduledFor).append("scheduledNever", scheduledNever).append("question", question).append("lastOutcome", lastOutcome).append("historicOutcome", historicOutcome).append("requirements", requirements).append("cyclicOrder", cyclicOrder).append("positionIsImplicitEnd", positionIsImplicitEnd).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(marked).append(attachedState).append(agentId).append(scheduledNever).append(requirements).append(surveyDate).append(question).append(orderId).append(lastOutcome).append(historicOutcome).append(positionString).append(scheduledFor).append(arguments).append(state).append(position).append(deliveryDate).append(workflowId).append(cycleState).append(cyclicOrder).toHashCode();
+        return new HashCodeBuilder().append(marked).append(attachedState).append(agentId).append(scheduledNever).append(requirements).append(surveyDate).append(question).append(orderId).append(lastOutcome).append(historicOutcome).append(positionString).append(scheduledFor).append(arguments).append(state).append(position).append(positionIsImplicitEnd).append(deliveryDate).append(workflowId).append(cycleState).append(cyclicOrder).toHashCode();
     }
 
     @Override
@@ -677,7 +692,7 @@ public class OrderV {
             return false;
         }
         OrderV rhs = ((OrderV) other);
-        return new EqualsBuilder().append(marked, rhs.marked).append(attachedState, rhs.attachedState).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).isEquals();
+        return new EqualsBuilder().append(marked, rhs.marked).append(attachedState, rhs.attachedState).append(agentId, rhs.agentId).append(scheduledNever, rhs.scheduledNever).append(requirements, rhs.requirements).append(surveyDate, rhs.surveyDate).append(question, rhs.question).append(orderId, rhs.orderId).append(lastOutcome, rhs.lastOutcome).append(historicOutcome, rhs.historicOutcome).append(positionString, rhs.positionString).append(scheduledFor, rhs.scheduledFor).append(arguments, rhs.arguments).append(state, rhs.state).append(position, rhs.position).append(positionIsImplicitEnd, rhs.positionIsImplicitEnd).append(deliveryDate, rhs.deliveryDate).append(workflowId, rhs.workflowId).append(cycleState, rhs.cycleState).append(cyclicOrder, rhs.cyclicOrder).isEquals();
     }
 
 }
