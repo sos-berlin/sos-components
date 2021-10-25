@@ -2198,7 +2198,7 @@ public class DBLayerDeploy {
                     } else if ("limit".equals(item)) {
                         return null;
                     } else if ("controllerId".equals(item)) {
-                        return "controllerId in (controllerIds)";
+                        return "controllerId in (:controllerIds)";
                     } else {
                         return item + " = :" + item;
                     }
