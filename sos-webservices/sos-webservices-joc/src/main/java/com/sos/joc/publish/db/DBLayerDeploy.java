@@ -2189,19 +2189,21 @@ public class DBLayerDeploy {
         if (filter.getDetailFilter() != null) {
             Set<String> presentFilterAttributes = FilterAttributesMapper.getDefaultAttributesFromFilter(filter.getDetailFilter(), allowedControllers);
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(presentFilterAttributes.stream().map(item -> {
-                if ("from".equals(item)) {
-                    return FROM_DEP_DATE;
-                } else if ("to".equals(item)) {
-                    return TO_DEP_DATE;
-                } else if ("limit".equals(item)) {
-                    return null;
-                } else if ("controllerId".equals(item)) {
-                    return "controllerId = :controllerId";
-                } else {
-                    return item + " = :" + item;
-                }
-            }).filter(Objects::nonNull).collect(Collectors.joining(" and ", " where ", "")));
+            if (presentFilterAttributes.contains("from") || presentFilterAttributes.contains("to") || presentFilterAttributes.contains("controllerId")) {
+                hql.append(presentFilterAttributes.stream().map(item -> {
+                    if ("from".equals(item)) {
+                        return FROM_DEP_DATE;
+                    } else if ("to".equals(item)) {
+                        return TO_DEP_DATE;
+                    } else if ("limit".equals(item)) {
+                        return null;
+                    } else if ("controllerId".equals(item)) {
+                        return "controllerId in (controllerIds)";
+                    } else {
+                        return item + " = :" + item;
+                    }
+                }).filter(Objects::nonNull).collect(Collectors.joining(" and ", " where ", "")));
+            }
             hql.append(" order by deploymentDate desc");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
             for (String item : presentFilterAttributes) {
@@ -2216,8 +2218,8 @@ public class DBLayerDeploy {
                     query.setParameter(item, FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item),
                             TemporalType.TIMESTAMP);
                     break;
-                case "controllerIds":
-                    query.setParameterList(item, allowedControllers);
+                case "controllerId":
+                    query.setParameterList("controllerIds", allowedControllers);
                     break;
                 case "limit":
                     query.setMaxResults((Integer) FilterAttributesMapper.getValueByFilterAttribute(filter.getDetailFilter(), item));

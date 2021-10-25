@@ -33,11 +33,8 @@ public abstract class FilterAttributesMapper {
             filterAttributes.add("type");
         }
         if (!allowedControllers.isEmpty()) {
-            filterAttributes.add("controllerIds");
+            filterAttributes.add("controllerId");
         }
-//        if (filter.getControllerId() != null) {
-//            filterAttributes.add("controllerId");
-//        }
         if (filter.getCommitId() != null) {
             filterAttributes.add("commitId");
         }
