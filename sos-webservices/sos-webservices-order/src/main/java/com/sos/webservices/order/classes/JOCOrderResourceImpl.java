@@ -103,25 +103,30 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return filter;
     }
 
-    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter)
-            throws SOSHibernateException {
+    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter,
+            boolean sort) throws SOSHibernateException {
 
         // session.setAutoCommit(false);
         // Globals.beginTransaction(session);
 
-        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
-        List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
+        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+        List<DBItemDailyPlanWithHistory> result = null;
 
         if (filter != null) {
-            filter.setOrderCriteria("plannedStart");
+            // filter.setOrderCriteria("plannedStart");
+            filter.setOrderCriteria(null);
             filter.setSingleStart();
-            listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0);
+            result = dbLayer.getDailyPlanWithHistoryList(filter, 0);
             filter.setCyclicStart();
-            listOfPlannedOrders.addAll(dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0));
+            result.addAll(dbLayer.getDailyPlanWithHistoryList(filter, 0));
+            if (sort) {
+                // sort on client
+                // result.sort((o1, o2) -> o1.getPlannedStart().compareTo(o2.getPlannedStart()));
+            }
         }
         // Globals.commit(session);
 
-        return listOfPlannedOrders;
+        return result;
     }
 
     protected List<String> getAllowedControllersOrdersView(String controllerId, List<String> controllerIds, String accessToken) {
@@ -205,10 +210,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                         mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
                     }
 
-                    // TODO why check by FINISHED
-                    // if (!DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
                     mapOfCycledOrders.get(cycleOrderKey).add(p);
-                    // }
 
                 } else {
                     listOfPlannedOrderItems.add(p);

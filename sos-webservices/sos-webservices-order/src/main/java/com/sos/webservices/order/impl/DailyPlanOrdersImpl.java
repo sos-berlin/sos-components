@@ -34,7 +34,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
 
     @Override
     public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) throws JocException {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
@@ -59,22 +59,22 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             setSettings();
             LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
 
-            ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
+            ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
 
             for (String controllerId : allowedControllers) {
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
 
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, filter);
-                addOrders(sosHibernateSession, filter, controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems, true);
+                List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, true);
+                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, result, true);
             }
 
-            PlannedOrders plannedOrders = new PlannedOrders();
-            plannedOrders.setPlannedOrderItems(listOfPlannedOrderItems);
-            plannedOrders.setDeliveryDate(Date.from(Instant.now()));
+            PlannedOrders answer = new PlannedOrders();
+            answer.setPlannedOrderItems(result);
+            answer.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(plannedOrders);
+            return JOCDefaultResponse.responseStatus200(answer);
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -82,7 +82,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 

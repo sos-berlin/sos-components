@@ -68,7 +68,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
 
                 ArrayList<PlannedOrderItem> plannedOrders = new ArrayList<PlannedOrderItem>();
-                List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter);
+                List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, false);
                 addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, plannedOrders, false);
 
                 for (PlannedOrderItem p : plannedOrders) {

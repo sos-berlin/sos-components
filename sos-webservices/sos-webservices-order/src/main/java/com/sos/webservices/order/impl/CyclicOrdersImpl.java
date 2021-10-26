@@ -32,7 +32,6 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
 
     @Override
     public JOCDefaultResponse postCyclicOrders(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession sosHibernateSession = null;
         LOGGER.debug("reading list of cyclic orders");
         try {
             initLogging(API_CALL, filterBytes, accessToken);
@@ -59,8 +58,6 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -88,7 +85,8 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
                     filterCyclic.setPeriodEnd(dbItemDailyPlanOrder.getPeriodEnd());
                     filterCyclic.setWorkflowName(dbItemDailyPlanOrder.getWorkflowName());
                     filterCyclic.setScheduleName(dbItemDailyPlanOrder.getScheduleName());
-                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(settings.getTimeZone()), settings.getTimeZone(), settings.getPeriodBegin());
+                    filterCyclic.setDailyPlanDate(dbItemDailyPlanOrder.getDailyPlanDate(settings.getTimeZone()), settings.getTimeZone(), settings
+                            .getPeriodBegin());
 
                     List<DBItemDailyPlanOrder> listOfPlannedCyclicOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filterCyclic, 0);
                     for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedCyclicOrders) {
@@ -104,7 +102,5 @@ public class CyclicOrdersImpl extends JOCOrderResourceImpl implements ICyclicOrd
             Globals.disconnect(sosHibernateSession);
         }
     }
-
- 
 
 }
