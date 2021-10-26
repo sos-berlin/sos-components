@@ -30,6 +30,7 @@ import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.AuditParams;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.sign.JocKeyPair;
+import com.sos.joc.model.sign.JocKeyType;
 import com.sos.joc.publish.util.PublishUtils;
 
 @Path("profile/key/ca")
@@ -66,6 +67,7 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             JocKeyPair keyPair = new JocKeyPair();
             String certificateFromFile = readFileContent(stream);
             keyPair.setKeyAlgorithm(SOSKeyConstants.ECDSA_ALGORITHM_NAME);
+            keyPair.setKeyType(JocKeyType.CA.name());
             String account = "";
             String publicKey = null;
             if (certificateFromFile != null) {

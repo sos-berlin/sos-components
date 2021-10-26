@@ -18,6 +18,7 @@ import com.sos.joc.keys.ca.resource.ISetRootCa;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.publish.SetRootCaFilter;
+import com.sos.joc.model.publish.SetRootCaForSigningFilter;
 import com.sos.joc.model.sign.JocKeyPair;
 import com.sos.joc.model.sign.JocKeyType;
 import com.sos.schema.JsonValidator;
@@ -33,8 +34,8 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
         SOSHibernateSession hibernateSession = null;
         try {
             initLogging(API_CALL, filter, xAccessToken);
-            JsonValidator.validateFailFast(filter, SetRootCaFilter.class);
-            SetRootCaFilter setRootCaFilter = Globals.objectMapper.readValue(filter, SetRootCaFilter.class);
+            JsonValidator.validateFailFast(filter, SetRootCaForSigningFilter.class);
+            SetRootCaForSigningFilter setRootCaFilter = Globals.objectMapper.readValue(filter, SetRootCaForSigningFilter.class);
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, getJocPermissions(xAccessToken).getAdministration().getCertificates().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
