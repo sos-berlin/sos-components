@@ -19,22 +19,12 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "end",
     "next",
     "since",
     "index"
 })
 public class OrderCycleState {
 
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("end")
-    @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
-    private Date end;
     /**
      * timestamp
      * <p>
@@ -67,37 +57,13 @@ public class OrderCycleState {
      * 
      * @param next
      * @param index
-     * @param end
      * @param since
      */
-    public OrderCycleState(Date end, Date next, Date since, Integer index) {
+    public OrderCycleState(Date next, Date since, Integer index) {
         super();
-        this.end = end;
         this.next = next;
         this.since = since;
         this.index = index;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("end")
-    public Date getEnd() {
-        return end;
-    }
-
-    /**
-     * timestamp
-     * <p>
-     * Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty
-     * 
-     */
-    @JsonProperty("end")
-    public void setEnd(Date end) {
-        this.end = end;
     }
 
     /**
@@ -156,12 +122,12 @@ public class OrderCycleState {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("end", end).append("next", next).append("since", since).append("index", index).toString();
+        return new ToStringBuilder(this).append("next", next).append("since", since).append("index", index).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(next).append(index).append(end).append(since).toHashCode();
+        return new HashCodeBuilder().append(next).append(index).append(since).toHashCode();
     }
 
     @Override
@@ -173,7 +139,7 @@ public class OrderCycleState {
             return false;
         }
         OrderCycleState rhs = ((OrderCycleState) other);
-        return new EqualsBuilder().append(next, rhs.next).append(index, rhs.index).append(end, rhs.end).append(since, rhs.since).isEquals();
+        return new EqualsBuilder().append(next, rhs.next).append(index, rhs.index).append(since, rhs.since).isEquals();
     }
 
 }
