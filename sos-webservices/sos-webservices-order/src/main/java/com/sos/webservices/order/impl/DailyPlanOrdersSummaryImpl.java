@@ -33,7 +33,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
 
     @Override
     public JOCDefaultResponse postDailyPlanOrdersSummary(String accessToken, byte[] filterBytes) throws JocException {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
@@ -55,53 +55,46 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             setSettings();
             LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
 
-            DailyPlanOrdersSummary dailyPlanOrdersSummary = new DailyPlanOrdersSummary();
-            dailyPlanOrdersSummary.setFinished(0);
-            dailyPlanOrdersSummary.setSubmitted(0);
-            dailyPlanOrdersSummary.setSubmittedLate(0);
-            dailyPlanOrdersSummary.setPlanned(0);
-            dailyPlanOrdersSummary.setPlannedLate(0);
+            DailyPlanOrdersSummary answer = new DailyPlanOrdersSummary();
+            answer.setFinished(0);
+            answer.setSubmitted(0);
+            answer.setSubmittedLate(0);
+            answer.setPlanned(0);
+            answer.setPlannedLate(0);
 
             for (String controllerId : allowedControllers) {
-                ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
-
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
-               
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, filter);
-                addOrders(sosHibernateSession, filter, controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems, false);
 
-                for (PlannedOrderItem p : listOfPlannedOrderItems) {
+                ArrayList<PlannedOrderItem> plannedOrders = new ArrayList<PlannedOrderItem>();
+                List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter);
+                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, plannedOrders, false);
+
+                for (PlannedOrderItem p : plannedOrders) {
                     if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value()) && !(DailyPlanOrderStateText.FINISHED
                             .value().equals(p.getState().get_text().value()))) {
-
                         if (p.getLate()) {
-                            dailyPlanOrdersSummary.setSubmittedLate(dailyPlanOrdersSummary.getSubmittedLate() + 1);
+                            answer.setSubmittedLate(answer.getSubmittedLate() + 1);
                         } else {
-                            dailyPlanOrdersSummary.setSubmitted(dailyPlanOrdersSummary.getSubmitted() + 1);
+                            answer.setSubmitted(answer.getSubmitted() + 1);
                         }
                     }
                     if (DailyPlanOrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
                         if (p.getLate()) {
-                            dailyPlanOrdersSummary.setPlannedLate(dailyPlanOrdersSummary.getPlannedLate() + 1);
+                            answer.setPlannedLate(answer.getPlannedLate() + 1);
                         } else {
-                            dailyPlanOrdersSummary.setPlanned(dailyPlanOrdersSummary.getPlanned() + 1);
+                            answer.setPlanned(answer.getPlanned() + 1);
                         }
                     }
                     if (DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
-                        dailyPlanOrdersSummary.setFinished(dailyPlanOrdersSummary.getFinished() + 1);
+                        answer.setFinished(answer.getFinished() + 1);
                     }
                 }
             }
+            return JOCDefaultResponse.responseStatus200(answer);
 
-            Globals.commit(sosHibernateSession);
-
-            return JOCDefaultResponse.responseStatus200(dailyPlanOrdersSummary);
-
-        } catch (
-
-        JocException e) {
+        } catch (JocException e) {
             LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -110,7 +103,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 }
