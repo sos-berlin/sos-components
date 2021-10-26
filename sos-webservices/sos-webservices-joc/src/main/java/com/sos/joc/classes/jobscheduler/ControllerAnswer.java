@@ -29,6 +29,8 @@ public class ControllerAnswer extends Controller {
 	@JsonIgnore
 	private DBItemInventoryOperatingSystem dbOs;
 	@JsonIgnore
+    private Date startedAt;
+    @JsonIgnore
 	private boolean updateDbInstance = false;
 	@JsonIgnore
     private ClusterType clusterState = null;
@@ -36,13 +38,14 @@ public class ControllerAnswer extends Controller {
     private boolean onlyDb = false;
 
     public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs,
-            boolean onlyDb) {
+            Date startedAt, boolean onlyDb) {
         this.overviewJson = overview;
         this.clusterStateJson = clusterState;
         if (clusterState != null) {
             this.clusterState = clusterState.getTYPE();
         }
         this.dbInstance = dbInstance;
+        this.startedAt = startedAt;
         if (dbOs == null) {
             dbOs = new DBItemInventoryOperatingSystem();
             dbOs.setId(null);
@@ -84,10 +87,14 @@ public class ControllerAnswer extends Controller {
 	public void setFields() throws ControllerInvalidResponseDataException {
 		if (overviewJson != null) {
 			if (!dbInstance.getControllerId().equals(overviewJson.getId())) {
-				throw new ControllerInvalidResponseDataException("unexpected JobSchedulerId " + overviewJson.getId());
+				throw new ControllerInvalidResponseDataException("unexpected ControllerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
-			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
+			if (startedAt != null) {
+			    setStartedAt(startedAt);
+			} else {
+			    setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
+			}
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
 			    switch (clusterStateJson.getTYPE()) {
@@ -95,7 +102,8 @@ public class ControllerAnswer extends Controller {
 			        isActive = true;
 			        break;
                 default:
-                    String activeClusterUri = clusterStateJson.getSetting().getIdToUri().getAdditionalProperties().get(clusterStateJson.getSetting().getActiveId());
+                    String activeClusterUri = clusterStateJson.getSetting().getIdToUri().getAdditionalProperties().get(clusterStateJson.getSetting()
+                            .getActiveId());
                     isActive = activeClusterUri.equalsIgnoreCase(dbInstance.getClusterUri()) || activeClusterUri.equalsIgnoreCase(dbInstance
                             .getUri());
                     break;

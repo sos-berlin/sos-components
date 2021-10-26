@@ -1,10 +1,10 @@
 package com.sos.joc.db.inventory.instance;
 
 import java.net.URI;
-import java.sql.Date;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
@@ -361,6 +362,24 @@ public class InventoryInstancesDBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Date getStartedAt(String controllerId) {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" where readyEventId = ");
+            sql.append("(select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(
+                    " where controllerId=:controllerId and shutdownTime is null)");
+            Query<DBItemHistoryController> query = session.createQuery(sql.toString());
+            query.setParameter("controllerId", controllerId);
+            DBItemHistoryController result = session.getSingleResult(query);
+            if (result != null) {
+                return result.getReadyTime();
+            }
+            return null;
+        } catch (Exception ex) {
+            return null;
         }
     }
 

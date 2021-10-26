@@ -145,7 +145,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             List<ControllerCallable> tasks = new ArrayList<ControllerCallable>();
             for (DBItemInventoryJSInstance schedulerInstance : schedulerInstances) {
                 tasks.add(new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()), accessToken,
-                        onlyDb));
+                        instanceLayer, onlyDb));
             }
             if (!tasks.isEmpty()) {
                 if (tasks.size() == 1) {

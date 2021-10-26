@@ -1,5 +1,6 @@
 package com.sos.joc.classes.jobscheduler;
 
+import java.util.Date;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import com.sos.controller.model.command.Overview;
 import com.sos.joc.classes.JOCJsonCommand;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
+import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
@@ -20,19 +22,24 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
 	private final DBItemInventoryOperatingSystem dbOsSystem;
 	private final String accessToken;
 	private final boolean onlyDb;
+	private final Date startedAt;
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerCallable.class);
 
-    public ControllerCallable(DBItemInventoryJSInstance dbItemInventoryInstance, DBItemInventoryOperatingSystem dbOsSystem, String accessToken) {
-		this.dbItemInventoryInstance = dbItemInventoryInstance;
-		this.dbOsSystem = dbOsSystem;
-		this.accessToken = accessToken;
-		this.onlyDb = false;
-	}
-    
-    public ControllerCallable(DBItemInventoryJSInstance dbItemInventoryInstance, DBItemInventoryOperatingSystem dbOsSystem, String accessToken, boolean onlyDb) {
+    public ControllerCallable(DBItemInventoryJSInstance dbItemInventoryInstance, DBItemInventoryOperatingSystem dbOsSystem, String accessToken,
+            InventoryInstancesDBLayer instanceLayer) {
         this.dbItemInventoryInstance = dbItemInventoryInstance;
         this.dbOsSystem = dbOsSystem;
         this.accessToken = accessToken;
+        this.startedAt = instanceLayer.getStartedAt(dbItemInventoryInstance.getControllerId());
+        this.onlyDb = false;
+    }
+
+    public ControllerCallable(DBItemInventoryJSInstance dbItemInventoryInstance, DBItemInventoryOperatingSystem dbOsSystem, String accessToken,
+            InventoryInstancesDBLayer instanceLayer, boolean onlyDb) {
+        this.dbItemInventoryInstance = dbItemInventoryInstance;
+        this.dbOsSystem = dbOsSystem;
+        this.accessToken = accessToken;
+        this.startedAt = instanceLayer.getStartedAt(dbItemInventoryInstance.getControllerId());
         this.onlyDb = onlyDb;
     }
 
@@ -57,7 +64,7 @@ public class ControllerCallable implements Callable<ControllerAnswer> {
                 LOGGER.info(e.toString());
             }
         }
-        ControllerAnswer js = new ControllerAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, onlyDb);
+        ControllerAnswer js = new ControllerAnswer(overview, clusterState, dbItemInventoryInstance, dbOsSystem, startedAt, onlyDb);
 		js.setFields();
 		return js;
 	}
