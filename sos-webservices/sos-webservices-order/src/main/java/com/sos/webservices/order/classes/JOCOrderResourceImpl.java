@@ -103,13 +103,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return filter;
     }
 
-    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession sosHibernateSession, String controllerId,
-            FilterDailyPlannedOrders filter) throws SOSHibernateException {
+    protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter)
+            throws SOSHibernateException {
 
-        sosHibernateSession.setAutoCommit(false);
-        Globals.beginTransaction(sosHibernateSession);
+        session.setAutoCommit(false);
+        Globals.beginTransaction(session);
 
-        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
 
         if (filter != null) {
@@ -119,7 +119,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             filter.setCyclicStart();
             listOfPlannedOrders.addAll(dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0));
         }
-        Globals.commit(sosHibernateSession);
+        Globals.commit(session);
 
         return listOfPlannedOrders;
     }
@@ -219,32 +219,46 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
             for (Entry<CycleOrderKey, List<PlannedOrderItem>> entry : mapOfCycledOrders.entrySet()) {
                 if (entry.getValue().size() > 0) {
-                    PlannedOrderItem firstP = entry.getValue().get(0);
-                    firstP.setCyclicOrder(new CyclicOrderInfos());
-                    firstP.getCyclicOrder().setFirstOrderId(firstP.getOrderId());
-                    firstP.getCyclicOrder().setFirstStart(firstP.getPlannedStartTime());
+                    PlannedOrderItem maxPOI = entry.getValue().get(0);
+                    maxPOI.setCyclicOrder(new CyclicOrderInfos());
 
-                    Object[] info = null;
+                    Object[] minPOIinfo = null;
                     if (getCyclicDetails) {
                         try {
-                            String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(firstP.getOrderId());
-                            info = dbLayer.getCyclicOrderLastEntryAndCountTotal(controllerId, mainOrderId, filter.getOrderPlannedStartFrom(), filter
+                            String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(maxPOI.getOrderId());
+                            Date dateFrom = filter.getOrderPlannedStartFrom();
+                            if (dateFrom != null && maxPOI.getState() != null) {
+                                Date now = new Date();
+                                if (DailyPlanOrderStateText.SUBMITTED.value().equals(maxPOI.getState().get_text().value()) && now.getTime() > dateFrom
+                                        .getTime()) {
+                                    dateFrom = now;
+                                }
+                            }
+                            minPOIinfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(controllerId, mainOrderId, dateFrom, filter
                                     .getOrderPlannedStartTo());
                         } catch (SOSHibernateException e) {
                             LOGGER.warn(e.toString(), e);
                         }
                     }
-                    if (info == null) {
-                        firstP.getCyclicOrder().setCount(entry.getValue().size());
-                        PlannedOrderItem lastP = entry.getValue().get(entry.getValue().size() - 1);
-                        firstP.getCyclicOrder().setLastOrderId(lastP.getOrderId());
-                        firstP.getCyclicOrder().setLastStart(lastP.getPlannedStartTime());
+                    if (minPOIinfo == null) {
+                        maxPOI.getCyclicOrder().setFirstOrderId(maxPOI.getOrderId());
+                        maxPOI.getCyclicOrder().setFirstStart(maxPOI.getPlannedStartTime());
+                        maxPOI.getCyclicOrder().setCount(entry.getValue().size());
+
+                        PlannedOrderItem lastPOI = entry.getValue().get(entry.getValue().size() - 1);
+                        maxPOI.getCyclicOrder().setLastOrderId(lastPOI.getOrderId());
+                        maxPOI.getCyclicOrder().setLastStart(lastPOI.getPlannedStartTime());
                     } else {
-                        firstP.getCyclicOrder().setCount(Integer.parseInt(info[2].toString()));
-                        firstP.getCyclicOrder().setLastOrderId((String) info[0]);
-                        firstP.getCyclicOrder().setLastStart((Date) info[1]);
+                        maxPOI.getCyclicOrder().setFirstOrderId((String) minPOIinfo[0]);
+                        maxPOI.getCyclicOrder().setFirstStart((Date) minPOIinfo[1]);
+                        maxPOI.getCyclicOrder().setCount(Integer.parseInt(minPOIinfo[2].toString()));
+
+                        maxPOI.getCyclicOrder().setLastOrderId(maxPOI.getOrderId());
+                        maxPOI.getCyclicOrder().setLastStart(maxPOI.getPlannedStartTime());
+
+                        maxPOI.setOrderId(maxPOI.getCyclicOrder().getFirstOrderId());
                     }
-                    listOfPlannedOrderItems.add(firstP);
+                    listOfPlannedOrderItems.add(maxPOI);
                 }
             }
         }

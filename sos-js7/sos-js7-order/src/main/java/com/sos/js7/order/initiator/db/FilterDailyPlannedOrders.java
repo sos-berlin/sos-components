@@ -48,35 +48,34 @@ public class FilterDailyPlannedOrders extends DBFilter {
     private List<Long> listOfSubmissionIds;
 
     private Long calendarId;
- 
+
     private Long plannedOrderId;
     private List<String> listOfScheduleNames;
     private String scheduleName;
     private String orderName;
     private Integer startMode;
- 
 
     public boolean isCyclicStart() {
-    	return startMode != null && startMode.equals(1);
+        return startMode != null && startMode.equals(1);
     }
-    
+
     public void setCyclicStart() {
-    	startMode = 1;
+        startMode = 1;
     }
-    
+
     public void setSingleStart() {
-    	startMode = 0;
+        startMode = 0;
     }
-    
+
     public Integer getStartMode() {
-		return startMode;
-	}
+        return startMode;
+    }
 
-	public void setStartMode(Integer startMode) {
-		this.startMode = startMode;
-	}
+    public void setStartMode(Integer startMode) {
+        this.startMode = startMode;
+    }
 
-	public Collection<String> getListOfOrders() {
+    public Collection<String> getListOfOrders() {
         return listOfOrders;
     }
 
@@ -91,7 +90,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     public void setListOfCyclicOrdersMainParts(List<String> val) {
         listOfCyclicOrdersMainParts = val;
     }
-    
+
     public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
         if (dailyPlanDate != null) {
             this.dailyPlanDate = dailyPlanDate;
@@ -183,6 +182,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
         filterFolder.setRecursive(recursive);
         setOfScheduleFolders.add(filterFolder);
     }
+
     public List<DailyPlanOrderStateText> getStates() {
         return states;
     }
@@ -245,12 +245,12 @@ public class FilterDailyPlannedOrders extends DBFilter {
     public void setSubmitted(Boolean submitted) {
         this.submitted = submitted;
     }
- 
+
     public void setSetOfOrders(Set<OrderId> setOfOrders) {
         if (this.listOfOrders == null) {
             this.listOfOrders = new ArrayList<String>();
         }
-        for (OrderId orderId: setOfOrders) {
+        for (OrderId orderId : setOfOrders) {
             this.listOfOrders.add(orderId.string());
         }
     }
@@ -262,7 +262,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
     public void setSubmitTime(Date submitTime) {
         this.submitTime = submitTime;
     }
- 
 
     public void addWorkflowName(String workflowName) {
         if (this.listOfWorkflowNames == null) {
@@ -355,37 +354,28 @@ public class FilterDailyPlannedOrders extends DBFilter {
         this.repeatInterval = repeatInterval;
     }
 
-    
     public Set<Folder> getSetOfScheduleFolders() {
         return setOfScheduleFolders;
     }
 
-    
     public void setSetOfScheduleFolders(Set<Folder> setOfScheduleFolders) {
         this.setOfScheduleFolders = setOfScheduleFolders;
     }
 
-    
     public Set<Folder> getSetOfWorkflowFolders() {
         return setOfWorkflowFolders;
     }
 
-    
     public void setSetOfWorkflowFolders(Set<Folder> setOfWorkflowFolders) {
         this.setOfWorkflowFolders = setOfWorkflowFolders;
     }
 
-    
     public String getOrderName() {
         return orderName;
     }
 
-    
     public void setOrderName(String orderName) {
         this.orderName = orderName;
     }
-
-    
- 
 
 }

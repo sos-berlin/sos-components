@@ -64,7 +64,8 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             ArrayList<PlannedOrderItem> listOfPlannedOrderItems = new ArrayList<PlannedOrderItem>();
 
             for (String controllerId : allowedControllers) {
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter,true);
+                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
+
                 List<DBItemDailyPlanWithHistory> listOfPlannedOrders = getOrders(sosHibernateSession, controllerId, filter);
                 addOrders(sosHibernateSession, filter, controllerId, dailyPlanOrderFilter, listOfPlannedOrders, listOfPlannedOrderItems, true);
             }

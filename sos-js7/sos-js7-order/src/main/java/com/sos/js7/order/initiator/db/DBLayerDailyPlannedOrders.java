@@ -437,10 +437,30 @@ public class DBLayerDailyPlannedOrders {
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
         if (filter.isCyclicStart()) {
-            StringBuilder q = new StringBuilder("select min(p.id) ");
-            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p left outer join ");
-            q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
-            q.append(getWhere(filter, "p.schedulePath", true)).append(" ");
+            StringBuilder q = new StringBuilder("select max(p.id) ");
+            boolean useHistoryOrderState = true;
+            if (filter.getStates() != null && filter.getStates().size() > 0) {
+                DailyPlanOrderStateText state = filter.getStates().get(0);
+                switch (state) {
+                case PLANNED:
+                    boolean isLate = filter.getIsLate() != null && filter.isLate();
+                    if (!isLate) {
+                        useHistoryOrderState = false;
+                    }
+                    break;
+                case FINISHED:
+                    useHistoryOrderState = false;
+                default:
+                    break;
+                }
+            }
+
+            q.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
+            if (useHistoryOrderState) {
+                q.append("left outer join ");
+                q.append(DBLayer.DBITEM_HISTORY_ORDERS).append(" o on p.orderId = o.orderId ");
+            }
+            q.append(getWhere(filter, "p.schedulePath", useHistoryOrderState)).append(" ");
             q.append("group by p.repeatInterval,p.periodBegin,p.periodEnd,p.orderName ");
 
             hql.append("select p.id as plannedOrderId,p.submissionHistoryId as submissionHistoryId,p.controllerId as controllerId");
@@ -477,12 +497,12 @@ public class DBLayerDailyPlannedOrders {
         return session.getResultList(query);
     }
 
-    public Object[] getCyclicOrderLastEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
+    public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
             throws SOSHibernateException {
         StringBuilder sql = new StringBuilder("select ");
         sql.append(quote("b.ORDER_ID")).append(",").append(quote("b.PLANNED_START")).append(",").append(quote("a.TOTAL")).append(" ");
         sql.append("from ( ");
-        sql.append("select max(").append(quote("ID")).append(") as ").append(quote("ID"));
+        sql.append("select min(").append(quote("ID")).append(") as ").append(quote("ID"));
         sql.append(",count(").append(quote("ID")).append(") as ").append(quote("TOTAL")).append(" ");
         sql.append("from ").append(DBLayer.TABLE_DPL_ORDERS).append(" ");
         sql.append("where ").append(quote("ORDER_ID")).append(" like :orderId ");
