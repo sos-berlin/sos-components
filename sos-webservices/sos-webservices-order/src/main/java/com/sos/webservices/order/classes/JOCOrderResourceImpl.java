@@ -1,13 +1,8 @@
 package com.sos.webservices.order.classes;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +23,6 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.js7.order.initiator.OrderInitiatorSettings;
-import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -106,9 +100,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter,
             boolean sort) throws SOSHibernateException {
 
-        // session.setAutoCommit(false);
-        // Globals.beginTransaction(session);
-
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
         List<DBItemDailyPlanWithHistory> result = null;
 
@@ -124,8 +115,6 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 // result.sort((o1, o2) -> o1.getPlannedStart().compareTo(o2.getPlannedStart()));
             }
         }
-        // Globals.commit(session);
-
         return result;
     }
 
@@ -142,31 +131,31 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return controllerIds;
     }
 
-    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory) {
+    protected PlannedOrderItem createPlanItem(DBItemDailyPlanWithHistory item) {
 
         PlannedOrderItem p = new PlannedOrderItem();
-        p.setLate(dbItemDailyPlanWithHistory.isLate());
+        p.setLate(item.isLate());
         Period period = new Period();
-        period.setBegin(dbItemDailyPlanWithHistory.getPeriodBegin());
-        period.setEnd(dbItemDailyPlanWithHistory.getPeriodEnd());
-        period.setRepeat(dbItemDailyPlanWithHistory.getRepeatInterval());
+        period.setBegin(item.getPeriodBegin());
+        period.setEnd(item.getPeriodEnd());
+        period.setRepeat(item.getRepeatInterval());
         p.setPeriod(period);
 
-        p.setPlannedStartTime(dbItemDailyPlanWithHistory.getPlannedStart());
-        p.setExpectedEndTime(dbItemDailyPlanWithHistory.getExpectedEnd());
-        p.setLate(dbItemDailyPlanWithHistory.isLate());
-        p.setSurveyDate(dbItemDailyPlanWithHistory.getPlannedOrderCreated());
+        p.setPlannedStartTime(item.getPlannedStart());
+        p.setExpectedEndTime(item.getExpectedEnd());
+        p.setLate(item.isLate());
+        p.setSurveyDate(item.getPlannedOrderCreated());
 
-        p.setStartMode(dbItemDailyPlanWithHistory.getStartMode());
+        p.setStartMode(item.getStartMode());
 
-        p.setWorkflowPath(dbItemDailyPlanWithHistory.getWorkflowPath());
-        p.setOrderId(dbItemDailyPlanWithHistory.getOrderId());
-        p.setSchedulePath(dbItemDailyPlanWithHistory.getSchedulePath());
-        p.setOrderName(dbItemDailyPlanWithHistory.getOrderName());
+        p.setWorkflowPath(item.getWorkflowPath());
+        p.setOrderId(item.getOrderId());
+        p.setSchedulePath(item.getSchedulePath());
+        p.setOrderName(item.getOrderName());
 
         DailyPlanOrderState orderState = new DailyPlanOrderState();
-        if (dbItemDailyPlanWithHistory.isSubmitted()) {
-            orderState.set_text(dbItemDailyPlanWithHistory.getStateText());
+        if (item.isSubmitted()) {
+            orderState.set_text(item.getStateText());
             orderState.setSeverity(OrdersHelper.severityByGroupedDailyPlanStates.get(orderState.get_text()));
         } else {
             orderState.set_text(DailyPlanOrderStateText.PLANNED);
@@ -174,96 +163,80 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
         p.setState(orderState);
 
-        if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
-            if (dbItemDailyPlanWithHistory.getStartTime().after(new Date(0L))) {
-                p.setStartTime(dbItemDailyPlanWithHistory.getStartTime());
-                p.setEndTime(dbItemDailyPlanWithHistory.getEndTime());
+        if (item.getOrderHistoryId() != null) {
+            if (item.getStartTime().after(new Date(0L))) {
+                p.setStartTime(item.getStartTime());
+                p.setEndTime(item.getEndTime());
             }
-            p.setHistoryId(String.valueOf(dbItemDailyPlanWithHistory.getOrderHistoryId()));
+            p.setHistoryId(String.valueOf(item.getOrderHistoryId()));
         }
         return p;
 
     }
 
     protected void addOrders(SOSHibernateSession session, FilterDailyPlannedOrders filter, String controllerId,
-            DailyPlanOrderFilter dailyPlanOrderFilter, List<DBItemDailyPlanWithHistory> listOfPlannedOrders,
-            ArrayList<PlannedOrderItem> listOfPlannedOrderItems, boolean getCyclicDetails) {
+            DailyPlanOrderFilter dailyPlanOrderFilter, List<DBItemDailyPlanWithHistory> orders, ArrayList<PlannedOrderItem> result,
+            boolean getCyclicDetails) {
 
-        if (listOfPlannedOrders != null) {
-            DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
-
-            Map<CycleOrderKey, List<PlannedOrderItem>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrderItem>>();
-
-            for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
-
-                PlannedOrderItem p = createPlanItem(dbItemDailyPlanWithHistory);
+        if (orders != null) {
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+            for (DBItemDailyPlanWithHistory item : orders) {
+                PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
 
                 if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
-                    CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                    cycleOrderKey.setPeriodBegin(periodFormat.format(p.getPeriod().getBegin()));
-                    cycleOrderKey.setPeriodEnd(periodFormat.format(p.getPeriod().getEnd()));
-                    cycleOrderKey.setRepeat(String.valueOf(p.getPeriod().getRepeat()));
-                    cycleOrderKey.setOrderName(p.getOrderName());
-                    cycleOrderKey.setWorkflowPath(p.getWorkflowPath());
-                    if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                        mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrderItem>());
-                    }
-
-                    mapOfCycledOrders.get(cycleOrderKey).add(p);
-
+                    result.add(getCyclicPlannedOrder(dbLayer, filter, p, getCyclicDetails));
                 } else {
-                    listOfPlannedOrderItems.add(p);
-                }
-            }
-
-            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-
-            for (Entry<CycleOrderKey, List<PlannedOrderItem>> entry : mapOfCycledOrders.entrySet()) {
-                if (entry.getValue().size() > 0) {
-                    PlannedOrderItem maxPOI = entry.getValue().get(0);
-                    maxPOI.setCyclicOrder(new CyclicOrderInfos());
-
-                    Object[] minPOIinfo = null;
-                    if (getCyclicDetails) {
-                        try {
-                            String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(maxPOI.getOrderId());
-                            Date dateFrom = filter.getOrderPlannedStartFrom();
-                            if (dateFrom != null && maxPOI.getState() != null) {
-                                Date now = new Date();
-                                if (DailyPlanOrderStateText.SUBMITTED.value().equals(maxPOI.getState().get_text().value()) && now.getTime() > dateFrom
-                                        .getTime()) {
-                                    dateFrom = now;
-                                }
-                            }
-                            minPOIinfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(controllerId, mainOrderId, dateFrom, filter
-                                    .getOrderPlannedStartTo());
-                        } catch (SOSHibernateException e) {
-                            LOGGER.warn(e.toString(), e);
-                        }
-                    }
-                    if (minPOIinfo == null) {
-                        maxPOI.getCyclicOrder().setFirstOrderId(maxPOI.getOrderId());
-                        maxPOI.getCyclicOrder().setFirstStart(maxPOI.getPlannedStartTime());
-                        maxPOI.getCyclicOrder().setCount(entry.getValue().size());
-
-                        PlannedOrderItem lastPOI = entry.getValue().get(entry.getValue().size() - 1);
-                        maxPOI.getCyclicOrder().setLastOrderId(lastPOI.getOrderId());
-                        maxPOI.getCyclicOrder().setLastStart(lastPOI.getPlannedStartTime());
-                    } else {
-                        maxPOI.getCyclicOrder().setFirstOrderId((String) minPOIinfo[0]);
-                        maxPOI.getCyclicOrder().setFirstStart((Date) minPOIinfo[1]);
-                        maxPOI.getCyclicOrder().setCount(Integer.parseInt(minPOIinfo[2].toString()));
-
-                        maxPOI.getCyclicOrder().setLastOrderId(maxPOI.getOrderId());
-                        maxPOI.getCyclicOrder().setLastStart(maxPOI.getPlannedStartTime());
-
-                        maxPOI.setOrderId(maxPOI.getCyclicOrder().getFirstOrderId());
-                    }
-                    listOfPlannedOrderItems.add(maxPOI);
+                    result.add(p);
                 }
             }
         }
+    }
+
+    private PlannedOrderItem getCyclicPlannedOrder(DBLayerDailyPlannedOrders dbLayer, FilterDailyPlannedOrders filter, PlannedOrderItem item,
+            boolean getCyclicDetails) {
+        // item is a max item in the cycle group
+        item.setCyclicOrder(new CyclicOrderInfos());
+
+        Object[] minIteminfo = null;
+        if (getCyclicDetails) {
+            try {
+                String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
+                Date dateFrom = filter.getOrderPlannedStartFrom();
+                if (dateFrom != null && item.getState() != null) {
+                    Date now = new Date();
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > dateFrom.getTime()) {
+                        dateFrom = now;
+                    }
+                }
+                minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, filter
+                        .getOrderPlannedStartTo());
+            } catch (SOSHibernateException e) {
+                LOGGER.warn(e.toString(), e);
+            }
+        }
+        if (minIteminfo == null) {
+            item.getCyclicOrder().setCount(1);
+
+            item.getCyclicOrder().setFirstOrderId(item.getOrderId());
+            item.getCyclicOrder().setFirstStart(item.getPlannedStartTime());
+
+            item.getCyclicOrder().setLastOrderId(item.getOrderId());
+            item.getCyclicOrder().setLastStart(item.getPlannedStartTime());
+        } else {
+            item.getCyclicOrder().setCount(Integer.parseInt(minIteminfo[0].toString()));
+
+            item.getCyclicOrder().setFirstOrderId((String) minIteminfo[1]);
+            item.getCyclicOrder().setFirstStart((Date) minIteminfo[2]);
+
+            item.getCyclicOrder().setLastOrderId(item.getOrderId());
+            item.getCyclicOrder().setLastStart(item.getPlannedStartTime());
+
+            item.setOrderId(item.getCyclicOrder().getFirstOrderId());
+            item.setPlannedStartTime(item.getCyclicOrder().getFirstStart());
+            item.setExpectedEndTime((Date) minIteminfo[3]);
+        }
+        return item;
     }
 
     protected DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {

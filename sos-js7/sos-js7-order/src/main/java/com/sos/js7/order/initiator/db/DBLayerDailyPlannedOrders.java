@@ -500,7 +500,10 @@ public class DBLayerDailyPlannedOrders {
     public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
             throws SOSHibernateException {
         StringBuilder sql = new StringBuilder("select ");
-        sql.append(quote("b.ORDER_ID")).append(",").append(quote("b.PLANNED_START")).append(",").append(quote("a.TOTAL")).append(" ");
+        sql.append(quote("a.TOTAL"));
+        sql.append(",").append(quote("b.ORDER_ID"));
+        sql.append(",").append(quote("b.PLANNED_START"));
+        sql.append(",").append(quote("b.EXPECTED_END")).append(" ");
         sql.append("from ( ");
         sql.append("select min(").append(quote("ID")).append(") as ").append(quote("ID"));
         sql.append(",count(").append(quote("ID")).append(") as ").append(quote("TOTAL")).append(" ");

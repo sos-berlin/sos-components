@@ -67,27 +67,25 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             for (String controllerId : allowedControllers) {
                 FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
 
-                ArrayList<PlannedOrderItem> plannedOrders = new ArrayList<PlannedOrderItem>();
+                ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, false);
-                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, plannedOrders, false);
+                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, result, false);
 
-                for (PlannedOrderItem p : plannedOrders) {
-                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(p.getState().get_text().value()) && !(DailyPlanOrderStateText.FINISHED
-                            .value().equals(p.getState().get_text().value()))) {
+                for (PlannedOrderItem p : result) {
+                    String state = p.getState().get_text().value();
+                    if (DailyPlanOrderStateText.SUBMITTED.value().equals(state)) {
                         if (p.getLate()) {
                             answer.setSubmittedLate(answer.getSubmittedLate() + 1);
                         } else {
                             answer.setSubmitted(answer.getSubmitted() + 1);
                         }
-                    }
-                    if (DailyPlanOrderStateText.PLANNED.value().equals(p.getState().get_text().value())) {
+                    } else if (DailyPlanOrderStateText.PLANNED.value().equals(state)) {
                         if (p.getLate()) {
                             answer.setPlannedLate(answer.getPlannedLate() + 1);
                         } else {
                             answer.setPlanned(answer.getPlanned() + 1);
                         }
-                    }
-                    if (DailyPlanOrderStateText.FINISHED.value().equals(p.getState().get_text().value())) {
+                    } else if (DailyPlanOrderStateText.FINISHED.value().equals(state)) {
                         answer.setFinished(answer.getFinished() + 1);
                     }
                 }
