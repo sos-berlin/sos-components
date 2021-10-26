@@ -106,8 +106,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
     protected List<DBItemDailyPlanWithHistory> getOrders(SOSHibernateSession session, String controllerId, FilterDailyPlannedOrders filter)
             throws SOSHibernateException {
 
-        session.setAutoCommit(false);
-        Globals.beginTransaction(session);
+        // session.setAutoCommit(false);
+        // Globals.beginTransaction(session);
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
         List<DBItemDailyPlanWithHistory> listOfPlannedOrders = null;
@@ -119,7 +119,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             filter.setCyclicStart();
             listOfPlannedOrders.addAll(dbLayerDailyPlannedOrders.getDailyPlanWithHistoryList(filter, 0));
         }
-        Globals.commit(session);
+        // Globals.commit(session);
 
         return listOfPlannedOrders;
     }
