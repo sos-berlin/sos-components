@@ -2479,8 +2479,9 @@ public abstract class PublishUtils {
 
     private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
+        String directory = fileOrderSource.getDirectoryExpr() == null ? fileOrderSource.getDirectory() : fileOrderSource.getDirectoryExpr();
         Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
-                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()),
+                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(directory),
                 getFileOrderSourcePattern(fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
         if (fileWatch.isLeft()) {
             throw new JocDeployException(fileWatch.getLeft().toString());
