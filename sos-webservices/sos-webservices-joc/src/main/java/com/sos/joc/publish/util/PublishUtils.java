@@ -2490,11 +2490,13 @@ public abstract class PublishUtils {
             pattern = Option.apply(SimplePattern.apply(Pattern.compile(fileOrderSource.getPattern())));
         }
         
+        String directory = fileOrderSource.getDirectoryExpr() == null ? fileOrderSource.getDirectory() : fileOrderSource.getDirectoryExpr();
+        
         return JFileWatch.apply(FileWatch.apply(
                 OrderWatchPath.of(fileOrderSource.getPath()),
                 WorkflowPath.of(fileOrderSource.getWorkflowPath()),
                 AgentPath.of(fileOrderSource.getAgentPath()),
-                getOrThrowEither(JExpression.parse(JExpression.quoteString(fileOrderSource.getDirectoryExpr()))).asScala(),
+                getOrThrowEither(JExpression.parse(JExpression.quoteString(directory))).asScala(),
                 pattern,
                 Option.apply(getOrThrowEither(JExpression.parse(getFileOrderIdPattern(fileOrderSource))).asScala()),
                 FiniteDuration.apply(delay, TimeUnit.SECONDS),
