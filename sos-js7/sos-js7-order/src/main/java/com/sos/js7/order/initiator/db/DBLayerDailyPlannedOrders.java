@@ -497,7 +497,7 @@ public class DBLayerDailyPlannedOrders {
         return session.getResultList(query);
     }
 
-    public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String orderId, Date plannedStartFrom, Date plannedStartTo)
+    public Object[] getCyclicOrderMinEntryAndCountTotal(String controllerId, String mainOrderId, Date plannedStartFrom, Date plannedStartTo)
             throws SOSHibernateException {
         StringBuilder sql = new StringBuilder("select ");
         sql.append(quote("a.TOTAL"));
@@ -521,7 +521,7 @@ public class DBLayerDailyPlannedOrders {
         sql.append("on ").append(quote("a.ID")).append("=").append(quote("b.ID"));
 
         Query<Object[]> query = session.createNativeQuery(sql.toString());
-        query.setParameter("orderId", orderId + "%");
+        query.setParameter("orderId", mainOrderId + "%");
         query.setParameter("controllerId", controllerId);
         if (plannedStartFrom != null) {
             query.setParameter("plannedStartFrom", plannedStartFrom);
@@ -534,6 +534,31 @@ public class DBLayerDailyPlannedOrders {
             return null;
         }
         return result.get(0);
+    }
+
+    public Date getCyclicMinPlannedStart(String controllerId, String mainOrderId, Date plannedStartFrom, Date plannedStartTo)
+            throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select min(plannedStart) ");
+        hql.append("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId like :orderId ");
+        if (plannedStartFrom != null) {
+            hql.append("and plannedStart >= :plannedStartFrom ");
+        }
+        if (plannedStartTo != null) {
+            hql.append("and plannedStart < :plannedStartTo ");
+        }
+
+        Query<Date> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("orderId", mainOrderId + "%");
+        if (plannedStartFrom != null) {
+            query.setParameter("plannedStartFrom", plannedStartFrom);
+        }
+        if (plannedStartTo != null) {
+            query.setParameter("plannedStartTo", plannedStartTo);
+        }
+        return session.getSingleResult(query);
     }
 
     private String quote(String fieldName) {

@@ -245,6 +245,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return item;
     }
 
+    protected Date getCyclicMinPlannedStart(SOSHibernateSession session, FilterDailyPlannedOrders filter, String orderId, String controllerId)
+            throws Exception {
+        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+        return dbLayer.getCyclicMinPlannedStart(controllerId, OrdersHelper.getCyclicOrderIdMainPart(orderId), filter.getOrderPlannedStartFrom(),
+                filter.getOrderPlannedStartTo());
+    }
+
     protected DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {

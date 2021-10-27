@@ -1,6 +1,7 @@
 package com.sos.webservices.order.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -83,7 +84,23 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                         if (p.getLate()) {
                             answer.setPlannedLate(answer.getPlannedLate() + 1);
                         } else {
-                            answer.setPlanned(answer.getPlanned() + 1);
+                            boolean addPlanned = true;
+                            if (p.getStartMode() == 1) {// cyclic max item
+                                Date now = new Date();
+                                if (p.getPlannedStartTime().getTime() > now.getTime()) {
+                                    Date minPlannedStart = getCyclicMinPlannedStart(session, filter, p.getOrderId(), controllerId);
+                                    if (minPlannedStart != null && now.getTime() > minPlannedStart.getTime()) {
+                                        answer.setPlannedLate(answer.getPlannedLate() + 1);
+                                        addPlanned = false;
+                                    }
+                                } else {
+                                    answer.setPlannedLate(answer.getPlannedLate() + 1);
+                                    addPlanned = false;
+                                }
+                            }
+                            if (addPlanned) {
+                                answer.setPlanned(answer.getPlanned() + 1);
+                            }
                         }
                     } else if (DailyPlanOrderStateText.FINISHED.value().equals(state)) {
                         answer.setFinished(answer.getFinished() + 1);
