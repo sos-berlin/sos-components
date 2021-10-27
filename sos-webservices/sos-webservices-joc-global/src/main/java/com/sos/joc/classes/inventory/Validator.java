@@ -159,6 +159,9 @@ public class Validator {
                 } else if (ConfigurationType.FILEORDERSOURCE.equals(type)) {
                     FileOrderSource fileOrderSource = (FileOrderSource) config;
                     validateWorkflowRef(fileOrderSource.getWorkflowName(), dbLayer, "$.workflowName");
+                    if (fileOrderSource.getDirectoryExpr() != null) {
+                        validateExpression("$.directoryExpr: ", fileOrderSource.getDirectoryExpr());
+                    }
                 }
             } finally {
                 Globals.disconnect(session);
