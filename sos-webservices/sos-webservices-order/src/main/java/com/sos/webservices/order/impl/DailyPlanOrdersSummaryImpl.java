@@ -88,10 +88,16 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                             if (p.getStartMode() == 1) {// cyclic max item
                                 Date now = new Date();
                                 if (p.getPlannedStartTime().getTime() > now.getTime()) {
-                                    Date minPlannedStart = getCyclicMinPlannedStart(session, filter, p.getOrderId(), controllerId);
-                                    if (minPlannedStart != null && now.getTime() > minPlannedStart.getTime()) {
-                                        answer.setPlannedLate(answer.getPlannedLate() + 1);
-                                        addPlanned = false;
+                                    boolean selectMinPlannedStart = true;
+                                    if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartFrom().getTime() > now.getTime()) {
+                                        selectMinPlannedStart = false;
+                                    }
+                                    if (selectMinPlannedStart) {
+                                        Date minPlannedStart = getCyclicMinPlannedStart(session, filter, p.getOrderId(), controllerId);
+                                        if (minPlannedStart != null && now.getTime() > minPlannedStart.getTime()) {
+                                            answer.setPlannedLate(answer.getPlannedLate() + 1);
+                                            addPlanned = false;
+                                        }
                                     }
                                 } else {
                                     answer.setPlannedLate(answer.getPlannedLate() + 1);
