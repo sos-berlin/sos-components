@@ -18,7 +18,6 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -34,7 +33,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -129,11 +130,13 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
+import js7.base.utils.SimplePattern;
 import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
 import js7.data.item.VersionId;
 import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
+import js7.data.orderwatch.FileWatch;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoard;
@@ -142,6 +145,8 @@ import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
 import reactor.core.publisher.Flux;
+import scala.Option;
+import scala.concurrent.duration.FiniteDuration;
 
 public abstract class PublishUtils {
 
@@ -2477,17 +2482,39 @@ public abstract class PublishUtils {
         return false;
     }
 
-    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
+    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException, JsonProcessingException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
-        String directory = fileOrderSource.getDirectoryExpr() == null ? fileOrderSource.getDirectory() : fileOrderSource.getDirectoryExpr();
-        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
-                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(directory),
-                getFileOrderSourcePattern(fileOrderSource), getFileOrderIdPattern(fileOrderSource), Duration.ofSeconds(delay));
-        if (fileWatch.isLeft()) {
-            throw new JocDeployException(fileWatch.getLeft().toString());
-        } else {
-            return fileWatch.get();
+        
+        Option<SimplePattern> pattern = Option.empty();
+        if (fileOrderSource.getPattern() != null && !fileOrderSource.getPattern().isEmpty()) {
+            pattern = Option.apply(SimplePattern.apply(Pattern.compile(fileOrderSource.getPattern())));
         }
+        
+        return JFileWatch.apply(FileWatch.apply(
+                OrderWatchPath.of(fileOrderSource.getPath()),
+                WorkflowPath.of(fileOrderSource.getWorkflowPath()),
+                AgentPath.of(fileOrderSource.getAgentPath()),
+                getOrThrowEither(JExpression.parse(JExpression.quoteString(fileOrderSource.getDirectoryExpr()))).asScala(),
+                pattern,
+                Option.apply(getOrThrowEither(JExpression.parse(getFileOrderIdPattern(fileOrderSource))).asScala()),
+                FiniteDuration.apply(delay, TimeUnit.SECONDS),
+                Option.empty()));
+        
+//        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
+//                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()),
+//                getFileOrderSourcePattern(fileOrderSource), Optional.of(getFileOrderIdPattern(fileOrderSource)), Duration.ofSeconds(delay));
+//        if (fileWatch.isLeft()) {
+//            throw new JocDeployException(fileWatch.getLeft().toString());
+//        } else {
+//            return fileWatch.get();
+//        }
+    }
+    
+    private static <T> T getOrThrowEither(Either<Problem, T> e) {
+        if (e.isLeft()) {
+            throw new JocDeployException(e.getLeft().toString());
+        }
+        return e.get();
     }
 
     private static JLock getJLock(Lock lock) {
@@ -2541,14 +2568,14 @@ public abstract class PublishUtils {
         return Optional.of(fileOrderSource.getPattern());
     }
 
-    private static Optional<String> getFileOrderIdPattern(FileOrderSource fileOrderSource) {
+    private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {
         String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$js7EpochSecond-$orderWatchPath:$0\"";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
         fileOrderSource.setTimeZone(null);
-        return Optional.of(String.format(idPattern, timeZone));
+        return String.format(idPattern, timeZone);
     }
 
     public static void postDeployHistoryEvent(DBItemDeploymentHistory dbItem) {
