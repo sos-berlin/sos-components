@@ -162,14 +162,14 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 }
                                 if (couplingState instanceof AgentRefState.Coupled$) {
                                     stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof AgentRefState.Resetting$) {
-                                    stateText = AgentStateText.RESETTING;
-                                } else if (couplingState instanceof AgentRefState.Reset$) {
-                                    stateText = AgentStateText.RESET;
                                 } else if (couplingState instanceof AgentRefState.ShutDown$) {
                                     stateText = AgentStateText.SHUTDOWN;
                                 } else if (optProblem.isPresent()) {
                                     stateText = AgentStateText.COUPLINGFAILED;
+                                } else if (couplingState instanceof AgentRefState.Resetting$) {
+                                    stateText = AgentStateText.RESETTING;
+                                } else if (couplingState instanceof AgentRefState.Reset$) {
+                                    stateText = AgentStateText.RESET;
                                 }
                             } else {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  problem = " + either.getLeft().messageWithCause());
