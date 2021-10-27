@@ -174,20 +174,29 @@ public abstract class PublishUtils {
             throws SOSHibernateException {
         DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
         if (keyPair != null) {
-            if (keyPair.getPrivateKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
-                        .getKeyAlgorithm());
-            } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
-                dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair
-                        .getKeyAlgorithm());
-            } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
-                switch (secLvl) {
-                case LOW:
-                case MEDIUM:
-                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
-                    break;
-                case HIGH:
-                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+            if(JocKeyType.CA.name().equals(keyPair.getKeyType())) {
+                if (keyPair.getPrivateKey() != null) {
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
+                            .getKeyAlgorithm());
+                } else if (keyPair.getCertificate() != null) {
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.CA.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                }   
+            } else {
+                if (keyPair.getPrivateKey() != null) {
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getPrivateKey(), keyPair.getCertificate(), account, secLvl, keyPair
+                            .getKeyAlgorithm());
+                } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() != null) {
+                    dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getPublicKey(), keyPair.getCertificate(), account, secLvl, keyPair
+                            .getKeyAlgorithm());
+                } else if (keyPair.getPrivateKey() == null && keyPair.getPublicKey() == null && keyPair.getCertificate() != null) {
+                    switch (secLvl) {
+                    case LOW:
+                    case MEDIUM:
+                        dbLayerKeys.saveOrUpdateKey(JocKeyType.PRIVATE.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                        break;
+                    case HIGH:
+                        dbLayerKeys.saveOrUpdateKey(JocKeyType.PUBLIC.value(), keyPair.getCertificate(), account, secLvl, keyPair.getKeyAlgorithm());
+                    }
                 }
             }
         }
