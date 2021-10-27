@@ -364,23 +364,5 @@ public class InventoryInstancesDBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
-    public Date getStartedAt(String controllerId) {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(" where readyEventId = ");
-            sql.append("(select max(readyEventId) from ").append(DBLayer.DBITEM_HISTORY_CONTROLLERS).append(
-                    " where controllerId=:controllerId and shutdownTime is null)");
-            Query<DBItemHistoryController> query = session.createQuery(sql.toString());
-            query.setParameter("controllerId", controllerId);
-            DBItemHistoryController result = session.getSingleResult(query);
-            if (result != null) {
-                return result.getReadyTime();
-            }
-            return null;
-        } catch (Exception ex) {
-            return null;
-        }
-    }
 
 }

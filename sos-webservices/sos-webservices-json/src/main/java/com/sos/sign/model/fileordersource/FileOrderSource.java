@@ -25,6 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "path",
     "workflowPath",
     "agentPath",
+    "directoryExpr",
     "directory",
     "pattern",
     "timeZone",
@@ -53,8 +54,6 @@ public class FileOrderSource implements IDeployObject
     @JsonProperty("path")
     private String path;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
@@ -82,6 +81,14 @@ public class FileOrderSource implements IDeployObject
      * (Required)
      * 
      */
+    @JsonProperty("directoryExpr")
+    private String directoryExpr;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("directory")
     private String directory;
     @JsonProperty("pattern")
@@ -89,11 +96,11 @@ public class FileOrderSource implements IDeployObject
     @JsonProperty("timeZone")
     private String timeZone = "Etc/UTC";
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$0"
      * 
      */
     @JsonProperty("orderIdExpression")
-    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$js7EpochSecond-$orderWatchId:$1\"")
+    @JsonPropertyDescription("'#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ \"#F$js7EpochSecond-$orderWatchId:$0\"")
     private String orderIdExpression;
     @JsonProperty("delay")
     private Long delay;
@@ -108,6 +115,7 @@ public class FileOrderSource implements IDeployObject
     /**
      * 
      * @param agentPath
+     * @param directoryExpr
      * @param path
      * @param delay
      * @param workflowPath
@@ -117,12 +125,13 @@ public class FileOrderSource implements IDeployObject
      * @param tYPE
      * @param directory
      */
-    public FileOrderSource(DeployType tYPE, String path, String workflowPath, String agentPath, String directory, String pattern, String timeZone, String orderIdExpression, Long delay) {
+    public FileOrderSource(DeployType tYPE, String path, String workflowPath, String agentPath, String directoryExpr, String directory, String pattern, String timeZone, String orderIdExpression, Long delay) {
         super();
         this.tYPE = tYPE;
         this.path = path;
         this.workflowPath = workflowPath;
         this.agentPath = agentPath;
+        this.directoryExpr = directoryExpr;
         this.directory = directory;
         this.pattern = pattern;
         this.timeZone = timeZone;
@@ -179,8 +188,6 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
@@ -191,8 +198,6 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
@@ -229,6 +234,29 @@ public class FileOrderSource implements IDeployObject
      * (Required)
      * 
      */
+    @JsonProperty("directoryExpr")
+    public String getDirectoryExpr() {
+        return directoryExpr;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("directoryExpr")
+    public void setDirectoryExpr(String directoryExpr) {
+        this.directoryExpr = directoryExpr;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
     @JsonProperty("directory")
     public String getDirectory() {
         return directory;
@@ -238,7 +266,6 @@ public class FileOrderSource implements IDeployObject
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -267,7 +294,7 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$0"
      * 
      */
     @JsonProperty("orderIdExpression")
@@ -276,7 +303,7 @@ public class FileOrderSource implements IDeployObject
     }
 
     /**
-     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$1"
+     * '#' ++ now(format='yyyy-MM-dd', timezone='Antarctica/Troll') ++ "#F$js7EpochSecond-$orderWatchId:$0"
      * 
      */
     @JsonProperty("orderIdExpression")
@@ -296,12 +323,12 @@ public class FileOrderSource implements IDeployObject
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("workflowPath", workflowPath).append("agentPath", agentPath).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("path", path).append("workflowPath", workflowPath).append("agentPath", agentPath).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("orderIdExpression", orderIdExpression).append("delay", delay).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentPath).append(path).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(tYPE).append(directory).toHashCode();
+        return new HashCodeBuilder().append(agentPath).append(directoryExpr).append(path).append(delay).append(workflowPath).append(orderIdExpression).append(pattern).append(timeZone).append(tYPE).append(directory).toHashCode();
     }
 
     @Override
@@ -313,7 +340,7 @@ public class FileOrderSource implements IDeployObject
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(path, rhs.path).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(agentPath, rhs.agentPath).append(directoryExpr, rhs.directoryExpr).append(path, rhs.path).append(delay, rhs.delay).append(workflowPath, rhs.workflowPath).append(orderIdExpression, rhs.orderIdExpression).append(pattern, rhs.pattern).append(timeZone, rhs.timeZone).append(tYPE, rhs.tYPE).append(directory, rhs.directory).isEquals();
     }
 
 }

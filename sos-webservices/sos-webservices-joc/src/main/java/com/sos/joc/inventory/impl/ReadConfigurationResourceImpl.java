@@ -7,10 +7,12 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -96,6 +98,13 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             if (config.getType().equals(ConfigurationType.WORKFLOW.intValue())) {
                 // temp. for compatibility PostNotice -> ExpectNotice
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent().replaceAll("(\"TYPE\"\\s*:\\s*)\"ReadNotice\"", "$1\"ExpectNotice\""), config.getType()));
+            } else if (config.getType().equals(ConfigurationType.FILEORDERSOURCE.intValue())) {
+                // temp. for compatibility directory -> directoryExpr
+                FileOrderSource fos = (FileOrderSource) JocInventory.content2IJSObject(config.getContent(), config.getType());
+                if (fos.getDirectoryExpr() == null) {
+                    fos.setDirectoryExpr(JsonSerializer.quoteString(fos.getDirectory())); 
+                }
+                item.setConfiguration(fos);
             } else {
                 item.setConfiguration(JocInventory.content2IJSObject(config.getContent(), config.getType()));
             }

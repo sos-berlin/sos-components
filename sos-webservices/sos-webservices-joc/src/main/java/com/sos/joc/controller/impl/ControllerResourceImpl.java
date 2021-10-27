@@ -85,7 +85,7 @@ public class ControllerResourceImpl extends JOCResourceImpl implements IControll
             }
 
             ControllerAnswer master = new ControllerCallable(schedulerInstance, osDBLayer.getInventoryOperatingSystem(schedulerInstance.getOsId()),
-                    accessToken, instanceLayer, onlyDb).call();
+                    accessToken, onlyDb).call();
 
             if (!onlyDb && master != null) {
                 Long osId = osDBLayer.saveOrUpdateOSItem(master.getDbOs());

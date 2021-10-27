@@ -76,8 +76,8 @@ public class FileOrderSource
      * @param versionDate
      * @param directory
      */
-    public FileOrderSource(String path, Date versionDate, SyncState state, String workflowName, String agentName, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
-        super(workflowName, agentName, directory, pattern, timeZone, delay, title, documentationPath);
+    public FileOrderSource(String path, Date versionDate, SyncState state, String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationPath) {
+        super(workflowName, agentName, directoryExpr, directory, pattern, timeZone, delay, title, documentationPath);
         this.path = path;
         this.versionDate = versionDate;
         this.state = state;

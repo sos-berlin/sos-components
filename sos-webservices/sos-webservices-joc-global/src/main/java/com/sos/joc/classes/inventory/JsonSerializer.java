@@ -67,16 +67,20 @@ public class JsonSerializer {
             return (T) emptyJobResourceValuesToNull((com.sos.sign.model.jobresource.JobResource) config);
         } else if (com.sos.sign.model.board.Board.class.isInstance(config)) {
             return (T) emptyBoardValuesToNull((com.sos.sign.model.board.Board) config);
+        } else if (com.sos.sign.model.fileordersource.FileOrderSource.class.isInstance(config)) {
+            return (T) emptyFileOrderSourceValuesToNull((com.sos.sign.model.fileordersource.FileOrderSource) config);
         } else if (com.sos.inventory.model.workflow.Workflow.class.isInstance(config)) {
             return (T) emptyWorkflowValuesToNull((com.sos.inventory.model.workflow.Workflow) config);
         } else if (com.sos.inventory.model.jobresource.JobResource.class.isInstance(config)) {
             return (T) emptyJobResourceValuesToNull((com.sos.inventory.model.jobresource.JobResource) config);
         } else if (com.sos.inventory.model.board.Board.class.isInstance(config)) {
             return (T) emptyBoardValuesToNull((com.sos.inventory.model.board.Board) config);
+        } else if (com.sos.inventory.model.fileordersource.FileOrderSource.class.isInstance(config)) {
+            return (T) emptyFileOrderSourceValuesToNull((com.sos.inventory.model.fileordersource.FileOrderSource) config);
         }
         return config;
     }
-    
+
     private static com.sos.sign.model.workflow.Workflow emptyWorkflowValuesToNull(com.sos.sign.model.workflow.Workflow w)
             throws JsonProcessingException {
         if (w == null) {
@@ -141,6 +145,38 @@ public class JsonSerializer {
             b.setEndOfLife(b.getEndOfLife().replaceAll("\\$epochMilli", "$js7EpochMilli"));
         }
         return b;
+    }
+    
+    private static com.sos.inventory.model.fileordersource.FileOrderSource emptyFileOrderSourceValuesToNull(
+            com.sos.inventory.model.fileordersource.FileOrderSource fos) {
+        if (fos == null) {
+            return null;
+        }
+        if (fos.getDirectoryExpr() == null || fos.getDirectoryExpr().isEmpty()) {
+            if (fos.getDirectory() != null) {
+                fos.setDirectoryExpr(quoteString(fos.getDirectory()));
+                fos.setDirectory(null);
+            }
+        } else {
+            fos.setDirectory(null);
+        }
+        return fos;
+    }
+    
+    private static com.sos.sign.model.fileordersource.FileOrderSource emptyFileOrderSourceValuesToNull(
+            com.sos.sign.model.fileordersource.FileOrderSource fos) {
+        if (fos == null) {
+            return null;
+        }
+        if (fos.getDirectoryExpr() == null || fos.getDirectoryExpr().isEmpty()) {
+            if (fos.getDirectory() != null) {
+                fos.setDirectoryExpr(quoteString(fos.getDirectory()));
+                fos.setDirectory(null);
+            }
+        } else {
+            fos.setDirectory(null);
+        }
+        return fos;
     }
     
     private static com.sos.sign.model.workflow.Jobs emptyJobsValuesToNull(com.sos.sign.model.workflow.Jobs j) {
@@ -319,7 +355,7 @@ public class JsonSerializer {
         return env;
     }
     
-    private static String quoteString(String str) {
+    public static String quoteString(String str) {
         if (str == null) {
             return null;
         }

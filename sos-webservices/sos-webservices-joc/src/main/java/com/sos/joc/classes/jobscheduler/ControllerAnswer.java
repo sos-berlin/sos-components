@@ -28,8 +28,6 @@ public class ControllerAnswer extends Controller {
 	private DBItemInventoryJSInstance dbInstance;
 	@JsonIgnore
 	private DBItemInventoryOperatingSystem dbOs;
-	@JsonIgnore
-    private Date startedAt;
     @JsonIgnore
 	private boolean updateDbInstance = false;
 	@JsonIgnore
@@ -38,14 +36,13 @@ public class ControllerAnswer extends Controller {
     private boolean onlyDb = false;
 
     public ControllerAnswer(Overview overview, ClusterState clusterState, DBItemInventoryJSInstance dbInstance, DBItemInventoryOperatingSystem dbOs,
-            Date startedAt, boolean onlyDb) {
+            boolean onlyDb) {
         this.overviewJson = overview;
         this.clusterStateJson = clusterState;
         if (clusterState != null) {
             this.clusterState = clusterState.getTYPE();
         }
         this.dbInstance = dbInstance;
-        this.startedAt = startedAt;
         if (dbOs == null) {
             dbOs = new DBItemInventoryOperatingSystem();
             dbOs.setId(null);
@@ -90,11 +87,7 @@ public class ControllerAnswer extends Controller {
 				throw new ControllerInvalidResponseDataException("unexpected ControllerId " + overviewJson.getId());
 			}
 			setSurveyDate(Date.from(Instant.now()));
-			if (startedAt != null) {
-			    setStartedAt(startedAt);
-			} else {
-			    setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
-			}
+			setStartedAt(Date.from(Instant.ofEpochMilli(overviewJson.getStartedAt() == null ? 0L : overviewJson.getStartedAt())));
 			Boolean isActive = null;
 			if (clusterStateJson != null) {
 			    switch (clusterStateJson.getTYPE()) {

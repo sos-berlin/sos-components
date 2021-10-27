@@ -190,7 +190,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             instances.add(instance);
                         }
                         osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-                        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken, instanceDBLayer).call();
+                        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
                         
                         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                         jobschedulerAnswer.setOsId(osId);
@@ -219,7 +219,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                             }
                             instances.add(instance);
                             osSystem = osDBLayer.getInventoryOperatingSystem(instance.getOsId());
-                            ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken, instanceDBLayer).call();
+                            ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, osSystem, accessToken).call();
                             
                             Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
                             jobschedulerAnswer.setOsId(osId);
@@ -472,7 +472,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         Long newId = instanceDBLayer.saveInstance(instance);
         instance.setId(newId);
 
-        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, null, getAccessToken(), instanceDBLayer).call();
+        ControllerAnswer jobschedulerAnswer = new ControllerCallable(instance, null, getAccessToken()).call();
 
         Long osId = osDBLayer.saveOrUpdateOSItem(jobschedulerAnswer.getDbOs());
         jobschedulerAnswer.setOsId(osId);

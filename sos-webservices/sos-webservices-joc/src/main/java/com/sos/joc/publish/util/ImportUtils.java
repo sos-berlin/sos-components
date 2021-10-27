@@ -590,6 +590,7 @@ public class ImportUtils {
             FileOrderSourceEdit fileOrderSourceEdit = new FileOrderSourceEdit();
             com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource = Globals.objectMapper.readValue(outBuffer.toString(
                     StandardCharsets.UTF_8.displayName()), com.sos.inventory.model.fileordersource.FileOrderSource.class);
+            fileOrderSource = JsonSerializer.emptyValuesToNull(fileOrderSource);
             if (checkObjectNotEmpty(fileOrderSource)) {
                 fileOrderSourceEdit.setConfiguration(fileOrderSource);
             } else {
@@ -729,7 +730,7 @@ public class ImportUtils {
     private static boolean checkObjectNotEmpty(com.sos.inventory.model.fileordersource.FileOrderSource fileOrderSource) {
         if (fileOrderSource != null && fileOrderSource.getDocumentationName() == null && fileOrderSource.getAgentName() == null && fileOrderSource
                 .getDelay() == null && fileOrderSource.getTYPE() == null && fileOrderSource.getPattern() == null && fileOrderSource
-                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null) {
+                        .getWorkflowName() == null && fileOrderSource.getDirectory() == null && fileOrderSource.getDirectoryExpr() == null) {
             return false;
         } else {
             return true;

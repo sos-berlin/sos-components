@@ -15,7 +15,6 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.SOSShiroFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.fileordersource.FileOrderSource;
 import com.sos.controller.model.workflow.Workflow;

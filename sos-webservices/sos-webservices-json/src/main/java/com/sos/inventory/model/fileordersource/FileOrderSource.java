@@ -27,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "version",
     "workflowName",
     "agentName",
+    "directoryExpr",
     "directory",
     "pattern",
     "timeZone",
@@ -54,21 +55,11 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
     @JsonProperty("version")
     @JsonPropertyDescription("inventory repository version")
     private String version = "1.1.0";
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("workflowName")
     @JsonAlias({
         "workflowPath"
     })
     private String workflowName;
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("agentName")
     @JsonAlias({
         "agentId",
@@ -79,7 +70,14 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      * string without < and >
      * <p>
      * 
-     * (Required)
+     * 
+     */
+    @JsonProperty("directoryExpr")
+    private String directoryExpr;
+    /**
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("directory")
@@ -122,6 +120,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
 
     /**
      * 
+     * @param directoryExpr
      * @param delay
      * @param pattern
      * @param agentName
@@ -132,10 +131,11 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      * @param title
      * @param directory
      */
-    public FileOrderSource(String workflowName, String agentName, String directory, String pattern, String timeZone, Long delay, String title, String documentationName) {
+    public FileOrderSource(String workflowName, String agentName, String directoryExpr, String directory, String pattern, String timeZone, Long delay, String title, String documentationName) {
         super();
         this.workflowName = workflowName;
         this.agentName = agentName;
+        this.directoryExpr = directoryExpr;
         this.directory = directory;
         this.pattern = pattern;
         this.timeZone = timeZone;
@@ -177,41 +177,21 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
         this.version = version;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("workflowName")
     public String getWorkflowName() {
         return workflowName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("workflowName")
     public void setWorkflowName(String workflowName) {
         this.workflowName = workflowName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("agentName")
     public String getAgentName() {
         return agentName;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("agentName")
     public void setAgentName(String agentName) {
         this.agentName = agentName;
@@ -221,7 +201,28 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      * string without < and >
      * <p>
      * 
-     * (Required)
+     * 
+     */
+    @JsonProperty("directoryExpr")
+    public String getDirectoryExpr() {
+        return directoryExpr;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("directoryExpr")
+    public void setDirectoryExpr(String directoryExpr) {
+        this.directoryExpr = directoryExpr;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
      * 
      */
     @JsonProperty("directory")
@@ -233,7 +234,6 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("directory")
@@ -329,12 +329,12 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("version", version).append("workflowName", workflowName).append("agentName", agentName).append("directoryExpr", directoryExpr).append("directory", directory).append("pattern", pattern).append("timeZone", timeZone).append("delay", delay).append("title", title).append("documentationName", documentationName).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(documentationName).append(tYPE).append(title).append(version).append(directory).toHashCode();
+        return new HashCodeBuilder().append(directoryExpr).append(delay).append(pattern).append(agentName).append(timeZone).append(workflowName).append(documentationName).append(tYPE).append(title).append(version).append(directory).toHashCode();
     }
 
     @Override
@@ -346,7 +346,7 @@ public class FileOrderSource implements IInventoryObject, IConfigurationObject, 
             return false;
         }
         FileOrderSource rhs = ((FileOrderSource) other);
-        return new EqualsBuilder().append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(directory, rhs.directory).isEquals();
+        return new EqualsBuilder().append(directoryExpr, rhs.directoryExpr).append(delay, rhs.delay).append(pattern, rhs.pattern).append(agentName, rhs.agentName).append(timeZone, rhs.timeZone).append(workflowName, rhs.workflowName).append(documentationName, rhs.documentationName).append(tYPE, rhs.tYPE).append(title, rhs.title).append(version, rhs.version).append(directory, rhs.directory).isEquals();
     }
 
 }

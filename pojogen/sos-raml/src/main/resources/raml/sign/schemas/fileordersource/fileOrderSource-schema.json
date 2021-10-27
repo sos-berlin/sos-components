@@ -11,7 +11,7 @@
     "path",
     "workflowPath",
     "agentPath",
-    "directory"
+    "directoryExpr"
   ],
   "propertyOrder": [
     "TYPE",
@@ -46,8 +46,11 @@
   		"maxLength": 255,
   		"minLength": 1
     },
-    "directory": {
+    "directoryExpr": {
     	"$ref": "../../../inventory/schemas/common/string255Required-schema.json"
+    },
+    "directory": {
+    	"$ref": "../../../inventory/schemas/common/string255-schema.json"
     },
     "pattern": {
     	"type": "string"

@@ -702,7 +702,7 @@ public class HistoryEventEntry {
 
         public HistoryControllerReady() {
             ControllerReady ev = (ControllerReady) event;
-            timezone = ev.timezone();
+            timezone = ev.timezone().string();
             totalRunningTime = getDuration(ev.totalRunningTime());
         }
 
