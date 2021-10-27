@@ -2482,7 +2482,7 @@ public abstract class PublishUtils {
         return false;
     }
 
-    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException, JsonProcessingException {
+    private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
         
         Option<SimplePattern> pattern = Option.empty();
@@ -2490,13 +2490,14 @@ public abstract class PublishUtils {
             pattern = Option.apply(SimplePattern.apply(Pattern.compile(fileOrderSource.getPattern())));
         }
         
-        String directory = fileOrderSource.getDirectoryExpr() == null ? fileOrderSource.getDirectory() : fileOrderSource.getDirectoryExpr();
-        
+        String directory = fileOrderSource.getDirectoryExpr() == null ? JExpression.quoteString(fileOrderSource.getDirectory()) : fileOrderSource
+                .getDirectoryExpr();
+
         return JFileWatch.apply(FileWatch.apply(
                 OrderWatchPath.of(fileOrderSource.getPath()),
                 WorkflowPath.of(fileOrderSource.getWorkflowPath()),
                 AgentPath.of(fileOrderSource.getAgentPath()),
-                getOrThrowEither(JExpression.parse(JExpression.quoteString(directory))).asScala(),
+                getOrThrowEither(JExpression.parse(directory)).asScala(),
                 pattern,
                 Option.apply(getOrThrowEither(JExpression.parse(getFileOrderIdPattern(fileOrderSource))).asScala()),
                 FiniteDuration.apply(delay, TimeUnit.SECONDS),
