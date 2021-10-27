@@ -235,6 +235,12 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             item.setOrderId(item.getCyclicOrder().getFirstOrderId());
             item.setPlannedStartTime(item.getCyclicOrder().getFirstStart());
             item.setExpectedEndTime((Date) minIteminfo[3]);
+
+            String state = item.getState().get_text().value();
+            if (DailyPlanOrderStateText.PLANNED.value().equals(state) && !item.getLate() && new Date().getTime() > item.getCyclicOrder()
+                    .getFirstStart().getTime()) {
+                item.setLate(true);
+            }
         }
         return item;
     }
