@@ -1006,6 +1006,7 @@ public class DBLayerDeploy {
                     existingConfiguration.setAuditLogId(auditLogId);
                     existingConfiguration.setValid(valid);
                     existingConfiguration.setDeployed(false);
+                    existingConfiguration.setReleased(false);
                     JocInventory.updateConfiguration(new InventoryDBLayer(session), existingConfiguration);
                 } else {
                     DBItemInventoryConfiguration newConfiguration = new DBItemInventoryConfiguration();
