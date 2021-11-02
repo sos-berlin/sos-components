@@ -24,5 +24,6 @@
 		<module>sos-commons-credentialstore</module>
 		<module>sos-commons-vfs</module>
 		<module>sos-commons-cli</module>
+		<module>sos-commons-git</module>
 	</modules>
 </project>
