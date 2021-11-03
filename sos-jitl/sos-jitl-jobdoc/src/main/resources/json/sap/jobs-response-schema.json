@@ -1,0 +1,25 @@
+{
+  	"title": "retrieve jobs",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ResponseJobs",
+  	"type": "object",
+  	"description": "e.g. Response 201 of POST /scheduler/jobs",
+  	"properties": {
+  		"total": {
+  			"type": "integer"
+  		},
+  		"results": {
+  			"type": "array",
+  			"items": {
+  				"$ref": "job-response-schema.json"
+  			}
+  		},
+  		"prev_url": {
+  			"type": "string"
+  		},
+  		"next_url": {
+  			"type": "string"
+  		}
+  	},
+	"additionalProperties": false
+}

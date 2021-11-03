@@ -1,0 +1,27 @@
+{
+  	"title": "create job",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.Job",
+  	"description": "e.g. POST /scheduler/jobs",
+  	"type": "object",
+  	"extends" : {
+    	"$ref": "abstractJob-schema.json"
+  	},
+  	"required": [
+  		"name",
+  		"action",
+  		"active",
+  		"httpMethod",
+  		"schedules"
+  	],
+  	"properties": {
+  		"schedules": {
+  			"type": "array",
+  			"minItems": 1,
+  			"items": {
+  				"$ref": "schedule-schema.json"
+  			}
+  		}
+  	},
+	"additionalProperties": false
+}

@@ -1,0 +1,9 @@
+{
+  	"title": "schedule data",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ScheduleData",
+  	"type": "object",
+	"additionalProperties": {
+  		"type": "string"
+  	}
+}

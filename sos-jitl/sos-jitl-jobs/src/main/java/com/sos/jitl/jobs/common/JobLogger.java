@@ -42,11 +42,19 @@ public class JobLogger {
     }
 
     public void info(final String format, final Object... msg) {
-        info(String.format(format, msg));
+        if (msg.length == 0) {
+            info(format); 
+        } else {
+            info(String.format(format, msg));
+        }
     }
 
     public void debug(final String format, final Object... msg) {
-        debug(String.format(format, msg));
+        if (msg.length == 0) {
+            debug(format); 
+        } else {
+            debug(String.format(format, msg));
+        }
     }
 
     public void debug(final Object msg) {
@@ -57,7 +65,11 @@ public class JobLogger {
     }
 
     public void trace(final String format, final Object... msg) {
-        trace(String.format(format, msg));
+        if (msg.length == 0) {
+            trace(format); 
+        } else {
+            trace(String.format(format, msg));
+        }
     }
 
     public void trace(final Object msg) {
@@ -100,11 +112,19 @@ public class JobLogger {
     }
 
     public void warn(final String format, final Object... msg) {
-        warn(String.format(format, msg));
+        if (msg.length == 0) {
+            warn(format); 
+        } else {
+            warn(String.format(format, msg));
+        }
     }
 
     public void error(final String format, final Object... msg) {
-        error(String.format(format, msg));
+        if (msg.length == 0) {
+            error(format); 
+        } else {
+            error(String.format(format, msg));
+        }
     }
 
     public void error(final String msg, final Throwable e) {

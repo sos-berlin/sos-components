@@ -1,0 +1,37 @@
+{
+  	"title": "abstract job",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.AbstractJob",
+  	"description": "e.g. POST /scheduler/jobs",
+  	"type": "object",
+  	"required": [
+  		"name",
+  		"action"
+  	],
+  	"properties": {
+  		"name": {
+  			"type": "string"
+  		},
+  		"description": {
+  			"type": "string"
+  		},
+  		"action": {
+  			"type": "string"
+  		},
+  		"active": {
+  			"type": "boolean",
+  			"default": false
+  		},
+  		"httpMethod": {
+  			"type": "string",
+  			"enum": [
+  				 "GET",
+  				 "POST",
+  				 "PUT",
+  				 "DELETE"
+  			],
+  			"default": "POST"
+  		}
+  	},
+	"additionalProperties": false
+}

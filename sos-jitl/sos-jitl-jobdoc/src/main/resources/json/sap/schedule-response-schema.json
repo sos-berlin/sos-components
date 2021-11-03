@@ -1,0 +1,31 @@
+{
+  	"title": "retrieve schedule",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ResponseSchedule",
+  	"type": "object",
+  	"extends" : {
+    	"$ref": "schedule-schema.json"
+  	},
+  	"properties": {
+  		"jobId": {
+  			"type": "integer"
+  		},
+  		"scheduleId": {
+  			"type": "string"
+  		},
+  		"type": {
+  			"description": "e.g. recurring, what other types exist?",
+  			"type": "string"
+  		},
+  		"nextRunAt": {
+  			"type": "string"
+  		},
+  		"logs": {
+  			"type": "array",
+  			"items": {
+  				"$ref": "log-schema.json"
+  			}
+  		}
+  	},
+	"additionalProperties": true
+}

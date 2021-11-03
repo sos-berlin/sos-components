@@ -118,6 +118,70 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			
+			<plugin>
+				<groupId>org.jsonschema2pojo</groupId>
+				<artifactId>jsonschema2pojo-maven-plugin</artifactId>
+				<dependencies>
+					<dependency>
+						<groupId>com.sos-berlin</groupId>
+						<artifactId>sos-annotator</artifactId>
+						<version>${project.version}</version>
+					</dependency>
+				</dependencies>
+				<executions>
+					<execution>
+						<id>generate-json-beans</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/json</sourceDirectory>
+							<removeOldOutput>true</removeOldOutput>
+							<customAnnotator>com.sos.annotator.SOSAnnotator</customAnnotator>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<generateBuilders>true</generateBuilders>
+							<outputEncoding>UTF-8</outputEncoding>
+							<constructorsRequiredPropertiesOnly>false</constructorsRequiredPropertiesOnly>
+							<includes>
+								<include>**/*.json</include>
+							</includes>
+							<excludes>
+								<exclude>**/ids-schema.json</exclude>
+							</excludes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>generate-json-beans-with-constructor</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<sourceDirectory>${basedir}/src/main/resources/json</sourceDirectory>
+							<removeOldOutput>false</removeOldOutput>
+							<annotationStyle>jackson2</annotationStyle>
+							<propertyWordDelimiters>- </propertyWordDelimiters>
+							<includeAdditionalProperties>true</includeAdditionalProperties>
+							<outputDirectory>${project.build.directory}/java-gen</outputDirectory>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<generateBuilders>true</generateBuilders>
+							<outputEncoding>UTF-8</outputEncoding>
+							<includeConstructors>true</includeConstructors>
+							<constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
+							<includes>
+								<include>**/ids-schema.json</include>
+							</includes>
+						</configuration>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 
 		</plugins>

@@ -1,0 +1,27 @@
+{
+  	"title": "schedule",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.Schedule",
+  	"type": "object",
+  	"description": "e.g. POST /scheduler/jobs/{jobId}/schedules",
+  	"required": [
+  		"active"
+  	],
+  	"properties": {
+  		"description": {
+  			"type": "string"
+  		},
+  		"active": {
+  			"type": "boolean",
+  			"default": false
+  		},
+  		"data": {
+  			"$ref": "scheduleData-schema.json"
+  		},
+  		"time": {
+  			"type": "string",
+  			"default": "now"
+  		}
+  	},
+	"additionalProperties": false
+}

@@ -1,0 +1,24 @@
+{
+  	"title": "ids",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.RunIds",
+  	"type": "object",
+  	"required": [
+  		"jobId",
+  		"scheduleId",
+  		"runId"
+  	],
+  	"properties": {
+  		"jobId": {
+  			"type": "number",
+  			"format":"utc-millisec"
+  		},
+  		"scheduleId": {
+  			"type": "string"
+  		},
+  		"runId": {
+  			"type": "string"
+  		}
+  	},
+	"additionalProperties": false
+}

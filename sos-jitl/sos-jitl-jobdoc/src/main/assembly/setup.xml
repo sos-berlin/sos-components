@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
 	<id>doc</id>
 	<formats>
 		<format>zip</format>
@@ -8,7 +10,7 @@
 	<fileSets>
 		<fileSet>
 			<directory>${target.dir}</directory>
-			<outputDirectory>/jitl-jobs</outputDirectory>
+			<outputDirectory>jitl-jobs</outputDirectory>
 			<excludes>
 				<exclude>default-markdown.css</exclude>
 				<exclude>*.png</exclude>
@@ -18,7 +20,7 @@
 		</fileSet>
 		<fileSet>
 			<directory>${target.dir}</directory>
-			<outputDirectory>/jitl-jobs</outputDirectory>
+			<outputDirectory>jitl-jobs</outputDirectory>
 			<includes>
 				<include>*.png</include>
 				<include>*.ico</include>
@@ -26,7 +28,7 @@
 		</fileSet>
 		<fileSet>
 			<directory>${target.dir}</directory>
-			<outputDirectory>/css</outputDirectory>
+			<outputDirectory>css</outputDirectory>
 			<includes>
 				<include>default-markdown.css</include>
 			</includes>

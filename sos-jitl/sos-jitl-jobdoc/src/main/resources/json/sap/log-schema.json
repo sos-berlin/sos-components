@@ -1,0 +1,35 @@
+{
+  	"title": "log",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ScheduleLog",
+  	"type": "object",
+  	"required": [
+  		"runId",
+  		"runStatus",
+  		"runState"
+  	],
+  	"properties": {
+  		"runId": {
+  			"type": "string"
+  		},
+  		"httpStatus": {
+  			"type": "integer"
+  		},
+  		"runStatus": {
+  			"decription": "e.g. COMPLETED, SCHEDULED, what else for a complete enumeration?",
+  			"type": "string"
+  		},
+  		"runState": {
+  			"decription": "e.g. REQUEST_ERROR, SCHEDULED, what else for a complete enumeration?",
+  			"type": "string"
+  		},
+  		"statusMessage": {
+  			"type": "string"
+  		},
+  		"runText": {
+  			"description": "contains serialized JSON object",
+  			"type": "string"
+  		}
+  	},
+	"additionalProperties": true
+}

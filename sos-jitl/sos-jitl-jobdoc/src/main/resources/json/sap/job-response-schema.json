@@ -1,0 +1,25 @@
+{
+  	"title": "retrieve job",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ResponseJob",
+  	"type": "object",
+  	"description": "e.g. Response 201 of POST /scheduler/jobs",
+  	"extends" : {
+    	"$ref": "abstractJob-schema.json"
+  	},
+  	"properties": {
+  		"jobId": {
+  			"alias": "_id",
+  			"type": "number",
+  			"format":"utc-millisec"
+  		},
+  		"schedules": {
+  			"type": "array",
+  			"minItems": 1,
+  			"items": {
+  				"$ref": "schedule-response-schema.json"
+  			}
+  		}
+  	},
+	"additionalProperties": true
+}
