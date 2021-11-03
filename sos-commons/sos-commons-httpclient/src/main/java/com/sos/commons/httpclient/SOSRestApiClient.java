@@ -15,10 +15,15 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HostnameVerifier;
@@ -31,6 +36,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
@@ -69,6 +75,8 @@ public class SOSRestApiClient {
     private String basicAuthorization = null;
     private Map<String, String> headers = new HashMap<String, String>();
     private Map<String, String> responseHeaders = new HashMap<String, String>();
+    private List<String> origResponseHeaders = new ArrayList<String>();
+    private List<String> cookies = new ArrayList<String>();
     private RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
     private CredentialsProvider credentialsProvider = null;
     private HostnameVerifier hostnameVerifier = NoopHostnameVerifier.INSTANCE;
@@ -109,16 +117,21 @@ public class SOSRestApiClient {
     public int statusCode() {
         return httpResponse.getStatusLine().getStatusCode();
     }
+    
+    public String printStatusLine() {
+        StatusLine s = httpResponse.getStatusLine();
+        return String.format("%s %d %s", s.getProtocolVersion(), s.getStatusCode(), s.getReasonPhrase());
+    }
 
     public void clearHeaders() {
-        headers = new HashMap<String, String>();
+        headers.clear();
     }
 
     public String getResponseHeader(String key) {
-        if (responseHeaders != null) {
-            return responseHeaders.get(key);
+        if (responseHeaders != null && key != null) {
+            return responseHeaders.get(key.toLowerCase());
         }
-        return "";
+        return null;
     }
 
     /*
@@ -381,16 +394,30 @@ public class SOSRestApiClient {
      * @throws SocketException
      * @throws SOSException
      */
-    public <T, B> T executeRestService(HttpMethod method, URI uri, B body) throws SocketException, SOSException {
+    public <B> String executeRestService(HttpMethod method, URI uri, B body) throws SocketException, SOSException {
+        return executeRestService(method, uri, body, String.class);
+    }
+    
+    /**
+     * 
+     * @param method
+     * @param uri
+     * @param body (could be String, byte[] or InputStream)
+     * @param clazz (could be String, byte[] or InputStream)
+     * @return T (could be String, byte[] or InputStream)
+     * @throws SocketException
+     * @throws SOSException
+     */
+    public <T, B> T executeRestService(HttpMethod method, URI uri, B body, Class<T> clazz) throws SocketException, SOSException {
         switch(method) {
         case GET:
-            return getRestService(uri);
+            return getRestService(uri, clazz);
         case POST:
-            return postRestService(uri, body);
+            return postRestService(uri, body, clazz);
         case PUT:
-            return putRestService(uri, body);
+            return putRestService(uri, body, clazz);
         case DELETE:
-            return deleteRestService(uri);
+            return deleteRestService(uri, clazz);
         }
         return null;
     }
@@ -398,21 +425,42 @@ public class SOSRestApiClient {
     public void addHeader(String header, String value) {
         headers.put(header, value);
     }
-
-    public String deleteRestService(HttpHost target, String path) throws SOSException, SocketException {
-        return getResponse(target, new HttpDelete(path));
+    
+    public void addCookieHeader() {
+        addCookieHeader(cookies);
+    }
+    
+    /*
+     * List entry of the form : key=val
+     */
+    public void addCookieHeader(List<String> _cookies) {
+        if (_cookies != null & !_cookies.isEmpty() ) {
+            headers.put("Cookie", String.join("; ", _cookies));
+        }
     }
 
-    public <T> T deleteRestService(URI uri) throws SOSException, SocketException {
-        return getResponse(new HttpDelete(uri));
+    public String deleteRestService(HttpHost target, String path) throws SOSException, SocketException {
+        return getResponse(target, new HttpDelete(path), String.class);
+    }
+
+    public String deleteRestService(URI uri) throws SOSException, SocketException {
+        return getResponse(new HttpDelete(uri), String.class);
+    }
+
+    public <T> T deleteRestService(URI uri, Class<T> clazz) throws SOSException, SocketException {
+        return getResponse(new HttpDelete(uri), clazz);
     }
 
     public String getRestService(HttpHost target, String path) throws SOSException, SocketException {
-        return getResponse(target, new HttpGet(path));
+        return getResponse(target, new HttpGet(path), String.class);
+    }
+    
+    public String getRestService(URI uri) throws SOSException, SocketException {
+        return getResponse(new HttpGet(uri), String.class);
     }
 
-    public <T> T getRestService(URI uri) throws SOSException, SocketException {
-        return getResponse(new HttpGet(uri));
+    public <T> T getRestService(URI uri, Class<T> clazz) throws SOSException, SocketException {
+        return getResponse(new HttpGet(uri), clazz);
     }
 
     public Path getFilePathByRestService(URI uri, String prefix, boolean withGzipEncoding) throws SOSException, SocketException {
@@ -423,50 +471,115 @@ public class SOSRestApiClient {
         return getStreamingOutputResponse(new HttpGet(uri), withGzipEncoding);
     }
 
-    public <T, B> T postRestService(HttpHost target, String path, B body) throws SOSException {
+    public <B> String postRestService(HttpHost target, String path, B body) throws SOSException {
         HttpPost requestPost = new HttpPost(path);
         HttpEntity entity = getEntity(body);
         if (entity != null) {
             requestPost.setEntity(entity);
         }
-        return getResponse(target, requestPost);
+        return getResponse(target, requestPost, String.class);
     }
-
-    public <T, B> T postRestService(URI uri, B body) throws SOSException {
+    
+    public <T, B> T postRestService(HttpHost target, String path, B body, Class<T> clazz) throws SOSException {
+        HttpPost requestPost = new HttpPost(path);
+        HttpEntity entity = getEntity(body);
+        if (entity != null) {
+            requestPost.setEntity(entity);
+        }
+        return getResponse(target, requestPost, clazz);
+    }
+    
+    public <B> String postRestService(URI uri, B body) throws SOSException {
         HttpPost requestPost = new HttpPost(uri);
         HttpEntity entity = getEntity(body);
         if (entity != null) {
             requestPost.setEntity(entity);
         }
-        return getResponse(requestPost);
+        return getResponse(requestPost, String.class);
     }
 
-    public <T, B> T putRestService(HttpHost target, String path, B body) throws SOSException, SocketException {
+    public <T, B> T postRestService(URI uri, B body, Class<T> clazz) throws SOSException {
+        HttpPost requestPost = new HttpPost(uri);
+        HttpEntity entity = getEntity(body);
+        if (entity != null) {
+            requestPost.setEntity(entity);
+        }
+        return getResponse(requestPost, clazz);
+    }
+
+    public <B> String putRestService(HttpHost target, String path, B body) throws SOSException, SocketException {
         HttpPut requestPut = new HttpPut(path);
         HttpEntity entity = getEntity(body);
         if (entity != null) {
             requestPut.setEntity(entity);
         }
-        return getResponse(target, requestPut);
+        return getResponse(target, requestPut, String.class);
     }
 
-    public <T, B> T putRestService(URI uri, B body) throws SOSException, SocketException {
+    public <T, B> T putRestService(HttpHost target, String path, B body, Class<T> clazz) throws SOSException, SocketException {
+        HttpPut requestPut = new HttpPut(path);
+        HttpEntity entity = getEntity(body);
+        if (entity != null) {
+            requestPut.setEntity(entity);
+        }
+        return getResponse(target, requestPut, clazz);
+    }
+
+    public <B> String putRestService(URI uri, B body) throws SOSException, SocketException {
         HttpPut requestPut = new HttpPut(uri);
         HttpEntity entity = getEntity(body);
         if (entity != null) {
             requestPut.setEntity(entity);
         }
-        return getResponse(requestPut);
+        return getResponse(requestPut, String.class);
+    }
+    
+    public <T, B> T putRestService(URI uri, B body, Class<T> clazz) throws SOSException, SocketException {
+        HttpPut requestPut = new HttpPut(uri);
+        HttpEntity entity = getEntity(body);
+        if (entity != null) {
+            requestPut.setEntity(entity);
+        }
+        return getResponse(requestPut, clazz);
     }
     
     public String printHttpRequestHeaders() {
+        return printHttpRequestHeaders(Collections.emptySet(), true);
+    }
+    
+    public String printHttpRequestHeaders(Set<String> maskedHeaders, boolean pretty) {
         Map<String, String> h = new HashMap<>();
         h.put("Accept", accept);
-        if (basicAuthorization != null && !basicAuthorization.isEmpty()) {
-            h.put("Authorization", "Basic " + basicAuthorization);
-        }
         h.putAll(headers);
-        return h.entrySet().stream().map(e -> e.getKey() +": "+ e.getValue()).collect(Collectors.joining(" \n", "Request headers \n", ""));
+        if (h.containsKey("Authorization")) {
+            h.put("Authorization", "********");
+        } else if (basicAuthorization != null && !basicAuthorization.isEmpty()) {
+            h.put("Authorization", "********");
+        }
+        for (String maskedHeader : maskedHeaders) {
+           if (h.containsKey(maskedHeader)) {
+               h.put(maskedHeader, "********");
+           }
+        }
+        Stream<String> s = h.entrySet().stream().map(e -> e.getKey() +": "+ e.getValue());
+        if (pretty) {
+            return s.collect(Collectors.joining(" \n\t> ", "Request headers \n\t> ", ""));
+        } else {
+            return s.collect(Collectors.joining("; ", "Request headers: ", ""));
+        }
+    }
+    
+    public String printHttpResponseHeaders() {
+        return printHttpResponseHeaders(true);
+    }
+    
+    public String printHttpResponseHeaders(boolean pretty) {
+        Stream<String> s = origResponseHeaders.stream();
+        if (pretty) {
+            return s.collect(Collectors.joining(" \n\t< ", "Response headers \n\t< ", ""));
+        } else {
+            return s.collect(Collectors.joining("; ", "Response headers: ", ""));
+        }
     }
     
     private <B> HttpEntity getEntity(B body) throws SOSBadRequestException {
@@ -490,13 +603,13 @@ public class SOSRestApiClient {
         return entity;
     }
 
-    private <T> T getResponse(HttpHost target, HttpRequest request) throws SOSException {
+    private <T> T getResponse(HttpHost target, HttpRequest request, Class<T> clazz) throws SOSException {
         httpResponse = null;
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
             httpResponse = httpClient.execute(target, request);
-            return getResponse();
+            return getResponse(clazz);
         } catch (SOSException e) {
             closeHttpClient();
             throw e;
@@ -521,13 +634,13 @@ public class SOSRestApiClient {
         }
     }
 
-    private <T> T getResponse(HttpUriRequest request) throws SOSException {
+    private <T> T getResponse(HttpUriRequest request, Class<T> clazz) throws SOSException {
         httpResponse = null;
         createHttpClient();
         setHttpRequestHeaders(request);
         try {
             httpResponse = httpClient.execute(request);
-            return getResponse();
+            return getResponse(clazz);
         } catch (SOSException e) {
             closeHttpClient();
             throw e;
@@ -615,9 +728,9 @@ public class SOSRestApiClient {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T getResponse() throws SOSNoResponseException {
+    private <T> T getResponse(Class<T> clazz) throws SOSNoResponseException {
         try {
-            T s = null;
+            T s = clazz.newInstance();
             setHttpResponseHeaders();
             HttpEntity entity = httpResponse.getEntity();
             if (entity != null) {
@@ -760,9 +873,20 @@ public class SOSRestApiClient {
     private void setHttpResponseHeaders() {
         if (httpResponse != null) {
             Header[] headers = httpResponse.getAllHeaders();
+            responseHeaders.clear();
+            origResponseHeaders.clear();
             for (Header header : headers) {
-                responseHeaders.put(header.getName(), header.getValue());
+                if ("set-cookie".equals(header.getName().toLowerCase())) {
+                    String[] cookieParts = header.getValue().split(";", 2);
+                    if (cookieParts.length >= 1) {
+                       cookies.add(cookieParts[0]);
+                    }
+                } else {
+                    responseHeaders.put(header.getName().toLowerCase(), header.getValue());
+                }
+                origResponseHeaders.add(String.format("%s: %s", header.getName(), header.getValue()));
             }
+            
         }
     }
 
