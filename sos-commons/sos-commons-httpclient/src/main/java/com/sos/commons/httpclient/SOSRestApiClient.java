@@ -730,15 +730,15 @@ public class SOSRestApiClient {
     @SuppressWarnings("unchecked")
     private <T> T getResponse(Class<T> clazz) throws SOSNoResponseException {
         try {
-            T s = clazz.newInstance();
+            T s = null;
             setHttpResponseHeaders();
             HttpEntity entity = httpResponse.getEntity();
             if (entity != null) {
-                if (s instanceof String) {
+                if (clazz.equals(String.class)) {
                     s = (T) EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                } else if (s instanceof byte[]) {
+                } else if (clazz.equals(byte[].class)) {
                     s = (T) EntityUtils.toByteArray(entity);
-                } else if (s instanceof InputStream) {
+                } else if (clazz.equals(InputStream.class)) {
                     s = (T) entity.getContent();
                 }
             }
