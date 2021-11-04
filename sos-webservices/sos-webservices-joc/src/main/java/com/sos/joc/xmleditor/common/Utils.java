@@ -45,13 +45,13 @@ public class Utils {
     }
 
     public static String serialize(String content) throws Exception {
-        return new SOSSerializer<String>().serialize(content);
+        return new SOSSerializer<String>().serializeCompressed(content);
     }
 
     public static String deserializeJson(String content) throws Exception {
         if (content == null || content.startsWith("{")) {
             return content;
         }
-        return new SOSSerializer<String>().deserialize(content);
+        return new SOSSerializer<String>().deserializeCompressed(content);
     }
 }

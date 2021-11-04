@@ -548,7 +548,7 @@ public class HistoryMonitoringModel {
     private void serialize() {
         if (payloads.size() > 0 || longerThan.size() > 0) {
             try {
-                saveJocVariable(new SOSSerializer<SerializedResult>().serialize2bytes(new SerializedResult(payloads, longerThan)));
+                saveJocVariable(new SOSSerializer<SerializedResult>().serializeCompressed2bytes(new SerializedResult(payloads, longerThan)));
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             }
@@ -565,7 +565,7 @@ public class HistoryMonitoringModel {
             if (var == null) {
                 return;
             }
-            SerializedResult sr = new SOSSerializer<SerializedResult>().deserialize(var.getBinaryValue());
+            SerializedResult sr = new SOSSerializer<SerializedResult>().deserializeCompressed(var.getBinaryValue());
             if (sr.getPayloads() != null) {
                 // payloads on start is maybe not empty (because event subscription)
                 payloads.addAll(sr.getPayloads());
