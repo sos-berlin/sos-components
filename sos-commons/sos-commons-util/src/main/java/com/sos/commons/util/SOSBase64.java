@@ -5,14 +5,14 @@ import java.util.Base64;
 
 public class SOSBase64 {
 
-    public static String encode(final String s) throws Exception {
+    public static String encode(final String s) {
         if (s == null) {
             return null;
         }
         return Base64.getEncoder().encodeToString(s.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static String decode(final String s) throws Exception {
+    public static String decode(final String s) {
         if (s == null) {
             return null;
         }
@@ -25,15 +25,16 @@ public class SOSBase64 {
         final String OP_ENCODE = "-encode";
         final String OP_DECODE = "-decode";
         try {
-            if (args.length == 0) {
-                System.out.println();
-                System.out.println("Usage:");
-                System.out.println("       <value> - required, string to encode/decode");
-                System.out.println("       -encode - optional (default), encode string");
-                System.out.println("         or ");
-                System.out.println("       -decode - optional, decode string");
-                System.out.println();
-                throw new Exception("missing arguments");
+            if (args.length == 0 || (args.length > 0 && args[0].length() == 0)) {
+                System.err.println();
+                System.err.println("Usage:");
+                System.err.println("       <value> - required, string to encode/decode");
+                System.err.println("       -encode - optional (default), encode string");
+                System.err.println("         or ");
+                System.err.println("       -decode - optional, decode string");
+                System.err.println();
+                exitStatus = 1;
+                return;
             }
 
             String op = OP_ENCODE;
