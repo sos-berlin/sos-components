@@ -18,6 +18,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -33,9 +34,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -130,13 +129,11 @@ import io.vavr.control.Either;
 import js7.base.crypt.SignedString;
 import js7.base.crypt.SignerId;
 import js7.base.problem.Problem;
-import js7.base.utils.SimplePattern;
 import js7.data.agent.AgentPath;
 import js7.data.board.BoardPath;
 import js7.data.item.VersionId;
 import js7.data.job.JobResourcePath;
 import js7.data.lock.LockPath;
-import js7.data.orderwatch.FileWatch;
 import js7.data.orderwatch.OrderWatchPath;
 import js7.data.workflow.WorkflowPath;
 import js7.data_for_java.board.JBoard;
@@ -145,8 +142,6 @@ import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
 import reactor.core.publisher.Flux;
-import scala.Option;
-import scala.concurrent.duration.FiniteDuration;
 
 public abstract class PublishUtils {
 
@@ -2484,33 +2479,17 @@ public abstract class PublishUtils {
 
     private static JFileWatch getJFileWatch(FileOrderSource fileOrderSource) throws JocDeployException {
         Long delay = fileOrderSource.getDelay() == null ? 2L : fileOrderSource.getDelay();
-        
-        Option<SimplePattern> pattern = Option.empty();
-        if (fileOrderSource.getPattern() != null && !fileOrderSource.getPattern().isEmpty()) {
-            pattern = Option.apply(SimplePattern.apply(Pattern.compile(fileOrderSource.getPattern())));
-        }
-        
         String directory = fileOrderSource.getDirectoryExpr() == null ? JExpression.quoteString(fileOrderSource.getDirectory()) : fileOrderSource
                 .getDirectoryExpr();
-
-        return JFileWatch.apply(FileWatch.apply(
+        
+        return getOrThrowEither(JFileWatch.checked(
                 OrderWatchPath.of(fileOrderSource.getPath()),
                 WorkflowPath.of(fileOrderSource.getWorkflowPath()),
                 AgentPath.of(fileOrderSource.getAgentPath()),
-                getOrThrowEither(JExpression.parse(directory)).asScala(),
-                pattern,
-                Option.apply(getOrThrowEither(JExpression.parse(getFileOrderIdPattern(fileOrderSource))).asScala()),
-                FiniteDuration.apply(delay, TimeUnit.SECONDS),
-                Option.empty()));
-        
-//        Either<Problem, JFileWatch> fileWatch = JFileWatch.checked(OrderWatchPath.of(fileOrderSource.getPath()), WorkflowPath.of(fileOrderSource
-//                .getWorkflowPath()), AgentPath.of(fileOrderSource.getAgentPath()), Paths.get(fileOrderSource.getDirectory()),
-//                getFileOrderSourcePattern(fileOrderSource), Optional.of(getFileOrderIdPattern(fileOrderSource)), Duration.ofSeconds(delay));
-//        if (fileWatch.isLeft()) {
-//            throw new JocDeployException(fileWatch.getLeft().toString());
-//        } else {
-//            return fileWatch.get();
-//        }
+                getOrThrowEither(JExpression.parse(directory)), 
+                getFileOrderSourcePattern(fileOrderSource), 
+                Optional.of(getFileOrderIdPattern(fileOrderSource)), 
+                Duration.ofSeconds(delay)));
     }
     
     private static <T> T getOrThrowEither(Either<Problem, T> e) {
@@ -2542,12 +2521,7 @@ public abstract class PublishUtils {
             readingOrderToNoticeIdExpression = readingOrderToNoticeIdEither.get();
         }
         if (board.getEndOfLife() != null) {
-            Either<Problem, JExpression> endOfLifeEither = JExpression.parse(board.getEndOfLife());
-            if (endOfLifeEither.isLeft()) {
-                throw new JocDeployException(endOfLifeEither.getLeft().toString());
-            } else {
-                endOfLifeExpression = endOfLifeEither.get();
-            }
+            endOfLifeExpression = getOrThrowEither(JExpression.parse(board.getEndOfLife()));
         }
         return JBoard.of(BoardPath.of(board.getPath()), toNoticeExpression, readingOrderToNoticeIdExpression, endOfLifeExpression);
     }
