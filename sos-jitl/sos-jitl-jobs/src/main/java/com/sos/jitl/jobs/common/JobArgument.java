@@ -19,6 +19,7 @@ import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 public class JobArgument<T> extends SOSArgument<T> {
 
     public enum ValueSource {
+
         JAVA("Resulting Arguments", "Resulting Argument"), ORDER("Order Variables", "Order Variable"), ORDER_OR_NODE(
                 "Default Order Variables or Node Arguments", "Default Order Variable or Node Argument"), JOB("Arguments", "Argument"), JOB_ARGUMENT(
                         "Job Arguments", "Job Argument"), JOB_RESOURCE("Job Resources", "Job Resource"), LAST_SUCCEEDED_OUTCOME(
@@ -149,8 +150,8 @@ public class JobArgument<T> extends SOSArgument<T> {
         return sb.toString();
     }
 
-    protected void setNotAcceptedValue(Object value) {
-        notAcceptedValue = new NotAcceptedValue(value);
+    protected void setNotAcceptedValue(Object value, Throwable exception) {
+        notAcceptedValue = new NotAcceptedValue(value, exception);
     }
 
     protected NotAcceptedValue getNotAcceptedValue() {
@@ -168,10 +169,13 @@ public class JobArgument<T> extends SOSArgument<T> {
     protected class NotAcceptedValue {
 
         private final Object value;
-        private ValueSource source;
+        private final Throwable exception;
+        private ValueSource source;// where is problem occurred - job, order etc
+        private ValueSource usedValueSource;// which value will be used: java, ...
 
-        private NotAcceptedValue(Object value) {
+        private NotAcceptedValue(Object value, Throwable exception) {
             this.value = value;
+            this.exception = exception;
         }
 
         protected void setSource(ValueSource val) {
@@ -180,6 +184,18 @@ public class JobArgument<T> extends SOSArgument<T> {
 
         protected ValueSource getSource() {
             return source;
+        }
+
+        protected void setUsedValueSource(ValueSource val) {
+            usedValueSource = val;
+        }
+
+        protected ValueSource getUsedValueSource() {
+            return usedValueSource;
+        }
+
+        protected Throwable getException() {
+            return exception;
         }
 
         protected String getDisplayValue() {

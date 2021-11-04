@@ -18,7 +18,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
+import com.sos.commons.util.SOSSerializer;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
 import com.sos.commons.vfs.ssh.common.SSHProviderArguments;
@@ -34,6 +36,7 @@ import com.sos.jitl.jobs.exception.SOSJobArgumentException;
 public class JobTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobTest.class);
+    private static final String BASE64_VALUE_PREFIX = "base64:";
 
     @Ignore
     @Test
@@ -93,6 +96,8 @@ public class JobTest {
         map.put(o3.getList().getName(), "xxx ; yyyy ;");
         map.put(o3.getLinkedList().getName(), "lxxx ; lyyyy ;");
         map.put(o3.getAuthMethods().getName(), "password;publickey");
+        // map.put(o3.getTest().getName(), BASE64_VALUE_PREFIX + "aGVsbG8gd2VsdA==");
+        map.put(o3.getTest().getName(), BASE64_VALUE_PREFIX + "rO0ABXQACmhlbGxvIHdlbHQ=");
 
         LOGGER.info(o1.getClass().getSimpleName() + "---");
         setArguments(map, o1);
@@ -107,6 +112,10 @@ public class JobTest {
         LOGGER.info("list=" + o3.getList().getDisplayValue());
         LOGGER.info("linkedList=" + o3.getLinkedList().getDisplayValue());
         LOGGER.info("authMethods=" + o3.getAuthMethods().getDisplayValue());
+        LOGGER.info("test=" + o3.getTest().getDisplayValue());
+
+        LOGGER.info("[1]" + new SOSSerializer<String>().serialize("Hello World"));
+        LOGGER.info("[2]" + SOSBase64.encode("Hello World"));
     }
 
     @Ignore
@@ -176,7 +185,18 @@ public class JobTest {
         if (val instanceof String) {
             val = val.toString().trim();
             Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-            if (!type.equals(String.class)) {
+            if (type.equals(String.class)) {
+                if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
+                    String s = val.toString().substring(BASE64_VALUE_PREFIX.length());
+                    try {
+                        val = SOSBase64.decode(s);
+                    } catch (Throwable e) {
+                        LOGGER.info("[BASE64]" + s);
+                        LOGGER.error(e.toString(), e);
+                        arg.setNotAcceptedValue(val, e);
+                    }
+                }
+            } else {
                 LOGGER.debug("       [" + field.getName() + "]type=" + type.getTypeName());
                 if (type.equals(Path.class)) {
                     val = Paths.get(val.toString());
@@ -209,7 +229,8 @@ public class JobTest {
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
-                        arg.setNotAcceptedValue(val);
+                        arg.setNotAcceptedValue(val, null);
+                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
                         val = arg.getDefaultValue();
                     } else {
                         val = v;
