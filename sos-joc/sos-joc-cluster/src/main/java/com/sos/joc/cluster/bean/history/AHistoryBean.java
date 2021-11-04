@@ -1,8 +1,12 @@
 package com.sos.joc.cluster.bean.history;
 
+import java.io.Serializable;
+
 import com.sos.controller.model.event.EventType;
 
-public abstract class AHistoryBean {
+public abstract class AHistoryBean implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final EventType eventType;
     private final long eventId;
