@@ -21,6 +21,7 @@ public class CommonJobArguments extends JobArguments {
     private JobArgument<Long> iJobId = new JobArgument<Long>(null, false, 0L);
     private JobArgument<String> iScheduleId = new JobArgument<String>(null, false, "");
     private JobArgument<String> iRunId = new JobArgument<String>(null, false, "");
+    private JobArgument<RunIds.Scope> iRunScope = new JobArgument<RunIds.Scope>(null, false, RunIds.Scope.SCHEDULE);
 
     private JobArgument<Long> checkInterval = new JobArgument<Long>(hanaPrefix + "_check_interval", false, TimeUnit.SECONDS.toSeconds(1));
 
@@ -176,7 +177,13 @@ public class CommonJobArguments extends JobArguments {
     }
     
     public RunIds getIds() {
-        return new RunIds(iJobId.getValue(), iScheduleId.getValue(), iRunId.getValue());
+        return new RunIds(iJobId.getValue(), iScheduleId.getValue(), iRunScope.getValue());
+    }
+    
+    public void setIds(RunIds runIds) {
+        iJobId.setValue(runIds.getJobId());
+        iScheduleId.setValue(runIds.getScheduleId());
+        iRunId.setValue(runIds.getRunId());
     }
     
     public void setIJobId(Long val) {
@@ -189,6 +196,10 @@ public class CommonJobArguments extends JobArguments {
     
     public void setIRunId(String val) {
         iRunId.setValue(val);
+    }
+    
+    public void setIRunScope(RunIds.Scope val) {
+        iRunScope.setValue(val);
     }
     
 }

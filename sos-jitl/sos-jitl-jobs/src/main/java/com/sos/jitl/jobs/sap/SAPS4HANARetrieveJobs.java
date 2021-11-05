@@ -4,7 +4,7 @@ import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobLogger;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.sap.common.CommonJobArguments;
-import com.sos.jitl.jobs.sap.common.Constants;
+import com.sos.jitl.jobs.sap.common.Globals;
 import com.sos.jitl.jobs.sap.common.HttpClient;
 import com.sos.jitl.jobs.sap.common.bean.ResponseJobs;
 
@@ -21,8 +21,8 @@ public class SAPS4HANARetrieveJobs extends ABlockingInternalJob<CommonJobArgumen
         JobLogger logger = step.getLogger();
         HttpClient httpClient = new HttpClient(step.getArguments(), logger);
         ResponseJobs result = httpClient.retrieveJobs();
+        logger.info("result: \n" + Globals.objectMapperPrettyPrint.writeValueAsString(result));
         httpClient.closeHttpClient();
-        logger.info("result: \n" + Constants.objectMapperPrettyPrint.writeValueAsString(result));
         return step.success(0);
     }
 

@@ -27,17 +27,17 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
     @Override
     public Completed onOrderProcess(JobStep<CommonJobArguments> step) throws Exception {
         CommonJobArguments args = step.getArguments();
-        execute(step, args, args.setCreateJobArgumentsRequired());
+        execute(step, args, RunIds.Scope.JOB);
         return step.success(0);
     }
     
     @Override
-    public void startSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger) throws Exception {
+    public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger) throws Exception {
         Map<String, Object> unknownArgs = com.sos.jitl.jobs.common.Job.asNameValueMap(step.getAllCurrentArguments(Type.UNKNOWN));
         ScheduleData data = new ScheduleData();
         unknownArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg
                 .getValue() instanceof String).forEach(arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));
-        Schedule schedule = new Schedule().withActive(true).withData(data);
+        Schedule schedule = new Schedule().withActive(false).withData(data).withDescription(setScheduleDescription(step));
         Job job = new Job().withAction(args.getActionEndpoint().getValue().toString()).withHttpMethod(args.getActionEndpointHTTPMethod().getValue())
                 .withActive(true).withDescription(args.getJobDescription().getValue()).withName(getJobName(step)).withSchedules(Collections
                         .singletonList(schedule));
@@ -46,13 +46,9 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
         ResponseJob respJob = httpClient.createJob(job);
         args.setIJobId(respJob.getJobId());
         args.setIScheduleId(respJob.getSchedules().get(0).getScheduleId());
+        logger.info("Schedule jobId=%d scheduleId=%s is created", respJob.getJobId(), respJob.getSchedules().get(0).getScheduleId());
     }
 
-    @Override
-    public boolean cleanUpSchedule(RunIds runIds, HttpClient httpClient) throws Exception {
-        return httpClient.deleteJob(runIds.getJobId());
-    }
-    
     private static String getJobName(JobStep<CommonJobArguments> step) throws SOSJobProblemException {
         return String.format("%s#%s", step.getWorkflowName(), step.getJobInstructionLabel());
     }
