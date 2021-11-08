@@ -39,6 +39,8 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
             throws Exception {
         JobLogger logger = step.getLogger();
         args.setIRunScope(scope);
+        Path statusFile = Globals.getStatusFileDirectory(args).resolve(getStatusFilename(step));
+        
         switch(scope) {
         case JOB:
             checkRequiredArguments(args.setCreateJobArgumentsRequired());
@@ -47,22 +49,44 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
             checkRequiredArguments(args.setCreateScheduleArgumentsRequired());
             break;
         }
-
+        
         HttpClient httpClient = null;
         try {
             httpClient = new HttpClient(args, logger);
-            createInactiveSchedule(step, args, httpClient, logger);
-            createStatusFile(step, args, logger);
-            activateSchedule(args.getIds(), httpClient, logger);
+            
+            // if status file exists -> e.g at an order resume (after kill)
+            if (Files.exists(statusFile)) {
+                RunIds runIds = null;
+                try {
+                    runIds = Globals.objectMapper.readValue(Files.readAllBytes(statusFile), RunIds.class);
+                    args.setIds(runIds);
+                    ResponseSchedule respSchedule = httpClient.retrieveSchedule(runIds.getJobId(), runIds.getScheduleId());
+                    if (!respSchedule.getActive()) {
+                        activateSchedule(args.getIds(), httpClient, logger);
+                    }
+                } catch (Exception e) {
+                    // file is corrupt, i.e. inactive schedule is already created but task was killed during status file creation
+                    // TODO retrieve inactive schedule via retrieve jobs etc.
+                    // createStatusFile(statusFile, args, logger);
+                    logger.warn("File '%s' is corrupt: %s", statusFile.getFileName().toString(), e.toString());
+                }
+            } else {
+                createInactiveSchedule(step, args, httpClient, logger);
+                createStatusFile(statusFile, args, logger);
+                activateSchedule(args.getIds(), httpClient, logger);
+            }
+            
             if (pollSchedule(args, httpClient, logger)) {
                 Globals.cleanUpSchedule(args.getIds(), httpClient);
-                deleteStatusFile(step, args, logger);
+                deleteStatusFile(statusFile, args, logger);
             }
+            
         } finally {
             if (httpClient != null) {
                 httpClient.closeHttpClient();
             }
         }
+        
         return true;
     }
     
@@ -149,20 +173,17 @@ public abstract class ASAPS4HANAJob extends ABlockingInternalJob<CommonJobArgume
         return String.format("%s#%s%s.json", step.getWorkflowName(), step.getJobInstructionLabel(), step.getOrderId().replace('|', '!'));
     }
     
-    private void createStatusFile(JobStep<CommonJobArguments> step, CommonJobArguments args, JobLogger logger) throws Exception {
-        String filename = getStatusFilename(step);
-        Path statusFileDirectory = Globals.getStatusFileDirectory(args);
-        Files.createDirectories(statusFileDirectory);
-        Files.write(statusFileDirectory.resolve(filename), Globals.objectMapper.writeValueAsBytes(args.getIds()));
+    private void createStatusFile(Path statusfile, CommonJobArguments args, JobLogger logger) throws Exception {
+        Files.createDirectories(statusfile.getParent());
+        Files.write(statusfile, Globals.objectMapper.writeValueAsBytes(args.getIds()));
         // TODO change to debug if it works
-        logger.info("status file '%s' is created with %s", filename, args.idsToString());
+        logger.info("status file '%s' is created with %s", statusfile.toString(), args.idsToString());
     }
     
-    private void deleteStatusFile(JobStep<CommonJobArguments> step, CommonJobArguments args, JobLogger logger) throws Exception {
-        String filename = getStatusFilename(step);
-        Files.deleteIfExists(Globals.getStatusFileDirectory(args).resolve(filename));
+    private void deleteStatusFile(Path statusfile, CommonJobArguments args, JobLogger logger) throws Exception {
+        Files.deleteIfExists(statusfile);
         // TODO change to debug if it works
-        logger.info("status file '%s' is deleted", filename);
+        logger.info("status file '%s' is deleted", statusfile.toString());
     }
 
 }

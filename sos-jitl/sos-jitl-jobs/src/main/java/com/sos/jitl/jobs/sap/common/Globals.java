@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.jitl.jobs.exception.SOSJobProblemException;
 import com.sos.jitl.jobs.sap.common.bean.RunIds;
+import com.sos.jitl.jobs.sap.common.bean.ScheduleDescription;
 
 public class Globals {
 
@@ -34,5 +35,10 @@ public class Globals {
             return httpClient.deleteSchedule(runIds.getJobId(), runIds.getScheduleId());
         }
         return false;
+    }
+    
+    public static ScheduleDescription parseFilename(String filename) {
+        String[] filnameParts = filename.split("#", 3);
+        return new ScheduleDescription(filnameParts[0], filnameParts[1], "#" + filnameParts[2].replace('!', '|'), null);
     }
 }

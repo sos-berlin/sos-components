@@ -34,6 +34,7 @@ public class SAPS4HANACreateJob extends ASAPS4HANAJob {
     @Override
     public void createInactiveSchedule(JobStep<CommonJobArguments> step, CommonJobArguments args, HttpClient httpClient, JobLogger logger) throws Exception {
         Map<String, Object> unknownArgs = com.sos.jitl.jobs.common.Job.asNameValueMap(step.getAllCurrentArguments(Type.UNKNOWN));
+        logger.info(unknownArgs.toString());
         ScheduleData data = new ScheduleData();
         unknownArgs.entrySet().stream().filter(arg -> !arg.getKey().startsWith("js7")).filter(arg -> arg
                 .getValue() instanceof String).forEach(arg -> data.setAdditionalProperty(arg.getKey(), (String) arg.getValue()));

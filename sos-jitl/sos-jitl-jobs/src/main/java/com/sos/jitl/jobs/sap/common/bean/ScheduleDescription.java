@@ -4,6 +4,11 @@ package com.sos.jitl.jobs.sap.common.bean;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -173,6 +178,23 @@ public class ScheduleDescription {
     public ScheduleDescription withCreated(Long created) {
         this.created = created;
         return this;
+    }
+    
+    public String string() {
+        List<String> s = new ArrayList<>(4);
+        if (workflowName != null) {
+            s.add("workflowName=" + workflowName);
+        }
+        if (jobLabel != null) {
+            s.add("jobLabel=" + jobLabel);
+        }
+        if (orderId != null) {
+            s.add("orderId=" + orderId);
+        }
+        if (created != null) {
+            s.add("created=" + Instant.ofEpochMilli(created).toString());
+        }
+        return String.join(", ", s);
     }
 
     @Override
