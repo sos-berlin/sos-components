@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
@@ -251,7 +252,7 @@ public class HistoryService extends AJocClusterService {
                         } else {
                             Files.createDirectory(dir);
                         }
-                        SOSPath.unpackGzip(item.getContent(), dir);
+                        SOSGzip.decompress(item.getContent(), dir);
                         toDelete.add(item.getHistoryOrderMainParentId());
                         LOGGER.info(String.format("[log directory restored from database]%s", dir));
                     } catch (Exception e) {
@@ -345,7 +346,7 @@ public class HistoryService extends AJocClusterService {
                     item = new DBItemHistoryTempLog();
                     item.setHistoryOrderMainParentId(historyOrderMainParentId);
                     item.setMemberId(getJocConfig().getMemberId());
-                    item.setContent(SOSPath.gzipDirectory(dir));
+                    item.setContent(SOSGzip.compress(dir));
                     item.setMostRecentFile(mostRecentFile);
                     item.setCreated(new Date());
                     item.setModified(item.getCreated());
@@ -354,7 +355,7 @@ public class HistoryService extends AJocClusterService {
                 } else {
                     if (!item.getMostRecentFile().equals(mostRecentFile)) {
                         item.setMemberId(getJocConfig().getMemberId());
-                        item.setContent(SOSPath.gzipDirectory(dir));
+                        item.setContent(SOSGzip.compress(dir));
                         item.setMostRecentFile(mostRecentFile);
                         item.setModified(new Date());
                         session.update(item);

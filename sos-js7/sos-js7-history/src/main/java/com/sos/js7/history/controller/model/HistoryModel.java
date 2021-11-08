@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
@@ -1812,7 +1813,7 @@ public class HistoryModel {
             item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
             if (item.getCompressed()) {// task
-                item.setFileContent(SOSPath.gzipFile(file));
+                item.setFileContent(SOSGzip.compress(file));
             } else {// order
                 item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
             }
