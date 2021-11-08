@@ -251,7 +251,7 @@ public class HistoryService extends AJocClusterService {
                         } else {
                             Files.createDirectory(dir);
                         }
-                        SOSPath.ungzipDirectory(item.getContent(), dir);
+                        SOSPath.unpackGzip(item.getContent(), dir);
                         toDelete.add(item.getHistoryOrderMainParentId());
                         LOGGER.info(String.format("[log directory restored from database]%s", dir));
                     } catch (Exception e) {
