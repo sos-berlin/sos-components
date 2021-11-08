@@ -378,7 +378,7 @@ public class JocCluster {
             }
         }
     }
-    
+
     private void postDailyPlanCalendarEvent(StartupMode mode) {
         if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
             firstStep = false;
@@ -604,6 +604,7 @@ public class JocCluster {
                     if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
                         // set switchMember because before "switch" the active cluster instance must be stopped
                         // and the current instance is not an active instance
+                        // TODO concurrency error handling
                         item.setHeartBeat(new Date());
                         item.setSwitchMemberId(newMemberId);
                         item.setSwitchHeartBeat(new Date());
@@ -658,6 +659,8 @@ public class JocCluster {
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
                             if (handler.isActive()) {
+                                // perform STOP can take a time ...
+                                // the stops of the individual services are executed in parallel, but are joined at the end
                                 handler.perform(mode, PerformType.STOP, configurations);
                             }
                             item.setMemberId(item.getSwitchMemberId());
