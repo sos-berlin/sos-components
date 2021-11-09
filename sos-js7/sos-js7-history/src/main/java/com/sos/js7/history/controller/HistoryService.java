@@ -252,7 +252,7 @@ public class HistoryService extends AJocClusterService {
                         } else {
                             Files.createDirectory(dir);
                         }
-                        SOSGzip.decompress(item.getContent(), dir);
+                        SOSGzip.decompress(item.getContent(), dir, true);
                         toDelete.add(item.getHistoryOrderMainParentId());
                         LOGGER.info(String.format("[log directory restored from database]%s", dir));
                     } catch (Exception e) {
@@ -346,7 +346,7 @@ public class HistoryService extends AJocClusterService {
                     item = new DBItemHistoryTempLog();
                     item.setHistoryOrderMainParentId(historyOrderMainParentId);
                     item.setMemberId(getJocConfig().getMemberId());
-                    item.setContent(SOSGzip.compress(dir));
+                    item.setContent(SOSGzip.compress(dir, false).getCompressed());
                     item.setMostRecentFile(mostRecentFile);
                     item.setCreated(new Date());
                     item.setModified(item.getCreated());
@@ -355,7 +355,7 @@ public class HistoryService extends AJocClusterService {
                 } else {
                     if (!item.getMostRecentFile().equals(mostRecentFile)) {
                         item.setMemberId(getJocConfig().getMemberId());
-                        item.setContent(SOSGzip.compress(dir));
+                        item.setContent(SOSGzip.compress(dir, false).getCompressed());
                         item.setMostRecentFile(mostRecentFile);
                         item.setModified(new Date());
                         session.update(item);

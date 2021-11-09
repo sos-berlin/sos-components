@@ -16,8 +16,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -376,6 +378,13 @@ public class SOSPath {
     public static File getMostRecentFile(Path dir) {
         return Arrays.stream(toFile(dir).listFiles()).filter(f -> f.isFile()).max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
                 .orElse(null);
+    }
+
+    public static void setLastModifiedTime(Path path, Date date) throws Exception {
+        if (path == null || date == null) {
+            return;
+        }
+        Files.setLastModifiedTime(path, FileTime.fromMillis(date.getTime()));
     }
 
     public static void main(String[] args) throws Exception {

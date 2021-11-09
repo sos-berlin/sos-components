@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSGzip.SOSGzipResult;
+
 public class SOSGzipTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSGzipTest.class);
@@ -18,25 +20,31 @@ public class SOSGzipTest {
     @Ignore
     @Test
     public void testGzipDirectory() throws IOException {
-        Path dir2gzip = Paths.get("./src/test/resources");
-        Path unpackDir = Paths.get("./src/test/resources/unpack");
-        if (!Files.exists(unpackDir)) {
-            Files.createDirectories(unpackDir);
-        }
-        Path targetTarGz = unpackDir.resolve("test.tar.gz");
+        Path dir2gzip = Paths.get("./src/test/java");
+        Path gzipTargetDir = Paths.get("./src/test/resources/gzip");
 
+        Path decompressDir = gzipTargetDir.resolve("decompress");
+        if (Files.exists(decompressDir)) {
+            SOSPath.cleanupDirectory(decompressDir);
+        } else {
+            Files.createDirectories(decompressDir);
+        }
+        Path targetTarGz = gzipTargetDir.resolve("test.tar.gz");
+
+        SOSGzipResult r;
         try {
+
             LOGGER.info("[compress]start");
-            byte[] r = SOSGzip.compress(dir2gzip);
-            LOGGER.info("[compress]end");
+            r = SOSGzip.compress(dir2gzip, false);
+            LOGGER.info("[compress][end]" + r.toString());
 
             LOGGER.info("[writeResult]start");
-            Files.write(targetTarGz, r, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(targetTarGz, r.getCompressed(), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             LOGGER.info("[writeResult]end");
 
             LOGGER.info("[decompress]start");
-            SOSGzip.decompress(targetTarGz, unpackDir.resolve("tmp"));
-            LOGGER.info("[decompress]end");
+            r = SOSGzip.decompress(targetTarGz, decompressDir, true);
+            LOGGER.info("[decompress][end]" + r.toString());
 
         } catch (Exception e) {
             LOGGER.error(e.toString(), e);

@@ -52,7 +52,7 @@ public class DBItemLogTest {
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
-            item.setFileContent(SOSGzip.compress(logFile));
+            item.setFileContent(SOSGzip.compress(logFile).getCompressed());
             item.setCreated(new Date());
 
             session.save(item);
@@ -70,8 +70,8 @@ public class DBItemLogTest {
 
         DBItemLogTest t = new DBItemLogTest();
 
-        //Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
-        //Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        // Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        // Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;

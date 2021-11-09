@@ -1813,7 +1813,7 @@ public class HistoryModel {
             item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
             if (item.getCompressed()) {// task
-                item.setFileContent(SOSGzip.compress(file));
+                item.setFileContent(SOSGzip.compress(file).getCompressed());
             } else {// order
                 item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
             }
