@@ -52,7 +52,7 @@ public class DBItemLogTest {
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
-            item.setFileContent(SOSGzip.compress(logFile).getCompressed());
+            item.setFileContent(SOSGzip.compress(logFile, false).getCompressed());
             item.setCreated(new Date());
 
             session.save(item);
