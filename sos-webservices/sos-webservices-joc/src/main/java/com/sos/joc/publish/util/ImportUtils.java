@@ -35,6 +35,7 @@ import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.CalendarType;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
@@ -64,6 +65,7 @@ import com.sos.joc.model.inventory.jobresource.JobResourceEdit;
 import com.sos.joc.model.inventory.jobresource.JobResourcePublish;
 import com.sos.joc.model.inventory.lock.LockEdit;
 import com.sos.joc.model.inventory.lock.LockPublish;
+import com.sos.joc.model.inventory.script.ScriptEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowEdit;
 import com.sos.joc.model.inventory.workflow.WorkflowPublish;
 import com.sos.joc.model.joc.JocMetaInfo;
@@ -106,6 +108,7 @@ public class ImportUtils {
         final String newName = configuration.getName().replaceFirst(replace.get(0), replace.get(1));
         Set<ConfigurationObject> referencedBy = new HashSet<ConfigurationObject>();
         
+        // TODO consider SCRIPT objects
         switch (configuration.getObjectType()) {
 	    	case LOCK:
 	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations));
@@ -144,6 +147,7 @@ public class ImportUtils {
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
+                    // TODO consider SCRIPT objects
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.LOCK)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
@@ -275,7 +279,7 @@ public class ImportUtils {
     }
     
     public static List<ConfigurationType> getImportOrder() {
-        return Arrays.asList(ConfigurationType.LOCK,  ConfigurationType.NOTICEBOARD, 
+        return Arrays.asList(ConfigurationType.LOCK, ConfigurationType.SCRIPT, ConfigurationType.NOTICEBOARD, 
                 ConfigurationType.JOBRESOURCE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR, 
                 ConfigurationType.WORKFLOW, ConfigurationType.FILEORDERSOURCE, ConfigurationType.SCHEDULE);
     }
@@ -646,6 +650,23 @@ public class ImportUtils {
                 throw new JocImportException(String.format("Calendar with path %1$s not imported. Object values could not be mapped.", ("/"
                         + entryName).replace(ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.value(), "")));
             }
+        } else if (entryName.endsWith(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value())) {
+            String normalizedPath = Globals.normalizePath("/" + entryName.replace(ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.value(),
+                    ""));
+            if (normalizedPath.startsWith("//")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+            ScriptEdit scriptEdit = new ScriptEdit();
+            Script script = Globals.objectMapper.readValue(outBuffer.toString(StandardCharsets.UTF_8.displayName()), Script.class);
+            if (checkObjectNotEmpty(script)) {
+                scriptEdit.setConfiguration(script);
+            } else {
+                throw new JocImportException(String.format("Script with path %1$s not imported. Object values could not be mapped.",
+                        normalizedPath));
+            }
+            scriptEdit.setName(Paths.get(normalizedPath).getFileName().toString());
+            scriptEdit.setPath(normalizedPath);
+            scriptEdit.setObjectType(ConfigurationType.SCRIPT);
         }
         return null;
     }
@@ -757,6 +778,14 @@ public class ImportUtils {
         if (schedule != null && schedule.getDocumentationName() == null && schedule.getPlanOrderAutomatically() == null && schedule.getPath() == null
                 && schedule.getCalendars() == null && schedule.getWorkflowPath() == null && schedule.getSubmitOrderToControllerWhenPlanned() == null
                 && schedule.getNonWorkingDayCalendars() == null && schedule.getVariableSets() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    private static boolean checkObjectNotEmpty(Script script) {
+        if (script != null && script.getDocumentationName() == null && script.getScript() == null && script.getTitle() == null) {
             return false;
         } else {
             return true;

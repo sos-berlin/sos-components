@@ -31,6 +31,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
 import com.sos.joc.model.publish.OperationType;
@@ -50,19 +51,20 @@ public class StoreDeployments {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreDeployments.class);
     
-    public static final Map<Integer, Class<?>> CLASS_MAPPING = Collections.unmodifiableMap(new HashMap<Integer, Class<?>>() {
+    public static final Map<Integer, Class<? extends IDeployObject>> CLASS_MAPPING = Collections.unmodifiableMap(
+            new HashMap<Integer, Class<? extends IDeployObject>>() {
 
-        private static final long serialVersionUID = 1L;
+                private static final long serialVersionUID = 1L;
 
-        {
-            put(DeployType.JOBCLASS.intValue(), JobClass.class);
-            put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
-            put(DeployType.NOTICEBOARD.intValue(), Board.class);
-            put(DeployType.LOCK.intValue(), Lock.class);
-            put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
-            put(DeployType.WORKFLOW.intValue(), Workflow.class);
-        }
-    });
+                {
+                    put(DeployType.JOBCLASS.intValue(), JobClass.class);
+                    put(DeployType.JOBRESOURCE.intValue(), JobResource.class);
+                    put(DeployType.NOTICEBOARD.intValue(), Board.class);
+                    put(DeployType.LOCK.intValue(), Lock.class);
+                    put(DeployType.FILEORDERSOURCE.intValue(), FileOrderSource.class);
+                    put(DeployType.WORKFLOW.intValue(), Workflow.class);
+                }
+            });
 
     public static void storeNewDepHistoryEntriesForRedeploy(SignedItemsSpec signedItemsSpec,
             String account, String commitId, String controllerId, String accessToken, JocError jocError, DBLayerDeploy dbLayer) {

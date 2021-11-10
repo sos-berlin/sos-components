@@ -14,6 +14,7 @@ public enum ConfigurationObjectType {
     LOCK("LOCK"),
     NOTICEBOARD("NOTICEBOARD"),
     SCHEDULE("SCHEDULE"),
+    SCRIPT("SCRIPT"),
     FOLDER("FOLDER"),
     JOBSCHEDULER("JOBSCHEDULER"),
     DAILYPLAN("DAILYPLAN"),

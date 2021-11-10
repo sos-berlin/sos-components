@@ -30,6 +30,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
@@ -91,6 +92,7 @@ public class JocInventory {
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
+            put(ConfigurationType.SCRIPT, "classpath:/raml/inventory/schemas/script/script-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
@@ -135,6 +137,7 @@ public class JocInventory {
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.SCHEDULE, Schedule.class);
+            put(ConfigurationType.SCRIPT, Script.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
@@ -146,7 +149,7 @@ public class JocInventory {
             ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.SCHEDULE, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
+            ConfigurationType.SCHEDULE, ConfigurationType.SCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -817,6 +820,7 @@ public class JocInventory {
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
+        // TODO consider SCRIPT onjects
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());

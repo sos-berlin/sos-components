@@ -25,7 +25,6 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.RedeployFilter;
@@ -74,10 +73,11 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
 
             List<DBItemDeploymentHistory> unsignedRedeployables = null;
             if (latest != null) {
+                final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
                 unsignedRedeployables = latest.stream().peek(item -> {
     				try {
-                        item.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
-                                StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId));
+                        item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
+                                StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
 					} catch (IOException e) {
 						throw new JocException(e);
 					}

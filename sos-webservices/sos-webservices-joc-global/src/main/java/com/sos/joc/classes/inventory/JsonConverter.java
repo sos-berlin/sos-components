@@ -1,9 +1,15 @@
 package com.sos.joc.classes.inventory;
 
 import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -21,6 +27,7 @@ import com.sos.inventory.model.instruction.Instruction;
 import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
+import com.sos.inventory.model.job.ExecutableScript;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.ListParameterType;
 import com.sos.inventory.model.workflow.ParameterType;
@@ -28,6 +35,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.workflow.ListParameters;
 import com.sos.sign.model.workflow.OrderPreparation;
 import com.sos.sign.model.workflow.Parameter;
@@ -43,36 +51,47 @@ public class JsonConverter {
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
+    private final static Pattern scriptIncludePattern = Pattern.compile("^##!INCLUDE\\s+(\\S+)\\s*(.*)$", Pattern.DOTALL);
+    private final static Predicate<String> hasScriptIncludes = Pattern.compile("(\"|\n)##!INCLUDE\\s+").asPredicate();
+    private final static String includeScriptErrorMsg =
+            "Script include '%s' of job '%s' has wrong format, expected format: ##!INCLUDE scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
+
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
     @SuppressWarnings("unchecked")
-    public static <T> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId) throws JsonParseException, JsonMappingException,
-            IOException {
+    public static <T extends IDeployObject> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId,
+            Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
         if (commitId != null && !commitId.isEmpty()) {
             json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
         }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
-            return (T) readAsConvertedWorkflow(json);
+            return (T) readAsConvertedWorkflow(json, releasedScripts);
         } else {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
     
-    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String json) throws JsonParseException, JsonMappingException, IOException {
-        
-        com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"),
-                com.sos.sign.model.workflow.Workflow.class);
+    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String json, Map<String, String> releasedScripts)
+            throws JsonParseException, JsonMappingException, IOException {
+
+        com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)",
+                "$1js7Epoch$2"), com.sos.sign.model.workflow.Workflow.class);
         Workflow invWorkflow = Globals.objectMapper.readValue(json, Workflow.class);
 
         signWorkflow.setOrderPreparation(invOrderPreparationToSignOrderPreparation(invWorkflow.getOrderPreparation()));
         
         if (signWorkflow.getInstructions() != null) {
-            // at the moment the converter is only necessary for ForkList, AddOrder instructions
+            // at the moment the converter is only necessary to modify instructions for ForkList, AddOrder instructions
             if (hasInstructionToConvert.test(json)) {
                 convertInstructions(invWorkflow, invWorkflow.getInstructions(), signWorkflow.getInstructions());
             }
             if (hasCycleInstruction.test(json)) {
                 signWorkflow.setCalendarPath(DailyPlanCalendar.dailyPlanCalendarName); 
+            }
+        }
+        if (signWorkflow.getJobs() != null) {
+            if (hasScriptIncludes.test(json)) {
+                includeScripts(signWorkflow.getJobs(), releasedScripts);
             }
         }
         
@@ -83,6 +102,118 @@ public class JsonConverter {
         return signWorkflow;
     }
     
+    private static void includeScripts(com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
+        Map<String, com.sos.sign.model.job.Job> replacedJobs = new HashMap<>();
+        if (signJobs.getAdditionalProperties() != null) {
+            signJobs.getAdditionalProperties().forEach((jobName, job) -> {
+                if (job.getExecutable() != null) {
+                    switch (job.getExecutable().getTYPE()) {
+                    case InternalExecutable:
+                        break;
+                    case ShellScriptExecutable:
+                    case ScriptExecutable:
+                        ExecutableScript es = job.getExecutable().cast();
+                        if (es.getScript() != null && hasScriptIncludes.test("\n" + es.getScript())) {
+                            es.setScript(replaceIncludes(es.getScript(), jobName, releasedScripts));
+                            replacedJobs.put(jobName, job);
+                        }
+                        break;
+                    }
+                }
+            });
+            replacedJobs.forEach((jobName, job) -> signJobs.setAdditionalProperty(jobName, job));
+        }
+        
+    }
+
+    private static String replaceIncludes(String script, String jobName, Map<String, String> releasedScripts) {
+        LinkedList<String> scriptLines = new LinkedList<>(Arrays.asList(script.split("\n")));
+        for (String line : scriptLines) {
+            if (hasScriptIncludes.test("\n" + line)) {
+                try {
+                    Matcher m = scriptIncludePattern.matcher(line);
+                    if (m.find()) {
+                        String scriptName = m.group(1);
+                        if (!releasedScripts.containsKey(scriptName)) {
+                            throw new IllegalArgumentException(String.format("Script include '%s' referenced an unreleased script '%s'", line,
+                                    scriptName));
+                        }
+                        line = releasedScripts.get(scriptName);
+                        Map<String, String> replacements = parseReplaceInclude(m.group(2));
+                        for (Map.Entry<String, String> entry : replacements.entrySet()) {
+                            line = line.replaceAll(Pattern.quote(entry.getKey()), entry.getValue());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("wrong format");
+                    }
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, jobName));
+                }
+            }
+        }
+        return String.join("\n", scriptLines);
+    }
+    
+    private static Map<String, String> parseReplaceInclude(String str) throws IOException, IllegalArgumentException {
+        StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str.trim()));
+        tokenizer.resetSyntax();
+        tokenizer.quoteChar('"');
+        tokenizer.quoteChar('\'');
+        tokenizer.slashSlashComments(false);
+        tokenizer.slashStarComments(false);
+        //wordChars all except above quote chars and ':', i.e. 34, 39, 58
+        tokenizer.wordChars(0, 33);
+        tokenizer.wordChars(35, 38);
+        tokenizer.wordChars(40, 57);
+        tokenizer.wordChars(59, 255);
+        
+        Map<String, String> replaceTokens = new HashMap<>();
+        
+        int currentToken = tokenizer.nextToken();
+        boolean searchValEnabled = false;
+        String searchVal = "";
+        boolean replacementValEnabled = false;
+        String msg = "wrong format";
+        
+        while (currentToken != StreamTokenizer.TT_EOF) {
+            switch (tokenizer.ttype) {
+            case StreamTokenizer.TT_WORD:
+                if (tokenizer.sval.trim().equals("--replace=")) {
+                    searchValEnabled = true;
+                } else {
+                    throw new IllegalArgumentException(msg);
+                }
+                break;
+            case '\'':
+            case '"':
+                if (replacementValEnabled) {
+                    if (!searchVal.isEmpty()) {
+                        replaceTokens.put(searchVal, tokenizer.sval);
+                        searchVal = "";
+                    }
+                    searchValEnabled = false;
+                    replacementValEnabled = false;
+                } else if (searchValEnabled) {
+                    searchVal = tokenizer.sval;
+                } else {
+                    throw new IllegalArgumentException(msg);
+                }
+                break;
+            case ':':
+                if (searchValEnabled) {
+                    replacementValEnabled = true; 
+                } else {
+                    throw new IllegalArgumentException(msg);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(msg);
+            }
+            currentToken = tokenizer.nextToken();
+        }
+        return replaceTokens;
+    }
+
     private static void convertInstructions(Workflow w, List<Instruction> invInstructions, List<com.sos.sign.model.instruction.Instruction> signInstructions) {
         if (invInstructions != null) {
             for (int i = 0; i < invInstructions.size(); i++) {

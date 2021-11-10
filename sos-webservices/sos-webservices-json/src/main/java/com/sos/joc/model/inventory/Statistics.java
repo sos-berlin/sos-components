@@ -28,7 +28,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "numOfJobResources",
     "numOfFileOrderSources",
     "numOfSchedules",
-    "numOfCalendars"
+    "numOfCalendars",
+    "numOfScripts"
 })
 public class Statistics {
 
@@ -116,6 +117,14 @@ public class Statistics {
      */
     @JsonProperty("numOfCalendars")
     private Long numOfCalendars;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfScripts")
+    private Long numOfScripts;
 
     /**
      * timestamp
@@ -341,14 +350,36 @@ public class Statistics {
         this.numOfCalendars = numOfCalendars;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfScripts")
+    public Long getNumOfScripts() {
+        return numOfScripts;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("numOfScripts")
+    public void setNumOfScripts(Long numOfScripts) {
+        this.numOfScripts = numOfScripts;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfScripts", numOfScripts).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfSchedules).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
+        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfSchedules).append(numOfScripts).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
     }
 
     @Override
@@ -360,7 +391,7 @@ public class Statistics {
             return false;
         }
         Statistics rhs = ((Statistics) other);
-        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
+        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(numOfScripts, rhs.numOfScripts).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
     }
 
 }

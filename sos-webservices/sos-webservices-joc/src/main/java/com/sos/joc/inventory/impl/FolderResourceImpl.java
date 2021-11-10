@@ -123,6 +123,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         case SCHEDULE:
                             folder.getSchedules().add(config);
                             break;
+                        case SCRIPT:
+                            folder.getScripts().add(config);
+                            break;
                         case WORKINGDAYSCALENDAR:
                         case NONWORKINGDAYSCALENDAR:
                             folder.getCalendars().add(config);
@@ -144,6 +147,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                 folder.setNoticeBoards(sort(folder.getNoticeBoards()));
                 folder.setFileOrderSources(sort(folder.getFileOrderSources()));
                 folder.setSchedules(sort(folder.getSchedules()));
+                folder.setScripts(sort(folder.getScripts()));
                 folder.setCalendars(sort(folder.getCalendars()));
                 // folder.setFolders(sort(folder.getFolders()));
             }

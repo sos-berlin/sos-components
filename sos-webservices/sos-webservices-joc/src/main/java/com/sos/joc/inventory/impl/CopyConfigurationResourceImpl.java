@@ -197,6 +197,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                         String json = item.getContent();
                         switch (item.getTypeAsEnum()) {
                         case WORKFLOW:
+                            // TODO consider Script objects
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.LOCK, Collections.emptyMap())
                                     .entrySet()) {
                                 json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");

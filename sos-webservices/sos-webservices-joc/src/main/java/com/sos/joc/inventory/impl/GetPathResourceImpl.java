@@ -12,12 +12,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.JocNotImplementedException;
 import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.inventory.resource.IGetPathResource;
-import com.sos.joc.model.common.Err;
-import com.sos.joc.model.common.Err420;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.path.PathFilter;
 import com.sos.joc.model.inventory.path.PathResponse;
@@ -60,7 +59,8 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                             break;
                         case NONWORKINGDAYSCALENDAR:
                         case SCHEDULE:
-                        case WORKINGDAYSCALENDAR:
+                        case SCRIPT:
+                            case WORKINGDAYSCALENDAR:
                             path = dbLayer.getPathByNameFromInvReleasedConfigurations(filter.getName(), ConfigurationType.fromValue(filter.getObjectType()));
                             break;
                         case FOLDER:
@@ -81,11 +81,8 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                 } 
             }
             if (path == null) {
-                Err420 error = new Err420();
-                Err err = new Err();
-                err.setMessage(String.format("Could not determine path for %1$s '%2$s', no object found in database.", filter.getObjectType(), filter.getName()));
-                error.setError(err);
-                return JOCDefaultResponse.responseStatus420(error);
+                throw new DBMissingDataException(String.format("Could not determine path for %1$s '%2$s', no object found in database.", filter
+                        .getObjectType(), filter.getName()));
             } else {
                 response.setPath(path);
             }

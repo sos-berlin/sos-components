@@ -136,6 +136,7 @@ public class Validator {
                         agentDBLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
                     }
                     Workflow workflow = (Workflow) config;
+                    // TODO consider SCRIPT objects
                     List<String> jobResources = validateWorkflowJobs(workflow);
                     if (workflow.getJobResourceNames() != null) {
                         jobResources.addAll(workflow.getJobResourceNames());

@@ -2535,4 +2535,16 @@ public class DBLayerDeploy {
             return true;
         }
     }
+    
+    public Map<String, String> getReleasedScripts() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where type=:type");
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCRIPT.intValue());
+        List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptyMap();
+        }
+        return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
+                DBItemInventoryReleasedConfiguration::getContent, (name, content) -> name));
+    }
 }
