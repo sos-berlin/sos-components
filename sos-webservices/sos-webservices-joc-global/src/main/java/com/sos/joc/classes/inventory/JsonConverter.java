@@ -3,9 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -28,6 +26,7 @@ import com.sos.inventory.model.instruction.InstructionType;
 import com.sos.inventory.model.instruction.Lock;
 import com.sos.inventory.model.instruction.TryCatch;
 import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Branch;
 import com.sos.inventory.model.workflow.ListParameterType;
 import com.sos.inventory.model.workflow.ParameterType;
@@ -52,7 +51,7 @@ public class JsonConverter {
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
     private final static Pattern scriptIncludePattern = Pattern.compile("^##!INCLUDE\\s+(\\S+)\\s*(.*)$", Pattern.DOTALL);
-    private final static Predicate<String> hasScriptIncludes = Pattern.compile("(\"|\n)##!INCLUDE\\s+").asPredicate();
+    private final static Predicate<String> hasScriptIncludes = Pattern.compile("##!INCLUDE\\s+").asPredicate();
     private final static String includeScriptErrorMsg =
             "Script include '%s' of job '%s' has wrong format, expected format: ##!INCLUDE scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
 
@@ -113,7 +112,7 @@ public class JsonConverter {
                     case ShellScriptExecutable:
                     case ScriptExecutable:
                         ExecutableScript es = job.getExecutable().cast();
-                        if (es.getScript() != null && hasScriptIncludes.test("\n" + es.getScript())) {
+                        if (es.getScript() != null && hasScriptIncludes.test(es.getScript())) {
                             es.setScript(replaceIncludes(es.getScript(), jobName, releasedScripts));
                             replacedJobs.put(jobName, job);
                         }
@@ -126,10 +125,11 @@ public class JsonConverter {
         
     }
 
-    private static String replaceIncludes(String script, String jobName, Map<String, String> releasedScripts) {
-        LinkedList<String> scriptLines = new LinkedList<>(Arrays.asList(script.split("\n")));
-        for (String line : scriptLines) {
-            if (hasScriptIncludes.test("\n" + line)) {
+    public static String replaceIncludes(String script, String jobName, Map<String, String> releasedScripts) {
+        String[] scriptLines = script.split("\n");
+        for (int i=0; i < scriptLines.length; i++) {
+            String line = scriptLines[i];
+            if (hasScriptIncludes.test(line)) {
                 try {
                     Matcher m = scriptIncludePattern.matcher(line);
                     if (m.find()) {
@@ -138,11 +138,12 @@ public class JsonConverter {
                             throw new IllegalArgumentException(String.format("Script include '%s' referenced an unreleased script '%s'", line,
                                     scriptName));
                         }
-                        line = releasedScripts.get(scriptName);
+                        line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
                         Map<String, String> replacements = parseReplaceInclude(m.group(2));
                         for (Map.Entry<String, String> entry : replacements.entrySet()) {
                             line = line.replaceAll(Pattern.quote(entry.getKey()), entry.getValue());
                         }
+                        scriptLines[i] = line;
                     } else {
                         throw new IllegalArgumentException("wrong format");
                     }
