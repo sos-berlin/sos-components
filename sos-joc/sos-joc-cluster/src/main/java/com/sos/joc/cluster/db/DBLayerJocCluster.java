@@ -54,17 +54,15 @@ public class DBLayerJocCluster extends DBLayer {
     }
 
     public DBItemInventoryOperatingSystem getOS(String hostname) throws Exception {
-        StringBuilder sql = new StringBuilder("from ");
-        sql.append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS);
-        sql.append(" where hostname=:hostname");
+        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_OPERATING_SYSTEMS).append(" ");
+        sql.append("where hostname=:hostname");
         Query<DBItemInventoryOperatingSystem> query = getSession().createQuery(sql.toString());
         query.setParameter("hostname", hostname);
         return getSession().getSingleResult(query);
     }
 
     public DBItemJocConfiguration getGlobalsSettings() throws Exception {
-        StringBuilder sql = new StringBuilder("from ");
-        sql.append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
+        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
         sql.append("where configurationType=:configurationType ");
         Query<DBItemJocConfiguration> query = getSession().createQuery(sql.toString());
         query.setParameter("configurationType", ConfigurationType.GLOBALS.name());
@@ -76,8 +74,7 @@ public class DBLayerJocCluster extends DBLayer {
         if (result.size() > 1) {
             boolean autoCommit = getSession().isAutoCommit();
             getSession().setAutoCommit(false);// for JOC sessions with the autocommit true
-            sql = new StringBuilder("delete from ");
-            sql.append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
+            sql = new StringBuilder("delete from ").append(DBLayer.DBITEM_JOC_CONFIGURATIONS).append(" ");
             sql.append("where configurationType=:configurationType ");
             sql.append("and id!=:id ");
             query = getSession().createQuery(sql.toString());
@@ -90,15 +87,13 @@ public class DBLayerJocCluster extends DBLayer {
     }
 
     public DBItemJocCluster getCluster() throws Exception {
-        StringBuilder sql = new StringBuilder("from ");
-        sql.append(DBLayer.DBITEM_JOC_CLUSTER);
+        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_CLUSTER);
         Query<DBItemJocCluster> query = getSession().createQuery(sql.toString());
         return getSession().getSingleResult(query);
     }
 
     public int deleteCluster(String memberId, boolean checkSwitchMemberId) throws Exception {
-        StringBuilder sql = new StringBuilder("delete from ");
-        sql.append(DBLayer.DBITEM_JOC_CLUSTER).append(" ");
+        StringBuilder sql = new StringBuilder("delete from ").append(DBLayer.DBITEM_JOC_CLUSTER).append(" ");
         sql.append("where memberId=:memberId");
         if (checkSwitchMemberId) {
             sql.append(" and switchMemberId is null");
@@ -109,19 +104,25 @@ public class DBLayerJocCluster extends DBLayer {
     }
 
     public DBItemJocInstance getInstance(String memberId) throws Exception {
-        StringBuilder sql = new StringBuilder("from ");
-        sql.append(DBLayer.DBITEM_JOC_INSTANCES);
-        sql.append(" where memberId=:memberId");
+        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" ");
+        sql.append("where memberId=:memberId");
         Query<DBItemJocInstance> query = getSession().createQuery(sql.toString());
         query.setParameter("memberId", memberId);
         return getSession().getSingleResult(query);
     }
 
+    public int updateClusterHeartBeat() throws Exception {
+        StringBuilder sql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_CLUSTER).append(" ");
+        sql.append("set heartBeat=:heartBeat ");
+        Query<DBItemJocInstance> query = getSession().createQuery(sql.toString());
+        query.setParameter("heartBeat", new Date());
+        return getSession().executeUpdate(query);
+    }
+
     public int updateInstanceHeartBeat(String memberId) throws Exception {
-        StringBuilder sql = new StringBuilder("update ");
-        sql.append(DBLayer.DBITEM_JOC_INSTANCES);
-        sql.append(" set heartBeat=:heartBeat");
-        sql.append(" where memberId=:memberId");
+        StringBuilder sql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" ");
+        sql.append("set heartBeat=:heartBeat ");
+        sql.append("where memberId=:memberId");
         Query<DBItemJocInstance> query = getSession().createQuery(sql.toString());
         query.setParameter("heartBeat", new Date());
         query.setParameter("memberId", memberId);

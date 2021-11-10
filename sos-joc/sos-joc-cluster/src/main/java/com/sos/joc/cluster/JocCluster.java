@@ -822,6 +822,8 @@ public class JocCluster {
             if (Math.abs(result) > 0) {
                 LOGGER.info(String.format("[active current memberId deleted]%s", currentMemberId));
             }
+            dbLayer.close();
+            dbLayer = null;
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // ignore exceptions - not me
             LOGGER.error(e.toString(), e);
@@ -834,8 +836,36 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
         }
         return result;
+    }
+
+    // separate thread
+    protected void updateHeartBeat() throws Exception {
+        DBLayerJocCluster dbLayer = null;
+        try {
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
+            dbLayer.beginTransaction();
+            dbLayer.updateClusterHeartBeat();
+            dbLayer.updateInstanceHeartBeat(currentMemberId);
+            dbLayer.commit();
+
+            dbLayer.close();
+            dbLayer = null;
+        } catch (Throwable e) {
+            if (dbLayer != null) {
+                dbLayer.rollback();
+            }
+            throw e;
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
+        }
     }
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
@@ -866,11 +896,13 @@ public class JocCluster {
 
     public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout) {
         String caller = SOSClassUtil.getMethodName(2);
+
         String logMode = mode == null ? "" : "[" + mode + "]";
         try {
             if (threadPool == null) {
                 return;
             }
+            caller += "-" + threadPool.getClass().getSimpleName();
             threadPool.shutdown();// Disable new tasks from being submitted
             // Wait a while for existing tasks to terminate
             if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
