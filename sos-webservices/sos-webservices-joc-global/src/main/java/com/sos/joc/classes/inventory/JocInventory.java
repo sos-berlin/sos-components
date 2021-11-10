@@ -16,6 +16,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -29,16 +32,18 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.inventory.model.instruction.InstructionType;
+import com.sos.inventory.model.job.ExecutableScript;
+import com.sos.inventory.model.job.ExecutableType;
 import com.sos.inventory.model.job.Job;
 import com.sos.inventory.model.jobclass.JobClass;
 import com.sos.inventory.model.jobresource.JobResource;
 import com.sos.inventory.model.lock.Lock;
+import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.CheckJavaVariableName;
@@ -820,7 +825,6 @@ public class JocInventory {
     public static Set<String> deepCopy(DBItemInventoryConfiguration config, String newName, List<DBItemInventoryConfiguration> items,
             InventoryDBLayer dbLayer) throws JsonParseException, JsonMappingException, SOSHibernateException, JsonProcessingException, IOException {
         Set<String> events = new HashSet<>();
-        // TODO consider SCRIPT onjects
         switch (config.getTypeAsEnum()) {
         case LOCK: // determine Workflows with Lock instructions
             List<DBItemInventoryConfiguration> workflows = dbLayer.getUsedWorkflowsByLockId(config.getName());
@@ -880,7 +884,6 @@ public class JocInventory {
             break;
 
         case NOTICEBOARD: // determine Workflows with PostNotice or ReadNotice reference
-            // TODO
             List<DBItemInventoryConfiguration> workflow3 = dbLayer.getUsedWorkflowsByBoardName(config.getName());
             if (workflow3 != null && !workflow3.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflow3) {
@@ -964,6 +967,52 @@ public class JocInventory {
                     } else {
                         JocInventory.updateConfiguration(dbLayer, schedule);
                         events.add(schedule.getFolder());
+                    }
+                }
+            }
+            break;
+        case SCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
+            List<DBItemInventoryConfiguration> workflows4 = dbLayer.getWorkflowsWithIncludedScripts();
+            Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptInclude + "\\s*" + config.getName()).asPredicate();
+            if (workflows4 != null && !workflows4.isEmpty()) {
+                for (DBItemInventoryConfiguration workflow : workflows4) {
+                    if (hasScriptInclude.test(workflow.getContent())) {
+                        Workflow w = Globals.objectMapper.readValue(workflow.getContent(), Workflow.class);
+                        if (w.getJobs() != null) {
+                            Map<String, Job> replacedJobs = new HashMap<>();
+                            w.getJobs().getAdditionalProperties().forEach((jobName, job) -> {
+                                if (job.getExecutable() != null && ExecutableType.ShellScriptExecutable.equals(job.getExecutable().getTYPE())) {
+                                    ExecutableScript es = job.getExecutable().cast();
+                                    if (es.getScript() != null && hasScriptInclude.test(es.getScript())) {
+                                        String[] scriptLines = es.getScript().split("\n");
+                                        for (int i = 0; i < scriptLines.length; i++) {
+                                            String line = scriptLines[i];
+                                            if (hasScriptInclude.test(line)) {
+                                                Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
+                                                if (m.find()) {
+                                                    if (config.getName().equals(m.group(1))) {
+                                                        scriptLines[i] = JsonConverter.scriptInclude + newName + " " + m.group(2);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        es.setScript(String.join("\n", scriptLines));
+                                        replacedJobs.put(jobName, job);
+                                    }
+                                }
+                            });
+                            replacedJobs.forEach((jobName, job) -> w.getJobs().setAdditionalProperty(jobName, job));
+                            workflow.setContent(Globals.objectMapper.writeValueAsString(w));
+                            workflow.setDeployed(false);
+                        }
+                        int i = items.indexOf(workflow);
+                        if (i != -1) {
+                            items.get(i).setContent(workflow.getContent());
+                            items.get(i).setDeployed(false);
+                        } else {
+                            JocInventory.updateConfiguration(dbLayer, workflow);
+                            events.add(workflow.getFolder());
+                        }
                     }
                 }
             }

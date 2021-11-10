@@ -50,8 +50,9 @@ public class JsonConverter {
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
-    private final static Pattern scriptIncludePattern = Pattern.compile("^##!INCLUDE\\s+(\\S+)\\s*(.*)$", Pattern.DOTALL);
-    private final static Predicate<String> hasScriptIncludes = Pattern.compile("##!INCLUDE\\s+").asPredicate();
+    public final static String scriptInclude = "##!INCLUDE ";
+    public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptInclude + "\\s*(\\S+)\\s*(.*)$", Pattern.DOTALL);
+    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptInclude).asPredicate();
     private final static String includeScriptErrorMsg =
             "Script include '%s' of job '%s' has wrong format, expected format: ##!INCLUDE scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
 
