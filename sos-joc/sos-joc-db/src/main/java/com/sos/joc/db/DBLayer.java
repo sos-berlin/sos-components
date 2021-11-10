@@ -26,7 +26,6 @@ import com.sos.joc.db.history.DBItemHistoryLog;
 import com.sos.joc.db.history.DBItemHistoryOrder;
 import com.sos.joc.db.history.DBItemHistoryOrderState;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
-import com.sos.joc.db.history.DBItemHistoryTempLog;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
@@ -108,9 +107,6 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_HISTORY_LOGS = DBItemHistoryLog.class.getSimpleName();
     public static final String TABLE_HISTORY_LOGS = "HISTORY_LOGS";
     public static final String TABLE_HISTORY_LOGS_SEQUENCE = "SEQ_HISTORY_L";
-
-    public static final String DBITEM_HISTORY_TEMP_LOGS = DBItemHistoryTempLog.class.getSimpleName();
-    public static final String TABLE_HISTORY_TEMP_LOGS = "HISTORY_TEMP_LOGS";
 
     /** MONITORING Tables */
     public static final String DBITEM_MON_ORDERS = DBItemMonitoringOrder.class.getSimpleName();
@@ -286,7 +282,6 @@ public class DBLayer implements Serializable {
         cl.add(DBItemHistoryOrderState.class);
         cl.add(DBItemHistoryOrderStep.class);
         cl.add(DBItemHistoryLog.class);
-        cl.add(DBItemHistoryTempLog.class);
         cl.add(DBItemHistoryController.class);
         cl.add(DBItemHistoryAgent.class);
 
