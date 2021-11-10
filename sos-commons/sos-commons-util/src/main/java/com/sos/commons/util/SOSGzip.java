@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ public class SOSGzip {
 
             result.addFile(source);
             result.setCompressed(bos.toByteArray());
+            result.finisch();
         } catch (IOException e) {
             throw e;
         }
@@ -68,12 +70,17 @@ public class SOSGzip {
      * @return
      * @throws Exception */
     private static SOSGzipResult compressDirectory(Path source, boolean setAllFileAttributes) throws Exception {
-        if (!SOSPath.toFile(source).isDirectory()) {
+        SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
+        if (source == null) {
+            return result;
+        }
+        File sourceDirAsFile = SOSPath.toFile(source);
+        if (!sourceDirAsFile.isDirectory()) {
             throw new Exception(String.format("[%s]is not a directory", source));
         }
+        Path sourceDir = sourceDirAsFile.toPath();
         // try (FileOutputStream fos = new FileOutputStream(outputFile); BufferedOutputStream bos = new BufferedOutputStream(fos);
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); BufferedOutputStream bos = new BufferedOutputStream(baos);
                 GzipCompressorOutputStream gcos = new GzipCompressorOutputStream(bos); TarArchiveOutputStream tos = new TarArchiveOutputStream(gcos,
                         "UTF-8")) {
@@ -81,7 +88,7 @@ public class SOSGzip {
             tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
             tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
 
-            try (Stream<Path> stream = Files.walk(source)) {
+            try (Stream<Path> stream = Files.walk(sourceDir)) {
                 for (Path p : stream.collect(Collectors.toList())) {
                     File f = p.toFile();
                     if (f.isFile()) {
@@ -89,7 +96,7 @@ public class SOSGzip {
                             continue;
                         }
 
-                        Path targetFile = source.relativize(p);
+                        Path targetFile = sourceDir.relativize(p);
                         try {
                             TarArchiveEntry entry = null;
                             if (setAllFileAttributes) {
@@ -111,7 +118,7 @@ public class SOSGzip {
                             LOGGER.error(String.format("[compress][file][%s]%s", p, e.toString()), e);
                         }
                     } else if (f.isDirectory()) {
-                        if (!p.equals(source)) {
+                        if (!p.equals(sourceDir)) {
                             if (isDebugEnabled) {
                                 LOGGER.debug(String.format("[compress][directory]%s", p.getFileName()));
                             }
@@ -122,6 +129,7 @@ public class SOSGzip {
             }
             tos.close();
             result.setCompressed(baos.toByteArray());
+            result.finisch();
             return result;
         }
     }
@@ -158,15 +166,17 @@ public class SOSGzip {
 
         SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
         try {
+            Path target = SOSPath.toFile(targetDir).toPath();
+
             inputStream = new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(source)));
-            result.addDirectory(targetDir);
+            result.addDirectory(target);
 
             try (TarArchiveInputStream tis = new TarArchiveInputStream(inputStream)) {
                 for (TarArchiveEntry entry = tis.getNextTarEntry(); entry != null;) {
                     if (isDebugEnabled) {
                         LOGGER.debug(String.format("[decompress][entry]%s", entry.getName()));
                     }
-                    Path outputPath = targetDir.resolve(entry.getName());
+                    Path outputPath = target.resolve(entry.getName());
 
                     if (entry.isDirectory()) {// empty directory
                         Files.createDirectories(outputPath);
@@ -199,7 +209,7 @@ public class SOSGzip {
                     entry = tis.getNextTarEntry();
                 }
             }
-            result.getDirectories().remove(targetDir.toString());
+            result.getDirectories().remove(target.toString());
         } catch (IOException e) {
             throw e;
         } finally {
@@ -217,14 +227,26 @@ public class SOSGzip {
                 }
             }
         }
+        result.finisch();
         return result;
     }
 
     public class SOSGzipResult {
 
+        private final Instant start;
+
+        private Instant end;
         private byte[] compressed = null;
         private Set<String> files = new HashSet<>();
         private Set<String> directories = new HashSet<>();
+
+        protected SOSGzipResult() {
+            start = Instant.now();
+        }
+
+        protected void finisch() {
+            end = Instant.now();
+        }
 
         protected void setCompressed(byte[] val) {
             compressed = val;
@@ -255,7 +277,10 @@ public class SOSGzip {
             StringBuilder sb = new StringBuilder("directories=").append(directories.size());
             sb.append(",files=").append(files.size());
             if (compressed != null) {
-                sb.append(",compressed=" + compressed.length).append("b");
+                sb.append(",compressed=").append(compressed.length).append("b");
+            }
+            if (end != null) {
+                sb.append(",duration=").append(SOSDate.getDuration(start, end));
             }
             return sb.toString();
         }

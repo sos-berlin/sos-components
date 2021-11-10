@@ -71,8 +71,8 @@ public class HistoryServiceTest {
 
         HistoryService service = new HistoryService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         AConfigurationSection configuration = null;
-        service.start(getControllers(), configuration, StartupMode.manual);
-        HistoryServiceTest.stopAfter(service, StartupMode.manual, 60);
+        service.start(getControllers(), configuration, StartupMode.manual_restart);
+        HistoryServiceTest.stopAfter(service, StartupMode.manual_restart, 60);
 
     }
 

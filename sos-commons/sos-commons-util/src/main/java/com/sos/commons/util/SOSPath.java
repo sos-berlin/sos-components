@@ -17,10 +17,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
@@ -134,16 +137,30 @@ public class SOSPath {
         }
     }
 
-    public static boolean cleanupDirectory(final Path dir) throws IOException {
-        if (Files.exists(dir)) {
-            try (Stream<Path> stream = Files.walk(dir)) {
-                for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+    public static SOSPathResult cleanupDirectory(final Path dir) throws IOException {
+        SOSPathResult result = (new SOSPath()).new SOSPathResult();
+        if (dir == null) {
+            return result;
+        }
+        Path sourceDir = SOSPath.toFile(dir).toPath();
+        if (Files.exists(sourceDir)) {
+            try (Stream<Path> stream = Files.walk(sourceDir)) {
+                for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(sourceDir)).collect(Collectors.toList())) {
+                    try {
+                        File f = p.toFile();
+                        if (f.isDirectory()) {
+                            result.addDirectory(p);
+                        } else {
+                            result.addFile(p);
+                        }
+                    } catch (Throwable e) {
+                    }
                     Files.delete(p);
                 }
-                return true;
             }
         }
-        return false;
+        result.finisch();
+        return result;
     }
 
     public static long getLineCount(final Path file) throws IOException {
@@ -385,6 +402,49 @@ public class SOSPath {
             return;
         }
         Files.setLastModifiedTime(path, FileTime.fromMillis(date.getTime()));
+    }
+
+    public class SOSPathResult {
+
+        private final Instant start;
+
+        private Instant end;
+        private Set<String> files = new HashSet<>();
+        private Set<String> directories = new HashSet<>();
+
+        protected SOSPathResult() {
+            start = Instant.now();
+        }
+
+        protected void finisch() {
+            end = Instant.now();
+        }
+
+        protected void addFile(Path p) {
+            files.add(p.toString());
+        }
+
+        public Set<String> getFiles() {
+            return files;
+        }
+
+        protected void addDirectory(Path p) {
+            directories.add(p.toString());
+        }
+
+        public Set<String> getDirectories() {
+            return directories;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("directories=").append(directories.size());
+            sb.append(",files=").append(files.size());
+            if (end != null) {
+                sb.append(",duration=").append(SOSDate.getDuration(start, end));
+            }
+            return sb.toString();
+        }
     }
 
     public static void main(String[] args) throws Exception {

@@ -392,7 +392,7 @@ public class OrderInitiatorRunner extends TimerTask {
         }
         AJocClusterService.setLogger("dailyplan");
         boolean generateFromManuelStart = false;
-        if (firstStart && StartupMode.manual.equals(orderInitiatorSettings.getStartMode())) {
+        if (firstStart && StartupMode.manual_restart.equals(orderInitiatorSettings.getStartMode())) {
             firstStart = false;
             LOGGER.debug("generateFromManuelStart: true");
             generateFromManuelStart = true;

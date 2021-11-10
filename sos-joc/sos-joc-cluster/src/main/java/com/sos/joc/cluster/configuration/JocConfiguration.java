@@ -26,6 +26,7 @@ public class JocConfiguration {
     private Integer ordering;
     private String hostname;
     private String uri;
+    private boolean clusterMode;
 
     public JocConfiguration(String jocDataDirectory, String jocTimeZone, Path jocHibernateConfig, Path jocResourceDir,
             JocSecurityLevel jocSecurityLevel, String jocTitle, Integer jocOrdering) {
@@ -102,5 +103,13 @@ public class JocConfiguration {
 
     public void setUri(String val) {
         uri = val;
+    }
+
+    public void setClusterMode(boolean val) {
+        clusterMode = val;
+    }
+
+    public boolean getClusterMode() {
+        return clusterMode;
     }
 }

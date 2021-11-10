@@ -75,8 +75,8 @@ public class TestOrderInitiatorService {
         ConfigurationGlobals configurations = new ConfigurationGlobals();
         AConfigurationSection configuration = configurations.getConfigurationSection(DefaultSections.dailyplan);
 
-        service.start(getControllers(), configuration, StartupMode.manual);
-        TestOrderInitiatorService.stopAfter(service, StartupMode.manual, 13 * 60);
+        service.start(getControllers(), configuration, StartupMode.manual_restart);
+        TestOrderInitiatorService.stopAfter(service, StartupMode.manual_restart, 13 * 60);
 
     }
 

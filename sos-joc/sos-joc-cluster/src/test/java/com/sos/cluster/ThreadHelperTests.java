@@ -90,14 +90,14 @@ public class ThreadHelperTests {
 
             Thread.sleep(1_000);
 
-            ThreadHelper.print(StartupMode.manual, "-------------------------");
+            ThreadHelper.print(StartupMode.manual_restart, "-------------------------");
 
             // ThreadHelperTests.interruptThreads();
-            ThreadHelper.tryStop(StartupMode.manual, groupMain);
+            ThreadHelper.tryStop(StartupMode.manual_restart, groupMain);
 
-            ThreadHelper.tryStop(StartupMode.manual, "Timer");
+            ThreadHelper.tryStop(StartupMode.manual_restart, "Timer");
 
-            ThreadHelper.print(StartupMode.manual, "-------------------------");
+            ThreadHelper.print(StartupMode.manual_restart, "-------------------------");
 
         } catch (Throwable e) {
             e.printStackTrace();

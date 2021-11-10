@@ -159,9 +159,9 @@ public class HistoryModel {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
             dbLayer.getSession().beginTransaction();
-            DBItemJocVariable item = dbLayer.getVariable(variableName);
+            DBItemJocVariable item = dbLayer.getControllerVariable(variableName);
             if (item == null) {
-                item = dbLayer.insertVariable(variableName, "0");
+                item = dbLayer.insertControllerVariable(variableName, "0");
             }
             dbLayer.getSession().commit();
 
@@ -557,7 +557,7 @@ public class HistoryModel {
         if (!dbLayer.getSession().isTransactionOpened()) {
             dbLayer.getSession().beginTransaction();
         }
-        dbLayer.updateVariable(variableName, eventId);
+        dbLayer.updateControllerVariable(variableName, eventId);
         dbLayer.getSession().commit();
         storedEventId = eventId;
     }
