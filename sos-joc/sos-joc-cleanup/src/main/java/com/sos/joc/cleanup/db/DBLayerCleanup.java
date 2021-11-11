@@ -81,4 +81,17 @@ public class DBLayerCleanup {
         return session.executeUpdate(query);
     }
 
+    public boolean mainOrderLogNotFinished(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+        hql.append("where id=:id ");
+        hql.append("and parentId=0 ");
+        hql.append("and logId=0 ");
+
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        Long result = query.getSingleResult();
+
+        return result.intValue() > 0;
+    }
+
 }

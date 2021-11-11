@@ -1,8 +1,13 @@
 package com.sos.joc.cleanup.model;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -10,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSPath;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cluster.IJocClusterService;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -19,6 +25,8 @@ import com.sos.joc.db.DBLayer;
 public class CleanupTaskHistory extends CleanupTaskModel {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupTaskHistory.class);
+    // TODO read from history/cluster/globals ..
+    private String logDir = "logs/history";
 
     private int totalOrders = 0;
     private int totalOrderStates = 0;
@@ -35,13 +43,16 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             TaskDateTime orderDatetime = datetimes.get(0);
             TaskDateTime logsDatetime = datetimes.get(1);
 
+            JocServiceTaskAnswerState state = null;
             if (orderDatetime.getAge().getConfigured().equals(logsDatetime.getAge().getConfigured())) {
                 LOGGER.info(String.format("[%s][orders,logs][%s][%s]start cleanup", getIdentifier(), orderDatetime.getAge().getConfigured(),
                         orderDatetime.getZonedDatetime()));
-                return cleanupOrders(orderDatetime, true);
+
+                state = cleanupOrders(orderDatetime, true);
+                cleanupLogDirectory(state);
+                return state;
             }
 
-            JocServiceTaskAnswerState state = null;
             if (logsDatetime.getDatetime() != null) {
                 LOGGER.info(String.format("[%s][logs][%s][%s]start cleanup", getIdentifier(), logsDatetime.getAge().getConfigured(), logsDatetime
                         .getZonedDatetime()));
@@ -57,6 +68,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             } else {
                 LOGGER.info(String.format("[%s][orders][%s]skip", getIdentifier(), orderDatetime.getAge().getConfigured()));
             }
+
+            cleanupLogDirectory(state);
 
             return state;
         } catch (Throwable e) {
@@ -330,5 +343,47 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         getDbLayer().getSession().commit();
 
         LOGGER.info(log.toString());
+    }
+
+    private void cleanupLogDirectory(JocServiceTaskAnswerState state) {
+        if (state != null && !state.equals(JocServiceTaskAnswerState.COMPLETED)) {
+            return;
+        }
+        Path dir = Paths.get(logDir).toAbsolutePath();
+        if (Files.exists(dir)) {
+            LOGGER.info(String.format("[%s][logDirectory]%s", getIdentifier(), dir));
+
+            try {
+                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+
+                int i = 0;
+                try (Stream<Path> stream = Files.walk(dir)) {
+                    for (Path p : stream.filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                        File f = p.toFile();
+                        if (f.isDirectory()) {
+                            try {
+                                Long id = Long.parseLong(f.getName());
+                                if (!getDbLayer().mainOrderLogNotFinished(id)) {
+                                    try {
+                                        if (SOSPath.deleteIfExists(p)) {
+                                            LOGGER.info(String.format("[%s][logDirectory][deleted]%s", getIdentifier(), p));
+                                            i++;
+                                        }
+                                    } catch (Throwable e) {// in the same moment deleted by history
+                                    }
+                                }
+                            } catch (Throwable e) {
+                                LOGGER.info(String.format("[%s][logDirectory][skip][non numeric]%s", getIdentifier(), p));
+                            }
+                        }
+                    }
+                }
+                LOGGER.info(String.format("[%s][logDirectory][deleted][total]%s", getIdentifier(), i));
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][logDirectory]%s", getIdentifier(), e.toString()), e);
+            } finally {
+                getDbLayer().close();
+            }
+        }
     }
 }
