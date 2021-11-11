@@ -245,7 +245,7 @@ public class JocClusterHandler {
                 AJocClusterService.setLogger();
                 LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 30s and ask again...", mode,
                         identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
-                cluster.waitFor(30);
+                cluster.waitFor(10);
                 answer = s.getInfo();
                 if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
                     LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));

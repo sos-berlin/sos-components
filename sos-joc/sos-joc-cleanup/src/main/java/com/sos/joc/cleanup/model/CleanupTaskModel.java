@@ -24,8 +24,8 @@ public class CleanupTaskModel implements ICleanupTask {
         SERVICE_TASK, MANUAL_TASK
     }
 
-    protected static final int WAIT_INTERVAL_ON_BUSY = 65;
-    protected static final int WAIT_INTERVAL_ON_ERROR = 60;
+    protected static final int WAIT_INTERVAL_ON_BUSY = 15;
+    protected static final int WAIT_INTERVAL_ON_ERROR = 30;
 
     private final JocClusterHibernateFactory factory;
     private final DBLayerCleanup dbLayer;
@@ -164,7 +164,9 @@ public class CleanupTaskModel implements ICleanupTask {
             JocServiceAnswer info = getService().getInfo();
             boolean rc = info.getState().equals(JocServiceAnswerState.RELAX);
             if (!rc) {
-                LOGGER.info(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug(String.format("[%s][ask service]%s", identifier, SOSString.toString(info)));
+                }
             }
             return rc;
         }

@@ -13,7 +13,7 @@ public class JocServiceAnswer {
         UNKNOWN, BUSY, RELAX
     }
 
-    private static long RELAX = 30;// seconds
+    private static long RELAX = 10;// seconds
     private static boolean checkJocStartTime = true;
 
     private JocServiceAnswerState state;
