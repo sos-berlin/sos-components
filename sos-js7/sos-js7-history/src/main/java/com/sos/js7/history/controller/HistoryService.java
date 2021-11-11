@@ -60,6 +60,7 @@ public class HistoryService extends AJocClusterService {
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private AtomicBoolean processingStarted = new AtomicBoolean(false);
+    private AtomicBoolean stop = new AtomicBoolean(false);
 
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static CopyOnWriteArrayList<HistoryControllerHandler> activeHandlers = new CopyOnWriteArrayList<>();
@@ -123,20 +124,24 @@ public class HistoryService extends AJocClusterService {
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
-        AJocClusterService.clearLogger();
+        stop.set(true);
+        try {
+            AJocClusterService.setLogger(IDENTIFIER);
+            LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
+            AJocClusterService.clearLogger();
 
-        int size = closeEventHandlers(mode);
+            int size = closeEventHandlers(mode);
 
-        AJocClusterService.setLogger(IDENTIFIER);
-        if (size > 0) {
-            handleLogsOnStop(mode);
+            AJocClusterService.setLogger(IDENTIFIER);
+            if (size > 0) {
+                handleLogsOnStop(mode);
+            }
+            closeFactory();
+            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        } finally {
+            stop.set(false);
+            processingStarted.set(false);
         }
-        closeFactory();
-        JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-
-        processingStarted.set(false);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
@@ -281,6 +286,11 @@ public class HistoryService extends AJocClusterService {
             // LOGGER.info(String.format("[%s][cleanup][%s]start..", method, logDir));
             // SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
             // LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
+
+            if (stop.get()) {
+                LOGGER.info(String.format("[%s][%s][skip]because stop called", caller, method));
+                return;
+            }
 
             // decompress
             LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));

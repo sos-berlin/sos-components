@@ -45,7 +45,7 @@ public class JocClusterHandler {
         cluster = jocCluster;
     }
 
-    protected JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
+    protected synchronized JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {

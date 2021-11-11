@@ -290,20 +290,21 @@ public class JocCluster {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
-            item = dbLayer.getCluster();
             dbLayer.commit();
-
-            activeMemberId = item == null ? null : item.getMemberId();
-            if (lastActiveMemberId == null) {
-                lastActiveMemberId = activeMemberId;
-            }
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
-                        lastActiveMemberId, SOSHibernate.toString(item)));
-            }
 
             skipPerform = false;
             synchronized (lockMember) {
+                item = dbLayer.getCluster();
+
+                activeMemberId = item == null ? null : item.getMemberId();
+                if (lastActiveMemberId == null) {
+                    lastActiveMemberId = activeMemberId;
+                }
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
+                            lastActiveMemberId, SOSHibernate.toString(item)));
+                }
+
                 item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations);
                 if (item != null) {
                     activeMemberId = item.getMemberId();
@@ -470,6 +471,7 @@ public class JocCluster {
         }
     }
 
+    // GUI - separate thread
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
         if (!config.getClusterMode()) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
@@ -555,6 +557,7 @@ public class JocCluster {
         return null;
     }
 
+    // GUI - separate thread
     private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, ConfigurationGlobals configurations, String newMemberId)
             throws Exception {
         mode = StartupMode.manual_switchover;
