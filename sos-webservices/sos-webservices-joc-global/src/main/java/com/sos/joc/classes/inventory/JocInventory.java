@@ -973,7 +973,8 @@ public class JocInventory {
             break;
         case SCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
             List<DBItemInventoryConfiguration> workflows4 = dbLayer.getWorkflowsWithIncludedScripts();
-            Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptInclude + "\\s*" + config.getName()).asPredicate();
+            Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "\\s*" + config
+                    .getName()).asPredicate();
             if (workflows4 != null && !workflows4.isEmpty()) {
                 for (DBItemInventoryConfiguration workflow : workflows4) {
                     if (hasScriptInclude.test(workflow.getContent())) {
@@ -990,8 +991,8 @@ public class JocInventory {
                                             if (hasScriptInclude.test(line)) {
                                                 Matcher m = JsonConverter.scriptIncludePattern.matcher(line);
                                                 if (m.find()) {
-                                                    if (config.getName().equals(m.group(1))) {
-                                                        scriptLines[i] = JsonConverter.scriptInclude + newName + " " + m.group(2);
+                                                    if (config.getName().equals(m.group(2))) {
+                                                        scriptLines[i] = m.group(1) + JsonConverter.scriptInclude + newName + " " + m.group(3);
                                                     }
                                                 }
                                             }

@@ -3,6 +3,7 @@ package com.sos.joc.classes.inventory;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,13 @@ public class JsonConverter {
     private final static String instructionsToConvert = String.join("|", InstructionType.FORKLIST.value(), InstructionType.ADD_ORDER.value());
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
-    public final static String scriptInclude = "##!INCLUDE ";
-    public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptInclude + "\\s*(\\S+)\\s*(.*)$", Pattern.DOTALL);
-    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptInclude).asPredicate();
-    private final static String includeScriptErrorMsg =
-            "Script include '%s' of job '%s' has wrong format, expected format: ##!INCLUDE scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
+    public final static String scriptIncludeComments = "(##|::|//)";
+    public final static String scriptInclude = "!INCLUDE ";
+    public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "\\s*(\\S+)\\s*(.*)$",
+            Pattern.DOTALL);
+    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude).asPredicate();
+    private final static String includeScriptErrorMsg = "Script include '%s' of job '%s' has wrong format, expected format: " + scriptIncludeComments
+            + scriptInclude + "scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
@@ -128,27 +131,32 @@ public class JsonConverter {
 
     public static String replaceIncludes(String script, String jobName, Map<String, String> releasedScripts) {
         String[] scriptLines = script.split("\n");
-        for (int i=0; i < scriptLines.length; i++) {
+        for (int i = 0; i < scriptLines.length; i++) {
             String line = scriptLines[i];
             if (hasScriptIncludes.test(line)) {
-                try {
-                    Matcher m = scriptIncludePattern.matcher(line);
-                    if (m.find()) {
-                        String scriptName = m.group(1);
-                        if (!releasedScripts.containsKey(scriptName)) {
-                            throw new IllegalArgumentException(String.format("Script include '%s' referenced an unreleased script '%s'", line,
-                                    scriptName));
-                        }
+                Matcher m = scriptIncludePattern.matcher(line);
+                if (m.find()) {
+                    String scriptName = m.group(2);
+                    if (!releasedScripts.containsKey(scriptName)) {
+                        throw new IllegalArgumentException(String.format("Script include '%s' referenced an unreleased script '%s'", line,
+                                scriptName));
+                    }
+                    try {
                         line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
-                        Map<String, String> replacements = parseReplaceInclude(m.group(2));
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException(String.format("Script '%s' of job '%s' cannot be read: %s", scriptName, jobName, e
+                                .toString()));
+                    }
+                    try {
+                        Map<String, String> replacements = parseReplaceInclude(m.group(3));
                         for (Map.Entry<String, String> entry : replacements.entrySet()) {
                             line = line.replaceAll(Pattern.quote(entry.getKey()), entry.getValue());
                         }
-                        scriptLines[i] = line;
-                    } else {
-                        throw new IllegalArgumentException("wrong format");
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, jobName));
                     }
-                } catch (Exception e) {
+                    scriptLines[i] = line;
+                } else {
                     throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, jobName));
                 }
             }
@@ -157,6 +165,9 @@ public class JsonConverter {
     }
     
     private static Map<String, String> parseReplaceInclude(String str) throws IOException, IllegalArgumentException {
+        if (str == null || str.trim().isEmpty()) {
+           return Collections.emptyMap(); 
+        }
         StreamTokenizer tokenizer = new StreamTokenizer(new StringReader(str.trim()));
         tokenizer.resetSyntax();
         tokenizer.quoteChar('"');
@@ -172,38 +183,53 @@ public class JsonConverter {
         Map<String, String> replaceTokens = new HashMap<>();
         
         int currentToken = tokenizer.nextToken();
-        boolean searchValEnabled = false;
+        boolean searchValExpected = false;
+        boolean replacementValExpected = false;
+        boolean replaceStringExpected = true;
+        boolean colonExpected = false;
         String searchVal = "";
-        boolean replacementValEnabled = false;
         String msg = "wrong format";
         
         while (currentToken != StreamTokenizer.TT_EOF) {
             switch (tokenizer.ttype) {
             case StreamTokenizer.TT_WORD:
-                if (tokenizer.sval.trim().equals("--replace=")) {
-                    searchValEnabled = true;
+                if (tokenizer.sval.trim().isEmpty()) {
+                    // ignore spaces
                 } else {
-                    throw new IllegalArgumentException(msg);
+                    if (tokenizer.sval.trim().matches("--replace\\s*=")) {
+                        if (replaceStringExpected) {
+                            searchValExpected = true;
+                            replaceStringExpected = false;
+                        } else {
+                            throw new IllegalArgumentException(msg);
+                        }
+                    } else {
+                        throw new IllegalArgumentException(msg);
+                    }
                 }
                 break;
             case '\'':
             case '"':
-                if (replacementValEnabled) {
-                    if (!searchVal.isEmpty()) {
-                        replaceTokens.put(searchVal, tokenizer.sval);
-                        searchVal = "";
-                    }
-                    searchValEnabled = false;
-                    replacementValEnabled = false;
-                } else if (searchValEnabled) {
+                if (replacementValExpected) {
+                    replaceTokens.put(searchVal, tokenizer.sval);
+                    searchVal = "";
+                    replacementValExpected = false;
+                    replaceStringExpected = true;
+                } else if (searchValExpected) {
                     searchVal = tokenizer.sval;
+                    if (searchVal.isEmpty()) {
+                        throw new IllegalArgumentException(msg);
+                    }
+                    searchValExpected = false;
+                    colonExpected = true;
                 } else {
                     throw new IllegalArgumentException(msg);
                 }
                 break;
             case ':':
-                if (searchValEnabled) {
-                    replacementValEnabled = true; 
+                if (colonExpected) {
+                    replacementValExpected = true;
+                    colonExpected = false;
                 } else {
                     throw new IllegalArgumentException(msg);
                 }
