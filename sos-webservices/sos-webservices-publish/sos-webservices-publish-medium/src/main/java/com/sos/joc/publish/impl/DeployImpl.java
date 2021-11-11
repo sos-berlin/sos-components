@@ -211,9 +211,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
                 			.peek(item -> {
                 				try {
-									item.writeUpdateableContent(
-                                            JsonConverter.readAsConvertedDeployObject(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item
-                                                    .getType()), commitId, releasedScripts));
+                                    item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
+                                            StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
 								} catch (IOException e) {
 									throw new JocException(e);
 								}

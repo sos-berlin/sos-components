@@ -2202,7 +2202,7 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getContent(), releasedScripts);
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getContent(), releasedScripts);
                 //Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
@@ -2247,7 +2247,7 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getInvContent(), releasedScripts);
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getInvContent(), releasedScripts);
                 //Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
@@ -2603,7 +2603,7 @@ public abstract class PublishUtils {
         newItem.setType(cfg.getType());
         newItem.setTitle(cfg.getTitle());
         try {
-            newItem.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(cfg.getContent(), StoreDeployments.CLASS_MAPPING
+            newItem.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(cfg.getPath(), cfg.getContent(), StoreDeployments.CLASS_MAPPING
                     .get(cfg.getType()), commitId, releasedScripts));
         } catch (IOException e) {
             throw new JocException(e);

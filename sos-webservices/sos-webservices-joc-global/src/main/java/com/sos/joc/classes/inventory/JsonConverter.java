@@ -52,29 +52,29 @@ public class JsonConverter {
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
     public final static String scriptIncludeComments = "(##|::|//)";
-    public final static String scriptInclude = "!INCLUDE ";
+    public final static String scriptInclude = "!include ";
     public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "\\s*(\\S+)\\s*(.*)$",
             Pattern.DOTALL);
     public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude).asPredicate();
-    private final static String includeScriptErrorMsg = "Script include '%s' of job '%s' has wrong format, expected format: " + scriptIncludeComments
-            + scriptInclude + "scriptname [--replace=\"search literal\":\"replacement literal\" [--replace=...]]";
+    private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: " + scriptIncludeComments
+            + scriptInclude + "scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 
     @SuppressWarnings("unchecked")
-    public static <T extends IDeployObject> T readAsConvertedDeployObject(String json, Class<T> clazz, String commitId,
+    public static <T extends IDeployObject> T readAsConvertedDeployObject(String objectName, String json, Class<T> clazz, String commitId,
             Map<String, String> releasedScripts) throws JsonParseException, JsonMappingException, IOException {
         if (commitId != null && !commitId.isEmpty()) {
             json = json.replaceAll("(\"versionId\"\\s*:\\s*\")[^\"]*\"", "$1" + commitId + "\"");
         }
         if (clazz.getName().equals("com.sos.sign.model.workflow.Workflow")) {
-            return (T) readAsConvertedWorkflow(json, releasedScripts);
+            return (T) readAsConvertedWorkflow(objectName, json, releasedScripts);
         } else {
             return Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)", "$1js7Epoch$2"), clazz);
         }
     }
     
-    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String json, Map<String, String> releasedScripts)
+    public static com.sos.sign.model.workflow.Workflow readAsConvertedWorkflow(String workflowName, String json, Map<String, String> releasedScripts)
             throws JsonParseException, JsonMappingException, IOException {
 
         com.sos.sign.model.workflow.Workflow signWorkflow = Globals.objectMapper.readValue(json.replaceAll("(\\$)epoch(Second|Milli)",
@@ -94,7 +94,7 @@ public class JsonConverter {
         }
         if (signWorkflow.getJobs() != null) {
             if (hasScriptIncludes.test(json)) {
-                includeScripts(signWorkflow.getJobs(), releasedScripts);
+                includeScripts(workflowName, signWorkflow.getJobs(), releasedScripts);
             }
         }
         
@@ -105,7 +105,7 @@ public class JsonConverter {
         return signWorkflow;
     }
     
-    private static void includeScripts(com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
+    private static void includeScripts(String workflowName, com.sos.sign.model.workflow.Jobs signJobs, Map<String, String> releasedScripts) {
         Map<String, com.sos.sign.model.job.Job> replacedJobs = new HashMap<>();
         if (signJobs.getAdditionalProperties() != null) {
             signJobs.getAdditionalProperties().forEach((jobName, job) -> {
@@ -117,7 +117,7 @@ public class JsonConverter {
                     case ScriptExecutable:
                         ExecutableScript es = job.getExecutable().cast();
                         if (es.getScript() != null && hasScriptIncludes.test(es.getScript())) {
-                            es.setScript(replaceIncludes(es.getScript(), jobName, releasedScripts));
+                            es.setScript(replaceIncludes(workflowName, es.getScript(), jobName, releasedScripts));
                             replacedJobs.put(jobName, job);
                         }
                         break;
@@ -129,7 +129,7 @@ public class JsonConverter {
         
     }
 
-    public static String replaceIncludes(String script, String jobName, Map<String, String> releasedScripts) {
+    public static String replaceIncludes(String workflowName, String script, String jobName, Map<String, String> releasedScripts) {
         String[] scriptLines = script.split("\n");
         for (int i = 0; i < scriptLines.length; i++) {
             String line = scriptLines[i];
@@ -138,14 +138,14 @@ public class JsonConverter {
                 if (m.find()) {
                     String scriptName = m.group(2);
                     if (!releasedScripts.containsKey(scriptName)) {
-                        throw new IllegalArgumentException(String.format("Script include '%s' referenced an unreleased script '%s'", line,
-                                scriptName));
+                        throw new IllegalArgumentException(String.format("Script include '%s' of job '%s[%s]' referenced an unreleased script '%s'", line,
+                                workflowName, jobName, scriptName));
                     }
                     try {
                         line = Globals.objectMapper.readValue(releasedScripts.get(scriptName), Script.class).getScript();
                     } catch (Exception e) {
-                        throw new IllegalArgumentException(String.format("Script '%s' of job '%s' cannot be read: %s", scriptName, jobName, e
-                                .toString()));
+                        throw new IllegalArgumentException(String.format("Script '%s' of job '%s[%s]' cannot be read: %s", scriptName, workflowName,
+                                jobName, e.toString()));
                     }
                     try {
                         Map<String, String> replacements = parseReplaceInclude(m.group(3));
@@ -153,11 +153,11 @@ public class JsonConverter {
                             line = line.replaceAll(Pattern.quote(entry.getKey()), entry.getValue());
                         }
                     } catch (Exception e) {
-                        throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, jobName));
+                        throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, workflowName, jobName));
                     }
                     scriptLines[i] = line;
                 } else {
-                    throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, jobName));
+                    throw new IllegalArgumentException(String.format(includeScriptErrorMsg, line, workflowName, jobName));
                 }
             }
         }
@@ -174,11 +174,11 @@ public class JsonConverter {
         tokenizer.quoteChar('\'');
         tokenizer.slashSlashComments(false);
         tokenizer.slashStarComments(false);
-        //wordChars all except above quote chars and ':', i.e. 34, 39, 58
+        //wordChars all except above quote chars and ',', i.e. 34, 39, 44
         tokenizer.wordChars(0, 33);
         tokenizer.wordChars(35, 38);
-        tokenizer.wordChars(40, 57);
-        tokenizer.wordChars(59, 255);
+        tokenizer.wordChars(40, 43);
+        tokenizer.wordChars(45, 255);
         
         Map<String, String> replaceTokens = new HashMap<>();
         
@@ -186,7 +186,7 @@ public class JsonConverter {
         boolean searchValExpected = false;
         boolean replacementValExpected = false;
         boolean replaceStringExpected = true;
-        boolean colonExpected = false;
+        boolean commaExpected = false;
         String searchVal = "";
         String msg = "wrong format";
         
@@ -221,15 +221,15 @@ public class JsonConverter {
                         throw new IllegalArgumentException(msg);
                     }
                     searchValExpected = false;
-                    colonExpected = true;
+                    commaExpected = true;
                 } else {
                     throw new IllegalArgumentException(msg);
                 }
                 break;
-            case ':':
-                if (colonExpected) {
+            case ',':
+                if (commaExpected) {
                     replacementValExpected = true;
-                    colonExpected = false;
+                    commaExpected = false;
                 } else {
                     throw new IllegalArgumentException(msg);
                 }

@@ -216,7 +216,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                     List<DBItemDeploymentHistory> filteredUnsignedReDeployables = unsignedReDeployables.stream().filter(draft -> canAdd(draft
                             .getPath(), permittedFolders)).peek(item -> {
                                 try {
-                                    item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getInvContent(),
+                                    item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
                                             StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
                                 } catch (IOException e) {
                                     throw new JocException(e);
