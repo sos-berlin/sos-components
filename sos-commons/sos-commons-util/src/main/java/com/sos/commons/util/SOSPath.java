@@ -142,7 +142,7 @@ public class SOSPath {
         if (dir == null) {
             return result;
         }
-        Path sourceDir = SOSPath.toFile(dir).toPath();
+        Path sourceDir = dir.toAbsolutePath();
         if (Files.exists(sourceDir)) {
             try (Stream<Path> stream = Files.walk(sourceDir)) {
                 for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(sourceDir)).collect(Collectors.toList())) {
@@ -409,6 +409,7 @@ public class SOSPath {
         private final Instant start;
 
         private Instant end;
+        // TODO Set<Path> check performance
         private Set<String> files = new HashSet<>();
         private Set<String> directories = new HashSet<>();
 

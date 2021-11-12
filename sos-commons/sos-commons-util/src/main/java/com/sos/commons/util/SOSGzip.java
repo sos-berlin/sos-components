@@ -166,7 +166,7 @@ public class SOSGzip {
 
         SOSGzipResult result = (new SOSGzip()).new SOSGzipResult();
         try {
-            Path target = SOSPath.toFile(targetDir).toPath();
+            Path target = targetDir.toAbsolutePath();
 
             inputStream = new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(source)));
             result.addDirectory(target);
@@ -237,6 +237,7 @@ public class SOSGzip {
 
         private Instant end;
         private byte[] compressed = null;
+        // TODO Set<Path> check performance
         private Set<String> files = new HashSet<>();
         private Set<String> directories = new HashSet<>();
 

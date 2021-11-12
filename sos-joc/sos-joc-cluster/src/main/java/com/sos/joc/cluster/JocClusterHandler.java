@@ -127,23 +127,7 @@ public class JocClusterHandler {
             @Override
             public void run() {
                 AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
-
-                boolean run = true;
-                int errorCounter = 0;
-                while (run) {
-                    try {
-                        LOGGER.info(String.format("[%s][%s]update heart beat on long running service %s...", mode, method, method));
-                        cluster.updateHeartBeat();
-                        run = false;
-                    } catch (Throwable e) {
-                        errorCounter += 1;
-                        if (errorCounter > 3) {
-                            run = false;
-                        } else {
-                            cluster.waitFor(1);
-                        }
-                    }
-                }
+                cluster.updateHeartBeat(mode, method, 3, true);
             }
         }, 5 /* start delay */, cluster.getConfig().getPollingInterval() /* duration */, TimeUnit.SECONDS);
         return threadPool;
@@ -182,6 +166,8 @@ public class JocClusterHandler {
         // }
         // }
         // handlers = new ArrayList<>();
+
+        cluster.updateHeartBeat(mode, type.name().toLowerCase(), 2, false);
 
         LOGGER.info(String.format("[%s][%s][active=%s][completed]%s", mode, type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {

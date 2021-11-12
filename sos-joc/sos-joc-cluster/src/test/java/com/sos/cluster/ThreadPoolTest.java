@@ -1,5 +1,6 @@
 package com.sos.cluster;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +15,46 @@ public class ThreadPoolTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadPoolTest.class);
 
     private static final int MAX_EXECUTION_TIME = 20;
+
+    @Ignore
+    @Test
+    public void testCompletableFuture() throws Exception {
+
+        for (int i = 0; i < 10; i++) {
+            CompletableFuture.runAsync(() -> {
+                LOGGER.info("hallo");
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        TimeUnit.SECONDS.sleep(50);
+
+    }
+
+    @Ignore
+    @Test
+    public void testThread() throws Exception {
+
+        for (int i = 0; i < 10; i++) {
+            new Thread(() -> {
+                LOGGER.info("hallo-");
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }).start();
+        }
+
+        TimeUnit.SECONDS.sleep(50);
+
+    }
 
     @Ignore
     @Test

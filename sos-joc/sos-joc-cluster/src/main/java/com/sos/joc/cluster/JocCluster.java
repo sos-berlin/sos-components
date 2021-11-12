@@ -848,7 +848,29 @@ public class JocCluster {
     }
 
     // separate thread
-    protected void updateHeartBeat() throws Exception {
+    protected void updateHeartBeat(StartupMode mode, String method, int retryCount, boolean log) {
+        boolean run = true;
+        int errorCount = 0;
+        while (run) {
+            try {
+                if (log) {
+                    LOGGER.info(String.format("[%s][%s]update heart beat on long running service %s...", mode, method, method));
+                }
+                updateHeartBeat();
+                run = false;
+            } catch (Throwable e) {
+                errorCount += 1;
+                if (errorCount > retryCount) {
+                    run = false;
+                } else {
+                    waitFor(1);
+                }
+            }
+        }
+    }
+
+    // separate thread
+    private void updateHeartBeat() throws Exception {
         DBLayerJocCluster dbLayer = null;
         try {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());

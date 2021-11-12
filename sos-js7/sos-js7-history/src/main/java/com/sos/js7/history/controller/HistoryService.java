@@ -282,6 +282,7 @@ public class HistoryService extends AJocClusterService {
         } else {
             // current member - getJocConfig().getMemberId(), stored member - item.getTextValue
 
+            // TODO - do cleanup ? - no, e.g. due to fail over (was killed and no compressed entry in the database ...)
             // cleanup logs
             // LOGGER.info(String.format("[%s][cleanup][%s]start..", method, logDir));
             // SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
