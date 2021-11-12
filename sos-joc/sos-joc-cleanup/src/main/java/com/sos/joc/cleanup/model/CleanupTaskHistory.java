@@ -49,7 +49,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                         orderDatetime.getZonedDatetime()));
 
                 state = cleanupOrders(orderDatetime, true);
-                cleanupLogDirectory(state);
+                cleanupNotReferencedLogs(state);
                 return state;
             }
 
@@ -69,7 +69,7 @@ public class CleanupTaskHistory extends CleanupTaskModel {
                 LOGGER.info(String.format("[%s][orders][%s]skip", getIdentifier(), orderDatetime.getAge().getConfigured()));
             }
 
-            cleanupLogDirectory(state);
+            cleanupNotReferencedLogs(state);
 
             return state;
         } catch (Throwable e) {
@@ -345,7 +345,8 @@ public class CleanupTaskHistory extends CleanupTaskModel {
         LOGGER.info(log.toString());
     }
 
-    private void cleanupLogDirectory(JocServiceTaskAnswerState state) {
+    // TODO duplicate method (some changes) - see com.sos.js7.history.controller.HistoryService
+    private void cleanupNotReferencedLogs(JocServiceTaskAnswerState state) {
         if (state != null && !state.equals(JocServiceTaskAnswerState.COMPLETED)) {
             return;
         }

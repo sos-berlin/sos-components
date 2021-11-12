@@ -25,10 +25,11 @@ public class DBLayerHistory {
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerHistory.class);
 
     private static final String LOGS_VARIABLE_NAME = "cluster_history_logs";
-    private final SOSHibernateSession session;
     /** result rerun interval in seconds */
     private static final long RERUN_INTERVAL = 2;
     private static final int MAX_RERUNS = 3;
+
+    private SOSHibernateSession session;
 
     public DBLayerHistory(SOSHibernateSession hibernateSession) {
         session = hibernateSession;
@@ -38,9 +39,17 @@ public class DBLayerHistory {
         return session;
     }
 
+    public void setSession(SOSHibernateSession val) {
+        if (session != null) {
+            session.close();
+        }
+        session = val;
+    }
+
     public void close() {
         if (session != null) {
             session.close();
+            session = null;
         }
     }
 
@@ -510,6 +519,20 @@ public class DBLayerHistory {
             }
         }
         return result;
+    }
+
+    // TODO duplicate method - see com.sos.joc.cleanup.db.DBLayerCleanup
+    public boolean mainOrderLogNotFinished(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+        hql.append("where id=:id ");
+        hql.append("and parentId=0 ");
+        hql.append("and logId=0 ");
+
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        Long result = query.getSingleResult();
+
+        return result.intValue() > 0;
     }
 
 }

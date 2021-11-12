@@ -1,5 +1,7 @@
 package com.sos.js7.history.controller;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,6 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,7 +251,40 @@ public class HistoryService extends AJocClusterService {
                         // delete BLOB ???
                         break;
                     default:
-                        decompress(method, dbLayer);
+                        //
+                        DBItemJocVariable item = dbLayer.getLogsVariable();
+                        if (item == null) {
+                            LOGGER.info(String.format("[%s][skip]because compressed data not found", method));
+                            return;
+                        }
+                        byte[] compressed = item.getBinaryValue();
+                        if (compressed == null) {
+                            LOGGER.info(String.format("[%s][skip][remove empty entry]because compressed data not found", method));
+                            dbLayer.getSession().beginTransaction();
+                            dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+                            dbLayer.getSession().commit();
+                            return;
+                        }
+                        if (stop.get()) {
+                            LOGGER.info(String.format("[%s][skip]because stop called", method));
+                            return;
+                        }
+                        dbLayer.close();
+
+                        // decompress
+                        LOGGER.info(String.format("[%s][%s]start..", method, logDir));
+                        SOSGzipResult gr = SOSGzip.decompress(compressed, logDir, true);
+                        LOGGER.info(String.format("[%s][end]%s", method, gr));
+                        gr.getDirectories().forEach(d -> {
+                            LOGGER.info(String.format("    [decompressed]%s", d));
+                        });
+
+                        // remove db entry
+                        dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                        dbLayer.getSession().beginTransaction();
+                        dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+                        dbLayer.getSession().commit();
+
                         break;
                     }
                 }
@@ -267,45 +304,6 @@ public class HistoryService extends AJocClusterService {
                 dbLayer.close();
             }
         }
-    }
-
-    private void decompress(String caller, DBLayerHistory dbLayer) throws Exception {
-        String method = "decompress";
-        DBItemJocVariable item = dbLayer.getLogsVariable();
-        if (item == null) {
-            LOGGER.info(String.format("[%s][%s][skip]because compressed data not found", caller, method));
-            return;
-        }
-        byte[] compressed = item.getBinaryValue();
-        if (compressed == null) {
-            LOGGER.info(String.format("[%s][%s][skip][remove empty entry]because compressed data not found", caller, method));
-        } else {
-            // current member - getJocConfig().getMemberId(), stored member - item.getTextValue
-
-            // TODO - do cleanup ? - no, e.g. due to fail over (was killed and no compressed entry in the database ...)
-            // cleanup logs
-            // LOGGER.info(String.format("[%s][cleanup][%s]start..", method, logDir));
-            // SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
-            // LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
-
-            if (stop.get()) {
-                LOGGER.info(String.format("[%s][%s][skip]because stop called", caller, method));
-                return;
-            }
-
-            // decompress
-            LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));
-            SOSGzipResult gr = SOSGzip.decompress(compressed, logDir, true);
-            LOGGER.info(String.format("[%s][%s][end]%s", caller, method, gr));
-            gr.getDirectories().forEach(d -> {
-                LOGGER.info(String.format("    [decompressed]%s", d));
-            });
-        }
-
-        // remove db entry
-        dbLayer.getSession().beginTransaction();
-        dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
-        dbLayer.getSession().commit();
     }
 
     private void handleLogsOnStop(StartupMode mode) {
@@ -330,15 +328,37 @@ public class HistoryService extends AJocClusterService {
                     default:
                         // TODO select List<Long> (convert to Set) and remove "old" folders before compress
                         Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
-                        hasOnlyFinished = orderLogs.equals(0L);
-                        LOGGER.info(String.format("[%s][not finished order logs]%s", method, orderLogs));
+                        long subfolders = SOSPath.getCountSubfolders(logDir, 1);
+                        LOGGER.info(String.format("[%s][db: not finished order logs=%s][log directory: subfolders=%s]", method, orderLogs,
+                                subfolders));
 
+                        hasOnlyFinished = orderLogs.equals(0L);
                         if (hasOnlyFinished) {
                             dbLayer.getSession().beginTransaction();
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
                             dbLayer.getSession().commit();
                         } else {
-                            compress(method, dbLayer);
+                            if (subfolders != orderLogs.longValue()) {
+                                cleanupNotReferencedLogs(dbLayer, method);
+                            }
+                            dbLayer.close();
+
+                            // compress
+                            LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
+                            SOSGzipResult gr = SOSGzip.compress(logDir, false);
+
+                            // write compressed to database
+                            dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                            compress(method, dbLayer, gr);
+                            dbLayer.close();
+
+                            // log compressed results
+                            gr.getDirectories().forEach(d -> {
+                                LOGGER.info(String.format("    [compressed]%s", d));
+                            });
+
+                            // cleanup whole history log directory
+                            cleanupAllLogs(method);
                         }
                         break;
                     }
@@ -346,6 +366,10 @@ public class HistoryService extends AJocClusterService {
                 }
             }
             if (!skipCheckOrders) {
+                if (dbLayer.getSession() == null) {
+                    dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                }
+
                 Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
                 hasOnlyFinished = orderLogs.equals(0L);
                 LOGGER.info(String.format("[%s][not finished order logs]%s", method, orderLogs));
@@ -359,7 +383,7 @@ public class HistoryService extends AJocClusterService {
                 SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
                 LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
                 pr.getDirectories().forEach(d -> {
-                    LOGGER.info(String.format("    [removed]%s", d));
+                    LOGGER.info(String.format("    [deleted]%s", d));
                 });
             }
         } catch (Exception e) {
@@ -377,12 +401,8 @@ public class HistoryService extends AJocClusterService {
         }
     }
 
-    private void compress(String caller, DBLayerHistory dbLayer) throws Exception {
+    private void compress(String caller, DBLayerHistory dbLayer, SOSGzipResult gr) throws Exception {
         String method = "compress";
-        // compress logs
-        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));
-        SOSGzipResult gr = SOSGzip.compress(logDir, false);
-
         Instant start = Instant.now();
         dbLayer.getSession().beginTransaction();
         if (gr.getDirectories().size() == 0) {
@@ -392,16 +412,51 @@ public class HistoryService extends AJocClusterService {
         }
         dbLayer.getSession().commit();
         Instant end = Instant.now();
-
         LOGGER.info(String.format("[%s][%s][end]%s,db update=%s", caller, method, gr, SOSDate.getDuration(start, end)));
-        gr.getDirectories().forEach(d -> {
-            LOGGER.info(String.format("    [compressed]%s", d));
-        });
+    }
 
-        // cleanup logs
-        LOGGER.info(String.format("[%s][%s][cleanup][%s]start..", caller, method, logDir));
+    private void cleanupAllLogs(String caller) throws IOException {
+        String method = "cleanupAllLogs";
+        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));
         SOSPathResult r = SOSPath.cleanupDirectory(logDir);
-        LOGGER.info(String.format("[%s][%s][cleanup][end]%s", caller, method, r));
+        LOGGER.info(String.format("[%s][%s][end]%s", caller, method, r));
+    }
+
+    // TODO duplicate method (some changes) - see com.sos.joc.cleanup.model.CleanupTaskHistory
+    private void cleanupNotReferencedLogs(DBLayerHistory dbLayer, String caller) {
+        Path dir = logDir.toAbsolutePath();
+        if (Files.exists(dir)) {
+            String method = "cleanupNotReferencedLogs";
+            LOGGER.info(String.format("[%s][%s]%s", caller, method, dir));
+
+            try {
+                int i = 0;
+                try (Stream<Path> stream = Files.walk(dir)) {
+                    for (Path p : stream.filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                        File f = p.toFile();
+                        if (f.isDirectory()) {
+                            try {
+                                Long id = Long.parseLong(f.getName());
+                                if (!dbLayer.mainOrderLogNotFinished(id)) {
+                                    try {
+                                        if (SOSPath.deleteIfExists(p)) {
+                                            LOGGER.info(String.format("    [deleted]%s", p));
+                                            i++;
+                                        }
+                                    } catch (Throwable e) {// in the same moment deleted by history
+                                    }
+                                }
+                            } catch (Throwable e) {
+                                LOGGER.info(String.format("    [skip][non numeric]%s", p));
+                            }
+                        }
+                    }
+                }
+                LOGGER.info(String.format("[%s][%s][deleted][total]%s", caller, method, i));
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][%s]%s", caller, method, e.toString()), e);
+            }
+        }
     }
 
     public static Path getOrderLogDirectory(Path logDir, Long historyOrderMainParentId) {

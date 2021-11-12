@@ -404,6 +404,15 @@ public class SOSPath {
         Files.setLastModifiedTime(path, FileTime.fromMillis(date.getTime()));
     }
 
+    public static long getCountSubfolders(Path dir, int maxDepth) throws IOException {
+        long count = 0;
+        Path sourceDir = dir.toAbsolutePath();
+        try (Stream<Path> stream = Files.find(sourceDir, maxDepth, (path, attributes) -> attributes.isDirectory())) {
+            count = stream.count() - 1;// -1 - without parent sourceDir
+        }
+        return count;
+    }
+
     public class SOSPathResult {
 
         private final Instant start;

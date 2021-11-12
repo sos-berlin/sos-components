@@ -81,6 +81,7 @@ public class DBLayerCleanup {
         return session.executeUpdate(query);
     }
 
+    // TODO duplicate method - see com.sos.js7.history.db.DBLayerHistory
     public boolean mainOrderLogNotFinished(Long id) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
         hql.append("where id=:id ");
