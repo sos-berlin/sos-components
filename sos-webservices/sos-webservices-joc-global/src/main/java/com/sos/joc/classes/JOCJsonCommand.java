@@ -274,19 +274,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(e.toString(), e);
             }
         } catch (SOSConnectionRefusedException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(e.toString(), e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(e.toString(), e);
             }
         } catch (JocException e) {
             throw e;
@@ -309,19 +309,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(e.toString(), e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(e.toString(), e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(e.toString(), e);
             }
         } catch (JocException e) {
             throw e;
@@ -350,19 +350,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(e.toString(), e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(e.toString(), e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(e.toString(), e);
             }
         } catch (JocException e) {
             throw e;
@@ -403,19 +403,19 @@ public class JOCJsonCommand extends SOSRestApiClient {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionRefusedException(jocError, e);
+                throw new ControllerConnectionRefusedException(e.toString(), e);
             }
         } catch (SOSConnectionResetException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerConnectionResetException(jocError, e);
+                throw new ControllerConnectionResetException(e.toString(), e);
             }
         } catch (SOSNoResponseException e) {
             if (isForcedClosingHttpClient()) {
                 throw new ForcedClosingHttpClientException(uri.getScheme()+"://"+uri.getAuthority(), e);
             } else {
-                throw new ControllerNoResponseException(jocError, e);
+                throw new ControllerNoResponseException(e.toString(), e);
             }
         } catch (JocException e) {
             throw e;
@@ -431,11 +431,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
         return csrfToken;
     }
     
-    private void setProperties() {
+    private void setProperties() throws ControllerConnectionRefusedException {
         setAllowAllHostnameVerifier(!Globals.withHostnameVerification);
         setConnectionTimeout(Globals.httpConnectionTimeout);
         setSocketTimeout(Globals.httpSocketTimeout);
         setSSLContext(SSLContext.getInstance().getSSLContext());
+        if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
+            throw new ControllerConnectionRefusedException("Required truststore not found");
+        }
         setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
     }
     
