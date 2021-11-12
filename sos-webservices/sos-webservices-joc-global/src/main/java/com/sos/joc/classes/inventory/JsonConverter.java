@@ -52,12 +52,12 @@ public class JsonConverter {
     private final static Predicate<String> hasInstructionToConvert = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + instructionsToConvert + ")\"").asPredicate();
     private final static Predicate<String> hasCycleInstruction = Pattern.compile("\"TYPE\"\\s*:\\s*\"(" + InstructionType.CYCLE.value() + ")\"").asPredicate();
     public final static String scriptIncludeComments = "(##|::|//)";
-    public final static String scriptInclude = "!include ";
-    public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "\\s*(\\S+)\\s*(.*)$",
+    public final static String scriptInclude = "!include";
+    public final static Pattern scriptIncludePattern = Pattern.compile("^" + scriptIncludeComments + scriptInclude + "[ \t]+(\\S+)[ \t]*(.*)$",
             Pattern.DOTALL);
-    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude).asPredicate();
+    public final static Predicate<String> hasScriptIncludes = Pattern.compile(scriptIncludeComments + scriptInclude + "[ \t]+").asPredicate();
     private final static String includeScriptErrorMsg = "Script include '%s' of job '%s[%s]' has wrong format, expected format: " + scriptIncludeComments
-            + scriptInclude + "scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
+            + scriptInclude + " scriptname [--replace=\"search literal\",\"replacement literal\" [--replace=...]]";
 
     private final static Logger LOGGER = LoggerFactory.getLogger(JsonConverter.class);
 

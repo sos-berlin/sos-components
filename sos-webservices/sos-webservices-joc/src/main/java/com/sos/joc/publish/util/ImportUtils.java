@@ -39,6 +39,7 @@ import com.sos.inventory.model.script.Script;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
@@ -108,13 +109,16 @@ public class ImportUtils {
         final String newName = configuration.getName().replaceFirst(replace.get(0), replace.get(1));
         Set<ConfigurationObject> referencedBy = new HashSet<ConfigurationObject>();
         
-        // TODO consider SCRIPT objects
         switch (configuration.getObjectType()) {
 	    	case LOCK:
 	    		referencedBy.addAll(getUsedWorkflowsFromArchiveByLockId(oldName, configurations));
 	    		break;
 	    	case NOTICEBOARD:
                 referencedBy.addAll(getUsedWorkflowsFromArchiveByBoardName(oldName, configurations));
+	    	    break;
+	    	case SCRIPT:
+	    	    // consider SCRIPT objects
+	    	    referencedBy.addAll(getUsedWorkflowsFromArchiveByScriptName(oldName, configurations));
 	    	    break;
         	case WORKFLOW:
                 referencedBy.addAll(getUsedFileOrderSourcesFromArchiveByWorkflowName(oldName, configurations));
@@ -147,7 +151,6 @@ public class ImportUtils {
         	for (ConfigurationObject configurationWithReference : updateableItem.getReferencedBy()) {
                 switch (configurationWithReference.getObjectType()) {
                 case WORKFLOW:
-                    // TODO consider SCRIPT objects
                     if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.LOCK)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
@@ -160,8 +163,20 @@ public class ImportUtils {
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NOTICEBOARD)) {
                         try {
                             String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
-                            json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
+                            json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1"
+                                    + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.SCRIPT)) {
+                        // consider SCRIPT objects
+                        try {
+                            String json = Globals.objectMapper.writeValueAsString(configurationWithReference.getConfiguration());
+                            json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]" + updateableItem
+                                    .getOldName() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + updateableItem.getNewName() + "$2");
+                            configurationWithReference.setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -214,7 +229,7 @@ public class ImportUtils {
     				Workflow wf = (Workflow)item.getConfiguration();
 					try {
 						String wfJson = Globals.objectMapper.writeValueAsString(wf);
-	    				Matcher matcher = Pattern.compile("(\"lockName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+	    				Matcher matcher = Pattern.compile("\"lockName\"\\s*:\\s*\"" + name + "\"").matcher(wfJson); 
 	    				if (matcher.find()) {
 	    					return item;
 	    				}
@@ -224,6 +239,22 @@ public class ImportUtils {
     				return null;
     			}).filter(Objects::nonNull).collect(Collectors.toSet());
     }
+    
+    private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByScriptName (String name, Set<ConfigurationObject> configurations) {
+        return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
+                .map(item -> {
+                    try {
+                        String wfJson = Globals.objectMapper.writeValueAsString(item.getConfiguration());
+                        if (Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + name + "\\s*").matcher(
+                                wfJson).find()) {
+                            return item;
+                        }
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }).filter(Objects::nonNull).collect(Collectors.toSet());
+    }
 
     private static Set<ConfigurationObject> getUsedWorkflowsFromArchiveByBoardName (String name, Set<ConfigurationObject> configurations) {
         return configurations.stream().filter(item -> ConfigurationType.WORKFLOW.equals(item.getObjectType()))
@@ -231,7 +262,7 @@ public class ImportUtils {
                     Workflow wf = (Workflow)item.getConfiguration();
                     try {
                         String wfJson = Globals.objectMapper.writeValueAsString(wf);
-                        Matcher matcher = Pattern.compile("(\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\")").matcher(wfJson); 
+                        Matcher matcher = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"" + name + "\"").matcher(wfJson); 
                         if (matcher.find()) {
                             return item;
                         }

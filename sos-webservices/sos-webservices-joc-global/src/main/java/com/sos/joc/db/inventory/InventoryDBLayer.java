@@ -800,6 +800,17 @@ public class InventoryDBLayer extends DBLayer {
         }
         return result;
     }
+    
+    public Set<String> getScriptNames() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" where type=:type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCRIPT.intValue());
+        List<String> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptySet();
+        }
+        return result.stream().collect(Collectors.toSet());
+    }
 
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
