@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +48,7 @@ public class EventBus {
 
     public void post(final JOCEvent evt) {
         if (evt != null) {
-            CompletableFuture.runAsync(() -> {
+            new Thread(() -> {
                 Set<Object> unsubcribedListeners = new HashSet<>();
                 evt.setEventId(Instant.now().toEpochMilli());
                 Collections.unmodifiableSet(listeners).stream().forEach(listener -> {
@@ -59,8 +58,8 @@ public class EventBus {
                 });
                 if (!unsubcribedListeners.isEmpty()) {
                     listeners.removeAll(unsubcribedListeners);
-                }
-            });
+                } 
+            }).start();
         }
     }
 
