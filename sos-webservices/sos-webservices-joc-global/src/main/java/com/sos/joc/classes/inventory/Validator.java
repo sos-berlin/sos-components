@@ -332,6 +332,12 @@ public class Validator {
                             throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script referenced an unknown script '"
                                     + scriptName + "'");
                         }
+                        try {
+                            JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ... 
+                        } catch (Exception e) {
+                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script: Invalid script include '"
+                                    + m.group(0) + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
+                        }
                     }
                     m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
                     while (m.find()) {

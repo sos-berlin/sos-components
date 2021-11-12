@@ -164,7 +164,7 @@ public class JsonConverter {
         return String.join("\n", scriptLines);
     }
     
-    private static Map<String, String> parseReplaceInclude(String str) throws IOException, IllegalArgumentException {
+    public static Map<String, String> parseReplaceInclude(String str) throws IOException, IllegalArgumentException {
         if (str == null || str.trim().isEmpty()) {
            return Collections.emptyMap(); 
         }
@@ -196,7 +196,7 @@ public class JsonConverter {
                 if (tokenizer.sval.trim().isEmpty()) {
                     // ignore spaces
                 } else {
-                    if (tokenizer.sval.trim().matches("--replace\\s*=")) {
+                    if (tokenizer.sval.trim().matches("--replace[ \t]*=")) {
                         if (replaceStringExpected) {
                             searchValExpected = true;
                             replaceStringExpected = false;
