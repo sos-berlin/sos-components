@@ -949,7 +949,7 @@ public class JocCluster {
             }
         } catch (InterruptedException e) {
             // (Re-)Cancel if current thread also interrupted
-            LOGGER.error(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
+            LOGGER.info(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
             threadPool.shutdownNow();
             Thread.currentThread().interrupt();
         }
