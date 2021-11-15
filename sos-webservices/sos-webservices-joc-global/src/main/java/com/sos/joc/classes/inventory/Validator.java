@@ -67,8 +67,12 @@ import js7.data_for_java.value.JExpression;
 
 public class Validator {
 
-    private static Predicate<String> checkKey = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$").asPredicate();
-    private static Predicate<String> firstCharOfKeyIsNumber = Pattern.compile("^[0-9]").asPredicate();
+    private final static Predicate<String> checkKey = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$").asPredicate();
+    private final static Predicate<String> firstCharOfKeyIsNumber = Pattern.compile("^[0-9]").asPredicate();
+    private final static Pattern scriptIncludePattern = Pattern.compile("^" + JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude
+            + "[ \t]+(\\S+)[ \t]*(.*)$", Pattern.MULTILINE);
+    private final static Pattern scriptIncludeWithoutScriptPattern = Pattern.compile("^" + JsonConverter.scriptIncludeComments
+            + JsonConverter.scriptInclude + "[ \t]*$", Pattern.MULTILINE);
 
     /** @param type
      * @param configBytes
@@ -131,23 +135,25 @@ public class Validator {
                     dbLayer = new InventoryDBLayer(session);
                 }
                 if (ConfigurationType.WORKFLOW.equals(type)) {
+                    String json = new String(configBytes, StandardCharsets.UTF_8);
                     InventoryAgentInstancesDBLayer agentDBLayer = null;
                     if (enabledAgentNames == null) {
                         agentDBLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
                     }
                     Workflow workflow = (Workflow) config;
-                    List<String> jobResources = validateWorkflowJobs(workflow);
+                    List<String> jobResources = validateWorkflowJobs(workflow, dbLayer.getScriptNames());
                     if (workflow.getJobResourceNames() != null) {
                         jobResources.addAll(workflow.getJobResourceNames());
                     }
                     // JsonValidator.validateStrict(configBytes, URI.create("classpath:/raml/inventory/schemas/workflow/workflowJobs-schema.json"));
                     validateOrderPreparation(workflow.getOrderPreparation());
-                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow.getOrderPreparation(), new HashMap<String, String>(), dbLayer);
+                    validateInstructions(workflow.getInstructions(), "instructions", workflow.getJobs().getAdditionalProperties().keySet(), workflow
+                            .getOrderPreparation(), new HashMap<String, String>(), dbLayer);
                     // validateJobArguments(workflow.getJobs(), workflow.getOrderPreparation());
-                    validateLockRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
-                    validateBoardRefs(new String(configBytes, StandardCharsets.UTF_8), dbLayer);
+                    validateLockRefs(json, dbLayer);
+                    validateBoardRefs(json, dbLayer);
                     validateJobResourceRefs(jobResources, dbLayer);
-                    validateAgentRefs(new String(configBytes, StandardCharsets.UTF_8), agentDBLayer, enabledAgentNames);
+                    validateAgentRefs(json, agentDBLayer, enabledAgentNames);
                 } else if (ConfigurationType.SCHEDULE.equals(type)) {
                     Schedule schedule = (Schedule) config;
                     String json = validateWorkflowRef(schedule.getWorkflowName(), dbLayer, "$.workflowName");
@@ -290,7 +296,7 @@ public class Validator {
         }
     }
     
-    private static List<String> validateWorkflowJobs(Workflow workflow) throws JsonProcessingException, IOException, SOSJsonSchemaException {
+    private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException, SOSJsonSchemaException {
         List<String> jobResources = new ArrayList<>();
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
@@ -317,6 +323,27 @@ public class Validator {
                 ExecutableScript es = entry.getValue().getExecutable().cast();
                 if (es.getEnv() != null) {
                     validateExpression("$.jobs['" + entry.getKey() + "'].executable.env", es.getEnv().getAdditionalProperties());
+                }
+                if (es.getScript() != null) {
+                    Matcher m = scriptIncludePattern.matcher(es.getScript());
+                    while (m.find()) {
+                        String scriptName = m.group(2);
+                        if (!releasedScripts.contains(scriptName)) {
+                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script referenced an unknown script '"
+                                    + scriptName + "'");
+                        }
+                        try {
+                            JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ... 
+                        } catch (Exception e) {
+                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script: Invalid script include '"
+                                    + m.group(0) + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
+                        }
+                    }
+                    m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
+                    while (m.find()) {
+                        throw new JocConfigurationException("$.jobs['" + entry.getKey()
+                                + "'].executable.script contains script include without script name");
+                    }
                 }
                 break;
             }

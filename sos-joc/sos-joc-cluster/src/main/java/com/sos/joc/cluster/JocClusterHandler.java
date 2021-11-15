@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -19,6 +21,7 @@ import com.sos.joc.cluster.bean.answer.JocServiceAnswer;
 import com.sos.joc.cluster.bean.answer.JocClusterAnswer.JocClusterAnswerState;
 import com.sos.joc.cluster.bean.answer.JocServiceAnswer.JocServiceAnswerState;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration;
 import com.sos.joc.cluster.configuration.JocConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
@@ -42,7 +45,7 @@ public class JocClusterHandler {
         cluster = jocCluster;
     }
 
-    protected JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
+    protected synchronized JocClusterAnswer perform(StartupMode mode, PerformType type, ConfigurationGlobals configurations) {
         LOGGER.info(String.format("[%s][perform][active=%s]%s", mode, active, type.name()));
 
         if (cluster.getConfig().getServices() == null || cluster.getConfig().getServices().size() == 0) {
@@ -75,6 +78,7 @@ public class JocClusterHandler {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
 
+        ScheduledExecutorService heartBeat = scheduleHeartBeat(mode, method);
         List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
         for (int i = 0; i < services.size(); i++) {
             IJocClusterService s = services.get(i);
@@ -112,11 +116,27 @@ public class JocClusterHandler {
             };
             tasks.add(task);
         }
-        return performServices(mode, tasks, type);
+        return performServices(mode, tasks, type, heartBeat);
     }
 
-    private JocClusterAnswer performServices(StartupMode mode, List<Supplier<JocClusterAnswer>> tasks, PerformType type) {
+    private ScheduledExecutorService scheduleHeartBeat(StartupMode mode, String method) {
+        ScheduledExecutorService threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(cluster.getConfig().getThreadGroup(),
+                JocClusterConfiguration.IDENTIFIER + "-s"));
+        threadPool.scheduleWithFixedDelay(new Runnable() {
+
+            @Override
+            public void run() {
+                AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                cluster.updateHeartBeat(mode, method, 3, true);
+            }
+        }, 5 /* start delay */, cluster.getConfig().getPollingInterval() /* duration */, TimeUnit.SECONDS);
+        return threadPool;
+    }
+
+    private JocClusterAnswer performServices(StartupMode mode, List<Supplier<JocClusterAnswer>> tasks, PerformType type,
+            ScheduledExecutorService heartBeat) {
         if (tasks == null || tasks.size() == 0) {
+            JocCluster.shutdownThreadPool(mode, heartBeat, 1);
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_HANDLERS);
         }
 
@@ -136,6 +156,7 @@ public class JocClusterHandler {
                 .toList());
         CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[futuresList.size()])).join();
         JocCluster.shutdownThreadPool(mode, es, 3);
+        JocCluster.shutdownThreadPool(mode, heartBeat, 1);
 
         // for (CompletableFuture<ClusterAnswer> future : futuresList) {
         // try {
@@ -145,6 +166,8 @@ public class JocClusterHandler {
         // }
         // }
         // handlers = new ArrayList<>();
+
+        cluster.updateHeartBeat(mode, type.name().toLowerCase(), 2, false);
 
         LOGGER.info(String.format("[%s][%s][active=%s][completed]%s", mode, type.name(), active, cluster.getJocConfig().getMemberId()));
         if (active) {
@@ -208,7 +231,7 @@ public class JocClusterHandler {
                 AJocClusterService.setLogger();
                 LOGGER.info(String.format("[%s][restart][%s][service status %s][last activity start=%s, end=%s]wait 30s and ask again...", mode,
                         identifier, answer.getState(), answer.getLastActivityStart(), answer.getLastActivityEnd()));
-                cluster.waitFor(30);
+                cluster.waitFor(10);
                 answer = s.getInfo();
                 if (answer.getState().equals(JocServiceAnswerState.RELAX)) {
                     LOGGER.info(String.format("[%s][restart][%s]service status %s", mode, identifier, answer.getState()));

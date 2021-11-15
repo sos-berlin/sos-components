@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
+import com.sos.commons.util.SOSBase64;
 import com.sos.commons.util.SOSReflection;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper;
@@ -42,6 +43,7 @@ import js7.launcher.forjava.internal.BlockingInternalJob;
 public abstract class ABlockingInternalJob<A extends JobArguments> implements BlockingInternalJob {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ABlockingInternalJob.class);
+    private static final String BASE64_VALUE_PREFIX = "base64:";
 
     private final JobContext jobContext;
 
@@ -285,7 +287,15 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
             val = val.toString().trim();
             setValueType(arg, field);
             Type type = arg.getClazzType();
-            if (!type.equals(String.class)) {
+            if (type.equals(String.class)) {
+                if (((String) val).startsWith(BASE64_VALUE_PREFIX)) {
+                    try {
+                        val = SOSBase64.decode(val.toString().substring(BASE64_VALUE_PREFIX.length()));
+                    } catch (Throwable e) {
+                        arg.setNotAcceptedValue(val, e);
+                    }
+                }
+            } else {
                 if (type.equals(Path.class)) {
                     val = Paths.get(val.toString());
                 } else if (type.equals(URI.class)) {
@@ -315,7 +325,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());
                     if (v == null) {
-                        arg.setNotAcceptedValue(val);
+                        arg.setNotAcceptedValue(val, null);
+                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
                         val = arg.getDefaultValue();
                     } else {
                         val = v;
@@ -324,7 +335,8 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     try {
                         val = Charset.forName(val.toString());
                     } catch (Throwable e) {
-                        arg.setNotAcceptedValue(val);
+                        arg.setNotAcceptedValue(val, e);
+                        arg.getNotAcceptedValue().setUsedValueSource(JobArgument.ValueSource.JAVA);
                         val = arg.getDefaultValue();
                     }
                 }
@@ -407,6 +419,9 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
     private void setValueSource(JobArgument<A> arg, ValueSource source) {
         if (arg.getNotAcceptedValue() != null) {
             arg.getNotAcceptedValue().setSource(source);
+            if (arg.getNotAcceptedValue().getUsedValueSource() == null) {
+                arg.getNotAcceptedValue().setUsedValueSource(source);
+            }
         } else {
             arg.setValueSource(source);
         }

@@ -21,6 +21,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
@@ -121,15 +122,15 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 if (oldDBFolderContent == null) {
                     oldDBFolderContent = Collections.emptyList();
                 }
-                Map<ConfigurationType, Map<String, String>> oldToNewName = Collections.emptyMap();
-                if (!in.getShallowCopy()) {
-                    List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
-                            .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
-                            ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue());
-                    oldToNewName = oldDBFolderContent.stream().filter(item -> typesForReferences.contains(item.getType())).collect(Collectors
-                            .groupingBy(DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName,
-                                    item -> item.getName().replaceFirst(replace.get(0), replace.get(1)))));
-                }
+                
+                List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
+                        .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
+                        ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.SCRIPT.intValue());
+                
+                Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
+                        item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
+                                DBItemInventoryConfiguration::getTypeAsEnum, Collectors.toMap(DBItemInventoryConfiguration::getName, item -> item
+                                        .getName().replaceFirst(replace.get(0), replace.get(1))))) : Collections.emptyMap();
                 
                 List<AuditLogDetail> auditLogDetails = new ArrayList<>();
                 oldDBFolderContent = oldDBFolderContent.stream().map(oldItem -> {
@@ -209,6 +210,12 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                             for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.WORKFLOW, Collections.emptyMap())
                                     .entrySet()) {
                                 json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
+                            }
+                            // include scripts
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.SCRIPT, Collections.emptyMap())
+                                    .entrySet()) {
+                                json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
+                                        .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");
                             }
                             Map<String, String> oldNewJobResourceNames = oldToNewName.getOrDefault(ConfigurationType.JOBRESOURCE, Collections.emptyMap());
                             if (oldNewJobResourceNames.size() > 0) {

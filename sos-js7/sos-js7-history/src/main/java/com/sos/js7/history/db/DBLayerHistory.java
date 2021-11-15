@@ -23,10 +23,13 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 public class DBLayerHistory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerHistory.class);
-    private final SOSHibernateSession session;
+
+    private static final String LOGS_VARIABLE_NAME = "cluster_history_logs";
     /** result rerun interval in seconds */
     private static final long RERUN_INTERVAL = 2;
     private static final int MAX_RERUNS = 3;
+
+    private SOSHibernateSession session;
 
     public DBLayerHistory(SOSHibernateSession hibernateSession) {
         session = hibernateSession;
@@ -36,13 +39,21 @@ public class DBLayerHistory {
         return session;
     }
 
-    public void close() {
+    public void setSession(SOSHibernateSession val) {
         if (session != null) {
             session.close();
         }
+        session = val;
     }
 
-    public DBItemJocVariable getVariable(String name) throws SOSHibernateException {
+    public void close() {
+        if (session != null) {
+            session.close();
+            session = null;
+        }
+    }
+
+    public DBItemJocVariable getControllerVariable(String name) throws SOSHibernateException {
         String hql = String.format("select name,textValue from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
         Query<Object[]> query = session.createQuery(hql);
         query.setParameter("name", name);
@@ -56,7 +67,7 @@ public class DBLayerHistory {
         return item;
     }
 
-    public DBItemJocVariable insertVariable(String name, String eventId) throws SOSHibernateException {
+    public DBItemJocVariable insertControllerVariable(String name, String eventId) throws SOSHibernateException {
         DBItemJocVariable item = new DBItemJocVariable();
         item.setName(name);
         item.setTextValue(String.valueOf(eventId));
@@ -64,7 +75,7 @@ public class DBLayerHistory {
         return item;
     }
 
-    public int updateVariable(String name, Long eventId) throws SOSHibernateException {
+    public int updateControllerVariable(String name, Long eventId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_JOC_VARIABLES).append(" ");
         hql.append("set textValue=:textValue ");
         hql.append("where name=:name");
@@ -72,6 +83,45 @@ public class DBLayerHistory {
         query.setParameter("textValue", String.valueOf(eventId));
         query.setParameter("name", name);
         return session.executeUpdate(query);
+    }
+
+    public DBItemJocVariable getLogsVariable() throws SOSHibernateException {
+        String hql = String.format("from %s where name=:name", DBLayer.DBITEM_JOC_VARIABLES);
+        Query<DBItemJocVariable> query = session.createQuery(hql);
+        query.setParameter("name", LOGS_VARIABLE_NAME);
+        return session.getSingleResult(query);
+    }
+
+    public void handleLogsVariable(String memberId, byte[] compressed) throws SOSHibernateException {
+        if (compressed == null) {
+            StringBuilder hql = new StringBuilder("delete ");
+            hql.append("from ").append(DBLayer.DBITEM_JOC_VARIABLES).append(" ");
+            hql.append("where name=:name");
+
+            Query<Long> query = session.createQuery(hql.toString());
+            query.setParameter("name", LOGS_VARIABLE_NAME);
+            session.executeUpdate(query);
+
+        } else {
+            DBItemJocVariable item = new DBItemJocVariable();
+            item.setName(LOGS_VARIABLE_NAME);
+            item.setTextValue(memberId);
+            item.setBinaryValue(compressed);
+
+            StringBuilder hql = new StringBuilder("select count(name) ");
+            hql.append("from ").append(DBLayer.DBITEM_JOC_VARIABLES).append(" ");
+            hql.append("where name=:name");
+
+            Query<Long> query = session.createQuery(hql.toString());
+            query.setParameter("name", LOGS_VARIABLE_NAME);
+
+            Long result = session.getSingleValue(query);
+            if (result.equals(0L)) {
+                session.save(item);
+            } else {
+                session.update(item);
+            }
+        }
     }
 
     public String getLastControllerTimezone(String controllerId) throws SOSHibernateException {
@@ -87,6 +137,14 @@ public class DBLayerHistory {
         Query<String> query = session.createQuery(hql.toString());
         query.setParameter("controllerId", controllerId);
         return session.getSingleResult(query);
+    }
+
+    public Long getCountNotFinishedOrderLogs() throws SOSHibernateException {
+        return session.getSingleValue("select count(id) from " + DBLayer.DBITEM_HISTORY_ORDERS + " where parentId=0 and logId=0");
+    }
+
+    public Long getCountJocInstances() throws SOSHibernateException {
+        return session.getSingleValue("select count(id) from " + DBLayer.DBITEM_JOC_INSTANCES);
     }
 
     public DBItemHistoryController getControllerByNextEventId(String controllerId, Long nextEventId) throws SOSHibernateException {
@@ -461,6 +519,20 @@ public class DBLayerHistory {
             }
         }
         return result;
+    }
+
+    // TODO duplicate method - see com.sos.joc.cleanup.db.DBLayerCleanup
+    public boolean mainOrderLogNotFinished(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_HISTORY_ORDERS).append(" ");
+        hql.append("where id=:id ");
+        hql.append("and parentId=0 ");
+        hql.append("and logId=0 ");
+
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        Long result = query.getSingleResult();
+
+        return result.intValue() > 0;
     }
 
 }

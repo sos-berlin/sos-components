@@ -91,6 +91,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 List<Long> rc = getChildOrderIds(datetime, rm);
                 if (rc != null && rc.size() > 0) {
                     if (!cleanupOrders(datetime, "children", rc)) {
+                        getDbLayer().close();
                         return JocServiceTaskAnswerState.UNCOMPLETED;
                     }
                 }
@@ -99,6 +100,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             }
             getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
             if (!cleanupOrders(datetime, "main", rm)) {
+                getDbLayer().close();
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
             getDbLayer().close();

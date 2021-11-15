@@ -31,7 +31,6 @@ import com.sos.joc.exceptions.JocMissingKeyException;
 import com.sos.joc.keys.db.DBLayerKeys;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.common.JocSecurityLevel;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.Config;
@@ -146,6 +145,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 throw new JocMissingKeyException(
                         "No private key found for signing! - Please check your private key from the key management section in your profile.");
             }
+            
+            final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
             List<DBItemDeploymentHistory> itemsFromFolderToDelete = new ArrayList<DBItemDeploymentHistory>();
             //DeployAudit audit = null;
             // store to selected controllers
@@ -174,7 +175,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 if (unsignedDrafts != null) {
                     List<DBItemDeploymentHistory> filteredUnsignedDrafts = unsignedDrafts.stream()
                     		.filter(draft -> canAdd(draft.getPath(), permittedFolders))
-                    		.map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId()))
+                    		.map(item -> PublishUtils.cloneInvCfgToDepHistory(item, account, controllerId, commitId, dbAuditlog.getId(), releasedScripts))
                     		.collect(Collectors.toList());
 //                    List<DBItemDeploymentHistory> filteredUnsignedDrafts = new ArrayList<DBItemDeploymentHistory>();
 //                    for (DBItemInventoryConfiguration cfg : unsignedDrafts) {
@@ -210,10 +211,8 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
                 			.filter(draft -> canAdd(draft.getPath(), permittedFolders))
                 			.peek(item -> {
                 				try {
-									item.writeUpdateableContent(
-									        (IDeployObject) JsonConverter.readAsConvertedDeployObject(item.getInvContent(), 
-									                StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId));
-											//(IDeployObject)Globals.objectMapper.readValue(item.getInvContent(), StoreDeployments.CLASS_MAPPING.get(item.getType())));
+                                    item.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(item.getPath(), item.getInvContent(),
+                                            StoreDeployments.CLASS_MAPPING.get(item.getType()), commitId, releasedScripts));
 								} catch (IOException e) {
 									throw new JocException(e);
 								}

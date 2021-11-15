@@ -8,6 +8,8 @@ import com.sos.joc.db.history.DBItemHistoryOrder;
 
 public class HistoryOrderBean extends AHistoryBean {
 
+    private static final long serialVersionUID = 1L;
+
     private String orderId;
     private String workflowPath;
     private String workflowVersionId;

@@ -328,7 +328,7 @@ public class JobStep<A extends JobArguments> {
         if (jobName == null) {
             if (internalStep == null) {
                 return null;
-            } 
+            }
             jobName = Job.getFromEither(internalStep.workflow().checkedJobName(internalStep.order().workflowPosition().position())).toString();
         }
         return jobName;
@@ -763,8 +763,13 @@ public class JobStep<A extends JobArguments> {
             if (a.getNotAcceptedValue() == null) {
                 logger.info("    %s=%s (source=%s%s)", a.getName(), a.getDisplayValue(), a.getValueSource().name(), detail);
             } else {
-                logger.info("    %s=%s (source=%s value=%s[not accepted, use default from source=%s]%s)", a.getName(), a.getDisplayValue(), a
-                        .getNotAcceptedValue().getSource().name(), a.getNotAcceptedValue().getDisplayValue(), a.getValueSource().name(), detail);
+                String exception = "";
+                if (a.getNotAcceptedValue().getException() != null) {
+                    exception = new StringBuilder("(").append(a.getNotAcceptedValue().getException().toString()).append(")").toString();
+                }
+                logger.info("    %s=%s (source=%s value=%s[not accepted%s, use from source=%s]%s)", a.getName(), a.getDisplayValue(), a
+                        .getNotAcceptedValue().getSource().name(), a.getNotAcceptedValue().getDisplayValue(), exception, a.getNotAcceptedValue()
+                                .getUsedValueSource().name(), detail);
             }
         });
     }

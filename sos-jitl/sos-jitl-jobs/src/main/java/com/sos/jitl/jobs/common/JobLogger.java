@@ -41,19 +41,22 @@ public class JobLogger {
         step.out().println(msg);
     }
 
-    public void info(final String format, final Object... msg) {
-        if (msg.length == 0) {
-            info(format); 
+    public void info(final String format, final Object... args) {
+        if (args.length == 0) {
+            info(format);
         } else {
-            info(String.format(format, msg));
+            info(String.format(format, args));
         }
     }
 
-    public void debug(final String format, final Object... msg) {
-        if (msg.length == 0) {
-            debug(format); 
+    public void debug(final String format, final Object... args) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        if (args.length == 0) {
+            debug(format);
         } else {
-            debug(String.format(format, msg));
+            debug(String.format(format, args));
         }
     }
 
@@ -64,11 +67,14 @@ public class JobLogger {
         step.out().println(String.format("[DEBUG]%s", msg));
     }
 
-    public void trace(final String format, final Object... msg) {
-        if (msg.length == 0) {
-            trace(format); 
+    public void trace(final String format, final Object... args) {
+        if (!isTraceEnabled) {
+            return;
+        }
+        if (args.length == 0) {
+            trace(format);
         } else {
-            trace(String.format(format, msg));
+            trace(String.format(format, args));
         }
     }
 
@@ -92,16 +98,16 @@ public class JobLogger {
         }
     }
 
-    public void log(LogLevel logLevel, final String format, final Object... msg) {
+    public void log(LogLevel logLevel, final String format, final Object... args) {
         switch (logLevel) {
         case INFO:
-            info(format, msg);
+            info(format, args);
             break;
         case DEBUG:
-            debug(format, msg);
+            debug(format, args);
             break;
         case TRACE:
-            trace(format, msg);
+            trace(format, args);
         }
     }
 
@@ -111,19 +117,19 @@ public class JobLogger {
         step.out().println(String.format("[WARN]%s", warn2String(msg, ex)));
     }
 
-    public void warn(final String format, final Object... msg) {
-        if (msg.length == 0) {
-            warn(format); 
+    public void warn(final String format, final Object... args) {
+        if (args.length == 0) {
+            warn(format);
         } else {
-            warn(String.format(format, msg));
+            warn(String.format(format, args));
         }
     }
 
-    public void error(final String format, final Object... msg) {
-        if (msg.length == 0) {
-            error(format); 
+    public void error(final String format, final Object... args) {
+        if (args.length == 0) {
+            error(format);
         } else {
-            error(String.format(format, msg));
+            error(String.format(format, args));
         }
     }
 

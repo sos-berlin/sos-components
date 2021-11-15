@@ -14,6 +14,7 @@ public class TestJobArgumentsSuperClass extends JobArguments {
     private JobArgument<List<String>> list = new JobArgument<>("list", false);
     private JobArgument<LinkedList<String>> linkedList = new JobArgument<>("linked_list", false);
     private JobArgument<List<AuthMethod>> authMethods = new JobArgument<>("auth_methods", false);
+    private JobArgument<String> test = new JobArgument<>("test", false);
 
     public JobArgument<String> getTestSuperClass() {
         return testSuperClass;
@@ -29,5 +30,9 @@ public class TestJobArgumentsSuperClass extends JobArguments {
 
     public JobArgument<List<AuthMethod>> getAuthMethods() {
         return authMethods;
+    }
+
+    public JobArgument<String> getTest() {
+        return test;
     }
 }

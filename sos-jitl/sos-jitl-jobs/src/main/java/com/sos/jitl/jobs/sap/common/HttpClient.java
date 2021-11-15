@@ -167,7 +167,7 @@ public class HttpClient extends SOSRestApiClient {
      * @throws SOSException
      */
     public ResponseJob createJob(Job body) throws JsonParseException, JsonMappingException, SocketException, IOException, SOSException {
-        return createJob(Constants.objectMapper.writeValueAsBytes(body));
+        return createJob(Globals.objectMapper.writeValueAsBytes(body));
     }
     
     /**
@@ -272,7 +272,7 @@ public class HttpClient extends SOSRestApiClient {
      */
     public ResponseSchedule createSchedule(Long jobId, Schedule body) throws JsonParseException, JsonMappingException, SocketException, IOException,
             SOSException {
-        return createSchedule(jobId, Constants.objectMapper.writeValueAsBytes(body));
+        return createSchedule(jobId, Globals.objectMapper.writeValueAsBytes(body));
     }
 
     /**
@@ -333,6 +333,34 @@ public class HttpClient extends SOSRestApiClient {
         URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}", uriParameter, queryParameter);
         logInfo("Retrieve Schedule: %s '%s'", HttpMethod.GET.name(), url.toString());
         return getJsonObject(HttpMethod.GET, url, null, ResponseSchedule.class);
+    }
+    
+    /**
+     * @see https://help.sap.com/viewer/6b94445c94ae495c83a19646e7c3fd56/2.0.01/en-US/5ef38ae037434042baf25dc79598bf8d.html#loio5ef38ae037434042baf25dc79598bf8d__section_hvh_gwq_xt
+     * @see https://help.sap.com/viewer/07b57c2f4b944bcd8470d024723a1631/Cloud/en-US/0a4d9395180f482db46b8a5375fa6f7f.html
+     * @param jobId
+     * @param scheduleId
+     * @return
+     * @throws JsonParseException
+     * @throws JsonMappingException
+     * @throws SocketException
+     * @throws IOException
+     * @throws SOSException
+     */
+    public ResponseSchedule activateSchedule(Long jobId, String scheduleId) throws JsonParseException, JsonMappingException, SocketException,
+            IOException, SOSException {
+        if (jobId == null) {
+            throw new SOSJobArgumentException("jobId is missing");
+        }
+        if (scheduleId == null) {
+            throw new SOSJobArgumentException("scheduleId is missing");
+        }
+        Map<String, Object> uriParameter = new HashMap<>(2);
+        uriParameter.put("jobId", jobId);
+        uriParameter.put("scheduleId", scheduleId);
+        URI url = setUriPath("scheduler/jobs/{jobId}/schedules/{scheduleId}", uriParameter);
+        logInfo("Activate Schedule: %s '%s'", HttpMethod.PUT.name(), url.toString());
+        return getJsonObject(HttpMethod.PUT, url, Globals.objectMapper.writeValueAsBytes(new Schedule().withActive(true)), ResponseSchedule.class);
     }
     
     /**
@@ -522,7 +550,7 @@ public class HttpClient extends SOSRestApiClient {
 	    if (jsonStr == null) {
             return null;
         }
-        return Constants.objectMapper.readValue(jsonStr, clazz);
+        return Globals.objectMapper.readValue(jsonStr, clazz);
 	}
 
     private byte[] getJsonFromResponse(byte[] response) throws SOSBadRequestException {

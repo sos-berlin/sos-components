@@ -290,20 +290,21 @@ public class JocCluster {
             dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
             dbLayer.beginTransaction();
             dbLayer.updateInstanceHeartBeat(currentMemberId);
-            item = dbLayer.getCluster();
             dbLayer.commit();
-
-            activeMemberId = item == null ? null : item.getMemberId();
-            if (lastActiveMemberId == null) {
-                lastActiveMemberId = activeMemberId;
-            }
-            if (isDebugEnabled) {
-                LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
-                        lastActiveMemberId, SOSHibernate.toString(item)));
-            }
 
             skipPerform = false;
             synchronized (lockMember) {
+                item = dbLayer.getCluster();
+
+                activeMemberId = item == null ? null : item.getMemberId();
+                if (lastActiveMemberId == null) {
+                    lastActiveMemberId = activeMemberId;
+                }
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][start][current=%s][active=%s][lastActive=%s]%s", mode, currentMemberId, activeMemberId,
+                            lastActiveMemberId, SOSHibernate.toString(item)));
+                }
+
                 item = handleCurrentMemberOnProcess(mode, dbLayer, item, configurations);
                 if (item != null) {
                     activeMemberId = item.getMemberId();
@@ -371,20 +372,24 @@ public class JocCluster {
                     event.setNewClusterMemberId(activeMemberId);
                     LOGGER.info(String.format("[post]%s", SOSString.toString(event)));
 
-                    EventBus.getInstance().post(event);
+                    new Thread(() -> {
+                        EventBus.getInstance().post(event);
+                    }).start();
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);
                 }
             }
         }
     }
-    
+
     private void postDailyPlanCalendarEvent(StartupMode mode) {
         if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
             firstStep = false;
             try {
                 LOGGER.info("[post]DailyPlanCalendarEvent");
-                EventBus.getInstance().post(new DailyPlanCalendarEvent());
+                new Thread(() -> {
+                    EventBus.getInstance().post(new DailyPlanCalendarEvent());
+                }).start();
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             }
@@ -470,6 +475,7 @@ public class JocCluster {
         }
     }
 
+    // GUI - separate thread
     public JocClusterAnswer switchMember(StartupMode mode, ConfigurationGlobals configurations, String newMemberId) {
         if (!config.getClusterMode()) {
             return JocCluster.getErrorAnswer(JocClusterAnswerState.MISSING_LICENSE);
@@ -555,6 +561,7 @@ public class JocCluster {
         return null;
     }
 
+    // GUI - separate thread
     private JocClusterAnswer setSwitchMember(StartupMode mode, DBLayerJocCluster dbLayer, ConfigurationGlobals configurations, String newMemberId)
             throws Exception {
         mode = StartupMode.manual_switchover;
@@ -604,6 +611,7 @@ public class JocCluster {
                     if (item.getSwitchMemberId() == null || !item.getSwitchMemberId().equals(newMemberId)) {
                         // set switchMember because before "switch" the active cluster instance must be stopped
                         // and the current instance is not an active instance
+                        // TODO concurrency error handling
                         item.setHeartBeat(new Date());
                         item.setSwitchMemberId(newMemberId);
                         item.setSwitchHeartBeat(new Date());
@@ -658,6 +666,8 @@ public class JocCluster {
                         } else {
                             LOGGER.info("[" + mode + "][switch][stop current]newMemberId=" + item.getSwitchMemberId());
                             if (handler.isActive()) {
+                                // perform STOP can take a time ...
+                                // the stops of the individual services are executed in parallel, but are joined at the end
                                 handler.perform(mode, PerformType.STOP, configurations);
                             }
                             item.setMemberId(item.getSwitchMemberId());
@@ -819,6 +829,8 @@ public class JocCluster {
             if (Math.abs(result) > 0) {
                 LOGGER.info(String.format("[active current memberId deleted]%s", currentMemberId));
             }
+            dbLayer.close();
+            dbLayer = null;
         } catch (SOSHibernateObjectOperationStaleStateException e) {// @Version
             // ignore exceptions - not me
             LOGGER.error(e.toString(), e);
@@ -831,8 +843,58 @@ public class JocCluster {
             if (dbLayer != null) {
                 dbLayer.rollback();
             }
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
         }
         return result;
+    }
+
+    // separate thread
+    protected void updateHeartBeat(StartupMode mode, String method, int retryCount, boolean log) {
+        boolean run = true;
+        int errorCount = 0;
+        while (run) {
+            try {
+                if (log) {
+                    LOGGER.info(String.format("[%s][%s]update heart beat on long running service %s...", mode, method, method));
+                }
+                updateHeartBeat();
+                run = false;
+            } catch (Throwable e) {
+                errorCount += 1;
+                if (errorCount > retryCount) {
+                    run = false;
+                } else {
+                    waitFor(1);
+                }
+            }
+        }
+    }
+
+    // separate thread
+    private void updateHeartBeat() throws Exception {
+        DBLayerJocCluster dbLayer = null;
+        try {
+            dbLayer = new DBLayerJocCluster(dbFactory.openStatelessSession());
+            dbLayer.beginTransaction();
+            dbLayer.updateClusterHeartBeat();
+            dbLayer.updateInstanceHeartBeat(currentMemberId);
+            dbLayer.commit();
+
+            dbLayer.close();
+            dbLayer = null;
+        } catch (Throwable e) {
+            if (dbLayer != null) {
+                dbLayer.rollback();
+            }
+            throw e;
+        } finally {
+            if (dbLayer != null) {
+                dbLayer.close();
+            }
+        }
     }
 
     public static JocClusterAnswer getOKAnswer(JocClusterAnswerState state) {
@@ -863,11 +925,13 @@ public class JocCluster {
 
     public static void shutdownThreadPool(StartupMode mode, ExecutorService threadPool, long awaitTerminationTimeout) {
         String caller = SOSClassUtil.getMethodName(2);
+
         String logMode = mode == null ? "" : "[" + mode + "]";
         try {
             if (threadPool == null) {
                 return;
             }
+            caller += "-" + threadPool.getClass().getSimpleName();
             threadPool.shutdown();// Disable new tasks from being submitted
             // Wait a while for existing tasks to terminate
             if (threadPool.awaitTermination(awaitTerminationTimeout, TimeUnit.SECONDS)) {
@@ -885,7 +949,7 @@ public class JocCluster {
             }
         } catch (InterruptedException e) {
             // (Re-)Cancel if current thread also interrupted
-            LOGGER.error(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
+            LOGGER.info(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
             threadPool.shutdownNow();
             Thread.currentThread().interrupt();
         }

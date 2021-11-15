@@ -32,6 +32,7 @@ import com.sos.commons.hibernate.function.json.SOSHibernateJsonValue.ReturnType;
 import com.sos.commons.hibernate.function.regex.SOSHibernateRegexp;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.inventory.JsonConverter;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeployablesTreeFolderItem;
@@ -799,6 +800,17 @@ public class InventoryDBLayer extends DBLayer {
         }
         return result;
     }
+    
+    public Set<String> getScriptNames() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" where type=:type");
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCRIPT.intValue());
+        List<String> result = getSession().getResultList(query);
+        if (result == null) {
+            return Collections.emptySet();
+        }
+        return result.stream().collect(Collectors.toSet());
+    }
 
     public List<DBItemJocLock> getJocLocks() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
@@ -1226,6 +1238,15 @@ public class InventoryDBLayer extends DBLayer {
         Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("jobResourceName", getRegexpParameter(jobResourceName, ""));
         query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        return getSession().getResultList(query);
+    }
+    
+    public List<DBItemInventoryConfiguration> getWorkflowsWithIncludedScripts() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+        hql.append(" where type=:type and content like :include");
+        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.WORKFLOW.intValue());
+        query.setParameter("include", "%" + JsonConverter.scriptInclude + "%");
         return getSession().getResultList(query);
     }
 

@@ -9,7 +9,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum ConfigurationObjectFileExtension {
 
     SCHEDULE_FILE_EXTENSION(".schedule.json"),
-    CALENDAR_FILE_EXTENSION(".calendar.json");
+    CALENDAR_FILE_EXTENSION(".calendar.json"),
+    SCRIPT_FILE_EXTENSION(".script.json");
 
     private final String value;
     private static final Map<String, ConfigurationObjectFileExtension> CONSTANTS = new HashMap<String, ConfigurationObjectFileExtension>();

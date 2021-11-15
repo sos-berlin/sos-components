@@ -1,9 +1,5 @@
 package com.sos.commons.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,28 +11,25 @@ import java.lang.management.RuntimeMXBean;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,16 +137,30 @@ public class SOSPath {
         }
     }
 
-    public static boolean cleanupDirectory(final Path dir) throws IOException {
-        if (Files.exists(dir)) {
-            try (Stream<Path> stream = Files.walk(dir)) {
-                for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+    public static SOSPathResult cleanupDirectory(final Path dir) throws IOException {
+        SOSPathResult result = (new SOSPath()).new SOSPathResult();
+        if (dir == null) {
+            return result;
+        }
+        Path sourceDir = dir.toAbsolutePath();
+        if (Files.exists(sourceDir)) {
+            try (Stream<Path> stream = Files.walk(sourceDir)) {
+                for (Path p : stream.sorted(Comparator.reverseOrder()).filter(f -> !f.equals(sourceDir)).collect(Collectors.toList())) {
+                    try {
+                        File f = p.toFile();
+                        if (f.isDirectory()) {
+                            result.addDirectory(p);
+                        } else {
+                            result.addFile(p);
+                        }
+                    } catch (Throwable e) {
+                    }
                     Files.delete(p);
                 }
-                return true;
             }
         }
-        return false;
+        result.finisch();
+        return result;
     }
 
     public static long getLineCount(final Path file) throws IOException {
@@ -385,109 +392,78 @@ public class SOSPath {
         return content.endsWith("\n") || content.endsWith("\r");
     }
 
-    public static byte[] gzipFile(Path path) throws Exception {// TODO use commons.compress implementation
-        byte[] uncompressedData = Files.readAllBytes(path);
-        byte[] result = new byte[] {};
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressedData.length); GZIPOutputStream gzipOS = new GZIPOutputStream(bos)) {
-            gzipOS.write(uncompressedData);
-            gzipOS.close();
-            result = bos.toByteArray();
-        } catch (IOException e) {
-            throw e;
-        }
-        return result;
-    }
-
-    public static byte[] gzipDirectory(Path path) throws Exception {
-        // TODO file filter, gzip sub directories etc...
-        // try (FileOutputStream fos = new FileOutputStream(outputFile); BufferedOutputStream bos = new BufferedOutputStream(fos);
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream(); BufferedOutputStream bos = new BufferedOutputStream(baos);
-                GzipCompressorOutputStream gcos = new GzipCompressorOutputStream(bos); TarArchiveOutputStream tos = new TarArchiveOutputStream(gcos,
-                        "UTF-8")) {
-
-            tos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
-            tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU);
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
-                for (Path currentFile : stream) {
-                    TarArchiveEntry entry = new TarArchiveEntry(currentFile.getFileName().toString());
-                    entry.setSize(Files.size(currentFile));
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[gzip][entry]%s", entry.getName()));
-                    }
-                    tos.putArchiveEntry(entry);
-                    tos.write(Files.readAllBytes(currentFile));
-                    tos.closeArchiveEntry();
-                }
-            }
-            tos.close();
-            return baos.toByteArray();
-        }
-    }
-
-    public static void ungzipDirectory(Path targz, Path outputDirectory) throws IOException {
-        ungzipDirectory(Files.newInputStream(targz), outputDirectory);
-    }
-
-    public static void ungzipDirectory(byte[] targz, Path outputDirectory) throws IOException {
-        ungzipDirectory(new ByteArrayInputStream(targz), outputDirectory);
-    }
-
-    public static void ungzipDirectory(InputStream targz, Path outputDirectory) throws IOException {
-        // TODO ungzip sub directories etc ...
-        InputStream inputStream = null;
-        try {
-            inputStream = new BufferedInputStream(new GZIPInputStream(new BufferedInputStream(targz)));
-
-            try (TarArchiveInputStream tis = new TarArchiveInputStream(inputStream)) {
-                for (TarArchiveEntry entry = tis.getNextTarEntry(); entry != null;) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[ungzip][entry]%s", entry.getName()));
-                    }
-                    if (entry.isDirectory()) {
-                        continue;
-                    } else {
-                        Path outputfile = outputDirectory.resolve(entry.getName());
-                        // outputFile.getParentFile().mkdirs();
-                        try (OutputStream out = Files.newOutputStream(outputfile)) {
-                            IOUtils.copy(tis, out);
-                        }
-                    }
-                    entry = tis.getNextTarEntry();
-                }
-            }
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    LOGGER.warn(e.toString(), e);
-                }
-            }
-            if (targz != null) {
-                try {
-                    targz.close();
-                } catch (Throwable e) {
-                }
-            }
-        }
-    }
-
     public static File getMostRecentFile(Path dir) {
         return Arrays.stream(toFile(dir).listFiles()).filter(f -> f.isFile()).max((f1, f2) -> Long.compare(f1.lastModified(), f2.lastModified()))
                 .orElse(null);
     }
 
+    public static void setLastModifiedTime(Path path, Date date) throws Exception {
+        if (path == null || date == null) {
+            return;
+        }
+        Files.setLastModifiedTime(path, FileTime.fromMillis(date.getTime()));
+    }
+
+    public static long getCountSubfolders(Path dir, int maxDepth) throws IOException {
+        long count = 0;
+        Path sourceDir = dir.toAbsolutePath();
+        try (Stream<Path> stream = Files.find(sourceDir, maxDepth, (path, attributes) -> attributes.isDirectory())) {
+            count = stream.count() - 1;// -1 - without parent sourceDir
+        }
+        return count;
+    }
+
+    public class SOSPathResult {
+
+        private final Instant start;
+
+        private Instant end;
+        // TODO Set<Path> check performance
+        private Set<String> files = new HashSet<>();
+        private Set<String> directories = new HashSet<>();
+
+        protected SOSPathResult() {
+            start = Instant.now();
+        }
+
+        protected void finisch() {
+            end = Instant.now();
+        }
+
+        protected void addFile(Path p) {
+            files.add(p.toString());
+        }
+
+        public Set<String> getFiles() {
+            return files;
+        }
+
+        protected void addDirectory(Path p) {
+            directories.add(p.toString());
+        }
+
+        public Set<String> getDirectories() {
+            return directories;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("directories=").append(directories.size());
+            sb.append(",files=").append(files.size());
+            if (end != null) {
+                sb.append(",duration=").append(SOSDate.getDuration(start, end));
+            }
+            return sb.toString();
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Path input = null;
-        Path output = null;
         int sleep = 1;
 
-        if (args.length > 2) {
+        if (args.length > 1) {
             input = Paths.get(args[0]);
-            output = Paths.get(args[1]);
-            sleep = Integer.parseInt(args[2]);
+            sleep = Integer.parseInt(args[1]);
         } else {
             return;
         }
@@ -497,8 +473,6 @@ public class SOSPath {
             String name = runtimeBean.getName();
             String pid = name.split("@")[0];
             System.out.println("PID=" + pid);
-
-            SOSPath.ungzipDirectory(SOSPath.gzipDirectory(input), output);
 
             SOSPath.getMostRecentFile(input);
 

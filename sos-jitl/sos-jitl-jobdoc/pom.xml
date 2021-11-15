@@ -151,6 +151,7 @@
 							</includes>
 							<excludes>
 								<exclude>**/ids-schema.json</exclude>
+								<exclude>**/scheduleDescription-schema.json</exclude>
 							</excludes>
 						</configuration>
 						<goals>
@@ -174,6 +175,7 @@
 							<constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
 							<includes>
 								<include>**/ids-schema.json</include>
+								<include>**/scheduleDescription-schema.json</include>
 							</includes>
 						</configuration>
 						<goals>

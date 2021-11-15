@@ -62,6 +62,7 @@ import com.sos.commons.sign.keys.verify.VerifySignature;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.inventory.model.schedule.Schedule;
+import com.sos.inventory.model.script.Script;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonConverter;
@@ -1360,6 +1361,9 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
+                            case SCRIPT:
+                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
+                                break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
                                 extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
@@ -1451,6 +1455,9 @@ public abstract class PublishUtils {
                             switch (releasable.getObjectType()) {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                                break;
+                            case SCRIPT:
+                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
@@ -1570,6 +1577,9 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
+                            case SCRIPT:
+                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
+                                break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
                                 extension = ConfigurationObjectFileExtension.CALENDAR_FILE_EXTENSION.toString();
@@ -1687,6 +1697,9 @@ public abstract class PublishUtils {
                             switch (releasable.getObjectType()) {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
+                                break;
+                            case SCRIPT:
+                                extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
                             case NONWORKINGDAYSCALENDAR:
@@ -2032,12 +2045,13 @@ public abstract class PublishUtils {
                     allItems.addAll(deploymentDbItems);
                 }
                 if (!allItems.isEmpty()) {
+                    final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getType().equals(ConfigurationType.FOLDER.intValue())).forEach(
                             item -> {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjects.add(getContollerObjectFromDBItem(item, commitId));
+                                allObjects.add(getContollerObjectFromDBItem(item, commitId, releasedScripts));
                             });
                 }
             }
@@ -2053,12 +2067,13 @@ public abstract class PublishUtils {
                     allItems.addAll(configurationDbItems);
                 }
                 if (!allItems.isEmpty()) {
+                    final Map<String, String> releasedScripts = dbLayer.getReleasedScripts();
                     allItems.stream().filter(Objects::nonNull).filter(item -> !item.getTypeAsEnum().equals(ConfigurationType.FOLDER)).forEach(
                             item -> {
                                 if (commitId != null) {
                                     dbLayer.storeCommitIdForLaterUsage(item, commitId);
                                 }
-                                allObjects.add(mapInvConfigToJSObject(item));
+                                allObjects.add(mapInvConfigToJSObject(item, releasedScripts));
                             });
                 }
             }
@@ -2175,11 +2190,11 @@ public abstract class PublishUtils {
         return withoutDuplicates;
     }
 
-    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item) {
-        return mapInvConfigToJSObject(item, null);
+    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item, Map<String, String> releasedScripts) {
+        return mapInvConfigToJSObject(item, null, releasedScripts);
     }
 
-    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item, String commitId) {
+    private static ControllerObject mapInvConfigToJSObject(DBItemInventoryConfiguration item, String commitId, Map<String, String> releasedScripts) {
         try {
             ControllerObject jsObject = new ControllerObject();
             // jsObject.setId(item.getId());
@@ -2187,7 +2202,7 @@ public abstract class PublishUtils {
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getContent());
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getContent(), releasedScripts);
                 //Workflow workflow = Globals.objectMapper.readValue(item.getContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
@@ -2225,14 +2240,14 @@ public abstract class PublishUtils {
         }
     }
 
-    private static ControllerObject getContollerObjectFromDBItem(DBItemDeploymentHistory item, String commitId) {
+    private static ControllerObject getContollerObjectFromDBItem(DBItemDeploymentHistory item, String commitId, Map<String, String> releasedScripts) {
         try {
             ControllerObject jsObject = new ControllerObject();
             jsObject.setPath(item.getPath());
             jsObject.setObjectType(DeployType.fromValue(item.getType()));
             switch (jsObject.getObjectType()) {
             case WORKFLOW:
-                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getInvContent());
+                Workflow workflow = JsonConverter.readAsConvertedWorkflow(item.getPath(), item.getInvContent(), releasedScripts);
                 //Workflow workflow = Globals.objectMapper.readValue(item.getInvContent().getBytes(), Workflow.class);
                 if (commitId != null) {
                     workflow.setVersionId(commitId);
@@ -2348,6 +2363,10 @@ public abstract class PublishUtils {
                 Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
+            case SCRIPT:
+                Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
+                configuration.setConfiguration(script);
+                break;
             case WORKINGDAYSCALENDAR:
             case NONWORKINGDAYSCALENDAR:
                 Calendar calendar = Globals.objectMapper.readValue(item.getContent().getBytes(), Calendar.class);
@@ -2387,6 +2406,10 @@ public abstract class PublishUtils {
             case SCHEDULE:
                 Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
+                break;
+            case SCRIPT:
+                Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
+                configuration.setConfiguration(script);
                 break;
             default:
                 break;
@@ -2566,7 +2589,7 @@ public abstract class PublishUtils {
     }
 
     public static DBItemDeploymentHistory cloneInvCfgToDepHistory(DBItemInventoryConfiguration cfg, String account, String controllerId,
-            String commitId, Long auditLogId) {
+            String commitId, Long auditLogId, Map<String, String> releasedScripts) {
         DBItemDeploymentHistory newItem = new DBItemDeploymentHistory();
         newItem.setAccount(account);
         newItem.setAuditlogId(auditLogId);
@@ -2580,8 +2603,8 @@ public abstract class PublishUtils {
         newItem.setType(cfg.getType());
         newItem.setTitle(cfg.getTitle());
         try {
-            newItem.writeUpdateableContent((IDeployObject) JsonConverter.readAsConvertedDeployObject(cfg.getContent(), StoreDeployments.CLASS_MAPPING
-                    .get(cfg.getType()), commitId));
+            newItem.writeUpdateableContent(JsonConverter.readAsConvertedDeployObject(cfg.getPath(), cfg.getContent(), StoreDeployments.CLASS_MAPPING
+                    .get(cfg.getType()), commitId, releasedScripts));
         } catch (IOException e) {
             throw new JocException(e);
         }

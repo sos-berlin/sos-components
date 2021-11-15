@@ -1,0 +1,28 @@
+{
+  	"title": "ScheduleDescription",
+  	"$schema": "http://json-schema.org/draft-04/schema#",
+  	"javaType": "com.sos.jitl.jobs.sap.common.bean.ScheduleDescription",
+  	"type": "object",
+  	"required": [
+  		"workflowName",
+  		"jobLabel",
+  		"orderId",
+  		"created"
+  	],
+  	"properties": {
+  		"workflowName": {
+  			"type": "string"
+  		},
+  		"jobLabel": {
+  			"type": "string"
+  		},
+  		"orderId": {
+  			"type": "string"
+  		},
+  		"created": {
+  			"type": "number",
+  			"format": "utc-millisec"
+  		}
+  	},
+	"additionalProperties": false
+}

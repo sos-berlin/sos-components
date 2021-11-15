@@ -8,6 +8,7 @@ import java.util.TimeZone;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -51,7 +52,7 @@ public class DBItemLogTest {
             }
             item.setFileLinesUncomressed(lines);
             item.setCompressed(true);
-            item.setFileContent(SOSPath.gzipFile(logFile));
+            item.setFileContent(SOSGzip.compress(logFile, false).getCompressed());
             item.setCreated(new Date());
 
             session.save(item);
@@ -69,8 +70,8 @@ public class DBItemLogTest {
 
         DBItemLogTest t = new DBItemLogTest();
 
-        //Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
-        //Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        // Path hibernateConfigFile = Paths.get("src/test/resources/hibernate.cfg.xml");
+        // Path logFile = Paths.get("src/test/resources/hibernate.cfg.xml");
 
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;

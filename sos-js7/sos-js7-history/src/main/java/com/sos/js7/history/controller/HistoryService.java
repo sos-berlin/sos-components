@@ -1,13 +1,12 @@
 package com.sos.js7.history.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -16,14 +15,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSGzip;
+import com.sos.commons.util.SOSGzip.SOSGzipResult;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.SOSPath.SOSPathResult;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.cluster.AJocClusterService;
@@ -41,9 +44,11 @@ import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.notifier.Mailer;
 import com.sos.joc.cluster.notifier.MailerConfiguration;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.history.DBItemHistoryTempLog;
+import com.sos.joc.db.joc.DBItemJocInstance;
+import com.sos.joc.db.joc.DBItemJocVariable;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.history.controller.configuration.HistoryConfiguration;
+import com.sos.js7.history.db.DBLayerHistory;
 
 public class HistoryService extends AJocClusterService {
 
@@ -59,6 +64,7 @@ public class HistoryService extends AJocClusterService {
     private JocClusterHibernateFactory factory;
     private ExecutorService threadPool;
     private AtomicBoolean processingStarted = new AtomicBoolean(false);
+    private AtomicBoolean stop = new AtomicBoolean(false);
 
     // private final List<HistoryControllerHandler> activeHandlers = Collections.synchronizedList(new ArrayList<HistoryControllerHandler>());
     private static CopyOnWriteArrayList<HistoryControllerHandler> activeHandlers = new CopyOnWriteArrayList<>();
@@ -90,7 +96,7 @@ public class HistoryService extends AJocClusterService {
 
             checkLogDirectory();
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
-            handleTempLogsOnStart();
+            handleLogsOnStart(mode);
             threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
             AJocClusterService.clearLogger();
 
@@ -122,20 +128,24 @@ public class HistoryService extends AJocClusterService {
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
-        AJocClusterService.clearLogger();
+        stop.set(true);
+        try {
+            AJocClusterService.setLogger(IDENTIFIER);
+            LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
+            AJocClusterService.clearLogger();
 
-        int size = closeEventHandlers(mode);
+            int size = closeEventHandlers(mode);
 
-        AJocClusterService.setLogger(IDENTIFIER);
-        if (size > 0) {
-            handleTempLogsOnEnd();
+            AJocClusterService.setLogger(IDENTIFIER);
+            if (size > 0) {
+                handleLogsOnStop(mode);
+            }
+            closeFactory();
+            JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
+        } finally {
+            stop.set(false);
+            processingStarted.set(false);
         }
-        closeFactory();
-        JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-
-        processingStarted.set(false);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
@@ -226,160 +236,226 @@ public class HistoryService extends AJocClusterService {
         }
     }
 
-    private void handleTempLogsOnStart() {
-        SOSHibernateSession session = null;
+    private void handleLogsOnStart(StartupMode mode) {
+        DBLayerHistory dbLayer = null;
         try {
-            session = factory.openStatelessSession(IDENTIFIER);
-            session.beginTransaction();
-
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
-            hql.append(" where memberId <> :memberId");
-            Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
-            query.setParameter("memberId", getJocConfig().getMemberId());
-            List<DBItemHistoryTempLog> result = session.getResultList(query);
-            session.commit();
-
-            if (result != null && result.size() > 0) {
-                List<Long> toDelete = new ArrayList<Long>();
-                for (int i = 0; i < result.size(); i++) {
-                    DBItemHistoryTempLog item = result.get(i);
-
-                    Path dir = getOrderLogDirectory(logDir, item.getHistoryOrderMainParentId());
-                    try {
-                        if (Files.exists(dir)) {
-                            SOSPath.cleanupDirectory(dir);
-                        } else {
-                            Files.createDirectory(dir);
+            if (getJocConfig().getClusterMode()) {
+                String method = "handleLogsOnStart";
+                dbLayer = new DBLayerHistory(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                Long jocInstances = dbLayer.getCountJocInstances();
+                if (jocInstances > 1) {
+                    switch (mode) {
+                    case manual_restart:// restart cluster or history service
+                    case settings_changed:
+                        LOGGER.info(String.format("[%s][skip]because start=%s", method, mode));
+                        // delete BLOB ???
+                        break;
+                    default:
+                        //
+                        DBItemJocVariable item = dbLayer.getLogsVariable();
+                        if (item == null) {
+                            LOGGER.info(String.format("[%s][skip]because compressed data not found", method));
+                            return;
                         }
-                        SOSPath.ungzipDirectory(item.getContent(), dir);
-                        toDelete.add(item.getHistoryOrderMainParentId());
-                        LOGGER.info(String.format("[log directory restored from database]%s", dir));
-                    } catch (Exception e) {
-                        LOGGER.error(String.format("[%s]%s", dir, e.toString()), e);
+                        byte[] compressed = item.getBinaryValue();
+                        if (compressed == null) {
+                            LOGGER.info(String.format("[%s][skip][remove empty entry]because compressed data not found", method));
+                            dbLayer.getSession().beginTransaction();
+                            dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+                            dbLayer.getSession().commit();
+                            return;
+                        }
+                        if (stop.get()) {
+                            LOGGER.info(String.format("[%s][skip]because stop called", method));
+                            return;
+                        }
+                        dbLayer.close();
+
+                        // decompress
+                        LOGGER.info(String.format("[%s][%s]start..", method, logDir));
+                        SOSGzipResult gr = SOSGzip.decompress(compressed, logDir, true);
+                        LOGGER.info(String.format("[%s][end]%s", method, gr));
+                        gr.getDirectories().forEach(d -> {
+                            LOGGER.info(String.format("    [decompressed]%s", d));
+                        });
+
+                        // remove db entry
+                        dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                        dbLayer.getSession().beginTransaction();
+                        dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+                        dbLayer.getSession().commit();
+
+                        break;
                     }
                 }
-
-                session.beginTransaction();
-                if (toDelete.size() == result.size()) {
-                    session.getSQLExecutor().executeUpdate("truncate table " + DBLayer.TABLE_HISTORY_TEMP_LOGS);
-                } else {
-                    hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
-                    hql.append(" where historyOrderMainParentId in (:historyOrderMainParentIds)");
-                    query = session.createQuery(hql.toString());
-                    query.setParameterList("historyOrderMainParentIds", toDelete);
-                    session.executeUpdate(query);
-                }
-                session.commit();
-            } else {
-                LOGGER.info("[handleTempLogsOnStart]0 log directories to restore");
+                dbLayer.close();
+                dbLayer = null;
             }
-
-            session.close();
-            session = null;
         } catch (Exception e) {
-            if (session != null) {
+            if (dbLayer != null) {
                 try {
-                    session.rollback();
+                    dbLayer.getSession().rollback();
                 } catch (SOSHibernateException e1) {
                 }
             }
             LOGGER.error(e.toString(), e);
         } finally {
-            if (session != null) {
-                session.close();
+            if (dbLayer != null) {
+                dbLayer.close();
             }
         }
     }
 
-    private void handleTempLogsOnEnd() {
+    private void handleLogsOnStop(StartupMode mode) {
         if (factory == null) {
             return;
         }
-        SOSHibernateSession session = null;
+        String method = "handleLogsOnStop";
+        DBLayerHistory dbLayer = null;
         try {
-            session = factory.openStatelessSession();
-            session.beginTransaction();
-            List<Long> result = session.getResultList("select id from " + DBLayer.DBITEM_HISTORY_ORDERS + " where parentId=0 and logId=0");
-            session.commit();
+            dbLayer = new DBLayerHistory(factory.openStatelessSession(IDENTIFIER + "_" + method));
+            boolean hasOnlyFinished = false;
+            boolean skipCheckOrders = false;
+            if (getJocConfig().getClusterMode()) {
+                Long jocInstances = dbLayer.getCountJocInstances();
+                if (jocInstances > 1) {
+                    switch (mode) {
+                    case manual_restart:// restart cluster or history service
+                    case settings_changed:
+                        LOGGER.info(String.format("[%s][skip]because stop=%s", method, mode));
+                        // delete BLOB ???
+                        break;
+                    default:
+                        // TODO select List<Long> (convert to Set) and remove "old" folders before compress
+                        Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
+                        long subfolders = SOSPath.getCountSubfolders(logDir, 1);
+                        LOGGER.info(String.format("[%s][db: not finished order logs=%s][log directory: subfolders=%s]", method, orderLogs,
+                                subfolders));
 
-            if (result != null && result.size() > 0) {
-                for (int i = 0; i < result.size(); i++) {
-                    importOrderLogs(session, result.get(i));
+                        hasOnlyFinished = orderLogs.equals(0L);
+                        if (hasOnlyFinished) {
+                            dbLayer.getSession().beginTransaction();
+                            dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+                            dbLayer.getSession().commit();
+                        } else {
+                            if (subfolders != orderLogs.longValue()) {
+                                cleanupNotReferencedLogs(dbLayer, method);
+                            }
+                            dbLayer.close();
+
+                            // compress
+                            LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
+                            SOSGzipResult gr = SOSGzip.compress(logDir, false);
+
+                            // write compressed to database
+                            dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                            compress(method, dbLayer, gr);
+                            dbLayer.close();
+
+                            // log compressed results
+                            gr.getDirectories().forEach(d -> {
+                                LOGGER.info(String.format("    [compressed]%s", d));
+                            });
+
+                            // cleanup whole history log directory
+                            cleanupAllLogs(method);
+                        }
+                        break;
+                    }
+                    skipCheckOrders = true;
                 }
-            } else {
-                LOGGER.info("[handleTempLogsOnEnd]0 log directories imported into database");
             }
-            session.close();
-            session = null;
+            if (!skipCheckOrders) {
+                if (dbLayer.getSession() == null) {
+                    dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                }
+
+                Long orderLogs = dbLayer.getCountNotFinishedOrderLogs();
+                hasOnlyFinished = orderLogs.equals(0L);
+                LOGGER.info(String.format("[%s][not finished order logs]%s", method, orderLogs));
+            }
+            dbLayer.close();
+            dbLayer = null;
+
+            if (hasOnlyFinished) {
+                // cleanup
+                LOGGER.info(String.format("[%s][cleanup][%s]start..", method, logDir));
+                SOSPathResult pr = SOSPath.cleanupDirectory(logDir);
+                LOGGER.info(String.format("[%s][cleanup][end]%s", method, pr));
+                pr.getDirectories().forEach(d -> {
+                    LOGGER.info(String.format("    [deleted]%s", d));
+                });
+            }
         } catch (Exception e) {
-            if (session != null) {
+            if (dbLayer != null) {
                 try {
-                    session.rollback();
+                    dbLayer.getSession().rollback();
                 } catch (SOSHibernateException e1) {
                 }
             }
             LOGGER.error(e.toString(), e);
         } finally {
-            if (session != null) {
-                session.close();
+            if (dbLayer != null) {
+                dbLayer.close();
             }
         }
     }
 
-    private void importOrderLogs(SOSHibernateSession session, Long historyOrderMainParentId) {
-        Path dir = getOrderLogDirectory(logDir, historyOrderMainParentId);
-        try {
-            if (Files.exists(dir)) {
-                session.beginTransaction();
+    private void compress(String caller, DBLayerHistory dbLayer, SOSGzipResult gr) throws Exception {
+        String method = "compress";
+        Instant start = Instant.now();
+        dbLayer.getSession().beginTransaction();
+        if (gr.getDirectories().size() == 0) {
+            dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
+        } else {
+            dbLayer.handleLogsVariable(getJocConfig().getMemberId(), gr.getCompressed());
+        }
+        dbLayer.getSession().commit();
+        Instant end = Instant.now();
+        LOGGER.info(String.format("[%s][%s][end]%s,db update=%s", caller, method, gr, SOSDate.getDuration(start, end)));
+    }
 
-                StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_HISTORY_TEMP_LOGS);
-                hql.append(" where historyOrderMainParentId=:historyOrderMainParentId");
-                Query<DBItemHistoryTempLog> query = session.createQuery(hql.toString());
-                query.setParameter("historyOrderMainParentId", historyOrderMainParentId);
+    private void cleanupAllLogs(String caller) throws IOException {
+        String method = "cleanupAllLogs";
+        LOGGER.info(String.format("[%s][%s][%s]start..", caller, method, logDir));
+        SOSPathResult r = SOSPath.cleanupDirectory(logDir);
+        LOGGER.info(String.format("[%s][%s][end]%s", caller, method, r));
+    }
 
-                DBItemHistoryTempLog item = session.getSingleResult(query);
-                File f = SOSPath.getMostRecentFile(dir);
-                Long mostRecentFile = f == null ? 0L : f.lastModified(); // TODO current time if null?
-                boolean imported = false;
-                if (item == null) {
-                    item = new DBItemHistoryTempLog();
-                    item.setHistoryOrderMainParentId(historyOrderMainParentId);
-                    item.setMemberId(getJocConfig().getMemberId());
-                    item.setContent(SOSPath.gzipDirectory(dir));
-                    item.setMostRecentFile(mostRecentFile);
-                    item.setCreated(new Date());
-                    item.setModified(item.getCreated());
-                    session.save(item);
-                    imported = true;
-                } else {
-                    if (!item.getMostRecentFile().equals(mostRecentFile)) {
-                        item.setMemberId(getJocConfig().getMemberId());
-                        item.setContent(SOSPath.gzipDirectory(dir));
-                        item.setMostRecentFile(mostRecentFile);
-                        item.setModified(new Date());
-                        session.update(item);
-                        imported = true;
+    // TODO duplicate method (some changes) - see com.sos.joc.cleanup.model.CleanupTaskHistory
+    private void cleanupNotReferencedLogs(DBLayerHistory dbLayer, String caller) {
+        Path dir = logDir.toAbsolutePath();
+        if (Files.exists(dir)) {
+            String method = "cleanupNotReferencedLogs";
+            LOGGER.info(String.format("[%s][%s]%s", caller, method, dir));
+
+            try {
+                int i = 0;
+                try (Stream<Path> stream = Files.walk(dir)) {
+                    for (Path p : stream.filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                        File f = p.toFile();
+                        if (f.isDirectory()) {
+                            try {
+                                Long id = Long.parseLong(f.getName());
+                                if (!dbLayer.mainOrderLogNotFinished(id)) {
+                                    try {
+                                        if (SOSPath.deleteIfExists(p)) {
+                                            LOGGER.info(String.format("    [deleted]%s", p));
+                                            i++;
+                                        }
+                                    } catch (Throwable e) {// in the same moment deleted by history
+                                    }
+                                }
+                            } catch (Throwable e) {
+                                LOGGER.info(String.format("    [skip][non numeric]%s", p));
+                            }
+                        }
                     }
                 }
-                session.commit();
-                if (imported) {
-                    LOGGER.info(String.format("[log directory imported into database]%s", dir));
-                } else {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug(String.format("[log directory not imported into database][%s][mostRecentFile=%s][item.mostRecentFile=%s]", dir,
-                                mostRecentFile, item.getMostRecentFile()));
-                    }
-                }
+                LOGGER.info(String.format("[%s][%s][deleted][total]%s", caller, method, i));
+            } catch (Throwable e) {
+                LOGGER.warn(String.format("[%s][%s]%s", caller, method, e.toString()), e);
             }
-
-        } catch (Exception e) {
-            if (session != null) {
-                try {
-                    session.rollback();
-                } catch (SOSHibernateException e1) {
-                }
-            }
-            LOGGER.error(String.format("[%s]%s", dir, e.toString()), e);
         }
     }
 
@@ -442,6 +518,7 @@ public class HistoryService extends AJocClusterService {
         factory.setAutoCommit(false);
         factory.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
+        factory.addClassMapping(DBItemJocInstance.class);
         factory.build();
     }
 

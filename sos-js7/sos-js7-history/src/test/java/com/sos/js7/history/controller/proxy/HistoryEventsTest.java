@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.junit.Ignore;
@@ -15,6 +14,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentCouplingFailed;
 import com.sos.js7.history.controller.proxy.HistoryEventEntry.HistoryAgentReady;
@@ -84,27 +84,31 @@ public class HistoryEventsTest {
 
     private static final String CONTROLLER_URI_PRIMARY = "http://localhost:5444";
     private static final String CONTROLLER_ID = "js7.x";
-    private static final int MAX_EXECUTION_TIME = 30; // seconds
-    private static final int CHECKER_REFRESH_INTERVAL = 10; // seconds
-    private static final Long START_EVENT_ID = 1627982697084002L;
+    private static final int MAX_EXECUTION_TIME = 10; // seconds
+    private static final int SIMULATE_LONG_EXECUTION_INTERVAL = 1; // seconds
+    private static final Long START_EVENT_ID = 1636022600405003L;
 
-    private EventFluxStopper stopper = new EventFluxStopper();
-    private AtomicBoolean stopped = new AtomicBoolean();
-    private AtomicLong lastExecution = new AtomicLong();
+    private EventFluxStopper stopper;
+    private AtomicBoolean closed;
 
     @Ignore
     @Test
     public void testGetEvents() throws Exception {
         JProxyTestClass proxy = new JProxyTestClass();
         JControllerApi api = null;
-        try {
-            api = proxy.getControllerApi(ProxyUser.JOC, CONTROLLER_URI_PRIMARY);
 
-            setStopper(stopper);
-            setChecker();
+        stopper = new EventFluxStopper();
+        closed = new AtomicBoolean();
+        try {
+            api = proxy.getControllerApi(ProxyUser.HISTORY, CONTROLLER_URI_PRIMARY);
+            setStopper();
+
+            // while (!closed.get()) {
             process(api, START_EVENT_ID);
+            // }
 
         } catch (Throwable e) {
+            LOGGER.error(String.format("[exception]%s", e.toString()), e);
             try {
                 Long id = api.journalInfo().thenApply(o -> o.get().tornEventId()).get();
                 LOGGER.info(String.format("[tornEventId]%s", id));
@@ -116,8 +120,9 @@ public class HistoryEventsTest {
         }
     }
 
-    public Long process(JControllerApi api, Long eventId) throws Exception {
+    private synchronized Long process(JControllerApi api, Long eventId) throws Exception {
         try (JStandardEventBus<ProxyEvent> eventBus = new JStandardEventBus<>(ProxyEvent.class)) {
+            LOGGER.info("[flux][START]");
             Flux<JEventAndControllerState<Event>> flux = api.eventFlux(eventBus, OptionalLong.of(eventId));
 
             // flux = flux.doOnNext(e -> LOGGER.info(e.stampedEvent().value().event().getClass().getSimpleName()));
@@ -130,34 +135,50 @@ public class HistoryEventsTest {
             flux = flux.doOnComplete(this::fluxDoOnComplete);
             flux = flux.doOnCancel(this::fluxDoOnCancel);
             flux = flux.doFinally(this::fluxDoFinally);
+            flux = flux.onErrorStop();
+            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(5, Duration.ofSeconds(1)).toIterable().forEach(list -> {
+                LOGGER.info("[HANDLE BLOCK][START]["+closed.get()+"]" + list.size());
 
-            flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(1_000, Duration.ofSeconds(2)).toIterable().forEach(list -> {
-                LOGGER.info("[HANDLE BLOCK][START]" + list.size());
-                for (AFatEvent event : list) {
-                    if (event instanceof FatEventOrderStepStdWritten) {
-                        // continue;
-                    }
-                    if (event instanceof FatEventOrderStepProcessed) {
-                        // FatEventOrderStepProcessed p = (FatEventOrderStepProcessed) event;
-                        // LOGGER.info(SOSString.toString(event));
-                        // LOGGER.info("----" + SOSString.toString(p.getOutcome()));
-                        // try {
-                        // LOGGER.info("-----------" + p.getOutcome().getNamedValuesAsJsonString());
-                        // } catch (JsonProcessingException e1) {
-                        // e1.printStackTrace();
-                        // }
-
+                // while (!closed.get()) {
+                if (!closed.get()) {
+                    try {
+                        handleBlock(list);
+                    } catch (Throwable e) {
+                        LOGGER.error(e.toString(), e);
                     }
                 }
+                
+
                 LOGGER.info("[HANDLE BLOCK][END]");
-                lastExecution.set(new Date().getTime());
             });
+            LOGGER.info("[flux][END]");
             return eventId;
         }
     }
 
-    public AtomicLong getLastExecution() {
-        return lastExecution;
+    private void handleBlock(List<AFatEvent> list) throws Exception {
+        for (AFatEvent event : list) {
+            if (event instanceof FatEventOrderStepStdWritten) {
+                // FatEventOrderStepProcessed p = (FatEventOrderStepProcessed) event;
+                // LOGGER.info(SOSString.toString(event));
+                // LOGGER.info("----" + SOSString.toString(p.getOutcome()));
+                // try {
+                // LOGGER.info("-----------" + p.getOutcome().getNamedValuesAsJsonString());
+                // } catch (JsonProcessingException e1) {
+                // e1.printStackTrace();
+                // }
+
+            } else {
+                LOGGER.info(SOSString.toString(event));
+            }
+            if (SIMULATE_LONG_EXECUTION_INTERVAL > 0) {
+                try {
+                    TimeUnit.SECONDS.sleep(SIMULATE_LONG_EXECUTION_INTERVAL);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
     }
 
     private AFatEvent map2fat(JEventAndControllerState<Event> eventAndState) {
@@ -433,11 +454,13 @@ public class HistoryEventsTest {
         return event;
     }
 
-    private void setStopper(EventFluxStopper stopper) {
-        stopped.set(false);
+    private synchronized void setStopper() {
+
         Thread thread = new Thread() {
 
             public void run() {
+                closed.set(false);
+
                 String name = Thread.currentThread().getName();
                 LOGGER.info(String.format("[%s][start][setStopper][%ss]...", name, MAX_EXECUTION_TIME));
 
@@ -446,33 +469,10 @@ public class HistoryEventsTest {
                 } catch (InterruptedException e) {
 
                 } finally {
+                    closed.set(true);
                     stopper.stop();
                 }
-                stopped.set(true);
                 LOGGER.info(String.format("[%s][end][setStopper][%ss]", name, MAX_EXECUTION_TIME));
-            }
-        };
-        thread.start();
-    }
-
-    private void setChecker() {
-        Thread thread = new Thread() {
-
-            public void run() {
-                String name = Thread.currentThread().getName();
-                LOGGER.info(String.format("[%s][start][setChecker][%ss]...", name, CHECKER_REFRESH_INTERVAL));
-
-                while (!stopped.get()) {
-                    try {
-                        TimeUnit.SECONDS.sleep(CHECKER_REFRESH_INTERVAL);
-
-                        LOGGER.info("LAST EXECUTION=" + lastExecution);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                LOGGER.info(String.format("[%s][end][setChecker][%ss]", name, CHECKER_REFRESH_INTERVAL));
             }
         };
         thread.start();
@@ -483,7 +483,7 @@ public class HistoryEventsTest {
     }
 
     private Throwable fluxDoOnError(Throwable t) {
-        LOGGER.info("[fluxDoOnError]" + t.toString());
+        LOGGER.warn("[fluxDoOnError]" + t.toString());
         return t;
     }
 

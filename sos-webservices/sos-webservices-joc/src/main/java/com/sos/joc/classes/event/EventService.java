@@ -98,7 +98,6 @@ import scala.collection.JavaConverters;
 public class EventService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EventService.class);
-    private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     //private static boolean isTraceEnabled = LOGGER.isTraceEnabled();
     // OrderAdded, OrderProcessed, OrderProcessingStarted$ extends OrderCoreEvent
     // OrderStarted, OrderProcessingKilled$, OrderFailed, OrderFailedInFork, OrderRetrying, OrderBroken, OrderSuspended$
@@ -314,7 +313,7 @@ public class EventService {
             long eventId = stampedEvt.eventId() / 1000000; //eventId per second
             Object key = event.key();
             Event evt = event.event();
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(evt.toString());
             }
 
@@ -565,7 +564,7 @@ public class EventService {
 
     private void addEvent(EventSnapshot eventSnapshot) {
         if (eventSnapshot != null && eventSnapshot.getEventId() != null && events.add(eventSnapshot)) {
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("add event for " + controllerId + ": " + eventSnapshot.toString());
             }
             if (atLeastOneConditionIsHold()) {
@@ -576,7 +575,7 @@ public class EventService {
     
     private synchronized void signalAll() {
         try {
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Try signal all Events of '" + controllerId + "'");
             }
             if (atLeastOneConditionIsHold() && EventServiceFactory.lock.tryLock(200L, TimeUnit.MILLISECONDS)) {
@@ -601,7 +600,7 @@ public class EventService {
     protected EventServiceFactory.Mode hasOldEvent(Long eventId, EventCondition eventArrived) {
         //LOGGER.info(events.toString());
         if (events.stream().parallel().anyMatch(e -> eventId < e.getEventId())) {
-            if (isDebugEnabled) {
+            if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("has old Event for " + controllerId + ": true");
             }
 //            if (isCurrentController.get() && events.stream().parallel().anyMatch(e -> EventType.PROBLEM.equals(e.getObjectType()))) {
@@ -612,7 +611,7 @@ public class EventService {
             EventServiceFactory.signalEvent(eventArrived);
             return EventServiceFactory.Mode.TRUE;
         }
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("has old Event for " + controllerId + ": false");
         }
         return EventServiceFactory.Mode.FALSE;

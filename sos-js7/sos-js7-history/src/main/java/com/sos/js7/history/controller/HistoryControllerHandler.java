@@ -232,21 +232,15 @@ public class HistoryControllerHandler {
 
             flux.takeUntilOther(stopper.stopped()).map(this::map2fat).bufferTimeout(config.getBufferTimeoutMaxSize(), Duration.ofSeconds(config
                     .getBufferTimeoutMaxTime())).toIterable().forEach(list -> {
-                        boolean run = true;
-                        while (run) {
-                            if (closed.get()) {
-                                run = false;
-                            } else {
-                                try {
-                                    lastActivityStart.set(new Date().getTime());
-                                    eventId.set(model.process(list));
-                                    releaseEvents(eventId.get());
-                                    run = false;
-                                    lastActivityEnd.set(new Date().getTime());
-                                } catch (Throwable e) {
-                                    LOGGER.error(e.toString(), e);
-                                    wait(config.getWaitIntervalOnError());
-                                }
+                        if (!closed.get()) {
+                            try {
+                                lastActivityStart.set(new Date().getTime());
+                                eventId.set(model.process(list));
+                                releaseEvents(eventId.get());
+                                lastActivityEnd.set(new Date().getTime());
+                            } catch (Throwable e) {
+                                LOGGER.error(e.toString(), e);
+                                wait(config.getWaitIntervalOnError());
                             }
                         }
                     });
@@ -610,13 +604,12 @@ public class HistoryControllerHandler {
     }
 
     public void doClose() {
+        closed.set(true);
         try {
             stopper.stop();
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
         }
-        closed.set(true);
-
         synchronized (lockObject) {
             lockObject.notifyAll();
         }

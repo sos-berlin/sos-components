@@ -432,19 +432,19 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
         }
     }
     
-    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI) throws ControllerInvalidResponseDataException {
+    private Controller testConnection(URI controllerURI, String controllerId, URI otherControllerURI) throws JocException {
         Controller jobScheduler = new Controller();
         jobScheduler.setUrl(controllerURI.toString());
         jobScheduler.setIsCoupled(null);
         Overview answer = null;
-        try {
+        //try {
             JOCJsonCommand jocJsonCommand = new JOCJsonCommand(controllerURI, getAccessToken());
             jocJsonCommand.setUriBuilderForOverview();
             answer = jocJsonCommand.getJsonObjectFromGet(Overview.class);
-        } catch (ControllerInvalidResponseDataException e) {
-            throw e;
-        } catch (JocException e) {
-        }
+//        } catch (ControllerInvalidResponseDataException e) {
+//            throw e;
+//        } catch (JocException e) {
+//        }
         if (answer != null) {
             if (!controllerId.isEmpty() && !controllerId.equals(answer.getId())) {
                 if (otherControllerURI != null) {

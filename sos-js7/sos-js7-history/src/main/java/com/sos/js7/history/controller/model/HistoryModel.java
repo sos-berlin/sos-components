@@ -26,6 +26,7 @@ import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSGzip;
 import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
@@ -158,9 +159,9 @@ public class HistoryModel {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
             dbLayer.getSession().beginTransaction();
-            DBItemJocVariable item = dbLayer.getVariable(variableName);
+            DBItemJocVariable item = dbLayer.getControllerVariable(variableName);
             if (item == null) {
-                item = dbLayer.insertVariable(variableName, "0");
+                item = dbLayer.insertControllerVariable(variableName, "0");
             }
             dbLayer.getSession().commit();
 
@@ -556,7 +557,7 @@ public class HistoryModel {
         if (!dbLayer.getSession().isTransactionOpened()) {
             dbLayer.getSession().beginTransaction();
         }
-        dbLayer.updateVariable(variableName, eventId);
+        dbLayer.updateControllerVariable(variableName, eventId);
         dbLayer.getSession().commit();
         storedEventId = eventId;
     }
@@ -1812,7 +1813,7 @@ public class HistoryModel {
             item.setFileLinesUncomressed(SOSPath.getLineCount(file));
 
             if (item.getCompressed()) {// task
-                item.setFileContent(SOSPath.gzipFile(file));
+                item.setFileContent(SOSGzip.compress(file, false).getCompressed());
             } else {// order
                 item.setFileContent(SOSPath.readFile(file, Collectors.joining(",", "[", "]")).getBytes(StandardCharsets.UTF_8));
             }

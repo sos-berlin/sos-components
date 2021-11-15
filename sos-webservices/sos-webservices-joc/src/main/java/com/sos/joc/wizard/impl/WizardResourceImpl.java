@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -104,7 +105,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         LOGGER.error(String.format("[%s] %s", jitlDoc.getPath(), e.toString()));
                         return null;
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).sorted(Comparator.comparing(Job::getAssignReference)).collect(Collectors.toList()));
             }
             jobs.setDeliveryDate(Date.from(Instant.now()));
 

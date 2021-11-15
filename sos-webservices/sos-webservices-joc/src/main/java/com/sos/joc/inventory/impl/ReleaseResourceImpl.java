@@ -291,9 +291,6 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
             releaseItem.setCid(conf.getId());
         }
         releaseItem.setAuditLogId(conf.getAuditLogId());
-//        IReleaseObject r = (IReleaseObject) Globals.objectMapper.readValue(conf.getContent(), JocInventory.CLASS_MAPPING.get(conf.getTypeAsEnum()));
-//        r.setPath(conf.getPath());
-//        releaseItem.setContent(Globals.objectMapper.writeValueAsString(r));
         releaseItem.setContent(conf.getContent());
         releaseItem.setFolder(conf.getFolder());
         releaseItem.setModified(now);
