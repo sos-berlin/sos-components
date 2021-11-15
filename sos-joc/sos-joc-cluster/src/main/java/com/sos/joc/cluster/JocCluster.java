@@ -367,6 +367,7 @@ public class JocCluster {
         if (activeMemberId != null) {
             if (lastActiveMemberId == null || !lastActiveMemberId.equals(activeMemberId)) {
                 try {
+                    AJocClusterService.setLogger();
                     ActiveClusterChangedEvent event = new ActiveClusterChangedEvent();
                     event.setOldClusterMemberId(lastActiveMemberId);
                     event.setNewClusterMemberId(activeMemberId);
@@ -386,6 +387,7 @@ public class JocCluster {
         if (StartupMode.automatic.equals(mode) && handler.isActive() && firstStep) {
             firstStep = false;
             try {
+                AJocClusterService.setLogger();
                 LOGGER.info("[post]DailyPlanCalendarEvent");
                 new Thread(() -> {
                     EventBus.getInstance().post(new DailyPlanCalendarEvent());
@@ -951,7 +953,7 @@ public class JocCluster {
             // (Re-)Cancel if current thread also interrupted
             LOGGER.info(String.format("%s[shutdown][%s][exception]%s", logMode, caller, e.toString()), e);
             threadPool.shutdownNow();
-            Thread.currentThread().interrupt();
+            // Thread.currentThread().interrupt();
         }
     }
 

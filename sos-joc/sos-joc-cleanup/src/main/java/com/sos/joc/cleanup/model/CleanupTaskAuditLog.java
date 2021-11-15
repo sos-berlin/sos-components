@@ -32,9 +32,9 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
             TaskDateTime datetime = datetimes.get(0);
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
 
+            tryOpenSession();
             boolean run = true;
             while (run) {
-                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
                 List<Long> ids = getIds(datetime);
                 if (ids == null || ids.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
@@ -60,8 +60,8 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
                 } else {
                     cleanupEntries(datetime, ids);
                 }
-                getDbLayer().close();
             }
+            getDbLayer().close();
         } catch (Throwable e) {
             getDbLayer().rollback();
             throw e;
@@ -72,7 +72,6 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
     }
 
     private List<Long> getIds(TaskDateTime datetime) throws SOSHibernateException {
-        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ");
         hql.append("where created < :created ");
@@ -80,7 +79,6 @@ public class CleanupTaskAuditLog extends CleanupTaskModel {
         query.setParameter("created", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
-        getDbLayer().getSession().commit();
 
         int size = r.size();
         if (LOGGER.isDebugEnabled()) {

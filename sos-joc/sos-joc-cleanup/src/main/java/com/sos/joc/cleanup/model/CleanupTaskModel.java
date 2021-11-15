@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.exception.SOSHibernateOpenSessionException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceTask.TaskDateTime;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
@@ -157,6 +158,12 @@ public class CleanupTaskModel implements ICleanupTask {
 
     public IJocClusterService getService() {
         return service;
+    }
+
+    protected void tryOpenSession() throws SOSHibernateOpenSessionException {
+        if (dbLayer != null && dbLayer.getSession() == null) {
+            dbLayer.setSession(factory.openStatelessSession(getIdentifier()));
+        }
     }
 
     protected boolean askService() {

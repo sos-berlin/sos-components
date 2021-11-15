@@ -37,10 +37,9 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         try {
             LOGGER.info(String.format("[%s][versions=%s]start cleanup", getIdentifier(), versions));
 
-            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-            List<DeploymentVersion> depVersions = getDeploymentVersions(versions);
-            getDbLayer().close();
+            tryOpenSession();
 
+            List<DeploymentVersion> depVersions = getDeploymentVersions(versions);
             if (depVersions != null && depVersions.size() > 0) {
                 int size = depVersions.size();
                 if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -84,10 +83,13 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             boolean askService = i % 500 == 0;
             boolean run = true;
             while (run) {
+                tryOpenSession();
+
                 if (askService) {
                     if (askService()) {
                         askService = false;
                     } else {
+                        getDbLayer().close();
                         waitFor(WAIT_INTERVAL_ON_BUSY);
                         continue;
                     }
@@ -96,30 +98,25 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
                     return JocServiceTaskAnswerState.UNCOMPLETED;
                 }
 
-                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
-                getDbLayer().getSession().beginTransaction();
-
                 List<Long> r = getLessThanMaxHistoryIds(depVersion);
                 if (r == null || r.size() < versions) {
                     int size = r == null ? 0 : r.size();
                     LOGGER.info(String.format("[%s][%s) maxId=%s][skip]found versions(%s) <= configured versions(%s)", getIdentifier(), counter,
                             depVersion.getMaxId(), size, versions));
                     run = false;
-                    getDbLayer().getSession().commit();
-                    getDbLayer().close();
                     continue;
                 }
                 r.sort(Comparator.comparing(Long::valueOf));// sort by id ascending
                 int toIndex = (r.size() + 1) - versions; // total versions = getLessThanMaxHistoryIds+1(maxVersion)
                 if (toIndex > 0) {
                     List<Long> subList = r.subList(0, toIndex);
+                    getDbLayer().getSession().beginTransaction();
                     cleanupEntries(counter, depVersion, subList);
+                    getDbLayer().getSession().commit();
                 } else {
                     LOGGER.warn(String.format("[%s][%s) maxId=%s][versions=%s][lessThanMax=%s][toIndex=%s]can't compute toIndex", getIdentifier(),
                             counter, depVersion.getMaxId(), versions, r.size(), toIndex));
                 }
-                getDbLayer().getSession().commit();
-                getDbLayer().close();
                 run = false;
                 state = JocServiceTaskAnswerState.COMPLETED;
             }
@@ -130,16 +127,13 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     @Override
     protected boolean askService() {
         try {
-            getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
+            tryOpenSession();
             Date d = getLastDeploymentDate();
             if (d != null) {
                 return (new Date().getTime() - d.getTime()) / 1_000 >= 60; // 1 minute
             }
         } catch (Throwable e) {
-            getDbLayer().rollback();
             LOGGER.error(e.toString(), e);
-        } finally {
-            getDbLayer().close();
         }
         return true;
     }
@@ -242,20 +236,17 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
     }
 
     private Date getLastDeploymentDate() throws SOSHibernateException {
-        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select max(deploymentDate) from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
 
         Query<Date> query = getDbLayer().getSession().createQuery(hql.toString());
         Date r = getDbLayer().getSession().getSingleResult(query);
-        getDbLayer().getSession().commit();
 
         // LOGGER.info(String.format("[%s][%s][last deployment]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, r));
         return r;
     }
 
     private List<DeploymentVersion> getDeploymentVersions(int versions) throws SOSHibernateException {
-        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select max(dh.id) as maxId ");
         hql.append(",count(dh.id) as countVersions ");
         hql.append(",dh.inventoryConfigurationId as inventoryId ");
@@ -267,7 +258,6 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         Query<DeploymentVersion> query = getDbLayer().getSession().createQuery(hql.toString(), DeploymentVersion.class);
         query.setParameter("versions", Long.valueOf(versions));
         List<DeploymentVersion> r = getDbLayer().getSession().getResultList(query);
-        getDbLayer().getSession().commit();
 
         LOGGER.info(String.format("[%s][%s][versions > %s]found=%s", getIdentifier(), DBLayer.TABLE_DEP_HISTORY, versions, r == null ? 0 : r.size()));
         return r;

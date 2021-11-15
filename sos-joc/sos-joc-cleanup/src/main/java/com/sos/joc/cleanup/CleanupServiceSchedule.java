@@ -27,7 +27,6 @@ import com.sos.commons.util.SOSString;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Period;
 import com.sos.joc.cleanup.db.DBLayerCleanup;
 import com.sos.joc.cleanup.exception.CleanupComputeException;
-import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
 import com.sos.joc.cluster.JocClusterThreadFactory;
@@ -42,7 +41,7 @@ public class CleanupServiceSchedule {
     private static final Logger LOGGER = LoggerFactory.getLogger(CleanupServiceSchedule.class);
 
     private final static String DELIMITER = "->";
-    private static final int FACTORY_MAX_POOL_SIZE = 5;
+    private static final int FACTORY_MAX_POOL_SIZE = 10;// 5;
 
     private final CleanupService service;
     private JocClusterHibernateFactory factory;
@@ -97,9 +96,9 @@ public class CleanupServiceSchedule {
 
     private JocClusterAnswer schedule(StartupMode mode, long delay, long timeout) throws Exception {
         closeTasks(mode);
-        AJocClusterService.setLogger(service.getIdentifier());
+        CleanupService.setServiceLogger();
         threadPool = Executors.newScheduledThreadPool(1, new JocClusterThreadFactory(service.getThreadGroup(), service.getIdentifier() + "-t"));
-        AJocClusterService.setLogger(service.getIdentifier());
+        CleanupService.setServiceLogger();
         LOGGER.info(String.format("[planned][begin=%s][max end=%s][timeout=%s] ...", start.toString(), end.toString(), SOSDate.getDuration(Duration
                 .ofSeconds(timeout))));
         resultFuture = threadPool.schedule(task, delay, TimeUnit.NANOSECONDS);
@@ -107,7 +106,7 @@ public class CleanupServiceSchedule {
     }
 
     private long computeNextDelay(StartupMode mode) throws Exception {
-        AJocClusterService.setLogger(service.getIdentifier());
+        CleanupService.setServiceLogger();
 
         unclompleted = null;
         try {
@@ -115,7 +114,7 @@ public class CleanupServiceSchedule {
             if (mode.equals(StartupMode.manual_restart) || mode.equals(StartupMode.settings_changed)) {
                 deleteJocVariable(mode);
             } else {
-                item = getJocVariable();
+                item = dbLayer.getVariable(service.getIdentifier());
             }
 
             Period storedPeriod = null;
@@ -412,15 +411,13 @@ public class CleanupServiceSchedule {
             }
         }
         if (resultFuture != null) {
-            resultFuture.cancel(true);// with intruption
-            AJocClusterService.setLogger(service.getIdentifier());
+            resultFuture.cancel(false);// without interruption
+            CleanupService.setServiceLogger();
             LOGGER.info(String.format("[%s][%s]schedule cancelled", service.getIdentifier(), mode));
-            AJocClusterService.clearLogger();
         }
         if (threadPool != null) {
-            AJocClusterService.setLogger(service.getIdentifier());
+            CleanupService.setServiceLogger();
             JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
-            AJocClusterService.clearLogger();
             threadPool = null;
         }
         resultFuture = null;
@@ -429,18 +426,6 @@ public class CleanupServiceSchedule {
     public void stop(StartupMode mode) {
         closeTasks(mode);
         closeFactory();
-    }
-
-    private DBItemJocVariable getJocVariable() throws Exception {
-        try {
-            dbLayer.getSession().beginTransaction();
-            DBItemJocVariable item = dbLayer.getVariable(service.getIdentifier());
-            dbLayer.getSession().commit();
-            return item;
-        } catch (Exception e) {
-            dbLayer.rollback();
-            throw e;
-        }
     }
 
     private void deleteJocVariable(StartupMode mode) throws Exception {
@@ -505,7 +490,7 @@ public class CleanupServiceSchedule {
             dbLayer.setSession(factory.openStatelessSession(service.getIdentifier()));
             String val = getInitialValue().append(DELIMITER).append(state).toString();
             if (item == null) {
-                item = getJocVariable();
+                item = dbLayer.getVariable(service.getIdentifier());
                 if (item == null) {
                     item = insertJocVariable(val);
                     val = null;
@@ -558,7 +543,7 @@ public class CleanupServiceSchedule {
     }
 
     private void closeFactory() {
-        AJocClusterService.setLogger(service.getIdentifier());
+        CleanupService.setServiceLogger();
         if (factory != null) {
             factory.close();
             factory = null;

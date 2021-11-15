@@ -46,7 +46,7 @@ public class CleanupService extends AJocClusterService {
 
     public CleanupService(JocConfiguration jocConf, ThreadGroup clusterThreadGroup) {
         super(jocConf, clusterThreadGroup, IDENTIFIER);
-        AJocClusterService.setLogger(IDENTIFIER);
+        setServiceLogger();
     }
 
     @Override
@@ -54,7 +54,7 @@ public class CleanupService extends AJocClusterService {
         try {
             closed.set(false);
             lastActivityStart.set(new Date().getTime());
-            AJocClusterService.setLogger(IDENTIFIER);
+            setServiceLogger();
 
             setConfig((ConfigurationGlobalsCleanup) configuration);
 
@@ -75,33 +75,33 @@ public class CleanupService extends AJocClusterService {
                     public void run() {
                         StartupMode startupMode = mode;
                         while (!closed.get()) {
-                            AJocClusterService.setLogger(IDENTIFIER);
+                            setServiceLogger();
                             try {
                                 schedule.start(startupMode);
                                 startupMode = StartupMode.automatic;
                                 waitFor(30);
                             } catch (CleanupComputeException e) {
                                 closed.set(true);
-                                AJocClusterService.setLogger(IDENTIFIER);
+                                setServiceLogger();
                                 LOGGER.error(String.format("[%s][%s][start][stopped]%s", getIdentifier(), mode, e.toString()));
                             } catch (SOSHibernateException e) {
-                                AJocClusterService.setLogger(IDENTIFIER);
+                                setServiceLogger();
                                 LOGGER.error(e.toString(), e);
                                 waitFor(60);
                             } catch (Throwable e) {
-                                AJocClusterService.setLogger(IDENTIFIER);
+                                setServiceLogger();
                                 LOGGER.error(e.toString(), e);
                                 long current = errors.get();
                                 if (current > 100) {
                                     closed.set(true);
-                                    AJocClusterService.setLogger(IDENTIFIER);
+                                    setServiceLogger();
                                     LOGGER.error(String.format("[%s][%s][start][stopped]max errors(%s) reached", getIdentifier(), mode, current));
                                 } else {
                                     errors.set(current + 1);
                                     waitFor(60);
                                 }
                             }
-                            AJocClusterService.clearLogger();
+
                         }
                     }
                 };
@@ -110,21 +110,18 @@ public class CleanupService extends AJocClusterService {
             }
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
-        } finally {
-            AJocClusterService.clearLogger();
         }
     }
 
     @Override
     public JocClusterAnswer stop(StartupMode mode) {
-        AJocClusterService.setLogger(IDENTIFIER);
+        setServiceLogger();
         LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
 
         closed.set(true);
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
-        AJocClusterService.clearLogger();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
@@ -151,6 +148,7 @@ public class CleanupService extends AJocClusterService {
         synchronized (lock) {
             lock.notifyAll();
         }
+        setServiceLogger();
         if (schedule != null) {
             schedule.stop(mode);
         }
@@ -203,5 +201,9 @@ public class CleanupService extends AJocClusterService {
 
     protected void setLastActivityEnd(Long val) {
         lastActivityEnd.set(val);
+    }
+
+    protected static void setServiceLogger() {
+        AJocClusterService.setLogger(IDENTIFIER);
     }
 }

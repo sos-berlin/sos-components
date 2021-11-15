@@ -32,9 +32,9 @@ public class CleanupTaskYade extends CleanupTaskModel {
             TaskDateTime datetime = datetimes.get(0);
             LOGGER.info(String.format("[%s][%s][%s]start cleanup", getIdentifier(), datetime.getAge().getConfigured(), datetime.getZonedDatetime()));
 
+            tryOpenSession();
             boolean run = true;
             while (run) {
-                getDbLayer().setSession(getFactory().openStatelessSession(getIdentifier()));
                 List<Long> ids = getIds(datetime);
                 if (ids == null || ids.size() == 0) {
                     return JocServiceTaskAnswerState.COMPLETED;
@@ -54,14 +54,18 @@ public class CleanupTaskYade extends CleanupTaskModel {
                         } else {
                             subList = copy.subList(i, size);
                         }
+                        getDbLayer().getSession().beginTransaction();
                         cleanupEntries(datetime, subList);
+                        getDbLayer().getSession().commit();
                     }
 
                 } else {
+                    getDbLayer().getSession().beginTransaction();
                     cleanupEntries(datetime, ids);
+                    getDbLayer().getSession().commit();
                 }
-                getDbLayer().close();
             }
+            getDbLayer().close();
         } catch (Throwable e) {
             getDbLayer().rollback();
             throw e;
@@ -72,7 +76,6 @@ public class CleanupTaskYade extends CleanupTaskModel {
     }
 
     private List<Long> getIds(TaskDateTime datetime) throws SOSHibernateException {
-        getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("select id from ");
         hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
         hql.append("where start < :start ");
@@ -81,7 +84,6 @@ public class CleanupTaskYade extends CleanupTaskModel {
         query.setParameter("start", datetime.getDatetime());
         query.setMaxResults(getBatchSize());
         List<Long> r = getDbLayer().getSession().getResultList(query);
-        getDbLayer().getSession().commit();
 
         int size = r.size();
         if (LOGGER.isDebugEnabled()) {
@@ -101,14 +103,14 @@ public class CleanupTaskYade extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        getDbLayer().getSession().beginTransaction();
+        // getDbLayer().getSession().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_YADE_FILES).append(" ");
         hql.append("where transferId in (:ids)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
-        getDbLayer().getSession().commit();
+        // getDbLayer().getSession().commit();
         totalFiles += r;
         log.append(getDeleted(DBLayer.TABLE_YADE_FILES, r, totalFiles));
 
@@ -117,14 +119,14 @@ public class CleanupTaskYade extends CleanupTaskModel {
             return;
         }
 
-        getDbLayer().getSession().beginTransaction();
+        // getDbLayer().getSession().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
         hql.append("where id in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        getDbLayer().getSession().commit();
+        // getDbLayer().getSession().commit();
         totalTransfers += r;
         log.append(getDeleted(DBLayer.TABLE_YADE_TRANSFERS, r, totalTransfers));
 
