@@ -738,8 +738,7 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations)
-            throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where ");
@@ -769,9 +768,8 @@ public class DBLayerDeploy {
                         if (d != null) {
                             dbItemsByConfId.add(d);
                         }
-                    } catch (SOSHibernateException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    } catch (Exception e) {
+                        throw new JocSosHibernateException(e);
                     }
                 });
                 return dbItemsByConfId;

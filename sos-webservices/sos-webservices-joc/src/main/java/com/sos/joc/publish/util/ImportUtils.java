@@ -150,8 +150,7 @@ public class ImportUtils {
                             json = json.replaceAll("(\"lockName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            throw new JocImportException(e);
                         }
                     } else if (updateableItem.getConfigurationObject().getObjectType().equals(ConfigurationType.NOTICEBOARD)) {
                         try {
@@ -159,8 +158,7 @@ public class ImportUtils {
                             json = json.replaceAll("(\"(?:noticeB|b)oardName\"\\s*:\\s*\")" + updateableItem.getOldName() + "\"", "$1" + updateableItem.getNewName() + "\"");
                             ((WorkflowEdit)configurationWithReference).setConfiguration(Globals.objectMapper.readValue(json, Workflow.class));
                         } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            throw new JocImportException(e);
                         }
                     }
                     break;
@@ -215,7 +213,7 @@ public class ImportUtils {
 	    					return item;
 	    				}
 					} catch (JsonProcessingException e) {
-						e.printStackTrace();
+                        throw new JocImportException(e);
 					}
     				return null;
     			}).filter(Objects::nonNull).collect(Collectors.toSet());
@@ -232,7 +230,7 @@ public class ImportUtils {
                             return item;
                         }
                     } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+                        throw new JocImportException(e);
                     }
                     return null;
                 }).filter(Objects::nonNull).collect(Collectors.toSet());
