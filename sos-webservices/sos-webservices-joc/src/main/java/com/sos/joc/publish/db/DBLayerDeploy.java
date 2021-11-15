@@ -19,6 +19,8 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
@@ -67,6 +69,7 @@ public class DBLayerDeploy {
     private final SOSHibernateSession session;
     private static final String FROM_DEP_DATE = "deploymentDate >= :fromDate";
     private static final String TO_DEP_DATE = "deploymentDate < :toDate";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDeploy.class);
 
     public DBLayerDeploy(SOSHibernateSession connection) {
         session = connection;
@@ -738,7 +741,8 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations) {
+    public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations)
+            throws DBConnectionRefusedException, DBInvalidDataException {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
             hql.append(" where ");
@@ -769,7 +773,7 @@ public class DBLayerDeploy {
                             dbItemsByConfId.add(d);
                         }
                     } catch (Exception e) {
-                        throw new JocSosHibernateException(e);
+                        LOGGER.error(e.getMessage(), e);
                     }
                 });
                 return dbItemsByConfId;
@@ -2532,17 +2536,5 @@ public class DBLayerDeploy {
         } else {
             return true;
         }
-    }
-    
-    public Map<String, String> getReleasedScripts() throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where type=:type");
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCRIPT.intValue());
-        List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
-        if (result == null) {
-            return Collections.emptyMap();
-        }
-        return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
-                DBItemInventoryReleasedConfiguration::getContent, (name, content) -> name));
     }
 }
