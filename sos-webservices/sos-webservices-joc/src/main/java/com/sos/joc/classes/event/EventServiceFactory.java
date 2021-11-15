@@ -30,7 +30,6 @@ import com.sos.joc.model.event.EventSnapshot;
 public class EventServiceFactory {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
-    private static boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private static EventServiceFactory eventServiceFactory;
     private volatile ConcurrentMap<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
@@ -132,6 +131,7 @@ public class EventServiceFactory {
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
         EventService service = null;
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         if (isDebugEnabled) {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }

@@ -42,7 +42,6 @@ import reactor.core.publisher.Flux;
 public class ProxyContext {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyContext.class);
-    private static final boolean isDebugEnabled = LOGGER.isDebugEnabled();
     private CompletableFuture<JControllerProxy> proxyFuture;
     private Optional<Problem> lastProblem = Optional.empty();
     private CompletableFuture<Void> coupledFuture;
@@ -204,7 +203,7 @@ public class ProxyContext {
     }
 
     private void onProxyCouplingError(ProxyCouplingError proxyCouplingError) {
-        if (isDebugEnabled) {
+        if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(this.credentials.getControllerId() + ": " + proxyCouplingError.toString());
         }
         lastProblem = Optional.of(proxyCouplingError.problem());
