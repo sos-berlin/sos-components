@@ -302,7 +302,7 @@ public class DeleteDeployments {
 
     public static List<DBItemInventoryConfiguration> getInvConfigurationsForTrash (DBLayerDeploy dbLayer, Set<DBItemDeploymentHistory> deletedDeployItems ) {
         return dbLayer.getInventoryConfigurationsByIds(
-                deletedDeployItems.stream().map(item -> item.getInventoryConfigurationId()).collect(Collectors.toSet()));
+                deletedDeployItems.stream().map(item -> item.getInventoryConfigurationId()).distinct().collect(Collectors.toList()));
     }
     
     public static void deleteConfigurations(DBLayerDeploy dbLayer, List<Configuration> folders, List<DBItemInventoryConfiguration> itemsToDelete, 

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -276,20 +277,28 @@ public class DBLayerDeploy {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getInventoryConfigurationsByIds(Set<Long> ids) throws DBConnectionRefusedException,
+    public List<DBItemInventoryConfiguration> getInventoryConfigurationsByIds(List<Long> ids) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
             if (ids != null && !ids.isEmpty()) {
-                StringBuilder sql = new StringBuilder();
-                sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-                sql.append(" where id in (:ids)");
-                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
-                query.setParameterList("ids", ids);
-                List<DBItemInventoryConfiguration> result = session.getResultList(query);
-                if (result == null) {
-                    return Collections.emptyList();
+                if (ids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+                    List<DBItemInventoryConfiguration> results = new ArrayList<>();
+                    for (int i = 0; i < ids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                        results.addAll(getInventoryConfigurationsByIds(SOSHibernate.getInClausePartition(i, ids)));
+                    }
+                    return results;
+                } else {
+                    StringBuilder sql = new StringBuilder();
+                    sql.append("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+                    sql.append(" where id in (:ids)");
+                    Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
+                    query.setParameterList("ids", ids);
+                    List<DBItemInventoryConfiguration> result = session.getResultList(query);
+                    if (result == null) {
+                        return Collections.emptyList();
+                    }
+                    return result;
                 }
-                return result;
             } else {
                 return Collections.emptyList();
             }
@@ -646,21 +655,17 @@ public class DBLayerDeploy {
     public List<DBItemInventoryConfiguration> getFilteredInventoryConfiguration(List<Configuration> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            List<DBItemInventoryConfiguration> results = new ArrayList<DBItemInventoryConfiguration>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where ");
-            for (Integer i = 0; i < configurations.size(); i++) {
-                hql.append("(").append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ").append(
-                        "type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(")");
-                if (i < configurations.size() - 1) {
-                    hql.append(" or ");
-                }
-            }
+            hql.append(" where path = :path and type = :type");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            for (Integer i = 0; i < configurations.size(); i++) {
-                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getObjectType().intValue());
+            for (Configuration cfg : configurations) {
+                query.setParameter("path", cfg.getPath());
+                query.setParameter("type", cfg.getObjectType().intValue());
+                query.setMaxResults(1);
+                results.add(query.getSingleResult());
             }
-            return query.getResultList();
+            return results;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -671,41 +676,18 @@ public class DBLayerDeploy {
     public List<DBItemInventoryReleasedConfiguration> getFilteredReleasedConfiguration(List<Configuration> configurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            List<DBItemInventoryReleasedConfiguration> results = new ArrayList<DBItemInventoryReleasedConfiguration>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-            hql.append(" where ");
-            for (Integer i = 0; i < configurations.size(); i++) {
-                hql.append("(").append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ").append(
-                        "type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(")");
-                if (i < configurations.size() - 1) {
-                    hql.append(" or ");
-                }
-            }
-            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-            for (Integer i = 0; i < configurations.size(); i++) {
-                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), configurations.get(i).getObjectType().intValue());
-            }
-            return query.getResultList();
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
+            hql.append(" where path = :path and type = :type");
 
-    public List<DBItemInventoryConfiguration> getFilteredInventoryConfigurationsByIds(Collection<Long> configurationIds)
-            throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            if (!configurationIds.isEmpty()) {
-                StringBuilder sql = new StringBuilder();
-                sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-                sql.append(" where id in (:ids)");
-                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
-                query.setParameterList("ids", configurationIds);
-                return session.getResultList(query);
-            } else {
-                return new ArrayList<DBItemInventoryConfiguration>();
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            for (Configuration cfg : configurations) {
+                query.setParameter("path", cfg.getPath());
+                query.setParameter("type", cfg.getObjectType().intValue());
+                query.setMaxResults(1);
+                results.add(query.getSingleResult());
             }
+            return results;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -716,24 +698,18 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(List<Configuration> deployConfigurations) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
+            List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where ");
-            for (Integer i = 0; i < deployConfigurations.size(); i++) {
-                hql.append("(").append("path = : path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ").append(
-                        "type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ").append("commitId = :commitId")
-                        .append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(")");
-                if (i < deployConfigurations.size() - 1) {
-                    hql.append(" or ");
-                }
-            }
+            hql.append(" where path = : path and type = :type and commitId = :commitId");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-            for (Integer i = 0; i < deployConfigurations.size(); i++) {
-                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType()
-                        .intValue());
-                query.setParameter("commitId" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getCommitId());
+            for (Configuration cfg : deployConfigurations) {
+                query.setParameter("path", cfg.getPath());
+                query.setParameter("type", cfg.getObjectType().intValue());
+                query.setParameter("commitId", cfg.getCommitId());
+                query.setMaxResults(1);
+                results.add(query.getSingleResult());
             }
-            return query.getResultList();
+            return results;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -744,24 +720,18 @@ public class DBLayerDeploy {
     public List<DBItemDeploymentHistory> getFilteredDeploymentHistoryToDelete(List<Configuration> deployConfigurations)
             throws DBConnectionRefusedException, DBInvalidDataException {
         try {
+            List<DBItemDeploymentHistory> results = new ArrayList<DBItemDeploymentHistory>();
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where ");
-            for (Integer i = 0; i < deployConfigurations.size(); i++) {
-                hql.append("(").append("path = :path").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(" and ").append(
-                        "type = :type").append(PublishUtils.getValueAsStringWithleadingZeros(i, 7)).append(")");
-                if (i < deployConfigurations.size() - 1) {
-                    hql.append(" or ");
-                }
-            }
+            hql.append(" where path = :path and type = :type");
             Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-            for (Integer i = 0; i < deployConfigurations.size(); i++) {
-                query.setParameter("path" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getPath());
-                query.setParameter("type" + PublishUtils.getValueAsStringWithleadingZeros(i, 7), deployConfigurations.get(i).getObjectType()
-                        .intValue());
+            for (Configuration cfg :deployConfigurations) {
+                query.setParameter("path", cfg.getPath());
+                query.setParameter("type", cfg.getObjectType().intValue());
+                query.setMaxResults(1);
+                results.add(query.getSingleResult());
             }
-            List<DBItemDeploymentHistory> dbItems = query.getResultList();
-            if (dbItems != null && !dbItems.isEmpty()) {
-                return dbItems;
+            if (results != null && !results.isEmpty()) {
+                return results;
             } else {
                 // check if configuration(s) exists with the given path(s) and get deployments with the configurations id
                 List<DBItemDeploymentHistory> dbItemsByConfId = new ArrayList<DBItemDeploymentHistory>();
@@ -777,26 +747,6 @@ public class DBLayerDeploy {
                     }
                 });
                 return dbItemsByConfId;
-            }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<DBItemDeploymentHistory> getFilteredDeploymentHistory(Collection<Long> deployIds) throws DBConnectionRefusedException,
-            DBInvalidDataException {
-        try {
-            if (deployIds != null && !deployIds.isEmpty()) {
-                StringBuilder sql = new StringBuilder();
-                sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-                sql.append(" where id in (:ids)");
-                Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-                query.setParameterList("ids", deployIds);
-                return session.getResultList(query);
-            } else {
-                return new ArrayList<DBItemDeploymentHistory>();
             }
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -893,44 +843,6 @@ public class DBLayerDeploy {
             DBInvalidDataException {
         return getFilteredDeploymentHistory(filter.getDeployConfigurations().stream().map(item -> item.getConfiguration()).collect(Collectors
                 .toList()));
-    }
-
-    public List<DBItemInventoryConfiguration> getFilteredConfigurations(List<Long> ids) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            if (ids != null && !ids.isEmpty()) {
-                StringBuilder sql = new StringBuilder();
-                sql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-                sql.append(" where id in (:ids)");
-                Query<DBItemInventoryConfiguration> query = session.createQuery(sql.toString());
-                query.setParameterList("ids", ids);
-                return session.getResultList(query);
-            } else {
-                return new ArrayList<DBItemInventoryConfiguration>();
-            }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
-    }
-
-    public List<DBItemDeploymentHistory> getFilteredDeployments(List<Long> ids) throws DBConnectionRefusedException, DBInvalidDataException {
-        try {
-            if (ids != null && !ids.isEmpty()) {
-                StringBuilder sql = new StringBuilder();
-                sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
-                sql.append(" where id in (:ids)");
-                Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
-                query.setParameterList("ids", ids);
-                return session.getResultList(query);
-            } else {
-                return new ArrayList<DBItemDeploymentHistory>();
-            }
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
     }
 
     public DBItemDeploymentHistory getDeployedConfiguration(String path, Integer type) throws DBConnectionRefusedException, DBInvalidDataException {
@@ -1571,20 +1483,6 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public List<Long> getLatestDeploymentFromConfigurationId(Set<Long> configurationIds, String controllerId) throws SOSHibernateException {
-        if (configurationIds != null && !configurationIds.isEmpty()) {
-            StringBuilder hql = new StringBuilder("select max(id) from ").append(DBLayer.DBITEM_DEP_HISTORY);
-            hql.append(" where inventoryConfigurationId in (:configurationIds)");
-            hql.append(" and controllerId = :controllerId");
-            Query<Long> query = session.createQuery(hql.toString());
-            query.setParameter("configurationIds", configurationIds);
-            query.setParameter("controllerId", controllerId);
-            return session.getResultList(query);
-        } else {
-            return new ArrayList<Long>();
-        }
-    }
-
     public List<DBItemDeploymentHistory> updateFailedDeploymentForUpdate(
             Map<DBItemInventoryConfiguration, DBItemDepSignatures> verifiedConfigurations,
             Map<DBItemDeploymentHistory, DBItemDepSignatures> verifiedReDeployables, String controllerId, String account, String versionId,
@@ -1994,21 +1892,6 @@ public class DBLayerDeploy {
         return session.getSingleResult(query);
     }
 
-    public void cleanupSignaturesForConfigurations(Set<DBItemInventoryConfiguration> invConfigurations) throws SOSHibernateException {
-        Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
-        hql.append(" where invConfigurationId in (:cfgIds)");
-        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
-        query.setParameterList("cfgIds", cfgIds);
-        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
-        if (signaturesToDelete != null && !signaturesToDelete.isEmpty()) {
-            for (DBItemDepSignatures sig : signaturesToDelete) {
-                session.delete(sig);
-            }
-        }
-    }
-
     public void cleanupSignatures(String commitId, String controllerId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder();
         hql.append("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig ");
@@ -2038,40 +1921,6 @@ public class DBLayerDeploy {
                     throw new JocSosHibernateException(e.getCause());
                 }
             }
-        }
-    }
-
-    public void cleanupSignaturesForRedeployments(Set<DBItemDeploymentHistory> deployments) throws SOSHibernateException {
-        Set<Long> depHistoryIds = deployments.stream().map(DBItemDeploymentHistory::getId).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder();
-        hql.append("from ").append(DBLayer.DBITEM_DEP_SIGNATURES);
-        hql.append(" where depHistoryId in (:depHistoryIds)");
-        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
-        query.setParameterList("depHistoryIds", depHistoryIds);
-        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
-        if (signaturesToDelete != null && !signaturesToDelete.isEmpty()) {
-            for (DBItemDepSignatures sig : signaturesToDelete) {
-                session.delete(sig);
-            }
-        }
-    }
-
-    public void cleanupCommitIdsForConfigurations(Set<DBItemInventoryConfiguration> invConfigurations) {
-        try {
-            Set<Long> cfgIds = invConfigurations.stream().map(DBItemInventoryConfiguration::getId).collect(Collectors.toSet());
-            StringBuilder hql = new StringBuilder();
-            hql.append("from ").append(DBLayer.DBITEM_DEP_COMMIT_IDS);
-            hql.append(" where invConfigurationId in (:cfgIds)");
-            Query<DBItemDepCommitIds> query = session.createQuery(hql.toString());
-            query.setParameterList("cfgIds", cfgIds);
-            List<DBItemDepCommitIds> commitIdsToDelete = session.getResultList(query);
-            if (commitIdsToDelete != null && !commitIdsToDelete.isEmpty()) {
-                for (DBItemDepCommitIds commitId : commitIdsToDelete) {
-                    session.delete(commitId);
-                }
-            }
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e.getCause());
         }
     }
 
@@ -2300,20 +2149,6 @@ public class DBLayerDeploy {
             }
         } else {
             return null;
-        }
-    }
-
-    public List<DBItemInventoryConfiguration> getInvConfigurationFolders(Collection<String> paths) {
-        try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-            hql.append(" where path in (:paths)");
-            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-            query.setParameterList("paths", paths);
-            return query.getResultList();
-        } catch (NoResultException e) {
-            return null;
-        } catch (SOSHibernateException e) {
-            throw new JocSosHibernateException(e);
         }
     }
 

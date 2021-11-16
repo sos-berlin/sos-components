@@ -376,37 +376,6 @@ public class DeploymentTest {
     }
 
     @Test
-    @Ignore
-    /* This is NO Unit test!
-     * This is an integration Test with hibernate and a DB!
-     * to run this test, adjust path to your hibernate configuration file
-     * adjust account and security level of your keyPair
-     * Make sure your X509Certificate is known to your controller
-     * uncomment the Ignore annotation
-     **/
-    public void test10VerfiySignatureFromDBItem() throws SOSHibernateException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, 
-            SignatureException, NoSuchProviderException, IOException {
-        LOGGER.info("******************************  VerfiySignatureFromDBItem Test  *********************");
-        SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/sp_hibernate.cfg.xml"));
-        factory.setAutoCommit(true);
-        factory.addClassMapping(DBLayer.getJocClassMapping());
-        factory.addClassMapping(DBLayer.getHistoryClassMapping());
-        factory.build();
-        SOSHibernateSession session = factory.openStatelessSession();
-        DBLayerDeploy dbLayer = new DBLayerDeploy(session);
-        DBLayerKeys dbLayerKeys = new DBLayerKeys(session);
-        List<Long> depIds = new ArrayList<Long>();
-        depIds.add(116L);
-        List<DBItemDeploymentHistory> items = dbLayer.getFilteredDeployments(depIds);
-        DBItemDeploymentHistory historyItem = items.get(0);
-        X509Certificate certificate = KeyUtil.getX509Certificate(dbLayerKeys.getKeyPair("root", JocSecurityLevel.LOW).getCertificate());
-        Boolean verified = VerifySignature.verifyX509(certificate, historyItem.getContent(), historyItem.getSignedContent());
-        LOGGER.info("verified: " + verified);
-
-        LOGGER.info("*************************** VerfiySignatureFromDBItem Test finished *****************");
-    }
-
-    @Test
     public void test11ImportWorkflowsFromSignAndUpdateArchiveFile() 
             throws IOException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, SignatureException, PGPException {
         LOGGER.info("*************************  import sign and update workflows from zip file Test ******");
