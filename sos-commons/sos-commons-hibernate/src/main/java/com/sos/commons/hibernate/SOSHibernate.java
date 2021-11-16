@@ -1,6 +1,7 @@
 package com.sos.commons.hibernate;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -139,6 +140,18 @@ public class SOSHibernate {
         excludeFieldNames.addAll(excludeDBItemFieldNames);
 
         return SOSString.toString(o, excludeFieldNames);
+    }
+    
+    public static <T> List<T> getInClausePartition(int part, List<T> list) {
+        return list.subList(part, Math.min(part + LIMIT_IN_CLAUSE, list.size()));
+    }
+    
+    public static <T> List<List<T>> getInClausePartitions(List<T> list) {
+        List<List<T>> partitions = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += LIMIT_IN_CLAUSE) {
+            partitions.add(getInClausePartition(i, list));
+        }
+        return partitions;
     }
 
     protected static String getLogIdentifier(String identifier) {
