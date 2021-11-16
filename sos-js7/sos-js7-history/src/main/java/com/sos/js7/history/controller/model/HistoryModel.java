@@ -158,20 +158,17 @@ public class HistoryModel {
         try {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             DBItemJocVariable item = dbLayer.getControllerVariable(variableName);
             if (item == null) {
                 item = dbLayer.insertControllerVariable(variableName, "0");
             }
-            dbLayer.getSession().commit();
+            dbLayer.commit();
 
             return Long.parseLong(item.getTextValue());
         } catch (Exception e) {
             if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (Throwable ex) {
-                }
+                dbLayer.rollback();
             }
             throw e;
         } finally {
@@ -209,7 +206,7 @@ public class HistoryModel {
         try {
             dbLayer = new DBLayerHistory(dbFactory.openStatelessSession());
             dbLayer.getSession().setIdentifier(identifier);
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
 
             for (AFatEvent entry : list) {
                 if (closed) {// TODO
@@ -542,7 +539,7 @@ public class HistoryModel {
     private void tryStoreCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
         if (transactionCounter % maxTransactions == 0) {
             storeCurrentState(dbLayer, eventId);
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
         }
     }
 
@@ -555,10 +552,10 @@ public class HistoryModel {
     private void storeCurrentState(DBLayerHistory dbLayer, Long eventId) throws Exception {
         // if (!isMySQL && dbLayer.getSession().isTransactionOpened()) {// TODO
         if (!dbLayer.getSession().isTransactionOpened()) {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
         }
         dbLayer.updateControllerVariable(variableName, eventId);
-        dbLayer.getSession().commit();
+        dbLayer.commit();
         storedEventId = eventId;
     }
 

@@ -260,9 +260,9 @@ public class HistoryService extends AJocClusterService {
                         byte[] compressed = item.getBinaryValue();
                         if (compressed == null) {
                             LOGGER.info(String.format("[%s][skip][remove empty entry]because compressed data not found", method));
-                            dbLayer.getSession().beginTransaction();
+                            dbLayer.beginTransaction();
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
-                            dbLayer.getSession().commit();
+                            dbLayer.commit();
                             return;
                         }
                         if (stop.get()) {
@@ -281,9 +281,9 @@ public class HistoryService extends AJocClusterService {
 
                         // remove db entry
                         dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
-                        dbLayer.getSession().beginTransaction();
+                        dbLayer.beginTransaction();
                         dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
-                        dbLayer.getSession().commit();
+                        dbLayer.commit();
 
                         break;
                     }
@@ -293,10 +293,7 @@ public class HistoryService extends AJocClusterService {
             }
         } catch (Exception e) {
             if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (SOSHibernateException e1) {
-                }
+                dbLayer.rollback();
             }
             LOGGER.error(e.toString(), e);
         } finally {
@@ -334,9 +331,9 @@ public class HistoryService extends AJocClusterService {
 
                         hasOnlyFinished = orderLogs.equals(0L);
                         if (hasOnlyFinished) {
-                            dbLayer.getSession().beginTransaction();
+                            dbLayer.beginTransaction();
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
-                            dbLayer.getSession().commit();
+                            dbLayer.commit();
                         } else {
                             if (subfolders != orderLogs.longValue()) {
                                 cleanupNotReferencedLogs(dbLayer, method);
@@ -388,10 +385,7 @@ public class HistoryService extends AJocClusterService {
             }
         } catch (Exception e) {
             if (dbLayer != null) {
-                try {
-                    dbLayer.getSession().rollback();
-                } catch (SOSHibernateException e1) {
-                }
+                dbLayer.rollback();
             }
             LOGGER.error(e.toString(), e);
         } finally {
@@ -404,13 +398,13 @@ public class HistoryService extends AJocClusterService {
     private void compress(String caller, DBLayerHistory dbLayer, SOSGzipResult gr) throws Exception {
         String method = "compress";
         Instant start = Instant.now();
-        dbLayer.getSession().beginTransaction();
+        dbLayer.beginTransaction();
         if (gr.getDirectories().size() == 0) {
             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
         } else {
             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), gr.getCompressed());
         }
-        dbLayer.getSession().commit();
+        dbLayer.commit();
         Instant end = Instant.now();
         LOGGER.info(String.format("[%s][%s][end]%s,db update=%s", caller, method, gr, SOSDate.getDuration(start, end)));
     }
