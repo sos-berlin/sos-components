@@ -158,12 +158,9 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(sosHibernateSession);

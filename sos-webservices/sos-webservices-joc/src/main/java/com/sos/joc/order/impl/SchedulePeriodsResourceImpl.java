@@ -22,6 +22,9 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.exception.SOSInvalidDataException;
@@ -38,6 +41,7 @@ import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
+import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.RunTime;
@@ -50,6 +54,7 @@ import com.sos.schema.JsonValidator;
 public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISchedulePeriodsResource {
 
     private static final String API_CALL = "./schedule/runtime";
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulePeriodsResourceImpl.class);
     private static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneOffset.UTC);
     private static DateTimeFormatter isoFormatter = DateTimeFormatter.ISO_INSTANT;
@@ -91,7 +96,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                 final List<String> nonWorkingDays = getNonWorkingDays(dbLayer, in);
 
                 List<DBItemInventoryReleasedConfiguration> workingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getCalendars().stream().map(
-                        AssignedCalendars::getCalendarName));
+                        AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList()));
                 
                 SortedSet<Period> periods = new TreeSet<>(Comparator.comparing(p -> p.getSingleStart() == null ? p.getBegin() : p.getSingleStart()));
                 
@@ -112,7 +117,7 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                         //restrictions.setExcludes(c.getExcludes());
                         Calendar basedOn = Globals.objectMapper.readValue(item.getContent(), Calendar.class);
                         fr.resolveRestrictions(basedOn, restrictions, in.getDateFrom(), in.getDateTo()).getDates().stream().flatMap(
-                                date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone)).collect(Collectors.toCollection(() -> periods));
+                                date -> getPeriods(c.getPeriods(), nonWorkingDays, date, timezone, getJocError())).collect(Collectors.toCollection(() -> periods));
                     }
                 }
                 entity.setPeriods(new ArrayList<>(periods));
@@ -136,8 +141,8 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         List<String> nonWorkingDays = new ArrayList<>();
         
         if (in.getNonWorkingDayCalendars() != null && !in.getNonWorkingDayCalendars().isEmpty()) {
-            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingDayCalendars().stream().map(
-                    AssignedNonWorkingDayCalendars::getCalendarName));
+            List<DBItemInventoryReleasedConfiguration> nonWorkingDbCalendars = dbLayer.getReleasedCalendarsByNames(in.getNonWorkingDayCalendars()
+                    .stream().map(AssignedNonWorkingDayCalendars::getCalendarName).distinct().collect(Collectors.toList()));
 
             if (nonWorkingDbCalendars != null && !nonWorkingDbCalendars.isEmpty()) {
 
@@ -156,14 +161,14 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
         return nonWorkingDays;
     }
     
-    private static Stream<Period> getPeriods(List<Period> periods, List<String> holidays, String date, ZoneId timezone) {
+    private static Stream<Period> getPeriods(List<Period> periods, List<String> holidays, String date, ZoneId timezone, JocError jocError) {
         if (periods == null) {
             return Stream.empty();
         }
-        return periods.stream().map(p -> getPeriod(p, holidays, date, timezone)).filter(Objects::nonNull);
+        return periods.stream().map(p -> getPeriod(p, holidays, date, timezone, jocError)).filter(Objects::nonNull);
     }
     
-    private static Period getPeriod(Period period, List<String> holidays, String date, ZoneId timezone) {
+    private static Period getPeriod(Period period, List<String> holidays, String date, ZoneId timezone, JocError jocError) {
         Period p = new Period();
         
         if (holidays.contains(date)) {
@@ -181,7 +186,11 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                             date = dateFormatter.format(dateCal.toInstant());
                         }
                     } catch (SOSInvalidDataException e) {
-                        e.printStackTrace();
+                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                            LOGGER.info(jocError.printMetaInfo());
+                            jocError.clearMetaInfo();
+                        }
+                        LOGGER.error(String.format("[%s] %s", period.toString(), e.toString()));
                         return null;
                     }
                     break;
@@ -195,7 +204,11 @@ public class SchedulePeriodsResourceImpl extends JOCResourceImpl implements ISch
                             date = dateFormatter.format(dateCal.toInstant());
                         }
                     } catch (SOSInvalidDataException e) {
-                        e.printStackTrace();
+                        if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
+                            LOGGER.info(jocError.printMetaInfo());
+                            jocError.clearMetaInfo();
+                        }
+                        LOGGER.error(String.format("[%s] %s", period.toString(), e.toString()));
                         return null;
                     }
                     break;

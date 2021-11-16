@@ -280,7 +280,7 @@ public class SOSShiroCurrentUser {
             inetAddress = InetAddress.getByName(ipAddress);
             ipv6 = inetAddress instanceof Inet6Address;
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            LOGGER.error("", e);
         }
 
         String[] ipParts = ipAddress.split("\\.");

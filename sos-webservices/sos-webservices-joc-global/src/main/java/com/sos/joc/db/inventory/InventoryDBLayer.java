@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +19,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -132,12 +132,20 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(Collection<Long> configIds)
+    public Map<Long, List<DBItemInventoryReleasedConfiguration>> getReleasedItemsByConfigurationIds(List<Long> configIds)
             throws SOSHibernateException {
-        if (configIds != null && !configIds.isEmpty()) {
+        if (configIds == null || configIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        if (configIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            Map<Long, List<DBItemInventoryReleasedConfiguration>> result = new HashMap<>();
+            for (int i = 0; i < configIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.putAll(getReleasedItemsByConfigurationIds(SOSHibernate.getInClausePartition(i, configIds)));
+            }
+            return result;
+        } else {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
             hql.append(" where cId in (:configIds) ");
-
             Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameterList("configIds", configIds);
             List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
@@ -145,17 +153,26 @@ public class InventoryDBLayer extends DBLayer {
                 return result.stream().collect(Collectors.groupingBy(DBItemInventoryReleasedConfiguration::getCid));
             }
             return Collections.emptyMap();
-        } else {
-            return Collections.emptyMap();
         }
     }
 
-    public Integer deleteReleasedItemsByConfigurationIds(Collection<Long> configIds) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where cid in (:configIds)");
-        Query<Integer> query = getSession().createQuery(hql.toString());
-        query.setParameter("configIds", configIds);
-        return getSession().executeUpdate(query);
+    public int deleteReleasedItemsByConfigurationIds(List<Long> configIds) throws SOSHibernateException {
+        if (configIds == null || configIds.isEmpty()) {
+            return 0;
+        }
+        if (configIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < configIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += deleteReleasedItemsByConfigurationIds(SOSHibernate.getInClausePartition(i, configIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where cid in (:configIds)");
+            Query<Integer> query = getSession().createQuery(hql.toString());
+            query.setParameter("configIds", configIds);
+            return getSession().executeUpdate(query);
+        }
     }
 
     public <T> List<T> getReleasedItemPropertyByConfigurationId(Long configId, String propertyName) throws SOSHibernateException {
@@ -259,7 +276,7 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
-    public Set<Long> getNotDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive, Collection<String> deletedFolders)
+    public List<Long> getNotDeletedConfigurations(Collection<Integer> types, String folder, boolean recursive, Collection<String> deletedFolders)
             throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select id from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
         hql.append(" where deleted = 0");
@@ -292,9 +309,9 @@ public class InventoryDBLayer extends DBLayer {
         }
         List<Long> result = getSession().getResultList(query);
         if (result != null) {
-            return result.stream().collect(Collectors.toSet());
+            return result.stream().distinct().collect(Collectors.toList());
         }
-        return Collections.emptySet();
+        return Collections.emptyList();
     }
 
     public List<InventoryTreeFolderItem> getConfigurationsByFolder(String folder, boolean recursive) throws SOSHibernateException {
@@ -394,9 +411,28 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(Collection<Long> configIds)
+    public Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> getConfigurationsWithAllDeployments(List<Long> configIds)
             throws SOSHibernateException {
-        if (configIds != null && !configIds.isEmpty()) {
+        if (configIds == null || configIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate).reversed());
+        return _getConfigurationsWithAllDeployments(configIds).stream().map(InventoryDeployablesTreeFolderItem::map).collect(Collectors.groupingBy(
+                InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(InventoryDeployablesTreeFolderItem::getDeployment, Collectors
+                        .toCollection(() -> new TreeSet<>(comp)))));
+    }
+    
+    private List<InventoryDeployablesTreeFolderItem> _getConfigurationsWithAllDeployments(List<Long> configIds) throws SOSHibernateException {
+        if (configIds == null || configIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (configIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<InventoryDeployablesTreeFolderItem> result = new ArrayList<>();
+            for (int i = 0; i < configIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(_getConfigurationsWithAllDeployments(SOSHibernate.getInClausePartition(i, configIds)));
+            }
+            return result;
+        } else {
             StringBuilder hql = new StringBuilder("select ");
             hql.append("ic.id as icId");
             hql.append(",ic.type as icType");
@@ -429,28 +465,34 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameter("state", DeploymentState.DEPLOYED.value());
 
             List<InventoryDeployablesTreeFolderItem> result = getSession().getResultList(query);
-            if (result != null && !result.isEmpty()) {
-                Comparator<InventoryDeploymentItem> comp = Comparator.nullsFirst(Comparator.comparing(InventoryDeploymentItem::getDeploymentDate)
-                        .reversed());
-                return result.stream().map(e -> {
-                    return e.map();
-                }).collect(Collectors.groupingBy(InventoryDeployablesTreeFolderItem::getConfiguration, Collectors.mapping(
-                        InventoryDeployablesTreeFolderItem::getDeployment, Collectors.toCollection(() -> new TreeSet<>(comp)))));
+            if (result != null) {
+                return result;
             }
+            return Collections.emptyList();
         }
-        return Collections.emptyMap();
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurations(Collection<Long> ids) throws SOSHibernateException {
-        if (ids != null && !ids.isEmpty()) {
+    public List<DBItemInventoryConfiguration> getConfigurations(List<Long> ids) throws SOSHibernateException {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        if (ids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getConfigurations(SOSHibernate.getInClausePartition(i, ids)));
+            }
+            return result;
+        } else {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             hql.append(" where id in (:ids) ");
 
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             query.setParameterList("ids", ids);
-            return getSession().getResultList(query);
-        } else {
-            return Collections.emptyList();
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList(); 
+            }
+            return result;
         }
     }
 
@@ -547,29 +589,43 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    public List<DBItemInventoryConfiguration> getConfigurationByNames(Stream<String> namesStream, Integer type) throws SOSHibernateException {
+    public List<DBItemInventoryConfiguration> getConfigurationByNames(List<String> names, Integer type) throws SOSHibernateException {
         boolean isCalendar = JocInventory.isCalendar(type);
-        Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        if (isCalendar) {
-            hql.append(" where type in (:types)");
+        if (names == null) {
+            names = Collections.emptyList(); 
+        }
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getConfigurationByNames(SOSHibernate.getInClausePartition(i, names), type));
+            }
+            return result;
         } else {
-            hql.append(" where type=:type");
-        }
-        if (!names.isEmpty()) {
-            hql.append(" and lower(name) in (:names)");
-        }
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            if (isCalendar) {
+                hql.append(" where type in (:types)");
+            } else {
+                hql.append(" where type=:type");
+            }
+            if (!names.isEmpty()) {
+                hql.append(" and lower(name) in (:names)");
+            }
 
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        if (!names.isEmpty()) {
-            query.setParameterList("names", names);
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            if (!names.isEmpty()) {
+                query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+            }
+            if (isCalendar) {
+                query.setParameterList("types", JocInventory.getCalendarTypes());
+            } else {
+                query.setParameter("type", type);
+            }
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         }
-        if (isCalendar) {
-            query.setParameterList("types", JocInventory.getCalendarTypes());
-        } else {
-            query.setParameter("type", type);
-        }
-        return getSession().getResultList(query);
     }
 
     public Integer getSuffixNumber(String suffix, String name, Integer type) throws SOSHibernateException {
@@ -674,85 +730,102 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().getSingleResult(query);
     }
 
-    // use getCalendarsByNames because Name should be unique and path could be wrong
-    @Deprecated
-    public List<DBItemInventoryConfiguration> getCalendars(Stream<String> pathsStream) throws SOSHibernateException {
-        Set<String> paths = pathsStream.map(String::toLowerCase).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where type in (:types)");
-        if (!paths.isEmpty()) {
-            hql.append(" and lower(path) in (:paths)");
+    public List<DBItemInventoryConfiguration> getCalendarsByNames(List<String> names) throws SOSHibernateException {
+        if (names == null) {
+            names = Collections.emptyList();
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        if (!paths.isEmpty()) {
-            query.setParameterList("paths", paths);
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getCalendarsByNames(SOSHibernate.getInClausePartition(i, names)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
+            hql.append(" where type in (:types)");
+            if (!names.isEmpty()) {
+                hql.append(" and lower(name) in (:names)");
+            }
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            if (!names.isEmpty()) {
+                query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+            }
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+            List<DBItemInventoryConfiguration> result =  getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         }
-        query.setParameterList("types", JocInventory.getCalendarTypes());
-        return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryConfiguration> getCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
-        Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
-        hql.append(" where type in (:types)");
-        if (!names.isEmpty()) {
-            hql.append(" and lower(name) in (:names)");
+    public List<DBItemInventoryReleasedConfiguration> getReleasedCalendarsByNames(List<String> names) throws SOSHibernateException {
+        if (names == null) {
+            names = Collections.emptyList();
         }
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        if (!names.isEmpty()) {
-            query.setParameterList("names", names);
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReleasedCalendarsByNames(SOSHibernate.getInClausePartition(i, names)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            hql.append(" where type in (:types)");
+            if (!names.isEmpty()) {
+                hql.append(" and lower(name) in (:names)");
+            }
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            if (!names.isEmpty()) {
+                query.setParameterList("names", names.stream().map(String::toLowerCase).collect(Collectors.toSet()));
+            }
+            query.setParameterList("types", JocInventory.getCalendarTypes());
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         }
-        query.setParameterList("types", JocInventory.getCalendarTypes());
-        return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getReleasedCalendarsByNames(Stream<String> namesStream) throws SOSHibernateException {
-        Set<String> names = namesStream.map(String::toLowerCase).collect(Collectors.toSet());
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        hql.append(" where type in (:types)");
-        if (!names.isEmpty()) {
-            hql.append(" and lower(name) in (:names)");
-        }
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        if (!names.isEmpty()) {
-            query.setParameterList("names", names);
-        }
-        query.setParameterList("types", JocInventory.getCalendarTypes());
-        return getSession().getResultList(query);
-    }
-
-    public List<DBItemInventoryReleasedConfiguration> getConfigurations(Stream<String> pathsStream, Collection<Integer> types)
+    public List<DBItemInventoryReleasedConfiguration> getConfigurationsByType(Collection<Integer> types)
             throws SOSHibernateException {
-        Set<String> paths = pathsStream.map(p -> JocInventory.pathToName(p).toLowerCase()).collect(Collectors.toSet());
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        List<String> clause = new ArrayList<>();
-        if (!paths.isEmpty()) {
-            clause.add("lower(name) in (:paths)");
-        }
         if (types != null && !types.isEmpty()) {
-            clause.add("type in (:types)");
+            hql.append(" where type in (:types)");
         }
-        hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        if (!paths.isEmpty()) {
-            query.setParameterList("paths", paths);
-        }
         if (types != null && !types.isEmpty()) {
             query.setParameterList("types", types);
         }
         return getSession().getResultList(query);
     }
 
-    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations(Collection<Long> ids) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
-        if (ids != null && !ids.isEmpty()) {
-            hql.append(" where id in (:ids)");
+    public List<DBItemInventoryReleasedConfiguration> getReleasedConfigurations(List<Long> ids) throws SOSHibernateException {
+        if (ids == null) {
+            ids = Collections.emptyList();
         }
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        if (ids != null && !ids.isEmpty()) {
-            query.setParameterList("ids", ids);
+        if (ids.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < ids.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getReleasedConfigurations(SOSHibernate.getInClausePartition(i, ids)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS);
+            if (!ids.isEmpty()) {
+                hql.append(" where id in (:ids)");
+            }
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            if (!ids.isEmpty()) {
+                query.setParameterList("ids", ids);
+            }
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         }
-        return getSession().getResultList(query);
     }
 
     public List<DBItemInventoryConfiguration> getFolderContent(String folder, boolean recursive, Collection<Integer> types)
@@ -990,40 +1063,6 @@ public class InventoryDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
 
-    public int markConfigurationAsDeleted(final Long configId, boolean deleted) throws SOSHibernateException {
-        return markConfigurationsAsDeleted(Arrays.asList(configId), deleted);
-    }
-
-    public int markConfigurationsAsDeleted(final Collection<Long> configIds, boolean deleted) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("set modified=:modified ");
-        hql.append(",deleted=:deleted ");
-        hql.append("where id in (:configIds) ");
-        hql.append("and deleted=:notDeleted");
-        Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
-        query.setParameterList("configIds", configIds);
-        query.setParameter("deleted", deleted);
-        query.setParameter("notDeleted", !deleted);
-        return getSession().executeUpdate(query);
-    }
-
-    public int markFoldersAsDeleted(final Collection<String> folders, boolean deleted) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("set modified=:modified ");
-        hql.append(",deleted=:deleted ");
-        hql.append("where path in (:folders) ");
-        hql.append("and type=:type ");
-        hql.append("and deleted=:notDeleted");
-        Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("modified", new Date());
-        query.setParameterList("folders", folders);
-        query.setParameter("deleted", deleted);
-        query.setParameter("notDeleted", !deleted);
-        query.setParameter("type", ConfigurationType.FOLDER.intValue());
-        return getSession().executeUpdate(query);
-    }
-
     public Set<Tree> getFoldersByFolderAndTypeForViews(String folder, Set<Integer> inventoryTypes) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {
@@ -1128,7 +1167,7 @@ public class InventoryDBLayer extends DBLayer {
                         folderWithParents.add(("/" + p.subpath(0, i + 1)).replace('\\', '/'));
                     }
                 }
-                Set<Tree> tree = getFoldersByFolder(folderWithParents);
+                Set<Tree> tree = getFoldersByFolder(new ArrayList<String>(folderWithParents));
                 Tree root = new Tree();
                 root.setPath(JocInventory.ROOT_FOLDER);
                 root.setDeleted(false);
@@ -1152,8 +1191,30 @@ public class InventoryDBLayer extends DBLayer {
         }
     }
 
-    private Set<Tree> getFoldersByFolder(Collection<String> folders) throws SOSHibernateException {
-        if (folders != null && !folders.isEmpty()) {
+    private Set<Tree> getFoldersByFolder(List<String> folders) throws SOSHibernateException {
+        List<Object[]> result = _getFoldersByFolder(folders);
+        if (result != null && !result.isEmpty()) {
+            return result.stream().map(s -> {
+                Tree tree = new Tree();
+                tree.setPath((String) s[0]);
+                tree.setDeleted((Boolean) s[1]);
+                return tree;
+            }).collect(Collectors.toSet());
+        }
+        return new HashSet<>();
+    }
+    
+    private List<Object[]> _getFoldersByFolder(List<String> folders) throws SOSHibernateException {
+        if (folders == null) {
+            folders = Collections.emptyList();
+        }
+        if (folders.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<Object[]> result = new ArrayList<>();
+            for (int i = 0; i < folders.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(_getFoldersByFolder(SOSHibernate.getInClausePartition(i, folders)));
+            }
+            return result;
+        } else if (!folders.isEmpty()) {
             StringBuilder sql = new StringBuilder();
             sql.append("select path, deleted from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
             sql.append(" where path in (:folders) and type=:type");
@@ -1161,16 +1222,11 @@ public class InventoryDBLayer extends DBLayer {
             query.setParameterList("folders", folders);
             query.setParameter("type", ConfigurationType.FOLDER.intValue());
             List<Object[]> result = getSession().getResultList(query);
-            if (result != null && !result.isEmpty()) {
-                return result.stream().map(s -> {
-                    Tree tree = new Tree();
-                    tree.setPath((String) s[0]);
-                    tree.setDeleted((Boolean) s[1]);
-                    return tree;
-                }).collect(Collectors.toSet());
+            if (result != null) {
+                return result;
             }
         }
-        return new HashSet<>();
+        return Collections.emptyList();
     }
 
     public List<DBItemInventoryConfiguration> getUsedWorkflowsByLockId(String lockName) throws SOSHibernateException {
@@ -1275,28 +1331,59 @@ public class InventoryDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryConfiguration> getUsedSchedulesByWorkflowNames(List<String> workflowNames) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in :workflowNames");
+        if (workflowNames == null) {
+            workflowNames = Collections.emptyList();
+        }
+        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getUsedSchedulesByWorkflowNames(SOSHibernate.getInClausePartition(i, workflowNames)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS).append(" ");
+            hql.append("where type=:type ");
+            hql.append("and ");
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
 
-        Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameterList("workflowNames", workflowNames);
-        return getSession().getResultList(query);
+            Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+            query.setParameterList("workflowNames", workflowNames);
+            List<DBItemInventoryConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
     }
 
     public List<DBItemInventoryReleasedConfiguration> getUsedReleasedSchedulesByWorkflowNames(List<String> workflowNames)
             throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-        hql.append("where type=:type ");
-        hql.append("and ");
-        hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in :workflowNames");
+        if (workflowNames == null) {
+            workflowNames = Collections.emptyList();
+        }
+        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemInventoryReleasedConfiguration> result = new ArrayList<>();
+            for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getUsedReleasedSchedulesByWorkflowNames(SOSHibernate.getInClausePartition(i, workflowNames)));
+            }
+            return result;
+        } else {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+            hql.append("where type=:type ");
+            hql.append("and ");
+            // TODO consider maxInSize
+            hql.append(SOSHibernateJsonValue.getFunction(ReturnType.SCALAR, "jsonContent", "$.workflowName")).append(" in (:workflowNames)");
 
-        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        query.setParameterList("workflowNames", workflowNames);
-        return getSession().getResultList(query);
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+            query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+            query.setParameterList("workflowNames", workflowNames);
+            List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
+        }
     }
 
     public List<DBItemInventoryConfiguration> getUsedFileOrderSourcesByWorkflowName(String workflowName) throws SOSHibernateException {

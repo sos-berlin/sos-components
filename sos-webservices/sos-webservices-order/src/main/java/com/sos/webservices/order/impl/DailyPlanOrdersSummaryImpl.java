@@ -116,12 +116,9 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             return JOCDefaultResponse.responseStatus200(answer);
 
         } catch (JocException e) {
-            LOGGER.error(getJocError().getMessage(), e);
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error(getJocError().getMessage(), e);
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
             Globals.disconnect(session);

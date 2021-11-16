@@ -75,7 +75,8 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
 
             } else if (calendarsFilter.getCalendarPaths() != null && !calendarsFilter.getCalendarPaths().isEmpty()) {
                 calendarsFilter.setRegex(null);
-                dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(p -> JocInventory.pathToName(p)));
+                dbCalendars = dbLayer.getReleasedCalendarsByNames(calendarsFilter.getCalendarPaths().stream().map(p -> JocInventory.pathToName(p))
+                        .distinct().collect(Collectors.toList()));
 
             } else if (withFolderFilter && (folders == null || folders.isEmpty())) {
                 // no folder permission
@@ -85,7 +86,7 @@ public class CalendarsResourceImpl extends JOCResourceImpl implements ICalendars
                 if (calendarsFilter.getType() != null) {
                     types = Arrays.asList(calendarsFilter.getType().intValue());
                 }
-                dbCalendars = dbLayer.getConfigurations(Stream.empty(), types);
+                dbCalendars = dbLayer.getConfigurationsByType(types);
             }
 
             Calendars entity = new Calendars();

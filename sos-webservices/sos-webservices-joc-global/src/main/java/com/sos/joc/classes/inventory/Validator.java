@@ -196,8 +196,7 @@ public class Validator {
 
     private static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
         if (!jobResources.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources.stream().distinct(),
-                    ConfigurationType.JOBRESOURCE.intValue());
+            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE.intValue());
             if (dbJobResources == null || dbJobResources.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
             } else {
@@ -218,12 +217,12 @@ public class Validator {
     }
 
     private static void validateCalendarRefs(Schedule schedule, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
-        Set<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).collect(Collectors.toSet());
+        List<String> calendarNames = schedule.getCalendars().stream().map(AssignedCalendars::getCalendarName).distinct().collect(Collectors.toList());
         if (schedule.getNonWorkingDayCalendars() != null && !schedule.getNonWorkingDayCalendars().isEmpty()) {
             calendarNames.addAll(schedule.getNonWorkingDayCalendars().stream().map(AssignedNonWorkingDayCalendars::getCalendarName).collect(Collectors
                     .toSet()));
         }
-        List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames.stream());
+        List<DBItemInventoryConfiguration> dbCalendars = dbLayer.getCalendarsByNames(calendarNames);
         if (dbCalendars == null || dbCalendars.isEmpty()) {
             throw new JocConfigurationException("Missing assigned Calendars: " + calendarNames.toString());
         } else if (dbCalendars.size() < calendarNames.size()) {
@@ -263,7 +262,8 @@ public class Validator {
             }
         }
         if (!locks.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbLocks = dbLayer.getConfigurationByNames(locks.stream(), ConfigurationType.LOCK.intValue());
+            List<DBItemInventoryConfiguration> dbLocks = dbLayer.getConfigurationByNames(locks.stream().collect(Collectors.toList()),
+                    ConfigurationType.LOCK.intValue());
             if (dbLocks == null || dbLocks.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Locks: " + locks.toString());
             } else {
@@ -284,7 +284,8 @@ public class Validator {
             }
         }
         if (!boards.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream(), ConfigurationType.NOTICEBOARD.intValue());
+            List<DBItemInventoryConfiguration> dbBoards = dbLayer.getConfigurationByNames(boards.stream().collect(Collectors.toList()),
+                    ConfigurationType.NOTICEBOARD.intValue());
             if (dbBoards == null || dbBoards.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned Notice Boards: " + boards.toString());
             } else {

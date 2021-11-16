@@ -87,10 +87,10 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 // get deleted folders
                 List<String> deletedFolders = dbLayer.getDeletedFolders();
                 // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
-                Set<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
+                List<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
                 // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
                 if (in.getWithRemovedObjects()) {
-                    List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
+                    List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Collections.singleton(
                             ConfigurationType.FOLDER.intValue()));
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
