@@ -110,9 +110,9 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
                 int toIndex = (r.size() + 1) - versions; // total versions = getLessThanMaxHistoryIds+1(maxVersion)
                 if (toIndex > 0) {
                     List<Long> subList = r.subList(0, toIndex);
-                    getDbLayer().getSession().beginTransaction();
+                    getDbLayer().beginTransaction();
                     cleanupEntries(counter, depVersion, subList);
-                    getDbLayer().getSession().commit();
+                    getDbLayer().commit();
                 } else {
                     LOGGER.warn(String.format("[%s][%s) maxId=%s][versions=%s][lessThanMax=%s][toIndex=%s]can't compute toIndex", getIdentifier(),
                             counter, depVersion.getMaxId(), versions, r.size(), toIndex));
@@ -142,14 +142,14 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(counter).append(") maxId=").append(depVersion.getMaxId()).append("]");
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DEP_SUBMISSIONS).append(" ");
         hql.append("where depHistoryId in (:ids)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalSubmissions += r;
         log.append(getDeleted(DBLayer.TABLE_DEP_SUBMISSIONS, r, totalSubmissions));
 
@@ -158,14 +158,14 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DEP_COMMIT_IDS).append(" ");
         hql.append("where depHistoryId in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalCommitIds += r;
         log.append(getDeleted(DBLayer.TABLE_DEP_COMMIT_IDS, r, totalCommitIds));
 
@@ -174,14 +174,14 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DEP_SIGNATURES).append(" ");
         hql.append("where depHistoryId in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalSignatures += r;
         log.append(getDeleted(DBLayer.TABLE_DEP_SIGNATURES, r, totalSignatures));
 
@@ -190,19 +190,19 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY).append(" ");
         hql.append("where deploymentHistoryId in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalSearchWorkflowsDepHistory += r;
         log.append(getDeleted(DBLayer.TABLE_SEARCH_WORKFLOWS_DEPLOYMENT_HISTORY, r, totalSearchWorkflowsDepHistory));
 
         if (Math.abs(r) > 0) {
-            // getDbLayer().getSession().beginTransaction();
+            // getDbLayer().beginTransaction();
             hql = new StringBuilder("delete from ");
             hql.append(DBLayer.DBITEM_SEARCH_WORKFLOWS).append(" ");
             hql.append("where deployed=true ");
@@ -211,7 +211,7 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             hql.append(")");
             query = getDbLayer().getSession().createQuery(hql.toString());
             r = getDbLayer().getSession().executeUpdate(query);
-            // getDbLayer().getSession().commit();
+            // getDbLayer().commit();
             totalSearchWorkflows += r;
             log.append(getDeleted(DBLayer.TABLE_SEARCH_WORKFLOWS, r, totalSearchWorkflows));
         }
@@ -221,14 +221,14 @@ public class CleanupTaskDeployment extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DEP_HISTORY).append(" ");
         hql.append("where id in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalHistory += r;
         log.append(getDeleted(DBLayer.TABLE_DEP_HISTORY, r, totalHistory));
 

@@ -433,9 +433,9 @@ public class CleanupServiceSchedule {
         // return;
         // }
         try {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             dbLayer.deleteVariable(service.getIdentifier());
-            dbLayer.getSession().commit();
+            dbLayer.commit();
             LOGGER.info("[deleted]because " + mode);
             item = null;
         } catch (Exception e) {
@@ -450,9 +450,9 @@ public class CleanupServiceSchedule {
 
     private DBItemJocVariable insertJocVariable(String value) throws Exception {
         try {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             DBItemJocVariable item = dbLayer.insertVariable(service.getIdentifier(), value);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
             LOGGER.info("[inserted]" + item.getTextValue());
             return item;
         } catch (Exception e) {
@@ -463,10 +463,10 @@ public class CleanupServiceSchedule {
 
     private DBItemJocVariable updateJocVariable(DBItemJocVariable item) throws Exception {
         try {
-            dbLayer.getSession().beginTransaction();
+            dbLayer.beginTransaction();
             item.setTextValue(getInitialValue().toString());
             dbLayer.getSession().update(item);
-            dbLayer.getSession().commit();
+            dbLayer.commit();
             LOGGER.info("[updated]" + item.getTextValue());
             return item;
         } catch (Exception e) {
@@ -497,10 +497,10 @@ public class CleanupServiceSchedule {
                 }
             }
             if (val != null) {
-                dbLayer.getSession().beginTransaction();
+                dbLayer.beginTransaction();
                 item.setTextValue(val);
                 dbLayer.getSession().update(item);
-                dbLayer.getSession().commit();
+                dbLayer.commit();
             }
             LOGGER.info("[updated]" + item.getTextValue());
         } catch (Exception e) {

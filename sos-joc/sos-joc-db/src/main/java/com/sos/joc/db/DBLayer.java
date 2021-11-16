@@ -3,6 +3,7 @@ package com.sos.joc.db;
 import java.io.Serializable;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSClassList;
 import com.sos.joc.db.authentication.SOSUser2RoleDBItem;
 import com.sos.joc.db.authentication.SOSUserDBItem;
@@ -249,12 +250,49 @@ public class DBLayer implements Serializable {
 
     private SOSHibernateSession session;
 
+    public DBLayer() {
+        this(null);
+    }
+
     public DBLayer(SOSHibernateSession session) {
         this.session = session;
     }
 
     public SOSHibernateSession getSession() {
         return session;
+    }
+
+    public void close() {
+        if (session != null) {
+            session.close();
+            session = null;
+        }
+    }
+
+    public void setSession(SOSHibernateSession val) {
+        close();
+        session = val;
+    }
+
+    public void beginTransaction() throws SOSHibernateException {
+        if (session != null) {
+            session.beginTransaction();
+        }
+    }
+
+    public void commit() throws SOSHibernateException {
+        if (session != null) {
+            session.commit();
+        }
+    }
+
+    public void rollback() {
+        if (session != null) {
+            try {
+                session.rollback();
+            } catch (Throwable e) {
+            }
+        }
     }
 
     public static SOSClassList getYadeClassMapping() {

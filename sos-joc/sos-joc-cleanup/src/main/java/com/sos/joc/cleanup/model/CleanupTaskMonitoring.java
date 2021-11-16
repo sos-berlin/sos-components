@@ -91,9 +91,9 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 tryOpenSession();
                 List<Long> rc = getChildOrderIds(datetime, rm);
                 if (rc != null && rc.size() > 0) {
-                    getDbLayer().getSession().beginTransaction();
+                    getDbLayer().beginTransaction();
                     boolean completed = cleanupOrders(datetime, "children", rc);
-                    getDbLayer().getSession().commit();
+                    getDbLayer().commit();
                     if (!completed) {
                         return JocServiceTaskAnswerState.UNCOMPLETED;
                     }
@@ -101,9 +101,9 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                 runc = false;
             }
             tryOpenSession();
-            getDbLayer().getSession().beginTransaction();
+            getDbLayer().beginTransaction();
             boolean completed = cleanupOrders(datetime, "main", rm);
-            getDbLayer().getSession().commit();
+            getDbLayer().commit();
             if (!completed) {
                 return JocServiceTaskAnswerState.UNCOMPLETED;
             }
@@ -131,16 +131,16 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
                     } else {
                         subList = copy.subList(i, size);
                     }
-                    getDbLayer().getSession().beginTransaction();
+                    getDbLayer().beginTransaction();
                     deleteNotifications(datetime, subList);
-                    getDbLayer().getSession().commit();
+                    getDbLayer().commit();
                 }
                 return state;
 
             } else {
-                getDbLayer().getSession().beginTransaction();
+                getDbLayer().beginTransaction();
                 deleteNotifications(datetime, ids);
-                getDbLayer().getSession().commit();
+                getDbLayer().commit();
             }
         } catch (Throwable e) {
             throw e;
@@ -194,14 +194,14 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("][").append(range).append(
                 "]");
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_ORDER_STEPS).append(" ");
         hql.append("where historyOrderId in (:orderIds)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalOrderSteps += r;
         log.append(getDeleted(DBLayer.TABLE_MON_ORDER_STEPS, r, totalOrderSteps));
 
@@ -210,14 +210,14 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
             return false;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_ORDERS).append(" ");
         hql.append("where historyId in (:orderIds)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("orderIds", orderIds);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalOrders += r;
         log.append(getDeleted(DBLayer.TABLE_MON_ORDERS, r, totalOrders));
 
@@ -229,7 +229,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
 
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_MON_NOT_MONITORS).append(" ");
@@ -267,7 +267,7 @@ public class CleanupTaskMonitoring extends CleanupTaskModel {
         totalNotifications += r;
         log.append(getDeleted(DBLayer.TABLE_MON_NOTIFICATIONS, r, totalNotifications));
 
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         LOGGER.info(log.toString());
         return log;
     }

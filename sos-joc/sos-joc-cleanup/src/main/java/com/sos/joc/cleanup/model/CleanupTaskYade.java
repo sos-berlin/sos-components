@@ -54,15 +54,15 @@ public class CleanupTaskYade extends CleanupTaskModel {
                         } else {
                             subList = copy.subList(i, size);
                         }
-                        getDbLayer().getSession().beginTransaction();
+                        getDbLayer().beginTransaction();
                         cleanupEntries(datetime, subList);
-                        getDbLayer().getSession().commit();
+                        getDbLayer().commit();
                     }
 
                 } else {
-                    getDbLayer().getSession().beginTransaction();
+                    getDbLayer().beginTransaction();
                     cleanupEntries(datetime, ids);
-                    getDbLayer().getSession().commit();
+                    getDbLayer().commit();
                 }
             }
             getDbLayer().close();
@@ -103,14 +103,14 @@ public class CleanupTaskYade extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_YADE_FILES).append(" ");
         hql.append("where transferId in (:ids)");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalFiles += r;
         log.append(getDeleted(DBLayer.TABLE_YADE_FILES, r, totalFiles));
 
@@ -119,14 +119,14 @@ public class CleanupTaskYade extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_YADE_TRANSFERS).append(" ");
         hql.append("where id in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalTransfers += r;
         log.append(getDeleted(DBLayer.TABLE_YADE_TRANSFERS, r, totalTransfers));
 

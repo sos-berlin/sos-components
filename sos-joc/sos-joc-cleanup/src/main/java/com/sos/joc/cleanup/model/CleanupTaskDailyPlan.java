@@ -45,9 +45,9 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
                 }
 
                 if (askService()) {
-                    getDbLayer().getSession().beginTransaction();
+                    getDbLayer().beginTransaction();
                     cleanupEntries(datetime, r);
-                    getDbLayer().getSession().commit();
+                    getDbLayer().commit();
                 } else {
                     getDbLayer().close();
                     waitFor(WAIT_INTERVAL_ON_BUSY);
@@ -66,7 +66,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         StringBuilder log = new StringBuilder();
         log.append("[").append(getIdentifier()).append("][deleted][").append(datetime.getAge().getConfigured()).append("]");
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
         hql.append("where plannedOrderId in (");
@@ -76,7 +76,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         int r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalVariables += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_ORDER_VARIABLES, r, totalVariables));
 
@@ -85,7 +85,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
         hql.append("where orderId in (");
@@ -95,7 +95,7 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalHistory += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_HISTORY, r, totalHistory));
 
@@ -104,14 +104,14 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submissionHistoryId in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalOrders += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_ORDERS, r, totalOrders));
 
@@ -120,14 +120,14 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
             return;
         }
 
-        // getDbLayer().getSession().beginTransaction();
+        // getDbLayer().beginTransaction();
         hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append("where id in (:ids)");
         query = getDbLayer().getSession().createQuery(hql.toString());
         query.setParameterList("ids", ids);
         r = getDbLayer().getSession().executeUpdate(query);
-        // getDbLayer().getSession().commit();
+        // getDbLayer().commit();
         totalSubmissions += r;
         log.append(getDeleted(DBLayer.TABLE_DPL_SUBMISSIONS, r, totalSubmissions));
 
