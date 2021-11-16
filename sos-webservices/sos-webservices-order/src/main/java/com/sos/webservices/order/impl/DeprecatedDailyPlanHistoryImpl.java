@@ -29,11 +29,12 @@ import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.FilterDailyPlanHistory;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
-import com.sos.webservices.order.resource.IDailyPlanHistoryResource;
+import com.sos.webservices.order.resource.DeprecatedIDailyPlanHistoryResource;
 
+/** see com.sos.joc.dailyplan.impl.DailyPlanHistoryImpl */
+@Deprecated
 @Path("daily_plan")
-
-public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDailyPlanHistoryResource {
+public class DeprecatedDailyPlanHistoryImpl extends JOCOrderResourceImpl implements DeprecatedIDailyPlanHistoryResource {
 
     class ControllerDateKey {
 
@@ -225,12 +226,12 @@ public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDaily
 
             filter.setSortMode("desc");
             filter.setOrderCriteria("order_id,scheduled_for");
-            
-            int limit=DEFAULT_LIMIT;
+
+            int limit = DEFAULT_LIMIT;
             if (dailyPlanHistoryFilter.getFilter().getLimit() != 0) {
-            	limit = dailyPlanHistoryFilter.getFilter().getLimit() ; 
+                limit = dailyPlanHistoryFilter.getFilter().getLimit();
             }
-            
+
             boolean haveEntries = true;
             if (dailyPlanHistoryFilter.getFilter().getAuditLogId() != null) {
                 List<String> orderIds = dbLayerDailyPlanHistory.getOrderIdsByAuditLog(dailyPlanHistoryFilter.getFilter().getAuditLogId());
@@ -313,11 +314,11 @@ public class DailyPlanHistoryImpl extends JOCOrderResourceImpl implements IDaily
                             } else {
                                 if (dbItemDailyPlanHistory.getMessage().startsWith(ERROR)) {
                                     dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailyPlanHistory.getMessage().substring(ERROR.length()));
-                                }else {
+                                } else {
                                     dailyPlanSubmissionTimes.getErrorMessages().add(dbItemDailyPlanHistory.getMessage());
                                 }
                             }
-                        } 
+                        }
                         dailyPlanSubmissionTimes.getOrderIds().add(dailyplanHistoryOrderItem);
                         mapOfSubmissionTimesItems.put(submissionControllerDateKey, dailyPlanSubmissionTimes);
                     }

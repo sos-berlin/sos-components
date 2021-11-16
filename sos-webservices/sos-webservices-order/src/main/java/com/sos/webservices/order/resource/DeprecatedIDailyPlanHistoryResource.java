@@ -8,8 +8,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-   
-public interface IDailyPlanHistoryResource {
+
+/** see com.sos.joc.dailyplan.resource.IDailyPlanHistoryImpl */
+@Deprecated
+public interface DeprecatedIDailyPlanHistoryResource {
 
     @POST
     @Path("history")
