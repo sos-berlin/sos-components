@@ -120,6 +120,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 return response;
             }
 
+            checkRequiredParameter("controllerId", in.getControllerId());
+            checkRequiredParameter("date", in.getDate());
+
             Date date = toDate(in.getDate());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SUBMISSIONS);
@@ -164,6 +167,10 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             if (response != null) {
                 return response;
             }
+
+            checkRequiredParameter("controllerId", in.getControllerId());
+            checkRequiredParameter("date", in.getDate());
+            checkRequiredParameter("submissionTime", in.getSubmissionTime());
 
             Date date = toDate(in.getDate());
 
