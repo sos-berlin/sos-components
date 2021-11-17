@@ -3,6 +3,7 @@ package com.sos.joc.documentations.impl;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -72,7 +73,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 }
             }
             Documentations documentations = new Documentations();
-            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, folderPermissions.getListOfFolders()));
+            documentations.setDocumentations(mapDbItemsToDocumentations(dbDocs, documentationsFilter.getOnlyWithAssignReference(), folderPermissions.getListOfFolders()));
             documentations.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(documentations);
         } catch (JocException e) {
@@ -85,8 +86,8 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
         }
     }
 
-    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Set<Folder> permittedFolders) {
-        return dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
+    private List<Documentation> mapDbItemsToDocumentations(List<DBItemDocumentation> dbDocs, Boolean onlyWithAssignReference, Set<Folder> permittedFolders) {
+        Stream<Documentation> docs = dbDocs.stream().filter(dbDoc -> folderIsPermitted(dbDoc.getFolder(), permittedFolders)).map(dbDoc -> {
             Documentation doc = new Documentation();
             doc.setId(dbDoc.getId());
             doc.setName(dbDoc.getName());
@@ -95,7 +96,12 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             doc.setModified(dbDoc.getModified());
             doc.setAssignReference(dbDoc.getDocRef());
             return doc;
-        }).collect(Collectors.toList());
+        });
+        if (onlyWithAssignReference == Boolean.TRUE) {
+            return docs.sorted(Comparator.comparing(doc -> doc.getAssignReference().toLowerCase())).collect(Collectors.toList());
+        } else {
+            return docs.sorted(Comparator.comparing(doc -> doc.getName().toLowerCase())).collect(Collectors.toList());
+        }
     }
 
 }

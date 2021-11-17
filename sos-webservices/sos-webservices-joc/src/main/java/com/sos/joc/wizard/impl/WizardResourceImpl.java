@@ -105,7 +105,7 @@ public class WizardResourceImpl extends JOCResourceImpl implements IWizardResour
                         LOGGER.error(String.format("[%s] %s", jitlDoc.getPath(), e.toString()));
                         return null;
                     }
-                }).filter(Objects::nonNull).sorted(Comparator.comparing(Job::getAssignReference)).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).sorted(Comparator.comparing(job -> job.getAssignReference().toLowerCase())).collect(Collectors.toList()));
             }
             jobs.setDeliveryDate(Date.from(Instant.now()));
 

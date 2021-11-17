@@ -81,6 +81,8 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             
             Set<String> events = new HashSet<>();
             Set<String> folderEvents = Collections.emptySet();
+            events.add(config.getPath());
+            folderEvents.add(oldFolder);
             
             ResponseNewPath response = new ResponseNewPath();
             response.setObjectType(type);
