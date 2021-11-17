@@ -32,7 +32,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
 
     @Override
     public JOCDefaultResponse postJobsOverviewSummary(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
+        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, JobsFilter.class);
@@ -76,10 +76,16 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
             JobsOverView entity = new JobsOverView();
             entity.setSurveyDate(Date.from(Instant.now()));
             entity.setJobs(jobsHistoricSummary);
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            JobHistoryDBLayer jobHistoryDBLayer = new JobHistoryDBLayer(connection, historyFilter);
-            jobsHistoricSummary.setFailed(jobHistoryDBLayer.getCountJobs(HistoryStateText.FAILED, permittedFolders));
-            jobsHistoricSummary.setSuccessful(jobHistoryDBLayer.getCountJobs(HistoryStateText.SUCCESSFUL, permittedFolders));
+            
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            JobHistoryDBLayer dbLayer = new JobHistoryDBLayer(session, historyFilter);
+            long failed = dbLayer.getCountJobs(HistoryStateText.FAILED, permittedFolders);
+            long successful = dbLayer.getCountJobs(HistoryStateText.SUCCESSFUL, permittedFolders);
+            session.close();
+            session = null;
+            
+            jobsHistoricSummary.setFailed(failed);
+            jobsHistoricSummary.setSuccessful(successful);
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);
@@ -89,7 +95,7 @@ public class JobsResourceOverviewSummaryImpl extends JOCResourceImpl implements 
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(connection);
+            Globals.disconnect(session);
         }
     }
 
