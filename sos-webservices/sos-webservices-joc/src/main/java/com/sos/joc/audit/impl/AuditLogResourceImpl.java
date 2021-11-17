@@ -8,7 +8,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -21,7 +20,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.JocAuditLog;
 import com.sos.joc.classes.proxy.Proxies;
-import com.sos.joc.db.audit.AuditLogDBFilter;
 import com.sos.joc.db.audit.AuditLogDBItem;
 import com.sos.joc.db.audit.AuditLogDBLayer;
 import com.sos.joc.exceptions.JocException;
@@ -29,7 +27,6 @@ import com.sos.joc.model.audit.AuditLog;
 import com.sos.joc.model.audit.AuditLogFilter;
 import com.sos.joc.model.audit.AuditLogItem;
 import com.sos.joc.model.audit.CategoryType;
-import com.sos.joc.model.audit.ObjectType;
 import com.sos.schema.JsonValidator;
 
 @Path("audit_log")
@@ -101,31 +98,8 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             if (auditLogFilter.getCategories() != null && !auditLogFilter.getCategories().isEmpty()) {
                 allowedCategories.retainAll(auditLogFilter.getCategories());
             }
-
+            
             boolean withDeployment = allowedCategories.contains(CategoryType.DEPLOYMENT);
-
-            // advanced search with objects or folders
-            boolean withFolders = auditLogFilter.getFolders() != null && !auditLogFilter.getFolders().isEmpty();
-            boolean withObjectName = auditLogFilter.getObjectName() != null && !auditLogFilter.getObjectName().isEmpty();
-            boolean withObjectTypes = auditLogFilter.getObjectTypes() != null && !auditLogFilter.getObjectTypes().isEmpty();
-            boolean withAdvancedSearch = withFolders || withObjectName || withObjectTypes;
-
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
-            AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
-
-            Stream<Long> auditLogIds = Stream.empty();
-            if (withAdvancedSearch) {
-                boolean searchInDepHistory = withDeployment;
-                if (withDeployment && withObjectTypes && !auditLogFilter.getObjectTypes().stream().anyMatch(t -> !ObjectType.ORDER.equals(t))) {
-                    searchInDepHistory = false;
-                }
-
-                auditLogIds = dbLayer.getAuditlogIds(auditLogFilter.getFolders(), auditLogFilter.getObjectTypes(), auditLogFilter.getObjectName());
-                if (searchInDepHistory) {
-                    auditLogIds = Stream.concat(auditLogIds, dbLayer.getAuditlogIdsFromDepHistory(auditLogFilter.getFolders(), auditLogFilter
-                            .getObjectTypes(), auditLogFilter.getObjectName()));
-                }
-            }
 
             if (categoriesWithEmptyControllerIds(allowedCategories)) {
                 if (allControllerAllowed) {
@@ -156,11 +130,12 @@ public class AuditLogResourceImpl extends JOCResourceImpl implements IAuditLogRe
             if (EnumSet.allOf(CategoryType.class).size() == allowedCategories.size()) {
                 allowedCategories = Collections.emptySet();
             }
+            
+            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            AuditLogDBLayer dbLayer = new AuditLogDBLayer(connection);
 
-            AuditLogDBFilter auditLogDBFilter = new AuditLogDBFilter(auditLogFilter, allowedControllers, allowedCategories, auditLogIds.collect(
-                    Collectors.toSet()));
             AuditLog entity = new AuditLog();
-            setAuditLogItems(entity.getAuditLog(), dbLayer.getAuditLogs(auditLogDBFilter, auditLogFilter.getLimit()));
+            setAuditLogItems(entity.getAuditLog(), dbLayer.getAuditLogs(auditLogFilter, allowedControllers, allowedCategories, withDeployment));
             entity.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(entity);

@@ -1,6 +1,7 @@
 package com.sos.joc.db.audit;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.ScrollableResults;
@@ -32,7 +33,6 @@ public class AuditLogDBLayerTest {
             session = factory.openStatelessSession();
 
             String controllerId = "js7.x";
-            Integer limit = null;
 
             AuditLogFilter aFilter = new AuditLogFilter();
             aFilter.setControllerId(controllerId);
@@ -42,7 +42,7 @@ public class AuditLogDBLayerTest {
             // Collection<Long> auditLogIds
 
             AuditLogDBLayer dbLayer = new AuditLogDBLayer(session);
-            sr = dbLayer.getAuditLogs(new AuditLogDBFilter(aFilter, null, null, null), limit);
+            sr = dbLayer.getAuditLogs(aFilter, Collections.emptySet(), Collections.emptySet(), false);
             int size = 0;
             while (sr.next()) {
                 AuditLogDBItem item = (AuditLogDBItem) sr.get(0);
