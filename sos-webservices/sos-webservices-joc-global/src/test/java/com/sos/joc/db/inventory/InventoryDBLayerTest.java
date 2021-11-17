@@ -3,7 +3,6 @@ package com.sos.joc.db.inventory;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,9 +140,7 @@ public class InventoryDBLayerTest {
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
             session.beginTransaction();
 
-            List<Long> configIds = Collections.singletonList(100L);
-
-            Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map = dbLayer.getConfigurationsWithAllDeployments(configIds);
+            Map<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> map = dbLayer.getConfigurationsWithAllDeployments(null, "/", false, null);
             for (Map.Entry<DBItemInventoryConfiguration, Set<InventoryDeploymentItem>> entry : map.entrySet()) {
                 LOGGER.info(SOSString.toString(entry.getKey()));
 

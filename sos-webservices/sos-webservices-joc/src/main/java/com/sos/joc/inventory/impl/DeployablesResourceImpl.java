@@ -86,17 +86,16 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             } else {
                 // get deleted folders
                 List<String> deletedFolders = dbLayer.getDeletedFolders();
-                // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
-                List<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(deployableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
-                // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
+                // get deleted deployables outside deleted folders
                 if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Collections.singleton(
                             ConfigurationType.FOLDER.intValue()));
                     deployables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(deployableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(notDeletedIds), in
-                        .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(), in.getLatest()));
+                deployables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurationsWithAllDeployments(deployableTypes, in.getFolder(), in
+                        .getRecursive(), deletedFolders), in.getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(),
+                        in.getLatest()));
             }
             ResponseDeployables result = new ResponseDeployables();
             result.setDeliveryDate(Date.from(Instant.now()));

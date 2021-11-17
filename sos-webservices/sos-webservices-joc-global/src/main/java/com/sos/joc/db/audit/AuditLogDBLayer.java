@@ -65,21 +65,21 @@ public class AuditLogDBLayer {
             
             Date createdFrom = JobSchedulerDate.getDateFrom(filter.getDateFrom(), filter.getTimeZone());
             Date createdTo = JobSchedulerDate.getDateTo(filter.getDateTo(), filter.getTimeZone());
-
-            StringBuilder hql = new StringBuilder("select ");
-            hql.append("al.id as id ");
-            hql.append(",al.account as account ");
-            hql.append(",al.request as request ");
-            hql.append(",al.created as created ");
-            hql.append(",al.controllerId as controllerId ");
-            hql.append(",al.category as category ");
-            hql.append(",al.comment as comment ");
-            hql.append(",al.parameters as parameters ");
-            hql.append(",al.timeSpent as timeSpent ");
-            hql.append(",al.ticketLink as ticketLink ");
-            hql.append("from ").append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" al ");
-            
             String tableAlias = "al.";
+            
+            StringBuilder hql = new StringBuilder("select ");
+            hql.append(tableAlias + "id as id,");
+            hql.append(tableAlias + "account as account,");
+            hql.append(tableAlias + "request as request,");
+            hql.append(tableAlias + "created as created,");
+            hql.append(tableAlias + "controllerId as controllerId,");
+            hql.append(tableAlias + "category as category,");
+            hql.append(tableAlias + "comment as comment,");
+            hql.append(tableAlias + "parameters as parameters,");
+            hql.append(tableAlias + "timeSpent as timeSpent,");
+            hql.append(tableAlias + "ticketLink as ticketLink");
+            hql.append(" from ").append(DBLayer.DBITEM_JOC_AUDIT_LOG).append(" ").append(tableAlias.substring(0, tableAlias.length() - 1));
+            
             Set<String> clause = new LinkedHashSet<>();
 
             if (!controllerIds.isEmpty()) {
@@ -137,7 +137,7 @@ public class AuditLogDBLayer {
                 hql.append(clause.stream().collect(Collectors.joining(" and ", " where ", "")));
             }
 
-            hql.append(" order by al.id desc");
+            hql.append(" order by " + tableAlias + "id desc");
             Query<AuditLogDBItem> query = session.createQuery(hql.toString(), AuditLogDBItem.class);
 
             //bindParameters

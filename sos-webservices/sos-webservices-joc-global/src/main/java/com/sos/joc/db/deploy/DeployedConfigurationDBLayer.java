@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -227,35 +229,43 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public Map<String, String> getNamePathMapping(String controllerId, Collection<String> names, Integer type) {
+    public Map<String, String> getNamePathMapping(String controllerId, List<String> names, Integer type) {
         if (names == null || names.isEmpty()) {
             return Collections.emptyMap();
         }
-        try {
-            StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-            hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
-            hql.append(" where name in (:names)");
-            if (controllerId != null) {
-                hql.append(" and controllerId=:controllerId");
+        if (names.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            Map<String, String> result = new HashMap<>();
+            for (int i = 0; i < names.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.putAll(getNamePathMapping(controllerId, SOSHibernate.getInClausePartition(i, names), type));
             }
-            if (type != null) {
-                hql.append(" and type=:type");
+            return result;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
+                hql.append("(name, path) from ").append(DBLayer.DBITEM_DEP_NAMEPATHS);
+                hql.append(" where name in (:names)");
+                if (controllerId != null) {
+                    hql.append(" and controllerId=:controllerId");
+                }
+                if (type != null) {
+                    hql.append(" and type=:type");
+                }
+                Query<InventoryNamePath> query = session.createQuery(hql.toString());
+                query.setParameterList("names", names);
+                if (controllerId != null) {
+                    query.setParameter("controllerId", controllerId);
+                }
+                if (type != null) {
+                    query.setParameter("type", type);
+                }
+                List<InventoryNamePath> result = session.getResultList(query);
+                if (result != null) {
+                    return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
+                }
+                return Collections.emptyMap();
+            } catch (Exception e) {
+                return Collections.emptyMap();
             }
-            Query<InventoryNamePath> query = session.createQuery(hql.toString());
-            query.setParameterList("names", names);
-            if (controllerId != null) {
-                query.setParameter("controllerId", controllerId);
-            }
-            if (type != null) {
-                query.setParameter("type", type);
-            }
-            List<InventoryNamePath> result = session.getResultList(query);
-            if (result != null) {
-                return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getName, InventoryNamePath::getPath));
-            }
-            return Collections.emptyMap();
-        } catch (Exception e) {
-            return Collections.emptyMap();
         }
     }
 
@@ -415,24 +425,36 @@ public class DeployedConfigurationDBLayer {
         }
     }
     
-    public List<WorkflowId> getWorkflowsIds(Collection<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
+    public List<WorkflowId> getWorkflowsIds(List<String> workflowNames, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        try {
-            StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
-            hql.append("(path, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
-            hql.append(" where type=:type");
-            hql.append(" and controllerId=:controllerId");
-            hql.append(" and name in (:workflowNames)");
+        if (workflowNames.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<WorkflowId> result = new ArrayList<>();
+            for (int i = 0; i < workflowNames.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getWorkflowsIds(SOSHibernate.getInClausePartition(i, workflowNames), controllerId));
+            }
+            return result;
+        } else {
+            try {
+                StringBuilder hql = new StringBuilder("select new ").append(WorkflowId.class.getName());
+                hql.append("(path, commitId) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+                hql.append(" where type=:type");
+                hql.append(" and controllerId=:controllerId");
+                hql.append(" and name in (:workflowNames)");
 
-            Query<WorkflowId> query = session.createQuery(hql.toString());
-            query.setParameter("type", DeployType.WORKFLOW.intValue());
-            query.setParameter("controllerId", controllerId);
-            query.setParameterList("workflowNames", workflowNames);
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
+                Query<WorkflowId> query = session.createQuery(hql.toString());
+                query.setParameter("type", DeployType.WORKFLOW.intValue());
+                query.setParameter("controllerId", controllerId);
+                query.setParameterList("workflowNames", workflowNames);
+                List<WorkflowId> result = session.getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
+            }
         }
     }
 
@@ -501,6 +523,7 @@ public class DeployedConfigurationDBLayer {
             clauses.add("controllerId = :controllerId");
         }
 
+        // TODO consider max in
         if (filter.getPaths() != null && !filter.getPaths().isEmpty()) {
             if (filter.getPaths().size() == 1) {
                 clauses.add("path = :path");
@@ -509,6 +532,7 @@ public class DeployedConfigurationDBLayer {
             }
         }
 
+        // TODO consider max in
         if (filter.getNames() != null && !filter.getNames().isEmpty()) {
             if (filter.getNames().size() == 1) {
                 clauses.add("name = :name");
@@ -516,7 +540,8 @@ public class DeployedConfigurationDBLayer {
                 clauses.add("name in (:names)");
             }
         }
-
+        
+        // TODO consider max in
         if (filter.getWorkflowIds() != null && !filter.getWorkflowIds().isEmpty()) {
             if (filter.getWorkflowIds().size() == 1) {
                 clauses.add("concat(name, '/', commitId) = :workflowId");

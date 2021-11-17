@@ -3,6 +3,7 @@ package com.sos.joc.event.impl;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -126,20 +127,20 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
             final DeployedConfigurationDBLayer dbCLayer = new DeployedConfigurationDBLayer(connection);
 
             // List<EventType> eventsWithWorkflow = Arrays.asList(EventType.WORKFLOW, EventType.JOB, EventType.TASKHISTORY, EventType.ORDERHISTORY);
-            // Set<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
-            // .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).collect(Collectors.toSet());
+            // List<String> workflowNames = evt.getEventSnapshots().stream().filter(e -> eventsWithWorkflow.contains(e.getObjectType())).map(e -> (e
+            // .getWorkflow() != null) ? e.getWorkflow().getPath() : e.getPath()).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            Set<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
-                    .filter(Objects::nonNull).collect(Collectors.toSet());
+            List<String> lockNames = evt.getEventSnapshots().stream().filter(e -> EventType.LOCK.equals(e.getObjectType())).map(EventSnapshot::getPath)
+                    .filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            Set<String> noticeBoardNames = evt.getEventSnapshots().stream().filter(e -> EventType.NOTICEBOARD.equals(e.getObjectType())).map(
-                    EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
+            List<String> noticeBoardNames = evt.getEventSnapshots().stream().filter(e -> EventType.NOTICEBOARD.equals(e.getObjectType())).map(
+                    EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // Set<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
-            // EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
+            // List<String> fileOrderSourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.FILEORDERSOURCE.equals(e.getObjectType())).map(
+            // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
-            // Set<String> jobResourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.JOBRESOURCE.equals(e.getObjectType())).map(
-            // EventSnapshot::getPath).filter(Objects::nonNull).collect(Collectors.toSet());
+            // List<String> jobResourceNames = evt.getEventSnapshots().stream().filter(e -> EventType.JOBRESOURCE.equals(e.getObjectType())).map(
+            // EventSnapshot::getPath).filter(Objects::nonNull).distinct().collect(Collectors.toList());
 
             // Map<String, String> namePathWorkflowMap = dbCLayer.getNamePathMapping(evt.getControllerId(), workflowNames, DeployType.WORKFLOW
             // .intValue());

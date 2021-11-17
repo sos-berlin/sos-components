@@ -86,26 +86,21 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             } else {
                 // get deleted folders
                 List<String> deletedFolders = dbLayer.getDeletedFolders();
-                // get not deleted deployables (only these needs left join with historic table DEP_HISTORY)
-                List<Long> notDeletedIds = dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
-                // get deleted deployables outside deleted folders (avoid left join to the historic table DEP_HISTORY)
+                // get deleted releasables outside deleted folders
                 if (in.getWithRemovedObjects()) {
                     List<DBItemInventoryConfiguration> folders = dbLayer.getFolderContent(in.getFolder(), in.getRecursive(), Arrays.asList(
                             ConfigurationType.FOLDER.intValue()));
                     releasables.addAll(getResponseStreamOfDeletedItem(dbLayer.getDeletedConfigurations(releasableTypes, in.getFolder(), in
                             .getRecursive(), deletedFolders), folders, permittedFolders));
                 }
-                
-                //if (!in.getWithoutDrafts() || !in.getWithoutReleased()) {
-                    Map<Long, List<DBItemInventoryReleasedConfiguration>> releasedItems = Collections.emptyMap();
-                    if (!in.getWithoutReleased()) {
-                        releasedItems = dbLayer.getReleasedItemsByConfigurationIds(notDeletedIds);
-                    }
-                    releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), releasedItems, in
-                            .getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutReleased()));
-//                } else {
-//                    releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getConfigurations(notDeletedIds), in.getOnlyValidObjects(), permittedFolders));
-//                }
+
+                Map<Long, List<DBItemInventoryReleasedConfiguration>> releasedItems = Collections.emptyMap();
+                if (!in.getWithoutReleased()) {
+                    releasedItems = dbLayer.getReleasedItemsByConfigurationIds(releasableTypes, in.getFolder(), in.getRecursive(), deletedFolders);
+                }
+                releasables.addAll(getResponseStreamOfNotDeletedItem(dbLayer.getNotDeletedConfigurations(releasableTypes, in.getFolder(), in
+                        .getRecursive(), deletedFolders), releasedItems, in.getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in
+                                .getWithoutReleased()));
             }
             
             ResponseReleasables result = new ResponseReleasables();
