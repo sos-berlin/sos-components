@@ -12,7 +12,7 @@ import com.sos.joc.classes.WebservicePaths;
 
 public interface IDailyPlanHistoryResource {
 
-    public static final String PATH_MAIN = "history_new";
+    public static final String PATH_MAIN = "history";
     public static final String IMPL_PATH_MAIN = WebservicePaths.getResourceImplPath(WebservicePaths.DAILYPLAN, PATH_MAIN);
 
     public static final String PATH_SUBMISSIONS = PATH_MAIN + "/submissions";

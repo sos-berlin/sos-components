@@ -55,8 +55,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 return response;
             }
 
-            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), "UTC");
-            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), "UTC");
+            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone());
+            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone());
             Map<Date, DateItem> map = new HashMap<>();
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
