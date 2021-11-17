@@ -4,8 +4,8 @@ import java.util.regex.Pattern;
 
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.file.common.AFileOperationsJob;
-import com.sos.jitl.jobs.file.common.FileOperationsImpl;
 import com.sos.jitl.jobs.file.common.FileOperationsJobArguments;
+import com.sos.jitl.jobs.file.common.FileOperationsRenameImpl;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -20,7 +20,7 @@ public class RenameFileJob extends AFileOperationsJob {
         FileOperationsJobArguments args = step.getArguments();
         checkArguments(args);
 
-        FileOperationsImpl fo = new FileOperationsImpl(step.getLogger());
+        FileOperationsRenameImpl fo = new FileOperationsRenameImpl(step.getLogger());
         int result = fo.renameFileCnt(args.getSourceFile().getValue(), args.getTargetFile().getValue(), args.getFileSpec().getValue(), args
                 .getFlags(), Pattern.CASE_INSENSITIVE, args.getReplacing().getValue(), args.getReplacement().getValue(), args.getMinFileAge()
                         .getValue(), args.getMaxFileAge().getValue(), args.getMinFileSize().getValue(), args.getMaxFileSize().getValue(), args
