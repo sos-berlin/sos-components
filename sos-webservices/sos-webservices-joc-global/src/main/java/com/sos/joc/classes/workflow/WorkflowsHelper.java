@@ -1,6 +1,7 @@
 package com.sos.joc.classes.workflow;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -294,7 +296,7 @@ public class WorkflowsHelper {
             // no folder permissions
         } else {
             
-            Set<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toSet());
+            List<WorkflowId> wIds = WorkflowsHelper.oldWorkflowIds(currentState).collect(Collectors.toList());
             if (wIds == null || wIds.isEmpty()) {
                 return Collections.emptyList();
             }
@@ -302,12 +304,20 @@ public class WorkflowsHelper {
             DeployedConfigurationFilter dbFilter = new DeployedConfigurationFilter();
             dbFilter.setControllerId(workflowsFilter.getControllerId());
             dbFilter.setObjectTypes(Collections.singleton(DeployType.WORKFLOW.intValue()));
-            dbFilter.setWorkflowIds(wIds);
-
             if (permittedFolders != null && !permittedFolders.isEmpty()) {
                 dbFilter.setFolders(permittedFolders);
-                contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
+            }
+            
+            // considered that wIds.size() can be > 1000
+            if (wIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+                List<List<WorkflowId>> wIdsPartitions = SOSHibernate.getInClausePartitions(wIds);
+                contents = new ArrayList<>();
+                for (List<WorkflowId> wIdsPartition : wIdsPartitions) {
+                    dbFilter.setWorkflowIds(wIdsPartition);
+                    contents.addAll(dbLayer.getDeployedInventoryWithCommitIds(dbFilter));
+                }
             } else {
+                dbFilter.setWorkflowIds(wIds);
                 contents = dbLayer.getDeployedInventoryWithCommitIds(dbFilter);
             }
         }

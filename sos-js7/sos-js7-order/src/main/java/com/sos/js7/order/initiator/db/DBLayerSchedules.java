@@ -2,8 +2,8 @@ package com.sos.js7.order.initiator.db;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -153,40 +154,48 @@ public class DBLayerSchedules {
         return filtered;
     }
 
-    public Map<String, String> getSchedulePathNameMap(Collection<String> scheduleNamesOrPaths) throws SOSHibernateException {
+    public Map<String, String> getSchedulePathNameMap(List<String> scheduleNamesOrPaths) throws SOSHibernateException {
 
         if (scheduleNamesOrPaths == null || scheduleNamesOrPaths.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<Boolean, List<String>> namesAndPaths = scheduleNamesOrPaths.stream().filter(s -> s != null && !s.isEmpty()).collect(Collectors.groupingBy(
-                s -> s.startsWith("/")));
+        if (scheduleNamesOrPaths.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            Map<String, String> result = new HashMap<>();
+            for (int i = 0; i < scheduleNamesOrPaths.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.putAll(getSchedulePathNameMap(SOSHibernate.getInClausePartition(i, scheduleNamesOrPaths)));
+            }
+            return result;
+        } else {
+            Map<Boolean, List<String>> namesAndPaths = scheduleNamesOrPaths.stream().filter(s -> s != null && !s.isEmpty()).collect(Collectors.groupingBy(
+                    s -> s.startsWith("/")));
 
-        StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where");
-        if (namesAndPaths.containsKey(true)) { // paths
-            sql.append(" path in (:paths)");
-        }
-        if (namesAndPaths.containsKey(true) && namesAndPaths.containsKey(false)) { // paths and names
-            sql.append(" or");
-        }
-        if (namesAndPaths.containsKey(false)) { // names
-            sql.append(" name in (:names)");
-        }
+            StringBuilder sql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where");
+            if (namesAndPaths.containsKey(true)) { // paths
+                sql.append(" path in (:paths)");
+            }
+            if (namesAndPaths.containsKey(true) && namesAndPaths.containsKey(false)) { // paths and names
+                sql.append(" or");
+            }
+            if (namesAndPaths.containsKey(false)) { // names
+                sql.append(" name in (:names)");
+            }
 
-        Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(sql);
-        if (namesAndPaths.containsKey(true)) { // paths
-            query.setParameterList("paths", namesAndPaths.get(true));
-        }
-        if (namesAndPaths.containsKey(false)) { // names
-            query.setParameterList("names", namesAndPaths.get(false));
-        }
+            Query<DBItemInventoryReleasedConfiguration> query = sosHibernateSession.createQuery(sql);
+            if (namesAndPaths.containsKey(true)) { // paths
+                query.setParameterList("paths", namesAndPaths.get(true));
+            }
+            if (namesAndPaths.containsKey(false)) { // names
+                query.setParameterList("names", namesAndPaths.get(false));
+            }
 
-        List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
-        if (resultset == null || resultset.isEmpty()) {
-            return Collections.emptyMap();
-        }
+            List<DBItemInventoryReleasedConfiguration> resultset = sosHibernateSession.getResultList(query);
+            if (resultset == null || resultset.isEmpty()) {
+                return Collections.emptyMap();
+            }
 
-        return resultset.stream().distinct().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getPath,
-                DBItemInventoryReleasedConfiguration::getName));
+            return resultset.stream().distinct().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getPath,
+                    DBItemInventoryReleasedConfiguration::getName));
+        }
     }
 
 }

@@ -608,13 +608,16 @@ public abstract class AFileOperations {
         if (source.isDirectory()) {
             if (target != null) {
                 if (!target.exists()) {
-                    throw new SOSFileOperationsException("directory does not exist: " + target.getCanonicalPath());
+                    throw new SOSFileOperationsException("target directory does not exist: " + target.getCanonicalPath());
                 }
                 if (!target.isDirectory()) {
                     throw new SOSFileOperationsException("target is no directory: " + target.getCanonicalPath());
                 }
             }
             list = getFilelist(source.getPath(), fileSpec, fileSpecFlags, has(flags, RECURSIVE), minAge, maxAge, minSize, maxSize, 0, 0);
+            if (logger.isDebugEnabled()) {
+                logger.debug("[source=%s][fileSpec=%s]found %s files", source.getPath(), fileSpec, list.size());
+            }
         } else {
             list = new ArrayList<File>();
             list.add(source);
@@ -677,6 +680,10 @@ public abstract class AFileOperations {
                 }
             }
             if (!handleOneFile(sourceFile, targetFile, overwrite, gracious)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("[skip][sourceFile=%s][targetFile=%s]overwrite=%s,gracious=%s", sourceFile.getPath(), targetFile.getPath(),
+                            overwrite, gracious);
+                }
                 continue;
             }
             transferedFiles++;

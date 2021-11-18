@@ -269,21 +269,6 @@ public class DeployedConfigurationDBLayer {
         }
     }
 
-    public Map<WorkflowId, String> getNamePathMappingWithCommitIds(DeployedConfigurationFilter filter) throws SOSHibernateException {
-        if (filter.getWorkflowIds() == null || filter.getWorkflowIds().isEmpty()) {
-            return Collections.emptyMap();
-        }
-        StringBuilder hql = new StringBuilder("select new ").append(InventoryNamePath.class.getName());
-        hql.append("(name, commitId, path) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(getWhereForDepHistory(filter));
-        Query<InventoryNamePath> query = createQuery(hql.toString(), filter);
-
-        List<InventoryNamePath> result = session.getResultList(query);
-        if (result != null) {
-            return result.stream().distinct().collect(Collectors.toMap(InventoryNamePath::getWorkflowId, InventoryNamePath::getPath));
-        }
-        return Collections.emptyMap();
-    }
-    
     public List<WorkflowId> getUsedWorkflowsByPostNoticeBoard(String boardName, String controllerId) throws DBConnectionRefusedException,
             DBInvalidDataException {
         try {

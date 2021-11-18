@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -33,7 +32,6 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
 
     @Override
     public JOCDefaultResponse postOrderCount(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, WorkflowIdsFilter.class);
@@ -68,8 +66,6 @@ public class WorkflowsOrderCountResourceImpl extends JOCResourceImpl implements 
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
-        } finally {
-            Globals.disconnect(connection);
         }
     }
     

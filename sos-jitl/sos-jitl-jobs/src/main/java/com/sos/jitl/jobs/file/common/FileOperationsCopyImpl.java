@@ -12,16 +12,15 @@ public class FileOperationsCopyImpl extends AFileOperations {
     }
 
     @Override
-    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious)
-            throws Exception {
+    protected boolean handleOneFile(File sourceFile, File targetFile, boolean overwrite, boolean gracious) throws Exception {
         if (sourceFile.equals(targetFile)) {
             throw new SOSFileOperationsException(String.format("cannot copy file to itself: %s", sourceFile.getCanonicalPath()));
         }
 
         if (overwrite || !targetFile.exists()) {
+            getLogger().info("copy %s to %s", sourceFile.getPath(), targetFile.getPath());
             if (copyFile(sourceFile, targetFile, false)) {
                 targetFile.setLastModified(sourceFile.lastModified());
-                getLogger().info("copy %s to %s", sourceFile.getPath(), targetFile.getPath());
                 return true;
             }
         } else if (!gracious) {

@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -13,8 +11,6 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 
 public class DBLayerInventoryReleasedConfigurations {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerInventoryReleasedConfigurations.class);
 
     private static final String DBItemInventoryReleasedConfiguration = com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration.class
             .getSimpleName();

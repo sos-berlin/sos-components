@@ -6,72 +6,72 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-  <job name="MailJob" title="Send Mails">
+  <job name="MailJob" title="Send Mail">
     <script language="java" java_class="com.sos.jitl.jobs.mail.MailJob" resource="1" />
   </job>
   <configuration>
     <params id="job_parameter">
       <note>
-        <div xmlns="http://www.w3.org/1999/xhtml">The parameters for this job may be set as job or order parameters</div>
+        <div xmlns="http://www.w3.org/1999/xhtml">The parameters for this job may be set as job arguments or order variables</div>
       </note>
       <param name="to" required="true">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">mail recipient(s)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Mail recipient(s)</div>
         </note>
       </param>
       <param name="from" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">mail sender</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Mail address of the sender</div>
         </note>
       </param>
       <param name="from_name" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">name of the sender</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Name of the sender</div>
         </note>
       </param>
       <param name="reply_to" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">reply address</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Reply address</div>
         </note>
       </param>
       <param name="cc" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">cc recipient(s)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Cc recipient(s)</div>
         </note>
       </param>
       <param name="bcc" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">bcc recipient(s)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Bcc recipient(s)</div>
         </note>
       </param>
       <param name="subject" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail Subject</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Mail subject</div>
         </note>
       </param>
       <param name="mail.smtp.host" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">mail server host</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Mail server host</div>
         </note>
       </param>
-      <param name="mail_smtp_port" required="false" default_value="25">
+      <param name="mail.smtp.port" required="false" default_value="25">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">mail server port</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Mail server port</div>
         </note>
       </param>
-      <param name="mail_smtp_user" required="false">
+      <param name="mail.smtp.user" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">smtp username</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">SMTP user account</div>
         </note>
       </param>
-      <param name="mail_smtp_password" required="false">
+      <param name="mail.smtp.password" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">smtp user password</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">SMTP user password</div>
         </note>
       </param>
       <param name="security_protocol" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">smtp user password</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">SMTP protocol (smtp, smtps)</div>
         </note>
       </param>
       <param name="body" required="false">
@@ -81,78 +81,78 @@
       </param>
       <param name="content_type" required="false" default_value="text/plain">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">content_type of the mail (text/plain, text/html...)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Content type of the mail (text/plain, text/html...)</div>
         </note>
       </param>
       <param name="encoding" required="false" default_value="7bit">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">encoding of the mail (7bit, Quoted-Printable, Base64)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Encoding of the mail (7bit, Quoted-Printable, Base64)</div>
         </note>
       </param>
       <param name="charset" required="false" default_value="iso-8859-1">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">charset of the mail</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Character set of the mail</div>
         </note>
       </param>
       <param name="attachment_content_type" required="false" default_value="application/octet-stream">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">content_type of attachments (application/octet-stream, application/pdf...)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Content type of attachments (application/octet-stream, application/pdf...)</div>
         </note>
       </param>
       <param name="attachment_encoding" required="false" default_value="Base64">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">encoding of attachments (7bit, Quoted-Printable, Base64)</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Encoding of attachments (7bit, Quoted-Printable, Base64)</div>
         </note>
       </param>
       <param name="attachment_charset" required="false" default_value="iso-8859-1">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">charset of attachments</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">Character set of attachments</div>
         </note>
       </param>
       <param name="attachment" required="false">
         <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Filename and path of the attachment(s) (multiple attachments separated by ";")</div>
+          <div xmlns="http://www.w3.org/1999/xhtml">File name and path of attachment(s) (multiple attachments are separated by ";")</div>
         </note>
       </param>
       
   	  <param name="credential_store_file" required="false">
         <note>
-        	<title>Location of the Credential Store file</title>
+        	<title>Location of the Credential Store database file</title>
         	<p>
-            	The name of the keepass file that contains the credentials for the access to the database.
+            	The name of the KeePass database file.
           	</p>
           	<p>
-            	Alternatively it is possible to specify the value in the url with ?file=
+            	Alternatively it is possible to specify the value in the URL with ?file=
           	</p>
         </note>
       </param>
 	  
       <param name="credential_store_key_file" required="false">
         <note>
-        	<title>Location of the Credential Store file</title>
+        	<title>Location of the Credential Store key file</title>
           	<p>
-            	The name of the keepass key file that contains the key for the credentials 
-            	for the access to the database (if a key file is assigned to the keepass file). 
-            	When no keepass key file is given, the file name is build with the name of the keepass file with changing the extension to .key.
+            	The name of the KeePass key file that contains the key
+            	for access to the KeePass database file (if a key file is assigned to KeePass database file). 
+            	If no KeePass key file is specified, then the file name is assumed from the basename of the KeePass database file and the extension .key.
           	</p>
           	<p>
-            	Alternatively it is possible to specify the value in the url with ?keyfile=
+            	Alternatively it is possible to specify the value in the URL with ?keyfile=
           	</p>
         </note>
       </param>
 	  
       <param name="credential_store_entry_path" required="false">
         <note>
-        	<title>Path for the entries in the keepass file</title>
+        	<title>Path for the entries in the KeePass file</title>
           	<p>
-           		To speciy a path for all entries. This makes the values for e.g. the password shorter.<br/>
+           		To speciy a path for all entries. This allows shorter values for references to the Credential Store.<br/>
 		   		Example: <br/>
-		   		credential_store_entry_path=/sos/scheduler<br/>
+		   		credential_store_entry_path=/sos/jobscheduler<br/>
 		   		value for password: cs://myMail<br/>
-		   		In the keepass file you find the entry in /sos/scheduler/myMail
+		   		In the KeePass file you find the entry in /sos/jobscheduler/myMail
           	</p>
           	<p>
-            	Alternatively it is possible to specify the value in the url with ?entry_path=
+            	Alternatively it is possible to specify the value in the URL with ?entry_path=
           	</p>
         </note>
       </param>
@@ -162,16 +162,16 @@
   </configuration>
   <documentation>
   		<p>
-      		This job is used to send emails.<br/>
-      		All "mail." parameters for Java mail can be used (see <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>).
+      		This job is used to send mail.<br/>
+      		All "mail.*" properties for Java Mail can be used (see <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>).
       	</p>
       	<p>
       		<ul>
       			<li>"mail.transport.protocol" is set to "smtp"</li>
         		<li>"mail.smtp.class" is set to "com.sun.mail.SMTPTransport</li>
       			<li>If "mail.smtp.user" is specified then "mail.smtp.auth" is set to "true". Otherwise "mail.smtp.auth" is set to "false".</li>
-      			<li>If the securityProtocol is specified as "ssl" then "mail.smtp.ssl.enable" is set to "true" and "mail.transport.protocol" is set to "smtps".</li>
-      			<li>If the securityProtocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".</li>
+      			<li>If the security protocol is specified as "ssl" then "mail.smtp.ssl.enable" is set to "true" and "mail.transport.protocol" is set to "smtps".</li>
+      			<li>If the security protocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".</li>
       		</ul>        
     	</p>
   </documentation>
