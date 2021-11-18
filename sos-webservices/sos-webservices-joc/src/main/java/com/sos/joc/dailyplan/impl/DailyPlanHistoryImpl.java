@@ -246,6 +246,8 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         }
         if (date.length() == 10) {
             date = date + "T00:00:00Z";
+        } else if (date.equals("0")) {
+            date = "0d";
         }
         return JobSchedulerDate.getDateFrom(date, "UTC");
     }
