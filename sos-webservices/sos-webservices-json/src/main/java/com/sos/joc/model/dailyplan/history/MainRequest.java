@@ -19,7 +19,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "timeZone",
     "dateFrom",
     "dateTo",
     "submitted",
@@ -36,31 +35,22 @@ public class MainRequest {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * string without < and >
-     * <p>
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    @JsonPropertyDescription("see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones")
-    private String timeZone;
-    /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateFrom")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    @JsonPropertyDescription("0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format")
     private String dateFrom;
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateTo")
-    @JsonPropertyDescription("0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp")
+    @JsonPropertyDescription("0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format")
     private String dateTo;
     @JsonProperty("submitted")
     private Boolean submitted;
@@ -90,31 +80,9 @@ public class MainRequest {
     }
 
     /**
-     * string without < and >
-     * <p>
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    public String getTimeZone() {
-        return timeZone;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-     * 
-     */
-    @JsonProperty("timeZone")
-    public void setTimeZone(String timeZone) {
-        this.timeZone = timeZone;
-    }
-
-    /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateFrom")
@@ -125,7 +93,7 @@ public class MainRequest {
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateFrom")
@@ -136,7 +104,7 @@ public class MainRequest {
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateTo")
@@ -147,7 +115,7 @@ public class MainRequest {
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
-     *  0 or [number][smhdwMy] (where smhdwMy unit for second, minute, etc) or ISO 8601 timestamp
+     *  0 or [number][dwMy] (where dwMy unit for day, week, etc) or ISO date in YYYY-MM-DD format
      * 
      */
     @JsonProperty("dateTo")
@@ -177,12 +145,12 @@ public class MainRequest {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("timeZone", timeZone).append("dateFrom", dateFrom).append("dateTo", dateTo).append("submitted", submitted).append("limit", limit).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dateFrom", dateFrom).append("dateTo", dateTo).append("submitted", submitted).append("limit", limit).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(submitted).append(controllerId).append(dateTo).append(limit).append(timeZone).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(limit).append(submitted).append(controllerId).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -194,7 +162,7 @@ public class MainRequest {
             return false;
         }
         MainRequest rhs = ((MainRequest) other);
-        return new EqualsBuilder().append(submitted, rhs.submitted).append(controllerId, rhs.controllerId).append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(limit, rhs.limit).append(submitted, rhs.submitted).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

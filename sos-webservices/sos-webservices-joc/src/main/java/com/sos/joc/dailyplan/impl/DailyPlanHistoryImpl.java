@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.WebservicePaths;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.dailyplan.resource.IDailyPlanHistoryResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DailyPlanHistoryDBLayer;
@@ -49,26 +51,40 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             JsonValidator.validateFailFast(inBytes, MainRequest.class);
             MainRequest in = Globals.objectMapper.readValue(inBytes, MainRequest.class);
 
-            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
-                    .getOrders().getView());
+            String controllerId = in.getControllerId();
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getOrders().getView()).collect(Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet();
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            }
+
+            JOCDefaultResponse response = initPermissions(controllerId, permitted);
             if (response != null) {
                 return response;
             }
 
-            Date dateFrom = JobSchedulerDate.getDateFrom(in.getDateFrom(), in.getTimeZone());
-            Date dateTo = JobSchedulerDate.getDateTo(in.getDateTo(), in.getTimeZone());
+            Date dateFrom = toUTCDate(in.getDateFrom());
+            Date dateTo = toUTCDate(in.getDateTo());
             Map<Date, DateItem> map = new HashMap<>();
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
-            List<Object[]> result = dbLayer.getDates(in.getControllerId(), dateFrom, dateTo, in.getSubmitted(), getLimit(in.getLimit()));
+            List<Object[]> result = dbLayer.getDates(allowedControllers, dateFrom, dateTo, in.getSubmitted(), getLimit(in.getLimit()));
 
             for (int i = 0; i < result.size(); i++) {
                 Object[] o = (Object[]) result.get(i);
                 Date date = (Date) o[0];
 
                 ControllerItem ci = new ControllerItem();
-                // TODO allowed controllerId ...
                 ci.setControllerId((String) o[1]);
                 ci.setCountTotal((Long) o[2]);
 
@@ -92,8 +108,10 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
 
             MainResponse answer = new MainResponse();
             answer.setDeliveryDate(new Date());
+            // sorting by the client
+            answer.setDates(map.values().stream().collect(Collectors.toList()));
             // descending sort
-            answer.setDates(map.values().stream().sorted((e1, e2) -> e2.getDate().compareTo(e1.getDate())).collect(Collectors.toList()));
+            // answer.setDates(map.values().stream().sorted((e1, e2) -> e2.getDate().compareTo(e1.getDate())).collect(Collectors.toList()));
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
@@ -123,7 +141,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             checkRequiredParameter("controllerId", in.getControllerId());
             checkRequiredParameter("date", in.getDate());
 
-            Date date = toDate(in.getDate());
+            Date date = toUTCDate(in.getDate());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SUBMISSIONS);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
@@ -134,13 +152,14 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             SubmissionsResponse answer = new SubmissionsResponse();
             answer.setDeliveryDate(new Date());
             if (result != null) {
-                // descending sort
                 answer.setSubmissionTimes(result.stream().map(e -> {
                     SubmissionItem item = new SubmissionItem();
                     item.setSubmissionTime((Date) e[0]);
                     item.setCountTotal((Long) e[1]);
                     return item;
-                }).sorted((e1, e2) -> e2.getSubmissionTime().compareTo(e1.getSubmissionTime())).collect(Collectors.toList()));
+                }).collect(Collectors.toList()));  // sorting by the client
+                // descending sort
+                // .sorted((e1, e2) -> e2.getSubmissionTime().compareTo(e1.getSubmissionTime())).collect(Collectors.toList()));
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
@@ -172,7 +191,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             checkRequiredParameter("date", in.getDate());
             checkRequiredParameter("submissionTime", in.getSubmissionTime());
 
-            Date date = toDate(in.getDate());
+            Date date = toUTCDate(in.getDate());
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SUBMISSIONS);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
@@ -188,7 +207,6 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             answer.setWarnMessages(new ArrayList<>());
             answer.setErrorMessages(new ArrayList<>());
             if (result != null) {
-                // ascending sort
                 answer.setOrders(result.stream().map(e -> {
                     OrderItem item = new OrderItem();
                     item.setOrderId(e.getOrderId());
@@ -206,7 +224,9 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                         }
                     }
                     return item;
-                }).sorted((e1, e2) -> e1.getScheduledFor().compareTo(e2.getScheduledFor())).collect(Collectors.toList()));
+                }).collect(Collectors.toList())); // sorted by the client
+                // ascending sort
+                // .sorted((e1, e2) -> e1.getScheduledFor().compareTo(e2.getScheduledFor()))
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
@@ -220,12 +240,12 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         }
     }
 
-    private Date toDate(String date) {
+    private Date toUTCDate(String date) {
         if (date == null) {
             return null;
         }
         if (date.length() == 10) {
-            date = date + "T00:00:00";
+            date = date + "T00:00:00Z";
         }
         return JobSchedulerDate.getDateFrom(date, "UTC");
     }

@@ -1,6 +1,8 @@
 package com.sos.joc.db.dailyplan;
 
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -28,13 +30,13 @@ public class DailyPlanHistoryDBLayerTest {
             factory = createFactory();
             session = factory.openStatelessSession();
 
-            String controllerId = "js7.x";
+            Collection<String> controllerIds = Collections.singleton("js7.x");
             Date dateFrom = null;
             Boolean submitted = null;
             int limit = 0;
 
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
-            List<Object[]> sr = dbLayer.getDates(controllerId, dateFrom, dateFrom, submitted, limit);
+            List<Object[]> sr = dbLayer.getDates(controllerIds, dateFrom, dateFrom, submitted, limit);
             int size = 0;
             for (int i = 0; i < sr.size(); i++) {
                 Object[] item = (Object[]) sr.get(i);
