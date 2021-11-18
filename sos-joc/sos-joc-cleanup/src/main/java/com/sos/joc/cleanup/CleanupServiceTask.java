@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory.Dbms;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.cleanup.CleanupServiceConfiguration.Age;
@@ -41,10 +42,12 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
     private final String MANUAL_TASK_IDENTIFIER_DEPLOYMENT = "deployment";
     private final String MANUAL_TASK_IDENTIFIER_AUDITLOG = "auditlog";
     private final String MANUAL_TASK_IDENTIFIER_YADE = "file_transfer";
+    private final int ORACLE_MAX_BATCH_SIZE = 1_000;
     private final CleanupServiceSchedule schedule;
+    private List<ICleanupTask> cleanupTasks = null;
     private final String identifier;
     private final String logIdentifier;
-    private List<ICleanupTask> cleanupTasks = null;
+    private int batchSize;
 
     public CleanupServiceTask(CleanupServiceSchedule schedule) {
         this.schedule = schedule;
@@ -65,7 +68,18 @@ public class CleanupServiceTask implements Callable<JocClusterAnswer> {
             List<IJocClusterService> services = cluster.getHandler().getServices();
             LOGGER.info(String.format("[%s][run]found %s running services", logIdentifier, services.size()));
 
-            int batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
+            batchSize = cleanupSchedule.getService().getConfig().getBatchSize();
+            try {
+                if (batchSize > ORACLE_MAX_BATCH_SIZE && cleanupSchedule.getFactory().getDbms().equals(Dbms.ORACLE)) {
+                    LOGGER.info(String.format("[%s][run][configured batch_size=%s][skip]use max batch_size=%s for oracle", logIdentifier, batchSize,
+                            ORACLE_MAX_BATCH_SIZE));
+
+                    batchSize = ORACLE_MAX_BATCH_SIZE;
+                }
+            } catch (Throwable e) {
+                LOGGER.warn(e.toString(), e);
+            }
+
             List<Supplier<JocClusterAnswer>> tasks = new ArrayList<Supplier<JocClusterAnswer>>();
             // 1) service tasks
             for (IJocClusterService service : services) {
