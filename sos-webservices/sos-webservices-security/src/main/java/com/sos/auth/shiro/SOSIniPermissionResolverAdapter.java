@@ -84,9 +84,9 @@ public class SOSIniPermissionResolverAdapter implements RolePermissionResolver {
 
                                         final Permission _permission;
                                         if (permission.getExcluded()) {
-                                            _permission = new WildcardPermission("-" + permission.getPath());
+                                            _permission = new WildcardPermission("-" + controllerPermissions.getKey() + ":" + permission.getPath());
                                         } else {
-                                            _permission = new WildcardPermission(permission.getPath());
+                                            _permission = new WildcardPermission(controllerPermissions.getKey() + ":" + permission.getPath());
                                         }
 
                                         if (permission.getPath() != null) {

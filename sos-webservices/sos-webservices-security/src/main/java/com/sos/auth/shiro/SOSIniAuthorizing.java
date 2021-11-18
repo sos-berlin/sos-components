@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
-import com.sos.joc.classes.security.SOSSecurityPermissionItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IniPermissions;
 import com.sos.joc.model.security.SecurityConfiguration;
@@ -98,9 +97,9 @@ public class SOSIniAuthorizing implements ISOSAuthorizing {
                                         for (IniPermission permission : controllerPermissions.getValue()) {
                                             if (permission.getPath() != null) {
                                                 if (permission.getExcluded()) {
-                                                    authorizationInfo.addStringPermission("-" + permission.getPath());
+                                                    authorizationInfo.addStringPermission("-" + controllerPermissions.getKey() + ":" + permission.getPath());
                                                 } else {
-                                                    authorizationInfo.addStringPermission(permission.getPath());
+                                                    authorizationInfo.addStringPermission(controllerPermissions.getKey() + ":" + permission.getPath());
                                                 }
                                             }
                                         }
