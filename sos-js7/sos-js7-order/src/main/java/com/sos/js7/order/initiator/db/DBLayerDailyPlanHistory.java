@@ -4,19 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
+import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.model.common.Folder;
 
 public class DBLayerDailyPlanHistory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerDailyPlanHistory.class);
     private static final String DBItemDailyPlanHistory = DBItemDailyPlanHistory.class.getSimpleName();
     private static final String DBItemJocAuditLogDetails = DBItemJocAuditLogDetails.class.getSimpleName();
     private final SOSHibernateSession sosHibernateSession;

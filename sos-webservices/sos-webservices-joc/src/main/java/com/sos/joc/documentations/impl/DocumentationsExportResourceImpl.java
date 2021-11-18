@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -237,7 +238,7 @@ public class DocumentationsExportResourceImpl extends JOCResourceImpl implements
             throws JocMissingRequiredParameterException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException {
         List<DBItemDocumentation> docs = new ArrayList<DBItemDocumentation>();
         if (filter.getDocumentations() != null && !filter.getDocumentations().isEmpty()) {
-            docs = dbLayer.getDocumentations(filter.getDocumentations());
+            docs = dbLayer.getDocumentations(filter.getDocumentations().stream().collect(Collectors.toList()));
         } else if (filter.getFolders() != null && !filter.getFolders().isEmpty()) {
             for (Folder folder : filter.getFolders()) {
                 docs.addAll(dbLayer.getDocumentations(null, folder.getFolder(), folder.getRecursive(), false));

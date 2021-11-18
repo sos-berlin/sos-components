@@ -60,7 +60,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
             }
             boolean onlyWithAssignReference = documentationsFilter.getOnlyWithAssignReference() == Boolean.TRUE;
             if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
-                dbDocs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
+                dbDocs = dbLayer.getDocumentations(documentationsFilter.getDocumentations().stream().collect(Collectors.toList()));
             } else {
                 if (documentationsFilter.getFolders() != null && !documentationsFilter.getFolders().isEmpty()) {
                     for (Folder folder : documentationsFilter.getFolders()) {
@@ -69,7 +69,7 @@ public class DocumentationsResourceImpl extends JOCResourceImpl implements IDocu
                 } else if (documentationsFilter.getTypes() != null && !documentationsFilter.getTypes().isEmpty()) {
                     dbDocs = dbLayer.getDocumentations(types, null, false, onlyWithAssignReference);
                 } else {
-                    dbDocs = dbLayer.getDocumentations((Collection<String>) null, onlyWithAssignReference);
+                    dbDocs = dbLayer.getDocumentations((List<String>) null, onlyWithAssignReference);
                 }
             }
             Documentations documentations = new Documentations();

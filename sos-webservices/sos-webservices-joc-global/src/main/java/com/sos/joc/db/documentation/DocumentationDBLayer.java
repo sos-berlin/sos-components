@@ -3,6 +3,7 @@ package com.sos.joc.db.documentation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,11 +17,13 @@ import java.util.stream.Stream;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.model.tree.Tree;
@@ -168,37 +171,52 @@ public class DocumentationDBLayer {
         }
     }
     
-    public List<DBItemDocumentation> getDocumentations(Collection<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
+    public List<DBItemDocumentation> getDocumentations(List<String> paths) throws DBConnectionRefusedException, DBInvalidDataException {
         return getDocumentations(paths, false);
     }
 
-    public List<DBItemDocumentation> getDocumentations(Collection<String> paths, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
+    public List<DBItemDocumentation> getDocumentations(List<String> paths, boolean onlyWithAssignReference) throws DBConnectionRefusedException,
             DBInvalidDataException {
-        try {
-            StringBuilder sql = new StringBuilder();
-            sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
-            List<String> clauses = new ArrayList<>();
-            if (paths != null && !paths.isEmpty()) {
-                clauses.add("path in (:paths)");
+        if (paths == null) {
+            paths = Collections.emptyList();
+        }
+        if (paths.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            List<DBItemDocumentation> result = new ArrayList<>();
+            for (int i = 0; i < paths.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                result.addAll(getDocumentations(SOSHibernate.getInClausePartition(i, paths), onlyWithAssignReference));
             }
-            if (onlyWithAssignReference) {
-                clauses.add("isRef = :isRef");
+            return result;
+        } else {
+            try {
+                StringBuilder sql = new StringBuilder();
+                sql.append("from ").append(DBLayer.DBITEM_INV_DOCUMENTATIONS);
+                List<String> clauses = new ArrayList<>();
+                if (paths != null && !paths.isEmpty()) {
+                    clauses.add("path in (:paths)");
+                }
+                if (onlyWithAssignReference) {
+                    clauses.add("isRef = :isRef");
+                }
+                if (!clauses.isEmpty()) {
+                    sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+                }
+                Query<DBItemDocumentation> query = session.createQuery(sql.toString());
+                if (paths != null && !paths.isEmpty()) {
+                    query.setParameterList("paths", paths);
+                }
+                if (onlyWithAssignReference) {
+                    query.setParameter("isRef", true);
+                }
+                List<DBItemDocumentation> result = session.getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            } catch (SOSHibernateInvalidSessionException ex) {
+                throw new DBConnectionRefusedException(ex);
+            } catch (Exception ex) {
+                throw new DBInvalidDataException(ex);
             }
-            if (!clauses.isEmpty()) {
-                sql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
-            }
-            Query<DBItemDocumentation> query = session.createQuery(sql.toString());
-            if (paths != null && !paths.isEmpty()) {
-                query.setParameterList("paths", paths);
-            }
-            if (onlyWithAssignReference) {
-                query.setParameter("isRef", true);
-            }
-            return session.getResultList(query);
-        } catch (SOSHibernateInvalidSessionException ex) {
-            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
         }
     }
 

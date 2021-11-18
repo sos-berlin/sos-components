@@ -51,7 +51,7 @@ public class DocumentationsDeleteResourceImpl extends JOCResourceImpl implements
             DocumentationDBLayer dbLayer = new DocumentationDBLayer(connection);
             List<DBItemDocumentation> docs = null;
             if (documentationsFilter.getDocumentations() != null && !documentationsFilter.getDocumentations().isEmpty()) {
-                docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations());
+                docs = dbLayer.getDocumentations(documentationsFilter.getDocumentations().stream().collect(Collectors.toList()));
             } else {
                 docs = dbLayer.getDocumentations(null, documentationsFilter.getFolder(), true, false);
             }
