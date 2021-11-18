@@ -417,6 +417,7 @@ public class WorkflowsHelper {
                 case ADD_ORDER:
                     AddOrder ao = inst.cast();
                     workflowNamesFromAddOrders.add(ao.getWorkflowName());
+                    break;
                 case CYCLE:
                     Cycle c = inst.cast();
                     setWorkflowPositionsAndForkListVariables(extendArray(pos, "cycle"), c.getCycleWorkflow().getInstructions(), forkListVariables,
