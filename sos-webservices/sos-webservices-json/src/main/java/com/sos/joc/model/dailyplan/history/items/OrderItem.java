@@ -40,7 +40,6 @@ public class OrderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -54,13 +53,13 @@ public class OrderItem {
      */
     @JsonProperty("orderId")
     private String orderId;
+    @JsonProperty("submitted")
+    private Boolean submitted;
     /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("submitted")
-    private Boolean submitted;
     @JsonProperty("permitted")
     private Boolean permitted;
 
@@ -90,7 +89,6 @@ public class OrderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -102,7 +100,6 @@ public class OrderItem {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("workflowPath")
@@ -134,31 +131,31 @@ public class OrderItem {
         this.orderId = orderId;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("submitted")
     public Boolean getSubmitted() {
         return submitted;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("submitted")
     public void setSubmitted(Boolean submitted) {
         this.submitted = submitted;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("permitted")
     public Boolean getPermitted() {
         return permitted;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("permitted")
     public void setPermitted(Boolean permitted) {
         this.permitted = permitted;

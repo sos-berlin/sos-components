@@ -210,17 +210,19 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 answer.setOrders(result.stream().map(e -> {
                     OrderItem item = new OrderItem();
                     item.setOrderId(e.getOrderId());
-                    item.setScheduledFor(e.getScheduledFor());
-                    item.setSubmitted(e.isSubmitted());
-                    item.setWorkflowPath(e.getWorkflowPath());
-                    item.setPermitted(canAdd(e, permittedFolders, checkedFolders));
-                    if (!SOSString.isEmpty(e.getMessage())) {
-                        if (e.getMessage().startsWith(PREFIX_WARN)) {
-                            answer.getWarnMessages().add(e.getMessage().substring(PREFIX_WARN.length()));
-                        } else if (e.getMessage().startsWith(PREFIX_ERROR)) {
-                            answer.getErrorMessages().add(e.getMessage().substring(PREFIX_ERROR.length()));
-                        } else {
-                            answer.getErrorMessages().add(e.getMessage());
+                    item.setPermitted(isPermitted(e, permittedFolders, checkedFolders));
+                    if (item.getPermitted()) {
+                        item.setScheduledFor(e.getScheduledFor());
+                        item.setSubmitted(e.isSubmitted());
+                        item.setWorkflowPath(e.getWorkflowPath());
+                        if (!SOSString.isEmpty(e.getMessage())) {
+                            if (e.getMessage().startsWith(PREFIX_WARN)) {
+                                answer.getWarnMessages().add(e.getMessage().substring(PREFIX_WARN.length()));
+                            } else if (e.getMessage().startsWith(PREFIX_ERROR)) {
+                                answer.getErrorMessages().add(e.getMessage().substring(PREFIX_ERROR.length()));
+                            } else {
+                                answer.getErrorMessages().add(e.getMessage());
+                            }
                         }
                     }
                     return item;
@@ -256,7 +258,7 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
         return limit == null || limit < 0 ? DEFAULT_LIMIT : limit.intValue();
     }
 
-    private boolean canAdd(DBItemDailyPlanHistory item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+    private boolean isPermitted(DBItemDailyPlanHistory item, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
         Boolean result = checkedFolders.get(item.getWorkflowFolder());
         if (result == null) {
             result = canAdd(item.getWorkflowPath(), permittedFolders);
