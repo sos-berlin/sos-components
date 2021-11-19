@@ -80,7 +80,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
             //boolean isRename = !oldPath.getFileName().toString().equals(p.getFileName().toString());
             
             Set<String> events = new HashSet<>();
-            Set<String> folderEvents = Collections.emptySet();
+            Set<String> folderEvents = new HashSet<>();
             events.add(config.getPath());
             folderEvents.add(oldFolder);
             
