@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -62,6 +63,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
             JocConfigurationException, DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, IOException,
             ParseException, SOSException, URISyntaxException, InterruptedException, ExecutionException, TimeoutException {
 
+        DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderFilter.getAuditLog(), CategoryType.DAILYPLAN);
         setSettings();
 
         OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
@@ -84,9 +86,10 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(null);
+        Set<AuditLogDetail> auditLogDetails = new HashSet<>();
+        
         for (String controllerId : allowedControllers) {
 
-            DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderFilter.getAuditLog(), controllerId, CategoryType.DAILYPLAN);
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
             folderPermissions.setSchedulerId(controllerId);
@@ -133,18 +136,15 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
                 EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
 
-                List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-
                 for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedOrders) {
-                    auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getControllerId()));
+                    auditLogDetails.add(new AuditLogDetail(dbItemDailyPlanOrders.getWorkflowPath(), dbItemDailyPlanOrders.getOrderId(),
+                            controllerId));
                 }
-
-                OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
-                        .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
 
             }
         }
-
+        OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
+                .postExceptionEventIfExist(either, accessToken, getJocError(), null));
     }
 
     @Override

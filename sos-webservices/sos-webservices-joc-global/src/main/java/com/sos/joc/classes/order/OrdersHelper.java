@@ -708,7 +708,7 @@ public class OrdersHelper {
 
                 FreshOrder o = new FreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
                 // JFreshOrder o = mapToFreshOrder(order.id(), order.workflowId().path(), args, scheduledFor);
-                auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string()));
+                auditLogDetails.add(new AuditLogDetail(workflowPath, order.id().string(), controllerId));
                 either = Either.right(o);
             } catch (Exception ex) {
                 either = Either.left(new BulkError().get(ex, jocError, order.workflowId().path().string() + "/" + order.id().string()));
@@ -843,14 +843,14 @@ public class OrdersHelper {
         });
     }
 
-    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId) {
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrders(Collection<JOrder> jOrders, Long auditlogId, String controllerId) {
         return storeAuditLogDetails(jOrders.stream().parallel().map(o -> new AuditLogDetail(WorkflowPaths.getPath(o.workflowId().path().string()), o
-                .id().string())).collect(Collectors.toList()), auditlogId);
+                .id().string(), controllerId)).collect(Collectors.toList()), auditlogId);
     }
 
-    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId) {
+    public static CompletableFuture<Either<Exception, Void>> storeAuditLogDetailsFromJOrder(JOrder jOrder, Long auditlogId, String controllerId) {
         return storeAuditLogDetails(Collections.singleton(new AuditLogDetail(WorkflowPaths.getPath(jOrder.workflowId().path().string()), jOrder.id()
-                .string())), auditlogId);
+                .string(), controllerId)), auditlogId);
     }
 
     public static boolean canAdd(String path, Set<Folder> listOfFolders) {

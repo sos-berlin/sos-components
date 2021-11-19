@@ -1,8 +1,12 @@
 package com.sos.joc.classes.audit;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -13,7 +17,12 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.WebserviceConstants;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
+import com.sos.joc.event.EventBus;
+import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
+import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.model.audit.AuditParams;
+import com.sos.joc.model.audit.CategoryType;
+import com.sos.joc.model.audit.ObjectType;
 
 public class JocAuditLog {
 
@@ -24,6 +33,7 @@ public class JocAuditLog {
     private String params;
     private boolean isLogged = false;
     public static final String EMPTY_STRING = "-";
+    private static final List<Integer> typesOfWorkflowEvent = Arrays.asList(ObjectType.ORDER.intValue(), ObjectType.WORKFLOW.intValue());
     
     public JocAuditLog(String user, String request) {
         this.user = setProperty(user);
@@ -104,6 +114,7 @@ public class JocAuditLog {
             }
         }
         auditLogToDb.setId(0L);
+        sendAuditLogEvent(controllerId, type);
         return auditLogToDb;
     }
     
@@ -183,10 +194,11 @@ public class JocAuditLog {
     
     public static synchronized void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, Long auditlogId, Date now) {
         if (details != null && !details.isEmpty() && auditlogId != null) {
+            Set<AuditLogDetail> details2 = details.stream().peek(d -> d.setControllerId(null)).collect(Collectors.toSet());
             if (connection == null) {
                 try {
                     connection = Globals.createSosHibernateStatelessConnection("storeAuditLogDetail");
-                    for (AuditLogDetail detail : details) {
+                    for (AuditLogDetail detail : details2) {
                         storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
                     }
                 } catch (Exception e) {
@@ -195,10 +207,13 @@ public class JocAuditLog {
                     Globals.disconnect(connection);
                 }
             } else {
-                for (AuditLogDetail detail : details) {
+                for (AuditLogDetail detail : details2) {
                     storeAuditLogDetail(detail.getAuditLogDetail(auditlogId, now), connection);
                 }
             }
+            details.stream().filter(AuditLogDetail::hasControllerId).filter(d -> typesOfWorkflowEvent.contains(d.getConfigurationType())).peek(d -> d
+                    .setOrderId(null)).distinct().forEach(d -> EventBus.getInstance().post(new AuditlogWorkflowEvent(d.getControllerId(), d
+                            .getPath())));
         }
     }
     
@@ -263,6 +278,12 @@ public class JocAuditLog {
             }
         } catch (Exception e) {
             LOGGER.error("", e);
+        }
+    }
+    
+    private static void sendAuditLogEvent(String controllerId, Integer type) {
+        if (!CategoryType.INVENTORY.intValue().equals(type) && !CategoryType.DOCUMENTATIONS.intValue().equals(type)) {
+            EventBus.getInstance().post(new AuditlogChangedEvent(controllerId));
         }
     }
     

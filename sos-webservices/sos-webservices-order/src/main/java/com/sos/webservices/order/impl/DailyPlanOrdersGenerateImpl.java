@@ -2,7 +2,7 @@ package com.sos.webservices.order.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -52,6 +52,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
             DailyPlanOrderSelector dailyPlanOrderSelector = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderSelector.class);
 
+            DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderSelector.getAuditLog(), CategoryType.DAILYPLAN);
             if (dailyPlanOrderSelector.getSelector() == null) {
                 Folder root = new Folder();
                 root.setFolder("/");
@@ -104,9 +105,9 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderSelector.getSelector().getSchedulePaths());
             folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
 
+            Set<AuditLogDetail> auditLogDetails = new HashSet<>();
+            
             for (String controllerId : allowedControllers) {
-                DBItemJocAuditLog dbItemJocAuditLog = storeAuditLog(dailyPlanOrderSelector.getAuditLog(), dailyPlanOrderSelector.getControllerId(),
-                        CategoryType.DAILYPLAN);
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
                 folderPermissions.setSchedulerId(controllerId);
@@ -138,17 +139,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                             accessToken, dailyPlanOrderSelector.getDailyPlanDate(), dailyPlanOrderSelector.getWithSubmit());
                     TimeZone.setDefault(savT);
 
-                    List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-
                     for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId()));
+                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
                     }
-
-                    OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
-                            .postExceptionEventIfExist(either, accessToken, getJocError(), controllerId));
 
                 }
             }
+            OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
+                    .postExceptionEventIfExist(either, accessToken, getJocError(), null));
+            
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (

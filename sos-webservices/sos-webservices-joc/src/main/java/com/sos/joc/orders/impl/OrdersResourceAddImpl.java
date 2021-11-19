@@ -93,7 +93,7 @@ public class OrdersResourceAddImpl extends JOCResourceImpl implements IOrdersRes
                     order.setArguments(OrdersHelper.checkArguments(order.getArguments(), JsonConverter.signOrderPreparationToInvOrderPreparation(
                             workflow.getOrderPreparation())));
                     JFreshOrder o = OrdersHelper.mapToFreshOrder(order, yyyymmdd);
-                    auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string()));
+                    auditLogDetails.add(new AuditLogDetail(order.getWorkflowPath(), o.id().string(), controllerId));
                     either = Either.right(o);
                 } catch (Exception ex) {
                     either = Either.left(new BulkError().get(ex, getJocError(), order));

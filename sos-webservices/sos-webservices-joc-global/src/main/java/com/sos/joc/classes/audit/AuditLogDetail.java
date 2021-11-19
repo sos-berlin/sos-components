@@ -16,35 +16,69 @@ public class AuditLogDetail {
     private Path path;
     private Integer type;
     private String orderId;
+    private String controllerId;
     
     public AuditLogDetail(Path path, Integer type) {
         this.path = path;
         this.type = type;
         this.orderId = null;
+        this.controllerId = null;
     }
     
     public AuditLogDetail(String path, Integer type) {
         this.path = Paths.get(path);
         this.type = type;
         this.orderId = null;
+        this.controllerId = null;
     }
     
-    public AuditLogDetail(String workflowPath, String orderId) {
+    public AuditLogDetail(Path path, Integer type, String controllerId) {
+        this.path = path;
+        this.type = type;
+        this.orderId = null;
+        this.controllerId = controllerId;
+    }
+    
+    public AuditLogDetail(String path, Integer type, String controllerId) {
+        this.path = Paths.get(path);
+        this.type = type;
+        this.orderId = null;
+        this.controllerId = controllerId;
+    }
+    
+    public AuditLogDetail(String workflowPath, String orderId, String controllerId) {
         this.path = Paths.get(workflowPath);
         this.type = ObjectType.ORDER.intValue();
         this.orderId = orderId;
+        this.controllerId = controllerId;
     }
 
     public Path getPath() {
         return path;
     }
 
-    public Integer setConfigurationType() {
+    public Integer getConfigurationType() {
         return type;
     }
     
-    public String setOrderId() {
+    public String getControllerId() {
+        return controllerId;
+    }
+    
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
+    
+    public boolean hasControllerId() {
+        return controllerId != null && !controllerId.isEmpty();
+    }
+    
+    public String getOrderId() {
         return orderId;
+    }
+    
+    public void setOrderId(String val) {
+        orderId = val;
     }
     
     public DBItemJocAuditLogDetails getAuditLogDetail(Long auditlogId, Date now) {
@@ -72,7 +106,7 @@ public class AuditLogDetail {
     
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(type).append(path.toString().replace('\\', '/')).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(type).append(path.toString().replace('\\', '/')).toHashCode();
     }
 
     @Override
@@ -84,7 +118,7 @@ public class AuditLogDetail {
             return false;
         }
         AuditLogDetail rhs = ((AuditLogDetail) other);
-        return new EqualsBuilder().append(type, rhs.type).append(path, rhs.path).isEquals();
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(type, rhs.type).append(path, rhs.path).isEquals();
     }
 
 }

@@ -20,6 +20,8 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
+import com.sos.joc.event.bean.auditlog.AuditlogChangedEvent;
+import com.sos.joc.event.bean.auditlog.AuditlogWorkflowEvent;
 import com.sos.joc.event.bean.cluster.ActiveClusterChangedEvent;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.event.bean.documentation.DocumentationEvent;
@@ -290,6 +292,29 @@ public class EventService {
         eventSnapshot.setObjectType(EventType.MONITORINGNOTIFICATION);
         eventSnapshot.setMessage(evt.getNotificationId().toString());
         addEvent(eventSnapshot);
+    }
+    
+    @Subscribe({ AuditlogChangedEvent.class })
+    public void createEvent(AuditlogChangedEvent evt) {
+        if (evt.getControllerId() == null || controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.AUDITLOG);
+            addEvent(eventSnapshot);
+        }
+    }
+    
+    @Subscribe({ AuditlogWorkflowEvent.class })
+    public void createEvent(AuditlogWorkflowEvent evt) {
+        if (controllerId.equals(evt.getControllerId())) {
+            EventSnapshot eventSnapshot = new EventSnapshot();
+            eventSnapshot.setEventId(evt.getEventId() / 1000);
+            eventSnapshot.setEventType(evt.getKey());
+            eventSnapshot.setObjectType(EventType.WORKFLOW);
+            eventSnapshot.setWorkflow(new WorkflowId(evt.getWorkflowPath(), evt.getVersionId()));
+            addEvent(eventSnapshot);
+        }
     }
     
     @Subscribe({ ProxyCoupled.class })

@@ -5,9 +5,9 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,11 +43,11 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
-import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
+import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -285,10 +285,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                     .getDailyPlanDate(settings.getTimeZone()), plannedOrder.getSubmitted());
             TimeZone.setDefault(savT);
 
-            List<AuditLogDetail> auditLogDetails = new ArrayList<>();
+            Set<AuditLogDetail> auditLogDetails = new HashSet<>();
 
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId()));
+                auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
             }
 
             EventBus.getInstance().post(new DailyPlanEvent(dDate));
@@ -483,9 +483,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             List<DBItemDailyPlanOrder> plannedOrders = dbLayer.getDailyPlanList(filter, 0);
             Globals.disconnect(session);
             session = null;
+            String controllerId = filter.getControllerId();
 
             if (plannedOrders.size() > 0) {
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(filter.getControllerId(), plannedOrders);
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, plannedOrders);
                 c.thenAccept(either -> {
 
                     SOSHibernateSession newSession = null;
@@ -562,12 +563,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             } else {
                                 Globals.commit(newSession);
                             }
-
-                            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
-                            OrdersHelper.storeAuditLogDetails(Collections.singleton(new AuditLogDetail(item.getWorkflowPath(), item.getOrderId())),
-                                    auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2, accessToken,
-                                            getJocError(), modifyOrder.getControllerId()));
                         }
+                        
+                        EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
+                        OrdersHelper.storeAuditLogDetails(plannedOrders.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item
+                                .getOrderId(), controllerId)).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
+                                        .postExceptionEventIfExist(either2, accessToken, getJocError(), modifyOrder.getControllerId()));
 
                     } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
                             | DBOpenSessionException | ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException

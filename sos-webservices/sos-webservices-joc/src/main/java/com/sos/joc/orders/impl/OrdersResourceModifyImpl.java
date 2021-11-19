@@ -339,8 +339,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
-                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
-                                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
+                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                         }
                     });
         } else {
@@ -437,7 +437,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
-                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
+                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
                                     .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                         }
                     });
@@ -501,7 +501,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             ControllerApi.of(controllerId).resumeOrder(jOrders.iterator().next().id(), positionOpt, historyOperations).thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
-                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
+                    OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
                             .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                 }
             });
@@ -510,7 +510,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 ControllerApi.of(controllerId).resumeOrder(jOrder.id(), positionOpt, historyOperations).thenAccept(either -> {
                     ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                     if (either.isRight()) {
-                        OrdersHelper.storeAuditLogDetailsFromJOrder(jOrder, dbAuditLog.getId()).thenAccept(either2 -> ProblemHelper
+                        OrdersHelper.storeAuditLogDetailsFromJOrder(jOrder, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
                                 .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                     }
                 });
