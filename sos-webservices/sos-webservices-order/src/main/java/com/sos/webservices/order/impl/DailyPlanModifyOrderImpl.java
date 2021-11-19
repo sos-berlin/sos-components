@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -551,7 +552,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                                         if (retryCount == 0) {
                                             throw e;
                                         }
-                                        LOGGER.debug("Retry update orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: "
+                                        LOGGER.debug("Retry update orders because SOSHibernateLockAcquisitionException was raised. Retry-counter: "
                                                 + retryCount);
                                     }
                                 } while (retryCount > 0);
@@ -563,10 +564,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             }
 
                             EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
-                            List<AuditLogDetail> auditLogDetails = new ArrayList<>();
-                            auditLogDetails.add(new AuditLogDetail(item.getWorkflowPath(), item.getOrderId()));
-                            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditlog.getId()).thenAccept(either2 -> ProblemHelper
-                                    .postExceptionEventIfExist(either2, accessToken, getJocError(), modifyOrder.getControllerId()));
+                            OrdersHelper.storeAuditLogDetails(Collections.singleton(new AuditLogDetail(item.getWorkflowPath(), item.getOrderId())),
+                                    auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(either2, accessToken,
+                                            getJocError(), modifyOrder.getControllerId()));
                         }
 
                     } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException

@@ -172,7 +172,7 @@ public class RenameConfigurationResourceImpl extends JOCResourceImpl implements 
                 response.setId(config.getId());
                 
                 events.add(newPath);
-                folderEvents = Collections.singleton(newFolder);
+                folderEvents.add(newFolder);
                 
             } else {
                 if (!newPath.equalsIgnoreCase(config.getPath())) { //if not only upper-lower case is changed then check if target exists
