@@ -1,9 +1,13 @@
 package com.sos.joc.joc.impl;
 
+import java.net.UnknownHostException;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Date;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSShell;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
@@ -16,7 +20,7 @@ import com.sos.joc.model.common.Ok;
 @javax.ws.rs.Path("joc")
 public class StateImpl extends JOCResourceImpl implements IStateResource {
     
-    private static String API_CALL = "./joc/state";
+    private static String API_CALL = "./joc/is_active";
     
     @Override
     public JOCDefaultResponse postIsActive(String accessToken) {
@@ -31,13 +35,13 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             JocInstancesDBLayer dbLayer = new JocInstancesDBLayer(connection);
             DBItemJocInstance activeInstance = dbLayer.getActiveInstance();
-            String currentTitle = Globals.sosCockpitProperties.getProperty("title", "");
+            //String currentTitle = Globals.sosCockpitProperties.getProperty("title", "");
             Ok entity = new Ok();
             if (activeInstance == null) {
                 entity.setOk(false);
             } else {
                 entity.setSurveyDate(activeInstance.getHeartBeat());
-                entity.setOk(currentTitle.isEmpty() || currentTitle.equals(activeInstance.getTitle()));
+                entity.setOk(activeIsCurrent(activeInstance.getMemberId()));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             return JOCDefaultResponse.responseStatus200(entity);
@@ -54,6 +58,22 @@ public class StateImpl extends JOCResourceImpl implements IStateResource {
     @Override
     public JOCDefaultResponse getIsActive(String xAccessToken, String accessToken) {
         return postIsActive(getAccessToken(xAccessToken, accessToken));
+    }
+    
+    private static Boolean activeIsCurrent(String activeMemberId) throws UnknownHostException {
+        // see com.sos.joc.cluster.configuration.JocConfiguration constructor
+        String curMemberId = getHostname() + ":" + SOSString.hash256(Paths.get(System.getProperty("user.dir")).toString());
+        return curMemberId.equals(activeMemberId);
+    }
+    
+    private static String getHostname() {
+        String hostname = "unknown";
+        try {
+            hostname = SOSShell.getHostname();
+        } catch (UnknownHostException e) {
+            //
+        }
+        return hostname;
     }
 
 }
