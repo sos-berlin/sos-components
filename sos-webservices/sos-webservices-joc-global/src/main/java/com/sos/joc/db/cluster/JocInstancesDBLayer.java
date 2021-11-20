@@ -54,11 +54,11 @@ public class JocInstancesDBLayer {
         }
     }
     
-    public DBItemJocCluster getActiveInstance() throws DBConnectionRefusedException, DBInvalidDataException {
+    public DBItemJocInstance getActiveInstance() throws DBConnectionRefusedException, DBInvalidDataException {
         try {
-            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" i inner join ").append(
+            StringBuilder hql = new StringBuilder("select i from ").append(DBLayer.DBITEM_JOC_INSTANCES).append(" i inner join ").append(
                     DBLayer.DBITEM_JOC_CLUSTER).append(" c on i.memberId = c.memberId");
-            Query<DBItemJocCluster> query = session.createQuery(hql.toString());
+            Query<DBItemJocInstance> query = session.createQuery(hql.toString());
             return session.getSingleResult(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);

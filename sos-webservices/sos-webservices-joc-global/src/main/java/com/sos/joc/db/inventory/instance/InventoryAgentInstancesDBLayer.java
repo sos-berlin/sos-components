@@ -136,14 +136,20 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-
+    
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        return getAgentNames(true);
+        return getAgentNames(null, true);
     }
 
-    public Set<String> getAgentNames(boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
+    public Set<String> getEnabledAgentNames(Collection<String> controllerIds) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
+        return getAgentNames(controllerIds, true);
+    }
+
+    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents) throws DBInvalidDataException,
+            DBMissingDataException, DBConnectionRefusedException {
         try {
-            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(null, false, onlyEnabledAgents);
+            List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptySet();
             }

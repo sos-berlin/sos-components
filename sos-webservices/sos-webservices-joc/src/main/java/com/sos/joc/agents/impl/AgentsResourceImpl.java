@@ -23,6 +23,7 @@ import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.Agents;
 import com.sos.joc.model.agent.ReadAgents;
+import com.sos.joc.model.controller.ControllerId;
 import com.sos.schema.JsonValidator;
 
 @Path("agents")
@@ -100,17 +101,34 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CALL_NAMES, null, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            JsonValidator.validateFailFast(filterBytes, ControllerId.class);
+            ControllerId agentParameter = Globals.objectMapper.readValue(filterBytes, ControllerId.class);
+            String controllerId = agentParameter.getControllerId();
+                    
+            Set<String> allowedControllers = Collections.emptySet();
+            boolean permitted = false;
+            if (controllerId == null || controllerId.isEmpty()) {
+                controllerId = "";
+                allowedControllers = Proxies.getControllerDbInstances().keySet().stream().filter(availableController -> getControllerPermissions(
+                        availableController, accessToken).getView()).collect(Collectors.toSet());
+                permitted = !allowedControllers.isEmpty();
+                if (allowedControllers.size() == Proxies.getControllerDbInstances().keySet().size()) {
+                    allowedControllers = Collections.emptySet();
+                }
+            } else {
+                allowedControllers = Collections.singleton(controllerId);
+                permitted = getControllerPermissions(controllerId, accessToken).getOrders().getView();
+            }        
+                    
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permitted);
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
             
-            // TODO restrict response for only allowed controllers/Agents??
-            
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             AgentNames agentNames = new AgentNames();
-            agentNames.setAgentNames(dbLayer.getEnabledAgentNames());
+            agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers));
             agentNames.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(agentNames);
