@@ -660,9 +660,11 @@ public class DBLayerDeploy {
             hql.append(" where path = :path and type = :type");
             Query<DBItemInventoryConfiguration> query = getSession().createQuery(hql.toString());
             for (Configuration cfg : configurations) {
-                query.setParameter("path", cfg.getPath());
-                query.setParameter("type", cfg.getObjectType().intValue());
-                query.setMaxResults(1);
+                if (ConfigurationType.FOLDER != cfg.getObjectType()) {
+                    query.setParameter("path", cfg.getPath());
+                    query.setParameter("type", cfg.getObjectType().intValue());
+                    query.setMaxResults(1);
+                }
                 results.add(query.getSingleResult());
             }
             return results;
