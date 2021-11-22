@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="auth_method" required="false" DefaultValue="publickey" DataType="java.lang.String">
+	<values>
+		<value>publickey</value>
+		<value>password</value>
+	</values>
+	<note>
+		<p>
+			This parameter specifies the authorization method for the SSH protocol -
+			the <paramval>publickey</paramval> and <paramval>password</paramval> methods are supported.
+			The method "Keyboard-Interactive" is not supported.
+			We recommend to use the method "publickey".
+		</p>
+		<p>
+			When the <paramval>publickey</paramval> authorization method is used,
+			then the path name of the private key file must be set in the <paramref>auth_file</paramref> parameter.
+			Should the private key file be secured by a password then this password must be specified with the
+			<paramref>password</paramref> parameter.
+		</p>
+		<p>
+			For the <paramval>password</paramval> authorization method the password for each user account must be
+			specified using the <paramref>password</paramref> parameter.
+		</p>
+		<p>
+			The authorization methods which are enabled depends on the SSH server configuration.
+			Not all SSH server configurations support the <paramval>password</paramval> authorization method.
+			In case that the server support this method one have to check, wether this is activated in the config-file /etc/ssh_config.
+			The value of the parameter must set to "yes".
+		</p>
+	</note>
+</param>

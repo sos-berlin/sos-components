@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="auth_file" required="false" DataType="java.lang.String">
+	<note>
+		<p>
+			The value of this parameter specifies the path and name of a user's private key file used for authorisation on an SSH server.
+			<br />
+			<br />
+			This parameter must be specified if the <em>publickey</em> authorization method has been specified in the <code>auth_method</code> parameter.
+			<br />
+			<br />
+			Should the private key file be secured by a password, then this must be specified using the <paramref>password</paramref> parameter.
+			</p>
+	</note>
+</param>

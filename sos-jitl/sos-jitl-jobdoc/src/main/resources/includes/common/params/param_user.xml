@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="user" required="false" DataType="java.lang.String">
+	<note>
+		<p>
+		  Username used to authenticate on a remote server. 
+		</p>
+	</note>
+</param>

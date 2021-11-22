@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="command_delimiter" required="true" DefaultValue="%%">
+	<note>
+		<p>
+			Command delimiter characters are specified using this parameter.
+			These delimiters can then be used in the <paramref>jump_command</paramref> parameter to separate multiple commands.
+		</p>
+		<p>
+			These commands are then excecuted in separate SSH sessions.
+		</p>
+	</note>
+</param>
+

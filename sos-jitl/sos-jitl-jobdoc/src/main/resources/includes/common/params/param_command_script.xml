@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="command_script" required="false" DataType="java.lang.String">
+	<note>
+		<p>
+			This parameter can be used as an alternative to <paramref>command</paramref> and <paramref>command_script_file</paramref>.
+			It contains scriptcode which will be transferred to the remote host as a file and will then be executed there.
+			The script can access job and order parameters by environment variables.
+			The names are in upper case and have "SCHEDULER_PARAM_" as a prefix.
+			Order parameters with the same name overwrite task parameters.
+		</p>
+	</note>
+</param>

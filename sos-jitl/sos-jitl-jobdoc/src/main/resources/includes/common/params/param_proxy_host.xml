@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="proxy_host" required="false" DataType="java.lang.Integer">
+	<note>
+		<p>
+			The value of this parameter is the host name or the IP address of a 
+			proxy used to create the connection to the SSH server. 
+			The use of a proxy is optional.
+		</p>
+	</note>
+</param>

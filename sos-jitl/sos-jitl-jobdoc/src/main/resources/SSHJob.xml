@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description 
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+    <job name="SSHJob" title="Execute commands or executable scripts over a SSH connection on a remote server.">
+        <script language="java" java_class="com.sos.jitl.jobs.ssh.SSHJob" resource="1" />
+    </job>
+
+    <configuration>
+        <params id="job_parameter">
+	   		<xi:include href="./includes/common/params/parameter_substitution.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_host.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_port.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_user.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_password.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_passphrase.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_credential_store_file.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_credential_store_key_file.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_credential_store_password.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_credential_store_entry_path.xml" parse="xml" />
+
+		    <xi:include href="./includes/common/params/param_proxy_host.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_proxy_port.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_proxy_user.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_proxy_password.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_auth_file.xml" parse="xml" />
+		    <xi:include href="./includes/common/params/param_auth_method.xml" parse="xml" />
+		    
+            <xi:include href="./includes/common/params/param_command.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_command_delimiter.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_command_script.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_command_script_file.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_ignore_error.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_ignore_stderr.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_raise_exception_on_error.xml" parse="xml" />
+            <xi:include href="./includes/common/params/param_exit_codes_to_ignore.xml" parse="xml" />
+            <!-- not implemented -->
+            <!-- xi:include href="./includes/common/params/param_command_script_param.xml" parse="xml" /-->
+		    <!-- not yet documented from AProvider --> 
+		    <!-- 
+		    "proxy_type"
+		    "proxy_connect_timeout"
+		    -->
+		    <!-- not yet documented from SSHProvider --> 
+		    <!--
+		    "preferred_authentications"
+		    "required_authentications"
+		    "connect_timeout"
+		    "socket_timeout"
+		    "server_alive_interval"
+		    "strict_hostkey_checking"
+		    "hostkey_location"
+		    "use_zlib_compression"
+		    "remote_charset"
+		    -->
+		    <!-- not documented and not implemented
+		    "simulate_shell"
+		    -->
+            <param name="tmp_dir" required="false" DataType="java.lang.String">
+				<note>
+					<p>
+						Directory for temporary data on the remote host.
+						Default:
+						<code>/tmp</code>
+					</p>
+				</note>
+            </param>
+            <param name="create_environment_variables" required="false" DataType="java.lang.Boolean">
+				<note>
+					<p>
+						This parameter can be used to activate transmission of JS7 agent environment variables to the remote session environment.
+					</p>
+				</note>
+            </param>
+            <param name="pre_command" required="false" DataType="java.lang.String">
+               <note>
+                  	<p>
+		               This parameter specifies the command to set an environmental variable on the remote host.
+		               default: 
+		               <code>export %s='%s'</code>
+             		</p>
+               </note>
+            </param>
+            <param name="post_command_read" required="false" DataType="java.lang.String">
+				<note>
+					<p>
+		               This parameter specifies the command to read the content of a file on the remote host.
+		               The content will then be written to stdout of the remote host.
+		               The command reads return values from a temporary file.
+		               default: 
+		               <code>test -r %s &amp;&amp; cat %s;</code>
+					</p>
+               </note>
+            </param>
+            <param name="post_command_delete" required="false" DataType="java.lang.String">
+               	<note>
+                  	<p>
+		               This parameter specifies the command to delete a file on the remote host.
+		               The command deletes a temporary file after proccessing.
+		               default: 
+					   <code>test -r %s &amp;&amp; rm %s;</code>					
+             		</p>
+               	</note>
+            </param>
+        </params>
+    </configuration>
+    <documentation language="en">
+        <xhtml:div>
+            <p>
+                This job is used to execute commands, programs and/or shell-scripts on a
+                remote
+                server by SSH.
+            </p>
+            <p>
+                for more information on SSH
+                <link>http://en.wikipedia.org/wiki/Secure_Shell</link>
+            </p>
+            <xi:include href="./includes/common/notes/how_to_use_open_ssh.xml" />
+            <xi:include href="./includes/common/notes/how_to_handle_stderr_and_exit_code.xml" />
+        </xhtml:div>
+    </documentation>
+</description>

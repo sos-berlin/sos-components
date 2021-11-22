@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	name="raise_exception_on_error" required="false" DefaultValue="false" DataType="java.lang.Boolean">
+	<note>
+		<p>
+			This job checks if any output to stderr has been created and if the parameter ignore_stderr is false.
+			<br />
+			<br />
+			Should the value <em>true</em> be specified for this parameter, the Job will raise an exception in case of errors in stderr.
+		</p>
+	</note>
+</param>

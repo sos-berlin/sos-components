@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+       xmlns:xhtml="http://www.w3.org/1999/xhtml"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="host"
+       DataType="java.lang.String"
+       required="true">
+       	<note>
+			<p>
+		  		This parameter specifies the hostname (e.g. test.sos) or IP address (e.g. IPv4 192.168.0.1) 
+		  		of a server which a connection has to be established to.
+			</p>
+        </note>
+      </param>
