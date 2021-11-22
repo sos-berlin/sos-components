@@ -25,31 +25,29 @@ public class ScheduleSourceFile extends ScheduleSource {
         this.templateFolder = templateFolder;
     }
 
-    
     @Override
-    public List<Schedule> fillListOfSchedules() throws IOException, SOSHibernateException {
-        List<Schedule> listOfSchedules = new ArrayList<Schedule>();
-        
-         for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
+    public List<Schedule> getSchedules() throws IOException, SOSHibernateException {
+        List<Schedule> schedules = new ArrayList<Schedule>();
+
+        for (Path p : Files.walk(Paths.get(templateFolder)).filter(p -> !Files.isDirectory(p)).collect(Collectors.toSet())) {
             Schedule schedule = new ObjectMapper().readValue(Files.readAllBytes(p), Schedule.class);
-            if (schedule.getPlanOrderAutomatically() == null){
+            if (schedule.getPlanOrderAutomatically() == null) {
                 schedule.setPlanOrderAutomatically(true);
             }
-            if (schedule.getSubmitOrderToControllerWhenPlanned() == null){
+            if (schedule.getSubmitOrderToControllerWhenPlanned() == null) {
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
             }
             LOGGER.trace("adding order: " + schedule.getPath() + " for workflow: " + schedule.getWorkflowPath());
             if (checkMandatory(schedule)) {
-                listOfSchedules.add(schedule);
+                schedules.add(schedule);
             }
         }
-        return listOfSchedules;
+        return schedules;
     }
 
-
     @Override
-    public String fromSource() {
-        return "folder:" + templateFolder;
+    public String getSource() {
+        return "Folder:" + templateFolder;
     }
 
 }

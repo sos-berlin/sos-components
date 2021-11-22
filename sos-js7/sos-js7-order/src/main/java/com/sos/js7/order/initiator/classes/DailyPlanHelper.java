@@ -25,19 +25,18 @@ public class DailyPlanHelper {
     private static final String UTC = "UTC";
 
     public static Date stringAsDate(String date) throws ParseException {
-        TimeZone savT = TimeZone.getDefault();
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyy-MM-dd");
-        Date d = sdfUtc.parse(date);
-        TimeZone.setDefault(savT);
+        // TimeZone savT = TimeZone.getDefault();
+        // TimeZone.setDefault(TimeZone.getTimeZone(UTC));
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Date d = format.parse(date);
+        // TimeZone.setDefault(savT);
         return d;
     }
 
     public static String dateAsString(Date date, String timeZone) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        formatter.setTimeZone(TimeZone.getTimeZone(timeZone));
-        String dateS = formatter.format(date);
-        return dateS;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        return format.format(date);
     }
 
     public static String getDailyPlanDateAsString(Long startTime, String timeZone, String periodBegin) {
@@ -58,7 +57,8 @@ public class DailyPlanHelper {
             time = "00:00";
         }
 
-        LOGGER.debug("Timezone is " + timeZoneName);
+        // SOSClassUtil.printStackTrace(true, LOGGER);
+        // LOGGER.debug("Timezone is " + timeZoneName);
         TimeZone timeZone = TimeZone.getTimeZone(timeZoneName);
         java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
 
@@ -101,68 +101,57 @@ public class DailyPlanHelper {
         return calendar;
     }
 
-    public static OrderCounter getOrderCount(List<DBItemDailyPlanOrder> listOfPlannedOrders) {
-        OrderCounter o = new OrderCounter();
-        o.countSingle = 0L;
-        o.countCycled = 0L;
-        o.countCycledAll = 0L;
+    public static OrderCounter getOrderCount(List<DBItemDailyPlanOrder> plannedOrders) {
+        OrderCounter c = new OrderCounter();
+        DateFormat format = new SimpleDateFormat("hh:mm:ss");
 
-        DateFormat periodFormat = new SimpleDateFormat("hh:mm:ss");
-        Map<CycleOrderKey, List<DBItemDailyPlanOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrder>>();
-
-        for (DBItemDailyPlanOrder dbItemDailyPlanOrders : listOfPlannedOrders) {
-
-            if ((dbItemDailyPlanOrders.getStartMode() == 1)) {
-                CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                cycleOrderKey.setPeriodBegin(periodFormat.format(dbItemDailyPlanOrders.getPeriodBegin()));
-                cycleOrderKey.setPeriodEnd(periodFormat.format(dbItemDailyPlanOrders.getPeriodEnd()));
-                cycleOrderKey.setRepeat(String.valueOf(dbItemDailyPlanOrders.getRepeatInterval()));
-                cycleOrderKey.setOrderName(dbItemDailyPlanOrders.getOrderName());
-                cycleOrderKey.setWorkflowPath(dbItemDailyPlanOrders.getWorkflowPath());
-                if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<DBItemDailyPlanOrder>());
-                    o.countCycled = o.countCycled + 1;
+        Map<CycleOrderKey, List<DBItemDailyPlanOrder>> map = new TreeMap<CycleOrderKey, List<DBItemDailyPlanOrder>>();
+        for (DBItemDailyPlanOrder item : plannedOrders) {
+            if ((item.getStartMode() == 1)) {
+                CycleOrderKey key = new CycleOrderKey();
+                key.setPeriodBegin(format.format(item.getPeriodBegin()));
+                key.setPeriodEnd(format.format(item.getPeriodEnd()));
+                key.setRepeat(String.valueOf(item.getRepeatInterval()));
+                key.setOrderName(item.getOrderName());
+                key.setWorkflowPath(item.getWorkflowPath());
+                if (map.get(key) == null) {
+                    map.put(key, new ArrayList<DBItemDailyPlanOrder>());
+                    c.addCyclic();
                 }
 
-                mapOfCycledOrders.get(cycleOrderKey).add(dbItemDailyPlanOrders);
-                o.countCycledAll = o.countCycledAll + 1;
+                map.get(key).add(item);
+                c.addCyclicTotal();
             } else {
-                o.countSingle = o.countSingle + 1;
+                c.addSingle();
             }
         }
-
-        return o;
+        return c;
     }
 
-    public static OrderCounter getOrderCount(Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders) {
-        OrderCounter o = new OrderCounter();
-        o.countSingle = 0L;
-        o.countCycled = 0L;
-        o.countCycledAll = 0L;
+    public static OrderCounter getOrderCount(Map<PlannedOrderKey, PlannedOrder> plannedOrders) {
+        OrderCounter c = new OrderCounter();
 
-        Map<CycleOrderKey, List<PlannedOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
-        for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-
+        Map<CycleOrderKey, List<PlannedOrder>> map = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+        for (PlannedOrder plannedOrder : plannedOrders.values()) {
             if ((plannedOrder.getPeriod().getSingleStart() == null)) {
-                CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
-                cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
-                cycleOrderKey.setRepeat(String.valueOf(plannedOrder.getPeriod().getRepeat()));
-                cycleOrderKey.setOrderName(plannedOrder.getOrderName());
-                cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-                if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                    mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());
-                    o.countCycled = o.countCycled + 1;
+                CycleOrderKey key = new CycleOrderKey();
+                key.setPeriodBegin(plannedOrder.getPeriod().getBegin());
+                key.setPeriodEnd(plannedOrder.getPeriod().getEnd());
+                key.setRepeat(String.valueOf(plannedOrder.getPeriod().getRepeat()));
+                key.setOrderName(plannedOrder.getOrderName());
+                key.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+                if (map.get(key) == null) {
+                    map.put(key, new ArrayList<PlannedOrder>());
+                    c.addCyclic();
                 }
 
-                mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
-                o.countCycledAll = o.countCycledAll + 1;
+                map.get(key).add(plannedOrder);
+                c.addCyclicTotal();
             } else {
-                o.countSingle = o.countSingle + 1;
+                c.addSingle();
             }
         }
-
-        return o;
+        return c;
 
     }
 
@@ -183,21 +172,34 @@ public class DailyPlanHelper {
             startCalendar.add(java.util.Calendar.DATE, 1);
         }
 
-        SimpleDateFormat startTimeFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        startTimeFormatter.setTimeZone(timeZone);
-        String startTime = startTimeFormatter.format(startCalendar.getTime());
-        return startTime;
-
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(timeZone);
+        return format.format(startCalendar.getTime());
     }
 
-    public static String getDayOfYear(java.util.Calendar calendar) {
-        SimpleDateFormat startTimeFormatter = new SimpleDateFormat("yyyy-MM-dd");
-        String date = startTimeFormatter.format(calendar.getTime());
-        return date;
+    public static String getDate(java.util.Calendar calendar) {
+        return new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
+    }
+
+    public static String getDateTime(java.util.Calendar calendar) {
+        return getDateTime(calendar.getTime());
+    }
+
+    public static String getDateTime(Date date) {
+        if (date == null) {
+            return null;
+        }
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return format.format(date);
+    }
+
+    public static String getDateTime(java.util.Calendar calendar, String timeZone) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        format.setTimeZone(TimeZone.getTimeZone(timeZone));
+        return format.format(calendar.getTime());
     }
 
     private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone, String periodBegin) {
-
         String orderId = "";
         String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone, periodBegin);
         if (startMode == 0) {
@@ -223,11 +225,8 @@ public class DailyPlanHelper {
         return buildOrderId(orderName, startTime, startMode, timeZone, periodBegin);
     }
 
-    public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings orderInitiatorSettings) throws ParseException {
-        TimeZone timeZone = TimeZone.getTimeZone(orderInitiatorSettings.getTimeZone());
-
-        java.util.Calendar calendar = java.util.Calendar.getInstance(timeZone);
-
+    public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings settings) throws ParseException {
+        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         calendar.setTime(dateForPlan);
         calendar.add(java.util.Calendar.DATE, 1);
         return calendar.getTime();
@@ -237,7 +236,6 @@ public class DailyPlanHelper {
         String[] stringSplit = oldOrderId.split("-");
         String newOrderId = "";
         if (stringSplit.length >= 4) {
-
             for (int i = 0; i < 3; i++) {
                 newOrderId = newOrderId + stringSplit[i] + "-";
             }

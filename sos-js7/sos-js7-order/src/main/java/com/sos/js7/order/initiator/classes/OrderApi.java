@@ -21,6 +21,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.exceptions.BulkError;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
@@ -31,8 +32,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Err419;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
@@ -50,23 +51,22 @@ public class OrderApi {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderApi.class);
 
     private static JFreshOrder mapToFreshOrder(FreshOrder order) {
-        OrderId orderId = OrderId.of(order.getId());
-
-        Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
-
         Optional<Instant> scheduledFor = Optional.empty();
         if (order.getScheduledFor() != null) {
             scheduledFor = Optional.of(Instant.ofEpochMilli(order.getScheduledFor()));
         } else {
             scheduledFor = Optional.of(Instant.now());
         }
-        return JFreshOrder.of(orderId, WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
+        Map<String, Value> arguments = OrdersHelper.variablesToScalaValuedArguments(order.getArguments());
+        return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static Set<PlannedOrder> addOrderToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
-            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
+    public static Set<PlannedOrder> addOrdersToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
+            List<DBItemDailyPlanHistory> items, boolean fromService) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
             DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
             InterruptedException, ExecutionException {
+
+        final String method = "addOrdersToController";
 
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
@@ -82,86 +82,100 @@ public class OrderApi {
 
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
-        final Map<OrderId, JFreshOrder> freshOrderMappedIds = freshOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(
-                JFreshOrder::id, Function.identity()));
+        final Map<OrderId, JFreshOrder> map = freshOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id, Function
+                .identity()));
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
-
             JControllerApi controllerApi = ControllerApi.of(controllerId);
             if (Proxies.isCoupled(controllerId)) {
                 LOGGER.debug("Controller " + controllerId + " is coupled with proxy");
             } else {
                 LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
             }
+
             final JControllerProxy proxy = Proxy.of(controllerId);
-            proxy.api().addOrders(Flux.fromIterable(freshOrderMappedIds.values())).thenAccept(either -> {
+            proxy.api().addOrders(Flux.fromIterable(map.values())).thenAccept(either -> {
+                if (fromService) {
+                    AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                }
+
                 if (either.isRight()) {
-
-                    SOSHibernateSession sosHibernateSession = null;
+                    Set<OrderId> set = map.keySet();
+                    SOSHibernateSession session = null;
                     try {
-                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
-                        sosHibernateSession.setAutoCommit(false);
-                        Globals.beginTransaction(sosHibernateSession);
+                        controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,
+                                controllerId));
 
-                        OrderApi.updatePlannedOrders(sosHibernateSession, freshOrderMappedIds.keySet(), controllerId);
-                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, true, null);
-                        controllerApi.deleteOrdersWhenTerminated(freshOrderMappedIds.keySet()).thenAccept(e -> ProblemHelper.postProblemEventIfExist(
-                                e, accessToken, jocError, controllerId));
-                        Globals.commit(sosHibernateSession);
+                        session = Globals.createSosHibernateStatelessConnection(method);
+                        session.setAutoCommit(false);
+                        Globals.beginTransaction(session);
+                        OrderApi.updatePlannedOrders(session, set, controllerId);
+                        OrderApi.updateHistory(session, items, true, null);
+                        Globals.commit(session);
+                        session.close();
+                        session = null;
 
+                        LOGGER.info(String.format("[%s][%s][submitted=%s][updated orders=%s, history=%s]", method, controllerId, set.size(), set
+                                .size(), items.size()));
                     } catch (Exception e) {
-                        Globals.rollback(sosHibernateSession);
+                        LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                        Globals.rollback(session);
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
-                        Globals.disconnect(sosHibernateSession);
+                        Globals.disconnect(session);
                     }
                 } else {
-                    SOSHibernateSession sosHibernateSession = null;
+                    SOSHibernateSession session = null;
                     try {
-                        sosHibernateSession = Globals.createSosHibernateStatelessConnection("addOrderToController");
-                        sosHibernateSession.setAutoCommit(false);
-                        Globals.beginTransaction(sosHibernateSession);
-                        OrderApi.updateHistory(sosHibernateSession, listOfInsertHistoryEntries, false, jocError.getCode() + ":" + either.getLeft()
-                                .toString());
-                        Globals.commit(sosHibernateSession);
+                        String msg = jocError.getCode() + ":" + either.getLeft().toString();
+
+                        session = Globals.createSosHibernateStatelessConnection(method);
+                        session.setAutoCommit(false);
+                        Globals.beginTransaction(session);
+                        OrderApi.updateHistory(session, items, false, msg);
+                        Globals.commit(session);
+                        session.close();
+                        session = null;
+
+                        LOGGER.info(String.format("[%s][%s][onError][updated history=%s]%s", method, controllerId, items.size(), msg));
+
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (SOSHibernateException e) {
-                        Globals.rollback(sosHibernateSession);
+                        LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                        Globals.rollback(session);
                     } finally {
-                        Globals.disconnect(sosHibernateSession);
+                        Globals.disconnect(session);
                     }
                 }
             });
 
         }
-
+        if (fromService) {
+            AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+        }
         return orders;
     }
 
-    public static void updatePlannedOrders(SOSHibernateSession sosHibernateSession, Set<OrderId> addedOrders, String controllerId)
-            throws SOSHibernateException {
-
-        DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
+    public static void updatePlannedOrders(SOSHibernateSession session, Set<OrderId> orders, String controllerId) throws SOSHibernateException {
 
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
         filter.setControllerId(controllerId);
         filter.setSubmitted(true);
-        filter.setSetOfOrders(addedOrders);
-        dbLayerDailyPlannedOrders.setSubmitted(filter);
+        filter.setSetOfOrders(orders);
 
+        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+        dbLayer.setSubmitted(filter);
     }
 
-    public static void updateHistory(SOSHibernateSession sosHibernateSession, List<DBItemDailyPlanHistory> listOfInsertHistoryEntries,
-            Boolean submitted, String message) throws SOSHibernateException {
+    public static void updateHistory(SOSHibernateSession session, List<DBItemDailyPlanHistory> items, Boolean submitted, String message)
+            throws SOSHibernateException {
 
-        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
-        for (DBItemDailyPlanHistory dbItemDailyPlanHistory : listOfInsertHistoryEntries) {
-            dbItemDailyPlanHistory.setSubmitted(submitted);
+        for (DBItemDailyPlanHistory item : items) {
+            item.setSubmitted(submitted);
             if (message != null && !message.isEmpty()) {
-                dbItemDailyPlanHistory.setMessage(message);
+                item.setMessage(message);
             }
-            dbLayerDailyPlanHistory.updateDailyPlanHistory(dbItemDailyPlanHistory);
+            session.update(item);
         }
-
     }
 }

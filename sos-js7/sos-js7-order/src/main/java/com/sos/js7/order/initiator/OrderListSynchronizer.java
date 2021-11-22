@@ -25,13 +25,16 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDuration;
 import com.sos.commons.util.SOSDurations;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
@@ -41,11 +44,12 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.order.initiator.classes.CycleOrderKey;
 import com.sos.js7.order.initiator.classes.OrderApi;
+import com.sos.js7.order.initiator.classes.OrderCounter;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.classes.PlannedOrderKey;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanHistory;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
@@ -55,15 +59,17 @@ import js7.data_for_java.controller.JControllerState;
 
 public class OrderListSynchronizer {
 
-    final JControllerState currentState;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
-    private OrderInitiatorSettings orderInitiatorSettings;
 
-    private Map<PlannedOrderKey, PlannedOrder> listOfPlannedOrders;
-    private Map<String, Long> listOfDurations;
-    private Map<WorkflowAtController, Boolean> listOfExistingWorkflows;
-    private String accessToken;
+    private final JControllerState currentState;
+    private OrderInitiatorSettings settings;
     private JocError jocError;
+    private DBItemDailyPlanSubmission submission;
+    private Map<PlannedOrderKey, PlannedOrder> plannedOrders;
+    private Map<WorkflowAtController, Boolean> existingWorkflows;
+    private Map<String, Long> durations;
+
+    private String accessToken;
 
     class WorkflowAtController {
 
@@ -109,339 +115,340 @@ public class OrderListSynchronizer {
         }
     }
 
-    public OrderListSynchronizer(JControllerState _currentState, OrderInitiatorSettings orderInitiatorSettings) {
-        listOfPlannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
-        this.orderInitiatorSettings = orderInitiatorSettings;
-        currentState = _currentState;
+    public OrderListSynchronizer(JControllerState currentState, OrderInitiatorSettings settings) {
+        this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
+        this.settings = settings;
+        this.currentState = currentState;
     }
 
     public boolean add(String controllerId, PlannedOrder o) {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         boolean added = false;
-        if (listOfExistingWorkflows == null) {
-            listOfExistingWorkflows = new HashMap<WorkflowAtController, Boolean>();
-            LOGGER.debug("Create list of existing workflows");
+        if (existingWorkflows == null) {
+            existingWorkflows = new HashMap<WorkflowAtController, Boolean>();
         }
         WorkflowAtController w = new WorkflowAtController();
         w.controllerId = controllerId;
         w.workflowName = o.getSchedule().getWorkflowName();
-        if (listOfExistingWorkflows.get(w) == null) {
-            listOfExistingWorkflows.put(w, WorkflowsHelper.workflowCurrentlyExists(currentState, o.getSchedule().getWorkflowName()));
-            LOGGER.debug("Adding workflow " + w.workflowName + " for controller " + w.controllerId + " to list of existing workflows");
+        if (existingWorkflows.get(w) == null) {
+            existingWorkflows.put(w, WorkflowsHelper.workflowCurrentlyExists(currentState, o.getSchedule().getWorkflowName()));
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][workflow=%s added", w.controllerId, w.workflowName));
+            }
         }
 
-        Boolean exists = listOfExistingWorkflows.get(w);
+        Boolean exists = existingWorkflows.get(w);
         if (exists) {
             added = true;
-            listOfPlannedOrders.put(o.uniqueOrderkey(), o);
+            plannedOrders.put(o.uniqueOrderkey(), o);
         } else {
-            LOGGER.debug("Workflow " + w.workflowName + " not deployed for controller " + w.controllerId);
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][workflow=%s not deployed][skip]%s", w.controllerId, w.workflowName, SOSString.toString(o)));
+            }
         }
         return added;
+    }
+
+    private void calculateDurations() throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
+        LOGGER.debug("... calculateDurations");
+        durations = new HashMap<String, Long>();
+
+        for (PlannedOrder plannedOrder : plannedOrders.values()) {
+            calculateDuration(plannedOrder);
+        }
     }
 
     private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,
             DBOpenSessionException {
 
-        if (listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
-
-            SOSHibernateSession sosHibernateSession = null;
+        if (durations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
+            SOSHibernateSession session = null;
             try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("calculateDurations");
-
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
                 filter.setOrderCriteria(null);
-                DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
-                Globals.beginTransaction(sosHibernateSession);
                 filter.setControllerId(plannedOrder.getControllerId());
                 filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
 
-                List<DBItemDailyPlanWithHistory> listOfPlannedOrders = dbLayerDailyPlan.getDailyPlanWithHistoryList(filter, 0);
-                SOSDurations sosDurations = new SOSDurations();
-                for (DBItemDailyPlanWithHistory dbItemDailyPlanWithHistory : listOfPlannedOrders) {
-                    if (dbItemDailyPlanWithHistory.getOrderHistoryId() != null) {
-                        SOSDuration sosDuration = new SOSDuration();
-                        Date startTime = dbItemDailyPlanWithHistory.getStartTime();
-                        Date endTime = dbItemDailyPlanWithHistory.getEndTime();
-                        sosDuration.setStartTime(startTime);
-                        sosDuration.setEndTime(endTime);
-                        sosDurations.add(sosDuration);
+                session = Globals.createSosHibernateStatelessConnection("calculateDurations");
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                // Globals.beginTransaction(session);
+                List<DBItemDailyPlanWithHistory> orders = dbLayer.getDailyPlanWithHistoryList(filter, 0);
+                session.close();
+                session = null;
+
+                SOSDurations durations = new SOSDurations();
+                for (DBItemDailyPlanWithHistory item : orders) {
+                    if (item.getOrderHistoryId() != null) {
+                        SOSDuration duration = new SOSDuration();
+                        duration.setStartTime(item.getStartTime());
+                        duration.setEndTime(item.getEndTime());
+                        durations.add(duration);
                     }
                 }
-                listOfDurations.put(plannedOrder.getSchedule().getWorkflowName(), sosDurations.average());
+                this.durations.put(plannedOrder.getSchedule().getWorkflowName(), durations.average());
             } finally {
-                Globals.disconnect(sosHibernateSession);
+                Globals.disconnect(session);
             }
         }
     }
 
-    private void calculateDurations() throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
-        LOGGER.debug("... calculateDurations");
-        listOfDurations = new HashMap<String, Long>();
+    private List<DBItemDailyPlanHistory> insertHistory(SOSHibernateSession session, Set<PlannedOrder> addedOrders) throws SOSHibernateException {
 
-        for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-            calculateDuration(plannedOrder);
-        }
-    }
+        Date submissionTime = settings.getSubmissionTime() == null ? new Date() : settings.getSubmissionTime();
 
-    private List<DBItemDailyPlanHistory> insertHistory(SOSHibernateSession sosHibernateSession, Set<PlannedOrder> addedOrders)
-            throws SOSHibernateException {
-
-        List<DBItemDailyPlanHistory> listOfInsertHistoryEntries = new ArrayList<DBItemDailyPlanHistory>();
-        Date submissionTime = null;
-        Date dailyPlanDate = null;
-
-        if (orderInitiatorSettings.getSubmissionTime() == null) {
-            submissionTime = new Date();
-        } else {
-            submissionTime = orderInitiatorSettings.getSubmissionTime();
-        }
-
-        DBLayerDailyPlanHistory dbLayerDailyPlanHistory = new DBLayerDailyPlanHistory(sosHibernateSession);
-        for (PlannedOrder addedOrder : addedOrders) {
-            if (orderInitiatorSettings.getDailyPlanDate() == null) {
+        List<DBItemDailyPlanHistory> result = new ArrayList<DBItemDailyPlanHistory>();
+        for (PlannedOrder order : addedOrders) {
+            Date dailyPlanDate = null;
+            if (settings.getDailyPlanDate() == null) {
                 Calendar dp = Calendar.getInstance();
-                dp.setTimeInMillis(addedOrder.getFreshOrder().getScheduledFor());
+                dp.setTimeInMillis(order.getFreshOrder().getScheduledFor());
                 dp.set(Calendar.MINUTE, 0);
                 dp.set(Calendar.SECOND, 0);
                 dp.set(Calendar.HOUR_OF_DAY, 0);
                 dailyPlanDate = dp.getTime();
             } else {
-
-                dailyPlanDate = orderInitiatorSettings.getDailyPlanDate();
+                dailyPlanDate = settings.getDailyPlanDate();
             }
-            DBItemDailyPlanHistory dbItemDailyPlanHistory = new DBItemDailyPlanHistory();
-            dbItemDailyPlanHistory.setSubmitted(false);
-            dbItemDailyPlanHistory.setControllerId(addedOrder.getControllerId());
-            dbItemDailyPlanHistory.setCreated(JobSchedulerDate.nowInUtc());
-            dbItemDailyPlanHistory.setDailyPlanDate(dailyPlanDate);
-            dbItemDailyPlanHistory.setOrderId(addedOrder.getFreshOrder().getId());
-            dbItemDailyPlanHistory.setScheduledFor(new Date(addedOrder.getFreshOrder().getScheduledFor()));
-            dbItemDailyPlanHistory.setWorkflowPath(addedOrder.getSchedule().getWorkflowPath());
-            if (dbItemDailyPlanHistory.getWorkflowPath() != null) {
-                String folderName = Paths.get(dbItemDailyPlanHistory.getWorkflowPath()).getParent().toString().replace('\\', '/');
-                dbItemDailyPlanHistory.setWorkflowFolder(folderName);
-            }
-            dbItemDailyPlanHistory.setSubmissionTime(submissionTime);
-            dbItemDailyPlanHistory.setUserAccount(orderInitiatorSettings.getUserAccount());
-            dbLayerDailyPlanHistory.storeDailyPlanHistory(dbItemDailyPlanHistory);
-            listOfInsertHistoryEntries.add(dbItemDailyPlanHistory);
 
+            DBItemDailyPlanHistory item = new DBItemDailyPlanHistory();
+            item.setSubmitted(false);
+            item.setControllerId(order.getControllerId());
+            item.setCreated(JobSchedulerDate.nowInUtc());
+            item.setDailyPlanDate(dailyPlanDate);
+            item.setOrderId(order.getFreshOrder().getId());
+            item.setScheduledFor(new Date(order.getFreshOrder().getScheduledFor()));
+            item.setWorkflowPath(order.getSchedule().getWorkflowPath());
+            if (item.getWorkflowPath() != null) {
+                String folderName = Paths.get(item.getWorkflowPath()).getParent().toString().replace('\\', '/');
+                item.setWorkflowFolder(folderName);
+            }
+            item.setSubmissionTime(submissionTime);
+            item.setUserAccount(settings.getUserAccount());
+
+            session.save(item);
+            result.add(item);
         }
-        return listOfInsertHistoryEntries;
+        return result;
     }
 
-    public void submitOrdersToController(String controllerId) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
+    public void submitOrdersToController(String controllerId, boolean fromService) throws ControllerConnectionResetException,
+            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
+            DBConnectionRefusedException, InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
 
-        LOGGER.debug(listOfPlannedOrders.size() + " orders will be submitted to the controller");
-
-        Set<PlannedOrder> addedOrders = new HashSet<PlannedOrder>();
-        for (PlannedOrder p : listOfPlannedOrders.values()) {
+        String method = "submitOrdersToController";
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
+        for (PlannedOrder p : plannedOrders.values()) {
             if (p.isStoredInDb() && p.getSchedule().getSubmitOrderToControllerWhenPlanned()) {
-                addedOrders.add(p);
+                orders.add(p);
+            } else {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format(
+                            "[%s][%s][skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s",
+                            method, controllerId, SOSString.toString(p)));
+                }
             }
         }
-        SOSHibernateSession sosHibernateSession = null;
 
+        SOSHibernateSession session = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
-            sosHibernateSession.setAutoCommit(false);
+            session = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+            session.setAutoCommit(false);
 
-            List<DBItemDailyPlanHistory> listOfInsertHistoryEntries = new ArrayList<DBItemDailyPlanHistory>();
+            List<DBItemDailyPlanHistory> inserted = new ArrayList<DBItemDailyPlanHistory>();
             try {
-                Globals.beginTransaction(sosHibernateSession);
-                listOfInsertHistoryEntries = insertHistory(sosHibernateSession, addedOrders);
-                Globals.commit(sosHibernateSession);
-                Globals.disconnect(sosHibernateSession); // disconnect here, not wait for the controller operations
-                sosHibernateSession = null;
+                Globals.beginTransaction(session);
+                inserted = insertHistory(session, orders);
+                Globals.commit(session);
+                Globals.disconnect(session); // disconnect here, not wait for the controller operations
+                session = null;
 
-                OrderApi.addOrderToController(controllerId, jocError, accessToken, addedOrders, listOfInsertHistoryEntries);
+                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s", method, controllerId, orders.size(), plannedOrders.size(),
+                        inserted.size()));
+
+                OrderApi.addOrdersToController(controllerId, jocError, accessToken, orders, inserted, fromService);
 
             } catch (Exception e) {
+                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s", method, controllerId, orders.size(), plannedOrders.size(),
+                        inserted.size()));
+
                 LOGGER.warn(e.getLocalizedMessage());
             }
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
 
     }
 
-    private void executeStore() throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException, ParseException,
-            JsonProcessingException {
-        SOSHibernateSession sosHibernateSession = null;
-
+    private OrderCounter executeStore(String operation, String controllerId, String date) throws JocConfigurationException,
+            DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
+        SOSHibernateSession session = null;
+        OrderCounter counter = new OrderCounter();
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
-            DBLayerDailyPlannedOrders dbLayerDailyPlan = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
+            session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+            session.setAutoCommit(false);
+            Globals.beginTransaction(session);
 
-            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
+            Map<CycleOrderKey, List<PlannedOrder>> cyclic = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
+            for (PlannedOrder plannedOrder : plannedOrders.values()) {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
-                    DBItemDailyPlanOrder dbItemDailyPlan = null;
-                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
-
-                    if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-                        LOGGER.trace("snchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
-                        plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        dbLayerDailyPlan.store(plannedOrder);
+                    DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
+                    if (settings.isOverwrite() || item == null) {
+                        LOGGER.debug("synchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        dbLayer.store(plannedOrder);
                         plannedOrder.setStoredInDb(true);
+                        counter.addSingle();
                     }
+                } else {
+                    CycleOrderKey key = new CycleOrderKey();
+                    key.setPeriodBegin(plannedOrder.getPeriod().getBegin());
+                    key.setPeriodEnd(plannedOrder.getPeriod().getEnd());
+                    key.setRepeat(plannedOrder.getPeriod().getRepeat());
+                    key.setOrderName(plannedOrder.getOrderName());
+                    key.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
+
+                    if (cyclic.get(key) == null) {
+                        cyclic.put(key, new ArrayList<PlannedOrder>());
+                        counter.addCyclic();
+                    }
+                    cyclic.get(key).add(plannedOrder);
                 }
             }
 
-            Map<CycleOrderKey, List<PlannedOrder>> mapOfCycledOrders = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
-
-            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                if (plannedOrder.getPeriod().getSingleStart() == null) {
-
-                    CycleOrderKey cycleOrderKey = new CycleOrderKey();
-                    cycleOrderKey.setPeriodBegin(plannedOrder.getPeriod().getBegin());
-                    cycleOrderKey.setPeriodEnd(plannedOrder.getPeriod().getEnd());
-                    cycleOrderKey.setRepeat(plannedOrder.getPeriod().getRepeat());
-                    cycleOrderKey.setOrderName(plannedOrder.getOrderName());
-                    cycleOrderKey.setWorkflowPath(plannedOrder.getSchedule().getWorkflowPath());
-
-                    if (mapOfCycledOrders.get(cycleOrderKey) == null) {
-                        mapOfCycledOrders.put(cycleOrderKey, new ArrayList<PlannedOrder>());
-                    }
-                    mapOfCycledOrders.get(cycleOrderKey).add(plannedOrder);
-                }
-            }
-
-            for (Entry<CycleOrderKey, List<PlannedOrder>> entry : mapOfCycledOrders.entrySet()) {
+            for (Entry<CycleOrderKey, List<PlannedOrder>> entry : cyclic.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
                 String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-                LOGGER.debug("synchronizer: adding planned cycled order to database: " + size + " orders ");
+                LOGGER.debug("synchronizer: adding planned cyclic order to database: " + size + " orders ");
                 for (PlannedOrder plannedOrder : entry.getValue()) {
-
-                    DBItemDailyPlanOrder dbItemDailyPlan = null;
-                    dbItemDailyPlan = dbLayerDailyPlan.getUniqueDailyPlan(plannedOrder);
-
-                    if (orderInitiatorSettings.isOverwrite() || dbItemDailyPlan == null) {
-                        plannedOrder.setAverageDuration(listOfDurations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        dbLayerDailyPlan.store(plannedOrder, id, nr, size);
+                    DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
+                    if (settings.isOverwrite() || item == null) {
+                        plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
+                        dbLayer.store(plannedOrder, id, nr, size);
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
+                        counter.addCyclicTotal();
                     }
                 }
             }
-            Globals.commit(sosHibernateSession);
+            Globals.commit(session);
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
+
+        LOGGER.info(String.format("[%s][%s][%s][stored]%s", operation, controllerId, date, counter));
+        return counter;
     }
 
-    public void addPlannedOrderToControllerAndDB(String controllerId, Boolean withSubmit) throws JocConfigurationException,
-            DBConnectionRefusedException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException, InterruptedException,
-            ExecutionException, TimeoutException {
+    public void addPlannedOrderToControllerAndDB(String operation, String controllerId, String date, Boolean withSubmit, boolean fromService)
+            throws JocConfigurationException, DBConnectionRefusedException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException,
+            InterruptedException, ExecutionException, TimeoutException {
+
         LOGGER.debug("... addPlannedOrderToControllerAndDB");
         calculateDurations();
 
-        // SOSHibernateSession sosHibernateSession = null;
-        try {
-            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+        if (settings.isOverwrite()) {
+            LOGGER.debug("Overwrite orders");
+            SOSHibernateSession session = null;
+            List<DBItemDailyPlanOrder> orders = new ArrayList<DBItemDailyPlanOrder>();
+            try {
+                session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDBOverwrite");
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
-            // DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            if (orderInitiatorSettings.isOverwrite()) {
-                LOGGER.debug("Overwrite orders");
-                SOSHibernateSession session = null;
-                List<DBItemDailyPlanOrder> listOfDailyPlanOrders = new ArrayList<DBItemDailyPlanOrder>();
-                try {
-                    session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDBOverwrite");
-                    DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                for (PlannedOrder plannedOrder : plannedOrders.values()) {
+                    final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+                    filter.setControllerId(controllerId);
+                    filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
 
-                    for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                        final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                        filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-
-                        filter.setControllerId(controllerId);
-                        String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
-                        filter.addWorkflowName(workflowName);
-                        List<DBItemDailyPlanOrder> l = dbLayer.getDailyPlanList(filter, 0);
-                        listOfDailyPlanOrders.addAll(l);
-                    }
-                } finally {
-                    Globals.disconnect(session);
+                    List<DBItemDailyPlanOrder> l = dbLayer.getDailyPlanList(filter, 0);
+                    orders.addAll(l);
                 }
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, listOfDailyPlanOrders);
-                c.thenAccept(either -> {
-                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
-                    if (either.isRight()) {
-                        SOSHibernateSession sosHibernateSession2 = null;
-                        try {
-                            sosHibernateSession2 = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
-                            sosHibernateSession2.setAutoCommit(false);
-                            Globals.beginTransaction(sosHibernateSession2);
-                            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders2 = new DBLayerDailyPlannedOrders(sosHibernateSession2);
-                            for (PlannedOrder plannedOrder : listOfPlannedOrders.values()) {
-                                final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                                filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
-                                LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder
-                                        .getFreshOrder().getScheduledFor()));
-                                filter.setControllerId(controllerId);
-                                String workflowName = Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString();
-                                filter.addWorkflowName(workflowName);
-                                dbLayerDailyPlannedOrders2.deleteCascading(filter);
-                            }
-                            Globals.commit(sosHibernateSession2);
-
-                            executeStore();
-                            if (withSubmit == null || withSubmit) {
-                                submitOrdersToController(controllerId);
-                            } else {
-                                LOGGER.debug("Orders will not be submitted to the controller");
-                            }
-                        } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
-                                | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
-                                | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
-                            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
-                        } catch (JsonProcessingException e) {
-                            e.printStackTrace();
-                        } finally {
-                            Globals.disconnect(sosHibernateSession2);
-                        }
-                    }
-                });
-
-            } else {
-                executeStore();
-                if (withSubmit == null || withSubmit) {
-                    submitOrdersToController(controllerId);
-                } else {
-                    LOGGER.debug("Orders will not be submitted to the controller");
-                }
+            } finally {
+                Globals.disconnect(session);
             }
-        } finally {
-            // Globals.disconnect(sosHibernateSession);
+            CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, orders);
+            c.thenAccept(either -> {
+                ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
+                if (either.isRight()) {
+                    if (fromService) {
+                        AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+                    }
+                    SOSHibernateSession session4delete = null;
+                    try {
+                        session4delete = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+                        session4delete.setAutoCommit(false);
+                        Globals.beginTransaction(session4delete);
+                        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
+                        for (PlannedOrder plannedOrder : plannedOrders.values()) {
+                            final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                            filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
+                            filter.setControllerId(controllerId);
+                            filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+
+                            LOGGER.trace("----> Remove: " + plannedOrder.getFreshOrder().getScheduledFor() + ":" + new Date(plannedOrder
+                                    .getFreshOrder().getScheduledFor()));
+
+                            dbLayer.deleteCascading(filter);
+                        }
+                        Globals.commit(session4delete);
+
+                        executeStore(operation, controllerId, date);
+                        if (withSubmit == null || withSubmit) {
+                            submitOrdersToController(controllerId, fromService);
+                        } else {
+                            LOGGER.debug("Orders will not be submitted to the controller");
+                        }
+                    } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
+                            | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
+                            | DBOpenSessionException | DBInvalidDataException | InterruptedException | ExecutionException | TimeoutException e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    } finally {
+                        Globals.disconnect(session4delete);
+                    }
+                }
+            });
+
+        } else {
+            executeStore(operation, controllerId, date);
+            if (withSubmit == null || withSubmit) {
+                submitOrdersToController(controllerId, fromService);
+            } else {
+                LOGGER.debug("Orders will not be submitted to the controller");
+            }
         }
-
     }
 
-    public Map<PlannedOrderKey, PlannedOrder> getListOfPlannedOrders() {
-        return listOfPlannedOrders;
+    public DBItemDailyPlanSubmission getSubmission() {
+        return submission;
     }
 
-    public void resetListOfPlannedOrders() {
-        listOfPlannedOrders = null;
+    public void setSubmission(DBItemDailyPlanSubmission val) {
+        submission = val;
+    }
+
+    public Map<PlannedOrderKey, PlannedOrder> getPlannedOrders() {
+        return plannedOrders;
     }
 
     public JocError getJocError() {
         return jocError;
     }
 
-    public void setJocError(JocError jocError) {
-        this.jocError = jocError;
+    public void setJocError(JocError val) {
+        jocError = val;
     }
 
     public String getAccessToken() {
         return accessToken;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public void setAccessToken(String val) {
+        accessToken = val;
     }
 }
