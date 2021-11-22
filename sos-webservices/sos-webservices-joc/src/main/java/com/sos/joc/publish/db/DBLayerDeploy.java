@@ -682,10 +682,12 @@ public class DBLayerDeploy {
 
             Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
             for (Configuration cfg : configurations) {
-                query.setParameter("path", cfg.getPath());
-                query.setParameter("type", cfg.getObjectType().intValue());
-                query.setMaxResults(1);
-                results.add(query.getSingleResult());
+                if (ConfigurationType.FOLDER != cfg.getObjectType()) {
+                    query.setParameter("path", cfg.getPath());
+                    query.setParameter("type", cfg.getObjectType().intValue());
+                    query.setMaxResults(1);
+                    results.add(query.getSingleResult());
+                }
             }
             return results;
         } catch (SOSHibernateInvalidSessionException ex) {
