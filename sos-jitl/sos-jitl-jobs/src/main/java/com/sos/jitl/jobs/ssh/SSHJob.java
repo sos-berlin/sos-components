@@ -9,6 +9,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,32 +64,31 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
         SOSCommandResult result = null;
         try {
-            Map<String, String> envVarsAgent = SSHJobUtil.getAgentEnvVars();
-            Map<String, String> envVarsYade = SSHJobUtil.getYadeEnvVars();
-
-            Map<String, String> combined = Stream.of(envVarsAgent, envVarsYade).flatMap(map -> map.entrySet().stream()).collect(Collectors.toMap(
-                    Map.Entry::getKey, Map.Entry::getValue));
-            envVars.setLocalEnvs(combined);// ??? local?global
-
-            if (logger.isDebugEnabled()) {
-                logWorkflowCredentials(step);
-                logger.debug("Systems Environment Variables - Agent");
-                logSosEnvVars(envVarsAgent);
-                logger.debug("Systems Environment Variables - Yade");
-                logSosEnvVars(envVarsYade);
-            }
-            if (logger.isTraceEnabled()) {
-                logger.debug("Complete JS7 Environment Variables");
-                // logSosEnvVars(envVars);
+            Map<String, String> envVarsAgent = Collections.emptyMap();
+            if (jobArgs.getCreateEnvVars().getValue()) {
+                envVarsAgent = SSHJobUtil.getAgentEnvVars();
+                Map<String, String> envVarsYade = SSHJobUtil.getYadeEnvVars();
+                Map<String, String> combined = Stream.of(envVarsAgent, envVarsYade).flatMap(map -> map.entrySet().stream()).collect(Collectors.toMap(
+                        Map.Entry::getKey, Map.Entry::getValue));
+                envVars.setLocalEnvs(combined);// ??? local?global
+                if (logger.isDebugEnabled()) {
+                    logWorkflowCredentials(step);
+                    logger.debug("Systems Environment Variables - Agent");
+                    logSosEnvVars(envVarsAgent);
+                    logger.debug("Systems Environment Variables - Yade");
+                    logSosEnvVars(envVarsYade);
+                }
+                if (logger.isTraceEnabled()) {
+                    logger.debug("Complete JS7 Environment Variables");
+                    // logSosEnvVars(envVars);
+                }
             }
             logger.info("[connect]%s:%s ...", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue());
             provider.connect();
             logger.info("[connected][%s:%s]%s", providerArgs.getHost().getDisplayValue(), providerArgs.getPort().getDisplayValue(), provider
                     .getServerInfo().toString());
-
             isWindowsShell = provider.getServerInfo().hasWindowsShell();
             delimiter = isWindowsShell ? SSHJobUtil.DEFAULT_WINDOWS_DELIMITER : SSHJobUtil.DEFAULT_LINUX_DELIMITER;
-
             String[] commands = new String[] {};
             if (!jobArgs.getCommand().isEmpty()) {
                 logger.info("[execute command] %s", jobArgs.getCommand().getDisplayValue());
@@ -102,7 +102,6 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                 logger.debug(String.format("createEnvironmentVariables=%s, simulateShell=%s", jobArgs.getCreateEnvVars().getValue(), providerArgs
                         .getSimulateShell().getValue()));
             }
-
             for (String command : commands) {
                 StringBuilder preCommand = new StringBuilder();
                 resolveReturnValuesFilename(jobArgs);
@@ -118,7 +117,7 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
                     }
                 }
 
-                if (envVars != null) {
+                if (envVars != null && jobArgs.getCreateEnvVars().getValue() && !envVarsAgent.isEmpty()) {
                     result = provider.executeCommand(command, new SOSEnv(envVarsAgent));
                 } else {
                     result = provider.executeCommand(command);

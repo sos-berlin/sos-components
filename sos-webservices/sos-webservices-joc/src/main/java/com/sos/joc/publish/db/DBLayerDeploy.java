@@ -664,8 +664,8 @@ public class DBLayerDeploy {
                     query.setParameter("path", cfg.getPath());
                     query.setParameter("type", cfg.getObjectType().intValue());
                     query.setMaxResults(1);
+                    results.add(query.getSingleResult());
                 }
-                results.add(query.getSingleResult());
             }
             return results;
         } catch (SOSHibernateInvalidSessionException ex) {
