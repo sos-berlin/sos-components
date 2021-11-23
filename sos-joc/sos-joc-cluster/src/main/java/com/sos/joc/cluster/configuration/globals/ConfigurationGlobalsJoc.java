@@ -38,8 +38,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
     private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "imported", GlobalSettingsSectionValueType.STRING);
     
     // controller pwds
-    private ConfigurationEntry jocPwd = new ConfigurationEntry("controller_connection_joc_password", "JS7-JOC", GlobalSettingsSectionValueType.STRING);
-    private ConfigurationEntry historyPwd = new ConfigurationEntry("controller_connection_history_password", "JS7-History", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry jocPwd = new ConfigurationEntry("controller_connection_joc_password", "JS7-JOC",
+            GlobalSettingsSectionValueType.PASSWORD);
+    private ConfigurationEntry historyPwd = new ConfigurationEntry("controller_connection_history_password", "JS7-History",
+            GlobalSettingsSectionValueType.PASSWORD);
 
     // "jobstreams"
     private ConfigurationEntry showViewDashboard = new ConfigurationEntry("show_view_dashboard", null, GlobalSettingsSectionValueType.BOOLEAN);

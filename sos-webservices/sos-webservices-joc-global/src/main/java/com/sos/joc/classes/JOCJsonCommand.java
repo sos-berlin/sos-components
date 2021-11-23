@@ -440,8 +440,9 @@ public class JOCJsonCommand extends SOSRestApiClient {
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new ControllerConnectionRefusedException("Required truststore not found");
         }
-        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC
-                .getBasicAuthorization()));
+        setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
+//        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC
+//                .getBasicAuthorization()));
     }
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {
