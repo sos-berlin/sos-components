@@ -2380,7 +2380,7 @@ public class DBLayerDeploy {
     public Map<String, String> getReleasedScripts() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" where type=:type");
         Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
-        query.setParameter("type", ConfigurationType.SCRIPT.intValue());
+        query.setParameter("type", ConfigurationType.INCLUDESCRIPT.intValue());
         List<DBItemInventoryReleasedConfiguration> result = getSession().getResultList(query);
         if (result == null) {
             return Collections.emptyMap();

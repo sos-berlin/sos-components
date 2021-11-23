@@ -59,8 +59,8 @@ public class GetPathResourceImpl extends JOCResourceImpl implements IGetPathReso
                             break;
                         case NONWORKINGDAYSCALENDAR:
                         case SCHEDULE:
-                        case SCRIPT:
-                            case WORKINGDAYSCALENDAR:
+                        case INCLUDESCRIPT:
+                        case WORKINGDAYSCALENDAR:
                             path = dbLayer.getPathByNameFromInvReleasedConfigurations(filter.getName(), ConfigurationType.fromValue(filter.getObjectType()));
                             break;
                         case FOLDER:

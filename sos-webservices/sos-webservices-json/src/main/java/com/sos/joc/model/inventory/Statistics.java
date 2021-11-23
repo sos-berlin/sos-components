@@ -29,7 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "numOfFileOrderSources",
     "numOfSchedules",
     "numOfCalendars",
-    "numOfScripts"
+    "numOfIncludeScripts"
 })
 public class Statistics {
 
@@ -123,8 +123,8 @@ public class Statistics {
      * 
      * 
      */
-    @JsonProperty("numOfScripts")
-    private Long numOfScripts;
+    @JsonProperty("numOfIncludeScripts")
+    private Long numOfIncludeScripts;
 
     /**
      * timestamp
@@ -356,9 +356,9 @@ public class Statistics {
      * 
      * 
      */
-    @JsonProperty("numOfScripts")
-    public Long getNumOfScripts() {
-        return numOfScripts;
+    @JsonProperty("numOfIncludeScripts")
+    public Long getNumOfIncludeScripts() {
+        return numOfIncludeScripts;
     }
 
     /**
@@ -367,19 +367,19 @@ public class Statistics {
      * 
      * 
      */
-    @JsonProperty("numOfScripts")
-    public void setNumOfScripts(Long numOfScripts) {
-        this.numOfScripts = numOfScripts;
+    @JsonProperty("numOfIncludeScripts")
+    public void setNumOfIncludeScripts(Long numOfIncludeScripts) {
+        this.numOfIncludeScripts = numOfIncludeScripts;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfScripts", numOfScripts).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("surveyDate", surveyDate).append("numOfJobs", numOfJobs).append("numOfWorkflows", numOfWorkflows).append("numOfLocks", numOfLocks).append("numOfNoticeBoards", numOfNoticeBoards).append("numOfJobResources", numOfJobResources).append("numOfFileOrderSources", numOfFileOrderSources).append("numOfSchedules", numOfSchedules).append("numOfCalendars", numOfCalendars).append("numOfIncludeScripts", numOfIncludeScripts).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfSchedules).append(numOfScripts).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
+        return new HashCodeBuilder().append(numOfNoticeBoards).append(numOfCalendars).append(surveyDate).append(numOfJobs).append(numOfFileOrderSources).append(numOfLocks).append(numOfSchedules).append(numOfIncludeScripts).append(deliveryDate).append(numOfJobResources).append(numOfWorkflows).toHashCode();
     }
 
     @Override
@@ -391,7 +391,7 @@ public class Statistics {
             return false;
         }
         Statistics rhs = ((Statistics) other);
-        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(numOfScripts, rhs.numOfScripts).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
+        return new EqualsBuilder().append(numOfNoticeBoards, rhs.numOfNoticeBoards).append(numOfCalendars, rhs.numOfCalendars).append(surveyDate, rhs.surveyDate).append(numOfJobs, rhs.numOfJobs).append(numOfFileOrderSources, rhs.numOfFileOrderSources).append(numOfLocks, rhs.numOfLocks).append(numOfSchedules, rhs.numOfSchedules).append(numOfIncludeScripts, rhs.numOfIncludeScripts).append(deliveryDate, rhs.deliveryDate).append(numOfJobResources, rhs.numOfJobResources).append(numOfWorkflows, rhs.numOfWorkflows).isEquals();
     }
 
 }

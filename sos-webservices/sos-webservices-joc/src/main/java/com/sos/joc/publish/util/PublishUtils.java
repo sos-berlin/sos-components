@@ -1361,7 +1361,7 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
-                            case SCRIPT:
+                            case INCLUDESCRIPT:
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
@@ -1456,7 +1456,7 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
-                            case SCRIPT:
+                            case INCLUDESCRIPT:
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
@@ -1577,7 +1577,7 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
-                            case SCRIPT:
+                            case INCLUDESCRIPT:
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
@@ -1698,7 +1698,7 @@ public abstract class PublishUtils {
                             case SCHEDULE:
                                 extension = ConfigurationObjectFileExtension.SCHEDULE_FILE_EXTENSION.toString();
                                 break;
-                            case SCRIPT:
+                            case INCLUDESCRIPT:
                                 extension = ConfigurationObjectFileExtension.SCRIPT_FILE_EXTENSION.toString();
                                 break;
                             case WORKINGDAYSCALENDAR:
@@ -2363,7 +2363,7 @@ public abstract class PublishUtils {
                 Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
-            case SCRIPT:
+            case INCLUDESCRIPT:
                 Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
                 configuration.setConfiguration(script);
                 break;
@@ -2407,7 +2407,7 @@ public abstract class PublishUtils {
                 Schedule schedule = Globals.objectMapper.readValue(item.getContent(), Schedule.class);
                 configuration.setConfiguration(schedule);
                 break;
-            case SCRIPT:
+            case INCLUDESCRIPT:
                 Script script = Globals.objectMapper.readValue(item.getContent(), Script.class);
                 configuration.setConfiguration(script);
                 break;

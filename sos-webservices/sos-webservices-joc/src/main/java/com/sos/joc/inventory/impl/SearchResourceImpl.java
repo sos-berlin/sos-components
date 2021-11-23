@@ -207,8 +207,8 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         case SCHEDULE:
             in.getAdvanced().setSchedule(null);
             break;
-        case SCRIPT:
-            in.getAdvanced().setScript(null);
+        case INCLUDESCRIPT:
+            in.getAdvanced().setIncludeScript(null);
             break;
         }
     }
@@ -231,7 +231,7 @@ public class SearchResourceImpl extends JOCResourceImpl implements ISearchResour
         item.setJobResources(in.getAdvanced().getJobResources());
         item.setLock(in.getAdvanced().getLock());
         item.setSchedule(in.getAdvanced().getSchedule());
-        item.setScript(in.getAdvanced().getScript());
+        item.setIncludeScript(in.getAdvanced().getIncludeScript());
         item.setWorkflow(null);
         return item;
     }

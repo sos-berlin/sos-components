@@ -97,7 +97,7 @@ public class JocInventory {
             put(ConfigurationType.LOCK, "classpath:/raml/inventory/schemas/lock/lock-schema.json");
             put(ConfigurationType.FILEORDERSOURCE, "classpath:/raml/inventory/schemas/fileordersource/fileOrderSource-schema.json");
             put(ConfigurationType.SCHEDULE, "classpath:/raml/inventory/schemas/schedule/schedule-schema.json");
-            put(ConfigurationType.SCRIPT, "classpath:/raml/inventory/schemas/script/script-schema.json");
+            put(ConfigurationType.INCLUDESCRIPT, "classpath:/raml/inventory/schemas/script/script-schema.json");
             put(ConfigurationType.WORKFLOW, "classpath:/raml/inventory/schemas/workflow/workflow-schema.json");
             put(ConfigurationType.NOTICEBOARD, "classpath:/raml/inventory/schemas/board/board-schema.json");
             put(ConfigurationType.FOLDER, "classpath:/raml/api/schemas/inventory/folder-schema.json");
@@ -142,7 +142,7 @@ public class JocInventory {
             put(ConfigurationType.WORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.NONWORKINGDAYSCALENDAR, Calendar.class);
             put(ConfigurationType.SCHEDULE, Schedule.class);
-            put(ConfigurationType.SCRIPT, Script.class);
+            put(ConfigurationType.INCLUDESCRIPT, Script.class);
             put(ConfigurationType.WORKFLOW, Workflow.class);
             put(ConfigurationType.NOTICEBOARD, Board.class);
             put(ConfigurationType.FOLDER, Folder.class);
@@ -154,7 +154,7 @@ public class JocInventory {
             ConfigurationType.JOBRESOURCE, ConfigurationType.NOTICEBOARD)));
 
     public static final Set<ConfigurationType> RELEASABLE_OBJECTS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            ConfigurationType.SCHEDULE, ConfigurationType.SCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
+            ConfigurationType.SCHEDULE, ConfigurationType.INCLUDESCRIPT, ConfigurationType.NONWORKINGDAYSCALENDAR, ConfigurationType.WORKINGDAYSCALENDAR)));
 
     public static String getResourceImplPath(final String path) {
         return String.format("./%s/%s", APPLICATION_PATH, path);
@@ -971,7 +971,7 @@ public class JocInventory {
                 }
             }
             break;
-        case SCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
+        case INCLUDESCRIPT: // determine Workflows with script reference in INCLUDE line of a job script
             List<DBItemInventoryConfiguration> workflows4 = dbLayer.getWorkflowsWithIncludedScripts();
             Predicate<String> hasScriptInclude = Pattern.compile(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + config
                     .getName() + "\\s*").asPredicate();
