@@ -36,6 +36,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     private ConfigurationEntry importSuffix = new ConfigurationEntry("import_suffix", "imported", GlobalSettingsSectionValueType.STRING);
     private ConfigurationEntry importPrefix = new ConfigurationEntry("import_prefix", "imported", GlobalSettingsSectionValueType.STRING);
+    
+    // controller pwds
+    private ConfigurationEntry jocPwd = new ConfigurationEntry("controller_connection_joc_password", "JS7-JOC", GlobalSettingsSectionValueType.STRING);
+    private ConfigurationEntry historyPwd = new ConfigurationEntry("controller_connection_history_password", "JS7-History", GlobalSettingsSectionValueType.STRING);
 
     // "jobstreams"
     private ConfigurationEntry showViewDashboard = new ConfigurationEntry("show_view_dashboard", null, GlobalSettingsSectionValueType.BOOLEAN);
@@ -78,6 +82,9 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViewConfiguration.setOrdering(++index);
         showViewfiletransfer.setOrdering(++index);
         // showViewJobstreams.setOrdering(++index);
+        
+        jocPwd.setOrdering(++index);
+        historyPwd.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -136,6 +143,14 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         showViews.put(ShowViewName.resources, getBoolean(showViewResources));
         showViews.put(ShowViewName.workflows, getBoolean(showViewWorkflows));
         return showViews;
+    }
+    
+    public ConfigurationEntry getJOCPwd() {
+        return jocPwd;
+    }
+    
+    public ConfigurationEntry getHistoryPwd() {
+        return historyPwd;
     }
 
     private static Boolean getBoolean(ConfigurationEntry c) {

@@ -85,6 +85,22 @@ public class ClusterSettings {
         return svProp;
     }
     
+    public static String getJOCPwd(ConfigurationGlobalsJoc settings) {
+        String pwd = settings.getJOCPwd().getValue();
+        if (pwd == null || pwd.isEmpty()) {
+           return settings.getJOCPwd().getDefault();
+        }
+        return pwd;
+    }
+    
+    public static String getHistoryPwd(ConfigurationGlobalsJoc settings) {
+        String pwd = settings.getHistoryPwd().getValue();
+        if (pwd == null || pwd.isEmpty()) {
+           return settings.getHistoryPwd().getDefault();
+        }
+        return pwd;
+    }
+    
     public static boolean getWelcomeDoNotRemindMe(ConfigurationGlobalsUser settings) {
         String welcome = settings.getWelcomeDoNotRemindMe().getValue();
         return welcome != null && welcome.equalsIgnoreCase("true");
