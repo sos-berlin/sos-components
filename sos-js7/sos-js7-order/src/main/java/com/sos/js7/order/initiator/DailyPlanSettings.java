@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 
-public class OrderInitiatorSettings {
+public class DailyPlanSettings {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorSettings.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSettings.class);
 
     private Path hibernateConfigurationFile;
     private String propertiesFile;
@@ -24,7 +24,7 @@ public class OrderInitiatorSettings {
     private boolean overwrite = false;
     private boolean submit = true;
     private StartupMode startMode;
-    
+
     private Date dailyPlanDate;
     private Date submissionTime;
 
@@ -92,7 +92,6 @@ public class OrderInitiatorSettings {
         this.hibernateConfigurationFile = hibernateConfigurationFile;
     }
 
- 
     public int getDayAheadPlan() {
         return dayAheadPlan;
     }
@@ -126,43 +125,35 @@ public class OrderInitiatorSettings {
             LOGGER.warn("Could not set setting for dayAheadPlan: " + dayAheadPlan);
         }
     }
- 
-    
+
     public StartupMode getStartMode() {
         return startMode;
     }
 
-    
     public void setStartMode(StartupMode startMode) {
         this.startMode = startMode;
     }
 
-    
     public String getDailyPlanStartTime() {
         return dailyPlanStartTime;
     }
 
-    
     public void setDailyPlanStartTime(String dailyPlanStartTime) {
         this.dailyPlanStartTime = dailyPlanStartTime;
     }
- 
-    
+
     public Date getDailyPlanDate() {
         return dailyPlanDate;
     }
 
-    
     public void setDailyPlanDate(Date dailyPlanDate) {
         this.dailyPlanDate = dailyPlanDate;
     }
 
-    
     public Date getSubmissionTime() {
         return submissionTime;
     }
 
-    
     public void setSubmissionTime(Date submissionTime) {
         this.submissionTime = submissionTime;
     }

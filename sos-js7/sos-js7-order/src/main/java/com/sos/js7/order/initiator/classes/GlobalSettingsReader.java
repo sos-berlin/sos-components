@@ -1,19 +1,20 @@
 package com.sos.js7.order.initiator.classes;
 
-import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
-import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsDailyPlan;
+import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 
 public class GlobalSettingsReader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalSettingsReader.class);
 
-    public OrderInitiatorSettings getSettings(AConfigurationSection section) {
+    public DailyPlanSettings getSettings(AConfigurationSection section) {
         ConfigurationGlobalsDailyPlan conf = (ConfigurationGlobalsDailyPlan) section;
 
-        OrderInitiatorSettings settings = new OrderInitiatorSettings();
+        DailyPlanSettings settings = new DailyPlanSettings();
         settings.setTimeZone(conf.getTimeZone().getValue());
         settings.setPeriodBegin(conf.getPeriodBegin().getValue());
         settings.setDailyPlanStartTime(conf.getStartTime().getValue());

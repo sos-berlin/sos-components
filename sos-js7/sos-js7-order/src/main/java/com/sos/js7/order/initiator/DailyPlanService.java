@@ -21,18 +21,18 @@ import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 
-public class OrderInitiatorService extends AJocClusterService {
+public class DailyPlanService extends AJocClusterService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 
     private static final String IDENTIFIER = ClusterServices.dailyplan.name();
 
+    private DailyPlanRunner runner;
     private Timer timer;
     private Instant lastActivityStart = null;
     private Instant lastActivityEnd = null;
-    private OrderInitiatorRunner orderInitiatorRunner;
 
-    public OrderInitiatorService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
+    public DailyPlanService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
     }
 
@@ -44,7 +44,7 @@ public class OrderInitiatorService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            OrderInitiatorSettings settings = getSettings(mode, globalSettings);
+            DailyPlanSettings settings = getSettings(mode, globalSettings);
 
             String startTime = DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(), settings.getDailyPlanStartTime(), settings
                     .getPeriodBegin());
@@ -84,12 +84,12 @@ public class OrderInitiatorService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        if (orderInitiatorRunner != null) {
-            Instant rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityStart().get());
+        if (runner != null) {
+            Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
             if (rla.isAfter(this.lastActivityStart)) {
                 this.lastActivityStart = rla;
             }
-            rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityEnd().get());
+            rla = Instant.ofEpochMilli(runner.getLastActivityEnd().get());
             if (rla.isAfter(this.lastActivityEnd)) {
                 this.lastActivityEnd = rla;
             }
@@ -102,20 +102,20 @@ public class OrderInitiatorService extends AJocClusterService {
 
     }
 
-    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers, OrderInitiatorSettings settings) {
+    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers, DailyPlanSettings settings) {
         if (timer != null) {
             timer.cancel();
             timer.purge();
         }
         timer = new Timer();
-        orderInitiatorRunner = new OrderInitiatorRunner(controllers, settings, true);
-        timer.schedule(orderInitiatorRunner, 0, 60 * 1000);
+        runner = new DailyPlanRunner(controllers, settings, true);
+        timer.schedule(runner, 0, 60 * 1000);
     }
 
-    private OrderInitiatorSettings getSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
-        OrderInitiatorSettings initiatorGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
+    private DailyPlanSettings getSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
+        DailyPlanSettings initiatorGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
 
-        OrderInitiatorSettings settings = new OrderInitiatorSettings();
+        DailyPlanSettings settings = new DailyPlanSettings();
         settings.setTimeZone(initiatorGlobalSettings.getTimeZone());
         settings.setPeriodBegin(initiatorGlobalSettings.getPeriodBegin());
         settings.setDailyPlanStartTime(initiatorGlobalSettings.getDailyPlanStartTime());

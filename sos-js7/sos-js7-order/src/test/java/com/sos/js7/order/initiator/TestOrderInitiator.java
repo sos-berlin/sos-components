@@ -22,14 +22,14 @@ public class TestOrderInitiator {
             Globals.sosCockpitProperties = new JocCockpitProperties("/dailyplan.properties");
         }
         
-        OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(getSettings(),true);
+        DailyPlanRunner orderInitiatorRunner = new DailyPlanRunner(getSettings(),true);
         orderInitiatorRunner.run();
     }
 
-    private OrderInitiatorSettings getSettings() throws Exception {
+    private DailyPlanSettings getSettings() throws Exception {
         String method = "getSettings";
 
-        OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+        DailyPlanSettings orderInitiatorSettings = new DailyPlanSettings();
 
         String jettyBase = System.getProperty("jetty.base");
         String orderConfiguration = "src/test/resources/dailyplan.properties";

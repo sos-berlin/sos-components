@@ -84,16 +84,16 @@ class CalendarCacheItem {
 
 }
 
-public class OrderInitiatorRunner extends TimerTask {
+public class DailyPlanRunner extends TimerTask {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorRunner.class);
-    private static final String DAILYPLAN_RUNNER = "DailyplanRunner";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanRunner.class);
+    private static final String IDENTIFIER = DailyPlanRunner.class.getSimpleName();
     private static final String UTC = "UTC";
 
     private JControllerState currentstate;
     private java.util.Calendar startCalendar;
     private SOSHibernateFactory factory;
-    private OrderInitiatorSettings settings;
+    private DailyPlanSettings settings;
     private AtomicLong lastActivityStart = new AtomicLong(0);
     private AtomicLong lastActivityEnd = new AtomicLong(0);
     private List<Schedule> schedules;
@@ -104,12 +104,12 @@ public class OrderInitiatorRunner extends TimerTask {
     private boolean fromService = true;
     private boolean firstStart = true;
 
-    public OrderInitiatorRunner(OrderInitiatorSettings settings, boolean fromService) {
+    public DailyPlanRunner(DailyPlanSettings settings, boolean fromService) {
         this.settings = settings;
         this.fromService = fromService;
     }
 
-    public OrderInitiatorRunner(List<ControllerConfiguration> controllers, OrderInitiatorSettings settings, boolean fromService) {
+    public DailyPlanRunner(List<ControllerConfiguration> controllers, DailyPlanSettings settings, boolean fromService) {
         this.settings = settings;
         this.controllers = controllers;
         this.fromService = fromService;
@@ -271,7 +271,7 @@ public class OrderInitiatorRunner extends TimerTask {
     private List<DBItemDailyPlanSubmission> getSubmissionsForDate(java.util.Calendar calendar, String controllerId) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection(DAILYPLAN_RUNNER);
+            session = Globals.createSosHibernateStatelessConnection(IDENTIFIER);
 
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();

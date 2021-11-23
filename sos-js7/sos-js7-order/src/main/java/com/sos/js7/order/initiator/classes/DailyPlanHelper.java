@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 
 public class DailyPlanHelper {
 
@@ -225,7 +225,7 @@ public class DailyPlanHelper {
         return buildOrderId(orderName, startTime, startMode, timeZone, periodBegin);
     }
 
-    public static Date getNextDay(Date dateForPlan, OrderInitiatorSettings settings) throws ParseException {
+    public static Date getNextDay(Date dateForPlan, DailyPlanSettings settings) throws ParseException {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
         calendar.setTime(dateForPlan);
         calendar.add(java.util.Calendar.DATE, 1);

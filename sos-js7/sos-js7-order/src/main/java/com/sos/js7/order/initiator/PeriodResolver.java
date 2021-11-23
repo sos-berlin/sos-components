@@ -25,21 +25,20 @@ public class PeriodResolver {
 
     private static final String DATE_FORMAT_SIMPLE = "yyyy-M-dd HH:mm:ss";
     private static final Logger LOGGER = LoggerFactory.getLogger(PeriodResolver.class);
-    private Map<Long, Period> listOfStartTimes;
-    private Map<String, Period> listOfPeriods;
-    private OrderInitiatorSettings orderInitiatorSettings;
-    
-    public PeriodResolver(OrderInitiatorSettings orderInitiatorSettings) {
+
+    private DailyPlanSettings settings;
+    private Map<Long, Period> startTimes;
+    private Map<String, Period> periods;
+
+    public PeriodResolver(DailyPlanSettings settings) {
         super();
-        this.orderInitiatorSettings = orderInitiatorSettings;
-        listOfStartTimes = new HashMap<Long, Period>();
-        listOfPeriods = new HashMap<String, Period>();
+        this.settings = settings;
+        this.startTimes = new HashMap<Long, Period>();
+        this.periods = new HashMap<String, Period>();
     }
 
     private Date getDate(String day, String time, String format) throws ParseException {
-
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
-
         String dateInString = String.format("%s %s", day, time);
         return dateFormat.parse(dateInString);
     }
@@ -53,9 +52,9 @@ public class PeriodResolver {
     private void add(String start, Period period) {
 
         LOGGER.debug("Adding " + start);
-        Period p = listOfPeriods.get(start);
+        Period p = periods.get(start);
         if (p == null) {
-            listOfPeriods.put(start, period);
+            periods.put(start, period);
         } else {
             LOGGER.info("Overlapping period for start time: " + start);
             logPeriod(p);
@@ -78,15 +77,15 @@ public class PeriodResolver {
             Calendar calendar = GregorianCalendar.getInstance();
             calendar.setTime(repeat);
             long offset = (calendar.get(Calendar.HOUR_OF_DAY) * 60 * 60 + calendar.get(Calendar.MINUTE) * 60 + calendar.get(Calendar.SECOND));
-             while (offset > 0 && startUtc.isBefore(endUtc)) {
+            while (offset > 0 && startUtc.isBefore(endUtc)) {
                 Calendar cal = Calendar.getInstance();
-                cal.setTimeInMillis(startUtc.toEpochSecond()*1000);
+                cal.setTimeInMillis(startUtc.toEpochSecond() * 1000);
                 TimeZone timeZoneFromCalendar = TimeZone.getTimeZone(timeZone);
 
-                DateFormat dateFormat = new SimpleDateFormat( "HH:mm:ss" );
-                dateFormat.setTimeZone( timeZoneFromCalendar );
-                String s = dateFormat.format( cal.getTime() ); 
-                
+                DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+                dateFormat.setTimeZone(timeZoneFromCalendar);
+                String s = dateFormat.format(cal.getTime());
+
                 add(s, period);
                 startUtc = startUtc.plusSeconds(offset);
             }
@@ -169,7 +168,7 @@ public class PeriodResolver {
     public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
         period = normalizePeriod(period);
         if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
-            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
+            // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
 
             // period.setSingleStart(getTimeFromIso(scheduledFor.get()));
             // add(scheduledFor.get().getEpochSecond(), period);
@@ -179,12 +178,12 @@ public class PeriodResolver {
     }
 
     public Map<Long, Period> getStartTimes() {
-        return listOfStartTimes;
+        return startTimes;
     }
 
     private boolean dayIsInPlan(Date start, String dailyPlanDate, String timeZone) throws ParseException {
-        String timeZoneDailyplan = orderInitiatorSettings.getTimeZone();
-        String periodBegin = orderInitiatorSettings.getPeriodBegin();
+        String timeZoneDailyplan = settings.getTimeZone();
+        String periodBegin = settings.getPeriodBegin();
         String dateInString = String.format("%s %s", dailyPlanDate, periodBegin);
 
         Instant instant = JobSchedulerDate.getScheduledForInUTC(dateInString, timeZoneDailyplan).get();
@@ -194,29 +193,27 @@ public class PeriodResolver {
         calendar.setTime(dailyPlanStartPeriod);
         calendar.add(java.util.Calendar.HOUR, 24);
         Date dailyPlanEndPeriod = calendar.getTime();
-        
-          
+
         SimpleDateFormat sdfUtc = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdfUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
-        start = sdf.parse(sdfUtc.format(start ));
- 
-        
+        start = sdf.parse(sdfUtc.format(start));
+
         return (start.after(JobSchedulerDate.nowInUtc()) && start.after(dailyPlanStartPeriod) || start.equals(dailyPlanStartPeriod)) && (start.before(
                 dailyPlanEndPeriod));
 
     }
 
     public Map<Long, Period> getStartTimes(String d, String dailyPlanDate, String timeZone) throws ParseException {
-        listOfStartTimes = new HashMap<Long, Period>();
-        for (Entry<String, Period> periodEntry : listOfPeriods.entrySet()) {
+        startTimes = new HashMap<Long, Period>();
+        for (Entry<String, Period> periodEntry : periods.entrySet()) {
             Date start = getDate(d, periodEntry.getKey(), DATE_FORMAT_SIMPLE);
             if (dayIsInPlan(start, dailyPlanDate, timeZone)) {
                 Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + periodEntry.getKey(), timeZone);
-                listOfStartTimes.put(scheduledFor.get().getEpochSecond()*1000, periodEntry.getValue());
+                startTimes.put(scheduledFor.get().getEpochSecond() * 1000, periodEntry.getValue());
             }
         }
-        return listOfStartTimes;
+        return startTimes;
     }
 }

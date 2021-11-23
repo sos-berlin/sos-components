@@ -26,7 +26,7 @@ public class JocClusterConfiguration {
     }
 
     private static final String CLASS_NAME_SERVICE_HISTORY = "com.sos.js7.history.controller.HistoryService";
-    private static final String CLASS_NAME_SERVICE_DAILYPLAN = "com.sos.js7.order.initiator.OrderInitiatorService";
+    private static final String CLASS_NAME_SERVICE_DAILYPLAN = "com.sos.js7.order.initiator.DailyPlanService";
     private static final String CLASS_NAME_SERVICE_CLEANUP = "com.sos.joc.cleanup.CleanupService";
     private static final String CLASS_NAME_SERVICE_MONITOR = "com.sos.joc.monitoring.MonitorService";
 

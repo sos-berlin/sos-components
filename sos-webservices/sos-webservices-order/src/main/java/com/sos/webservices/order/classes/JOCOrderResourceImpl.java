@@ -22,19 +22,19 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderState;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 public class JOCOrderResourceImpl extends JOCResourceImpl {
 
-    protected OrderInitiatorSettings settings;
+    protected DailyPlanSettings settings;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCOrderResourceImpl.class);
 
     protected void setSettings() {
         if (Globals.configurationGlobals == null) {
-            settings = new OrderInitiatorSettings();
+            settings = new DailyPlanSettings();
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             LOGGER.warn("Could not read settings. Using defaults");

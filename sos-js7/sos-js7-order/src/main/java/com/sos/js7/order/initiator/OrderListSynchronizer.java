@@ -62,7 +62,7 @@ public class OrderListSynchronizer {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderListSynchronizer.class);
 
     private final JControllerState currentState;
-    private OrderInitiatorSettings settings;
+    private DailyPlanSettings settings;
     private JocError jocError;
     private DBItemDailyPlanSubmission submission;
     private Map<PlannedOrderKey, PlannedOrder> plannedOrders;
@@ -115,7 +115,7 @@ public class OrderListSynchronizer {
         }
     }
 
-    public OrderListSynchronizer(JControllerState currentState, OrderInitiatorSettings settings) {
+    public OrderListSynchronizer(JControllerState currentState, DailyPlanSettings settings) {
         this.plannedOrders = new TreeMap<PlannedOrderKey, PlannedOrder>();
         this.settings = settings;
         this.currentState = currentState;
