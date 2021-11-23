@@ -9,7 +9,7 @@ import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 
 import js7.data.value.Value;
-import js7.launcher.forjava.internal.BlockingInternalJob;
+import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class JobLogger {
 

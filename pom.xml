@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<sos.engine.version>2.2.0-beta.20211103</sos.engine.version>
+		<sos.engine.version>2.1.1-beta.20211123</sos.engine.version>
 		<!-- 3rd Party version properties and the dependencyManagement have to 
 			be reworked for 2.0.0 below configuration is only as an example -->
 		<jackson.version>2.9.10</jackson.version>
@@ -441,6 +441,21 @@
 			<dependency>
 				<groupId>com.sos-berlin.js7.engine</groupId>
 				<artifactId>js7-launcher-for-java_2.13</artifactId>
+				<version>${sos.engine.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>com.intellij</groupId>
+						<artifactId>annotations</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.inject</groupId>
+						<artifactId>javax.inject</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>com.sos-berlin.js7.engine</groupId>
+				<artifactId>js7-executor-for-java_2.13</artifactId>
 				<version>${sos.engine.version}</version>
 				<exclusions>
 					<exclusion>
