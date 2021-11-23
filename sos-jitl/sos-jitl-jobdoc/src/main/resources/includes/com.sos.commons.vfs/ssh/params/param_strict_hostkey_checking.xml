@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	name="strict_hostkey_checking" required="false" DataType="java.lang.Boolean" DefaultValue="false">
+        <note>
+			<p>
+				This parameter specifies the behavior for hosts that have not previously been involved in a ssh connection to the specific target host.
+				By default it is not necessary that the user "known hosts" files contain the host key which corresponds to the value "false".
+				If this parameter is set to "true", the host key is expected in the user "known hosts" files and the connection will be refused 
+				if the host key cannot be found. This setting forces the user to manually add new hosts to the "known hosts" files.
+			</p>
+        </note>
+</param>

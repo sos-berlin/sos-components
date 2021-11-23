@@ -13,54 +13,50 @@
 
     <configuration>
         <params id="job_parameter">
-	   		<xi:include href="./includes/common/params/parameter_substitution.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_host.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_port.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_user.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_password.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_passphrase.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_credential_store_file.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_credential_store_key_file.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_credential_store_password.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_credential_store_entry_path.xml" parse="xml" />
-
-		    <xi:include href="./includes/common/params/param_proxy_host.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_proxy_port.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_proxy_user.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_proxy_password.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_auth_file.xml" parse="xml" />
-		    <xi:include href="./includes/common/params/param_auth_method.xml" parse="xml" />
-		    
-            <xi:include href="./includes/common/params/param_command.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_command_delimiter.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_command_script.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_command_script_file.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_ignore_error.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_ignore_stderr.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_raise_exception_on_error.xml" parse="xml" />
-            <xi:include href="./includes/common/params/param_exit_codes_to_ignore.xml" parse="xml" />
+	   		<xi:include href="./includes/com.sos.jitl.jobs.ssh/features/parameter_substitution.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_host.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_port.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_user.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_password.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_passphrase.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_credential_store_file.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_credential_store_key_file.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_credential_store_password.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_credential_store_entry_path.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_proxy_host.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_proxy_port.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_proxy_user.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/commons/params/param_proxy_password.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_auth_file.xml" parse="xml" />
+		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_auth_method.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_delimiter.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script_file.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_error.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_stderr.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_raise_exception_on_error.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_exit_codes_to_ignore.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_preferred_authentications.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_required_authentications.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_connect_timeout.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_socket_timeout.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_server_alive_interval.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_strict_hostkey_checking.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_remote_charset.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_simulate_shell.xml" parse="xml" />
             <!-- not implemented -->
             <!-- xi:include href="./includes/common/params/param_command_script_param.xml" parse="xml" /-->
-		    <!-- not yet documented from AProvider --> 
 		    <!-- 
-		    "proxy_type"
-		    "proxy_connect_timeout"
-		    -->
-		    <!-- not yet documented from SSHProvider --> 
-		    <!--
-		    "preferred_authentications"
-		    "required_authentications"
-		    "connect_timeout"
-		    "socket_timeout"
-		    "server_alive_interval"
-		    "strict_hostkey_checking"
-		    "hostkey_location"
-		    "use_zlib_compression"
-		    "remote_charset"
-		    -->
-		    <!-- not documented and not implemented
-		    "simulate_shell"
-		    -->
+		    	not yet documented from AProvider
+				    "proxy_type"
+				    "proxy_connect_timeout"
+		    --> 
+		    <!-- 
+		    	not yet documented from SSHProvider 
+				    "hostkey_location"
+				    "use_zlib_compression"
+	    	--> 
             <param name="tmp_dir" required="false" DataType="java.lang.String">
 				<note>
 					<p>
@@ -109,7 +105,7 @@
             </param>
         </params>
     </configuration>
-    <documentation language="en">
+    <documentation>
         <xhtml:div>
             <p>
                 This job is used to execute commands, programs and/or shell-scripts on a
@@ -120,8 +116,8 @@
                 for more information on SSH
                 <link>http://en.wikipedia.org/wiki/Secure_Shell</link>
             </p>
-            <xi:include href="./includes/common/notes/how_to_use_open_ssh.xml" />
-            <xi:include href="./includes/common/notes/how_to_handle_stderr_and_exit_code.xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/notes/how_to_use_open_ssh.xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/notes/how_to_handle_stderr_and_exit_code.xml" />
         </xhtml:div>
     </documentation>
 </description>
