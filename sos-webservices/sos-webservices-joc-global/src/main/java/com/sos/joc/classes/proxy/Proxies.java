@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +44,6 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.data_for_java.agent.JAgentRef;
-import js7.data_for_java.auth.JCredentials;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
@@ -60,6 +58,7 @@ public class Proxies {
     private volatile ConcurrentMap<ProxyCredentials, JControllerApi> controllerApis = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, List<DBItemInventoryJSInstance>> controllerDbInstances = new ConcurrentHashMap<>();
     private volatile ConcurrentMap<String, Boolean> coupledStates = new ConcurrentHashMap<>();
+    private volatile ConcurrentMap<String, ProxyCoupled> proxyCredentials = new ConcurrentHashMap<>();
 
     private Proxies() {
         EventBus.getInstance().register(this);
@@ -213,9 +212,13 @@ public class Proxies {
         return Proxies.getInstance().controllerDbInstances;
     }
     
-    public static Optional<JCredentials> getJOCCredentials() {
-        return Proxies.getInstance().controllerApis.keySet().stream().filter(p -> ProxyUser.JOC.getUser().equals(p.getUser().getUser())).map(
-                ProxyCredentials::getAccount).findAny();
+//    public static Optional<JCredentials> getJOCCredentials() {
+//        return Proxies.getInstance().controllerApis.keySet().stream().filter(p -> ProxyUser.JOC.getUser().equals(p.getUser().getUser())).map(
+//                ProxyCredentials::getAccount).findAny();
+//    }
+    
+    public static ProxyCoupled getJOCCredentials(String url) {
+        return Proxies.getInstance().proxyCredentials.get(url);
     }
     
     /**
@@ -267,6 +270,10 @@ public class Proxies {
     public void setCoupled(ProxyCoupled evt) {
         if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.isCoupled() != null) {
             coupledStates.put(evt.getControllerId(), evt.isCoupled());
+        }
+        if (evt.getUrl() != null && ProxyUser.JOC.getUser().equals(evt.getUser())) {
+            LOGGER.info("Store last successful connection data for " + evt.getUrl());
+            proxyCredentials.put(evt.getUrl(), evt);
         }
     }
     

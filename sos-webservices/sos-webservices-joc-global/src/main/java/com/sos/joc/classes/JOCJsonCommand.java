@@ -25,14 +25,15 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
-import com.sos.joc.exceptions.ForcedClosingHttpClientException;
-import com.sos.joc.exceptions.JocBadRequestException;
+import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.exceptions.ControllerConflictException;
 import com.sos.joc.exceptions.ControllerConnectionRefusedException;
 import com.sos.joc.exceptions.ControllerConnectionResetException;
 import com.sos.joc.exceptions.ControllerInvalidResponseDataException;
 import com.sos.joc.exceptions.ControllerNoResponseException;
 import com.sos.joc.exceptions.ControllerServiceUnavailableException;
+import com.sos.joc.exceptions.ForcedClosingHttpClientException;
+import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.UnknownJobSchedulerAgentException;
@@ -441,6 +442,14 @@ public class JOCJsonCommand extends SOSRestApiClient {
             throw new ControllerConnectionRefusedException("Required truststore not found");
         }
         setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
+        ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
+        if (evt != null) {
+            LOGGER.info("ProxyCoupled event exists for " + this.url);
+            setBasicAuthorization(ProxyUser.getBasicAuthorization(evt.getUser(), evt.getPwd()));
+        } else {
+            LOGGER.info("ProxyCoupled event doesn't exist for " + this.url);
+            setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
+        }
 //        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC
 //                .getBasicAuthorization()));
     }
