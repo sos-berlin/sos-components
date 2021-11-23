@@ -25,8 +25,8 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
-import com.sos.js7.order.initiator.OrderInitiatorRunner;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.DailyPlanRunner;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 import com.sos.js7.order.initiator.ScheduleSource;
 import com.sos.js7.order.initiator.ScheduleSourceDB;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
@@ -86,7 +86,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderSelector.getDailyPlanDate());
             setSettings();
 
-            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+            DailyPlanSettings orderInitiatorSettings = new DailyPlanSettings();
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             orderInitiatorSettings.setOverwrite(dailyPlanOrderSelector.getOverwrite());
             orderInitiatorSettings.setSubmit(dailyPlanOrderSelector.getWithSubmit());
@@ -98,7 +98,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     .getDailyPlanDate()).getTime()));
             orderInitiatorSettings.setSubmissionTime(new Date());
 
-            OrderInitiatorRunner orderInitiatorRunner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+            DailyPlanRunner orderInitiatorRunner = new DailyPlanRunner(orderInitiatorSettings, false);
 
             FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
             folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderSelector.getSelector().getFolders());

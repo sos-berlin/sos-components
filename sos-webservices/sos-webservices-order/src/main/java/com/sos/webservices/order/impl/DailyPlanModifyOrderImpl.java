@@ -64,8 +64,8 @@ import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
-import com.sos.js7.order.initiator.OrderInitiatorRunner;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.DailyPlanRunner;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.PlannedOrder;
 import com.sos.js7.order.initiator.classes.PlannedOrderKey;
@@ -229,7 +229,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         try {
             setSettings();
 
-            OrderInitiatorSettings orderInitiatorSettings = new OrderInitiatorSettings();
+            DailyPlanSettings orderInitiatorSettings = new DailyPlanSettings();
             orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             orderInitiatorSettings.setOverwrite(false);
             orderInitiatorSettings.setSubmit(plannedOrder.getSubmitted());
@@ -240,7 +240,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dDate));
             orderInitiatorSettings.setSubmissionTime(new Date());
 
-            OrderInitiatorRunner runner = new OrderInitiatorRunner(orderInitiatorSettings, false);
+            DailyPlanRunner runner = new DailyPlanRunner(orderInitiatorSettings, false);
 
             TimeZone savT = TimeZone.getDefault();
             TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
@@ -352,14 +352,14 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             InterruptedException, ExecutionException, TimeoutException {
 
         if (plannedOrders.size() > 0) {
-            OrderInitiatorSettings settings = new OrderInitiatorSettings();
+            DailyPlanSettings settings = new DailyPlanSettings();
             settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             settings.setOverwrite(false);
             settings.setSubmit(true);
             settings.setTimeZone(settings.getTimeZone());
             settings.setPeriodBegin(settings.getPeriodBegin());
 
-            OrderInitiatorRunner runner = new OrderInitiatorRunner(settings, false);
+            DailyPlanRunner runner = new DailyPlanRunner(settings, false);
             runner.submitOrders(plannedOrders.get(0).getControllerId(), getJocError(), getAccessToken(), plannedOrders);
         }
     }

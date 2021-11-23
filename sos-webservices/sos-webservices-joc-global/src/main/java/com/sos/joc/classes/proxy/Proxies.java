@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,7 @@ import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.cluster.ClusterSetting.Watch;
 import js7.data_for_java.agent.JAgentRef;
+import js7.data_for_java.auth.JCredentials;
 import js7.data_for_java.auth.JHttpsConfig;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
@@ -209,6 +211,11 @@ public class Proxies {
      */
     public static Map<String, List<DBItemInventoryJSInstance>> getControllerDbInstances() {
         return Proxies.getInstance().controllerDbInstances;
+    }
+    
+    public static Optional<JCredentials> getJOCCredentials() {
+        return Proxies.getInstance().controllerApis.keySet().stream().filter(p -> ProxyUser.JOC.getUser().equals(p.getUser().getUser())).map(
+                ProxyCredentials::getAccount).findAny();
     }
     
     /**

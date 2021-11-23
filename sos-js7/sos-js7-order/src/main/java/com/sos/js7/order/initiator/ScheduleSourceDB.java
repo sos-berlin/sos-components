@@ -21,63 +21,66 @@ import com.sos.js7.order.initiator.db.FilterSchedules;
 
 public class ScheduleSourceDB extends ScheduleSource {
 
-    private DailyPlanOrderSelector dailyPlanOrderSelector;
+    private DailyPlanOrderSelector selector;
     private Boolean fromService;
 
     public ScheduleSourceDB(String controllerId) {
-        dailyPlanOrderSelector = new DailyPlanOrderSelector();
-        dailyPlanOrderSelector.setSelector(new DailyPlanOrderSelectorDef());
         Folder f = new Folder();
         f.setFolder("/");
         f.setRecursive(true);
-        dailyPlanOrderSelector.getSelector().setFolders(Collections.singletonList(f));
-        dailyPlanOrderSelector.setControllerIds(Collections.singletonList(controllerId));
+
+        selector = new DailyPlanOrderSelector();
+        selector.setSelector(new DailyPlanOrderSelectorDef());
+        selector.getSelector().setFolders(Collections.singletonList(f));
+        selector.setControllerIds(Collections.singletonList(controllerId));
         fromService = false;
     }
 
-    public ScheduleSourceDB(DailyPlanOrderSelector dailyPlanOrderSelector) {
-        this.dailyPlanOrderSelector = dailyPlanOrderSelector;
-        fromService = true;
+    public ScheduleSourceDB(DailyPlanOrderSelector selector) {
+        this.selector = selector;
+        this.fromService = true;
     }
 
     @Override
-    public List<Schedule> fillListOfSchedules() throws IOException, SOSHibernateException {
-        FilterSchedules filterSchedules = new FilterSchedules();
+    public List<Schedule> getSchedules() throws IOException, SOSHibernateException {
+        FilterSchedules filter = new FilterSchedules();
         Function<String, String> pathToName = s -> Paths.get(s).getFileName().toString();
 
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
-            List<Schedule> listOfSchedules = new ArrayList<Schedule>();
-            DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
+            session = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
+            DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
-            filterSchedules.setListOfControllerIds(dailyPlanOrderSelector.getControllerIds());
-            filterSchedules.setListOfFolders(dailyPlanOrderSelector.getSelector().getFolders());
-            if (dailyPlanOrderSelector.getSelector().getWorkflowPaths() != null) {
-                filterSchedules.setListOfWorkflowNames(dailyPlanOrderSelector.getSelector().getWorkflowPaths().stream().map(pathToName).distinct()
-                        .collect(Collectors.toList()));
+            filter.setListOfControllerIds(selector.getControllerIds());
+            filter.setListOfFolders(selector.getSelector().getFolders());
+            if (selector.getSelector().getWorkflowPaths() != null) {
+                filter.setListOfWorkflowNames(selector.getSelector().getWorkflowPaths().stream().map(pathToName).distinct().collect(Collectors
+                        .toList()));
             }
-            if (dailyPlanOrderSelector.getSelector().getSchedulePaths() != null) {
-                filterSchedules.setListOfScheduleNames(dailyPlanOrderSelector.getSelector().getSchedulePaths().stream().map(pathToName).distinct()
-                        .collect(Collectors.toList()));
+            if (selector.getSelector().getSchedulePaths() != null) {
+                filter.setListOfScheduleNames(selector.getSelector().getSchedulePaths().stream().map(pathToName).distinct().collect(Collectors
+                        .toList()));
             }
+            List<DBItemInventoryReleasedConfiguration> items = dbLayer.getSchedules(filter, 0);
+            session.close();
+            session = null;
 
-            List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
-            for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedulesDbItems) {
-                if (dbItemInventoryConfiguration.getSchedule() != null) {
-                    if (fromService || dbItemInventoryConfiguration.getSchedule().getPlanOrderAutomatically()) {
-                        listOfSchedules.add(dbItemInventoryConfiguration.getSchedule());
+            List<Schedule> schedules = new ArrayList<Schedule>();
+            for (DBItemInventoryReleasedConfiguration item : items) {
+                if (item.getSchedule() != null) {
+                    if (fromService || item.getSchedule().getPlanOrderAutomatically()) {
+                        schedules.add(item.getSchedule());
                     }
                 }
             }
-            return listOfSchedules;
+            return schedules;
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 
     @Override
-    public String fromSource() {
+    public String getSource() {
         return "Database";
     }
 

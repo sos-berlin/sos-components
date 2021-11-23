@@ -2,7 +2,6 @@ package com.sos.js7.order.initiator;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,31 +25,32 @@ public class ScheduleSourceList extends ScheduleSource {
     }
 
     @Override
-    public List<Schedule> fillListOfSchedules() throws IOException, SOSHibernateException {
-        List<Schedule> listOfSchedules = new ArrayList<>();
-        FilterSchedules filterSchedules = new FilterSchedules();
-        SOSHibernateSession sosHibernateSession = null;
+    public List<Schedule> getSchedules() throws IOException, SOSHibernateException {
+        SOSHibernateSession session = null;
         try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
-            DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
+            FilterSchedules filter = new FilterSchedules();
+            filter.addControllerId(controllerId);
 
-            filterSchedules.addControllerId(controllerId);
+            session = Globals.createSosHibernateStatelessConnection("ScheduleSourceList");
+            DBLayerSchedules dbLayer = new DBLayerSchedules(session);
+
             if (this.schedules != null) {
-                filterSchedules.setListOfScheduleNames(this.schedules.stream().map(s -> Paths.get(s).getFileName().toString()).distinct().collect(
-                        Collectors.toList()));
+                filter.setListOfScheduleNames(this.schedules.stream().map(s -> Paths.get(s).getFileName().toString()).distinct().collect(Collectors
+                        .toList()));
             }
-            
-            List<DBItemInventoryReleasedConfiguration> listOfSchedulesDbItems = dbLayerSchedules.getSchedules(filterSchedules, 0);
-            listOfSchedules = listOfSchedulesDbItems.stream().map(DBItemInventoryReleasedConfiguration::getSchedule).collect(Collectors.toList());
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
 
-        return listOfSchedules;
+            List<DBItemInventoryReleasedConfiguration> items = dbLayer.getSchedules(filter, 0);
+            session.close();
+            session = null;
+
+            return items.stream().map(DBItemInventoryReleasedConfiguration::getSchedule).collect(Collectors.toList());
+        } finally {
+            Globals.disconnect(session);
+        }
     }
 
     @Override
-    public String fromSource() {
+    public String getSource() {
         return "List";
     }
 

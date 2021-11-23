@@ -45,8 +45,8 @@ import com.sos.joc.classes.workflow.WorkflowPaths;
 import com.sos.joc.classes.workflow.WorkflowsHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
-import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
 import com.sos.joc.exceptions.ControllerObjectNotExistException;
@@ -59,7 +59,7 @@ import com.sos.joc.model.order.ModifyOrders;
 import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Positions;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
-import com.sos.js7.order.initiator.OrderInitiatorSettings;
+import com.sos.js7.order.initiator.DailyPlanSettings;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
@@ -223,9 +223,9 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
     private DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId,
             DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders) throws SOSHibernateException {
-        OrderInitiatorSettings settings;
+        DailyPlanSettings settings;
         if (Globals.configurationGlobals == null) {
-            settings = new OrderInitiatorSettings();
+            settings = new DailyPlanSettings();
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
             LOGGER.warn("Could not read settings. Using defaults");
@@ -718,13 +718,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
 
                 GlobalSettingsReader reader = new GlobalSettingsReader();
-                OrderInitiatorSettings settings;
+                DailyPlanSettings settings;
                 if (Globals.configurationGlobals != null) {
 
                     AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
                     settings = reader.getSettings(configuration);
                 } else {
-                    settings = new OrderInitiatorSettings();
+                    settings = new DailyPlanSettings();
                     settings.setTimeZone("Etc/UTC");
                     settings.setPeriodBegin("00:00");
                 }
@@ -782,13 +782,13 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
                 sosHibernateSession.setAutoCommit(false);
                 GlobalSettingsReader reader = new GlobalSettingsReader();
-                OrderInitiatorSettings settings;
+                DailyPlanSettings settings;
                 if (Globals.configurationGlobals != null) {
 
                     AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
                     settings = reader.getSettings(configuration);
                 } else {
-                    settings = new OrderInitiatorSettings();
+                    settings = new DailyPlanSettings();
                     settings.setTimeZone("Etc/UTC");
                     settings.setPeriodBegin("00:00");
                 }

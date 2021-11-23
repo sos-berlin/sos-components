@@ -16,10 +16,10 @@ public class DBLayerDailyPlanHistory {
 
     private static final String DBItemDailyPlanHistory = DBItemDailyPlanHistory.class.getSimpleName();
     private static final String DBItemJocAuditLogDetails = DBItemJocAuditLogDetails.class.getSimpleName();
-    private final SOSHibernateSession sosHibernateSession;
+    private final SOSHibernateSession session;
 
     public DBLayerDailyPlanHistory(SOSHibernateSession session) {
-        this.sosHibernateSession = session;
+        this.session = session;
     }
 
     public FilterDailyPlanHistory resetFilter() {
@@ -114,33 +114,25 @@ public class DBLayerDailyPlanHistory {
 
     public List<DBItemDailyPlanHistory> getDailyPlanHistory(FilterDailyPlanHistory filter, final int limit) throws SOSHibernateException {
         String q = "from " + DBItemDailyPlanHistory + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
-        Query<DBItemDailyPlanHistory> query = sosHibernateSession.createQuery(q);
+        Query<DBItemDailyPlanHistory> query = session.createQuery(q);
         query = bindParameters(filter, query);
 
         if (limit > 0) {
             query.setMaxResults(limit);
         }
-        return sosHibernateSession.getResultList(query);
+        return session.getResultList(query);
     }
 
     public List<String> getOrderIdsByAuditLog(Long auditLogId) throws SOSHibernateException {
         String q = "from " + DBItemJocAuditLogDetails + " where auditLogId=:auditLogId";
-        Query<DBItemJocAuditLogDetails> query = sosHibernateSession.createQuery(q);
+        Query<DBItemJocAuditLogDetails> query = session.createQuery(q);
         query.setParameter("auditLogId", auditLogId);
         List<String> orderIds = new ArrayList<String>();
-        for (DBItemJocAuditLogDetails dbItemJocAuditLogDetails : sosHibernateSession.getResultList(query)) {
+        for (DBItemJocAuditLogDetails dbItemJocAuditLogDetails : session.getResultList(query)) {
             if (dbItemJocAuditLogDetails.getOrderId() != null) {
                 orderIds.add(dbItemJocAuditLogDetails.getOrderId());
             }
         }
         return orderIds;
-    }
-
-    public void storeDailyPlanHistory(DBItemDailyPlanHistory dbItemDailyPlanHistory) throws SOSHibernateException {
-        sosHibernateSession.save(dbItemDailyPlanHistory);
-    }
-
-    public void updateDailyPlanHistory(DBItemDailyPlanHistory dbItemDailyPlanHistory) throws SOSHibernateException {
-        sosHibernateSession.update(dbItemDailyPlanHistory);
     }
 }

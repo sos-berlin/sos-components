@@ -20,24 +20,20 @@ import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.js7.order.initiator.classes.DailyPlanHelper;
 import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
- 
-public class OrderInitiatorService extends AJocClusterService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderInitiatorService.class);
+public class DailyPlanService extends AJocClusterService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanService.class);
 
     private static final String IDENTIFIER = ClusterServices.dailyplan.name();
 
-    private OrderInitiatorSettings settings;
+    private DailyPlanRunner runner;
     private Timer timer;
     private Instant lastActivityStart = null;
     private Instant lastActivityEnd = null;
-    private OrderInitiatorRunner orderInitiatorRunner;
 
-    public OrderInitiatorService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
+    public DailyPlanService(JocConfiguration jocConfiguration, ThreadGroup parentThreadGroup) {
         super(jocConfiguration, parentThreadGroup, IDENTIFIER);
-        AJocClusterService.setLogger(IDENTIFIER);
-        LOGGER.info("Ressource: " + jocConfiguration.getResourceDirectory());
-        AJocClusterService.clearLogger();
     }
 
     @Override
@@ -48,15 +44,20 @@ public class OrderInitiatorService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            setSettings(mode, globalSettings);
-            
-            LOGGER.info("will start creating daily plan at " + DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(),settings.getDailyPlanStartTime(),settings.getPeriodBegin()) + " " + settings.getTimeZone() + " for "
-                    + settings.getDayAheadPlan() + " days ahead");
-            LOGGER.info("will start submitting daily plan at " + DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(),settings.getDailyPlanStartTime(),settings.getPeriodBegin()) + " " + settings.getTimeZone() + " for "
-                    + settings.getDayAheadSubmit() + " days ahead");
+            DailyPlanSettings settings = getSettings(mode, globalSettings);
+
+            String startTime = DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(), settings.getDailyPlanStartTime(), settings
+                    .getPeriodBegin());
 
             if (settings.getDayAheadPlan() > 0) {
-                resetStartPlannedOrderTimer(controllers);
+                if (!StartupMode.manual_restart.equals(mode)) {
+                    LOGGER.info(String.format("[planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead", startTime,
+                            settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
+                }
+                resetStartPlannedOrderTimer(controllers, settings);
+            } else {
+                LOGGER.info(String.format("[planned][%s %s][skip]because creating daily plan for %s days ahead", startTime, settings.getTimeZone(),
+                        settings.getDayAheadPlan()));
             }
 
             lastActivityEnd = Instant.now();
@@ -83,52 +84,48 @@ public class OrderInitiatorService extends AJocClusterService {
 
     @Override
     public JocServiceAnswer getInfo() {
-        if (orderInitiatorRunner != null) {
-            Instant rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityStart().get());
+        if (runner != null) {
+            Instant rla = Instant.ofEpochMilli(runner.getLastActivityStart().get());
             if (rla.isAfter(this.lastActivityStart)) {
                 this.lastActivityStart = rla;
             }
-            rla = Instant.ofEpochMilli(orderInitiatorRunner.getLastActivityEnd().get());
+            rla = Instant.ofEpochMilli(runner.getLastActivityEnd().get());
             if (rla.isAfter(this.lastActivityEnd)) {
                 this.lastActivityEnd = rla;
             }
         }
         return new JocServiceAnswer(lastActivityStart, lastActivityEnd);
     }
-    
+
     @Override
     public void update(List<ControllerConfiguration> controllers, String controllerId, Action action) {
-        
+
     }
 
-    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers) {
+    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers, DailyPlanSettings settings) {
         if (timer != null) {
             timer.cancel();
             timer.purge();
         }
         timer = new Timer();
-        orderInitiatorRunner = new OrderInitiatorRunner(controllers, settings, true);
-        timer.schedule(orderInitiatorRunner, 0, 60 * 1000);
+        runner = new DailyPlanRunner(controllers, settings, true);
+        timer.schedule(runner, 0, 60 * 1000);
     }
 
-   
+    private DailyPlanSettings getSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
+        DailyPlanSettings initiatorGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
 
-    private void setSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
-        settings = new OrderInitiatorSettings();
+        DailyPlanSettings settings = new DailyPlanSettings();
+        settings.setTimeZone(initiatorGlobalSettings.getTimeZone());
+        settings.setPeriodBegin(initiatorGlobalSettings.getPeriodBegin());
+        settings.setDailyPlanStartTime(initiatorGlobalSettings.getDailyPlanStartTime());
+        settings.setDayAheadPlan(initiatorGlobalSettings.getDayAheadPlan());
+        settings.setDayAheadSubmit(initiatorGlobalSettings.getDayAheadSubmit());
+
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         settings.setStartMode(mode);
 
-        GlobalSettingsReader reader = new GlobalSettingsReader();
-        OrderInitiatorSettings readerSettings = reader.getSettings(globalSettings);
-
-        settings.setTimeZone(readerSettings.getTimeZone());
-        settings.setPeriodBegin(readerSettings.getPeriodBegin());
-        settings.setDailyPlanStartTime(readerSettings.getDailyPlanStartTime());
- 
-        settings.setDayAheadPlan(readerSettings.getDayAheadPlan());
-        
-        settings.setDayAheadSubmit(readerSettings.getDayAheadSubmit());
+        return settings;
     }
 
-   
 }

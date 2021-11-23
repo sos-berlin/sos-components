@@ -22,6 +22,7 @@ import com.sos.commons.httpclient.exception.SOSConnectionRefusedException;
 import com.sos.commons.httpclient.exception.SOSConnectionResetException;
 import com.sos.commons.httpclient.exception.SOSNoResponseException;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.exceptions.ForcedClosingHttpClientException;
@@ -439,7 +440,8 @@ public class JOCJsonCommand extends SOSRestApiClient {
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new ControllerConnectionRefusedException("Required truststore not found");
         }
-        setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
+        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC
+                .getBasicAuthorization()));
     }
     
     private <T extends JsonStructure> T getJsonStructure(String jsonStr) {

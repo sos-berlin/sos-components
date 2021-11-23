@@ -2,41 +2,49 @@ package com.sos.js7.order.initiator.classes;
 
 public class OrderCounter {
 
-    protected Long countSingle = 0L;
-    protected Long countCycled = 0L;
-    protected Long countCycledAll = 0L;
+    private long single;
+    private long cyclic;
+    private long cyclicTotal;
+    private long submitted;
 
-    public Long getCountSingle() {
-        return countSingle;
+    public OrderCounter() {
+        single = 0;
+        cyclic = 0;
+        cyclicTotal = 0;
+        submitted = 0;
     }
 
-    public Long getCountCycled() {
-        return countCycled;
+    public void addSingle() {
+        single += 1;
     }
 
-    public Long getCountCycledAll() {
-        return countCycledAll;
+    public void addCyclic() {
+        cyclic += 1;
     }
 
-    public Long getCount() {
-        return countSingle + countCycled;
+    public void addCyclicTotal() {
+        cyclicTotal += 1;
     }
 
-    public String cycledOrdersDesc() {
-        String s = "";
-        String orders = "orders";
-        String ordersCycledAll = " orders";
-        if (countCycled > 0) {
-            if (countCycled == 1){
-                orders = "order";
+    public long getCount() {
+        return single + cyclic;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getCount()).append(" orders");
+        if (cyclic > 0) {
+            sb.append(" (");
+            if (single > 0) {
+                sb.append("single=").append(single).append(", ");
             }
-            if (countCycledAll == 1){
-                ordersCycledAll = " order";
-            }
-            s = "(" + countCycled + " cycled " + orders + " with " + countCycledAll   + ordersCycledAll + ")";
+            sb.append("cyclic=").append(cyclic).append(", cyclic total=").append(cyclicTotal);
+            sb.append(")");
         }
-        return s;
-
+        if (submitted > 0) {
+            sb.append(" submitted=").append(submitted);
+        }
+        return sb.toString();
     }
-
 }

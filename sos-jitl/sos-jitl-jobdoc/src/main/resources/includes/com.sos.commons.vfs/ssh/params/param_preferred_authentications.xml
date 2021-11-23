@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	name="preferred_authentications" required="false" DataType="java.util.List">
+        <note>
+			<p>
+				Specifies the order in which the client should try protocol 2 authentication methods.
+				This allows a client to prefer one method (e.g. publickey) over another method (e.g. password).
+			</p>
+        </note>
+</param>

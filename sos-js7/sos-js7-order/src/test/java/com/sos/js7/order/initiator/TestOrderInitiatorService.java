@@ -57,8 +57,6 @@ public class TestOrderInitiatorService {
 
         return list;
     }
-    
- 
 
     @Test
     @Ignore
@@ -67,11 +65,11 @@ public class TestOrderInitiatorService {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
         Path resDir = Paths.get("src/test/resources");
-        // test ignore  -> @Uwe: Resource resDir.resolve("hibernate.cfg.xml") missing
+        // test ignore -> @Uwe: Resource resDir.resolve("hibernate.cfg.xml") missing
         JocConfiguration jocConfig = new JocConfiguration(resDir.toString(), "UTC", resDir.resolve("hibernate.cfg.xml"), resDir, JocSecurityLevel.LOW,
                 "", 0);
 
-        OrderInitiatorService service = new OrderInitiatorService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
+        DailyPlanService service = new DailyPlanService(jocConfig, new ThreadGroup(JocClusterConfiguration.IDENTIFIER));
         ConfigurationGlobals configurations = new ConfigurationGlobals();
         AConfigurationSection configuration = configurations.getConfigurationSection(DefaultSections.dailyplan);
 
