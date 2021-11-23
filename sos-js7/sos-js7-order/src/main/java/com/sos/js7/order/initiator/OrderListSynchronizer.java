@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSDuration;
 import com.sos.commons.util.SOSDurations;
 import com.sos.commons.util.SOSString;
@@ -257,14 +258,16 @@ public class OrderListSynchronizer {
 
             List<DBItemDailyPlanHistory> inserted = new ArrayList<DBItemDailyPlanHistory>();
             try {
+                Instant start = Instant.now();
                 Globals.beginTransaction(session);
                 inserted = insertHistory(session, orders);
                 Globals.commit(session);
                 Globals.disconnect(session); // disconnect here, not wait for the controller operations
                 session = null;
 
-                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s", method, controllerId, orders.size(), plannedOrders.size(),
-                        inserted.size()));
+                Instant end = Instant.now();
+                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s(%s)", method, controllerId, orders.size(), plannedOrders.size(),
+                        inserted.size(), SOSDate.getDuration(start, end)));
 
                 OrderApi.addOrdersToController(controllerId, jocError, accessToken, orders, inserted, fromService);
 

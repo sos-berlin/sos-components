@@ -313,13 +313,14 @@ public class DailyPlanRunner extends TimerTask {
                 Globals.disconnect(session);
             }
 
+            String submissionForDate = DailyPlanHelper.getDateTime(item.getSubmissionForDate());
             if (plannedOrders == null || plannedOrders.size() == 0) {
                 LOGGER.info(String.format("[submitting][%s][%s][submission id=%s, submission for date=%s][skip]0 not submitted orders found",
-                        controllerId, date, item.getId(), DailyPlanHelper.getDateTime(item.getSubmissionForDate())));
+                        controllerId, date, item.getId(), submissionForDate));
             } else {
                 OrderCounter c = DailyPlanHelper.getOrderCount(plannedOrders);
-                String submissionForDate = DailyPlanHelper.getDateTime(item.getSubmissionForDate());
-                LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit %s start ...", controllerId, date, submissionForDate, c));
+                LOGGER.info(String.format("[submitting][%s][%s][submission id=%s, submission for date=%s]submit %s start ...", controllerId, date,
+                        item.getId(), submissionForDate, c));
                 submitOrders(controllerId, null, "", plannedOrders);
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));

@@ -51,15 +51,13 @@ public class ScheduleSourceDB extends ScheduleSource {
             session = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
-            filter.setListOfControllerIds(selector.getControllerIds());
-            filter.setListOfFolders(selector.getSelector().getFolders());
+            filter.setControllerIds(selector.getControllerIds());
+            filter.setFolders(selector.getSelector().getFolders());
             if (selector.getSelector().getWorkflowPaths() != null) {
-                filter.setListOfWorkflowNames(selector.getSelector().getWorkflowPaths().stream().map(pathToName).distinct().collect(Collectors
-                        .toList()));
+                filter.setWorkflowNames(selector.getSelector().getWorkflowPaths().stream().map(pathToName).distinct().collect(Collectors.toList()));
             }
             if (selector.getSelector().getSchedulePaths() != null) {
-                filter.setListOfScheduleNames(selector.getSelector().getSchedulePaths().stream().map(pathToName).distinct().collect(Collectors
-                        .toList()));
+                filter.setScheduleNames(selector.getSelector().getSchedulePaths().stream().map(pathToName).distinct().collect(Collectors.toList()));
             }
             List<DBItemInventoryReleasedConfiguration> items = dbLayer.getSchedules(filter, 0);
             session.close();

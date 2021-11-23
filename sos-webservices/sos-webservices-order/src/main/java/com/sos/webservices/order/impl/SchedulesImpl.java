@@ -17,7 +17,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.js7.order.initiator.db.DBLayerSchedules;
 import com.sos.js7.order.initiator.db.FilterSchedules;
 import com.sos.schema.JsonValidator;
@@ -36,25 +35,25 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
 
     @Override
     public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         LOGGER.debug("reading list of schedules");
         try {
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
-            ScheduleSelector scheduleSelector = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
+            JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
+            ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 
-            if (scheduleSelector.getSelector() == null) {
+            if (in.getSelector() == null) {
                 Folder root = new Folder();
                 root.setFolder("/");
                 root.setRecursive(true);
-                scheduleSelector.setSelector(new SchedulesSelector());
-                scheduleSelector.getSelector().setFolders(new ArrayList<Folder>());
-                scheduleSelector.getSelector().getFolders().add(root);
+                in.setSelector(new SchedulesSelector());
+                in.getSelector().setFolders(new ArrayList<Folder>());
+                in.getSelector().getFolders().add(root);
             }
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(scheduleSelector.getControllerId(), scheduleSelector.getSelector()
-                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
-                            accessToken).getWorkflows().getView()).collect(Collectors.toSet());
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getSelector().getControllerIds(), accessToken)
+                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getWorkflows().getView())
+                    .collect(Collectors.toSet());
 
             boolean permitted = !allowedControllers.isEmpty();
 
@@ -64,55 +63,50 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
                 return jocDefaultResponse;
             }
 
-            FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
-            folderPermissionEvaluator.setListOfScheduleFolders(scheduleSelector.getSelector().getFolders());
-            folderPermissionEvaluator.setListOfSchedulePaths(scheduleSelector.getSelector().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowPaths(scheduleSelector.getSelector().getWorkflowPaths());
+            FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
+            evaluator.setScheduleFolders(in.getSelector().getFolders());
+            evaluator.setSchedulePaths(in.getSelector().getSchedulePaths());
+            evaluator.setWorkflowPaths(in.getSelector().getWorkflowPaths());
 
-            SchedulesList schedulesList = new SchedulesList();
-            schedulesList.setSchedules(new ArrayList<Schedule>());
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            SchedulesList answer = new SchedulesList();
+            answer.setSchedules(new ArrayList<Schedule>());
 
-            DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerSchedules dbLayer = new DBLayerSchedules(session);
             for (String controllerId : allowedControllers) {
                 folderPermissions.setSchedulerId(controllerId);
-                folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, null);
+                evaluator.getPermittedNames(folderPermissions, controllerId, null);
 
-                if (folderPermissionEvaluator.isHasPermission()) {
+                if (evaluator.isHasPermission()) {
+                    FilterSchedules filter = new FilterSchedules();
+                    filter.addControllerId(controllerId);
+                    filter.setScheduleNames(evaluator.getPermittedScheduleNames());
+                    filter.setWorkflowNames(evaluator.getPermittedWorkflowNames());
+                    filter.setFolders(in.getSelector().getFolders());
 
-                    FilterSchedules filterSchedules = new FilterSchedules();
-                    filterSchedules.addControllerId(controllerId);
-                    filterSchedules.setListOfScheduleNames(folderPermissionEvaluator.getListOfPermittedScheduleNames());
-                    filterSchedules.setListOfWorkflowNames(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
-                    filterSchedules.setListOfFolders(scheduleSelector.getSelector().getFolders());
-
-                    List<DBItemInventoryReleasedConfiguration> listOfSchedules = dbLayerSchedules.getSchedules(filterSchedules, 0);
-                    for (DBItemInventoryReleasedConfiguration dbItemInventoryConfiguration : listOfSchedules) {
-                        if (dbItemInventoryConfiguration.getContent() != null) {
+                    List<DBItemInventoryReleasedConfiguration> items = dbLayer.getSchedules(filter, 0);
+                    for (DBItemInventoryReleasedConfiguration item : items) {
+                        if (item.getContent() != null) {
                             permitted = true;
-                            if (folderPermissions.getListOfFolders(scheduleSelector.getControllerId()).size() > 0) {
-                                String folder = getParent(dbItemInventoryConfiguration.getPath());
+                            if (folderPermissions.getListOfFolders(in.getControllerId()).size() > 0) {
+                                String folder = getParent(item.getPath());
                                 permitted = folderPermissions.isPermittedForFolder(folder);
                             }
                             if (permitted) {
-                                schedulesList.getSchedules().add(dbItemInventoryConfiguration.getSchedule());
+                                answer.getSchedules().add(item.getSchedule());
                             }
                         }
                     }
                 }
             }
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(schedulesList));
-
-        } catch (
-
-        JocException e) {
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
+        } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
 
     }

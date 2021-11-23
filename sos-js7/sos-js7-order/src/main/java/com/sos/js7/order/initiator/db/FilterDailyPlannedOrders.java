@@ -23,37 +23,82 @@ import js7.data.order.OrderId;
 public class FilterDailyPlannedOrders extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
-    private String dailyPlanDate;
+
+    private Collection<String> listOfOrders;
+    private Set<Folder> workflowFolders;
+    private Set<Folder> scheduleFolders;
+    private List<DailyPlanOrderStateText> states;
+    private List<Long> submissionIds;
+    private List<String> cyclicOrdersMainParts;
+    private List<String> workflowNames;
+    private List<String> scheduleNames;
+
+    private Date plannedStart;
+    private Date periodBegin;
+    private Date periodEnd;
     private Date orderPlannedStartFrom;
     private Date orderPlannedStartTo;
     private Date submitTime;
 
-    private Date periodBegin;
-    private Date periodEnd;
     private Long repeatInterval;
-
-    private String orderId;
-    private Boolean submitted;
-    private Collection<String> listOfOrders;
-    private List<String> listOfCyclicOrdersMainParts;
-
-    private List<DailyPlanOrderStateText> states;
-    private Set<Folder> setOfWorkflowFolders;
-    private Set<Folder> setOfScheduleFolders;
-    private Date plannedStart;
-    private Boolean isLate;
-    private String controllerId;
-    private List<String> listOfWorkflowNames;
-    private String workflowName;
-    private List<Long> listOfSubmissionIds;
-
     private Long calendarId;
-
     private Long plannedOrderId;
-    private List<String> listOfScheduleNames;
+
+    private Integer startMode;
+
+    private Boolean submitted;
+    private Boolean isLate;
+
+    private String controllerId;
+    private String orderId;
+    private String dailyPlanDate;
+    private String workflowName;
     private String scheduleName;
     private String orderName;
-    private Integer startMode;
+
+    public FilterDailyPlannedOrders() {
+        super();
+        this.setSortMode("DESC");
+        this.setOrderCriteria("plannedStart");
+    }
+
+    public FilterDailyPlannedOrders copy() {
+        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+
+        filter.setListOfOrders(listOfOrders);
+        filter.setWorkflowFolders(workflowFolders);
+        filter.setScheduleFolders(scheduleFolders);
+        filter.setStates(states);
+        filter.setSubmissionIds(submissionIds);
+        filter.setCyclicOrdersMainParts(cyclicOrdersMainParts);
+        filter.setWorkflowNames(workflowNames);
+        filter.setScheduleNames(scheduleNames);
+
+        filter.setPlannedStart(plannedStart);
+        filter.setPeriodBegin(periodBegin);
+        filter.setPeriodEnd(periodEnd);
+        filter.setOrderPlannedStartFrom(orderPlannedStartFrom);
+        filter.setOrderPlannedStartTo(orderPlannedStartTo);
+        filter.setSubmitTime(submitTime);
+
+        filter.setRepeatInterval(repeatInterval);
+        filter.setCalendarId(calendarId);
+        filter.setPlannedOrderId(plannedOrderId);
+
+        filter.setStartMode(startMode);
+
+        filter.setSubmitted(submitted);
+        filter.setLate(isLate);
+
+        filter.setControllerId(controllerId);
+        filter.setOrderId(orderId);
+        filter.setDailyPlanDate(dailyPlanDate);
+        filter.setWorkflowName(workflowName);
+        filter.setScheduleName(scheduleName);
+        filter.setOrderName(orderName);
+
+        return filter;
+    }
 
     public boolean isCyclicStart() {
         return startMode != null && startMode.equals(1);
@@ -71,24 +116,28 @@ public class FilterDailyPlannedOrders extends DBFilter {
         return startMode;
     }
 
-    public void setStartMode(Integer startMode) {
-        this.startMode = startMode;
+    public void setStartMode(Integer val) {
+        startMode = val;
     }
 
     public Collection<String> getListOfOrders() {
         return listOfOrders;
     }
 
-    public void setListOfOrders(Collection<String> listOfOrders) {
-        this.listOfOrders = listOfOrders;
+    public void setListOfOrders(Collection<String> val) {
+        listOfOrders = val;
     }
 
-    public List<String> getListOfCyclicOrdersMainParts() {
-        return listOfCyclicOrdersMainParts;
+    public List<String> getCyclicOrdersMainParts() {
+        return cyclicOrdersMainParts;
     }
 
-    public void setListOfCyclicOrdersMainParts(List<String> val) {
-        listOfCyclicOrdersMainParts = val;
+    public void setCyclicOrdersMainParts(List<String> val) {
+        cyclicOrdersMainParts = val;
+    }
+
+    private void setDailyPlanDate(String val) {// for copy
+        dailyPlanDate = val;
     }
 
     public void setDailyPlanDate(String dailyPlanDate, String timeZone, String periodBegin) {
@@ -99,10 +148,260 @@ public class FilterDailyPlannedOrders extends DBFilter {
     }
 
     public void addScheduleName(String scheduleName) {
-        if (listOfScheduleNames == null) {
-            listOfScheduleNames = new ArrayList<String>();
+        if (scheduleNames == null) {
+            scheduleNames = new ArrayList<String>();
         }
-        listOfScheduleNames.add(scheduleName);
+        scheduleNames.add(scheduleName);
+    }
+
+    private void setOrderPlannedStartFrom(Date val) {// for copy
+        orderPlannedStartFrom = val;
+    }
+
+    public Date getOrderPlannedStartFrom() {
+        return orderPlannedStartFrom;
+    }
+
+    private void setOrderPlannedStartTo(Date val) {// for copy
+        orderPlannedStartTo = val;
+    }
+
+    public Date getOrderPlannedStartTo() {
+        return orderPlannedStartTo;
+    }
+
+    public Set<Folder> getWorkflowFolders() {
+        return workflowFolders;
+    }
+
+    public void setWorkflowFolders(Set<Folder> val) {
+        workflowFolders = val;
+    }
+
+    public void addWorkflowFolders(Set<Folder> val) {
+        if (workflowFolders == null) {
+            workflowFolders = new HashSet<Folder>();
+        }
+        if (val != null) {
+            workflowFolders.addAll(val);
+        }
+    }
+
+    public void addWorkflowFolders(String workflowFolder, boolean recursive) {
+        LOGGER.debug("Add workflowFolder: " + workflowFolder);
+        if (workflowFolders == null) {
+            workflowFolders = new HashSet<Folder>();
+        }
+        Folder filterFolder = new Folder();
+        filterFolder.setFolder(workflowFolder);
+        filterFolder.setRecursive(recursive);
+        workflowFolders.add(filterFolder);
+    }
+
+    public Set<Folder> getScheduleFolders() {
+        return scheduleFolders;
+    }
+
+    public void setScheduleFolders(Set<Folder> val) {
+        scheduleFolders = val;
+    }
+
+    public void addScheduleFolders(Set<Folder> val) {
+        if (scheduleFolders == null) {
+            scheduleFolders = new HashSet<Folder>();
+        }
+        if (val != null) {
+            scheduleFolders.addAll(val);
+        }
+    }
+
+    public void addScheduleFolders(String scheduleFolder, boolean recursive) {
+        LOGGER.debug("Add scheduleFolder: " + scheduleFolder);
+        if (scheduleFolders == null) {
+            scheduleFolders = new HashSet<Folder>();
+        }
+        Folder filterFolder = new Folder();
+        filterFolder.setFolder(scheduleFolder);
+        filterFolder.setRecursive(recursive);
+        scheduleFolders.add(filterFolder);
+    }
+
+    public List<DailyPlanOrderStateText> getStates() {
+        return states;
+    }
+
+    public Boolean isLate() {
+        return isLate != null && isLate;
+    }
+
+    public Boolean getIsLate() {
+        return isLate;
+    }
+
+    public void setLate(Boolean val) {
+        isLate = val;
+    }
+
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
+
+    public void addState(DailyPlanOrderStateText state) {
+        if (states == null) {
+            states = new ArrayList<DailyPlanOrderStateText>();
+        }
+        states.add(state);
+    }
+
+    public void setPlannedStart(Date val) {
+        plannedStart = val;
+    }
+
+    public Date getPlannedStart() {
+        return this.plannedStart;
+    }
+
+    public Long getCalendarId() {
+        return calendarId;
+    }
+
+    public void setCalendarId(Long val) {
+        calendarId = val;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String val) {
+        orderId = val;
+    }
+
+    public Boolean getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(Boolean val) {
+        submitted = val;
+    }
+
+    public void setSetOfOrders(Set<OrderId> val) {
+        if (listOfOrders == null) {
+            listOfOrders = new ArrayList<String>();
+        }
+        for (OrderId orderId : val) {
+            listOfOrders.add(orderId.string());
+        }
+    }
+
+    public Date getSubmitTime() {
+        return submitTime;
+    }
+
+    public void setSubmitTime(Date val) {
+        submitTime = val;
+    }
+
+    public void addWorkflowName(String workflowName) {
+        if (workflowNames == null) {
+            workflowNames = new ArrayList<String>();
+        }
+        workflowNames.add(workflowName);
+    }
+
+    public void setStates(List<DailyPlanOrderStateText> val) {
+        states = val;
+    }
+
+    public List<Long> getSubmissionIds() {
+        return submissionIds;
+    }
+
+    public void setSubmissionIds(List<Long> val) {
+        submissionIds = val;
+    }
+
+    public void addSubmissionHistoryId(Long val) {
+        if (submissionIds == null) {
+            submissionIds = new ArrayList<Long>();
+        }
+        submissionIds.add(val);
+    }
+
+    public Long getPlannedOrderId() {
+        return plannedOrderId;
+    }
+
+    public void setPlannedOrderId(Long val) {
+        plannedOrderId = val;
+    }
+
+    public List<String> getWorkflowNames() {
+        return workflowNames;
+    }
+
+    public void setWorkflowNames(List<String> val) {
+        workflowNames = val;
+    }
+
+    public List<String> getScheduleNames() {
+        return scheduleNames;
+    }
+
+    public void setScheduleNames(List<String> val) {
+        scheduleNames = val;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String val) {
+        workflowName = val;
+    }
+
+    public String getScheduleName() {
+        return scheduleName;
+    }
+
+    public void setScheduleName(String val) {
+        scheduleName = val;
+    }
+
+    public Date getPeriodBegin() {
+        return periodBegin;
+    }
+
+    public void setPeriodBegin(Date val) {
+        periodBegin = val;
+    }
+
+    public Date getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public void setPeriodEnd(Date val) {
+        periodEnd = val;
+    }
+
+    public Long getRepeatInterval() {
+        return repeatInterval;
+    }
+
+    public void setRepeatInterval(Long val) {
+        repeatInterval = val;
+    }
+
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String val) {
+        orderName = val;
     }
 
     private void setOrderPlanDateInterval(String timeZone, String periodBegin) {
@@ -120,262 +419,4 @@ public class FilterDailyPlannedOrders extends DBFilter {
         calendar.add(java.util.Calendar.HOUR, 24);
         orderPlannedStartTo = calendar.getTime();
     }
-
-    public Date getOrderPlannedStartFrom() {
-        return orderPlannedStartFrom;
-    }
-
-    public Date getOrderPlannedStartTo() {
-        return orderPlannedStartTo;
-    }
-
-    public Set<Folder> getListOfWorkflowFolders() {
-        return setOfWorkflowFolders;
-    }
-
-    public void setListOfWorkflowFolders(Set<Folder> listOfWorkflowFolders) {
-        this.setOfWorkflowFolders = listOfWorkflowFolders;
-    }
-
-    public FilterDailyPlannedOrders() {
-        super();
-        this.setSortMode("DESC");
-        this.setOrderCriteria("plannedStart");
-    }
-
-    public void addWorkflowFolders(Set<Folder> workflowFolders) {
-        if (setOfWorkflowFolders == null) {
-            setOfWorkflowFolders = new HashSet<Folder>();
-        }
-        if (workflowFolders != null) {
-            setOfWorkflowFolders.addAll(workflowFolders);
-        }
-    }
-
-    public void addWorkflowFolders(String workflowFolder, boolean recursive) {
-        LOGGER.debug("Add workflowFolder: " + workflowFolder);
-        if (setOfWorkflowFolders == null) {
-            setOfWorkflowFolders = new HashSet<Folder>();
-        }
-        Folder filterFolder = new Folder();
-        filterFolder.setFolder(workflowFolder);
-        filterFolder.setRecursive(recursive);
-        setOfWorkflowFolders.add(filterFolder);
-    }
-
-    public void addScheduleFolders(Set<Folder> scheduleFolders) {
-        if (setOfScheduleFolders == null) {
-            setOfScheduleFolders = new HashSet<Folder>();
-        }
-        if (setOfScheduleFolders != null) {
-            setOfScheduleFolders.addAll(scheduleFolders);
-        }
-    }
-
-    public void addScheduleFolders(String scheduleFolder, boolean recursive) {
-        LOGGER.debug("Add scheduleFolder: " + scheduleFolder);
-        if (setOfScheduleFolders == null) {
-            setOfScheduleFolders = new HashSet<Folder>();
-        }
-        Folder filterFolder = new Folder();
-        filterFolder.setFolder(scheduleFolder);
-        filterFolder.setRecursive(recursive);
-        setOfScheduleFolders.add(filterFolder);
-    }
-
-    public List<DailyPlanOrderStateText> getStates() {
-        return states;
-    }
-
-    public Boolean isLate() {
-        return isLate != null && isLate;
-    }
-
-    public Boolean getIsLate() {
-        return isLate;
-    }
-
-    public void setLate(Boolean late) {
-        this.isLate = late;
-    }
-
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
-
-    public void addState(DailyPlanOrderStateText state) {
-        if (states == null) {
-            states = new ArrayList<DailyPlanOrderStateText>();
-        }
-        states.add(state);
-    }
-
-    public void setPlannedStart(Date plannedStart) {
-        this.plannedStart = plannedStart;
-    }
-
-    public Date getPlannedStart() {
-        return this.plannedStart;
-    }
-
-    public Long getCalendarId() {
-        return calendarId;
-    }
-
-    public void setCalendarId(Long calendarId) {
-        this.calendarId = calendarId;
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public Boolean getSubmitted() {
-        return submitted;
-    }
-
-    public void setSubmitted(Boolean submitted) {
-        this.submitted = submitted;
-    }
-
-    public void setSetOfOrders(Set<OrderId> setOfOrders) {
-        if (this.listOfOrders == null) {
-            this.listOfOrders = new ArrayList<String>();
-        }
-        for (OrderId orderId : setOfOrders) {
-            this.listOfOrders.add(orderId.string());
-        }
-    }
-
-    public Date getSubmitTime() {
-        return submitTime;
-    }
-
-    public void setSubmitTime(Date submitTime) {
-        this.submitTime = submitTime;
-    }
-
-    public void addWorkflowName(String workflowName) {
-        if (this.listOfWorkflowNames == null) {
-            this.listOfWorkflowNames = new ArrayList<String>();
-        }
-        this.listOfWorkflowNames.add(workflowName);
-    }
-
-    public void setStates(List<DailyPlanOrderStateText> states) {
-        this.states = states;
-    }
-
-    public List<Long> getListOfSubmissionIds() {
-        return listOfSubmissionIds;
-    }
-
-    public void setListOfSubmissionIds(List<Long> listOfSubmissionIds) {
-        this.listOfSubmissionIds = listOfSubmissionIds;
-    }
-
-    public void addSubmissionHistoryId(Long submissionHistoryId) {
-        if (this.listOfSubmissionIds == null) {
-            this.listOfSubmissionIds = new ArrayList<Long>();
-        }
-        this.listOfSubmissionIds.add(submissionHistoryId);
-
-    }
-
-    public Long getPlannedOrderId() {
-        return plannedOrderId;
-    }
-
-    public void setPlannedOrderId(Long plannedOrderId) {
-        this.plannedOrderId = plannedOrderId;
-    }
-
-    public List<String> getListOfWorkflowNames() {
-        return listOfWorkflowNames;
-    }
-
-    public void setListOfWorkflowNames(List<String> listOfWorkflowNames) {
-        this.listOfWorkflowNames = listOfWorkflowNames;
-    }
-
-    public List<String> getListOfScheduleNames() {
-        return listOfScheduleNames;
-    }
-
-    public void setListOfScheduleNames(List<String> listOfScheduleNames) {
-        this.listOfScheduleNames = listOfScheduleNames;
-    }
-
-    public String getWorkflowName() {
-        return workflowName;
-    }
-
-    public void setWorkflowName(String workflowName) {
-        this.workflowName = workflowName;
-    }
-
-    public String getScheduleName() {
-        return scheduleName;
-    }
-
-    public void setScheduleName(String scheduleName) {
-        this.scheduleName = scheduleName;
-    }
-
-    public Date getPeriodBegin() {
-        return periodBegin;
-    }
-
-    public void setPeriodBegin(Date periodBegin) {
-        this.periodBegin = periodBegin;
-    }
-
-    public Date getPeriodEnd() {
-        return periodEnd;
-    }
-
-    public void setPeriodEnd(Date periodEnd) {
-        this.periodEnd = periodEnd;
-    }
-
-    public Long getRepeatInterval() {
-        return repeatInterval;
-    }
-
-    public void setRepeatInterval(Long repeatInterval) {
-        this.repeatInterval = repeatInterval;
-    }
-
-    public Set<Folder> getSetOfScheduleFolders() {
-        return setOfScheduleFolders;
-    }
-
-    public void setSetOfScheduleFolders(Set<Folder> setOfScheduleFolders) {
-        this.setOfScheduleFolders = setOfScheduleFolders;
-    }
-
-    public Set<Folder> getSetOfWorkflowFolders() {
-        return setOfWorkflowFolders;
-    }
-
-    public void setSetOfWorkflowFolders(Set<Folder> setOfWorkflowFolders) {
-        this.setOfWorkflowFolders = setOfWorkflowFolders;
-    }
-
-    public String getOrderName() {
-        return orderName;
-    }
-
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
-    }
-
 }

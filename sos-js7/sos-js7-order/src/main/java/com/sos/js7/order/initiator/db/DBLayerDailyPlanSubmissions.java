@@ -34,10 +34,32 @@ public class DBLayerDailyPlanSubmissions {
     }
 
     public int delete(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        int result = deleteOrderVariabless(filter);
-        result += deleteOrders(filter);
-        result += deleteSubmissions(filter);
+        Long countSubmitted = getCountSubmittedOrders(filter);
+        int result = 0;
+        if (countSubmitted.equals(0L)) {
+            result = deleteOrderVariabless(filter);
+            result += deleteOrders(filter);
+            result += deleteSubmissions(filter);
+        } else {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[delete sumbission][skip]found %s submitted orders for controllerId=%s, dateFor=%s", countSubmitted,
+                        filter.getControllerId(), filter.getDateFor()));
+            }
+        }
         return result;
+    }
+
+    private Long getCountSubmittedOrders(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where submitted=true ");
+        hql.append("and submissionHistoryId in (");
+        hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append(getWhere(filter));
+        hql.append(")");
+
+        Query<Long> query = session.createQuery(hql.toString());
+        bindParameters(filter, query);
+        return session.getSingleResult(query);
     }
 
     private int deleteOrderVariabless(FilterDailyPlanSubmissions filter) throws SOSHibernateException {

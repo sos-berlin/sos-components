@@ -80,14 +80,14 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         }
 
         FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
-        folderPermissionEvaluator.setListOfWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
-        folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
-        folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
-        folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+        folderPermissionEvaluator.setWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
+        folderPermissionEvaluator.setScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
+        folderPermissionEvaluator.setSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+        folderPermissionEvaluator.setWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
 
         DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(null);
         Set<AuditLogDetail> auditLogDetails = new HashSet<>();
-        
+
         for (String controllerId : allowedControllers) {
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
@@ -112,10 +112,10 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 filter.setSubmitted(false);
                 filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), orderInitiatorSettings.getTimeZone(),
                         orderInitiatorSettings.getPeriodBegin());
-                filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
+                filter.setSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
 
-                filter.setListOfWorkflowNames(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
-                filter.setListOfScheduleNames(folderPermissionEvaluator.getListOfPermittedScheduleNames());
+                filter.setWorkflowNames(folderPermissionEvaluator.getPermittedWorkflowNames());
+                filter.setScheduleNames(folderPermissionEvaluator.getPermittedScheduleNames());
                 filter.setControllerId(controllerId);
 
                 SOSHibernateSession session = null;
@@ -143,8 +143,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
 
             }
         }
-        OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
-                .postExceptionEventIfExist(either, accessToken, getJocError(), null));
+        OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper.postExceptionEventIfExist(
+                either, accessToken, getJocError(), null));
     }
 
     @Override

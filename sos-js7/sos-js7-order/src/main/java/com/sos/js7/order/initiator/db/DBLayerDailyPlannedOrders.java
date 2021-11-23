@@ -20,11 +20,12 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -41,6 +42,9 @@ public class DBLayerDailyPlannedOrders {
 
     private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
     private static final String WHERE_PARAM_CURRENT_TIME = "currentTime";
+    /** rerun interval in seconds */
+    private static final long RERUN_INTERVAL = 1;
+    private static final int MAX_RERUNS = 3;
 
     private SOSHibernateSession session;
     private boolean whereHasCurrentTime;
@@ -206,12 +210,12 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (filter.getListOfWorkflowNames() != null && filter.getListOfWorkflowNames().size() > 0) {
-            where.append(and).append(SearchStringHelper.getStringListSql(filter.getListOfWorkflowNames(), "p.workflowName"));
+        if (filter.getWorkflowNames() != null && filter.getWorkflowNames().size() > 0) {
+            where.append(and).append(SearchStringHelper.getStringListSql(filter.getWorkflowNames(), "p.workflowName"));
             and = " and ";
         }
-        if (filter.getListOfScheduleNames() != null && filter.getListOfScheduleNames().size() > 0) {
-            where.append(and).append(SearchStringHelper.getStringListSql(filter.getListOfScheduleNames(), "p.scheduleName"));
+        if (filter.getScheduleNames() != null && filter.getScheduleNames().size() > 0) {
+            where.append(and).append(SearchStringHelper.getStringListSql(filter.getScheduleNames(), "p.scheduleName"));
             and = " and ";
         }
 
@@ -299,14 +303,14 @@ public class DBLayerDailyPlannedOrders {
             }
         }
 
-        if (filter.getListOfSubmissionIds() != null && filter.getListOfSubmissionIds().size() > 0) {
-            where.append(and).append(SearchStringHelper.getLongSetSql(filter.getListOfSubmissionIds(), "p.submissionHistoryId"));
+        if (filter.getSubmissionIds() != null && filter.getSubmissionIds().size() > 0) {
+            where.append(and).append(SearchStringHelper.getLongSetSql(filter.getSubmissionIds(), "p.submissionHistoryId"));
             and = " and ";
         }
 
-        if (!"".equals(pathField) && filter.getSetOfScheduleFolders() != null && filter.getSetOfScheduleFolders().size() > 0) {
+        if (!"".equals(pathField) && filter.getScheduleFolders() != null && filter.getScheduleFolders().size() > 0) {
             where.append(and).append("(");
-            for (Folder filterFolder : filter.getSetOfScheduleFolders()) {
+            for (Folder filterFolder : filter.getScheduleFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
                     where.append(" (" + "p.scheduleFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.scheduleFolder" + " like '" + likeFolder
@@ -321,9 +325,9 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        if (!"".equals(pathField) && filter.getSetOfWorkflowFolders() != null && filter.getSetOfWorkflowFolders().size() > 0) {
+        if (!"".equals(pathField) && filter.getWorkflowFolders() != null && filter.getWorkflowFolders().size() > 0) {
             where.append(and).append("(");
-            for (Folder filterFolder : filter.getSetOfWorkflowFolders()) {
+            for (Folder filterFolder : filter.getWorkflowFolders()) {
                 if (filterFolder.getRecursive()) {
                     String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
                     where.append(" (" + "p.workflowFolder" + " = '" + filterFolder.getFolder() + "' or " + "p.workflowFolder" + " like '" + likeFolder
@@ -338,7 +342,7 @@ public class DBLayerDailyPlannedOrders {
             and = " and ";
         }
 
-        boolean hasCyclics = filter.getListOfCyclicOrdersMainParts() != null && filter.getListOfCyclicOrdersMainParts().size() > 0;
+        boolean hasCyclics = filter.getCyclicOrdersMainParts() != null && filter.getCyclicOrdersMainParts().size() > 0;
         if (filter.getListOfOrders() != null && filter.getListOfOrders().size() > 0) {
             where.append(and);
             if (hasCyclics) {
@@ -346,12 +350,12 @@ public class DBLayerDailyPlannedOrders {
             }
             where.append(getOrderListSql(filter.getListOfOrders()));
             if (hasCyclics) {
-                where.append(" or ").append(getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts()));
+                where.append(" or ").append(getCyclicOrderListSql(filter.getCyclicOrdersMainParts()));
                 where.append(") ");
             }
             and = " and ";
         } else if (hasCyclics) {
-            where.append(and).append(getCyclicOrderListSql(filter.getListOfCyclicOrdersMainParts()));
+            where.append(and).append(getCyclicOrderListSql(filter.getCyclicOrdersMainParts()));
             and = " and ";
         }
 
@@ -704,47 +708,112 @@ public class DBLayerDailyPlannedOrders {
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String hql;
-        filter.setStates(null);
-        filter.setSubmitTime(null);
-        if (filter.getSubmitted()) {
-            filter.setSubmitted(null);
-            hql = "update  " + DBLayer.DBITEM_DPL_ORDERS + " p set submitted=1,submitTime=:submitTime  " + getWhere(filter);
-            filter.setSubmitTime(JobSchedulerDate.nowInUtc());
-        } else {
-            filter.setSubmitted(null);
-            hql = "update  " + DBLayer.DBITEM_DPL_ORDERS + " p set submitted=0,submitTime=null  " + getWhere(filter);
-        }
-        LOGGER.debug("Update submitting on controller:" + hql);
+        boolean isSubmitted = filter.getSubmitted();
+        Date now = JobSchedulerDate.nowInUtc();
 
-        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
+        FilterDailyPlannedOrders filterCopy = filter.copy();
+        filterCopy.setStates(null);
+        filterCopy.setSubmitTime(null);
+        filterCopy.setSubmitted(null);
+
+        int size = filterCopy.getListOfOrders() == null ? 0 : filterCopy.getListOfOrders().size();
+        if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int result = 0;
+            ArrayList<String> copy = (ArrayList<String>) filterCopy.getListOfOrders().stream().collect(Collectors.toList());
+            for (int i = 0; i < size; i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                if (size > i + SOSHibernate.LIMIT_IN_CLAUSE) {
+                    filterCopy.setListOfOrders(copy.subList(i, (i + SOSHibernate.LIMIT_IN_CLAUSE)));
+                } else {
+                    filterCopy.setListOfOrders(copy.subList(i, size));
+                }
+                result += executeSetSubmitted(filterCopy, isSubmitted, now);
+            }
+            return result;
+        } else {
+            return executeSetSubmitted(filterCopy, isSubmitted, now);
+        }
+    }
+
+    private int executeSetSubmitted(FilterDailyPlannedOrders filter, boolean isSubmitted, Date now) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
+        if (isSubmitted) {
+            hql.append("set submitted=true");
+            hql.append(",submitTime=:submitTime  ");
+
+            filter.setSubmitTime(now);
+        } else {
+            hql.append("set submitted=false");
+            hql.append(",submitTime=null  ");
+
+            filter.setSubmitTime(null);
+        }
+        hql.append(getWhere(filter));
+
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
         bindParameters(filter, query);
 
-        int retryCount = 20;
-        int row = -1;
-        do {
+        return executeUpdate("executeSetSubmitted", query);
+    }
+
+    public int setSubmitted(String controllerId, String orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("set submitted=true ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId=:orderId");
+
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("orderId", orderId);
+
+        return executeUpdate("setSubmitted", query);
+    }
+
+    public int setHistorySubmitted(Long id, boolean submitted, String message) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("update ").append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
+        hql.append("set submitted=:submitted ");
+        if (!SOSString.isEmpty(message)) {
+            hql.append(",message=:message ");
+        }
+        hql.append("where id=:id");
+
+        Query<DBItemDailyPlanHistory> query = session.createQuery(hql);
+        query.setParameter("submitted", submitted);
+        if (!SOSString.isEmpty(message)) {
+            query.setParameter("message", message);
+        }
+        query.setParameter("id", id);
+
+        return executeUpdate("setHistorySubmitted", query);
+    }
+
+    private <T> int executeUpdate(String callerMethodName, Query<T> query) throws SOSHibernateException {
+        int result = 0;
+        int count = 0;
+        boolean run = true;
+        while (run) {
+            count++;
             try {
-                row = session.executeUpdate(query);
-                if (retryCount != 20) {
-                    LOGGER.info("deadlock resolved successfully:" + hql);
-                }
-                retryCount = 0;
-            } catch (SOSHibernateLockAcquisitionException e) {
-                LOGGER.info("Try to resolve deadlock:" + hql);
-                retryCount = retryCount - 1;
-                try {
-                    java.lang.Thread.sleep(500);
-                } catch (InterruptedException e1) {
-                }
-                if (retryCount == 0) {
+                result = session.executeUpdate(query);
+                run = false;
+            } catch (Exception e) {
+                if (count >= MAX_RERUNS) {
                     throw e;
+                } else {
+                    Throwable te = SOSHibernate.findLockException(e);
+                    if (te == null) {
+                        throw e;
+                    } else {
+                        LOGGER.warn(String.format("%s: %s occured, wait %ss and try again (%s of %s) ...", callerMethodName, te.getClass().getName(),
+                                RERUN_INTERVAL, count, MAX_RERUNS));
+                        try {
+                            Thread.sleep(RERUN_INTERVAL * 1000);
+                        } catch (InterruptedException e1) {
+                        }
+                    }
                 }
-                LOGGER.debug("Retry update orders as SOSHibernateLockAcquisitionException was thrown. Retry-counter: " + retryCount);
-
             }
-        } while (retryCount > 0);
-
-        return row;
+        }
+        return Math.abs(result);
     }
 
     public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,

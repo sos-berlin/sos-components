@@ -35,7 +35,7 @@ public class ScheduleSourceList extends ScheduleSource {
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
             if (this.schedules != null) {
-                filter.setListOfScheduleNames(this.schedules.stream().map(s -> Paths.get(s).getFileName().toString()).distinct().collect(Collectors
+                filter.setScheduleNames(this.schedules.stream().map(s -> Paths.get(s).getFileName().toString()).distinct().collect(Collectors
                         .toList()));
             }
 

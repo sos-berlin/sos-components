@@ -51,10 +51,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
         FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
 
-        folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
-        folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
-        folderPermissionEvaluator.setListOfWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
-        folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
+        folderPermissionEvaluator.setScheduleFolders(dailyPlanOrderFilter.getFilter().getScheduleFolders());
+        folderPermissionEvaluator.setSchedulePaths(dailyPlanOrderFilter.getFilter().getSchedulePaths());
+        folderPermissionEvaluator.setWorkflowFolders(dailyPlanOrderFilter.getFilter().getWorkflowFolders());
+        folderPermissionEvaluator.setWorkflowPaths(dailyPlanOrderFilter.getFilter().getWorkflowPaths());
 
         folderPermissionEvaluator.getPermittedNames(folderPermissions, controllerId, filter);
 
@@ -76,13 +76,13 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                             listOfOrderIds.add(orderId);
                         }
                     }
-                    filter.setListOfCyclicOrdersMainParts(cyclicMainParts);
+                    filter.setCyclicOrdersMainParts(cyclicMainParts);
                 }
                 filter.setListOfOrders(listOfOrderIds);
             }
 
             filter.setControllerId(controllerId);
-            filter.setListOfSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
+            filter.setSubmissionIds(dailyPlanOrderFilter.getFilter().getSubmissionHistoryIds());
             filter.setDailyPlanDate(dailyPlanOrderFilter.getFilter().getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
             filter.setLate(dailyPlanOrderFilter.getFilter().getLate());
 

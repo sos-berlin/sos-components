@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
@@ -35,7 +36,6 @@ import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.cluster.common.ClusterServices;
 import com.sos.joc.model.common.Err419;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 import io.vavr.control.Either;
 import js7.data.order.OrderId;
@@ -107,16 +107,22 @@ public class OrderApi {
                                 controllerId));
 
                         session = Globals.createSosHibernateStatelessConnection(method);
+                        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+
+                        Instant start = Instant.now();
+
                         session.setAutoCommit(false);
                         Globals.beginTransaction(session);
-                        OrderApi.updatePlannedOrders(session, set, controllerId);
-                        OrderApi.updateHistory(session, items, true, null);
+                        int updateOrders = OrderApi.updatePlannedOrders(dbLayer, set, controllerId);
+                        Instant updateOrdersEnd = Instant.now();
+                        int updateHistory = OrderApi.updateHistory(dbLayer, items, true, null);
                         Globals.commit(session);
                         session.close();
                         session = null;
 
-                        LOGGER.info(String.format("[%s][%s][submitted=%s][updated orders=%s, history=%s]", method, controllerId, set.size(), set
-                                .size(), items.size()));
+                        Instant end = Instant.now();
+                        LOGGER.info(String.format("[%s][%s][submitted=%s][updated orders=%s(%s), history=%s(%s)]", method, controllerId, set.size(),
+                                updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory, SOSDate.getDuration(updateOrdersEnd, end)));
                     } catch (Exception e) {
                         LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
                         Globals.rollback(session);
@@ -130,14 +136,19 @@ public class OrderApi {
                         String msg = jocError.getCode() + ":" + either.getLeft().toString();
 
                         session = Globals.createSosHibernateStatelessConnection(method);
+                        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                        Instant start = Instant.now();
+
                         session.setAutoCommit(false);
                         Globals.beginTransaction(session);
-                        OrderApi.updateHistory(session, items, false, msg);
+                        int updateHistory = OrderApi.updateHistory(dbLayer, items, false, msg);
                         Globals.commit(session);
                         session.close();
                         session = null;
 
-                        LOGGER.info(String.format("[%s][%s][onError][updated history=%s]%s", method, controllerId, items.size(), msg));
+                        Instant end = Instant.now();
+                        LOGGER.info(String.format("[%s][%s][onError][updated history=%s(%s)]%s", method, controllerId, updateHistory, SOSDate
+                                .getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (SOSHibernateException e) {
@@ -156,26 +167,20 @@ public class OrderApi {
         return orders;
     }
 
-    public static void updatePlannedOrders(SOSHibernateSession session, Set<OrderId> orders, String controllerId) throws SOSHibernateException {
-
-        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setControllerId(controllerId);
-        filter.setSubmitted(true);
-        filter.setSetOfOrders(orders);
-
-        DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-        dbLayer.setSubmitted(filter);
+    private static int updatePlannedOrders(DBLayerDailyPlannedOrders dbLayer, Set<OrderId> orders, String controllerId) throws SOSHibernateException {
+        int result = 0;
+        for (OrderId orderId : orders) {
+            result += dbLayer.setSubmitted(controllerId, orderId.string());
+        }
+        return result;
     }
 
-    public static void updateHistory(SOSHibernateSession session, List<DBItemDailyPlanHistory> items, Boolean submitted, String message)
+    private static int updateHistory(DBLayerDailyPlannedOrders dbLayer, List<DBItemDailyPlanHistory> items, boolean submitted, String message)
             throws SOSHibernateException {
-
+        int result = 0;
         for (DBItemDailyPlanHistory item : items) {
-            item.setSubmitted(submitted);
-            if (message != null && !message.isEmpty()) {
-                item.setMessage(message);
-            }
-            session.update(item);
+            result += dbLayer.setHistorySubmitted(item.getId(), submitted, message);
         }
+        return result;
     }
 }
