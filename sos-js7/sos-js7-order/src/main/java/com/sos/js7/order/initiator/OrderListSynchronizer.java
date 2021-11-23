@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
@@ -285,6 +286,7 @@ public class OrderListSynchronizer {
 
     private OrderCounter executeStore(String operation, String controllerId, String date) throws JocConfigurationException,
             DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
         try {
@@ -296,13 +298,22 @@ public class OrderListSynchronizer {
             Map<CycleOrderKey, List<PlannedOrder>> cyclic = new TreeMap<CycleOrderKey, List<PlannedOrder>>();
             for (PlannedOrder plannedOrder : plannedOrders.values()) {
                 if (plannedOrder.getPeriod().getSingleStart() != null) {
+                    counter.addSingle();
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        LOGGER.debug("synchronizer: adding planned order to database: " + plannedOrder.uniqueOrderkey());
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[store][single]%s", plannedOrder.uniqueOrderkey()));
+                        }
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
                         dbLayer.store(plannedOrder);
                         plannedOrder.setStoredInDb(true);
-                        counter.addSingle();
+                        counter.addStoredSingle();
+                    } else {
+                        counter.addStoreSkippedSingle();
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[store][single][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
+                                    .isOverwrite(), SOSHibernate.toString(item)));
+                        }
                     }
                 } else {
                     CycleOrderKey key = new CycleOrderKey();
@@ -317,6 +328,7 @@ public class OrderListSynchronizer {
                         counter.addCyclic();
                     }
                     cyclic.get(key).add(plannedOrder);
+                    counter.addCyclicTotal();
                 }
             }
 
@@ -324,15 +336,27 @@ public class OrderListSynchronizer {
                 int size = entry.getValue().size();
                 int nr = 1;
                 String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-                LOGGER.debug("synchronizer: adding planned cyclic order to database: " + size + " orders ");
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[store][cycle]%s", size));
+                }
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[store][cycle]%s", plannedOrder.uniqueOrderkey()));
+                        }
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
                         dbLayer.store(plannedOrder, id, nr, size);
                         nr = nr + 1;
                         plannedOrder.setStoredInDb(true);
-                        counter.addCyclicTotal();
+                        counter.addStoredCyclicTotal();
+                    } else {
+                        counter.addStoreSkippedCyclicTotal();
+
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[store][cycle][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
+                                    .isOverwrite(), SOSHibernate.toString(item)));
+                        }
                     }
                 }
             }
