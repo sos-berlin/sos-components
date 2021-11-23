@@ -271,9 +271,15 @@ public class Proxies {
         if (evt.getControllerId() != null && !evt.getControllerId().isEmpty() && evt.isCoupled() != null) {
             coupledStates.put(evt.getControllerId(), evt.isCoupled());
         }
-        if (evt.getUrl() != null && ProxyUser.JOC.getUser().equals(evt.getUser())) {
-            LOGGER.info("Store last successful connection data for " + evt.getUrl());
-            proxyCredentials.put(evt.getUrl(), evt);
+        if (evt.getUser() != null && ProxyUser.JOC.getUser().equals(evt.getUser())) {
+            if (evt.getUrl() != null) {
+                LOGGER.info("Store last successful connection data for " + evt.getUrl());
+                proxyCredentials.put(evt.getUrl(), evt);
+            }
+            if (evt.getBackupUrl() != null) {
+                LOGGER.info("Store last successful connection data for " + evt.getBackupUrl());
+                proxyCredentials.put(evt.getBackupUrl(), evt);
+            }
         }
     }
     

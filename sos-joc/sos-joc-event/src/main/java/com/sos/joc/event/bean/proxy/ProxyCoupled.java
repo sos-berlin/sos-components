@@ -20,10 +20,11 @@ public class ProxyCoupled extends ProxyEvent {
         putVariable("isCoupled", isCoupled);
     }
     
-    public ProxyCoupled(String controllerId, Boolean isCoupled, String url, String user, String pwd) {
+    public ProxyCoupled(String controllerId, Boolean isCoupled, String url, String backupUrl, String user, String pwd) {
         super("ProxyCoupled", controllerId, null);
         putVariable("isCoupled", isCoupled);
         putVariable("url", url);
+        putVariable("backupUrl", backupUrl);
         putVariable("user", user);
         putVariable("pwd", pwd);
     }
@@ -36,6 +37,11 @@ public class ProxyCoupled extends ProxyEvent {
     @JsonIgnore
     public String getUrl() {
         return (String) getVariables().get("url");
+    }
+    
+    @JsonIgnore
+    public String getBackupUrl() {
+        return (String) getVariables().get("backupUrl");
     }
     
     @JsonIgnore

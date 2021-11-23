@@ -189,7 +189,7 @@ public class ProxyContext {
             Optional<UserAndPassword> account = OptionConverters.toJava(this.credentials.getAccount().toScala());
             if (account.isPresent()) {
                 EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true, this.credentials
-                        .getUrl(), account.get().userId().string(), account.get().password().string()));
+                        .getUrl(), this.credentials.getBackupUrl(), account.get().userId().string(), account.get().password().string()));
             } else {
                 EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true));
             }
