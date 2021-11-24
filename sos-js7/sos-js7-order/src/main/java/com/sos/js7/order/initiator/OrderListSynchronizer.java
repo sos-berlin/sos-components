@@ -167,6 +167,7 @@ public class OrderListSynchronizer {
             SOSHibernateSession session = null;
             try {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.setSortMode(null);
                 filter.setOrderCriteria(null);
                 filter.setControllerId(plannedOrder.getControllerId());
                 filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
@@ -290,7 +291,7 @@ public class OrderListSynchronizer {
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
         try {
-            session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+            session = Globals.createSosHibernateStatelessConnection("executeStore");
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
@@ -301,9 +302,6 @@ public class OrderListSynchronizer {
                     counter.addSingle();
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[store][single]%s", plannedOrder.uniqueOrderkey()));
-                        }
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
                         dbLayer.store(plannedOrder);
                         plannedOrder.setStoredInDb(true);
@@ -337,14 +335,11 @@ public class OrderListSynchronizer {
                 int nr = 1;
                 String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[store][cycle]%s", size));
+                    LOGGER.debug(String.format("[store][cyclic]size=%s, id=%s, key=%s", size, id, entry.getKey()));
                 }
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[store][cycle]%s", plannedOrder.uniqueOrderkey()));
-                        }
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
                         dbLayer.store(plannedOrder, id, nr, size);
                         nr = nr + 1;
@@ -354,7 +349,7 @@ public class OrderListSynchronizer {
                         counter.addStoreSkippedCyclicTotal();
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[store][cycle][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
+                            LOGGER.debug(String.format("[store][cyclic][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
                                     .isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
@@ -387,6 +382,8 @@ public class OrderListSynchronizer {
 
                 for (PlannedOrder plannedOrder : plannedOrders.values()) {
                     final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                    filter.setSortMode(null);
+                    filter.setOrderCriteria(null);
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     filter.setControllerId(controllerId);
                     filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
@@ -412,6 +409,8 @@ public class OrderListSynchronizer {
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
                         for (PlannedOrder plannedOrder : plannedOrders.values()) {
                             final FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                            filter.setSortMode(null);
+                            filter.setOrderCriteria(null);
                             filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                             filter.setControllerId(controllerId);
                             filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());

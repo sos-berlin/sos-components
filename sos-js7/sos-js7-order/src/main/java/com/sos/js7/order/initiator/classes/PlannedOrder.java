@@ -19,27 +19,27 @@ public class PlannedOrder {
     private String workflowPath;
     private String orderName;
 
-    public boolean isStoredInDb() {
-        return storedInDb;
-    }
-
-    public void setStoredInDb(boolean storedInDb) {
-        this.storedInDb = storedInDb;
-    }
-
     public PlannedOrder() {
     }
 
-    public PlannedOrder(DBItemDailyPlanOrder dbItemDailyPlannedOrders) {
-        this.freshOrder = new FreshOrder();
-        freshOrder.setId(dbItemDailyPlannedOrders.getOrderId());
-        freshOrder.setScheduledFor(dbItemDailyPlannedOrders.getPlannedStart().getTime());
-        freshOrder.setWorkflowPath(dbItemDailyPlannedOrders.getWorkflowPath());
-        this.schedule = new Schedule();
-        schedule.setWorkflowPath((dbItemDailyPlannedOrders.getWorkflowPath()));
-        schedule.setPath(dbItemDailyPlannedOrders.getSchedulePath());
-        schedule.setWorkflowName(dbItemDailyPlannedOrders.getWorkflowName());
+    public PlannedOrder(DBItemDailyPlanOrder item) {
+        freshOrder = new FreshOrder();
+        freshOrder.setId(item.getOrderId());
+        freshOrder.setScheduledFor(item.getPlannedStart().getTime());
+        freshOrder.setWorkflowPath(item.getWorkflowPath());
 
+        schedule = new Schedule();
+        schedule.setWorkflowPath((item.getWorkflowPath()));
+        schedule.setPath(item.getSchedulePath());
+        schedule.setWorkflowName(item.getWorkflowName());
+    }
+
+    public PlannedOrderKey uniqueOrderkey() {
+        PlannedOrderKey key = new PlannedOrderKey();
+        key.setControllerId(this.getControllerId());
+        key.setOrderId(freshOrder.getId());
+        key.setWorkflowName(freshOrder.getWorkflowPath());
+        return key;
     }
 
     public FreshOrder getFreshOrder() {
@@ -50,40 +50,40 @@ public class PlannedOrder {
         return period;
     }
 
-    public void setPeriod(Period period) {
-        this.period = period;
+    public void setPeriod(Period val) {
+        period = val;
     }
 
-    public void setFreshOrder(FreshOrder freshOrder) {
-        this.freshOrder = freshOrder;
+    public void setFreshOrder(FreshOrder val) {
+        freshOrder = val;
     }
 
     public Long getCalendarId() {
         return calendarId;
     }
 
-    public void setCalendarId(Long calendarId) {
-        this.calendarId = calendarId;
+    public void setCalendarId(Long val) {
+        calendarId = val;
     }
 
     public Schedule getSchedule() {
         return schedule;
     }
 
-    public void setSchedule(Schedule schedule) {
-        this.schedule = schedule;
+    public void setSchedule(Schedule val) {
+        schedule = val;
     }
 
-    public void setAverageDuration(Long averageDuration) {
-        this.averageDuration = averageDuration;
+    public void setAverageDuration(Long val) {
+        averageDuration = val;
     }
 
     public Long getAverageDuration() {
         return averageDuration;
     }
 
-    public void setSubmissionHistoryId(Long planId) {
-        this.submissionHistoryId = planId;
+    public void setSubmissionHistoryId(Long val) {
+        submissionHistoryId = val;
     }
 
     public Long getSubmissionHistoryId() {
@@ -91,41 +91,39 @@ public class PlannedOrder {
 
     }
 
-    public PlannedOrderKey uniqueOrderkey() {
-        PlannedOrderKey plannedOrderKey = new PlannedOrderKey();
-        plannedOrderKey.setControllerId(this.getControllerId());
-        plannedOrderKey.setOrderId(freshOrder.getId());
-        plannedOrderKey.setWorkflowName(freshOrder.getWorkflowPath());
-        return plannedOrderKey;
-    }
-
     public String getControllerId() {
         return controllerId;
     }
 
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getWorkflowPath() {
         return workflowPath;
     }
 
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
     }
 
     public String getOrderName() {
         return orderName;
     }
 
-    public void setOrderName(String orderName) {
-        if (orderName.length() > 30) {
-            this.orderName = orderName.substring(0, 30);
+    public void setOrderName(String val) {
+        if (val.length() > 30) {
+            orderName = val.substring(0, 30);
         } else {
-            this.orderName = orderName;
+            orderName = val;
         }
-
     }
 
+    public boolean isStoredInDb() {
+        return storedInDb;
+    }
+
+    public void setStoredInDb(boolean val) {
+        storedInDb = val;
+    }
 }

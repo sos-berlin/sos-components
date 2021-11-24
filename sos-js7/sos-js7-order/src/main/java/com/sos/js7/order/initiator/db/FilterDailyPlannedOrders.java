@@ -24,7 +24,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
 
-    private Collection<String> listOfOrders;
+    private Collection<String> orderIds;
     private Set<Folder> workflowFolders;
     private Set<Folder> scheduleFolders;
     private List<DailyPlanOrderStateText> states;
@@ -65,7 +65,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     public FilterDailyPlannedOrders copy() {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
-        filter.setListOfOrders(listOfOrders);
+        filter.setOrderIds(orderIds);
         filter.setWorkflowFolders(workflowFolders);
         filter.setScheduleFolders(scheduleFolders);
         filter.setStates(states);
@@ -120,12 +120,21 @@ public class FilterDailyPlannedOrders extends DBFilter {
         startMode = val;
     }
 
-    public Collection<String> getListOfOrders() {
-        return listOfOrders;
+    public Collection<String> getOrderIds() {
+        return orderIds;
     }
 
-    public void setListOfOrders(Collection<String> val) {
-        listOfOrders = val;
+    public void setOrderIds(Collection<String> val) {
+        orderIds = val;
+    }
+
+    public void setOrderIds(Set<OrderId> val) {
+        if (orderIds == null) {
+            orderIds = new ArrayList<String>();
+        }
+        for (OrderId orderId : val) {
+            orderIds.add(orderId.string());
+        }
     }
 
     public List<String> getCyclicOrdersMainParts() {
@@ -287,15 +296,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void setSubmitted(Boolean val) {
         submitted = val;
-    }
-
-    public void setSetOfOrders(Set<OrderId> val) {
-        if (listOfOrders == null) {
-            listOfOrders = new ArrayList<String>();
-        }
-        for (OrderId orderId : val) {
-            listOfOrders.add(orderId.string());
-        }
     }
 
     public Date getSubmitTime() {

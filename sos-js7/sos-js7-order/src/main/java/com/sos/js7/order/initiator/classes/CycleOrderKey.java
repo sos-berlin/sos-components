@@ -4,50 +4,60 @@ import java.util.Comparator;
 
 public class CycleOrderKey implements Comparable<CycleOrderKey> {
 
-    private String periodBegin="";
-    private String periodEnd="";
-    private String repeat="";
-    private String orderName="";
-    private String workflowPath="";
+    private String workflowPath = "";
+    private String orderName = "";
+    private String periodBegin = "";
+    private String periodEnd = "";
+    private String repeat = "";
 
-    public String getPeriodBegin() {
-        return periodBegin;
+    public String getWorkflowPath() {
+        return workflowPath;
     }
 
-    public void setPeriodBegin(String periodBegin) {
-        this.periodBegin = periodBegin;
-    }
-
-    public String getPeriodEnd() {
-        return periodEnd;
-    }
-
-    public void setPeriodEnd(String periodEnd) {
-        this.periodEnd = periodEnd;
-    }
-
-    public String getRepeatInterval() {
-        return repeat;
-    }
-
-    public void setRepeat(String repeat) {
-        this.repeat = repeat;
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
     }
 
     public String getOrderName() {
         return orderName;
     }
 
-    public void setOrderName(String orderName) {
-        this.orderName = orderName;
+    public void setOrderName(String val) {
+        orderName = val;
     }
 
-    public String getWorkflowPath() {
-        return workflowPath;
+    public String getPeriodBegin() {
+        return periodBegin;
     }
 
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    public void setPeriodBegin(String val) {
+        periodBegin = val;
+    }
+
+    public String getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public void setPeriodEnd(String val) {
+        periodEnd = val;
+    }
+
+    public String getRepeatInterval() {
+        return repeat;
+    }
+
+    public void setRepeat(String val) {
+        repeat = val;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("workflowPath=").append(workflowPath);
+        sb.append(",orderName=").append(orderName);
+        sb.append(",periodBegin=").append(periodBegin);
+        sb.append(",periodEnd=").append(periodEnd);
+        sb.append(",repeat=").append(repeat);
+        return sb.toString();
     }
 
     @Override
