@@ -342,7 +342,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setPeriodBegin(settings.getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings, false);
-            runner.submitOrders(items.get(0).getControllerId(), getJocError(), getAccessToken(), items);
+            runner.submitOrders(items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
         }
     }
 

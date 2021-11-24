@@ -37,6 +37,18 @@ public class PeriodResolver {
         this.periods = new HashMap<String, Period>();
     }
 
+    public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
+        period = normalizePeriod(period);
+        if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
+            // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
+
+            // period.setSingleStart(getTimeFromIso(scheduledFor.get()));
+            // add(scheduledFor.get().getEpochSecond(), period);
+            add(period.getSingleStart(), period);
+        }
+        addRepeat(period, dailyPlanDate, timeZone);
+    }
+
     private Date getDate(String day, String time, String format) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         String dateInString = String.format("%s %s", day, time);
@@ -50,8 +62,8 @@ public class PeriodResolver {
     }
 
     private void add(String start, Period period) {
+        LOGGER.trace("Adding " + start);
 
-        LOGGER.debug("Adding " + start);
         Period p = periods.get(start);
         if (p == null) {
             periods.put(start, period);
@@ -110,7 +122,6 @@ public class PeriodResolver {
         }
 
         if (res != null && !res.isEmpty()) {
-
             String[] time = res.split(":");
 
             if (time.length == 1) {
@@ -143,7 +154,6 @@ public class PeriodResolver {
     }
 
     private Period normalizePeriod(Period p) throws SOSInvalidDataException {
-
         if (p.getBegin() == null || p.getBegin().isEmpty()) {
             p.setBegin("00:00:00");
         }
@@ -161,20 +171,7 @@ public class PeriodResolver {
         if (p.getSingleStart() != null && !p.getSingleStart().isEmpty()) {
             p.setSingleStart(normalizeTimeValue(p.getSingleStart()));
         }
-
         return p;
-    }
-
-    public void addStartTimes(Period period, String dailyPlanDate, String timeZone) throws ParseException, SOSInvalidDataException {
-        period = normalizePeriod(period);
-        if (period.getSingleStart() != null && !period.getSingleStart().isEmpty()) {
-            // Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + period.getSingleStart(), timeZone);
-
-            // period.setSingleStart(getTimeFromIso(scheduledFor.get()));
-            // add(scheduledFor.get().getEpochSecond(), period);
-            add(period.getSingleStart(), period);
-        }
-        addRepeat(period, dailyPlanDate, timeZone);
     }
 
     public Map<Long, Period> getStartTimes() {

@@ -151,17 +151,20 @@ public class OrderListSynchronizer {
         return added;
     }
 
-    private void calculateDurations() throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException, DBOpenSessionException {
-        LOGGER.debug("... calculateDurations");
+    private void calculateDurations(String controllerId, String date) throws SOSHibernateException, JocConfigurationException,
+            DBConnectionRefusedException, DBOpenSessionException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[calculateDurations][%s]%s", controllerId, date));
+        }
         durations = new HashMap<String, Long>();
 
         for (PlannedOrder plannedOrder : plannedOrders.values()) {
-            calculateDuration(plannedOrder);
+            calculateDuration(plannedOrder, date);
         }
     }
 
-    private void calculateDuration(PlannedOrder plannedOrder) throws SOSHibernateException, JocConfigurationException, DBConnectionRefusedException,
-            DBOpenSessionException {
+    private void calculateDuration(PlannedOrder plannedOrder, String date) throws SOSHibernateException, JocConfigurationException,
+            DBConnectionRefusedException, DBOpenSessionException {
 
         if (durations.get(plannedOrder.getSchedule().getWorkflowName()) == null) {
             SOSHibernateSession session = null;
@@ -172,7 +175,7 @@ public class OrderListSynchronizer {
                 filter.setControllerId(plannedOrder.getControllerId());
                 filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
 
-                session = Globals.createSosHibernateStatelessConnection("calculateDurations");
+                session = Globals.createSosHibernateStatelessConnection("calculateDurations-" + date);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 // Globals.beginTransaction(session);
                 List<DBItemDailyPlanWithHistory> orders = dbLayer.getDailyPlanWithHistoryList(filter, 0);
@@ -234,12 +237,14 @@ public class OrderListSynchronizer {
         return result;
     }
 
-    public void submitOrdersToController(String controllerId, boolean fromService) throws ControllerConnectionResetException,
-            ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
-            DBConnectionRefusedException, InterruptedException, ExecutionException, SOSHibernateException, TimeoutException, ParseException {
+    public void submitOrdersToController(String controllerId, String submissionForDate, boolean fromService)
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException,
+            SOSHibernateException, TimeoutException, ParseException {
 
         String method = "submitOrdersToController";
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String logSubmissionForDate = SOSString.isEmpty(submissionForDate) ? "" : "[" + submissionForDate + "]";
         Set<PlannedOrder> orders = new HashSet<PlannedOrder>();
         for (PlannedOrder p : plannedOrders.values()) {
             if (p.isStoredInDb() && p.getSchedule().getSubmitOrderToControllerWhenPlanned()) {
@@ -247,15 +252,20 @@ public class OrderListSynchronizer {
             } else {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format(
-                            "[%s][%s][skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s",
-                            method, controllerId, SOSString.toString(p)));
+                            "[%s][%s]%s[skip because planned order !p.isStoredInDb() or !p.getSchedule().getSubmitOrderToControllerWhenPlanned()]%s",
+                            method, controllerId, logSubmissionForDate, SOSString.toString(p)));
                 }
             }
         }
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection("submitOrdersToController");
+            String sessionIdentifier = method;
+            if (!SOSString.isEmpty(submissionForDate)) {
+                sessionIdentifier += "-" + submissionForDate;
+            }
+
+            session = Globals.createSosHibernateStatelessConnection(sessionIdentifier);
             session.setAutoCommit(false);
 
             List<DBItemDailyPlanHistory> inserted = new ArrayList<DBItemDailyPlanHistory>();
@@ -268,14 +278,14 @@ public class OrderListSynchronizer {
                 session = null;
 
                 Instant end = Instant.now();
-                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s(%s)", method, controllerId, orders.size(), plannedOrders.size(),
-                        inserted.size(), SOSDate.getDuration(start, end)));
+                LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s(%s)", method, controllerId, logSubmissionForDate, orders
+                        .size(), plannedOrders.size(), inserted.size(), SOSDate.getDuration(start, end)));
 
                 OrderApi.addOrdersToController(controllerId, jocError, accessToken, orders, inserted, fromService);
 
             } catch (Exception e) {
-                LOGGER.info(String.format("[%s][%s][%s of %s orders]history added=%s", method, controllerId, orders.size(), plannedOrders.size(),
-                        inserted.size()));
+                LOGGER.info(String.format("[%s][%s]%s[%s of %s orders]history added=%s", method, controllerId, logSubmissionForDate, orders.size(),
+                        plannedOrders.size(), inserted.size()));
 
                 LOGGER.warn(e.getLocalizedMessage());
             }
@@ -291,7 +301,7 @@ public class OrderListSynchronizer {
         SOSHibernateSession session = null;
         OrderCounter counter = new OrderCounter();
         try {
-            session = Globals.createSosHibernateStatelessConnection("executeStore");
+            session = Globals.createSosHibernateStatelessConnection("executeStore-" + date);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
@@ -309,8 +319,8 @@ public class OrderListSynchronizer {
                     } else {
                         counter.addStoreSkippedSingle();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[store][single][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
-                                    .isOverwrite(), SOSHibernate.toString(item)));
+                            LOGGER.debug(String.format("[store][%s][%s][single][skip][%s][isOverwrite=%s][item=%s]", controllerId, date, plannedOrder
+                                    .uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 } else {
@@ -335,7 +345,8 @@ public class OrderListSynchronizer {
                 int nr = 1;
                 String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[store][cyclic]size=%s, id=%s, key=%s", size, id, entry.getKey()));
+                    LOGGER.debug(String.format("[store][%s][%s][cyclic]size=%s, order id main part=%s, key=%s", controllerId, date, size, id, entry
+                            .getKey()));
                 }
                 for (PlannedOrder plannedOrder : entry.getValue()) {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
@@ -349,8 +360,8 @@ public class OrderListSynchronizer {
                         counter.addStoreSkippedCyclicTotal();
 
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[store][cyclic][skip][%s][isOverwrite=%s][item=%s]", plannedOrder.uniqueOrderkey(), settings
-                                    .isOverwrite(), SOSHibernate.toString(item)));
+                            LOGGER.debug(String.format("[store][%s][%s][cyclic][skip][%s][isOverwrite=%s][item=%s]", controllerId, date, plannedOrder
+                                    .uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 }
@@ -369,15 +380,19 @@ public class OrderListSynchronizer {
             DBMissingDataException, DBOpenSessionException, DBInvalidDataException, SOSHibernateException, JsonProcessingException, ParseException,
             InterruptedException, ExecutionException, TimeoutException {
 
-        LOGGER.debug("... addPlannedOrderToControllerAndDB");
-        calculateDurations();
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String method = "addPlannedOrderToControllerAndDB";
 
+        if (isDebugEnabled) {
+            LOGGER.debug(String.format("[%s][%s][%s]overwrite orders=%s", method, controllerId, date, settings.isOverwrite()));
+        }
+
+        calculateDurations(controllerId, date);
         if (settings.isOverwrite()) {
-            LOGGER.debug("Overwrite orders");
             SOSHibernateSession session = null;
             List<DBItemDailyPlanOrder> orders = new ArrayList<DBItemDailyPlanOrder>();
             try {
-                session = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDBOverwrite");
+                session = Globals.createSosHibernateStatelessConnection(method + "-" + date);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
                 for (PlannedOrder plannedOrder : plannedOrders.values()) {
@@ -403,7 +418,7 @@ public class OrderListSynchronizer {
                     }
                     SOSHibernateSession session4delete = null;
                     try {
-                        session4delete = Globals.createSosHibernateStatelessConnection("addPlannedOrderToDB");
+                        session4delete = Globals.createSosHibernateStatelessConnection(method + "-" + date);
                         session4delete.setAutoCommit(false);
                         Globals.beginTransaction(session4delete);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session4delete);
@@ -424,9 +439,11 @@ public class OrderListSynchronizer {
 
                         executeStore(operation, controllerId, date);
                         if (withSubmit == null || withSubmit) {
-                            submitOrdersToController(controllerId, fromService);
+                            submitOrdersToController(controllerId, date, fromService);
                         } else {
-                            LOGGER.debug("Orders will not be submitted to the controller");
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[%s][%s][%s][skip]withSubmit=%s", method, controllerId, date, withSubmit));
+                            }
                         }
                     } catch (SOSHibernateException | JocConfigurationException | DBConnectionRefusedException | ParseException
                             | ControllerConnectionResetException | ControllerConnectionRefusedException | DBMissingDataException
@@ -443,9 +460,11 @@ public class OrderListSynchronizer {
         } else {
             executeStore(operation, controllerId, date);
             if (withSubmit == null || withSubmit) {
-                submitOrdersToController(controllerId, fromService);
+                submitOrdersToController(controllerId, date, fromService);
             } else {
-                LOGGER.debug("Orders will not be submitted to the controller");
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][%s][skip]withSubmit=%s", method, controllerId, date, withSubmit));
+                }
             }
         }
     }

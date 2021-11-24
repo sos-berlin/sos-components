@@ -48,28 +48,28 @@ public class OrderCounter {
         storeSkippedCyclicTotal += 1;
     }
 
-    public long getCount() {
-        return single + cyclic;
+    private long getCountTotal() {
+        return single + cyclicTotal;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getCount()).append(" orders");
+        StringBuilder sb = new StringBuilder("total ");
+        sb.append(getCountTotal()).append(" orders");
         if (cyclic > 0) {
-            sb.append(" (");
+            sb.append("(");
             if (single > 0) {
-                sb.append("single=").append(single).append(", ");
+                sb.append("single=").append(single).append(",");
             }
-            sb.append("cyclic=").append(cyclic).append(", cyclic total=").append(cyclicTotal);
+            sb.append("cyclic=").append(cyclic).append("(total=").append(cyclicTotal).append(")");
             sb.append(")");
         }
         boolean storeDiffSingle = storedSingle > 0 && storedSingle != single;
         boolean storeDiffCyclic = storedCyclicTotal > 0 && storedCyclicTotal != cyclicTotal;
         if (storeDiffSingle || storeDiffCyclic || storeSkippedSingle > 0 || storeSkippedCyclicTotal > 0) {
-            sb.append(" (store ");
-            sb.append("stored single=").append(storedSingle).append(", cyclic total=" + storedCyclicTotal).append(" ");
-            sb.append("skipped single=").append(storeSkippedSingle).append(", cyclic total=" + storeSkippedCyclicTotal).append(" ");
+            sb.append("(store ");
+            sb.append("stored single=").append(storedSingle).append(",cyclic total=" + storedCyclicTotal).append(" ");
+            sb.append("skipped single=").append(storeSkippedSingle).append(",cyclic total=" + storeSkippedCyclicTotal);
             sb.append(")");
         }
         return sb.toString();

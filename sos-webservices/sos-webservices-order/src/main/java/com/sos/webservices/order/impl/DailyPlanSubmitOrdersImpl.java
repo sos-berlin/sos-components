@@ -166,7 +166,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                     Globals.disconnect(session);
                 }
 
-                runner.submitOrders(controllerId, getJocError(), getAccessToken(), items);
+                runner.submitOrders(controllerId, items, null, getJocError(), getAccessToken());
 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDailyPlanDate()));
 

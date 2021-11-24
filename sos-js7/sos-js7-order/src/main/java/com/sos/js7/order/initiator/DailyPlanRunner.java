@@ -149,7 +149,7 @@ public class DailyPlanRunner extends TimerTask {
                             String d = DailyPlanHelper.getDateTime(e.getSubmissionForDate());
                             return d == null ? "" : d;
                         }).collect(Collectors.toList());
-                        LOGGER.info(String.format("[creating][%s][%s][skip][submissions found]%s", controllerId, date, String.join(",", copy)));
+                        LOGGER.info(String.format("[creating][%s][%s][skip][submission(s) found]%s", controllerId, date, String.join(",", copy)));
                     }
 
                     dailyPlanCalendar.add(java.util.Calendar.DATE, 1);
@@ -204,9 +204,9 @@ public class DailyPlanRunner extends TimerTask {
         return synchronizer.getPlannedOrders();
     }
 
-    public void submitOrders(String controllerId, JocError jocError, String accessToken, List<DBItemDailyPlanOrder> plannedOrders)
-            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
-            JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
+    public void submitOrders(String controllerId, List<DBItemDailyPlanOrder> plannedOrders, String submissionForDate, JocError jocError,
+            String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
         SOSHibernateSession session = null;
@@ -218,7 +218,11 @@ public class DailyPlanRunner extends TimerTask {
             synchronizer.setAccessToken(accessToken);
             synchronizer.setJocError(jocError);
 
-            session = Globals.createSosHibernateStatelessConnection("submitOrders");
+            String sessionIdentifier = "submitOrders";
+            if (!SOSString.isEmpty(submissionForDate)) {
+                sessionIdentifier += "-" + submissionForDate;
+            }
+            session = Globals.createSosHibernateStatelessConnection(sessionIdentifier);
             DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
 
             for (DBItemDailyPlanOrder item : plannedOrders) {
@@ -261,7 +265,7 @@ public class DailyPlanRunner extends TimerTask {
             session = null;
 
             if (synchronizer.getPlannedOrders().size() > 0) {
-                synchronizer.submitOrdersToController(controllerId, fromService);
+                synchronizer.submitOrdersToController(controllerId, submissionForDate, fromService);
             }
         } finally {
             Globals.disconnect(session);
@@ -323,7 +327,7 @@ public class DailyPlanRunner extends TimerTask {
                 OrderCounter c = DailyPlanHelper.getOrderCount(plannedOrders);
                 LOGGER.info(String.format("[submitting][%s][%s][submission id=%s, submission for date=%s]submit %s start ...", controllerId, date,
                         item.getId(), submissionForDate, c));
-                submitOrders(controllerId, null, "", plannedOrders);
+                submitOrders(controllerId, plannedOrders, submissionForDate, null, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));
             }
