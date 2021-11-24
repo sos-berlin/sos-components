@@ -1,6 +1,6 @@
 package com.sos.js7.order.initiator.classes;
 
-public class PlannedOrderKey implements Comparable<PlannedOrderKey>  {
+public class PlannedOrderKey implements Comparable<PlannedOrderKey> {
 
     private String controllerId;
     private String workflowName;
@@ -10,24 +10,32 @@ public class PlannedOrderKey implements Comparable<PlannedOrderKey>  {
         return controllerId;
     }
 
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getWorkflowName() {
         return workflowName;
     }
 
-    public void setWorkflowName(String workflowName) {
-        this.workflowName = workflowName;
+    public void setWorkflowName(String val) {
+        workflowName = val;
     }
 
     public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
+    public void setOrderId(String val) {
+        orderId = val;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("controllerId=").append(controllerId);
+        sb.append(",workflowName=").append(workflowName);
+        sb.append(",orderId=").append(orderId);
+        return sb.toString();
     }
 
     @Override
@@ -58,7 +66,7 @@ public class PlannedOrderKey implements Comparable<PlannedOrderKey>  {
 
     @Override
     public int compareTo(PlannedOrderKey o) {
-        return this.orderId.compareTo(o.orderId);         
+        return this.orderId.compareTo(o.orderId);
     }
 
 }

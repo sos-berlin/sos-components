@@ -636,9 +636,21 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
+    public DBItemDailyPlanOrder getUniqueDailyPlan(PlannedOrder order) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException {
+        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+        filter.setPlannedStart(new Date(order.getFreshOrder().getScheduledFor()));
+        filter.setControllerId(order.getControllerId());
+        filter.setWorkflowName(order.getFreshOrder().getWorkflowPath());
+        filter.setOrderName(order.getOrderName());
+
+        return getUniqueDailyPlan(filter);
+    }
+
     public DBItemDailyPlanOrder getUniqueDailyPlan(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        String q = "from " + DBLayer.DBITEM_DPL_ORDERS + " p " + getWhere(filter);
-        Query<DBItemDailyPlanOrder> query = session.createQuery(q);
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
+        hql.append(getWhere(filter));
+        Query<DBItemDailyPlanOrder> query = session.createQuery(hql.toString());
         query = bindParameters(filter, query);
 
         List<DBItemDailyPlanOrder> result = session.getResultList(query);
@@ -647,18 +659,6 @@ public class DBLayerDailyPlannedOrders {
         } else {
             return null;
         }
-    }
-
-    public DBItemDailyPlanOrder getUniqueDailyPlan(PlannedOrder order) throws JocConfigurationException, DBConnectionRefusedException,
-            SOSHibernateException {
-        FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-        filter.setPlannedStart(new Date(order.getFreshOrder().getScheduledFor()));
-        LOGGER.trace("----> " + order.getFreshOrder().getScheduledFor() + ":" + new Date(order.getFreshOrder().getScheduledFor()));
-        filter.setControllerId(order.getControllerId());
-        filter.setWorkflowName(order.getFreshOrder().getWorkflowPath());
-        filter.setOrderName(order.getOrderName());
-
-        return getUniqueDailyPlan(filter);
     }
 
     public void storeVariables(PlannedOrder order, Long id) throws SOSHibernateException, JsonProcessingException {
@@ -672,8 +672,8 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
-    public Long store(PlannedOrder plannedOrder, String id, Integer nr, Integer size) throws JocConfigurationException, DBConnectionRefusedException,
-            SOSHibernateException, ParseException, JsonProcessingException {
+    public DBItemDailyPlanOrder store(PlannedOrder plannedOrder, String id, Integer nr, Integer size) throws JocConfigurationException,
+            DBConnectionRefusedException, SOSHibernateException, ParseException, JsonProcessingException {
 
         DBItemDailyPlanOrder item = new DBItemDailyPlanOrder();
         item.setSchedulePath(plannedOrder.getSchedule().getPath());
@@ -719,7 +719,7 @@ public class DBLayerDailyPlannedOrders {
         plannedOrder.getFreshOrder().setId(item.getOrderId());
         session.save(item);
         storeVariables(plannedOrder, item.getId());
-        return item.getId();
+        return item;
     }
 
     public int setSubmitted(FilterDailyPlannedOrders filter) throws SOSHibernateException {
@@ -831,9 +831,9 @@ public class DBLayerDailyPlannedOrders {
         return Math.abs(result);
     }
 
-    public void store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException, SOSHibernateException,
-            ParseException, JsonProcessingException {
-        store(plannedOrder, Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3), 0, 0);
+    public DBItemDailyPlanOrder store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
+            SOSHibernateException, ParseException, JsonProcessingException {
+        return store(plannedOrder, Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3), 0, 0);
     }
 
     public DBItemDailyPlanOrder insertFrom(DBItemDailyPlanOrder item) throws SOSHibernateException {

@@ -303,6 +303,8 @@ public class DailyPlanRunner extends TimerTask {
             SOSHibernateSession session = null;
             try {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
+                filter.setSortMode(null);
+                filter.setOrderCriteria(null);
                 filter.addSubmissionHistoryId(item.getId());
                 filter.setSubmitted(false);
 
