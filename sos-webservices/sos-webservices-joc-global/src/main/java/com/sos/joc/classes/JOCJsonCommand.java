@@ -444,10 +444,9 @@ public class JOCJsonCommand extends SOSRestApiClient {
         setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {
-            LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));
+            //LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));
             setBasicAuthorization(ProxyUser.getBasicAuthorization(evt.getUser(), evt.getPwd()));
         } else {
-            LOGGER.info("ProxyCoupled event doesn't exist for " + this.url);
             setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
         }
 //        setBasicAuthorization(Proxies.getJOCCredentials().flatMap(c -> ProxyUser.getBasicAuthorization(c)).orElse(ProxyUser.JOC

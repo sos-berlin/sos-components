@@ -60,7 +60,6 @@ public abstract class AConfigurationSection {
                     GlobalSettingsSectionEntry entry = section.getAdditionalProperties().get(ce.getName());
                     String val = entry.getValue() == null ? null : entry.getValue().trim();
                     if (GlobalSettingsSectionValueType.PASSWORD.equals(ce.getType())) {
-                        LOGGER.info(String.format("[%s.setValues]%s='%s'", this.getClass().getSimpleName(), ce.getName(), entry.getValue()));
                         ce.setValue(val == null ? ce.getDefault() : val);  //allow empty strings
                     } else {
                         ce.setValue(SOSString.isEmpty(val) ? ce.getDefault() : val);
