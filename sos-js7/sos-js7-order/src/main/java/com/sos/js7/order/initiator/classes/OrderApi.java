@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
@@ -61,12 +62,13 @@ public class OrderApi {
         return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static Set<PlannedOrder> addOrdersToController(String controllerId, JocError jocError, String accessToken, Set<PlannedOrder> orders,
-            List<DBItemDailyPlanHistory> items, boolean fromService) throws ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            InterruptedException, ExecutionException {
+    public static Set<PlannedOrder> addOrdersToController(String controllerId, String submissionForDate, boolean fromService,
+            Set<PlannedOrder> orders, List<DBItemDailyPlanHistory> items, JocError jocError, String accessToken)
+            throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
+            DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
 
         final String method = "addOrdersToController";
+        String logSubmissionForDate = SOSString.isEmpty(submissionForDate) ? "" : "[" + submissionForDate + "]";
 
         Function<PlannedOrder, Either<Err419, JFreshOrder>> mapper = order -> {
             Either<Err419, JFreshOrder> either = null;
@@ -78,8 +80,9 @@ public class OrderApi {
             return either;
         };
 
-        LOGGER.debug("update submit state for history and order on controller::" + controllerId);
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(String.format("[%s][%s]%s update submit state for history and order", method, controllerId, logSubmissionForDate));
+        }
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
         final Map<OrderId, JFreshOrder> map = freshOrders.get(true).stream().map(Either::get).collect(Collectors.toMap(JFreshOrder::id, Function
@@ -88,9 +91,9 @@ public class OrderApi {
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             JControllerApi controllerApi = ControllerApi.of(controllerId);
             if (Proxies.isCoupled(controllerId)) {
-                LOGGER.debug("Controller " + controllerId + " is coupled with proxy");
+                LOGGER.info(String.format("[%s][%s]%s coupled with proxy", method, controllerId, logSubmissionForDate));
             } else {
-                LOGGER.warn("Controller " + controllerId + " is NOT coupled with proxy");
+                LOGGER.info(String.format("[%s][%s]%s not coupled with proxy", method, controllerId, logSubmissionForDate));
             }
 
             final JControllerProxy proxy = Proxy.of(controllerId);
@@ -121,10 +124,11 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s][submitted=%s][updated orders=%s(%s), history=%s(%s)]", method, controllerId, set.size(),
-                                updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory, SOSDate.getDuration(updateOrdersEnd, end)));
+                        LOGGER.info(String.format("[%s][%s]%s[submitted=%s][updated orders=%s(%s), history=%s(%s)]", method, controllerId,
+                                logSubmissionForDate, set.size(), updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory, SOSDate
+                                        .getDuration(updateOrdersEnd, end)));
                     } catch (Exception e) {
-                        LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                        LOGGER.error(String.format("[%s][%s]%s %s", method, controllerId, logSubmissionForDate, e.toString()), e);
                         Globals.rollback(session);
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
@@ -147,23 +151,22 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s][onError][updated history=%s(%s)]%s", method, controllerId, updateHistory, SOSDate
-                                .getDuration(start, end), msg));
+                        LOGGER.info(String.format("[%s][%s]%s[onError][updated history=%s(%s)]%s", method, controllerId, logSubmissionForDate,
+                                updateHistory, SOSDate.getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (SOSHibernateException e) {
-                        LOGGER.error(String.format("[%s]%s", method, e.toString()), e);
+                        LOGGER.error(String.format("[%s][%s]%s %s", method, controllerId, logSubmissionForDate, e.toString()), e);
                         Globals.rollback(session);
                     } finally {
                         Globals.disconnect(session);
                     }
                 }
             });
-
         }
-        if (fromService) {
-            AJocClusterService.setLogger(ClusterServices.dailyplan.name());
-        }
+        // if (fromService) {
+        // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
+        // }
         return orders;
     }
 
