@@ -16,8 +16,8 @@ public class HashImpl extends JOCResourceImpl implements IHashResource {
     @Override
     public JOCDefaultResponse postHash(String accessToken, byte[] body) {
         try {
-            initLogging(API_CALL, body, accessToken);
-            JOCDefaultResponse jocDefaultResponse = initPermissions("", true);
+            initLogging(API_CALL, null, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getSettings().getView());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
