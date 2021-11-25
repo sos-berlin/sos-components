@@ -27,6 +27,7 @@ import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
@@ -954,4 +955,23 @@ public class DBLayerDailyPlannedOrders {
         return session.getResultList(query);
     }
 
+    public Long getCountOrdersBySubmissionId(String controllerId, Long submissionHistoryId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where controllerId = :controllerId ");
+        hql.append("and submissionHistoryId = :submissionHistoryId");
+
+        Query<Long> query = session.createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("submissionHistoryId", submissionHistoryId);
+        return session.getSingleValue(query);
+    }
+
+    public int deleteSubmission(Long id) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append("where id = :id ");
+
+        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql.toString());
+        query.setParameter("id", id);
+        return executeUpdate("deleteSubmission", query);
+    }
 }
