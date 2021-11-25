@@ -39,6 +39,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     private Date orderPlannedStartFrom;
     private Date orderPlannedStartTo;
     private Date submitTime;
+    private Date submissionForDate;
 
     private Long repeatInterval;
     private Long calendarId;
@@ -80,6 +81,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
         filter.setOrderPlannedStartFrom(orderPlannedStartFrom);
         filter.setOrderPlannedStartTo(orderPlannedStartTo);
         filter.setSubmitTime(submitTime);
+        filter.setSubmitTime(submissionForDate);
 
         filter.setRepeatInterval(repeatInterval);
         filter.setCalendarId(calendarId);
@@ -163,7 +165,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
         scheduleNames.add(scheduleName);
     }
 
-    private void setOrderPlannedStartFrom(Date val) {// for copy
+    public void setOrderPlannedStartFrom(Date val) {
         orderPlannedStartFrom = val;
     }
 
@@ -171,7 +173,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
         return orderPlannedStartFrom;
     }
 
-    private void setOrderPlannedStartTo(Date val) {// for copy
+    public void setOrderPlannedStartTo(Date val) {
         orderPlannedStartTo = val;
     }
 
@@ -304,6 +306,14 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void setSubmitTime(Date val) {
         submitTime = val;
+    }
+
+    public Date getSubmissionForDate() {
+        return submissionForDate;
+    }
+
+    public void setSubmissionForDate(Date val) {
+        submissionForDate = val;
     }
 
     public void addWorkflowName(String workflowName) {

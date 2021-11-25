@@ -11,6 +11,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
@@ -173,9 +174,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
 
     }
 
-    protected void addOrders(SOSHibernateSession session, FilterDailyPlannedOrders filter, String controllerId,
-            DailyPlanOrderFilter dailyPlanOrderFilter, List<DBItemDailyPlanWithHistory> orders, ArrayList<PlannedOrderItem> result,
-            boolean getCyclicDetails) {
+    protected void addOrders(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo, DailyPlanOrderFilter in,
+            List<DBItemDailyPlanWithHistory> orders, ArrayList<PlannedOrderItem> result, boolean getCyclicDetails) {
 
         if (orders != null) {
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -183,8 +183,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 PlannedOrderItem p = createPlanItem(item);
                 p.setControllerId(controllerId);
 
-                if ((p.getStartMode() == 1 && !dailyPlanOrderFilter.getExpandCycleOrders())) {
-                    result.add(getCyclicPlannedOrder(dbLayer, filter, p, getCyclicDetails));
+                if ((p.getStartMode() == 1 && !in.getExpandCycleOrders())) {
+                    result.add(getCyclicPlannedOrder(dbLayer, plannedStartFrom, plannedStartTo, p, getCyclicDetails));
                 } else {
                     result.add(p);
                 }
@@ -192,8 +192,8 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
     }
 
-    private PlannedOrderItem getCyclicPlannedOrder(DBLayerDailyPlannedOrders dbLayer, FilterDailyPlannedOrders filter, PlannedOrderItem item,
-            boolean getCyclicDetails) {
+    private PlannedOrderItem getCyclicPlannedOrder(DBLayerDailyPlannedOrders dbLayer, Date plannedStartFrom, Date plannedStartTo,
+            PlannedOrderItem item, boolean getCyclicDetails) {
         // item is a max item in the cycle group
         item.setCyclicOrder(new CyclicOrderInfos());
 
@@ -201,15 +201,14 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         if (getCyclicDetails) {
             try {
                 String mainOrderId = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
-                Date dateFrom = filter.getOrderPlannedStartFrom();
+                Date dateFrom = plannedStartFrom;
                 if (dateFrom != null && item.getState() != null) {
                     Date now = new Date();
                     if (DailyPlanOrderStateText.SUBMITTED.value().equals(item.getState().get_text().value()) && now.getTime() > dateFrom.getTime()) {
                         dateFrom = now;
                     }
                 }
-                minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, filter
-                        .getOrderPlannedStartTo());
+                minIteminfo = dbLayer.getCyclicOrderMinEntryAndCountTotal(item.getControllerId(), mainOrderId, dateFrom, plannedStartTo);
             } catch (SOSHibernateException e) {
                 LOGGER.warn(e.toString(), e);
             }
@@ -244,11 +243,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return item;
     }
 
-    protected Date getCyclicMinPlannedStart(SOSHibernateSession session, FilterDailyPlannedOrders filter, String orderId, String controllerId)
-            throws Exception {
+    protected Date getCyclicMinPlannedStart(SOSHibernateSession session, String controllerId, Date plannedStartFrom, Date plannedStartTo,
+            String orderId) throws Exception {
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-        return dbLayer.getCyclicMinPlannedStart(controllerId, OrdersHelper.getCyclicOrderIdMainPart(orderId), filter.getOrderPlannedStartFrom(),
-                filter.getOrderPlannedStartTo());
+        return dbLayer.getCyclicMinPlannedStart(controllerId, OrdersHelper.getCyclicOrderIdMainPart(orderId), plannedStartFrom, plannedStartTo);
     }
 
     protected DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
@@ -256,5 +254,17 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(null);
         return dbLayer.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());
 
+    }
+
+    protected Date toUTCDate(String date) {
+        if (date == null) {
+            return null;
+        }
+        if (date.length() == 10) {
+            date = date + "T00:00:00Z";
+        } else if (date.equals("0")) {
+            date = "0d";
+        }
+        return JobSchedulerDate.getDateFrom(date, "UTC");
     }
 }
