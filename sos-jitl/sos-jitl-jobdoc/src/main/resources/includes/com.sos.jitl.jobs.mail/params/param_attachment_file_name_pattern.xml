@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="attachment_file_name_pattern"
+    default_value="${filename}" 
+    required="false">
+    <note>
+        <title>File name of the attachment</title>
+        <p>
+        	This parameter is considered if <paramref>mail_action</paramref> is <code>dump_attachments</code>.<br/> 
+        	The following patterns will be substituted:
+        	<ul>
+        		<li>${filename}</li>
+        		<li>${subject}</li>
+        		<li>${messageId}</li>
+        	</ul>
+        	If the file name already exists then "_nr" will be added where nr is a running number. 
+        </p>
+   	</note>
+</param>

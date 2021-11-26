@@ -3,15 +3,13 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    name="min_file_age" 
-    default_value="0" 
+    name="mail_target_folder" 
     required="false">
     <note>
-        <title>minimum age of a file</title>
+        <title>Folder on the mail server for copying/moving mails</title>
         <p>
-        	Specifies the minimum age of a file.
-        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+        	This parameter is required if <paramref>mail_post_action</paramref> is <code>copy</code> or <code>move</code>.<br/> 
+        	The folder must exist and be writable. The job does not create the folder.
         </p>
    	</note>
-   	<xi:include href="../common/notes/note_age_values.xml" parse="xml" />
 </param>

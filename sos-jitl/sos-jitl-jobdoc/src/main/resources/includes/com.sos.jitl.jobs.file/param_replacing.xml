@@ -2,6 +2,7 @@
 <param
 	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xi="http://www.w3.org/2001/XInclude"
 	name="replacing" 
 	required="false" 
 	DataType="java.lang.String" 
@@ -48,5 +49,5 @@
 			Requires the parameter <paramref>replacement</paramref> to be specified.
 		</p>
 	</note>
-	<xi:include href="./note_regexp_example_replace.xml" xmlns:xi="http://www.w3.org/2001/XInclude"  parse="xml" />
+	<xi:include href="./note_regexp_example_replace.xml" parse="xml" />
 </param>

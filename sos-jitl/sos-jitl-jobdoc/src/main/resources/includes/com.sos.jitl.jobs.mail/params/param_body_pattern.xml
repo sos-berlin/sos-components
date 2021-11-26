@@ -3,15 +3,15 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    name="min_file_age" 
-    default_value="0" 
+    name="mail_body_pattern" 
     required="false">
     <note>
-        <title>minimum age of a file</title>
+        <title>Checks the <i>Body</i> of a mail</title>
         <p>
-        	Specifies the minimum age of a file.
-        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+        	This filter checks the <i>Body</i>  of a mail with a regular expression.
+        	Only mails matching this expression will be processed.
+        </p>
+        <p>See <paramref>mail_subject_pattern</paramref> for some remarks on regular expressions.
         </p>
    	</note>
-   	<xi:include href="../common/notes/note_age_values.xml" parse="xml" />
 </param>

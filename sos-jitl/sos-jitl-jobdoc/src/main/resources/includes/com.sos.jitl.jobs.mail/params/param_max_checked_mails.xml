@@ -3,15 +3,15 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    name="min_file_age" 
-    default_value="0" 
+    name="max_processed_mails" 
+    default_value="1000" 
     required="false">
     <note>
-        <title>minimum age of a file</title>
+        <title>maximum number of processed mails</title>
         <p>
-        	Specifies the minimum age of a file.
-        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+        	This is the first filter.
+        	The most recent mails, e.g. 1000, are read for each folder specified in <paramref>mail_source_folders</paramref>.
+        	All further filters are applied to this set.
         </p>
    	</note>
-   	<xi:include href="../common/notes/note_age_values.xml" parse="xml" />
 </param>

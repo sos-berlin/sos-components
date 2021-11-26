@@ -29,7 +29,7 @@ public class CommonJobArguments extends JobArguments {
     private JobArgument<String> credentialStoreFile = new JobArgument<String>("credential_store_file", false);
     private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
     private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
-    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>(hanaPrefix + "_credential_store_entry_path", false);
+    private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
 
     /* http client arguments */
     private JobArgument<Long> connectionTimeout = new JobArgument<Long>(hanaPrefix + "_connection_timeout", false, TimeUnit.SECONDS.toSeconds(2));

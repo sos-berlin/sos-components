@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail.imap.ssl.enable" 
+    default_value="false" 
+    required="false">
+    <note>
+        <title>Flag to enable SSL connections to the IMAP mail server</title>
+   	</note>
+   	<xi:include href="../notes/note_param_order.xml" parse="xml" />
+   	<note>
+        <ul>
+        	<li><code>mail.imap.ssl.enable</code> from system properties</li>
+        </ul>
+   	</note>
+</param>

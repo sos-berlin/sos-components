@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_source_folders" 
+    default_value="INBOX" 
+    required="false"
+    group="Source and filter parameter">
+    <note>
+        <title>Source folders</title>
+        <p>
+        	The name of the incoming box, which should be processed. 
+        	You can concatenate several folder names by using a comma. They will be handled one after the other.
+        </p>
+   	</note>
+</param>

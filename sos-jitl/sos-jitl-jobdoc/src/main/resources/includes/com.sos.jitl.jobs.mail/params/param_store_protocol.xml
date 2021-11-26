@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail.store.protocol" 
+    required="true"
+    group="Mail store parameters">
+    <note>
+        <title>Protocol (POP3 or IMAP) of the mail server</title>
+        <p>If the system property <code>mail.store.protocol</code> is set then this parameter is not longer required.</p>
+        <p>Allowed values are
+        	<ul>
+        		<li><code>pop3</code></li>
+        		<li><code>imap</code></li>
+        	</ul>
+        </p>
+        <p>If the value is <code>pop3</code>, then the following <code>mail.pop3.*</code> parameters are to be used for the connection to the mail server.</p>
+        <p>If the value is <code>imap</code>, then the following <code>mail.imap.*</code> parameters are to be used for the connection to the mail server.</p>	
+   	</note>
+</param>

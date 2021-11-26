@@ -8,10 +8,10 @@ public class SOSMailAuthenticator extends Authenticator {
     private String user;
     private String password;
 
-    public SOSMailAuthenticator(final String smtpUser, final String smtpUserPassword) {
+    public SOSMailAuthenticator(final String user, final String password) {
         super();
-        user = smtpUser == null ? "" : smtpUser;
-        password = smtpUserPassword == null ? "" : smtpUserPassword;
+        this.user = user == null ? "" : user;
+        this.password = password == null ? "" : password;
     }
 
     @Override

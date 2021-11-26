@@ -3,15 +3,13 @@
 	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    name="min_file_age" 
-    default_value="0" 
+    name="mail_file_directory" 
     required="false">
     <note>
-        <title>minimum age of a file</title>
+        <title>Directory on the file system for dumping mails</title>
         <p>
-        	Specifies the minimum age of a file.
-        	If the file(s) is newer then it is classified as non-existing, it will be not included in the result-list.
+        	This parameter is required if <paramref>mail_action</paramref> is <code>dump</code>.<br/> 
+        	The directory must exist and be writable. The job does not create the directory.
         </p>
    	</note>
-   	<xi:include href="../common/notes/note_age_values.xml" parse="xml" />
 </param>

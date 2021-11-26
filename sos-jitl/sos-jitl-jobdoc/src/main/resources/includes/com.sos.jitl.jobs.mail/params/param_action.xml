@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_action"
+    default_value="none"  
+    required="false"
+    group="Action parameters">
+    <note>
+        <title>Actions to perform</title>
+        <p>
+        	You can use the following actions:
+			<ul>
+				<li><code>none</code>: no action</li>
+				<li><code>dump</code>: stores the content of the mail into a file located in 
+				<paramref>mail_file_directory</paramref> where the filename is the messageId of the mail.</li>
+				<li><code>dump_attachments</code>: stores the attachments of the mail into files located 
+				in <paramref>mail_attachment_directory</paramref>.<br/>
+				With <paramref>attachment_file_name_pattern</paramref> you can specify the file names.<br/>
+				With <paramref>body_as_attachment</paramref> you decide wether the body will be handled as an attachment and stored too.</li>
+				<!-- li><code>delete</code>: deletes the mail</li -->
+			</ul>
+			You can concatenate the actions by using a comma.
+        </p>
+   	</note>
+</param>

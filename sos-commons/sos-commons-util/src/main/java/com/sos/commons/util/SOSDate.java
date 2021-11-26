@@ -17,6 +17,8 @@ import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
+
 public class SOSDate {
 
     private static Logger LOGGER = LoggerFactory.getLogger(SOSDate.class);
@@ -48,169 +50,165 @@ public class SOSDate {
         return SOSDate.dateTimeFormat;
     }
 
-    public static Date getCurrentDate() throws Exception {
+    public static Date getCurrentDate() throws SOSInvalidDataException {
         return SOSDate.getDate();
     }
 
-    public static String getCurrentDateAsString() throws Exception {
+    public static String getCurrentDateAsString() {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateFormat);
         formatter.setLenient(lenient);
         Calendar now = Calendar.getInstance();
         return formatter.format(now.getTime());
     }
 
-    public static String getCurrentDateAsString(String dateFormat) throws Exception {
+    public static String getCurrentDateAsString(String dateFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         formatter.setLenient(lenient);
         Calendar now = Calendar.getInstance();
         return formatter.format(now.getTime());
     }
 
-    public static Date getCurrentTime() throws Exception {
+    public static Date getCurrentTime() {
         return SOSDate.getTime();
     }
 
-    public static String getCurrentTimeAsString() throws Exception {
+    public static String getCurrentTimeAsString() {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateTimeFormat);
         formatter.setLenient(lenient);
         Calendar now = Calendar.getInstance();
         return formatter.format(now.getTime());
     }
 
-    public static String getCurrentTimeAsString(String dateTimeFormat) throws Exception {
+    public static String getCurrentTimeAsString(String dateTimeFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateTimeFormat);
         formatter.setLenient(lenient);
         Calendar now = Calendar.getInstance();
         return formatter.format(now.getTime());
     }
 
-    public static Date getDate() throws Exception {
+    public static Date getDate() throws SOSInvalidDataException {
         SimpleDateFormat formatter;
         try {
             formatter = new SimpleDateFormat(SOSDate.dateFormat);
             formatter.setLenient(lenient);
         } catch (Exception e) {
-            throw new Exception("invalid date format string: " + e.toString());
+            throw new SOSInvalidDataException("invalid date format string: " + e.toString());
         }
         try {
             Calendar now = Calendar.getInstance();
             return now.getTime();
         } catch (Exception e) {
-            throw new Exception("illegal date value: " + e.toString());
+            throw new SOSInvalidDataException("illegal date value: " + e.toString());
         }
     }
 
-    public static String getDateAsString() throws Exception {
+    public static String getDateAsString() throws SOSInvalidDataException {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateFormat);
         formatter.setLenient(lenient);
         return formatter.format(SOSDate.getDate());
     }
 
-    public static Date getDate(String dateStr) throws Exception {
+    public static Date getDate(String dateStr) throws SOSInvalidDataException {
         SimpleDateFormat formatter;
         try {
             formatter = new SimpleDateFormat(SOSDate.dateFormat);
             formatter.setLenient(lenient);
         } catch (Exception e) {
-            throw new Exception("invalid date format string: " + e.toString());
+            throw new SOSInvalidDataException("invalid date format string: " + e.toString());
         }
         try {
             return formatter.parse(dateStr);
         } catch (Exception e) {
-            throw new Exception("illegal date value: " + e.toString());
+            throw new SOSInvalidDataException("illegal date value: " + e.toString());
         }
     }
 
-    public static String getDateAsString(Date date) throws Exception {
+    public static String getDateAsString(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateFormat);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
 
-    public static Date getDate(String dateStr, String dateFormat) throws Exception {
+    public static Date getDate(String dateStr, String dateFormat) throws SOSInvalidDataException {
         SimpleDateFormat formatter;
         try {
             formatter = new SimpleDateFormat(dateFormat);
             formatter.setLenient(lenient);
         } catch (Exception e) {
-            throw new Exception("invalid date format string: " + e.toString());
+            throw new SOSInvalidDataException("invalid date format string: " + e.toString());
         }
         try {
             return formatter.parse(dateStr);
         } catch (Exception e) {
-            throw new Exception("illegal date string: " + e.toString());
+            throw new SOSInvalidDataException("illegal date string: " + e.toString());
         }
     }
 
-    public static Date getDateFromISOString(String dateStr) throws Exception {
+    public static Date getDateFromISOString(String dateStr) throws SOSInvalidDataException {
         return getDate(dateStr, dateTimeFormat);
     }
 
-    public static String getDateAsString(Date date, String dateFormat) throws Exception {
+    public static String getDateAsString(Date date, String dateFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
 
-    public static String getDateAsString(Date date, String dateFormat, TimeZone zone) throws Exception {
+    public static String getDateAsString(Date date, String dateFormat, TimeZone zone) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         formatter.setTimeZone(zone);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
 
-    public static Date getTime() throws Exception {
-        try {
-            Calendar now = Calendar.getInstance();
-            return now.getTime();
-        } catch (Exception e) {
-            throw new Exception("illegal date value: " + e.toString());
-        }
+    public static Date getTime() {
+        Calendar now = Calendar.getInstance();
+        return now.getTime();
     }
 
-    public static String getTimeAsString() throws Exception {
+    public static String getTimeAsString() {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateTimeFormat);
         formatter.setLenient(lenient);
         return formatter.format(SOSDate.getTime());
     }
 
-    public static Date getTime(String dateTimeStr) throws Exception {
+    public static Date getTime(String dateTimeStr) throws SOSInvalidDataException {
         SimpleDateFormat formatter;
         try {
             formatter = new SimpleDateFormat(SOSDate.dateTimeFormat);
             formatter.setLenient(lenient);
         } catch (Exception e) {
-            throw new Exception("invalid date format string: " + e.toString());
+            throw new SOSInvalidDataException("invalid date format string: " + e.toString());
         }
         try {
             return formatter.parse(dateTimeStr);
         } catch (Exception e) {
-            throw new Exception("illegal date value: " + e.toString());
+            throw new SOSInvalidDataException("illegal date value: " + e.toString());
         }
     }
 
-    public static String getTimeAsString(Date date) throws Exception {
+    public static String getTimeAsString(Date date) {
         SimpleDateFormat formatter = new SimpleDateFormat(SOSDate.dateTimeFormat);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
 
-    public static Date getTime(String dateTimeStr, String dateTimeFormat) throws Exception {
+    public static Date getTime(String dateTimeStr, String dateTimeFormat) throws SOSInvalidDataException {
         SimpleDateFormat formatter;
         try {
             formatter = new SimpleDateFormat(dateTimeFormat);
             formatter.setLenient(lenient);
         } catch (Exception e) {
-            throw new Exception("invalid date format string: " + e.toString());
+            throw new SOSInvalidDataException("invalid date format string: " + e.toString());
         }
         try {
             return formatter.parse(dateTimeStr);
         } catch (Exception e) {
-            throw new Exception("illegal date value: " + e.toString());
+            throw new SOSInvalidDataException("illegal date value: " + e.toString());
         }
     }
 
-    public static String getTimeAsString(Date date, String dateTimeFormat) throws Exception {
+    public static String getTimeAsString(Date date, String dateTimeFormat) {
         SimpleDateFormat formatter = new SimpleDateFormat(dateTimeFormat);
         formatter.setLenient(lenient);
         return formatter.format(date);
@@ -258,11 +256,11 @@ public class SOSDate {
         return formatter.format(date);
     }
 
-    public static String getDateTimeAsString(String datestr) throws Exception {
+    public static String getDateTimeAsString(String datestr) throws SOSInvalidDataException {
         return getDateTimeAsString(datestr, null);
     }
 
-    public static String getDateTimeAsString(String datestr, String outputDateTimeFormat) throws Exception {
+    public static String getDateTimeAsString(String datestr, String outputDateTimeFormat) throws SOSInvalidDataException {
         Date date = null;
         if ("%now".equals(datestr)) {
             date = new Date();
@@ -277,11 +275,11 @@ public class SOSDate {
         return formatter.format(date);
     }
 
-    public static String getDateTimeAsString(Date date) throws Exception {
+    public static String getDateTimeAsString(Date date) {
         return getDateTimeAsString(date, null);
     }
 
-    public static String getDateTimeAsString(Date date, String outputDateTimeFormat) throws Exception {
+    public static String getDateTimeAsString(Date date, String outputDateTimeFormat) {
         if (outputDateTimeFormat == null || outputDateTimeFormat.isEmpty()) {
             outputDateTimeFormat = SOSDate.getOutputDateTimeFormat();
         }
@@ -290,13 +288,13 @@ public class SOSDate {
         return formatter.format(date);
     }
 
-    public static String getDateTimeAsISO(Date date) throws Exception {
+    public static String getDateTimeAsISO(Date date) {
         DateFormat formatter = new SimpleDateFormat(dateTimeFormat);
         formatter.setLenient(lenient);
         return formatter.format(date);
     }
 
-    public static String getDateTimeAsISO(long datetime) throws Exception {
+    public static String getDateTimeAsISO(long datetime) {
         return getDateTimeAsISO(new Date(datetime));
     }
 
@@ -341,7 +339,7 @@ public class SOSDate {
         SOSDate.outputDateTimeFormat = outputDateTimeFormat;
     }
 
-    public static String getLocaleDateAsString(String datestr) throws Exception {
+    public static String getLocaleDateAsString(String datestr) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat(SOSDate.dateFormat);
         sdf.setLenient(lenient);
         Date date = sdf.parse(datestr);
@@ -349,7 +347,7 @@ public class SOSDate {
         return formatter.format(date);
     }
 
-    public static String getLocaleDateTimeAsString(String datestr) throws Exception {
+    public static String getLocaleDateTimeAsString(String datestr) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat(SOSDate.dateTimeFormat);
         sdf.setLenient(lenient);
         Date date = sdf.parse(datestr);
@@ -357,23 +355,23 @@ public class SOSDate {
         return formatter.format(date);
     }
 
-    public static String getLocaleDateAsString(Date date) throws Exception {
+    public static String getLocaleDateAsString(Date date) {
         DateFormat formatter = DateFormat.getDateInstance(SOSDate.dateStyle, SOSDate.locale);
         return formatter.format(date);
     }
 
-    public static String getLocaleDateTimeAsString(Date date) throws Exception {
+    public static String getLocaleDateTimeAsString(Date date) {
         DateFormat formatter = DateFormat.getDateTimeInstance(SOSDate.dateStyle, SOSDate.timeStyle, SOSDate.locale);
         return formatter.format(date);
     }
 
-    public static String getISODateTimeAsString(GregorianCalendar date) throws Exception {
+    public static String getISODateTimeAsString(GregorianCalendar date) {
         SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         isoFormat.setLenient(lenient);
         return isoFormat.format(date.getTime());
     }
 
-    public static String getISODateAsString(GregorianCalendar date) throws Exception {
+    public static String getISODateAsString(GregorianCalendar date) {
         SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd");
         isoFormat.setLenient(lenient);
         return isoFormat.format(date.getTime());
@@ -463,10 +461,11 @@ public class SOSDate {
     /** @param range e.g.: m - minutes,s -seconds, ms - milliseconds
      * @param age , e.g.: 1w 2h 45s
      * @return age in minutes, seconds or milliseconds
-     * @throws Exception */
-    public static Long resolveAge(String range, String age) throws Exception {
+     * @throws SOSInvalidDataException 
+     */
+    public static Long resolveAge(String range, String age) throws SOSInvalidDataException {
         if (SOSString.isEmpty(age)) {
-            throw new Exception("age is empty");
+            throw new SOSInvalidDataException("age is empty");
         }
 
         int multiplicatorSeconds = -1;
@@ -522,7 +521,7 @@ public class SOSDate {
                         break;
                     }
                 } catch (Exception ex) {
-                    throw new Exception(String.format("[invalid numeric value][%s][%s][%s]%s", age, part, numericalPart, ex.toString()), ex);
+                    throw new SOSInvalidDataException(String.format("[invalid numeric value][%s][%s][%s]%s", age, part, numericalPart, ex.toString()), ex);
                 }
             }
         }
@@ -540,6 +539,9 @@ public class SOSDate {
         int j = 0;
         long seconds = 0L;
         String[] arr = val.split(":");
+        if (arr.length == 2) {
+            j++;
+        }
         for (int i = arr.length - 1; i >= 0; i--) {
             try {
                 seconds += Integer.valueOf(arr[i].trim()) * num[j++];

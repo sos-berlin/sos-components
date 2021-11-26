@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<note
+	xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<p>This parameter is not declared as required, 
+	even though the value must be known, since other parameters are taken into account for this in the following order if necessary.</p>
+ 	
+</note>

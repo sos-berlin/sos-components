@@ -156,7 +156,7 @@ public class JobTest {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void setArguments(Map<String, Object> map, JobArguments o) {
+    private static void setArguments(Map<String, Object> map, JobArguments o) {
         List<Field> fields = Job.getJobArgumentFields(o);
         for (Field field : fields) {
             try {
@@ -176,12 +176,12 @@ public class JobTest {
                     field.set(o, arg);
                 }
             } catch (Throwable e) {
-                LOGGER.error(String.format("[can't get field][%s.%s]%s", this.getClass().getSimpleName(), field.getName(), e.toString()), e);
+                LOGGER.error(String.format("[can't get field][%s.%s]%s", o.getClass().getSimpleName(), field.getName(), e.toString()), e);
             }
         }
     }
 
-    private Object getValue(Field field, JobArgument<?> arg, Object val) throws ClassNotFoundException {
+    private static Object getValue(Field field, JobArgument<?> arg, Object val) throws ClassNotFoundException {
         if (val instanceof String) {
             val = val.toString().trim();
             Type type = ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];

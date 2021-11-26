@@ -11,5 +11,6 @@
                 the files which has to be processed.
             </p>
     		<xi:include href="../notes/note_regexp_remarks.xml" parse="xml"/>
+    		<xi:include href="../notes/note_regexp_additional.xml" parse="xml" />
         </documentation>
 </feature>

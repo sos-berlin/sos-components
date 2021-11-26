@@ -2,6 +2,7 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
        xmlns:xhtml="http://www.w3.org/1999/xhtml"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
        name="variable_parser_reg_expr"
        default_value="^SET\s+([^\s]+)\s*IS\s+(.*)$"
        required="false"
@@ -44,5 +45,6 @@
              </ul>
 
         </note>
-        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml"/>
+        <xi:include href="../common/notes/note_regexp_additional.xml" parse="xml" />
       </param>

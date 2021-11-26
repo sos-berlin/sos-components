@@ -307,7 +307,7 @@
 		</xsl:if>
 	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template für Configuration/ Parameter -->
+		Template for Configuration/ Parameter -->
 	<xsl:template match="jobdoc:params[parent::jobdoc:configuration] | jobdoc:params[parent::jobdoc:params]">
 		<tr>
 			<td class="td1">
@@ -330,7 +330,7 @@
 					<xsl:otherwise>
 						<xsl:if test="child::*">
 							<table class="section" cellpadding="0" cellspacing="1">
-								<xsl:apply-templates select="codeexample|jobdoc:codeexample|jobdoc:param|jobdoc:params/jobdoc:*"/>
+								<xsl:apply-templates select="codeexample|jobdoc:codeexample|jobdoc:param|jobdoc:paramgroup|jobdoc:params/jobdoc:*"/>
 							</table>
 						</xsl:if>
 					</xsl:otherwise>
@@ -348,18 +348,46 @@
 				<td class="td3">
 					<xsl:if test="child::*">
 						<table class="section" cellpadding="0" cellspacing="1">
-							<xsl:apply-templates select="jobdoc:param"/>
+							<xsl:apply-templates select="jobdoc:param|jobdoc:paramgroup"/>
 						</table>
 					</xsl:if>
 				</td>
 			</tr>
 		</xsl:if>
 	</xsl:template>
+	
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+		Template for Parameter group -->
+	<xsl:template match="jobdoc:paramgroup">
+		<tr>
+			<td class="section1" colspan="2">
+				<span class="sourceNameBold">
+					<xsl:choose>
+						<xsl:when test="@display">
+							<xsl:value-of select="@display" />
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="@name" />
+						</xsl:otherwise>
+					</xsl:choose>
+				</span>
+			</td>
+		</tr>
+	</xsl:template>
 
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template für einzelnen Parameter -->
+		Template for single Parameter -->
 	<xsl:template match="jobdoc:param">
 		<xsl:param name="extdoc" />
+		<xsl:if test="@group">
+			<tr>
+				<td class="sectiongroup" colspan="2">
+					<span class="sourceNameBold">
+						<xsl:value-of select="@group" />
+					</span>
+				</td>
+			</tr>
+		</xsl:if>
 		<tr>
 			<td class="section1" colspan="2">
 				<xsl:call-template name="set_anchor">
@@ -399,6 +427,11 @@
 					<xsl:if test="@DataType and not(@DataType='')">
 						<xsl:text>DataType: </xsl:text>
 						<xsl:value-of select="@DataType"></xsl:value-of>
+						<br />
+					</xsl:if>
+					<xsl:if test="@data_type and not(@data_type='')">
+						<xsl:text>DataType: </xsl:text>
+						<xsl:value-of select="@data_type"></xsl:value-of>
 						<br />
 					</xsl:if>
 
@@ -487,7 +520,7 @@
 		</xsl:if>
 	</xsl:template>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-		Template für Payload/ Parameter -->
+		Template for Payload/ Parameter -->
 	<xsl:template match="jobdoc:params[parent::jobdoc:payload]">
 		<xsl:if test="child::*">
 			<xsl:apply-templates select="jobdoc:param"/>
@@ -711,6 +744,7 @@
       table.section   { background-color:#eaedf4; width:100%; }
       table.section td   { background-color:#d0d6e6; color:#8c892c; }
 
+      td.sectiongroup { width:100%; text-align:center; line-height: 40px; }
       td.section1     { width:20%; }
       td.section2     { width:80%; }
                       

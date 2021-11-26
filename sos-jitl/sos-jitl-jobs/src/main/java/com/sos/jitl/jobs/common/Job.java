@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -97,8 +98,32 @@ public class Job {
         return map.entrySet().stream().filter(a -> a.getValue().getValue() != null).collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                 .getValue()));
     }
+    
+    public static Map<String, Object> asNameValueMap(JobArguments o) {
+        List<Field> fields = getJobArgumentFields(o);
+        Map<String, Object> map = new HashMap<>();
+        for (Field field : fields) {
+            try {
+                field.setAccessible(true);
+                JobArgument<?> arg = (JobArgument<?>) field.get(o);
+                if (arg != null) {
+                    if (arg.getName() == null) {// internal usage
+                        continue;
+                    }
+                    if (arg.getValue() == null || SOSString.isEmpty(arg.getValue().toString())) {
+                        map.put(arg.getName(), arg.getDefaultValue());
+                    } else {
+                        map.put(arg.getName(), arg.getValue());
+                    }
+                }
+            } catch (Throwable e) {
+                //
+            }
+        }
+        return map;
+    }
 
-    protected static List<Field> getJobArgumentFields(JobArguments o) {
+    public static List<Field> getJobArgumentFields(JobArguments o) {
         return SOSReflection.getAllDeclaredFields(o.getClass()).stream().filter(f -> f.getType().equals(JobArgument.class)).collect(Collectors
                 .toList());
     }

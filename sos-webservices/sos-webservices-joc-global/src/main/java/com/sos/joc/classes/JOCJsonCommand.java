@@ -441,7 +441,6 @@ public class JOCJsonCommand extends SOSRestApiClient {
         if (url.startsWith("https:") && SSLContext.getInstance().getTrustStore() == null) {
             throw new ControllerConnectionRefusedException("Required truststore not found");
         }
-        setBasicAuthorization(ProxyUser.JOC.getBasicAuthorization());
         ProxyCoupled evt = Proxies.getJOCCredentials(this.url);
         if (evt != null) {
             //LOGGER.info(String.format("ProxyCoupled event exists for %s with %s:%s", this.url, evt.getUser(), evt.getPwd()));

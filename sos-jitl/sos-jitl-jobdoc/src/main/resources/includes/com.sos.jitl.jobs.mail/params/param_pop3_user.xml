@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail.pop3.user" 
+    required="false">
+    <note>
+        <title>User of the POP3 mail server account</title>
+        <p>The user is often the email address</p>
+   	</note>
+   	<xi:include href="../notes/note_required_param_order.xml" parse="xml" />
+   	<note>
+        <ul>
+        	<li><code>mail.pop3.user</code> from system properties</li>
+        	<li><code>mail.user</code> from Job or Order parameters</li>
+        	<li><code>mail.user</code> from system properties</li>
+        </ul>
+   	</note>
+</param>
