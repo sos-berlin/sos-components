@@ -44,7 +44,7 @@
         		</note>
       		</param>
       		
-      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value'">
+      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value','export_csv'">
         		<note>
           		<div xmlns="http://www.w3.org/1999/xhtml">
             	<strong>empty</strong><br/>
@@ -92,9 +92,25 @@
                		Hans=Mustermann<br/>
                		Jean=Dupont<br/>
             	</code>
+            	<br/><br/>
+            	<strong>'export_csv'</strong><br/>
+            	If set to 'export_csv', the column names and all columns of the resultset will be written to the 'output_file' file.
+            	<code>
+               		"FIRST_NAME","LAST_NAME","AGE"<br/>
+               		"John","Doe","30"<br/>
+               		"Hans","Mustermann","33"<br/>
+            	</code>
           		</div>
         		</note>
 			</param>
+			<param name="output_file" required="false" default_value="false" DataType="java.nio.file.Path">
+        		<note>
+          			<p>
+            			The name of a output file.<br />
+            			Required by <strong>'resultset_as_variables'</strong>=<strong>'export_csv'</strong>;
+          			</p>
+        		</note>
+      		</param>
 		</params>
 	</configuration>
 

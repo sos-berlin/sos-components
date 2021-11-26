@@ -9,7 +9,7 @@ import com.sos.jitl.jobs.common.JobArguments;
 public class SQLExecutorJobArguments extends JobArguments {
 
     public enum ResultSetAsVariables {
-        COLUMN_VALUE, NAME_VALUE
+        COLUMN_VALUE, NAME_VALUE, EXPORT_CSV
     }
 
     private JobArgument<Path> hibernateFile = new JobArgument<Path>("hibernate_configuration_file", true, Job.getAgentHibernateFile());
@@ -17,6 +17,9 @@ public class SQLExecutorJobArguments extends JobArguments {
     private JobArgument<ResultSetAsVariables> resultSetAsVariables = new JobArgument<ResultSetAsVariables>("resultset_as_variables", false);
     private JobArgument<Boolean> execReturnsResultset = new JobArgument<Boolean>("exec_returns_resultset", false, false);
     private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false, false);
+
+    // CSV/XML export
+    private JobArgument<Path> outputFile = new JobArgument<Path>("output_file", false);
 
     public JobArgument<Path> getHibernateFile() {
         return hibernateFile;
@@ -40,5 +43,9 @@ public class SQLExecutorJobArguments extends JobArguments {
 
     public Boolean getResultSetAsWarning() {
         return resultSetAsWarning.getValue();
+    }
+
+    public JobArgument<Path> getOutputFile() {
+        return outputFile;
     }
 }
