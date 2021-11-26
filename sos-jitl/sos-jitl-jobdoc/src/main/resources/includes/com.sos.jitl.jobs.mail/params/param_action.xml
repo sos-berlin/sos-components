@@ -21,7 +21,7 @@
 				With <paramref>body_as_attachment</paramref> you decide wether the body will be handled as an attachment and stored too.</li>
 				<!-- li><code>delete</code>: deletes the mail</li -->
 			</ul>
-			You can concatenate the actions by using a comma.
+			You can concatenate the actions by using a semicolon *;*.
         </p>
    	</note>
 </param>

@@ -11,7 +11,7 @@
         <title>Source folders</title>
         <p>
         	The name of the incoming box, which should be processed. 
-        	You can concatenate several folder names by using a comma. They will be handled one after the other.
+        	You can concatenate several folder names by using a semicolon *;*. They will be handled one after the other.
         </p>
    	</note>
 </param>
