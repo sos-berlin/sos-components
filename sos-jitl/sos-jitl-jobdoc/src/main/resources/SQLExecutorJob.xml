@@ -44,7 +44,7 @@
         		</note>
       		</param>
       		
-      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value','export_csv'">
+      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value','csv'">
         		<note>
           		<div xmlns="http://www.w3.org/1999/xhtml">
             	<strong>empty</strong><br/>
@@ -93,8 +93,9 @@
                		Jean=Dupont<br/>
             	</code>
             	<br/><br/>
-            	<strong>'export_csv'</strong><br/>
-            	If set to 'export_csv', the column names and all columns of the resultset will be written to the 'output_file' file.
+            	<strong>'csv'</strong><br/>
+            	If set to 'csv', the column names and all columns of the resultset will be written to the 'result_file' file.<br />
+            	Comma separated; delimiter is a double-quote "; 
             	<code>
                		"FIRST_NAME","LAST_NAME","AGE"<br/>
                		"John","Doe","30"<br/>
@@ -103,11 +104,11 @@
           		</div>
         		</note>
 			</param>
-			<param name="output_file" required="false" default_value="false" DataType="java.nio.file.Path">
+			<param name="result_file" required="false" default_value="false" DataType="java.nio.file.Path">
         		<note>
           			<p>
-            			The name of a output file.<br />
-            			Required by <strong>'resultset_as_variables'</strong>=<strong>'export_csv'</strong>;
+            			The parameter specifies the path to the result file.<br />
+            			This parameter is required if the parameter <strong>'resultset_as_variables'</strong> is used with a value <strong>'csv'</strong>.
           			</p>
         		</note>
       		</param>
