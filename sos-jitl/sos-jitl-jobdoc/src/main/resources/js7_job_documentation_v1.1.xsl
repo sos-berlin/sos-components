@@ -443,6 +443,9 @@
 
 					<xsl:variable name="defVal">
 						<xsl:choose>
+							<xsl:when test="@default_display_value and not(@default_display_value='')">
+								<xsl:value-of select="@default_display_value" />
+							</xsl:when>
 							<xsl:when test="@default_value and not(@default_value='')">
 								<xsl:value-of select="@default_value" />
 							</xsl:when>
