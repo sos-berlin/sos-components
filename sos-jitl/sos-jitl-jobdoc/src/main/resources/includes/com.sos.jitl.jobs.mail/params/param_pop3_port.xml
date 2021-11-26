@@ -4,11 +4,12 @@
 	xmlns:xi="http://www.w3.org/2001/XInclude" 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     name="mail.pop3.port" 
-    default_display_value="110 (without SSL) or 995 (with SSL)" 
+    default_display_value="110 (without SSL) or 995 (with SSL)"
+    default_value="110"
     required="false">
     <note>
         <title>POP3 mail server port</title>
-        <p>The default port depends on the connection with or without SSL; see <paramref>mail.pop3.ssl.enable</paramref></p>
+        <p>The default port depends on the connection with (993) or without SSL (110); see <paramref>mail.pop3.ssl.enable</paramref></p>
    	</note>
    	<xi:include href="../notes/note_param_order.xml" parse="xml" />
    	<note>

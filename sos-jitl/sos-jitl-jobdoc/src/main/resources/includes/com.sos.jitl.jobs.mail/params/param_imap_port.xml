@@ -8,7 +8,7 @@
     required="false">
     <note>
         <title>IMAP mail server port</title>
-        <p>The default port depends on the connection with or without SSL; see <paramref>mail.imap.ssl.enable</paramref></p>
+        <p>The default port depends on the connection with (143) or without SSL (993); see <paramref>mail.imap.ssl.enable</paramref></p>
    	</note>
    	<xi:include href="../notes/note_param_order.xml" parse="xml" />
    	<note>
