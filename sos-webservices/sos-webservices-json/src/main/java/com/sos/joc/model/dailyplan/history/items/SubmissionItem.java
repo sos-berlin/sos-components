@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "submissionTime",
-    "countTotal"
+    "countTotal",
+    "countSubmitted"
 })
 public class SubmissionItem {
 
@@ -43,6 +44,15 @@ public class SubmissionItem {
      */
     @JsonProperty("countTotal")
     private Long countTotal;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    private Long countSubmitted;
 
     /**
      * timestamp
@@ -92,14 +102,38 @@ public class SubmissionItem {
         this.countTotal = countTotal;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public Long getCountSubmitted() {
+        return countSubmitted;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public void setCountSubmitted(Long countSubmitted) {
+        this.countSubmitted = countSubmitted;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("submissionTime", submissionTime).append("countTotal", countTotal).toString();
+        return new ToStringBuilder(this).append("submissionTime", submissionTime).append("countTotal", countTotal).append("countSubmitted", countSubmitted).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(submissionTime).append(countTotal).toHashCode();
+        return new HashCodeBuilder().append(countTotal).append(submissionTime).append(countSubmitted).toHashCode();
     }
 
     @Override
@@ -111,7 +145,7 @@ public class SubmissionItem {
             return false;
         }
         SubmissionItem rhs = ((SubmissionItem) other);
-        return new EqualsBuilder().append(submissionTime, rhs.submissionTime).append(countTotal, rhs.countTotal).isEquals();
+        return new EqualsBuilder().append(countTotal, rhs.countTotal).append(submissionTime, rhs.submissionTime).append(countSubmitted, rhs.countSubmitted).isEquals();
     }
 
 }

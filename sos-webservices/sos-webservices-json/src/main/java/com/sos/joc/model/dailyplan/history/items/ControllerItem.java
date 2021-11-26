@@ -18,7 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "countTotal"
+    "countTotal",
+    "countSubmitted"
 })
 public class ControllerItem {
 
@@ -40,6 +41,15 @@ public class ControllerItem {
      */
     @JsonProperty("countTotal")
     private Long countTotal;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    private Long countSubmitted;
 
     /**
      * controllerId
@@ -89,14 +99,38 @@ public class ControllerItem {
         this.countTotal = countTotal;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public Long getCountSubmitted() {
+        return countSubmitted;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public void setCountSubmitted(Long countSubmitted) {
+        this.countSubmitted = countSubmitted;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("countTotal", countTotal).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("countTotal", countTotal).append("countSubmitted", countSubmitted).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllerId).append(countTotal).toHashCode();
+        return new HashCodeBuilder().append(countTotal).append(controllerId).append(countSubmitted).toHashCode();
     }
 
     @Override
@@ -108,7 +142,7 @@ public class ControllerItem {
             return false;
         }
         ControllerItem rhs = ((ControllerItem) other);
-        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(countTotal, rhs.countTotal).isEquals();
+        return new EqualsBuilder().append(countTotal, rhs.countTotal).append(controllerId, rhs.controllerId).append(countSubmitted, rhs.countSubmitted).isEquals();
     }
 
 }
