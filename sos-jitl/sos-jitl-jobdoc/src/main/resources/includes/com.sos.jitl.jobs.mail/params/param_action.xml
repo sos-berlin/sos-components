@@ -16,7 +16,7 @@
 				<li><code>dump</code>: stores the content of the mail into a file located in 
 				<paramref>mail_file_directory</paramref> where the filename is the messageId of the mail.</li>
 				<li><code>dump_attachments</code>: stores the attachments of the mail into files located 
-				in <paramref>mail_attachment_directory</paramref>.<br/>
+				in <paramref>mail_attachments_directory</paramref>.<br/>
 				With <paramref>attachment_file_name_pattern</paramref> you can specify the file names.<br/>
 				With <paramref>body_as_attachment</paramref> you decide wether the body will be handled as an attachment and stored too.</li>
 				<!-- li><code>delete</code>: deletes the mail</li -->
