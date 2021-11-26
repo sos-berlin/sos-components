@@ -71,6 +71,7 @@ public class SOSMailReceiver {
 		parseHost(props);
 		parsePassword(props);
 		parsePort(props);
+		LOGGER.info("port:" + port);
         if (!parseString("timeout", props).isPresent()) {
             props.put("mail." + protocol.name() + ".timeout", defaultTimeout);
         }
@@ -110,7 +111,7 @@ public class SOSMailReceiver {
 	
 	private void parsePort(Properties props) {
         if (port == null) {
-            parseString("port", props).ifPresent(val -> port =  Integer.valueOf(val));
+            parse("port", props).ifPresent(val -> port =  (Integer) val);
         }
     }
 	
@@ -122,6 +123,19 @@ public class SOSMailReceiver {
         }
         prop = props.getProperty("mail." + key);
         if (!SOSString.isEmpty(prop)) {
+            return Optional.of(prop);
+        }
+        return Optional.empty();
+    }
+	
+	private Optional<Object> parse(String key, Properties props) {
+        String propPrefix = "mail." + protocol.name() + ".";
+        Object prop = props.get(propPrefix + key);
+        if (prop != null) {
+            return Optional.of(prop);
+        }
+        prop = props.get("mail." + key);
+        if (prop != null) {
             return Optional.of(prop);
         }
         return Optional.empty();
