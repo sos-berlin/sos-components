@@ -80,7 +80,10 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 // continue;
                 // }
 
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, in, true);
+                FilterDailyPlannedOrders filter = getOrderFilter(API_CALL, controllerId, in, true);
+                if (filter == null) {
+                    continue;
+                }
                 Date plannedStartFrom = filter.getOrderPlannedStartFrom();
                 Date plannedStartTo = filter.getOrderPlannedStartTo();
 

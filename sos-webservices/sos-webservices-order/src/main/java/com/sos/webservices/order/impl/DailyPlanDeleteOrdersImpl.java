@@ -86,7 +86,10 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             DBInvalidDataException, InterruptedException, ExecutionException {
 
         for (String controllerId : allowedControllers) {
-            FilterDailyPlannedOrders filter = getOrderFilter(controllerId, in, true);
+            FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true);
+            if (filter == null) {
+                continue;
+            }
             filter.addState(DailyPlanOrderStateText.PLANNED);
 
             SOSHibernateSession session = null;

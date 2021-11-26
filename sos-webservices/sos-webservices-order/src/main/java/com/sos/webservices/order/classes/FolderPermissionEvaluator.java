@@ -88,7 +88,7 @@ public class FolderPermissionEvaluator {
         if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
             Set<Folder> permitted = addPermittedFolder(scheduleFolders, folderPermissions);
             if (permitted.isEmpty()) {
-                hasPermission = false;
+                // hasPermission = false; //maybe the schedules were deleted
             } else {
                 filter.addScheduleFolders(permitted);
             }
@@ -96,7 +96,7 @@ public class FolderPermissionEvaluator {
         if (workflowFolders != null && !workflowFolders.isEmpty()) {
             Set<Folder> permitted = addPermittedFolder(workflowFolders, folderPermissions);
             if (permitted.isEmpty()) {
-                hasPermission = false;
+                // hasPermission = false;
             } else {
                 filter.addWorkflowFolders(permitted);
             }

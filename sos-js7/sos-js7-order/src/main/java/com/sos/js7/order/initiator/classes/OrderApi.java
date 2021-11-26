@@ -90,11 +90,10 @@ public class OrderApi {
 
         if (freshOrders.containsKey(true) && !freshOrders.get(true).isEmpty()) {
             JControllerApi controllerApi = ControllerApi.of(controllerId);
-            if (Proxies.isCoupled(controllerId)) {
-                LOGGER.info(String.format("[%s][%s]%s coupled with proxy", method, controllerId, logSubmissionForDate));
-            } else {
-                LOGGER.info(String.format("[%s][%s]%s not coupled with proxy", method, controllerId, logSubmissionForDate));
-            }
+            final Set<OrderId> set = map.keySet();
+            String add = Proxies.isCoupled(controllerId) ? "" : "not ";
+            LOGGER.info(String.format("[%s][%s]%s[%scoupled with proxy]start submitting %s orders ...", method, controllerId, logSubmissionForDate,
+                    add, set.size()));
 
             final JControllerProxy proxy = Proxy.of(controllerId);
             proxy.api().addOrders(Flux.fromIterable(map.values())).thenAccept(either -> {
@@ -103,7 +102,7 @@ public class OrderApi {
                 }
 
                 if (either.isRight()) {
-                    Set<OrderId> set = map.keySet();
+                    // Set<OrderId> set = map.keySet();
                     SOSHibernateSession session = null;
                     try {
                         controllerApi.deleteOrdersWhenTerminated(set).thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, jocError,

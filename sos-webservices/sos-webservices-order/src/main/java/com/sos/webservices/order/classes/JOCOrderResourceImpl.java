@@ -46,7 +46,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         }
     }
 
-    protected FilterDailyPlannedOrders getOrderFilter(String controllerId, DailyPlanOrderFilter in, boolean selectCyclicOrders)
+    protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilter in, boolean selectCyclicOrders)
             throws SOSHibernateException {
         FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
@@ -92,6 +92,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
                 }
             }
         } else {
+            LOGGER.info(String.format("[%s][getOrderFilter][%s]missing permissions", caller, controllerId));
             return null;
         }
         return filter;

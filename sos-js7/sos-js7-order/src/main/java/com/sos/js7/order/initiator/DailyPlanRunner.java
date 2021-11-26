@@ -462,7 +462,15 @@ public class DailyPlanRunner extends TimerTask {
                 }
                 nonWorkingDays = new HashMap<String, String>();
 
-                Calendar calendar = getCalendar(controllerId, calendars.getCalendarName(), ConfigurationType.NONWORKINGDAYSCALENDAR);
+                Calendar calendar = null;
+                try {
+                    calendar = getCalendar(controllerId, calendars.getCalendarName(), ConfigurationType.NONWORKINGDAYSCALENDAR);
+                } catch (DBMissingDataException e) {
+                    LOGGER.warn(String.format("[%s][%s][%s][NonWorkingDayCalendar=%s][skip]not found", method, controllerId, dateAsString, calendars
+                            .getCalendarPath()));
+                    continue;
+                }
+
                 CalendarDatesFilter filter = new CalendarDatesFilter();
                 filter.setDateFrom(DailyPlanHelper.dateAsString(date, settings.getTimeZone()));
                 filter.setDateTo(DailyPlanHelper.dateAsString(nextDate, settings.getTimeZone()));
@@ -498,7 +506,6 @@ public class DailyPlanRunner extends TimerTask {
         Date nextDate = DailyPlanHelper.getNextDay(dailyPlanDate, settings);
 
         Map<String, CalendarCacheItem> calendarCache = new HashMap<String, CalendarCacheItem>();
-        DBItemDailyPlanSubmission item = null;
 
         OrderListSynchronizer synchronizer = new OrderListSynchronizer(settings);
         for (Schedule schedule : schedules) {
@@ -508,11 +515,6 @@ public class DailyPlanRunner extends TimerTask {
                             date, schedule.getPath()));
                 }
             } else {
-                if (item == null) {
-                    item = addDailyPlanSubmission(controllerId, dailyPlanDate);
-                    synchronizer.setSubmission(item);
-                }
-
                 generateNonWorkingDays(controllerId, schedule, dailyPlanDate, date);
 
                 for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
@@ -530,12 +532,19 @@ public class DailyPlanRunner extends TimerTask {
 
                     if (calendarCacheItem == null) {
                         calendarCacheItem = new CalendarCacheItem();
-                        Calendar calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
+                        Calendar calendar = null;
+                        try {
+                            calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
+                        } catch (DBMissingDataException e) {
+                            LOGGER.warn(String.format("[%s][%s][%s][WorkingDayCalendar=%s][skip]not found", method, controllerId, date,
+                                    assignedCalendar.getCalendarName()));
+                            continue;
+                        }
                         calendarCacheItem.calendar = calendar;
                         calendarCache.put(assignedCalendar.getCalendarName() + "#" + schedule.getPath(), calendarCacheItem);
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][calendar=%s][cache]%s", method, controllerId, date, assignedCalendar
+                            LOGGER.debug(String.format("[%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, date, assignedCalendar
                                     .getCalendarName(), SOSString.toString(calendarCacheItem)));
                         }
                     }
@@ -595,13 +604,17 @@ public class DailyPlanRunner extends TimerTask {
                                         schedule.setSubmitOrderToControllerWhenPlanned(settings.isSubmit());
                                     }
 
+                                    if (synchronizer.getSubmission() == null) {
+                                        synchronizer.setSubmission(addDailyPlanSubmission(controllerId, dailyPlanDate));
+                                    }
+
                                     PlannedOrder plannedOrder = new PlannedOrder();
                                     plannedOrder.setControllerId(controllerId);
                                     plannedOrder.setFreshOrder(freshOrder);
                                     plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
                                     plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
                                     plannedOrder.setPeriod(periodEntry.getValue());
-                                    plannedOrder.setSubmissionHistoryId(item.getId());
+                                    plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
                                     plannedOrder.setSchedule(schedule);
                                     if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {
                                         plannedOrder.setOrderName(variableSet.getOrderName());
