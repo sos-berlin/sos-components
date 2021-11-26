@@ -71,8 +71,7 @@ public class SOSMailReceiver {
 		parseHost(props);
 		parsePassword(props);
 		parsePort(props);
-		LOGGER.info("port:" + port);
-        if (!parseString("timeout", props).isPresent()) {
+		if (!parseString("timeout", props).isPresent()) {
             props.put("mail." + protocol.name() + ".timeout", defaultTimeout);
         }
 		
