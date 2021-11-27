@@ -6,41 +6,29 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 	
-    <job name="SQLPlusJob" title="Start SQL*Plus client and execute a sql*plus script">
+    <job name="SQLPLUSJob" title="Start SQL*Plus client and execute a sql*plus script">
         <script language="java" java_class="com.sos.jitl.jobs.db.oracle.SQLPLUSJob" resource="1"/>
     </job>
 
     <configuration> 
         <params id="job_parameter">
 
-             <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">
+            <param name="shell_command" required="true" default_value="sqlplus">
                 <note>
-                    <title>Ignore "ORA-" errors</title>
+                    <title>Path to the SQL*Plus Client</title>
                     <p>
-                        The value of this parameter are the numbers of the Oracle error messages that should not be interpreted as an error to specify.
-                        Multipe error numbers must be separated by a colon (;).
-                        The text "ORA-" may be omitted.
-                    </p>
-                </note>
-            </param>
-            <param name="ignore_sp2_messages" required="false" default_value="">
-                <note>
-                    <title>Ignore SQL*Plus Errors</title>
-                    <p>
-                        The value of this parameter are the numbers of the SQL*Plus error messages that should not be interpreted as an error to specify.
-                        Multipe error numbers must be separated by a colon (;).
-                        The text "SP2-" may be omitted.
-                    </p>
+                        The argument specifies the path to the SQL*Plus Client, frequently "slqplus".
+						The SQL statements of the job are processed by the SQL*Plus Client.
+					</p>
                 </note>
             </param>
 
-            <param name="shell_command" required="true" default_value="sqlplus">
+            <param name="command_line_options" required="false" default_value="-S -L">
                 <note>
-                    <title>Name of the SQL*Plus Client executable</title>
+                    <title>SQL*Plus Client Options</title>
                     <p>
-                        The value of this parameter specifies the name of the SQL*Plus client.
-						The SQL*Plus code is processed by the client.
-					</p>
+                        The value of this argument contains common command line options available for the SQL*Plus Client.
+                    </p>
                 </note>
             </param>
 
@@ -50,45 +38,122 @@
 
             <param name="db_user" required="false">
                 <note>
-                    <title>User-ID of the database user</title>
-                    <p>database user</p>
+                    <title>The user accocunt for access to the database</title>
+                    <p>
+                        Database user accounts can be retrieved from a credential store by use of the cs://path/entry@user property.
+                    </p>
                 </note>
             </param>
 
             <param name="db_password" required="false">
                 <note>
-                    <title>Password of the database user</title>
-                    <p>database password</p>
+                    <title>The password for access to the database</title>
+                    <p>
+                        Passwords for database accounts can be retrieved from a credential store by use of the cs://path/entry@password property.
+                    </p>
                 </note>
             </param>
 
-            <param name="command_Line_options" required="false" default_value="-S -L">
+            <param name="command_script_file" required="one of command or command_script_file">
                 <note>
-                    <title>SQL*Plus Client Options</title>
-                    <p>The value of this parameter contains the options which are available for the SQL*PLUS client on the command-line.</p>
+                	<title>Path to a file that contains the SQL statement(s)</title>
+                	<p>
+                    	SQL statements are specified from an input file to the SQL*Plus Client.
+                    	SQL statements included in a file have to be separated by a semicolon and a subsequent new line.
+                    </p>
+                    <p>
+                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
+                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
+                    	argument with the same name.
+                  	</p>
                 </note>
             </param>
 
             <param name="include_files" required="false" default_value="">
                 <note>
-                    <title>Code Fragments to include</title>
+                    <title>SQL Statements to include from files</title>
                     <p>
-                    	This parameter can be specified for code fragments, which are additional to execute the SQL*Plus code.
-                    	The SQL*Plus code is temporary extendes by these fragments.
-                        You must specify the names of files, separated by a semicolon, which contain the code fragments.
-                        The contents of the files will be temporaryl inserted at the beginning of the SQL*Plus codes.
+                    	This argument can be specified to embed additional SQL statements from files.
+                    	The SQL*Plus script is prepended the specified files.
+                        A number of files can be specified separated by a semicolon.
                     </p>
                 </note>
             </param>
+
+            <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">
+                <note>
+                    <title>Ignore "ORA-" Errors</title>
+                    <p>
+                        The value of this argument is a list of identifiers for Oracle server error messages that should be ignored.
+                        Multipe identifiers have to be separated by a semicolon (;).
+                        The prefix "ORA-" can be omitted.
+                    </p>
+                </note>
+            </param>
+
+            <param name="ignore_sp2_messages" required="false" default_value="">
+                <note>
+                    <title>Ignore SQL*Plus Errors</title>
+                    <p>
+                        The value of this argument is alist of identifiers for Oracle SQL*Plus error messages that should be ignored.
+                        Multipe identifiers have to be separated by a semicolon (;).
+                        The prefix "SP2-" can be omitted.
+                    </p>
+                </note>
+            </param>
+
+            <param name="credential_store_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Database File</title>
+                    <p>
+                        The path to the KeepPass database file that contains the credentials for access to the database.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?file=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_key_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Key File</title>
+                    <p>
+                        The path to the KeePass key file that represents the key for access to the credential store.
+                        This requires a key file to be assigned the KeePass database file. If no KeePass key file is specified, 
+                        the the file name is assumed from the basename of the KeePass database file and the extension .key.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_entry_path" required="false">
+                <note>
+                    <title>Path to entries in the Credential Store</title>
+                    <p>
+                        The argument is used to specify a common path that is added to all entries.<br/>
+                        Example: <br/>
+                        credential_store_entry_path=/sos/jobscheduler<br/>
+                        password=cs://mydb@password<br/>
+                        In the KeePass database the entry is found in /sos/jobscheduler/mydb@password.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?entry_path=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+
         </params>
 
         <params id="return_parameter">
             <param name="sql_error" required="false" default_value="">
                 <note>
-                    <title>Error Messages of the client or the server</title>
+                    <title>Error Messages of the SQL*Plus Client or the database server</title>
                     <p>
-                     	If during the execution of the code one (or more) errors occurs, the error-text will be stored on this variable in the order.
-                        If no error occurs then the contents of the variable will remain empty.
+                        If errors occur during execution of SQL statements then the error messages will be stored with the
+                        "sql_error" result order variable in the order of occurrence.
+                        If no errors occur then the value of the variable is empty.
                     </p>
                 </note>
             </param>
@@ -101,100 +166,98 @@
 
     <documentation>
             
-	>    <note>
+	    <note>
 	        <title>What is the purpose of this job?</title>
 	        <p>
 	        	The job executes a SQL*Plus script.
-	            The job runs the SQL*Plus client in a separate process.
+	            The job runs the SQL*Plus Client in a separate process.
 	            It keeps the job in control of the program flow.
 	        </p>
 	    </note>
 	    
 	    <note>
-	        <title>How is the script defined?</title>
+	        <title>How is the SQL script defined?</title>
 	        <p>
-	        	The script can be saved to a separate file.
-	            Or it can be specified as the value of the parameter <paramref> command_script_file </paramref>.
+                SQL statements are stored to a separate file that is specified by the <paramref>command_script_file</paramref> argument.
 	        </p>
 	        <p>
-				Before the SQL*Plus client is launched for execution of the script, the script is modified by the job.
+				Before the SQL*Plus Client is launched for execution of the SQL script, the following steps are applied
 				First, for each parameter a "DEFINE" directive is generated.
 				These directives are written to a temporary file.
-				Thereafter, the specified code fragments (see <paramref> include_files </paramref>) as the next block in the
-				temporary file is copied.
-				Subsequently, all directly specified name of JobScheduler parameters are substituted by their current value.
-				The script is written as the last part to the temporary file.
+				Thereafter, the specified additional files (see <paramref>include_files</paramref>) are copied to the
+				temporary file.
+                Then the original SQL script file is added to the temporary file.
+				Subsequently, all variables specified directly with SQL statements are substituted by arguments values.
+				Finally the temporary file is used for execution with the SQL*Plus Client.
 			</p>
-			<p>
-				With the temporary file as input the client is started.
-			</p>
-	    </note>
-	
+	    </note>	
 	   
 	    <note>
-	        <title>How is it possible to use parameter in scripts?</title>
+	        <title>How is it possible to use parameters in SQL scripts?</title>
 			<p>
-	     		Parameters of the job, job or order parameters, can be used in the script in two ways.
-	     		Firstly, all parameters of their name, apply with a preceding "&amp;" in the script.
-	     		They are defined as SQL*Plus variables by the job.
-	     		The job created for each parameter a "DEFINE" directive.
+	     		Order variables can be used in the SQL script in two ways:
+            </p>
+            <p>
+	     		First, all arguments can be used in SQL*Plus statements with their name being preceeded with an ampersand "&amp;".
+	     		The arguments are defined as SQL*Plus variables by the job.
+	     		The job creates a "DEFINE" directive for each argument.
 	     	</p>
 	     	<p>
-	     		Secondly, the name of the JobScheduler parameters are used directly in the script.
-	     		These names are then replaced by the current value of the parameter.
+	     		Second, the names of arguments can be used directly in the SQL script.
+	     		The names are replaced by value of the respective argument.
 	     	</p>
 	   	</note>
 	    
 	    <note>
-	        <title>How do I access stdout and stderr?</title>
+	        <title>How do I access stdout and stderr channels?</title>
 	        <p>
-	        	The contents of STDOUT and STDERR are as values of the corresponding order parameters of the job transferred to the order.
-	     		Thus, every subsequent step in a job chain has access to this information.
+	        	The contents of the stdout and stderr channels are available from values of the corresponding result order variables.
+	     		Any subsequent jobs and instructions in a workflow can access the result order variables.
 			</p>
 	    </note>
 	    
 	    <note>
 	        <title>How can results be reused in subsequent jobs?</title>
-	        <p>
-	        	The job transfers the appropriate parameters in the order.
-	     		The first of these are static parameters, such as those in the template docu described in the section "return parameters".
-	     		On the other hand, these are dynamic parameters.
-	     		The job analyzing the output of the script, and extracted there from using a regular expression, both
-	     		Names and the values of these parameters.
-	     		The regular expression is defined by the parameter <paramref>variable_parser_reg_exp</paramref>.
-	        </p>
-	        <p>
-	        	These parameters are readable by all jobs in all job steps.
-	     		The value of the parameter can be changed by other jobs.
-	        </p>
+            <p>
+                To report return values the job adds result order variables.
+                The first set of variables is static in the sense that variables are always provided, such as the
+                variables explained with section "return variables".
+                In addition, order variables can be added dynamically.
+                The job parses output of the process and extracts variable names and values using a regular expression.
+                The regular expression is defined with the <paramref>variable_parser_reg_exp</paramref> argument.
+            </p>
+            <p>
+                Result order variables are available to jobs and instructions in subsequent nodes of a workflow.
+                The values of resul order variables can be modified by subsequent jobs and instructions.
+            </p>            
 	    </note>
 	    
 	    <note>
-	        <title>How are errors are detected and treated?</title>
+	        <title>How are errors detected and handled?</title>
 	        <p>
-	        	The job can detect errors that are reported by the SQL * Plus client.
-	     		These have a number that starts with the string "SP2".
+	        	The job detects errors reported by the SQL*Plus Client.
+	     		Such errors use an identifier starting with the string "SP2-" followed by a number.
 	     	</p>
 	     	<p>
-	     		Moreover, the job can detect errors that the DB server reported during or after the execution of the script.
-	     		These begin with the string "ORA" and then also contain a number.
+	     		In addition, the job detects errors reported by the database server on execution of the SQL script.
+	     		Such errors use an identifier starting with the string "ORA-" followed by a number.
 	     	</p>
 	     	<p>
-	     		Occurs either SP2 or an ORA-error occurs, the job is terminated abnormally.
-	     		A return code of 98 is set.
+	     		If SP2-* or ORA-* errors occur then the job is terminated abnormally.
+	     		A return code 98 is set.
 	     	</p>
 	     	<p>
-	     		Additionally, the error message is as value of the parameter <paramref> sql_error </paramref> stored in the order parameters.
+	     		In addition, the error message is reported as the value of the <paramref>sql_error</paramref> result order variable.
 	     	</p>
 	    </note>
 	   
 	    <note>
-	        <title>Errors may be ignored?</title>
+	        <title>Can errors be ignored?</title>
 	        <p>
 				It is possible to ignore errors.
-	  			There are parameters <paramref>ignore_sp2_messages</paramref> and <paramref>ignore_ora_messages</paramref>.
-				There the numbers of ignored errors are specified as values.
-	    		The error messages are contained in the STDOUT, even if they are ignored.
+	  			The <paramref>ignore_sp2_messages</paramref> and <paramref>ignore_ora_messages</paramref> arguments can be used to this purpose.
+				The identifiers of the respective errors to be ignored are specified as the values of the arguments.
+	    		Error messages are available with the stdout channel, even if they are ignored.
 	    	</p>
 	    </note>
 	
@@ -221,14 +284,14 @@ exit;
 </embeddedExample>
 	
 				<explanation>
-					<title>Example: SQL*Plus script</title>
+					<title>Example: SQL*Plus Script</title>
 	            	<p>
-	            		The following parameters are returned to the order
-	              		(see the parameter <paramref>variable_parser_reg_expr</paramref>).
-	              		For this purpose, the output of the script is parsed with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
+	            		The following order variables are returned,
+	              		see the <paramref>variable_parser_reg_expr</paramref> agument.
+	              		To this purpose, the output of the script is parsed with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
 	            	</p>
 	            	<p>
-	             		In the above example the following parameters are returned:
+	             		In the above example the following result order variables are returned:
 	            	</p>
 	            	<p>
 	            		<ul>
@@ -237,7 +300,9 @@ exit;
 	                		<li>period_prev=0</li>
 	           			</ul>
 	            	</p>
-	            	<p>If a parameter is set several times then the last value is used as the order parameter.</p>
+	            	<p>
+                        If a resulting order variables is set a number of times then the last assignment.
+                    </p>
 				</explanation>
 			</codeexample>
 		</p>

@@ -18,41 +18,43 @@
       		<param name="command" required="true" DataType="java.lang.String">
         		<note>
           			<p>
-            		Database Commands for the Job. It is possible to define more than one instruction in the COMMAND field.
-            		Such instructions  are then carried out in the order in which they are written
-            		and must be separated by a semicolon and a subsequent new line.
-            		Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
-            		at any given point in a command. This variable is then given the value of the
-            		instruction parameter with the name [param] before execution.
-          			</p>
+                        The argument holds SQL statements of the Job.
+                    	It is possible to specify more than one SQL statement with the "command" argument.
+                    	Such SQL statements are then carried out in the specified order
+                    	and have to be separated by a semicolon and a subsequent new line.
+                    </p>
+                     <p>
+                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
+                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
+                    	job argument with the same name.
+                  	</p>
         		</note>
       		</param>
       		
       		<param name="resultset_as_warning" required="false" default_value="false" DataType="java.lang.Boolean">
         		<note>
-          			<p>If set to true, a warning will be issued, if the statements produce a result.</p>
+          			<p>If set to true, a warning will be issued if the SQL statement(s) create a result set.</p>
         		</note>
       		</param>
       		
       		<param name="exec_returns_resultset" required="false" default_value="false" DataType="java.lang.Boolean">
         		<note>
           			<p>
-            			If stored procedures are called which return a result set, 
-            			this needs to be set to true in order to run the stored procedure as a query.
-            			This does not work with the SQL Server 2000 and 2005 jdbc drivers.
+            			If stored procedures are called that return a result set then
+            			the argment has to be set to "true" in order to run stored procedure as queries.
           			</p>
         		</note>
       		</param>
       		
-      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value','export_csv'">
+      		<param name="resultset_as_variables" required="false" default_value="" DataType="java.lang.String" valuelist="'column_value','name_value','csv'">
         		<note>
           		<div xmlns="http://www.w3.org/1999/xhtml">
-            	<strong>empty</strong><br/>
-            	No output parameters are generated.<br/><br/>
-            	<strong>'column_value'</strong><br/>
-            	If set to 'column_value', the first row of the resultset will be set as order parameters
-            	(using the column names as parameter names). Example:<br/>
-            	The query "SELECT first_name, last_name, age FROM persons" produces the following result set:<br/>
+            	<strong>Argument value: empty</strong><br/>
+            	No result order variables are created.<br/><br/>
+            	<strong>Argument value: column_value'</strong><br/>
+            	If set to 'column_value', the first row of the result set will be used to create result order variables
+            	(using column names as variable names). Example:<br/>
+            	The query "SELECT first_name, last_name, age FROM persons" creates the following result set:<br/>
             	<table class="explanation">
               	<tr>
                   	<th>first_name</th>
@@ -75,26 +77,27 @@
                 	<td>56</td>
               	</tr>
             	</table>
-            	The following name/value pairs will be generated as order parameters:<br/>
+            	The following name/value pairs will be created as result order variables:<br/>
             	<code>
                		first_name=John<br/>
                		last_name=Doe<br/>
                		age=30<br/>
             	</code>
             	<br/><br/>
-            	<strong>'name_value'</strong><br/>
-            	If set to 'name_value', the first two columns of the resultset will be turned into order parameters.
-            	The values of the first column will become parameter names, the values of the second column will become
-            	parameter values. Example:<br/>
-            	From the above resultset, the following name/value pairs will be generated as order parameters:<br/>
+            	<strong>Argument value: name_value</strong><br/>
+            	If set to 'name_value', the first two columns of the result set will be turned into result order variables.
+            	The values of the first column will become variable names, the values of the second column will become
+            	variable values. Example:<br/>
+            	From the above result set, the following name/value pairs will be created as result order variables:<br/>
             	<code>
                		John=Doe<br/>
                		Hans=Mustermann<br/>
                		Jean=Dupont<br/>
             	</code>
             	<br/><br/>
-            	<strong>'export_csv'</strong><br/>
-            	If set to 'export_csv', the column names and all columns of the resultset will be written to the 'output_file' file.
+            	<strong>Argument value: csv</strong><br/>
+            	If set to 'csv', the column names and all columns of the result set will be written to the file
+                specified with the <paramref>output_file</paramref> argument.
             	<code>
                		"FIRST_NAME","LAST_NAME","AGE"<br/>
                		"John","Doe","30"<br/>
@@ -106,8 +109,8 @@
 			<param name="output_file" required="false" default_value="false" DataType="java.nio.file.Path">
         		<note>
           			<p>
-            			The name of a output file.<br />
-            			Required by <strong>'resultset_as_variables'</strong>=<strong>'export_csv'</strong>;
+            			The path to an output file.<br />
+            			Required by the <paramref>resultset_as_variables</paramref> argument when used with the value <strong>'csv'</strong>.
           			</p>
         		</note>
       		</param>
@@ -116,7 +119,7 @@
 
 	<documentation>
    		<div xmlns="http://www.w3.org/1999/xhtml">
-    	This job executes statements in a database. These can be database procedures or SQL statements.
+            This job executes SQL statements in a database. This includes SQL stored procedures and SQL statements.
    		</div>
   	</documentation>
 </description>

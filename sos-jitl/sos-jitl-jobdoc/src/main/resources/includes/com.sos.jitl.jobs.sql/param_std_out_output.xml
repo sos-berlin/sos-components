@@ -5,9 +5,9 @@
     name="std_out_output" required="false">
  
     <note>
-        <title>Content of STDOUT</title>
+        <title>Content of stdout</title>
         <p>
-        The output of the process into STDOUT is reported as the value of this parameter.
+        The output of the process to the stdout channel is reported from the value of this variable.
         </p>
     </note>
 </param>

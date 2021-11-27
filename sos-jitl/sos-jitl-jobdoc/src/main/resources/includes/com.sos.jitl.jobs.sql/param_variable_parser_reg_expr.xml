@@ -12,11 +12,11 @@
  
         <note>
 		    <title>Regular Expression for Parameter parsing</title>
-          <p>The script output will parse with this regular expression. The hits are available as order parameters.
+          <p>The process output is parsed using this regular expression. Any matches are available as order variables.
           </p>
           <ul>
-            <li>The regular expression must have two groups.</li>
-            <li>The first group for the parameter name and the second for the value.</li>
+            <li>The regular expression has to include two groups.</li>
+            <li>The first group states the variable name and the second group states the value.</li>
           </ul>
           <p>
           The 'prompt' in SQL*Plus writes the output. Example:
@@ -40,8 +40,8 @@
             end;
                </pre>
              <ul>
-               <li>variable_parser_reg_expr="^SET\s+([^\s]+)\s*IS\s+(.*)$" returns the order parameter "hello=world"</li>
-               <li>variable_parser_reg_expr="^([^=]+)\s*=\s+(.*)$" returns the order parameter "foo=bar"</li>
+               <li>variable_parser_reg_expr="^SET\s+([^\s]+)\s*IS\s+(.*)$" returns the order variable assignment "hello=world"</li>
+               <li>variable_parser_reg_expr="^([^=]+)\s*=\s+(.*)$" returns the order variable assignment "foo=bar"</li>
              </ul>
 
         </note>

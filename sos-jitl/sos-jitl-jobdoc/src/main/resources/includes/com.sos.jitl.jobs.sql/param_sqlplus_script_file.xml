@@ -56,11 +56,9 @@ exit;
 </embeddedExample>
  
 <explanation>
-<title>Parameter value with many lines</title>
+<title>Multi-line argument values</title>
 <p>
-The value of a parameter can be arranged in lines.
-It should be noted (as well as otherwise) that xml specific characters must be converted to entities in order
-obtain the well-formedness of XML.
+An argument value can include line breaks.
 </p>
 </explanation>
 </codeexample>
@@ -68,7 +66,7 @@ obtain the well-formedness of XML.
 <codeexample type="xml">
 <embeddedExample>
         ...
-        &lt;param  name="command_script_file" value="./config/live/sqlplus/sqlplus2.sql"/>
+        &lt;param  name="command_script_file" value="./config/scripts/sqlplus/sqlplus2.sql"/>
         ...
 </embeddedExample>
  

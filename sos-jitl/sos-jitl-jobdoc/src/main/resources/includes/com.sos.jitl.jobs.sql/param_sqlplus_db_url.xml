@@ -7,15 +7,13 @@
 	DataType="SOSOptionString">
 	 
 	<note>
-		<title>SID of the database connection</title>
-
+		<title>Service ID of the Database</title>
 		<p>
-               The database connection is formed with  the parameters db_url, <paramref>db_user</paramref> and <paramref>db_password</paramref>: db_user/db_password@db_url, e.g.
+               The database connection is specified by the job with the <paramref>db_url</paramref>, <paramref>db_user</paramref> and <paramref>db_password</paramref>
+               arguments lke this: db_user/db_password@db_url, for example:
         </p>
         <pre>
                sys/sys_admin@localhost as sysdba
-               
-               scheduler/scheduler@scheduler
         </pre>
     </note>
     
