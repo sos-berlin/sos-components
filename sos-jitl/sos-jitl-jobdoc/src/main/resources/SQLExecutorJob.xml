@@ -97,7 +97,7 @@
             	<br/><br/>
             	<strong>Argument value: csv</strong><br/>
             	If set to 'csv', the column names and all columns of the result set will be written to the file
-                specified with the <paramref>output_file</paramref> argument.
+                specified with the <paramref>output_file</paramref> argument enclosed with double quotes and separated by a comma.
             	<code>
                		"FIRST_NAME","LAST_NAME","AGE"<br/>
                		"John","Doe","30"<br/>
@@ -109,7 +109,7 @@
 			<param name="output_file" required="false" default_value="false" DataType="java.nio.file.Path">
         		<note>
           			<p>
-            			The path to an output file.<br />
+            			The path to the output file that holds the result set in csv format.<br />
             			Required by the <paramref>resultset_as_variables</paramref> argument when used with the value <strong>'csv'</strong>.
           			</p>
         		</note>
