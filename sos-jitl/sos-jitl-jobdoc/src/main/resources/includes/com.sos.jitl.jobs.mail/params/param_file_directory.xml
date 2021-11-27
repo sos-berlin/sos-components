@@ -6,10 +6,10 @@
     name="mail_file_directory" 
     required="false">
     <note>
-        <title>Directory on the file system for dumping mails</title>
+        <title>Directory in the file system for dumping mails</title>
         <p>
-        	This parameter is required if <paramref>mail_action</paramref> is <code>dump</code>.<br/> 
-        	The directory must exist and be writable. The job does not create the directory.
+        	This argument is required if the <paramref>mail_action</paramref> agument is used with the  <code>dump</code> value.<br/> 
+        	The directory has to exist and has to be writable. The job does not create the directory.
         </p>
    	</note>
 </param>

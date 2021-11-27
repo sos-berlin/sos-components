@@ -15,7 +15,7 @@
    	<note>
         <ul>
         	<li><code>mail.pop3.port</code> from system properties</li>
-        	<li><code>mail.port</code> from Job or Order parameters</li>
+        	<li><code>mail.port</code> from order variables</li>
         	<li><code>mail.port</code> from system properties</li>
         </ul>
    	</note>

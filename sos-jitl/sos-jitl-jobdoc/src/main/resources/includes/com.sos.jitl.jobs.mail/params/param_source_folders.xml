@@ -10,8 +10,9 @@
     <note>
         <title>Source folders</title>
         <p>
-        	The name of the incoming box, which should be processed. 
-        	You can concatenate several folder names by using a semicolon *;*. They will be handled one after the other.
+        	The path to a folder in the incoming mail box that should be processed.
+            The path can be a folder name such as "Drafts" or a folder hierarchy such as "public/com/Junk". The path is considered being case sensitive.
+        	You can concatenate a number of folders by use of a semicolon ";". Folders are handled in the order of occurrence with the argument.
         </p>
    	</note>
 </param>

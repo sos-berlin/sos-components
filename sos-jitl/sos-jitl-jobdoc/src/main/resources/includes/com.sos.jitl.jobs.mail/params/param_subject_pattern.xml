@@ -8,7 +8,7 @@
     <note>
         <title>Checks the <i>Subject</i> field of a mail</title>
         <p>
-        	This filter checks the <i>Subject</i> field of a mail with a regular expression.
+        	This filter checks if the <i>Subject</i> field of a mail matches a regular expression.
         	Only mails matching this expression will be processed.
         	If you want to use substrings, you can use the <paramref>mail_subject_filter</paramref> parameter. 
         </p>

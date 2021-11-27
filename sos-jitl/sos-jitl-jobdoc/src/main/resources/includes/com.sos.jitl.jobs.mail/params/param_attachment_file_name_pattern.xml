@@ -9,14 +9,14 @@
     <note>
         <title>File name of the attachment</title>
         <p>
-        	This parameter is considered if <paramref>mail_action</paramref> is <code>dump_attachments</code>.<br/> 
+        	This argument is considered if the <paramref>mail_action</paramref> argument is used with the <code>dump_attachments</code> value.<br/> 
         	The following patterns will be substituted:
         	<ul>
         		<li>${filename}</li>
         		<li>${subject}</li>
         		<li>${messageId}</li>
         	</ul>
-        	If the file name already exists then "_nr" will be added where nr is a running number. 
+        	If the file exists then an underscore "_" and a running number will be added.
         </p>
    	</note>
 </param>

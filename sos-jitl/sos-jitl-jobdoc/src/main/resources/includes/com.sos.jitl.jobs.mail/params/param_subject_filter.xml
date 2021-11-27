@@ -6,11 +6,11 @@
     name="mail_subject_filter" 
     required="false">
     <note>
-        <title>Checks te <i>Subject</i> field of a mail</title>
+        <title>Checks the <i>Subject</i> field of a mail</title>
         <p>
-        	This filter checks if the given value is exactly (case sensitive) a substring of the <i>Subject</i> field of a mail.
-        	Only mails having this substring will be processed.
-        	If you want to use regular expressions, you can use the <paramref>mail_subject_pattern</paramref> parameter. 
+        	This filter checks if the given value matches exactly (case sensitive) a substring of the <i>Subject</i> field of a mail.
+        	Only mails using this substring in the <i>Subject</i> will be processed.
+        	To use regular expression, apply the <paramref>mail_subject_pattern</paramref> argument. 
         </p>
    	</note>
 </param>

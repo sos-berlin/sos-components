@@ -10,8 +10,8 @@
         <title>maximum number of processed mails</title>
         <p>
         	This is the first filter.
-        	The most recent mails, e.g. 1000, are read for each folder specified in <paramref>mail_source_folders</paramref>.
-        	All further filters are applied to this set.
+        	The most recent mails, e.g. 1000, are read for each folder specified with the <paramref>mail_source_folders</paramref> argument.
+        	Any further filters are applied to this set.
         </p>
    	</note>
 </param>

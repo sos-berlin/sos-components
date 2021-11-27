@@ -8,8 +8,8 @@
     <note>
         <title>Checks the <i>From</i> field of a mail</title>
         <p>
-        	This filter checks if the given value is exactly (case sensitive) a substring of the <i>From</i> field of a mail.
-        	Only mails having this substring will be processed.
+        	This filter checks if the given value matches exactly (case sensitive) a substring of the <i>From</i> field of a mail.
+        	Only mails using this substring in the <i>From</i> field will be processed.
         </p>
    	</note>
 </param>

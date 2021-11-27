@@ -6,164 +6,246 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-  <job name="MailJob" title="Send Mail">
-    <script language="java" java_class="com.sos.jitl.jobs.mail.MailJob" resource="1" />
-  </job>
-  <configuration>
-    <params id="job_parameter">
-      <note>
-        <div xmlns="http://www.w3.org/1999/xhtml">The parameters for this job may be set as job arguments or order variables</div>
-      </note>
-      <param name="to" required="true">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail recipient(s)</div>
-        </note>
-      </param>
-      <param name="from" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail address of the sender</div>
-        </note>
-      </param>
-      <param name="from_name" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Name of the sender</div>
-        </note>
-      </param>
-      <param name="reply_to" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Reply address</div>
-        </note>
-      </param>
-      <param name="cc" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Cc recipient(s)</div>
-        </note>
-      </param>
-      <param name="bcc" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Bcc recipient(s)</div>
-        </note>
-      </param>
-      <param name="subject" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail subject</div>
-        </note>
-      </param>
-      <param name="mail.smtp.host" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail server host</div>
-        </note>
-      </param>
-      <param name="mail.smtp.port" required="false" default_value="25">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail server port</div>
-        </note>
-      </param>
-      <param name="mail.smtp.user" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">SMTP user account</div>
-        </note>
-      </param>
-      <param name="mail.smtp.password" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">SMTP user password</div>
-        </note>
-      </param>
-      <param name="security_protocol" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">SMTP protocol (smtp, smtps)</div>
-        </note>
-      </param>
-      <param name="body" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Mail body</div>
-        </note>
-      </param>
-      <param name="content_type" required="false" default_value="text/plain">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Content type of the mail (text/plain, text/html...)</div>
-        </note>
-      </param>
-      <param name="encoding" required="false" default_value="7bit">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Encoding of the mail (7bit, Quoted-Printable, Base64)</div>
-        </note>
-      </param>
-      <param name="charset" required="false" default_value="iso-8859-1">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Character set of the mail</div>
-        </note>
-      </param>
-      <param name="attachment_content_type" required="false" default_value="application/octet-stream">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Content type of attachments (application/octet-stream, application/pdf...)</div>
-        </note>
-      </param>
-      <param name="attachment_encoding" required="false" default_value="Base64">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Encoding of attachments (7bit, Quoted-Printable, Base64)</div>
-        </note>
-      </param>
-      <param name="attachment_charset" required="false" default_value="iso-8859-1">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">Character set of attachments</div>
-        </note>
-      </param>
-      <param name="attachment" required="false">
-        <note>
-          <div xmlns="http://www.w3.org/1999/xhtml">File name and path of attachment(s) (multiple attachments are separated by ";")</div>
-        </note>
-      </param>
+    <job name="MailJob" title="Send Mail">
+        <script language="java" java_class="com.sos.jitl.jobs.mail.MailJob" resource="1" />
+    </job>
+    <configuration>
+        <params id="job_parameter">
+            <note>
+                <div xmlns="http://www.w3.org/1999/xhtml">The parameters for this job may be set as job arguments or order variables</div>
+            </note>
+
+            <param name="to" required="true">
+                <note>
+                    <title>E-mail address of mail recipient(s)</title>
+                    <p>
+                        List of mail recipient's e-mail address, a number of e-mail addresses are separated by comma.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="from" required="false">
+                <note>
+                    <title>E-mail address of the sender</title>
+                    <p>
+                        E-mail address used for sending mail.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="from_name" required="false">
+                <note>
+                    <title>Name of the sender</title>
+                    <p>
+                        The free-text name of the account that sends mail.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="reply_to" required="false">
+                <note>
+                    <title>Reply address</title>
+                    <p>
+                        If no replies should be accepted then typically use an e-mail address such as 
+                        no-reply@example.com is used for the respective domain.
+                        Otherwise a valid mail address can be specified to receive replies.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="cc" required="false">
+                <note>
+                    <title>Cc recipient(s)</title>
+                    <p>
+                        E-mail address of carbon copy recipient, multiple e-mail addresses are separated by comma.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="bcc" required="false">
+                <note>
+                    <title>Bcc recipient(s)</title>
+                    <p>
+                        E-mail address of blind carbon copy recipient, multiple e-mail addresses are separated by comma.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="subject" required="false">
+                <note>
+                    <title>Mail Subject</title>
+                    <p>
+                        The mail subject, consider to use ASCII 7bit characters.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="body" required="false">
+                <note>
+                    <title>Mail Body</title>
+                    <p>
+                        The mail body specified as plain text or HTML depending on the "content_type" setting.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="content_type" required="false" default_value="text/plain">
+                <note>
+                    <title>Content Type (text/plain, text/html)</title>
+                    <p>
+                        A content type text/plain specifies plain text mail, a content type text/html specifies use of HTML mail.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="encoding" required="false" default_value="7bit">
+                <note>
+                    <title>Encoding of the mail (7bit, Quoted-Printable, Base64)</title>
+                    <p>
+                        The character encoding of subject and body, by default ASCII 7bit is used.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="charset" required="false" default_value="iso-8859-1">
+                <note>
+                    <title>Character set of the mail</title>
+                    <p>
+                        By default Latin 1 (iso-8859-1) is used.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="attachment" required="false">
+                <note>
+                    <title>Path to attachment(s)</title>
+                    <p>
+                        The path to a file to be attached, multiple files are separated by a semicolon.
+                    </p>
+                </note>
+            </param>
       
-  	  <param name="credential_store_file" required="false">
-        <note>
-        	<title>Location of the Credential Store database file</title>
-        	<p>
-            	The name of the KeePass database file.
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the URL with ?file=
-          	</p>
-        </note>
-      </param>
-	  
-      <param name="credential_store_key_file" required="false">
-        <note>
-        	<title>Location of the Credential Store key file</title>
-          	<p>
-            	The name of the KeePass key file that contains the key
-            	for access to the KeePass database file (if a key file is assigned to KeePass database file). 
-            	If no KeePass key file is specified, then the file name is assumed from the basename of the KeePass database file and the extension .key.
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the URL with ?keyfile=
-          	</p>
-        </note>
-      </param>
-	  
-      <param name="credential_store_entry_path" required="false">
-        <note>
-        	<title>Path for the entries in the KeePass file</title>
-          	<p>
-           		To speciy a path for all entries. This allows shorter values for references to the Credential Store.<br/>
-		   		Example: <br/>
-		   		credential_store_entry_path=/sos/jobscheduler<br/>
-		   		value for password: cs://myMail<br/>
-		   		In the KeePass file you find the entry in /sos/jobscheduler/myMail
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the URL with ?entry_path=
-          	</p>
-        </note>
-      </param>
+            <param name="attachment_content_type" required="false" default_value="application/octet-stream">
+                <note>
+                    <title>Content type of attachments (application/octet-stream, application/pdf, ...)</title>
+                    <p>
+                        The attachment content-type typically allows binary files.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="attachment_encoding" required="false" default_value="Base64">
+                <note>
+                    <title>Encoding of attachments (7bit, Quoted-Printable, Base64)</title>
+                    <p>
+                        Typically attached files are encoded with printable base64 characters.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="attachment_charset" required="false" default_value="iso-8859-1">
+                <note>
+                    <title>Character set of attachments</title>
+                    <p>
+                        By default Latin 1 (iso-8859-1) is used.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="security_protocol" required="false">
+                <note>
+                    <title>Mail server SMTP protocol (smtp, smtps)</title>
+                    <p>
+                        The protocol to be used, defaults to "smtp".
+                    </p>
+                </note>
+            </param>
+        
+            <param name="mail.smtp.host" required="false">
+                <note>
+                    <title>Mail server host</title>
+                    <p>
+                        The hostname or IP address of the SMTP server.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="mail.smtp.port" required="false" default_value="25">
+                <note>
+                    <title>Mail server port</title>
+                    <p>
+                        The port of the SMTP server.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="mail.smtp.user" required="false">
+                <note>
+                    <title>SMTP user account</title>
+                    <p>
+                        The user account to be used in case that the SMTP server requires authentication.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="mail.smtp.password" required="false">
+                <note>
+                    <title>SMTP user account password</title>
+                    <p>
+                        The password to be used for the user account in case that the SMTP server requires authentication.
+                    </p>
+                </note>
+            </param>
+        
+            <param name="credential_store_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Database File</title>
+                    <p>
+                        The path to the KeepPass database file that contains the credentials for access to the database.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?file=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_key_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Key File</title>
+                    <p>
+                        The path to the KeePass key file that represents the key for access to the credential store.
+                        This requires a key file to be assigned the KeePass database file. If no KeePass key file is specified, 
+                        the the file name is assumed from the basename of the KeePass database file and the extension .key.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_entry_path" required="false">
+                <note>
+                    <title>Path to entries in the Credential Store</title>
+                    <p>
+                        The argument is used to specify a common path that is added to all entries.<br/>
+                        Example: <br/>
+                        credential_store_entry_path=/sos/jobscheduler<br/>
+                        password=cs://mydb@password<br/>
+                        In the KeePass database the entry is found in /sos/jobscheduler/mydb@password.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?entry_path=</code> query parameter.
+                    </p>
+                </note>
+            </param>
       
-    </params>
+        </params>
     
-  </configuration>
-  <documentation>
+    </configuration>
+    <documentation>
   		<p>
       		This job is used to send mail.<br/>
-      		All "mail.*" properties for Java Mail can be used (see <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">here</a>).
+      		All "mail.*" properties for Java Mail can be used (see <a href="https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html">https://javaee.github.io/javamail/docs/api//com/sun/mail/smtp/package-summary.html</a>).
       	</p>
       	<p>
       		<ul>
@@ -174,6 +256,6 @@
       			<li>If the security protocol is specified as "starttls" then "mail.smtp.starttls.enable" is set to  "true" and "mail.transport.protocol" is set to "smtps".</li>
       		</ul>        
     	</p>
-  </documentation>
+    </documentation>
 </description>
 

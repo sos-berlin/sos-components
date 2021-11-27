@@ -13,9 +13,9 @@
         	You can use one of the following actions:
 			<ul>
 				<li><code>none</code>: no action</li>
-				<li><code>mark_as_read</code>: marked the mail as read</li>
-				<li><code>copy</code>: copies the mail into another mail folder located in <paramref>mail_target_folder</paramref></li>
-				<li><code>move</code>: moves the mail into another mail folder located in <paramref>mail_target_folder</paramref></li>
+				<li><code>mark_as_read</code>: marks the mail as being read</li>
+				<li><code>copy</code>: copies the mail to another mail folder located in <paramref>mail_target_folder</paramref></li>
+				<li><code>move</code>: moves the mail to another mail folder located in <paramref>mail_target_folder</paramref></li>
 				<li><code>delete</code>: deletes the mail</li>
 			</ul>
         </p>

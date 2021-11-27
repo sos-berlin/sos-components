@@ -8,9 +8,9 @@
     required="false">
     <note>
         <p>
-        	This parameter is considered if <paramref>mail_action</paramref> is <code>dump_attachments</code>.<br/> 
+        	This argument is considered if the <paramref>mail_action</paramref> argument is used with the <code>dump_attachments</code> value.<br/> 
         	If true, the body of the mail will be handled as an attachment 
-        	and will be stored in the directory specified in <paramref>mail_attachments_directory</paramref>.
+        	and will be stored to the directory specified with the <paramref>mail_attachments_directory</paramref> argument.
         </p>
    	</note>
 </param>

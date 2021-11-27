@@ -9,7 +9,7 @@
     required="false">
     <note>
         <p>
-        	If true then only unread mails will be handled.
+        	If true then only unread mail will be handled.
         </p>
    	</note>
 </param>

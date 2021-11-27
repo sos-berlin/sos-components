@@ -13,7 +13,7 @@
    	<note>
         <ul>
         	<li><code>mail.pop3.host</code> from system properties</li>
-        	<li><code>mail.host</code> from Job or Order parameters</li>
+        	<li><code>mail.host</code> from Job argument or Order variable</li>
         	<li><code>mail.host</code> from system properties</li>
         </ul>
    	</note>
