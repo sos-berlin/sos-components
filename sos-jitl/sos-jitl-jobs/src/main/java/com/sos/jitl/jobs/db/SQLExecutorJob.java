@@ -93,11 +93,11 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
             boolean isParamValue = false;
             if (checkResultSet) {
                 switch (args.getResultSetAsVariables()) {
-                case EXPORT_CSV:
-                    if (args.getOutputFile().getValue() == null) {
-                        throw new SOSJobRequiredArgumentMissingException(args.getOutputFile().getName());
+                case CSV:
+                    if (args.getResultFile().getValue() == null) {
+                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
                     }
-                    Export2CSV.export(rs, args.getOutputFile().getValue(), step.getLogger());
+                    Export2CSV.export(rs, args.getResultFile().getValue(), step.getLogger());
                     return;
                 default:
                     isParamValue = args.getResultSetAsVariables().equals(ResultSetAsVariables.NAME_VALUE);

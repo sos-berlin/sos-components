@@ -98,6 +98,7 @@ public class Export2CSV {
         builder.setDelimiter(",");
         builder.setQuoteMode(QuoteMode.ALL);
         builder.setQuote("\"".charAt(0));
+        builder.setEscape('\\');
         builder.setRecordSeparator("\r\n");
         builder.setIgnoreEmptyLines(false);
         builder.setNullString("");

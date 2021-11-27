@@ -51,11 +51,11 @@ public class MailInboxArguments extends JobArguments {
     private JobArgument<ActionAfterProcess> afterProcessMail = new JobArgument<ActionAfterProcess>("mail_post_action", false,
             ActionAfterProcess.none);
     private JobArgument<String> afterProcessMailDirectoryName = new JobArgument<String>("mail_target_folder", false, "");
-    private JobArgument<String> attachmentDirectoryName = new JobArgument<String>("mail_attachment_directory", false, "");
+    private JobArgument<String> attachmentDirectoryName = new JobArgument<String>("mail_attachments_directory", false, "");
     //private JobArgument<Boolean> copyMailToFile = new JobArgument<Boolean>("dump", false, false);
-    private JobArgument<Boolean> saveBodyAsAttachment = new JobArgument<Boolean>("save_body_as_attachment", false, false);
+    private JobArgument<Boolean> saveBodyAsAttachment = new JobArgument<Boolean>("body_as_attachment", false, false);
     //private JobArgument<Boolean> deleteMail = new JobArgument<Boolean>("delete_mail", false, false);
-    private JobArgument<Boolean> mailOnlyUnseen = new JobArgument<Boolean>("mail_only_unread", false, true);
+    private JobArgument<Boolean> mailOnlyUnseen = new JobArgument<Boolean>("only_unread_mails", false, true);
     private JobArgument<String> attachmentFileNamePattern = new JobArgument<String>("attachment_file_name_pattern", false, "");
     private JobArgument<String> mailDirectoryName = new JobArgument<String>("mail_file_directory", false, "");
     //private JobArgument<Boolean> copyAttachmentsToFile = new JobArgument<Boolean>("dump_attachments", false, false);
