@@ -32,9 +32,7 @@
                 </note>
             </param>
 
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_db_url.xml" parse="xml"/>
-            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
 
             <param name="db_user" required="false">
                 <note>
@@ -54,6 +52,8 @@
                 </note>
             </param>
 
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
+<!--
             <param name="command_script_file" required="one of command or command_script_file">
                 <note>
                 	<title>Path to a file that contains the SQL statement(s)</title>
@@ -68,7 +68,7 @@
                   	</p>
                 </note>
             </param>
-
+-->
             <param name="include_files" required="false" default_value="">
                 <note>
                     <title>SQL Statements to include from files</title>
@@ -79,6 +79,8 @@
                     </p>
                 </note>
             </param>
+
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
 
             <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">
                 <note>
