@@ -38,7 +38,7 @@ public class JobLogger {
     }
 
     public void info(final Object msg) {
-        step.out().println(msg);
+        step.out().println(String.format("[INFO]%s", msg));
     }
 
     public void info(final String format, final Object... args) {
