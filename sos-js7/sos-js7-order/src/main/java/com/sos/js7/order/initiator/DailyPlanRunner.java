@@ -186,8 +186,8 @@ public class DailyPlanRunner extends TimerTask {
                 submissionDate = DailyPlanHelper.getDateTime(synchronizer.getSubmission().getSubmissionForDate());
             }
 
-            LOGGER.info(String.format("[%s][%s][%s][calculated][%s][submission id=%s, submission for date=%s]", operation, controllerId, date, c,
-                    submissionId, submissionDate));
+            LOGGER.info(String.format("[%s][%s][%s][calculated][%s][submission date=%s, id=%s]", operation, controllerId, date, c, submissionDate,
+                    submissionId));
 
             synchronizer.addPlannedOrderToControllerAndDB(operation, controllerId, date, withSubmit, fromService);
             EventBus.getInstance().post(new DailyPlanEvent(date));
@@ -311,12 +311,12 @@ public class DailyPlanRunner extends TimerTask {
 
             String submissionForDate = DailyPlanHelper.getDateTime(item.getSubmissionForDate());
             if (plannedOrders == null || plannedOrders.size() == 0) {
-                LOGGER.info(String.format("[submitting][%s][%s][submission id=%s, submission for date=%s][skip]0 not submitted orders found",
-                        controllerId, date, item.getId(), submissionForDate));
+                LOGGER.info(String.format("[submitting][%s][%s][submission date=%s, id=%s][skip]0 not submitted orders found", controllerId, date,
+                        submissionForDate, item.getId()));
             } else {
                 OrderCounter c = DailyPlanHelper.getOrderCount(plannedOrders);
-                LOGGER.info(String.format("[submitting][%s][%s][submission id=%s, submission for date=%s]submit %s start ...", controllerId, date,
-                        item.getId(), submissionForDate, c));
+                LOGGER.info(String.format("[submitting][%s][%s][submission date=%s, id=%s]submit %s start ...", controllerId, date, submissionForDate,
+                        item.getId(), c));
                 submitOrders(controllerId, plannedOrders, submissionForDate, null, "");
                 // not log end because asynchronous
                 // LOGGER.info(String.format("[submitting][%s][%s][submission=%s]submit end", controllerId, date, submissionForDate));
