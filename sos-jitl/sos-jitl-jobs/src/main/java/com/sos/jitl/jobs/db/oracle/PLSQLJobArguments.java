@@ -26,9 +26,7 @@ public class PLSQLJobArguments extends JobArguments {
     private JobArgument<String> credentialStoreKeyFile = new JobArgument<String>("credential_store_key_file", false);
     private JobArgument<String> credentialStorePassword = new JobArgument<String>("credential_store_password", false);
     private JobArgument<String> credentialStoreEntryPath = new JobArgument<String>("credential_store_entry_path", false);
-    private JobArgument<Boolean> resultSetAsParameters = new JobArgument<Boolean>("resultset_as_parameters", false, false);
-    private JobArgument<Boolean> resultSetAsWarning = new JobArgument<Boolean>("resultset_as_warning", false, false);
-
+ 
     public Path getHibernateFile() {
         return hibernateFile.getValue();
     }
@@ -109,21 +107,6 @@ public class PLSQLJobArguments extends JobArguments {
         this.credentialStoreEntryPath = credentialStoreEntryPath;
     }
 
-    public Boolean getResultSetAsParameters() {
-        return resultSetAsParameters.getValue();
-    }
-
-    public void setResultSetAsParameters(Boolean resultSetAsParameters) {
-        this.resultSetAsParameters.setValue(resultSetAsParameters);
-    }
-
-    public Boolean getResultSetAsWarning() {
-        return resultSetAsWarning.getValue();
-    }
-
-    public void setResultSetAsWarning(Boolean resultSetAsWarning) {
-        this.resultSetAsWarning.setValue(resultSetAsWarning);
-    }
 
     public boolean useHibernateFile() {
         return ((dbUrl.getValue() == null) || dbUrl.getValue().isEmpty()) && ((dbUser.getValue() == null) || dbUser.getValue().isEmpty());

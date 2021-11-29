@@ -9,7 +9,6 @@ import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 public class SQLPlusJobArguments extends JobArguments {
 
     private JobArgument<String> shellCommand = new JobArgument<String>("shell_command", false, "sqlplus");
-    private JobArgument<String> osName = new JobArgument<String>("os_name", false);
     private JobArgument<String> ignoreOraMessages = new JobArgument<String>("ignore_ora_messages", false, "");
     private JobArgument<String> ignoreSp2Messages = new JobArgument<String>("ignore_sp2_messages", false, "");
     private JobArgument<String> commandScriptFile = new JobArgument<String>("command_script_file", false, "");
@@ -100,14 +99,7 @@ public class SQLPlusJobArguments extends JobArguments {
         this.shellCommand.setValue(shellCommand);
     }
 
-    public String getOsName() {
-        return osName.getValue();
-    }
-
-    public void setOsName(String osName) {
-        this.osName.setValue(osName);
-    }
-
+ 
     public String getIgnoreOraMessages() {
         return ignoreOraMessages.getValue();
     }
