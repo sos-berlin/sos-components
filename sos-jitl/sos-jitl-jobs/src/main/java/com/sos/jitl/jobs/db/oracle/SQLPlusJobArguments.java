@@ -16,7 +16,7 @@ public class SQLPlusJobArguments extends JobArguments {
     private JobArgument<String> command = new JobArgument<String>("command", false, "");
     private JobArgument<String> commandLineOptions = new JobArgument<String>("command_line_options", false, "");
     private JobArgument<String> includeFiles = new JobArgument<String>("include_files", false, "");
-    private JobArgument<String> sqlError = new JobArgument<String>("sqlError", false);
+    private JobArgument<String> sqlError = new JobArgument<String>("sql_error", false);
     private JobArgument<String> dbPassword = new JobArgument<String>("db_password", false, DisplayMode.MASKED);
     private JobArgument<String> dbUser = new JobArgument<String>("db_user", false);
     private JobArgument<String> dbUrl = new JobArgument<String>("db_url", false);
