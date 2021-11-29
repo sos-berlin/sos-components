@@ -7,7 +7,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-    <job name="SSHJob" title="Execute commands or executable scripts over a SSH connection on a remote server.">
+    <job name="SSHJob" title="Execute commands or executable scripts by use of an SSH connection on a remote server.">
         <script language="java" java_class="com.sos.jitl.jobs.ssh.SSHJob" resource="1" />
     </job>
 
@@ -69,14 +69,14 @@
             <param name="create_environment_variables" required="false" DataType="java.lang.Boolean">
 				<note>
 					<p>
-						This parameter can be used to activate transmission of JS7 agent environment variables to the remote session environment.
+						This argument can be used to populate the remote session with JS7 Agent environment variables.
 					</p>
 				</note>
             </param>
             <param name="pre_command" required="false" DataType="java.lang.String">
                <note>
                   	<p>
-		               This parameter specifies the command to set an environmental variable on the remote host.
+		               This argument specifies the command to set an environment variable on the remote host.
 		               default: 
 		               <code>export %s='%s'</code>
              		</p>
@@ -85,8 +85,8 @@
             <param name="post_command_read" required="false" DataType="java.lang.String">
 				<note>
 					<p>
-		               This parameter specifies the command to read the content of a file on the remote host.
-		               The content will then be written to stdout of the remote host.
+		               This agument specifies the command to read the content of a file on the remote host.
+		               The content will then be written to the stdout channel of the remote host.
 		               The command reads return values from a temporary file.
 		               default: 
 		               <code>test -r %s &amp;&amp; cat %s;</code>
@@ -96,7 +96,7 @@
             <param name="post_command_delete" required="false" DataType="java.lang.String">
                	<note>
                   	<p>
-		               This parameter specifies the command to delete a file on the remote host.
+		               This agument specifies the command to delete a file on the remote host.
 		               The command deletes a temporary file after proccessing.
 		               default: 
 					   <code>test -r %s &amp;&amp; rm %s;</code>					
@@ -108,12 +108,11 @@
     <documentation>
         <xhtml:div>
             <p>
-                This job is used to execute commands, programs and/or shell-scripts on a
-                remote
-                server by SSH.
+                This job is used to execute commands, programs and/or shell scripts on a
+                remote server by use of the SSH protocol.
             </p>
             <p>
-                for more information on SSH
+                For more information about SSH see
                 <link>http://en.wikipedia.org/wiki/Secure_Shell</link>
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/notes/how_to_use_open_ssh.xml" />

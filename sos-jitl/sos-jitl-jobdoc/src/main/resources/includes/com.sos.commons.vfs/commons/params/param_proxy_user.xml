@@ -5,8 +5,8 @@
 	required="false" DataType="java.lang.String">
 	<note>
 		<p>
-			The value of this parameter specifies the user account for authorization
-			by the proxy server should a proxy be used to connect to the SSH server.
+			The argument specifies the user account for authentication
+			with a proxy server should a proxy be used to connect to the SSH server.
 		</p>
 	</note>
 </param>

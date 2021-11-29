@@ -5,7 +5,7 @@
 	name="connect_timeout" required="false" DataType="java.lang.Integer" DefaultValue="0">
         <note>
 			<p>
-				This value limits the waiting period in seconds for a connection to be established.
+				The argument limits the waiting period in seconds for a connection to a remote host to be established.
 				A value of 0 (the default value) indicates no timeout.
 			</p>
         </note>

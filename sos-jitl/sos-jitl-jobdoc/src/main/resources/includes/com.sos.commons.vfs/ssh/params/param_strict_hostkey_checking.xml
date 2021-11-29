@@ -5,10 +5,10 @@
 	name="strict_hostkey_checking" required="false" DataType="java.lang.Boolean" DefaultValue="false">
         <note>
 			<p>
-				This parameter specifies the behavior for hosts that have not previously been involved in a ssh connection to the specific target host.
-				By default it is not necessary that the user "known hosts" files contain the host key which corresponds to the value "false".
-				If this parameter is set to "true", the host key is expected in the user "known hosts" files and the connection will be refused 
-				if the host key cannot be found. This setting forces the user to manually add new hosts to the "known hosts" files.
+				This argument specifies the behavior for hosts that have not previously been involved in an SSH connection to the specific target host.
+				By default it is not required that the client's "known_hosts" file includes the host key - this situation corresponds to use of the value "false".
+				If this argument is set to "true" then the host key is expected in the user's "known_hosts" file and the connection will be refused 
+				if the host key cannot be found. This setting forces to manually add new hosts to the "known_hosts" file.
 			</p>
         </note>
 </param>

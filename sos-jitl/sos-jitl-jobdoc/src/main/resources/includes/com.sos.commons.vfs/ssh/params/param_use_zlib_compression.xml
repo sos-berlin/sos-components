@@ -5,7 +5,7 @@
 	name="use_zlib_compression" required="false" DataType="java.lang.Boolean">
         <note>
 			<p>
-				Specifies if compression should be used.
+				Specifies if compression should be used for transfer of data with the remote host.
 			</p>
         </note>
 </param>

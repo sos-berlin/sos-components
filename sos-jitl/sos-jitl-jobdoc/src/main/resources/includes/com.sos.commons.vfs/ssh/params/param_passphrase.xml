@@ -5,7 +5,7 @@
        name="password" required="false" DataType="java.lang.String">
         <note language="en">
 			<p>
-				This parameter specifies the passphrase for the SSH Key.
+				This argument specifies the passphrase for the SSH private key.
 			</p>
         </note>
 </param>

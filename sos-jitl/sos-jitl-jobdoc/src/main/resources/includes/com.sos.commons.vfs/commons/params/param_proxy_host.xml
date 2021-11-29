@@ -5,9 +5,8 @@
        name="proxy_host" required="false" DataType="java.lang.Integer">
 	<note>
 		<p>
-			The value of this parameter is the host name or the IP address of a 
-			proxy used to create the connection to the SSH server. 
-			The use of a proxy is optional.
+			The argument specifies the host name or the IP address of a proxy server should 
+			a proxy be used to establish the connection to the SSH server. 
 		</p>
 	</note>
 </param>

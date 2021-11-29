@@ -5,8 +5,12 @@
 	name="preferred_authentications" required="false" DataType="java.util.List">
         <note>
 			<p>
-				Specifies the order in which the client should try protocol 2 authentication methods.
-				This allows a client to prefer one method (e.g. publickey) over another method (e.g. password).
+				Specifies the order in which an SSH client should try authentication methods.
+				This allows the SSH client to prefer one method (e.g. publickey) over another method (e.g. password).
+                In addition, it allows to specify a number of alternative authentication methods that can be used by a client,
+                for example, if password and publickey authentication methods are specified then one of them is sufficient.
+                This applies even in case of failure when using an authentication method as long as one of the
+                remaining authentication methods succeeds.
 			</p>
         </note>
 </param>

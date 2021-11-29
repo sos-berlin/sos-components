@@ -5,7 +5,7 @@
 	name="simulate_shell" required="false" DataType="java.lang.Boolean">
         <note>
 			<p>
-				Specifies if the ssh connection should be established with simulated shell.
+				Specifies if the SSH connection should be established with a simulated shell.
 			</p>
         </note>
 </param>

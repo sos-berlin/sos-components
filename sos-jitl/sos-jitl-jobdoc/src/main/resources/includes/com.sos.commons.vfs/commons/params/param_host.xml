@@ -7,8 +7,8 @@
        required="true">
        	<note>
 			<p>
-		  		This parameter specifies the hostname (e.g. test.sos) or IP address (e.g. IPv4 192.168.0.1) 
-		  		of a server which a connection has to be established to.
+		  		The argument specifies the hostname or IP address
+		  		of the remote server to which a connection should be established.
 			</p>
         </note>
       </param>

@@ -5,7 +5,8 @@
 	name="socket_timeout" required="false" DataType="java.util.List" DefaultValue="0">
         <note>
 			<p>
-				This value limits the waiting period in seconds for a socket to be established.
+				The argument limits the waiting period in seconds for a socket to be established
+                when connecting to a remote host.
 				A value of 0 (the default value) indicates no timeout.
 			</p>
         </note>
