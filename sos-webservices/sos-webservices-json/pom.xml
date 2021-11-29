@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>com.sos-berlin</groupId>
 		<artifactId>sos-webservices</artifactId>
-		<version>2.1.1</version>
+		<version>2.1.2-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>sos-webservices-json</artifactId>
