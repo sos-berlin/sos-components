@@ -197,8 +197,8 @@ public class MailProcessor {
             }
 
             if (!args.getMailSubjectFilter().isEmpty() && !args.getMailFromFilter().isEmpty()) {
-                SearchTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
-                SearchTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
+                FromTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
+                SubjectTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
                 SearchTerm searchTerm = new AndTerm(subjectTerm, fromTerm);
                 logDebug("looking for subject=%s and from=%s", args.getMailSubjectFilter().getValue(), args.getMailFromFilter().getValue());
                 msgs2 = inFolder.search(searchTerm, msgs);
@@ -208,11 +208,11 @@ public class MailProcessor {
 
                 if (!args.getMailSubjectFilter().isEmpty()) {
                     logDebug("looking for subject=%s", args.getMailSubjectFilter().getValue());
-                    SearchTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
+                    SubjectTerm subjectTerm = new SubjectTerm(args.getMailSubjectFilter().getValue());
                     msgs2 = inFolder.search(subjectTerm, msgs);
                     logDebug("%d messages found with subject=%s", msgs2.length, args.getMailSubjectFilter().getValue());
                 } else if (!args.getMailFromFilter().isEmpty()) {
-                    SearchTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
+                    FromTerm fromTerm = new FromTerm(new InternetAddress(args.getMailFromFilter().getValue()));
                     logDebug("looking for from=%s", args.getMailFromFilter().getValue());
                     msgs2 = inFolder.search(fromTerm, msgs);
                     logDebug("%d messages found with from=%s", msgs2.length, args.getMailFromFilter().getValue());
