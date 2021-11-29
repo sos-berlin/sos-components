@@ -175,7 +175,11 @@ public class DBLayerSchedules {
                 sql.append(" name in (:names)");
             }
 
+            sql.append(" and type=:type");
+
             Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(sql);
+            query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+
             if (namesAndPaths.containsKey(true)) { // paths
                 query.setParameterList("paths", namesAndPaths.get(true));
             }
