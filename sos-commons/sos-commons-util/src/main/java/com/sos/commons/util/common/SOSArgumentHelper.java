@@ -1,6 +1,7 @@
 package com.sos.commons.util.common;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SOSArgumentHelper {
@@ -37,7 +38,7 @@ public class SOSArgumentHelper {
         case UNMASKED:
             if (value instanceof List) {
                 List<?> l = (List<?>) value;
-                String s = (String) l.stream().map(e -> {
+                String s = (String) l.stream().filter(Objects::nonNull).map(e -> {
                     return e.toString();
                 }).collect(Collectors.joining(LIST_VALUE_DELIMITER));
                 return truncatingIfNeeded(s);

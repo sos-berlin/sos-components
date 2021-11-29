@@ -11,14 +11,10 @@
 			The names of the environment variables are in upper case and have the string "SCHEDULER_PARAM_" as a prefix.
 			Order parameters with the same name overwrite task parameters.
 		</p>
+		<br/>
 		<p>
-			This parameter can be used as an alternative to <paramref>command</paramref> and <paramref>command_script</paramref>.
+			The parameters <paramref>command</paramref>, <paramref>command_script</paramref> and <paramref>command_script_file</paramref>
+			 are optional by themself, but it is required to set one of the three.
 		</p>
 	</note>
-	<!--  
-		<xi:include href="../examples/ssh/command_script_file.xml" parse="xml">
-			<xi:fallback>"../examples/ssh/command_script_file.xml" not found</xi:fallback>
-		</xi:include>
-	-->
-
 </param>

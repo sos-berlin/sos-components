@@ -30,9 +30,9 @@
 		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_auth_file.xml" parse="xml" />
 		    <xi:include href="./includes/com.sos.commons.vfs/ssh/params/param_auth_method.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command.xml" parse="xml" />
-            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_delimiter.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_script_file.xml" parse="xml" />
+            <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_command_delimiter.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_error.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_ignore_stderr.xml" parse="xml" />
             <xi:include href="./includes/com.sos.jitl.jobs.ssh/params/param_raise_exception_on_error.xml" parse="xml" />

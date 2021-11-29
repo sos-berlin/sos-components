@@ -11,5 +11,10 @@
 			The names are in upper case and have "SCHEDULER_PARAM_" as a prefix.
 			Order parameters with the same name overwrite task parameters.
 		</p>
+		<br/>
+		<p>
+			The parameters <paramref>command</paramref>, <paramref>command_script</paramref> and <paramref>command_script_file</paramref>
+			 are optional by themself, but it is required to set one of the three.
+		</p>
 	</note>
 </param>

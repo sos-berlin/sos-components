@@ -37,8 +37,10 @@ public class SSHJob extends ABlockingInternalJob<SSHJobArguments> {
 
     /** steps
      *
-     * - read agent environment variables -export some of them - execute command, script, remote script - set return values */
-
+     * - read agent environment variables 
+     * - export some of them 
+     * - execute command, script, remote script 
+     * - set return values */
     private SOSEnv envVars = new SOSEnv();
     private JobLogger logger;
     private Map<String, Object> outcomes = new HashMap<String, Object>();
