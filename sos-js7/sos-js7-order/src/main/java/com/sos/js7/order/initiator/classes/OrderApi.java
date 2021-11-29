@@ -100,8 +100,8 @@ public class OrderApi {
                 if (fromService) {
                     AJocClusterService.setLogger(ClusterServices.dailyplan.name());
                 }
-
                 if (either.isRight()) {
+                    // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
                     // Set<OrderId> set = map.keySet();
                     SOSHibernateSession session = null;
                     try {
@@ -134,9 +134,11 @@ public class OrderApi {
                         Globals.disconnect(session);
                     }
                 } else {
+                    // AJocClusterService.setLogger(ClusterServices.dailyplan.name());
                     SOSHibernateSession session = null;
                     try {
-                        String msg = jocError.getCode() + ":" + either.getLeft().toString();
+                        String msg = either.getLeft().toString();
+                        LOGGER.error(String.format("[%s][%s]%s[error]%s", method, controllerId, logSubmissionForDate, msg));
 
                         session = Globals.createSosHibernateStatelessConnection(method);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -150,11 +152,11 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s]%s[onError][updated history=%s(%s)]%s", method, controllerId, logSubmissionForDate,
-                                updateHistory, SOSDate.getDuration(start, end), msg));
+                        LOGGER.info(String.format("[%s][%s]%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", method, controllerId,
+                                logSubmissionForDate, updateHistory, SOSDate.getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
-                    } catch (SOSHibernateException e) {
+                    } catch (Throwable e) {
                         LOGGER.error(String.format("[%s][%s]%s %s", method, controllerId, logSubmissionForDate, e.toString()), e);
                         Globals.rollback(session);
                     } finally {
