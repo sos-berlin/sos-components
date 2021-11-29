@@ -23,11 +23,22 @@
                 </note>
             </param>
 
-            <param name="command_line_options" required="false" default_value="-S -L">
+           <param name="command" required="false" default_value="">
+                <note>
+                    <title>Command to be executed by the SQL*Plus Client</title>
+                    <p>
+                        The argument specifies a command to be prepended at the begin of command_script_file (after the include files).
+					</p>
+                </note>
+            </param>
+
+            <param name="command_line_options" required="false" default_value="">
                 <note>
                     <title>SQL*Plus Client Options</title>
                     <p>
                         The value of this argument contains common command line options available for the SQL*Plus Client.
+                        e.g. -S -L
+                        
                     </p>
                 </note>
             </param>
@@ -53,7 +64,7 @@
             </param>
 
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_sqlplus_script_file.xml" parse="xml"/>
-<!--
+
             <param name="command_script_file" required="one of command or command_script_file">
                 <note>
                 	<title>Path to a file that contains the SQL statement(s)</title>
@@ -68,7 +79,7 @@
                   	</p>
                 </note>
             </param>
--->
+
             <param name="include_files" required="false" default_value="">
                 <note>
                     <title>SQL Statements to include from files</title>
@@ -123,6 +134,19 @@
                         The path to the KeePass key file that represents the key for access to the credential store.
                         This requires a key file to be assigned the KeePass database file. If no KeePass key file is specified, 
                         the the file name is assumed from the basename of the KeePass database file and the extension .key.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_password" required="false">
+                <note>
+                    <title>Password of the Credential Store Key File</title>
+                    <p>
+                        The password for the credential store file.
+                        This requires a password to be assigned to the KeePass database file. 
                     </p>
                     <p>
                         Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.

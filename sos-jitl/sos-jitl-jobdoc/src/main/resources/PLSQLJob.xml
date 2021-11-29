@@ -110,6 +110,19 @@
                 </note>
             </param>
             
+            <param name="credential_store_password" required="false">
+                <note>
+                    <title>Password of the Credential Store Key File</title>
+                    <p>
+                        The password for the credential store file.
+                        This requires a password to be assigned to the KeePass database file. 
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>            
+            
             <param name="credential_store_entry_path" required="false">
                 <note>
                     <title>Path to entries in the Credential Store</title>
