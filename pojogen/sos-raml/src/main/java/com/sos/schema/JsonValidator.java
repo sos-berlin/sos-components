@@ -45,17 +45,17 @@ public class JsonValidator {
 
         private static final long serialVersionUID = 1L;
 
-        {   
+        {
             put("AuditLogFilter", "audit/auditLogFilter-schema.json");
             put("AuditLogDetailFilter", "audit/auditLogDetailFilter-schema.json");
-            
+
             put("ConfigurationsFilter", "configuration/configurationsFilter-schema.json");
             put("ConfigurationsDeleteFilter", "configuration/configurationsDeleteFilter-schema.json");
             put("Configuration", "configuration/configuration-schema.json");
-            
+
             put("CalendarDatesFilter", "calendar/calendarDatesFilter-schema.json");
             put("CalendarsFilter", "calendar/calendarsFilter-schema.json");
-            
+
             put("ClusterRestart", "cluster/restart-schema.json");
             put("ClusterSwitchMember", "cluster/switch-schema.json");
 
@@ -64,10 +64,9 @@ public class JsonValidator {
             put("DocumentationsFilter", "docu/documentationsFilter-schema.json");
             put("DocumentationImport", "docu/documentationImport-schema.json");
             put("DocumentationsDeleteFilter", "docu/documentationsDeleteFilter-schema.json");
-            
-            put("RegisterEvent", "event/register-schema.json"); //obsolete
+
+            put("RegisterEvent", "event/register-schema.json"); // obsolete
             put("Controller", "event/controllerFilter-schema.json");
-            
 
             put("com.sos.joc.model.controller.ControllerId", "controller/controllerId-optional-schema.json");
             put("com.sos.joc.model.controller.ControllerIdReq", "controller/controllerId-required-schema.json");
@@ -79,14 +78,14 @@ public class JsonValidator {
             put("ReadAgents", "agent/readAgents-schema.json");
             put("ReadAgentsV", "agent/readAgents_v-schema.json");
             put("AgentReportFilter", "agent/agentReportFilter-schema.json");
-            
+
             put("LockFilter", "lock/lockFilter-schema.json");
             put("LocksFilter", "lock/locksFilter-schema.json");
-            
+
             put("BoardFilter", "board/boardFilter-schema.json");
             put("BoardsFilter", "board/boardsFilter-schema.json");
             put("ModifyNotice", "board/modifyNotice-schema.json");
-            
+
             put("WorkflowFilter", "workflow/workflowFilter-schema.json");
             put("WorkflowsFilter", "workflow/workflowsFilter-schema.json");
             put("WorkflowIdsFilter", "workflow/workflowIdsFilter-schema.json");
@@ -100,13 +99,12 @@ public class JsonValidator {
             put("AddOrders", "order/addOrders-schema.json");
             put("ModifyOrders", "order/modifyOrders-schema.json");
             put("CancelDailyPlanOrders", "order/cancelDailyPlanOrders-schema.json");
-            
+
             put("ScheduleDatesFilter", "orderManagement/scheduleDatesFilter-schema.json");
-            
-            
+
             put("JobsFilter", "job/jobsFilter-schema.json");
             put("TaskFilter", "job/taskFilter-schema.json");
-            //put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
+            // put("RunningTaskLogsFilter", "job/runningTaskLogsFilter-schema.json");
             put("RunningTaskLogFilter", "job/runningTaskLogFilter-schema.json");
 
             put("ApplyConfiguration", "xmleditor/apply/apply-configuration-schema.json");
@@ -122,7 +120,7 @@ public class JsonValidator {
             put("StoreConfiguration", "xmleditor/store/store-configuration-schema.json");
             put("ValidateConfiguration", "xmleditor/validate/validate-configuration-schema.json");
             put("Xml2JsonConfiguration", "xmleditor/xml2json/xml2json-configuration-schema.json");
-            
+
             put("TreeFilter", "tree/treeFilter-schema.json");
             put("SecurityConfiguration", "security/security-configuration-schema.json");
             put("SecurityConfigurationRole", "security/role-schema.json");
@@ -141,9 +139,9 @@ public class JsonValidator {
             put("com.sos.joc.model.inventory.copy.RequestFilter", "inventory/copy/request-filter-schema.json");
             put("com.sos.joc.model.inventory.restore.RequestFilter", "inventory/restore/request-filter-schema.json");
             put("com.sos.joc.model.inventory.ConfigurationObject", "inventory/configurationObject-schema.json");
-            put("com.sos.joc.model.inventory.path.PathFilter","inventory/path/pathFilter-schema.json");
-            put("com.sos.joc.model.inventory.search.RequestSearchFilter","inventory/search/request-search-filter-schema.json");
-            put("com.sos.joc.model.inventory.convert.ConvertCronFilter","inventory/convert/convertCronFilter-schema.json");
+            put("com.sos.joc.model.inventory.path.PathFilter", "inventory/path/pathFilter-schema.json");
+            put("com.sos.joc.model.inventory.search.RequestSearchFilter", "inventory/search/request-search-filter-schema.json");
+            put("com.sos.joc.model.inventory.convert.ConvertCronFilter", "inventory/convert/convertCronFilter-schema.json");
             put("JobWizardFilter", "wizard/wizard-job-filter-schema.json");
 
             put("com.sos.joc.model.publish.SetKeyFilter", "publish/setKey-schema.json");
@@ -164,29 +162,33 @@ public class JsonValidator {
             put("com.sos.joc.model.publish.CreateCSRFilter", "publish/createCSRFilter-schema.json");
             put("com.sos.joc.model.auth.CreateOnetimeTokenFilter", "auth/createOnetimeTokenFilter-schema.json");
             put("com.sos.joc.model.auth.ShowOnetimeTokenFilter", "auth/showOnetimeTokenFilter-schema.json");
-           
+
+            // schedules
+            put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
+
             put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanOrderFilter", "orderManagement/dailyplan/dailyPlanOrdersFilter-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanModifyOrder", "orderManagement/dailyplan/dailyPlanModifyOrder-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanOrderSelector", "orderManagement/dailyplan/dailyPlanOrdersSelector-schema.json");
             put("com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter", "orderManagement/dailyplan/dailyplanSubmissionsFilter-schema.json");
-            put("com.sos.webservices.order.initiator.model.ScheduleSelector", "orderManagement/orders/schedulesSelector-schema.json");
-            put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
             put("com.sos.joc.model.dailyplan.history.MainRequest", "dailyplan/history/main-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsRequest", "dailyplan/history/submissions-request-schema.json");
             put("com.sos.joc.model.dailyplan.history.SubmissionsOrdersRequest", "dailyplan/history/submissions-orders-request-schema.json");
-            
-            put("com.sos.joc.model.yade.TransferFilter","yade/transferFilter-schema.json");
-            put("com.sos.joc.model.yade.FileFilter","yade/fileFilter-schema.json");
-            put("com.sos.joc.model.yade.FilesFilter","yade/filesFilter-schema.json");
-            
-            put("com.sos.joc.model.monitoring.NotificationsFilter","monitoring/notifications-filter-schema.json");
-            put("com.sos.joc.model.monitoring.NotificationFilter","monitoring/notification-filter-schema.json");
-            put("com.sos.joc.model.monitoring.NotificationAcknowledgeFilter","monitoring/notification-acknowledge-filter-schema.json");
-            put("com.sos.joc.model.monitoring.ControllersFilter","monitoring/controllers-filter-schema.json");
-            put("com.sos.joc.model.monitoring.AgentsFilter","monitoring/agents-filter-schema.json");
-                        
-            //put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
+
+            put("com.sos.joc.model.yade.TransferFilter", "yade/transferFilter-schema.json");
+            put("com.sos.joc.model.yade.FileFilter", "yade/fileFilter-schema.json");
+            put("com.sos.joc.model.yade.FilesFilter", "yade/filesFilter-schema.json");
+
+            put("com.sos.joc.model.monitoring.NotificationsFilter", "monitoring/notifications-filter-schema.json");
+            put("com.sos.joc.model.monitoring.NotificationFilter", "monitoring/notification-filter-schema.json");
+            put("com.sos.joc.model.monitoring.NotificationAcknowledgeFilter", "monitoring/notification-acknowledge-filter-schema.json");
+            put("com.sos.joc.model.monitoring.ControllersFilter", "monitoring/controllers-filter-schema.json");
+            put("com.sos.joc.model.monitoring.AgentsFilter", "monitoring/agents-filter-schema.json");
+
+            // utilities
+            put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
+
+            // put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map
         }
@@ -203,7 +205,7 @@ public class JsonValidator {
             validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, false);
         }
     }
-    
+
     /** Validation which raises all errors
      * 
      * @param json
@@ -213,6 +215,7 @@ public class JsonValidator {
     public static void validate(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
         validate(json, getSchemaPath(clazz));
     }
+
     /** Validation which raises all errors
      * 
      * @param json
@@ -258,17 +261,17 @@ public class JsonValidator {
             validate(json, schemaUri, true, false);
         }
     }
-    
+
     public static void validateStrict(byte[] json, String schemaPath) throws IOException, SOSJsonSchemaException {
         if (schemaPath != null) {
             validate(json, URI.create("classpath:/raml/api/schemas/" + schemaPath), false, true);
         }
     }
-    
+
     public static void validateStrict(byte[] json, Class<?> clazz) throws IOException, SOSJsonSchemaException {
         validateStrict(json, getSchemaPath(clazz));
     }
-    
+
     public static void validateStrict(byte[] json, URI schemaUri) throws IOException, SOSJsonSchemaException {
         if (schemaUri != null) {
             validate(json, schemaUri, false, true);
@@ -330,33 +333,27 @@ public class JsonValidator {
      * @param json
      * @param schemaPath - path relative to ./resources/raml/schemas directory
      * 
-     * @return true/false
-     *
-     **/
+     * @return true/false **/
     public static boolean isValid(byte[] json, String schemaPath) {
         return isValid(json, URI.create("classpath:/raml/api/schemas/" + schemaPath));
     }
-    
+
     /** Checks if object is valid without raising any exceptions.
      * 
      * @param json
      * @param clazz
      * 
-     * @return true/false
-     *
-     **/
-   public static boolean isValid(byte[] json, Class<?> clazz) {
+     * @return true/false **/
+    public static boolean isValid(byte[] json, Class<?> clazz) {
         return isValid(json, getSchemaPath(clazz));
     }
 
-   /** Checks if object is valid without raising any exceptions.
-    * 
-    * @param json
-    * @param schemaUri
-    * 
-    * @return true/false
-    *
-    **/
+    /** Checks if object is valid without raising any exceptions.
+     * 
+     * @param json
+     * @param schemaUri
+     * 
+     * @return true/false **/
     public static boolean isValid(byte[] json, URI schemaUri) {
         if (schemaUri != null) {
             return isValid(json, schemaUri, true, false);
