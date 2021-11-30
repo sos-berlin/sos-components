@@ -254,7 +254,7 @@ public class JobStep<A extends JobArguments> {
                         l.add(arg);
                     }
                 } catch (Throwable e) {
-                    logger.warn(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
+                    logger.warn2allLogger(String.format("[%s.%s][can't read field]%s", getClass().getName(), field.getName(), e.toString()), e);
                 }
             }
             if (arguments.getAppArguments() != null && arguments.getAppArguments().size() > 0) {
@@ -470,7 +470,7 @@ public class JobStep<A extends JobArguments> {
     public JOutcome.Completed failed(final Integer returnCode, final String msg, Throwable e) {
         Throwable ex = logger.handleException(e);
         logger.failed2slf4j(e.toString(), ex);
-        return JOutcome.failed(logger.err2String(msg, ex), mapResult(null, returnCode));
+        return JOutcome.failed(logger.throwable2String(msg, ex), mapResult(null, returnCode));
     }
 
     private JOutcome.Completed failedWithMap(final Integer returnCode, final String msg, final Map<String, Value> outcomes) {
@@ -636,7 +636,7 @@ public class JobStep<A extends JobArguments> {
             }
 
         } catch (Exception e) {
-            logger.error(e.toString(), e);
+            logger.error2allLogger(e.toString(), e);
         }
     }
 
@@ -646,7 +646,7 @@ public class JobStep<A extends JobArguments> {
             logArguments(LogLevel.INFO);
             logAllResultingArguments(LogLevel.INFO);
         } catch (Exception e) {
-            logger.error(e.toString(), e);
+            logger.error2allLogger(e.toString(), e);
         }
     }
 

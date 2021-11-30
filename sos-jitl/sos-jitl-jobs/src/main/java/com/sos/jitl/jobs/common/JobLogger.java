@@ -14,10 +14,15 @@ import js7.executor.forjava.internal.BlockingInternalJob;
 public class JobLogger {
 
     public enum LogLevel {
-        INFO, DEBUG, TRACE
+        INFO, DEBUG, TRACE, WARN, ERROR
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobLogger.class);
+    private static final String LOG_LEVEL_INFO = LogLevel.INFO.name();
+    private static final String LOG_LEVEL_DEBUG = LogLevel.DEBUG.name();
+    private static final String LOG_LEVEL_TRACE = LogLevel.TRACE.name();
+    private static final String LOG_LEVEL_WARN = LogLevel.WARN.name();
+    private static final String LOG_LEVEL_ERROR = LogLevel.ERROR.name();
 
     private final BlockingInternalJob.Step step;
     private final String stepInfo;
@@ -38,7 +43,7 @@ public class JobLogger {
     }
 
     public void info(final Object msg) {
-        step.out().println(String.format("[INFO]%s", msg));
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_INFO, msg));
     }
 
     public void info(final String format, final Object... args) {
@@ -47,6 +52,13 @@ public class JobLogger {
         } else {
             info(String.format(format, args));
         }
+    }
+
+    public void debug(final Object msg) {
+        if (!isDebugEnabled) {
+            return;
+        }
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_DEBUG, msg));
     }
 
     public void debug(final String format, final Object... args) {
@@ -60,11 +72,11 @@ public class JobLogger {
         }
     }
 
-    public void debug(final Object msg) {
-        if (!isDebugEnabled) {
+    public void trace(final Object msg) {
+        if (!isTraceEnabled) {
             return;
         }
-        step.out().println(String.format("[DEBUG]%s", msg));
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_TRACE, msg));
     }
 
     public void trace(final String format, final Object... args) {
@@ -78,43 +90,8 @@ public class JobLogger {
         }
     }
 
-    public void trace(final Object msg) {
-        if (!isTraceEnabled) {
-            return;
-        }
-        step.out().println(String.format("[TRACE]%s", msg));
-    }
-
-    public void log(LogLevel logLevel, final Object msg) {
-        switch (logLevel) {
-        case INFO:
-            info(msg);
-            break;
-        case DEBUG:
-            debug(msg);
-            break;
-        case TRACE:
-            trace(msg);
-        }
-    }
-
-    public void log(LogLevel logLevel, final String format, final Object... args) {
-        switch (logLevel) {
-        case INFO:
-            info(format, args);
-            break;
-        case DEBUG:
-            debug(format, args);
-            break;
-        case TRACE:
-            trace(format, args);
-        }
-    }
-
-    public void warn(final String msg, Throwable e) {
-        Throwable ex = handleException(e);
-        warn2slf4j(msg, ex);
-        step.out().println(String.format("[WARN]%s", warn2String(msg, ex)));
+    public void warn(final Object msg) {
+        step.out().println(String.format("[%s]%s", LOG_LEVEL_WARN, msg));
     }
 
     public void warn(final String format, final Object... args) {
@@ -125,6 +102,22 @@ public class JobLogger {
         }
     }
 
+    public void warn(final String msg, Throwable e) {
+        warn(warn2String(msg, e));
+    }
+
+    protected void warn2allLogger(final String msg, Throwable e) {
+        Throwable ex = handleException(e);
+        if (ex != null) {
+            warn2slf4j(msg, ex);
+            warn(warn2String(msg, ex));
+        }
+    }
+
+    public void error(final Object msg) {
+        step.err().println(String.format("[%s]%s", LOG_LEVEL_ERROR, msg));
+    }
+
     public void error(final String format, final Object... args) {
         if (args.length == 0) {
             error(format);
@@ -133,10 +126,56 @@ public class JobLogger {
         }
     }
 
-    public void error(final String msg, final Throwable e) {
+    public void error(final String msg, Throwable e) {
+        error(throwable2String(msg, e));
+    }
+
+    protected void error2allLogger(final String msg, final Throwable e) {
         Throwable ex = handleException(e);
-        error2slf4j(msg, ex);
-        step.err().println(String.format("[ERROR]%s", err2String(msg, ex)));
+        if (ex != null) {
+            error2slf4j(msg, ex);
+            error(throwable2String(msg, ex));
+        }
+    }
+
+    protected void log(LogLevel logLevel, final Object msg) {
+        switch (logLevel) {
+        case INFO:
+            info(msg);
+            break;
+        case DEBUG:
+            debug(msg);
+            break;
+        case TRACE:
+            trace(msg);
+            break;
+        case WARN:
+            warn(msg);
+            break;
+        case ERROR:
+            error(msg);
+            break;
+        }
+    }
+
+    protected void log(LogLevel logLevel, final String format, final Object... args) {
+        switch (logLevel) {
+        case INFO:
+            info(format, args);
+            break;
+        case DEBUG:
+            debug(format, args);
+            break;
+        case TRACE:
+            trace(format, args);
+            break;
+        case WARN:
+            warn(format, args);
+            break;
+        case ERROR:
+            error(format, args);
+            break;
+        }
     }
 
     public boolean isDebugEnabled() {
@@ -148,7 +187,7 @@ public class JobLogger {
     }
 
     protected String warn2String(String msg, Throwable e) {
-        return err2String(msg, e);
+        return throwable2String(msg, e);
     }
 
     protected Throwable handleException(Throwable e) {
@@ -179,7 +218,7 @@ public class JobLogger {
         LOGGER.error(String.format("%s%s", stepInfo, msg), e);
     }
 
-    protected String err2String(String msg, Throwable e) {
+    protected String throwable2String(String msg, Throwable e) {
         if (e == null) {
             return msg;
         }
