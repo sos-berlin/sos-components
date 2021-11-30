@@ -27,8 +27,12 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.dailyplan.DailyPlanRunner;
+import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.FolderPermissionEvaluator;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
+import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanSubmitOrderResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
@@ -45,10 +49,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
-import com.sos.js7.order.initiator.DailyPlanRunner;
-import com.sos.js7.order.initiator.DailyPlanSettings;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 
 @Path("daily_plan")

@@ -10,7 +10,10 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
+import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
 import com.sos.joc.dailyplan.resource.IDailyPlanSubmissionsResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.event.EventBus;
@@ -19,9 +22,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
-import com.sos.js7.order.initiator.common.DailyPlanHelper;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
-import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.schema.JsonValidator;
 
 @Path("daily_plan")

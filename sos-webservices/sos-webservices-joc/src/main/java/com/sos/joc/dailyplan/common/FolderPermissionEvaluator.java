@@ -15,9 +15,9 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.dailyplan.db.DBLayerSchedules;
+import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.model.common.Folder;
-import com.sos.js7.order.initiator.db.DBLayerSchedules;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 public class FolderPermissionEvaluator {
 

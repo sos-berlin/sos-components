@@ -19,7 +19,6 @@
 
 	<modules>
 		<module>pojogen</module>
-		<module>sos-js7</module>
 		<module>sos-commons</module>
 		<module>sos-yade</module>
 		<module>sos-webservices</module>

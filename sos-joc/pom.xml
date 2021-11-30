@@ -15,6 +15,7 @@
 	<modules>
 		<module>sos-joc-cleanup</module>
 		<module>sos-joc-cluster</module>
+		<module>sos-joc-dailyplan</module>
 		<module>sos-joc-db</module>
 		<module>sos-joc-event</module>
 		<module>sos-joc-history</module>

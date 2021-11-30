@@ -49,7 +49,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin</groupId>
-			<artifactId>sos-js7-order</artifactId>
+			<artifactId>sos-joc-dailyplan</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

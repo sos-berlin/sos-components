@@ -10,12 +10,12 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
+import com.sos.joc.dailyplan.db.FilterOrderVariables;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrderVariablesResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.OrderFilter;
-import com.sos.js7.order.initiator.db.DBLayerOrderVariables;
-import com.sos.js7.order.initiator.db.FilterOrderVariables;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 

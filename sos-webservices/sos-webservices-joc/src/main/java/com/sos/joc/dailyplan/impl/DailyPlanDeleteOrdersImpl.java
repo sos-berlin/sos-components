@@ -17,6 +17,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
+import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanDeleteOrderResource;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.bean.dailyplan.DailyPlanEvent;
@@ -32,8 +34,6 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 
 @Path("daily_plan")

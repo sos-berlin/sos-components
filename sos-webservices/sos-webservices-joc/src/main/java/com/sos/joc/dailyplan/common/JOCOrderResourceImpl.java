@@ -15,6 +15,8 @@ import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobals.DefaultSections;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
+import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.model.dailyplan.CyclicOrderInfos;
@@ -23,10 +25,6 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderState;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
-import com.sos.js7.order.initiator.DailyPlanSettings;
-import com.sos.js7.order.initiator.common.GlobalSettingsReader;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 
 public class JOCOrderResourceImpl extends JOCResourceImpl {
 

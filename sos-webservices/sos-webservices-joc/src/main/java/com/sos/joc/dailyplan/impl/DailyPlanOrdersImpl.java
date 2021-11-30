@@ -16,14 +16,14 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
+import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
+import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
-import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
-import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 
 @Path("daily_plan")
