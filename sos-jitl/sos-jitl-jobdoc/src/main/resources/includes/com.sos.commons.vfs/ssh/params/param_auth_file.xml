@@ -5,13 +5,13 @@
 	name="auth_file" required="false" DataType="java.lang.String">
 	<note>
 		<p>
-			The value of this parameter specifies the path and name of a user's private key file used for authorisation on an SSH server.
+			The argument specifies the path to the client's private key file that is used for authentication with an SSH server.
 			<br />
 			<br />
-			This parameter must be specified if the <em>publickey</em> authorization method has been specified in the <code>auth_method</code> parameter.
+			This argument has to be used if the <em>publickey</em> authentication method is specified as the value of the <paramref>auth_method</paramref> argument.
 			<br />
 			<br />
-			Should the private key file be secured by a password, then this must be specified using the <paramref>password</paramref> parameter.
+			Should the private key file be secured by a passphrase, then the passphrase has to be specified with the <paramref>password</paramref> argument.
 			</p>
 	</note>
 </param>

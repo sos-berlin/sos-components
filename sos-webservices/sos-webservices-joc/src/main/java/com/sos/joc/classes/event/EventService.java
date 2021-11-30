@@ -178,7 +178,7 @@ public class EventService {
                 evtBus = null;
             }
             if (evtBus == null && (evt instanceof ProxyRestarted || evt instanceof ProxyClosed)) {
-                LOGGER.info("try to restart EventBus");
+                LOGGER.debug("try to restart EventBus");
                 startEventService();
             }
         }

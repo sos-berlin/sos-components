@@ -26,11 +26,7 @@
 		</p>
 	    <p>
 	    	For further information on regular expressions see
-	        <a href="http://java.sun.com/j2se/1.4.2/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
-	    </p>
-	    <p>
-	    	As an extension of regular expression the [date:] variable is supported. Using this feature it is possible to create a regexp, which is
-	    	depending on the date with is defined in the date-format.
+	        <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">java.util.regex.Pattern</a>
 	    </p>
 	    <p>
 	    	If you want (only part of the regex) to be case sensitive , then you have the option to use
@@ -39,5 +35,5 @@
 		<p>
 			If you're dealing with Unicode characters besides ASCII, check whether or not your regex engine properly supports them.
 		</p>
-
+	    
 </note>

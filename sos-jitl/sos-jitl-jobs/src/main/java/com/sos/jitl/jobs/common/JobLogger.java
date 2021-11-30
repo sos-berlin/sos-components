@@ -9,7 +9,7 @@ import com.sos.commons.exception.ISOSRequiredArgumentMissingException;
 import com.sos.commons.util.SOSString;
 
 import js7.data.value.Value;
-import js7.launcher.forjava.internal.BlockingInternalJob;
+import js7.executor.forjava.internal.BlockingInternalJob;
 
 public class JobLogger {
 
@@ -38,7 +38,7 @@ public class JobLogger {
     }
 
     public void info(final Object msg) {
-        step.out().println(msg);
+        step.out().println(String.format("[INFO]%s", msg));
     }
 
     public void info(final String format, final Object... args) {

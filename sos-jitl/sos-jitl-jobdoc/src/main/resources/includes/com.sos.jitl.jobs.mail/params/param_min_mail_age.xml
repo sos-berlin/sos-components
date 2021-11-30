@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="min_mail_age" 
+    default_value="0" 
+    required="false">
+    <note>
+        <title>minimum age of a mail</title>
+        <p>
+        	Specifies the minimum age of a mail.
+        	Newer mail(s) will not be processed.
+        </p>
+   	</note>
+   	<xi:include href="../../common/notes/note_age_values.xml" parse="xml" />
+</param>

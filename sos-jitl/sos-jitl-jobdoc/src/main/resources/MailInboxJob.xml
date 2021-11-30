@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="js7_job_documentation_v1.1.xsl"?>
+<description xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
+
+  <job name="MailInboxJob" title="Process mail incoming box">
+    <script language="java" java_class="com.sos.jitl.jobs.mail.MailInboxJob" />
+  </job>
+  <configuration>
+    <params id="job_parameter">
+    		
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_store_protocol.xml" parse="xml" />
+        <!-- dont work paramgroup name="IMAP connection parameters" / -->
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_imap_host.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_imap_port.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_imap_user.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_imap_password.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_imap_ssl.xml" parse="xml" />
+        
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_pop3_host.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_pop3_port.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_pop3_user.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_pop3_password.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_pop3_ssl.xml" parse="xml" />
+        
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_source_folders.xml" parse="xml" />
+  		<xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_max_checked_mails.xml" parse="xml" />
+  		<xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_only_unread.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_min_mail_age.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_from_filter.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_subject_filter.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_subject_pattern.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_body_pattern.xml" parse="xml" />
+        
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_action.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_file_directory.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_attachments_directory.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_body_as_attachment.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_attachment_file_name_pattern.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_post_action.xml" parse="xml" />
+        <xi:include href="./includes/com.sos.jitl.jobs.mail/params/param_mail_target_folder.xml" parse="xml" />
+        
+        <xi:include href="./includes/common/params/params_credential_store.xml" parse="xml" />
+      
+    </params>
+    
+    </configuration>
+    <documentation>
+  		<p>
+      		The job reads an incoming mail box and provides actions for each mail found.<br/> 
+      		The actions to be executed for mails are specified with the <paramref>mail_action</paramref> argument.<br/> 
+      		Any general "mail.*", POP3 "mail.pop3.*" and IMAP "mail.imap.*" properties for Java Mail can be used for the connection to the mail server. For details see
+      		<ul>
+      			<li><a href="https://javaee.github.io/javamail/docs/api/javax/mail/package-summary.html">general mail properties</a></li>
+      			<li><a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/pop3/package-summary.html">POP3 mail properties</a></li>
+      			<li><a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/imap/package-summary.html">IMAP mail properties</a></li>
+      		</ul> 
+      	</p>
+    </documentation>
+</description>

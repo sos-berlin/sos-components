@@ -23,12 +23,13 @@ public class FolderPermissionEvaluator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FolderPermissionEvaluator.class);
 
-    private List<String> listOfWorkflowPaths;
-    private List<String> listOfSchedulePaths;
-    private List<Folder> listOfWorkflowFolders;
-    private List<Folder> listOfScheduleFolders;
-    private List<String> listOfPermittedWorkflowNames;
-    private List<String> listOfPermittedScheduleNames;
+    private List<Folder> workflowFolders;
+    private List<Folder> scheduleFolders;
+
+    private List<String> workflowPaths;
+    private List<String> schedulePaths;
+    private List<String> permittedWorkflowNames;
+    private List<String> permittedScheduleNames;
     private boolean hasPermission;
 
     public void getPermittedNames(SOSShiroFolderPermissions folderPermissions, String controllerId, FilterDailyPlannedOrders filter)
@@ -39,30 +40,30 @@ public class FolderPermissionEvaluator {
             filter = new FilterDailyPlannedOrders();
         }
 
-        boolean withSchedulePathFilter = listOfSchedulePaths != null && !listOfSchedulePaths.isEmpty();
-        boolean withWorkflowPathFilter = listOfWorkflowPaths != null && !listOfWorkflowPaths.isEmpty();
+        boolean withSchedulePathFilter = schedulePaths != null && !schedulePaths.isEmpty();
+        boolean withWorkflowPathFilter = workflowPaths != null && !workflowPaths.isEmpty();
 
-        listOfPermittedWorkflowNames = new ArrayList<String>();
-        listOfPermittedScheduleNames = new ArrayList<String>();
+        permittedWorkflowNames = new ArrayList<String>();
+        permittedScheduleNames = new ArrayList<String>();
 
         hasPermission = true;
 
-        if (listOfSchedulePaths != null && !listOfSchedulePaths.isEmpty()) {
-            SOSHibernateSession sosHibernateSession = null;
+        if (schedulePaths != null && !schedulePaths.isEmpty()) {
+            SOSHibernateSession session = null;
             try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("FolderPermissionEvaluator");
-                DBLayerSchedules dbLayerSchedules = new DBLayerSchedules(sosHibernateSession);
-                dbLayerSchedules.getSchedulePathNameMap(listOfSchedulePaths).forEach((path, name) -> {
+                session = Globals.createSosHibernateStatelessConnection("FolderPermissionEvaluator");
+                DBLayerSchedules dbLayer = new DBLayerSchedules(session);
+                dbLayer.getSchedulePathNameMap(schedulePaths).forEach((path, name) -> {
                     if (folderPermissions.isPermittedForFolder(path)) {
-                        listOfPermittedScheduleNames.add(name);
+                        permittedScheduleNames.add(name);
                     }
                 });
             } finally {
-                Globals.disconnect(sosHibernateSession);
+                Globals.disconnect(session);
             }
         }
-        if (listOfWorkflowPaths != null && !listOfWorkflowPaths.isEmpty()) {
-            for (String path : listOfWorkflowPaths) {
+        if (workflowPaths != null && !workflowPaths.isEmpty()) {
+            for (String path : workflowPaths) {
                 if (path == null || path.isEmpty()) {
                     LOGGER.debug("path is empty");
                     continue;
@@ -75,7 +76,7 @@ public class FolderPermissionEvaluator {
                 LOGGER.debug(String.format("[path=%s]wpath=%s", path, wpath));
                 Path p = Paths.get(wpath);
                 if (folderPermissions.isPermittedForFolder(p.getParent().toString().replace('\\', '/'))) {
-                    listOfPermittedWorkflowNames.add(p.getFileName().toString());
+                    permittedWorkflowNames.add(p.getFileName().toString());
                 }
             }
         }
@@ -84,40 +85,40 @@ public class FolderPermissionEvaluator {
         // currently e.g. see listOfPermittedWorkflowNames
         // 2 workflows selected : 1 is valid, 2 is not valid - this is allowed
         // 1 workflow selected (and listOfPermittedScheduleNames is not empty): 1 is not valid - this is not allowed
-        if (listOfScheduleFolders != null && !listOfScheduleFolders.isEmpty()) {
-            Set<Folder> permittedSchedulefolders = addPermittedFolder(listOfScheduleFolders, folderPermissions);
-            if (permittedSchedulefolders.isEmpty()) {
-                hasPermission = false;
+        if (scheduleFolders != null && !scheduleFolders.isEmpty()) {
+            Set<Folder> permitted = addPermittedFolder(scheduleFolders, folderPermissions);
+            if (permitted.isEmpty()) {
+                // hasPermission = false; //maybe the schedules were deleted
             } else {
-                filter.addScheduleFolders(permittedSchedulefolders);
+                filter.addScheduleFolders(permitted);
             }
         }
-        if (listOfWorkflowFolders != null && !listOfWorkflowFolders.isEmpty()) {
-            Set<Folder> permittedWorkflowfolders = addPermittedFolder(listOfWorkflowFolders, folderPermissions);
-            if (permittedWorkflowfolders.isEmpty()) {
-                hasPermission = false;
+        if (workflowFolders != null && !workflowFolders.isEmpty()) {
+            Set<Folder> permitted = addPermittedFolder(workflowFolders, folderPermissions);
+            if (permitted.isEmpty()) {
+                // hasPermission = false;
             } else {
-                filter.addWorkflowFolders(permittedWorkflowfolders);
+                filter.addWorkflowFolders(permitted);
             }
         }
 
-        if (withSchedulePathFilter && listOfPermittedScheduleNames.isEmpty()) {
+        if (withSchedulePathFilter && permittedScheduleNames.isEmpty()) {
             hasPermission = false;
         } else {
-            filter.setListOfScheduleNames(listOfPermittedScheduleNames);
+            filter.setScheduleNames(permittedScheduleNames);
         }
 
-        if (withWorkflowPathFilter && listOfPermittedWorkflowNames.isEmpty()) {
+        if (withWorkflowPathFilter && permittedWorkflowNames.isEmpty()) {
             hasPermission = false;
         } else {
-            filter.setListOfWorkflowNames(listOfPermittedWorkflowNames);
+            filter.setWorkflowNames(permittedWorkflowNames);
         }
 
         if (folderPermissions.getListOfFolders(controllerId).size() > 0) {
-            if (listOfWorkflowFolders == null) {
+            if (workflowFolders == null) {
                 filter.addWorkflowFolders(folderPermissions.getListOfFolders(controllerId));
             }
-            if (listOfScheduleFolders == null) {
+            if (scheduleFolders == null) {
                 filter.addScheduleFolders(folderPermissions.getListOfFolders(controllerId));
             }
         }
@@ -128,31 +129,32 @@ public class FolderPermissionEvaluator {
         return folderPermissions.getPermittedFolders(folders);
     }
 
-    public List<String> getListOfPermittedWorkflowNames() {
-        return listOfPermittedWorkflowNames;
-    }
-
-    public List<String> getListOfPermittedScheduleNames() {
-        return listOfPermittedScheduleNames;
-    }
-
     public boolean isHasPermission() {
         return hasPermission;
     }
 
-    public void setListOfWorkflowPaths(List<String> listOfWorkflowPaths) {
-        this.listOfWorkflowPaths = listOfWorkflowPaths;
+    public void setWorkflowFolders(List<Folder> val) {
+        workflowFolders = val;
     }
 
-    public void setListOfSchedulePaths(List<String> listOfSchedulePaths) {
-        this.listOfSchedulePaths = listOfSchedulePaths;
+    public void setScheduleFolders(List<Folder> val) {
+        scheduleFolders = val;
     }
 
-    public void setListOfWorkflowFolders(List<Folder> listOfWorkflowFolders) {
-        this.listOfWorkflowFolders = listOfWorkflowFolders;
+    public void setWorkflowPaths(List<String> val) {
+        workflowPaths = val;
     }
 
-    public void setListOfScheduleFolders(List<Folder> listOfScheduleFolders) {
-        this.listOfScheduleFolders = listOfScheduleFolders;
+    public void setSchedulePaths(List<String> val) {
+        schedulePaths = val;
     }
+
+    public List<String> getPermittedWorkflowNames() {
+        return permittedWorkflowNames;
+    }
+
+    public List<String> getPermittedScheduleNames() {
+        return permittedScheduleNames;
+    }
+
 }

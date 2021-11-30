@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="max_processed_mails" 
+    default_value="1000" 
+    required="false">
+    <note>
+        <title>maximum number of processed mails</title>
+        <p>
+        	This is the first filter.
+        	The most recent mails, e.g. 1000, are read for each folder specified with the <paramref>mail_source_folders</paramref> argument.
+        	Any further filters are applied to this set.
+        </p>
+   	</note>
+</param>

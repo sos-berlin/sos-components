@@ -6,237 +6,251 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1 http://www.sos-berlin.com/schema/js7_job_documentation_v1.1.xsd">
 
-  <job name  = "PLSQLJob"
-       title = "Execute PL/SQL procedure"
-       category="PLSQL;SQL;Database;JITL;Oracle">
-    <script language   = "java"
-            java_class = "com.sos.jitl.jobs.db.oracle.PLSQLJob"
-            resource   = "1"/>
-  </job>
+    <job name  = "PLSQLJob"
+         title = "Execute PL/SQL Statements"
+         category="PLSQL;SQL;Database;JITL;Oracle">
+        <script language   = "java"
+                java_class = "com.sos.jitl.jobs.db.oracle.PLSQLJob"
+                resource   = "1"/>
+    </job>
 
-  <configuration>
+    <configuration>
      
-    <params id="job_parameter">
+        <params id="job_parameter">
     
-      <param name="command" required="one of command or command_script_file">
-        <note>
-        	<title>Database Commands for the Job</title>
-        	<p>
-            	It is possible to define more than one instruction in the COMMAND field.
-            	Such instructions  are then carried out in the order in which they are written
-            	and must be separated by a semicolon and a subsequent new line.
-            	Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
-            	at any given point in a command. This variable is then given the value of the
-            	instruction parameter with the name [param] before execution.
-          	</p>
-          	<p>
-            	The command in command and then the content of the file command_script_file will be executed.
-          	</p>
-        </note>
-      </param>
+            <param name="command" required="one of command or command_script_file">
+                <note>
+                	<title>SQL Statement(s) of the Job</title>
+                	<p>
+                        The argument holds SQL statement(s) of the Job.
+                    	It is possible to specify more than one SQL statement with the "command" argument.
+                    	Such SQL statements are then carried out in the specified order
+                    	and have to be separated by a semicolon and a subsequent new line.
+                     </p>
+                     <p>
+                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
+                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
+                    	argument with the same name.
+                  	</p>
+                </note>
+            </param>
       
-      <param name="command_script_file" required="one of command or command_script_file">
-        <note>
-        	<title>Name of a file that contains the database commands for the Job</title>
-        	<p>
-            	It is possible to define more than one instruction in a file.
-            	Such instructions  are then carried out in the order in which they are written
-            	and must be separated by a semicolon and a subsequent new line.
-            	Parameters can be replaced in database commands. This is done by the addition of a variable in the form §{param}
-            	at any given point in a command. This variable is then given the value of the
-            	instruction parameter with the name [param] before execution.
-          	</p>
-          	<p>
-             	The command in command and then the content of the file command_script_file will be executed.
-          	</p>
-        </note>
-      </param>
+            <param name="command_script_file" required="one of command or command_script_file">
+                <note>
+                	<title>Path to a file that contains the SQL statement(s)</title>
+                	<p>
+                    	It is possible to specify SQL statements from one or more files.
+                    	Such SQL statements are then carried out in the specified order of files.
+                    	SQL statements included in files have to be separated by a semicolon and a subsequent new line.
+                    </p>
+                    <p>
+                    	Placeholders are replaced in SQL statements by the job. This is achieved by embedding a variable in the form ${argument}
+                    	in the SQL statement. On execution of the job the variable "argument" is assigned the value of the
+                    	argument with the same name.
+                  	</p>
+                </note>
+            </param>
 
-      <param name="db_url" required="true">
-        <note>
-          <p>
-            jdbc url (e.g. jdbc:oracle:thin:@localhost:1521:XE)
-            with credential store: cs://path/url
-          </p>
-        </note>
-      </param>
-
-      <param name="db_user" required="true">
-        <note>
-          <p>
-            database user with credential store: cs://path/user
-          </p>
-        </note>
-      </param>
-
-      <param name="db_password" required="false">
-        <note>
-        	<title>The user password for accessing the database</title>
-          	<p>
-            	database password with credential store: cs://path/password
-          	</p>
-        </note>
-      </param>
-
-      <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
-
-
-      <param name="credential_store_file" required="false">
-        <note>
-        	<title>Location of the Credential Store file</title>
-        	<p>
-            	The name of the keepass file that contains the credentials for the access to the database.
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the url with ?file=
-          	</p>
-        </note>
-      </param>
-	  
-      <param name="credential_store_key_file" required="false">
-        <note>
-        	<title>Location of the Credential Store file</title>
-        	<p>
-            	The name of the keepass key file that contains the key for the credentials for the access 
-            	to the database (if a key file is assigned to the keepass file). When no keepass key file is given, 
-            	the file name is build with the name of the keepass file with changing the extension to .key.
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the url with ?keyfile=
-          	</p>
-        </note>
-      </param>
-	  
-      <param name="credential_store_entry_path" required="false">
-        <note>
-        	<title>Path for the entries in the keepass file</title>
-        	<p>
-           		To speciy a path for all entries. This makes the values for e.g. the password shorter.<br/>
-		   		Example: <br/>
-		   		credential_store_entry_path=/sos/scheduler<br/>
-		   		value for password: cs://mydb<br/>
-		   		In the keepass file you find the entry in /sos/scheduler/mydb
-          	</p>
-          	<p>
-            	Alternatively it is possible to specify the value in the url with <code>?entry_path=</code>
-          	</p>
-        </note>
-      </param>
-
-    </params>
-
-    <params id="return_parameter">
+            <param name="db_url" required="true">
+                <note>
+                    <title>The JDBC URL (e.g. jdbc:oracle:thin:@localhost:1521:XE)</title>
+                    <p>
+                        The JDBC URL specifies the host and port of the Orcle listener. Depending on the syntax in use the
+                        Service Name or Service ID of the database is specified.
+                    </p>
+                    <p>
+                        The JDBC URL can be retrieved from a credential store by use of the cs://path/entry@url property.
+                    </p>
+                </note>
+            </param>
       
-      <param name="sql_error" required="false">
-      	<note>
-        	<title>Error Messages of the client or the server</title>
-	        <p>
-            	If during the execution of the code one (or more) errors occurs, the error-text will be stored on this variable in the order.
-            	If no error occurs then the contents of the variable will remain empty.
+            <param name="db_user" required="true">
+                <note>
+                    <title>The user accocunt for access to the database</title>
+                    <p>
+                        Database user accounts can be retrieved from a credential store by use of the cs://path/entry@user property.
+                    </p>
+                </note>
+            </param>
+      
+            <param name="db_password" required="false">
+                <note>
+                    <title>The password for access to the database</title>
+                    <p>
+                        Passwords for user accounts can be retrieved from a credential store by use of the cs://path/entry@password property.
+                    </p>
+                </note>
+            </param>
+      
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
+
+            <param name="credential_store_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Database File</title>
+                    <p>
+                        The path to the KeepPass database file that contains the credentials for access to the database.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?file=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_key_file" required="false">
+                <note>
+                    <title>Location of the Credential Store Key File</title>
+                    <p>
+                        The path to the KeePass key file that represents the key for access to the credential store.
+                        This requires a key file to be assigned the KeePass database file. If no KeePass key file is specified, 
+                        the the file name is assumed from the basename of the KeePass database file and the extension .key.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+            
+            <param name="credential_store_password" required="false">
+                <note>
+                    <title>Password of the Credential Store Key File</title>
+                    <p>
+                        The password for the credential store file.
+                        This requires a password to be assigned to the KeePass database file. 
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
+                    </p>
+                </note>
+            </param>            
+            
+            <param name="credential_store_entry_path" required="false">
+                <note>
+                    <title>Path to entries in the Credential Store</title>
+                    <p>
+                        The argument is used to specify a common path that is added to all entries.<br/>
+                        Example: <br/>
+                        credential_store_entry_path=/sos/jobscheduler<br/>
+                        password=cs://mydb@password<br/>
+                        In the KeePass database the entry is found in /sos/jobscheduler/mydb@password.
+                    </p>
+                    <p>
+                        Alternatively it is possible to specify the value in the URL with the <code>?entry_path=</code> query parameter.
+                    </p>
+                </note>
+            </param>
+        
+        </params>
+        
+        <params id="return_parameter">
+            
+            <param name="sql_error" required="false">
+                <note>
+                    <title>Error Messages of the JDBC client or the database server</title>
+                    <p>
+                        If errors occur during execution of SQL statements then the error messages will be stored with the "sql_error" result variable 
+                        in the order or occurrence.
+                        If no errors occur then the value of the variable is empty.
+                    </p>
+                </note>
+            </param>
+        
+            <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml" parse="xml"/>
+        
+        </params>
+    </configuration>
+
+    <documentation>
+    
+        <note>
+            <title>What is the purpose of this job?</title>
+            <p>The job executes PL/SQL statements by JDBC.</p>
+        </note>
+    
+    
+        <note>
+            <title>How is the job script defined?</title>
+            <p>
+                SQL statements can be stored to a separate file that is specified by the <paramref> command_script_file </paramref> argument.
+                In addition, they can be specified with the value of the <paramref>command</paramref> argument.
             </p>
-         </note>
-      </param>
-
-      <xi:include href="./includes/com.sos.jitl.jobs.sql/param_std_out_output.xml" parse="xml"/>
-
-    </params>
-  </configuration>
-
-  <documentation>
+            <p>
+                Before SQL statements are executed, they are checked for placeholders that should be substituted.
+                Placeholders that reference order variables are replaced by the oder variable's value.
+                The following syntax for use with SQL statements is supported: ${argument}
+            </p>
+        </note>
     
-    <note>
-        <title>What is the purpose of this job?</title>
-        <p>The job executes PL/SQL code.</p>
-    </note>
+    
+        <note>
+            <title>How can results be reused in subsequent jobs?</title>
+            <p>
+                To report return values the job adds result order variables.
+                The first set of return variables is static in the sense that variables are always provided, such as the
+                variables explained with section "return variables".
+                In addition, result order variables can be added dynamically.
+                The job parses output of the process and extracts variable names and values using a regular expression.
+                The regular expression is defined with the <paramref>variable_parser_reg_exp</paramref> argument.
+            </p>
+            <p>
+                Result order variables are available to jobs and instructions in subsequent nodes of a workflow.
+                The values of result orders variables can be modified by subsequent jobs and instructions.
+            </p>
+        </note>
 
-   
-    <note>
-        <title>How is the script defined?</title>
         <p>
-        	The script can be saved to a separate file. Or it can be specified as the value of the parameter <paramref>command</paramref>.
-        </p>
-        <p>
-			Before the script is executed, the script is modified by the job.
-			All directly specified name of JobScheduler parameters are substituted by their current value.
-			The following notations are supported: %parameter_name%, ${parameter_name}
-		</p>
-    </note>
-
- 
-    <note>
-        <title>How can results be reused in subsequent jobs?</title>
-        <p>
-			The job transfers the appropriate parameters in the order.
-     		The first of these are static parameters, such as those in the template docu described in the section "return parameters".
-     		On the other hand, these are dynamic parameters.
-     		The job analyzing the output of the script, and extracted there from using a regular expression, both
-     		Names and the values of these parameters.
-     		The regular expression is defined by the parameter <paramref>variable_parser_reg_exp</paramref>.
-        </p>
-        <p>
-        	These parameters are readable by all jobs in all job steps.
-     		The value of the parameter can be changed by other jobs.
-        </p>
-    </note>
-
-    <p>
-		<codeexample>
-		<embeddedExample>declare
+            <codeexample>
+                <embeddedExample>declare
   howmany NUMBER;
   p_id varchar2(20) := null;
 begin
   dbms_output.put_line('set variable1=value1');
   p_id := '12345';
   --
-  -- If the job or order contains the parameter
+  -- If the job or order contains the argument
   --
   -- table_name=scheduler_variables
   --
-  -- then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
+  -- then all following select statement is substituted to 'select count(*) into howmany from scheduler_variables;'
   --
-  select count(*) into howmany from ${SCHEDULER_PARAM_table_name};
-  select count(*) into howmany from %table_name%;
-  select count(*) into howmany from %TABLE_NAME%;
-  select count(*) into howmany from ${SCHEDULER_PARAM_TABLE_NAME};
-  select count(*) into howmany from ${scheduler_param_table_name};
-  select count(*) into howmany from ${sChEdUlEr_pArAm_tAbLe_nAmE};
+  select count(*) into howmany from ${table_name};
   --
-  -- now put the results to the buffer
-  -- JS will get the results from the buffer
+  -- now add the results to the buffer
+  -- JS7 will read the results from the buffer
   --
-  dbms_output.put_line('The table %table_name% has ' || howmany || ' rows.');
+  dbms_output.put_line('The table ${table_name} has ' || howmany || ' rows.');
   dbms_output.put_line('set howmany is ' || howmany);
   dbms_output.put_line('set variable1 is ' || p_id);
   dbms_output.put_line('set variable2 is value2');
 end;
-</embeddedExample>
+            </embeddedExample>
 
-		<explanation>
-			<title >Example: PL/SQL code</title>
-			<p>
-				If the job or order contains the parameter "table_name=scheduler_variables"
-				then all following selects are substituted to 'select count(*) into howmany from scheduler_variables;'
-			</p>
-    		<p>
-             	If the job is started in a job chain by an order, then the following parameters are added to the order as additional parameters
-              	(see the parameter <paramref>variable_parser_reg_expr</paramref>).
-              	For this purpose, the output of the script is parsed with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
-            </p>
-            <p>
-             	In the above example the following parameters are returned:
-            </p>
-            <p>
-            <ul>
-                <li>howmany=8</li>
-                <li>variable1=12345</li>
-                <li>variable2=value2</li>
-            </ul>
-            </p>
-            <p>If a parameter is set several times then the last value is used as the order parameter.</p>
-		</explanation>
-		</codeexample>
-	</p>
+                <explanation>
+                    <title >Example: PL/SQL code</title>
+                    <p>
+                        If the job or order carries the argument "table_name" with the value "scheduler_variables"
+                        then all following select statements are substituted to "select count(*) into howmany from scheduler_variables;"
+                    </p>
+                    <p>
+                        The <paramref>variable_parser_reg_expr</paramref> argument specifies a regular expression to parse output of the process,
+                        for example with the regular expression "^SET\s+([^\s]+)\s*IS\s+(.*)$".
+                    </p>
+                    <p>
+                        In the above example the following resulting order variables are created:
+                    </p>
+                    <p>
+                        <ul>
+                            <li>howmany=8</li>
+                            <li>variable1=12345</li>
+                            <li>variable2=value2</li>
+                        </ul>
+                    </p>
+                    <p>
+                        If a resulting order variables is set a number of times then the last assignment.
+                    </p>
+                </explanation>
+            </codeexample>
+        </p>
 
-  </documentation>
+    </documentation>
 
 </description>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_body_pattern" 
+    required="false">
+    <note>
+        <title>Checks the <i>Body</i> of a mail</title>
+        <p>
+        	This filter checks if the <i>Body</i>  of a mail matches a regular expression.
+        	Only mails matching this expression will be processed.
+        </p>
+        <p>See <paramref>mail_subject_pattern</paramref> argument for additional information about regular expressions.
+        </p>
+   	</note>
+</param>

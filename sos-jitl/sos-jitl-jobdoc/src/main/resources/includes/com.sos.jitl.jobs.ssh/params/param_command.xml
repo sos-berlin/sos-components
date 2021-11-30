@@ -9,5 +9,10 @@
 			Multiple commands can be separated by the command delimiter that is specified using the
 			<paramref>command_delimiter</paramref> parameter.
 		</p>
+		<br/>
+		<p>
+			The parameters <paramref>command</paramref>, <paramref>command_script</paramref> and <paramref>command_script_file</paramref>
+			 are optional by themself, but it is required to set one of the three.
+		</p>
 	</note>
 </param>

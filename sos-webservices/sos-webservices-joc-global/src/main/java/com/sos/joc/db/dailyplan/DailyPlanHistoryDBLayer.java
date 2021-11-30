@@ -74,6 +74,25 @@ public class DailyPlanHistoryDBLayer extends DBLayer {
         return getSession().getResultList(query);
     }
 
+    public Long getCountSubmitted(String controllerId, Date date, Date submissionTime) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select count(id) ");
+        hql.append("from ").append(DBLayer.DBITEM_DPL_HISTORY).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and dailyPlanDate = :date ");
+        hql.append("and submitted = true ");
+        if (submissionTime != null) {
+            hql.append("and submissionTime=:submissionTime ");
+        }
+
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("date", date);
+        if (submissionTime != null) {
+            query.setParameter("submissionTime", submissionTime);
+        }
+        return getSession().getSingleValue(query);
+    }
+
     public List<Object[]> getSubmissions(String controllerId, Date date, Boolean submitted, int limit) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("select submissionTime, count(id) as countTotal ");
         hql.append("from ").append(DBLayer.DBITEM_DPL_HISTORY).append(" ");

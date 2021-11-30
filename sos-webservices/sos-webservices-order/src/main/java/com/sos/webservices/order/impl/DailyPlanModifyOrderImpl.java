@@ -3,6 +3,7 @@ package com.sos.webservices.order.impl;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.hibernate.exception.SOSHibernateLockAcquisitionException;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
@@ -44,8 +43,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.event.EventBus;
@@ -96,54 +95,50 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         try {
             initLogging(API_CALL_MODIFY_ORDER, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
-            DailyPlanModifyOrder dailyplanModifyOrder = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
+            DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyplanModifyOrder.getControllerId(), getJocPermissions(accessToken)
-                    .getDailyPlan().getView());
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
 
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            if (response != null) {
+                return response;
             }
 
             // TODO this check is not necessary if schema specifies orderIds as required and with minItems:1
             // uniqueItems should also better
-            this.checkRequiredParameter("orderIds", dailyplanModifyOrder.getOrderIds());
-            boolean startTimeGiven = dailyplanModifyOrder.getScheduledFor() != null || (dailyplanModifyOrder.getCycle() != null
-                    && dailyplanModifyOrder.getCycle().getRepeat() != null);
-            if (!startTimeGiven && dailyplanModifyOrder.getRemoveVariables() == null && dailyplanModifyOrder.getVariables() == null) {
+            this.checkRequiredParameter("orderIds", in.getOrderIds());
+            boolean startTimeGiven = in.getScheduledFor() != null || (in.getCycle() != null && in.getCycle().getRepeat() != null);
+            if (!startTimeGiven && in.getRemoveVariables() == null && in.getVariables() == null) {
                 throw new JocMissingRequiredParameterException("variables, removeVariables, scheduledFor or cycle missing");
             }
 
-            List<String> orderIds = dailyplanModifyOrder.getOrderIds();
-            Set<String> temporaryOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
-            orderIds.removeAll(temporaryOrderIds);
+            List<String> orderIds = in.getOrderIds();
+            Set<String> tempOrderIds = orderIds.stream().filter(id -> id.matches(".*#T[0-9]+-.*")).collect(Collectors.toSet());
+            orderIds.removeAll(tempOrderIds);
 
             CategoryType category = CategoryType.DAILYPLAN;
             if (orderIds.isEmpty()) {
                 category = CategoryType.CONTROLLER;
             }
-            DBItemJocAuditLog dbAuditlog = storeAuditLog(dailyplanModifyOrder.getAuditLog(), dailyplanModifyOrder.getControllerId(), category);
-
-            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(temporaryOrderIds, dailyplanModifyOrder, accessToken, getJocError(), dbAuditlog
-                    .getId(), folderPermissions);
+            DBItemJocAuditLog auditlog = storeAuditLog(in.getAuditLog(), in.getControllerId(), category);
+            List<Err419> errors = OrdersHelper.cancelAndAddFreshOrder(tempOrderIds, in, accessToken, getJocError(), auditlog.getId(),
+                    folderPermissions);
 
             if (!orderIds.isEmpty()) {
                 setSettings();
-                List<String> listOfOrderIds = new ArrayList<String>();
+                List<String> newOrderIds = new ArrayList<String>();
                 for (String orderId : orderIds) {
-                    listOfOrderIds.add(orderId);
+                    newOrderIds.add(orderId);
                 }
 
-                DBItemDailyPlanOrder plannedOrder = null;
+                DBItemDailyPlanOrder cyclicItem = null;
                 for (String orderId : orderIds) {
-                    plannedOrder = addCyclicOrderIds(listOfOrderIds, orderId, dailyplanModifyOrder.getControllerId());
+                    cyclicItem = addCyclicOrderIds(newOrderIds, orderId, in.getControllerId());
                 }
 
-                final DBItemDailyPlanOrder finalPlannedOrder = plannedOrder;
-                if (plannedOrder != null && plannedOrder.getStartMode() == 1 && dailyplanModifyOrder.getCycle() != null) {
-                    recreateCyclicOrder(dailyplanModifyOrder, listOfOrderIds, finalPlannedOrder, dbAuditlog);
+                if (cyclicItem != null && cyclicItem.getStartMode() == 1 && in.getCycle() != null) {
+                    recreateCyclicOrder(in, newOrderIds, cyclicItem, auditlog);
                 } else {
-                    modifyOrder(listOfOrderIds, accessToken, dailyplanModifyOrder, dbAuditlog);
+                    modifyOrder(in, newOrderIds, accessToken, auditlog);
                 }
 
                 if (!errors.isEmpty()) {
@@ -178,7 +173,6 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             Calendar calendar = new ObjectMapper().readValue(config.getContent(), Calendar.class);
             calendar.setName(config.getName());
             calendar.setPath(config.getPath());
-
             return calendar;
         } finally {
             Globals.disconnect(session);
@@ -186,18 +180,61 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     }
 
-    private void removeRecreateCyclicOrder(boolean submitted, DailyPlanModifyOrder modifyOrder, final DBItemDailyPlanOrder plannedOrder,
-            List<String> orderIds, DBItemJocAuditLog auditlog) {
-        String controllerId = modifyOrder.getControllerId();
-        String dDate = modifyOrder.getDailyPlanDate();
-        if (dDate == null) {
-            dDate = plannedOrder.getOrderId().substring(1, 11);
-        }
+    private void recreateCyclicOrder(DailyPlanModifyOrder in, List<String> orderIds, final DBItemDailyPlanOrder plannedOrder,
+            DBItemJocAuditLog auditlog) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException,
+            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
+            ExecutionException {
+        SOSHibernateSession session = null;
+        try {
+            final String controllerId = plannedOrder.getControllerId();
+            final Long oldSubmissionId = plannedOrder.getSubmissionHistoryId();
 
+            // remove not submitted
+            removeCyclicOrder(in, controllerId, oldSubmissionId, orderIds, false);
+
+            FilterOrderVariables filterOV = new FilterOrderVariables();
+            filterOV.setPlannedOrderId(plannedOrder.getId());
+
+            FilterDailyPlannedOrders filterPO = new FilterDailyPlannedOrders();
+            filterPO.setControllerId(in.getControllerId());
+            filterPO.setOrderIds(orderIds);
+            filterPO.setSubmitted(true);
+
+            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[recreateCyclicOrder]");
+            DBLayerOrderVariables dbLayerOV = new DBLayerOrderVariables(session);
+            List<DBItemDailyPlanVariable> variables = dbLayerOV.getOrderVariables(filterOV, 0);
+
+            // get submitted
+            DBLayerDailyPlannedOrders dbLayerPO = new DBLayerDailyPlannedOrders(session);
+            List<DBItemDailyPlanOrder> items = dbLayerPO.getDailyPlanList(filterPO, 0);
+            Globals.disconnect(session);
+            session = null;
+
+            // has submitted
+            if (items.size() > 0) {
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(filterPO.getControllerId(), items);
+                c.thenAccept(either -> {
+                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filterPO.getControllerId());
+                    if (either.isRight()) {
+                        // remove submitted
+                        removeCyclicOrder(in, controllerId, oldSubmissionId, orderIds, true);
+                        executeRecreateCyclicOrder(in, plannedOrder, variables, auditlog);
+                    }
+                });
+
+            } else {
+                executeRecreateCyclicOrder(in, plannedOrder, variables, auditlog);
+            }
+        } finally {
+            Globals.disconnect(session);
+        }
+    }
+
+    private void removeCyclicOrder(DailyPlanModifyOrder in, String controllerId, Long oldSubmissionId, List<String> orderIds, boolean submitted) {
         SOSHibernateSession session = null;
         try {
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setListOfOrders(orderIds);
+            filter.setOrderIds(orderIds);
             filter.setSubmitted(submitted);
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[removeRecreateCyclicOrder]");
@@ -210,51 +247,57 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             dbLayer.deleteCascading(filter);
             Globals.commit(session);
 
+            if (oldSubmissionId != null) {
+                Long count = dbLayer.getCountOrdersBySubmissionId(controllerId, oldSubmissionId);
+                if (count.equals(0L)) {
+                    session.beginTransaction();
+                    dbLayer.deleteSubmission(oldSubmissionId);
+                    session.commit();
+                }
+            }
+
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
                 | DBMissingDataException | DBOpenSessionException | DBInvalidDataException | SOSException e) {
-            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), controllerId);
+            ProblemHelper.postExceptionEventIfExist(Either.left(e), getAccessToken(), getJocError(), in.getControllerId());
         } finally {
             Globals.disconnect(session);
         }
     }
 
-    private void executeRecreateCyclicOrder(DailyPlanModifyOrder modifyOrder, final DBItemDailyPlanOrder plannedOrder,
-            List<DBItemDailyPlanVariable> listOfVariables, DBItemJocAuditLog dbAuditlog) {
-        String controllerId = modifyOrder.getControllerId();
-        String dDate = modifyOrder.getDailyPlanDate();
+    private void executeRecreateCyclicOrder(DailyPlanModifyOrder in, final DBItemDailyPlanOrder item, List<DBItemDailyPlanVariable> listOfVariables,
+            DBItemJocAuditLog auditlog) {
+        String controllerId = in.getControllerId();
+        String dDate = in.getDailyPlanDate();
         if (dDate == null) {
-            dDate = plannedOrder.getOrderId().substring(1, 11);
+            dDate = item.getOrderId().substring(1, 11);
         }
 
         try {
             setSettings();
 
-            DailyPlanSettings orderInitiatorSettings = new DailyPlanSettings();
-            orderInitiatorSettings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
-            orderInitiatorSettings.setOverwrite(false);
-            orderInitiatorSettings.setSubmit(plannedOrder.getSubmitted());
+            DailyPlanSettings settings = new DailyPlanSettings();
+            settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            settings.setOverwrite(false);
+            settings.setSubmit(item.getSubmitted());
+            settings.setTimeZone(settings.getTimeZone());
+            settings.setPeriodBegin(settings.getPeriodBegin());
+            settings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dDate));
+            settings.setSubmissionTime(new Date());
 
-            orderInitiatorSettings.setTimeZone(settings.getTimeZone());
-            orderInitiatorSettings.setPeriodBegin(settings.getPeriodBegin());
+            DailyPlanRunner runner = new DailyPlanRunner(settings, false);
 
-            orderInitiatorSettings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dDate));
-            orderInitiatorSettings.setSubmissionTime(new Date());
-
-            DailyPlanRunner runner = new DailyPlanRunner(orderInitiatorSettings, false);
-
-            TimeZone savT = TimeZone.getDefault();
-            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            // TimeZone savT = TimeZone.getDefault();
+            // TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
             Schedule schedule = new Schedule();
             schedule.setVersion("");
-            schedule.setPath(plannedOrder.getSchedulePath());
-            schedule.setWorkflowName(plannedOrder.getWorkflowName());
-            schedule.setWorkflowPath(plannedOrder.getWorkflowPath());
+            schedule.setPath(item.getSchedulePath());
+            schedule.setWorkflowName(item.getWorkflowName());
+            schedule.setWorkflowPath(item.getWorkflowPath());
             schedule.setTitle("");
             schedule.setDocumentationName("");
-            schedule.setSubmitOrderToControllerWhenPlanned(plannedOrder.getSubmitted());
+            schedule.setSubmitOrderToControllerWhenPlanned(item.getSubmitted());
             schedule.setPlanOrderAutomatically(true);
-
             schedule.setVariableSets(new ArrayList<VariableSet>());
             VariableSet variableSet = new VariableSet();
             Variables variables = new Variables();
@@ -265,35 +308,32 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             if (variableSet.getVariables().getAdditionalProperties().size() > 0) {
                 schedule.getVariableSets().add(variableSet);
             }
-
             schedule.setCalendars(new ArrayList<AssignedCalendars>());
-            AssignedCalendars assignedCalendars = new AssignedCalendars();
-            Calendar calendar = getCalendarById(plannedOrder.getCalendarId());
-            assignedCalendars.setCalendarName(calendar.getName());
-            assignedCalendars.setPeriods(new ArrayList<Period>());
-            assignedCalendars.setTimeZone(modifyOrder.getTimeZone());
+            AssignedCalendars calendars = new AssignedCalendars();
+            Calendar calendar = getCalendarById(item.getCalendarId());
+            calendars.setCalendarName(calendar.getName());
+            calendars.setPeriods(new ArrayList<Period>());
+            calendars.setTimeZone(in.getTimeZone());
             Period period = new Period();
-            period.setBegin(modifyOrder.getCycle().getBegin());
-            period.setEnd(modifyOrder.getCycle().getEnd());
-            period.setRepeat(modifyOrder.getCycle().getRepeat());
-            assignedCalendars.getPeriods().add(period);
-            schedule.getCalendars().add(assignedCalendars);
+            period.setBegin(in.getCycle().getBegin());
+            period.setEnd(in.getCycle().getEnd());
+            period.setRepeat(in.getCycle().getRepeat());
+            calendars.getPeriods().add(period);
+            schedule.getCalendars().add(calendars);
 
             runner.addSchedule(schedule);
-
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(controllerId, getJocError(), getAccessToken(), plannedOrder
-                    .getDailyPlanDate(settings.getTimeZone()), plannedOrder.getSubmitted());
-            TimeZone.setDefault(savT);
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(controllerId, getJocError(), getAccessToken(), item
+                    .getDailyPlanDate(settings.getTimeZone()), item.getSubmitted());
+            // TimeZone.setDefault(savT);
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
-
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
                 auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
             }
 
             EventBus.getInstance().post(new DailyPlanEvent(dDate));
 
-            OrdersHelper.storeAuditLogDetails(auditLogDetails, dbAuditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(
+            OrdersHelper.storeAuditLogDetails(auditLogDetails, auditlog.getId()).thenAccept(either2 -> ProblemHelper.postExceptionEventIfExist(
                     either2, getAccessToken(), getJocError(), controllerId));
 
         } catch (JocConfigurationException | DBConnectionRefusedException | ControllerConnectionResetException | ControllerConnectionRefusedException
@@ -303,55 +343,12 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         }
     }
 
-    private void recreateCyclicOrder(DailyPlanModifyOrder modifyOrder, List<String> orderIds, final DBItemDailyPlanOrder plannedOrder,
-            DBItemJocAuditLog auditlog) throws SOSHibernateException, ControllerConnectionResetException, ControllerConnectionRefusedException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException,
-            ExecutionException {
-        SOSHibernateSession session = null;
-        try {
-            removeRecreateCyclicOrder(false, modifyOrder, plannedOrder, orderIds, auditlog);
-
-            FilterOrderVariables filterOV = new FilterOrderVariables();
-            filterOV.setPlannedOrderId(plannedOrder.getId());
-
-            FilterDailyPlannedOrders filterPO = new FilterDailyPlannedOrders();
-            filterPO.setControllerId(modifyOrder.getControllerId());
-            filterPO.setListOfOrders(orderIds);
-            filterPO.setSubmitted(true);
-
-            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[recreateCyclicOrder]");
-            DBLayerOrderVariables dbLayerOV = new DBLayerOrderVariables(session);
-            List<DBItemDailyPlanVariable> variables = dbLayerOV.getOrderVariables(filterOV, 0);
-
-            DBLayerDailyPlannedOrders dbLayerPO = new DBLayerDailyPlannedOrders(session);
-            List<DBItemDailyPlanOrder> plannedOrders = dbLayerPO.getDailyPlanList(filterPO, 0);
-            Globals.disconnect(session);
-            session = null;
-
-            if (plannedOrders.size() > 0) {
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(filterPO.getControllerId(), plannedOrders);
-                c.thenAccept(either -> {
-                    ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), filterPO.getControllerId());
-                    if (either.isRight()) {
-                        removeRecreateCyclicOrder(true, modifyOrder, plannedOrder, orderIds, auditlog);
-                        executeRecreateCyclicOrder(modifyOrder, plannedOrder, variables, auditlog);
-                    }
-                });
-
-            } else {
-                executeRecreateCyclicOrder(modifyOrder, plannedOrder, variables, auditlog);
-            }
-        } finally {
-            Globals.disconnect(session);
-        }
-    }
-
-    private void submitOrdersToController(List<DBItemDailyPlanOrder> plannedOrders) throws JsonParseException, JsonMappingException,
+    private void submitOrdersToController(List<DBItemDailyPlanOrder> items) throws JsonParseException, JsonMappingException,
             DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException, SOSException, URISyntaxException,
             InterruptedException, ExecutionException, TimeoutException {
 
-        if (plannedOrders.size() > 0) {
+        if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
             settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
             settings.setOverwrite(false);
@@ -360,11 +357,11 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setPeriodBegin(settings.getPeriodBegin());
 
             DailyPlanRunner runner = new DailyPlanRunner(settings, false);
-            runner.submitOrders(plannedOrders.get(0).getControllerId(), getJocError(), getAccessToken(), plannedOrders);
+            runner.submitOrders(items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
         }
     }
 
-    private void updateVariables(SOSHibernateSession session, DailyPlanModifyOrder modifyOrder, DBItemDailyPlanOrder plannedOrder)
+    private void updateVariables(SOSHibernateSession session, DailyPlanModifyOrder in, DBItemDailyPlanOrder plannedOrder)
             throws SOSHibernateException, IOException {
 
         DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
@@ -372,15 +369,15 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         DBItemDailyPlanVariable item = new DBItemDailyPlanVariable();
 
         filter.setPlannedOrderId(plannedOrder.getId());
-        List<DBItemDailyPlanVariable> orderVariables = dbLayer.getOrderVariables(filter, 0);
-        if (orderVariables.size() > 0) {
-            item = orderVariables.get(0);
+        List<DBItemDailyPlanVariable> items = dbLayer.getOrderVariables(filter, 0);
+        if (items.size() > 0) {
+            item = items.get(0);
         } else {
             item.setPlannedOrderId(plannedOrder.getId());
             item.setCreated(new Date());
         }
 
-        if (modifyOrder.getVariables() != null) {
+        if (in.getVariables() != null) {
             Variables variables = new Variables();
             if (item.getVariableValue() != null) {
                 try {
@@ -410,10 +407,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                 } else {
                     map.put(variable.getKey(), variable.getValue());
                 }
-
             }
 
-            for (Entry<String, Object> variable : modifyOrder.getVariables().getAdditionalProperties().entrySet()) {
+            for (Entry<String, Object> variable : in.getVariables().getAdditionalProperties().entrySet()) {
                 if (variable.getValue() instanceof List) {
                     @SuppressWarnings("unchecked")
                     List<Map<String, Object>> valList = (List<Map<String, Object>>) variable.getValue();
@@ -436,7 +432,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             item.setModified(new Date());
         }
 
-        if (modifyOrder.getRemoveVariables() != null) {
+        if (in.getRemoveVariables() != null) {
             Variables variables;
             if (item.getVariableValue() != null) {
                 variables = Globals.objectMapper.readValue(item.getVariableValue(), Variables.class);
@@ -445,18 +441,17 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             }
             Map<String, Object> map = new HashMap<String, Object>();
             for (Entry<String, Object> variable : variables.getAdditionalProperties().entrySet()) {
-                if (modifyOrder.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {
+                if (in.getRemoveVariables().getAdditionalProperties().get(variable.getKey()) == null) {
                     map.put(variable.getKey(), variable.getValue());
                 }
             }
             variables.getAdditionalProperties().clear();
             variables.setAdditionalProperties(map);
-            String variablesJson = Globals.objectMapper.writeValueAsString(variables);
-            item.setVariableValue(variablesJson);
+            item.setVariableValue(Globals.objectMapper.writeValueAsString(variables));
         }
 
         if (item.getVariableValue() != null && !item.getVariableValue().isEmpty()) {
-            if (orderVariables.size() > 0) {
+            if (items.size() > 0) {
                 session.update(item);
             } else {
                 session.save(item);
@@ -465,37 +460,37 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
     }
 
-    private void modifyOrder(List<String> orderIds, String accessToken, DailyPlanModifyOrder modifyOrder, DBItemJocAuditLog auditlog)
+    private void modifyOrder(DailyPlanModifyOrder in, List<String> orderIds, String accessToken, DBItemJocAuditLog auditlog)
             throws JocConfigurationException, DBConnectionRefusedException, ControllerInvalidResponseDataException, DBOpenSessionException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, DBInvalidDataException, SOSException,
             URISyntaxException, InterruptedException, ExecutionException, IOException, ParseException, TimeoutException {
 
         SOSHibernateSession session = null;
         try {
+            final String dailyPlanDate = in.getDailyPlanDate();
+
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-            filter.setControllerId(modifyOrder.getControllerId());
-            filter.setListOfOrders(orderIds);
+            filter.setControllerId(in.getControllerId());
+            filter.setOrderIds(orderIds);
 
-            final String dailyPlanDate = modifyOrder.getDailyPlanDate();
-
-            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER);
+            session = Globals.createSosHibernateStatelessConnection("modifyOrder");
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
-            List<DBItemDailyPlanOrder> plannedOrders = dbLayer.getDailyPlanList(filter, 0);
+            List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
             Globals.disconnect(session);
             session = null;
             String controllerId = filter.getControllerId();
 
-            if (plannedOrders.size() > 0) {
-                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, plannedOrders);
+            if (items.size() > 0) {
+                CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, items);
                 c.thenAccept(either -> {
 
                     SOSHibernateSession newSession = null;
                     try {
-
                         Date scheduledForDate = null;
-                        if (modifyOrder.getScheduledFor() != null) {
-                            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(modifyOrder.getScheduledFor(), modifyOrder
-                                    .getTimeZone());
+                        DBItemDailyPlanSubmission newSubmission = null;
+                        Long oldSubmissionId = items.get(0).getSubmissionHistoryId();
+                        if (in.getScheduledFor() != null) {
+                            Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(in.getScheduledFor(), in.getTimeZone());
                             scheduledForDate = JobSchedulerDate.nowInUtc();
                             if (!scheduledFor.equals(Optional.empty())) {
                                 scheduledForDate = Date.from(scheduledFor.get());
@@ -505,70 +500,66 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                         newSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[removeFromJobSchedulerController]");
                         newSession.setAutoCommit(false);
 
-                        for (DBItemDailyPlanOrder item : plannedOrders) {
+                        if (scheduledForDate != null) {
+                            newSubmission = newSubmission(controllerId, scheduledForDate);
+                            newSession.save(newSubmission);
+                        }
+
+                        DBLayerDailyPlannedOrders dbLayerPO = new DBLayerDailyPlannedOrders(newSession);
+                        DBLayerOrderVariables dbLayerOV = new DBLayerOrderVariables(newSession);
+                        List<DBItemDailyPlanOrder> newItems = new ArrayList<>();
+
+                        for (DBItemDailyPlanOrder item : items) {
                             Globals.beginTransaction(newSession);
                             item.setModified(new Date());
-                            if ((modifyOrder.getScheduledFor() != null) && (scheduledForDate != null)) {
+                            if (scheduledForDate != null) {
                                 Long expectedDuration = item.getExpectedEnd().getTime() - item.getPlannedStart().getTime();
                                 item.setExpectedEnd(new Date(expectedDuration + scheduledForDate.getTime()));
                                 item.setPlannedStart(scheduledForDate);
+                                item.setSubmissionHistoryId(newSubmission.getId());
                                 newSession.update(item);
                             }
 
-                            if ((modifyOrder.getVariables() != null && modifyOrder.getVariables() != null) || (modifyOrder
-                                    .getRemoveVariables() != null && modifyOrder.getRemoveVariables() != null)) {
-                                updateVariables(newSession, modifyOrder, item);
+                            if ((in.getVariables() != null && in.getVariables() != null) || (in.getRemoveVariables() != null && in
+                                    .getRemoveVariables() != null)) {
+                                updateVariables(newSession, in, item);
                             }
 
                             if (item.getSubmitted()) {
-                                List<DBItemDailyPlanWithHistory> items = new ArrayList<DBItemDailyPlanWithHistory>();
-                                DBItemDailyPlanWithHistory dailyPlanWithHistory = new DBItemDailyPlanWithHistory();
-                                dailyPlanWithHistory.setOrderId(item.getOrderId());
-                                dailyPlanWithHistory.setPlannedOrderId(item.getId());
-                                items.add(dailyPlanWithHistory);
-
-                                DBLayerDailyPlannedOrders dbLayerPO = new DBLayerDailyPlannedOrders(newSession);
-                                DBLayerOrderVariables dbLayerOV = new DBLayerOrderVariables(newSession);
+                                Long oldId = item.getId();
 
                                 FilterDailyPlannedOrders filterPO = new FilterDailyPlannedOrders();
                                 filterPO.setPlannedOrderId(item.getId());
+                                dbLayerPO.delete(filterPO);
 
-                                int retryCount = 20;
-                                do {
-                                    try {
-                                        dbLayerPO.delete(filterPO);
-                                        DBItemDailyPlanOrder dailyPlanOrder = dbLayerPO.insertFrom(item);
-                                        dbLayerOV.update(dailyPlanWithHistory.getPlannedOrderId(), dailyPlanOrder.getId());
-                                        if (retryCount != 20) {
-                                            LOGGER.info("deadlock resolved successfully update dpl_orders");
-                                        }
-                                        retryCount = 0;
-                                    } catch (SOSHibernateLockAcquisitionException e) {
-                                        LOGGER.info("Try to resolve deadlock update dpl_orders");
-                                        retryCount = retryCount - 1;
-                                        try {
-                                            java.lang.Thread.sleep(500);
-                                        } catch (InterruptedException e1) {
-                                        }
-                                        if (retryCount == 0) {
-                                            throw e;
-                                        }
-                                        LOGGER.debug("Retry update orders because SOSHibernateLockAcquisitionException was raised. Retry-counter: "
-                                                + retryCount);
-                                    }
-                                } while (retryCount > 0);
-
+                                DBItemDailyPlanOrder newItem = dbLayerPO.insertFrom(item);
+                                dbLayerOV.update(oldId, newItem.getId());
                                 Globals.commit(newSession);
-                                submitOrdersToController(plannedOrders);
+
+                                newItems.add(newItem);
                             } else {
                                 Globals.commit(newSession);
                             }
                         }
-                        
+                        if (newSubmission != null) {
+                            Long count = dbLayerPO.getCountOrdersBySubmissionId(controllerId, oldSubmissionId);
+                            if (count.equals(0L)) {
+                                newSession.beginTransaction();
+                                dbLayerPO.deleteSubmission(oldSubmissionId);
+                                newSession.commit();
+                            }
+                        }
+                        newSession.close();
+                        newSession = null;
+
+                        if (newItems.size() > 0) {
+                            submitOrdersToController(newItems);
+                        }
+
                         EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
-                        OrdersHelper.storeAuditLogDetails(plannedOrders.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item
-                                .getOrderId(), controllerId)).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
-                                        .postExceptionEventIfExist(either2, accessToken, getJocError(), modifyOrder.getControllerId()));
+                        OrdersHelper.storeAuditLogDetails(items.stream().map(item -> new AuditLogDetail(item.getWorkflowPath(), item.getOrderId(),
+                                controllerId)).collect(Collectors.toSet()), auditlog.getId()).thenAccept(either2 -> ProblemHelper
+                                        .postExceptionEventIfExist(either2, accessToken, getJocError(), in.getControllerId()));
 
                     } catch (IOException | DBConnectionRefusedException | DBInvalidDataException | DBMissingDataException | JocConfigurationException
                             | DBOpenSessionException | ControllerConnectionResetException | ControllerConnectionRefusedException | ParseException
@@ -582,6 +573,18 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         } finally {
             Globals.disconnect(session);
         }
+    }
+
+    private DBItemDailyPlanSubmission newSubmission(String controllerId, Date scheduleForDate) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date dateWithoutTime = sdf.parse(sdf.format(scheduleForDate));
+
+        DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
+        item.setControllerId(controllerId);
+        item.setSubmissionForDate(dateWithoutTime);
+        item.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+        item.setCreated(new Date());
+        return item;
     }
 
 }

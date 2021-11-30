@@ -38,7 +38,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
-import js7.launcher.forjava.internal.BlockingInternalJob;
+import js7.executor.forjava.internal.BlockingInternalJob;
 
 public abstract class ABlockingInternalJob<A extends JobArguments> implements BlockingInternalJob {
 

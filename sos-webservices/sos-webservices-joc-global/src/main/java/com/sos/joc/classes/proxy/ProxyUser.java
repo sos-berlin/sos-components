@@ -54,6 +54,10 @@ public enum ProxyUser {
                 .string()).getBytes())));
     }
     
+    public static String getBasicAuthorization(String user, String pwd) {
+        return new String(Base64.getEncoder().encode((user + ":" + pwd).getBytes()));
+    }
+    
     public String getBasicAuthorization() {
         return new String(Base64.getEncoder().encode((getUser() + ":" + getPwd()).getBytes()));
     }
@@ -62,12 +66,12 @@ public enum ProxyUser {
         ConfigurationGlobalsJoc settings = Globals.getConfigurationGlobalsJoc();
         switch (this) {
         case JOC:
-            if (settings.getJOCPwd() != null && !SOSString.isEmpty(settings.getJOCPwd().getValue())) {
+            if (settings.getJOCPwd() != null && settings.getJOCPwd().getValue() != null) {
                 return settings.getJOCPwd().getValue();
             }
             break;
         case HISTORY:
-            if (settings.getHistoryPwd() != null && !SOSString.isEmpty(settings.getJOCPwd().getValue())) {
+            if (settings.getHistoryPwd() != null && settings.getJOCPwd().getValue() != null) {
                 return settings.getHistoryPwd().getValue();
             }
             break;

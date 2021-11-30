@@ -48,12 +48,12 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         LOGGER.debug("Delete orders from the daily plan");
         try {
             initLogging(API_CALL_DELETE, filterBytes, accessToken);
-            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
+            DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getFilter()
-                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
-                            accessToken).getOrders().getCancel()).collect(Collectors.toSet());
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getCancel())
+                    .collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
@@ -61,14 +61,14 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-            storeAuditLog(dailyPlanOrderFilter.getAuditLog(), dailyPlanOrderFilter.getControllerId(), CategoryType.DAILYPLAN);
+            this.checkRequiredParameter("filter", in.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
+            storeAuditLog(in.getAuditLog(), in.getControllerId(), CategoryType.DAILYPLAN);
             setSettings();
 
-            deleteOrdersFromPlan(allowedControllers, dailyPlanOrderFilter);
+            deleteOrdersFromPlan(allowedControllers, in);
 
-            EventBus.getInstance().post(new DailyPlanEvent(dailyPlanOrderFilter.getFilter().getDailyPlanDate()));
+            EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDailyPlanDate()));
 
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
@@ -80,52 +80,31 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
         }
     }
 
-    private void deleteOrdersFromPlan(Set<String> allowedControllers, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
+    private void deleteOrdersFromPlan(Set<String> allowedControllers, DailyPlanOrderFilter in) throws JocConfigurationException,
             DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
             DBInvalidDataException, InterruptedException, ExecutionException {
 
         for (String controllerId : allowedControllers) {
-            FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, false);
+            FilterDailyPlannedOrders filter = getOrderFilter("deleteOrdersFromPlan", controllerId, in, true);
+            if (filter == null) {
+                continue;
+            }
             filter.addState(DailyPlanOrderStateText.PLANNED);
 
             SOSHibernateSession session = null;
             try {
                 session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
-                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 session.setAutoCommit(false);
                 Globals.beginTransaction(session);
-                dbLayerDailyPlannedOrders.deleteCascading(filter);
+                dbLayer.deleteCascading(filter);
                 Globals.commit(session);
             } finally {
                 Globals.disconnect(session);
             }
         }
 
-    }
-
-    /** opens nested sessions: 1)in this method 2) in getOrderFilter */
-    private void deleteOrdersFromPlanOld(Set<String> allowedControllers, DailyPlanOrderFilter dailyPlanOrderFilter) throws JocConfigurationException,
-            DBConnectionRefusedException, ControllerInvalidResponseDataException, JsonProcessingException, SOSException, URISyntaxException,
-            DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException,
-            DBInvalidDataException, InterruptedException, ExecutionException {
-        SOSHibernateSession sosHibernateSession = null;
-
-        try {
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
-            sosHibernateSession.setAutoCommit(false);
-            for (String controllerId : allowedControllers) {
-                Globals.beginTransaction(sosHibernateSession);
-
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter,true);
-                filter.addState(DailyPlanOrderStateText.PLANNED);
-                dbLayerDailyPlannedOrders.deleteCascading(filter);
-                Globals.commit(sosHibernateSession);
-            }
-        } finally {
-            Globals.disconnect(sosHibernateSession);
-        }
     }
 
 }

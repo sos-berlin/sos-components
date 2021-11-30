@@ -9,26 +9,21 @@
 	</values>
 	<note>
 		<p>
-			This parameter specifies the authorization method for the SSH protocol -
-			the <paramval>publickey</paramval> and <paramval>password</paramval> methods are supported.
-			The method "Keyboard-Interactive" is not supported.
-			We recommend to use the method "publickey".
+			This argument specifies the authentication method to use for the connection to the SSH server:
+			both the <paramval>publickey</paramval> and <paramval>password</paramval> methods are supported.
+			The "Keyboard-Interactive" method is not supported as it makes not sense for an unattended application
+            such as JS7 JobScheduler that does not dispose of a keyboard to type passwords on-the-fly.
 		</p>
 		<p>
-			When the <paramval>publickey</paramval> authorization method is used,
-			then the path name of the private key file must be set in the <paramref>auth_file</paramref> parameter.
-			Should the private key file be secured by a password then this password must be specified with the
-			<paramref>password</paramref> parameter.
+			If the <paramval>publickey</paramval> authentication method is used
+			then the path to the private key file has to be specified with the <paramref>auth_file</paramref> argument.
+			Should the private key file be secured by a password then the password has to be specified with the
+			<paramref>password</paramref> argument.
 		</p>
 		<p>
-			For the <paramval>password</paramval> authorization method the password for each user account must be
-			specified using the <paramref>password</paramref> parameter.
-		</p>
-		<p>
-			The authorization methods which are enabled depends on the SSH server configuration.
-			Not all SSH server configurations support the <paramval>password</paramval> authorization method.
-			In case that the server support this method one have to check, wether this is activated in the config-file /etc/ssh_config.
-			The value of the parameter must set to "yes".
+			The SSH server configuration decides about applicable authentication methods.
+			Depending on the SSH server configuration use of the <paramval>password</paramval> authentication method is applicable or not.
+			The SSH server configuration on Unix based servers typically is specified from the /etc/ssh_config configuration file.
 		</p>
 	</note>
 </param>

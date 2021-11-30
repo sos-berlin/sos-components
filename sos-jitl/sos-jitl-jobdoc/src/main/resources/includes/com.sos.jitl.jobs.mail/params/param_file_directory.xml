@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_file_directory" 
+    required="false">
+    <note>
+        <title>Directory in the file system for dumping mails</title>
+        <p>
+        	This argument is required if the <paramref>mail_action</paramref> agument is used with the  <code>dump</code> value.<br/> 
+        	The directory has to exist and has to be writable. The job does not create the directory.
+        </p>
+   	</note>
+</param>

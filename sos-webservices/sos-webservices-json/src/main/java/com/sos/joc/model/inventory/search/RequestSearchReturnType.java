@@ -14,7 +14,7 @@ public enum RequestSearchReturnType {
     NOTICEBOARD("NOTICEBOARD"),
     LOCK("LOCK"),
     SCHEDULE("SCHEDULE"),
-    SCRIPT("SCRIPT");
+    INCLUDESCRIPT("INCLUDESCRIPT");
     private final String value;
     private final static Map<String, RequestSearchReturnType> CONSTANTS = new HashMap<String, RequestSearchReturnType>();
 

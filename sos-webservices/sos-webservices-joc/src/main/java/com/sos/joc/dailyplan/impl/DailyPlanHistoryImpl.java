@@ -11,7 +11,11 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSString;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -39,6 +43,7 @@ import com.sos.schema.JsonValidator;
 @Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanHistoryResource {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHistoryImpl.class);
     private static final int DEFAULT_LIMIT = 5_000;
     private static final String PREFIX_ERROR = "ERROR:";
     private static final String PREFIX_WARN = "WARN:";
@@ -87,17 +92,26 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                 ControllerItem ci = new ControllerItem();
                 ci.setControllerId((String) o[1]);
                 ci.setCountTotal((Long) o[2]);
+                if (in.getSubmitted() == null) {// submitted/not submitted
+                    ci.setCountSubmitted(dbLayer.getCountSubmitted(ci.getControllerId(), date, null));
+                } else if (in.getSubmitted()) {// only submitted
+                    ci.setCountSubmitted(ci.getCountTotal());
+                } else {// only not submitted
+                    ci.setCountSubmitted(0L);
+                }
 
                 DateItem di = null;
                 if (map.containsKey(date)) {
                     di = map.get(date);
                     di.setCountTotal(di.getCountTotal() + ci.getCountTotal());
+                    di.setCountSubmitted(di.getCountSubmitted() + ci.getCountSubmitted());
                     di.getControllers().add(ci);
                     di.getControllers().sort((e1, e2) -> e1.getControllerId().compareTo(e2.getControllerId()));
                 } else {
                     di = new DateItem();
                     di.setDate(date);
                     di.setCountTotal(ci.getCountTotal());
+                    di.setCountSubmitted(ci.getCountSubmitted());
                     di.setControllers(new ArrayList<>());
                     di.getControllers().add(ci);
                 }
@@ -146,8 +160,6 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_SUBMISSIONS);
             DailyPlanHistoryDBLayer dbLayer = new DailyPlanHistoryDBLayer(session);
             List<Object[]> result = dbLayer.getSubmissions(in.getControllerId(), date, in.getSubmitted(), getLimit(in.getLimit()));
-            session.close();
-            session = null;
 
             SubmissionsResponse answer = new SubmissionsResponse();
             answer.setDeliveryDate(new Date());
@@ -156,11 +168,25 @@ public class DailyPlanHistoryImpl extends JOCResourceImpl implements IDailyPlanH
                     SubmissionItem item = new SubmissionItem();
                     item.setSubmissionTime((Date) e[0]);
                     item.setCountTotal((Long) e[1]);
+
+                    if (in.getSubmitted() == null) {// submitted/not submitted
+                        try {
+                            item.setCountSubmitted(dbLayer.getCountSubmitted(in.getControllerId(), date, item.getSubmissionTime()));
+                        } catch (SOSHibernateException e1) {
+                            LOGGER.error(String.format("[%s][%s][%s]%s", in.getControllerId(), date, item.getSubmissionTime(), e.toString()), e);
+                        }
+                    } else if (in.getSubmitted()) {// only submitted
+                        item.setCountSubmitted(item.getCountTotal());
+                    } else {// only not submitted
+                        item.setCountSubmitted(0L);
+                    }
                     return item;
                 }).collect(Collectors.toList()));  // sorting by the client
                 // descending sort
                 // .sorted((e1, e2) -> e2.getSubmissionTime().compareTo(e1.getSubmissionTime())).collect(Collectors.toList()));
             }
+            session.close();
+            session = null;
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {

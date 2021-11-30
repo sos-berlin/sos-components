@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_post_action"
+    default_value="mark_as_read"  
+    required="false"
+    group="Post action parameters">
+    <note>
+        <title>Further action to perform</title>
+        <p>
+        	You can use one of the following actions:
+			<ul>
+				<li><code>none</code>: no action</li>
+				<li><code>mark_as_read</code>: marks the mail as being read</li>
+				<li><code>copy</code>: copies the mail to another mail folder located in <paramref>mail_target_folder</paramref></li>
+				<li><code>move</code>: moves the mail to another mail folder located in <paramref>mail_target_folder</paramref></li>
+				<li><code>delete</code>: deletes the mail</li>
+			</ul>
+        </p>
+   	</note>
+</param>

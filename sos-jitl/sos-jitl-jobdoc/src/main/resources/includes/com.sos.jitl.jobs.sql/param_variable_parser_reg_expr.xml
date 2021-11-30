@@ -2,6 +2,7 @@
 <param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1"
        xmlns:xhtml="http://www.w3.org/1999/xhtml"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
        name="variable_parser_reg_expr"
        default_value="^SET\s+([^\s]+)\s*IS\s+(.*)$"
        required="false"
@@ -11,11 +12,11 @@
  
         <note>
 		    <title>Regular Expression for Parameter parsing</title>
-          <p>The script output will parse with this regular expression. The hits are available as order parameters.
+          <p>The process output is parsed using this regular expression. Any matches are available as order variables.
           </p>
           <ul>
-            <li>The regular expression must have two groups.</li>
-            <li>The first group for the parameter name and the second for the value.</li>
+            <li>The regular expression has to include two groups.</li>
+            <li>The first group states the variable name and the second group states the value.</li>
           </ul>
           <p>
           The 'prompt' in SQL*Plus writes the output. Example:
@@ -39,10 +40,11 @@
             end;
                </pre>
              <ul>
-               <li>variable_parser_reg_expr="^SET\s+([^\s]+)\s*IS\s+(.*)$" returns the order parameter "hello=world"</li>
-               <li>variable_parser_reg_expr="^([^=]+)\s*=\s+(.*)$" returns the order parameter "foo=bar"</li>
+               <li>variable_parser_reg_expr="^SET\s+([^\s]+)\s*IS\s+(.*)$" returns the order variable assignment "hello=world"</li>
+               <li>variable_parser_reg_expr="^([^=]+)\s*=\s+(.*)$" returns the order variable assignment "foo=bar"</li>
              </ul>
 
         </note>
-        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+        <xi:include href="../common/notes/note_regexp_remarks.xml" parse="xml"/>
+        <xi:include href="../common/notes/note_regexp_additional.xml" parse="xml" />
       </param>

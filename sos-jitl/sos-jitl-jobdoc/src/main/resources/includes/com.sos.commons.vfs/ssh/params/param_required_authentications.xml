@@ -5,7 +5,7 @@
 	name="required_authentications" required="false" DataType="java.util.List">
         <note>
 			<p>
-				Specifies the authentication methods that must be successfully completed for a user to be granted access.
+				Specifies the authentication methods that have to be completed successfully for a client to be granted access to the remote server.
 			</p>
         </note>
 </param>

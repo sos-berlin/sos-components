@@ -6,7 +6,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<p>
 		The JITL category "FileOperations" includes commonly used operations such as copying, renaming, moving and deleting of files. 
-		These File Operations are based on Java so they are available on all by JobScheduler supported os-platforms . 
+		These File Operations are based on Java so they are available on all by JS7 Agent supported os-platforms. 
 		In comparison with functions such as system-specific operating-system commands like copy, cp, move, mv, del and rm, 
 		which behave differently on different operating systems, handling and behavior of the File Operations job-classes is 
 		identical on all supported operating systems.
@@ -14,5 +14,5 @@
 	<p>
 		Most of the job implementations are supporting "regular expressions" on file names for filtering and searching the files which has to be processed.
 	</p>
-	<p>File operations are often used in workflows that e.g. receive files	by SFTP, rename the files and transfer them to different locations.</p>
+	<p>File operations are often used in workflows that e.g. receive files by SFTP, rename the files and transfer them to different locations.</p>
 </note>

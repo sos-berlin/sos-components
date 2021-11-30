@@ -113,14 +113,15 @@ public class DailyPlanService extends AJocClusterService {
     }
 
     private DailyPlanSettings getSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
-        DailyPlanSettings initiatorGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
+        DailyPlanSettings dailyPlanGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
 
+        // TODO why create new DailyPlanSettings?
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setTimeZone(initiatorGlobalSettings.getTimeZone());
-        settings.setPeriodBegin(initiatorGlobalSettings.getPeriodBegin());
-        settings.setDailyPlanStartTime(initiatorGlobalSettings.getDailyPlanStartTime());
-        settings.setDayAheadPlan(initiatorGlobalSettings.getDayAheadPlan());
-        settings.setDayAheadSubmit(initiatorGlobalSettings.getDayAheadSubmit());
+        settings.setTimeZone(dailyPlanGlobalSettings.getTimeZone());
+        settings.setPeriodBegin(dailyPlanGlobalSettings.getPeriodBegin());
+        settings.setDailyPlanStartTime(dailyPlanGlobalSettings.getDailyPlanStartTime());
+        settings.setDayAheadPlan(dailyPlanGlobalSettings.getDayAheadPlan());
+        settings.setDayAheadSubmit(dailyPlanGlobalSettings.getDayAheadSubmit());
 
         settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
         settings.setStartMode(mode);

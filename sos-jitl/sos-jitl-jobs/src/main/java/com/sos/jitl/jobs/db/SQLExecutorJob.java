@@ -14,6 +14,8 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.jitl.jobs.common.ABlockingInternalJob;
 import com.sos.jitl.jobs.common.JobStep;
 import com.sos.jitl.jobs.db.SQLExecutorJobArguments.ResultSetAsVariables;
+import com.sos.jitl.jobs.db.common.Export2CSV;
+import com.sos.jitl.jobs.exception.SOSJobRequiredArgumentMissingException;
 
 import js7.data_for_java.order.JOutcome;
 
@@ -85,12 +87,23 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
         try {
             SQLExecutorJobArguments args = step.getArguments();
 
+            rs = executor.getResultSet(statement);
+
             boolean checkResultSet = args.getResultSetAsVariables() != null;
             boolean isParamValue = false;
             if (checkResultSet) {
-                isParamValue = args.getResultSetAsVariables().equals(ResultSetAsVariables.NAME_VALUE);
+                switch (args.getResultSetAsVariables()) {
+                case CSV:
+                    if (args.getResultFile().getValue() == null) {
+                        throw new SOSJobRequiredArgumentMissingException(args.getResultFile().getName());
+                    }
+                    Export2CSV.export(rs, args.getResultFile().getValue(), step.getLogger());
+                    return;
+                default:
+                    isParamValue = args.getResultSetAsVariables().equals(ResultSetAsVariables.NAME_VALUE);
+                    break;
+                }
             }
-            rs = executor.getResultSet(statement);
 
             if (checkResultSet || args.getResultSetAsWarning()) {
                 StringBuilder warn = new StringBuilder();
@@ -147,7 +160,7 @@ public class SQLExecutorJob extends ABlockingInternalJob<SQLExecutorJobArguments
                     warning.append(warn);
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw e;
         } finally {
             executor.close(rs);

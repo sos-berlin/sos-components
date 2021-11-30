@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_source_folders" 
+    default_value="INBOX" 
+    required="false"
+    group="Source and filter parameter">
+    <note>
+        <title>Source folders</title>
+        <p>
+        	The path to a folder in the incoming mail box that should be processed.
+            The path can be a folder name such as "Drafts" or a folder hierarchy such as "public/com/Junk". The path is considered being case sensitive.
+        	You can concatenate a number of folders by use of a semicolon ";". Folders are handled in the order of occurrence with the argument.
+        </p>
+   	</note>
+</param>

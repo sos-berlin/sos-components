@@ -23,6 +23,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "date",
     "countTotal",
+    "countSubmitted",
     "controllers"
 })
 public class DateItem {
@@ -46,6 +47,15 @@ public class DateItem {
      */
     @JsonProperty("countTotal")
     private Long countTotal;
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    private Long countSubmitted;
     @JsonProperty("controllers")
     private List<ControllerItem> controllers = new ArrayList<ControllerItem>();
 
@@ -97,6 +107,30 @@ public class DateItem {
         this.countTotal = countTotal;
     }
 
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public Long getCountSubmitted() {
+        return countSubmitted;
+    }
+
+    /**
+     * non negative long
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("countSubmitted")
+    public void setCountSubmitted(Long countSubmitted) {
+        this.countSubmitted = countSubmitted;
+    }
+
     @JsonProperty("controllers")
     public List<ControllerItem> getControllers() {
         return controllers;
@@ -109,12 +143,12 @@ public class DateItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("date", date).append("countTotal", countTotal).append("controllers", controllers).toString();
+        return new ToStringBuilder(this).append("date", date).append("countTotal", countTotal).append("countSubmitted", countSubmitted).append("controllers", controllers).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(date).append(controllers).append(countTotal).toHashCode();
+        return new HashCodeBuilder().append(date).append(controllers).append(countTotal).append(countSubmitted).toHashCode();
     }
 
     @Override
@@ -126,7 +160,7 @@ public class DateItem {
             return false;
         }
         DateItem rhs = ((DateItem) other);
-        return new EqualsBuilder().append(date, rhs.date).append(controllers, rhs.controllers).append(countTotal, rhs.countTotal).isEquals();
+        return new EqualsBuilder().append(date, rhs.date).append(controllers, rhs.controllers).append(countTotal, rhs.countTotal).append(countSubmitted, rhs.countSubmitted).isEquals();
     }
 
 }

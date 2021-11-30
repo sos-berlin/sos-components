@@ -7,15 +7,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.commons.util.SOSPath;
+import com.sos.commons.util.common.SOSCommandResult;
 import com.sos.jitl.jobs.common.JobLogger;
 
 public class SQLPLUSCommandHandler {

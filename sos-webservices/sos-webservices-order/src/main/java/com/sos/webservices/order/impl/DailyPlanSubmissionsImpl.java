@@ -7,9 +7,6 @@ import java.util.List;
 
 import javax.ws.rs.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -30,64 +27,61 @@ import com.sos.webservices.order.resource.IDailyPlanSubmissionsResource;
 @Path("daily_plan")
 public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements IDailyPlanSubmissionsResource {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmissionsImpl.class);
     private static final String API_CALL = "./daily_plan/submissions";
 
     @Override
     public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
-            DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
-                    DailyPlanSubmissionsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(accessToken)
-                    .getDailyPlan().getView());
+            DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
+            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
 
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("filter", dailyPlanSubmissionHistoryFilter.getFilter());
-            this.checkRequiredParameter("dateTo", dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+            this.checkRequiredParameter("filter", in.getFilter());
+            this.checkRequiredParameter("dateTo", in.getFilter().getDateTo());
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
 
-            DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
+            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
 
-            Globals.beginTransaction(sosHibernateSession);
+            Globals.beginTransaction(session);
 
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
-            filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                Date fromDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom());
+            filter.setControllerId(in.getControllerId());
+            if (in.getFilter().getDateFrom() != null) {
+                Date fromDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateFrom());
                 filter.setDateFrom(fromDate);
             }
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
-                Date toDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+            if (in.getFilter().getDateTo() != null) {
+                Date toDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateTo());
                 filter.setDateTo(toDate);
             }
 
             filter.setSortMode("desc");
             filter.setOrderCriteria("id");
-            DailyPlanSubmissions dailyPlanSubmissions = new DailyPlanSubmissions();
-            List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
 
-            List<DBItemDailyPlanSubmission> listOfDailyPlanSubmissions = dbLayerDailyPlan.getDailyPlanSubmissions(filter, 0);
-            for (DBItemDailyPlanSubmission dbItemDailySubmissionHistory : listOfDailyPlanSubmissions) {
+            List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
+            List<DBItemDailyPlanSubmission> items = dbLayer.getDailyPlanSubmissions(filter, 0);
+            for (DBItemDailyPlanSubmission item : items) {
                 DailyPlanSubmissionsItem p = new DailyPlanSubmissionsItem();
-                p.setSubmissionHistoryId(dbItemDailySubmissionHistory.getId());
-                p.setControllerId(dbItemDailySubmissionHistory.getControllerId());
-                p.setDailyPlanDate(dbItemDailySubmissionHistory.getSubmissionForDate());
-                p.setSubmissionTime(dbItemDailySubmissionHistory.getCreated());
+                p.setSubmissionHistoryId(item.getId());
+                p.setControllerId(item.getControllerId());
+                p.setDailyPlanDate(item.getSubmissionForDate());
+                p.setSubmissionTime(item.getCreated());
                 result.add(p);
             }
 
-            dailyPlanSubmissions.setSubmissionHistoryItems(result);
-            dailyPlanSubmissions.setDeliveryDate(Date.from(Instant.now()));
+            DailyPlanSubmissions answer = new DailyPlanSubmissions();
+            answer.setSubmissionHistoryItems(result);
+            answer.setDeliveryDate(Date.from(Instant.now()));
 
-            return JOCDefaultResponse.responseStatus200(dailyPlanSubmissions);
+            return JOCDefaultResponse.responseStatus200(answer);
 
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
@@ -95,75 +89,67 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 
     @Override
     public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
             initLogging(API_CALL, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
-            DailyPlanSubmissionsFilter dailyPlanSubmissionHistoryFilter = Globals.objectMapper.readValue(filterBytes,
-                    DailyPlanSubmissionsFilter.class);
+            DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(dailyPlanSubmissionHistoryFilter.getControllerId(), getJocPermissions(accessToken)
-                    .getDailyPlan().getManage());
+            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getManage());
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("filter", dailyPlanSubmissionHistoryFilter.getFilter());
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            this.checkRequiredParameter("filter", in.getFilter());
 
             setSettings();
-            DBLayerDailyPlanSubmissions dbLayerDailyPlan = new DBLayerDailyPlanSubmissions(sosHibernateSession);
-
-            sosHibernateSession.setAutoCommit(false);
-            Globals.beginTransaction(sosHibernateSession);
-
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
-            filter.setControllerId(dailyPlanSubmissionHistoryFilter.getControllerId());
-
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
-                Date date = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor());
+            filter.setControllerId(in.getControllerId());
+            if (in.getFilter().getDateFor() != null) {
+                Date date = DailyPlanHelper.stringAsDate(in.getFilter().getDateFor());
                 filter.setDateFor(date);
             } else {
-
-                if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                    Date fromDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom());
+                if (in.getFilter().getDateFrom() != null) {
+                    Date fromDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateFrom());
                     filter.setDateFrom(fromDate);
                 }
-                if (dailyPlanSubmissionHistoryFilter.getFilter().getDateTo() != null) {
-                    Date toDate = DailyPlanHelper.stringAsDate(dailyPlanSubmissionHistoryFilter.getFilter().getDateTo());
+                if (in.getFilter().getDateTo() != null) {
+                    Date toDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateTo());
                     filter.setDateTo(toDate);
                 }
             }
 
-            dbLayerDailyPlan.delete(filter);
-            Globals.commit(sosHibernateSession);
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
+            session.setAutoCommit(false);
+            Globals.beginTransaction(session);
+            int result = dbLayer.delete(filter);
+            Globals.commit(session);
+            session.close();
+            session = null;
 
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFor() != null) {
-                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanSubmissionHistoryFilter.getFilter().getDateFor()));
+            if (result > 0) {
+                if (in.getFilter().getDateFor() != null) {
+                    EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFor()));
+                }
+                if (in.getFilter().getDateFrom() != null) {
+                    EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDateFrom()));
+                }
             }
-            
-            if (dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom() != null) {
-                EventBus.getInstance().post(new DailyPlanEvent(dailyPlanSubmissionHistoryFilter.getFilter().getDateFrom()));
-            }
-            
-            
-
             return JOCDefaultResponse.responseStatusJSOk(new Date());
-
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
     }
 

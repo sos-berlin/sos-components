@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_target_folder" 
+    required="false">
+    <note>
+        <title>Folder in the mail server for copying/moving mails</title>
+        <p>
+        	This parameter is required if the <paramref>mail_post_action</paramref> argument is used with the <code>copy</code> or <code>move</code> values.<br/> 
+        	The folder has to exist and has to be writable. The job does not create the folder.
+        </p>
+   	</note>
+</param>

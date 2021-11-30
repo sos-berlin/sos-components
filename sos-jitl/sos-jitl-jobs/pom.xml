@@ -20,7 +20,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.sos-berlin.js7.engine</groupId>
-			<artifactId>js7-launcher-for-java_2.13</artifactId>
+			<artifactId>js7-executor-for-java_2.13</artifactId>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -71,7 +71,11 @@
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
         </dependency>
-
+        
+        <dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+		</dependency>
 
 		<!-- for tests -->
 		<dependency>

@@ -5,7 +5,7 @@
 	name="remote_charset" required="false" DataType="java.lang.String" DefaultValue="UTF-8">
         <note>
 			<p>
-				Specifies the charset to be used on the remote side.
+				Specifies the character set to be used for the remote server.
 			</p>
         </note>
 </param>

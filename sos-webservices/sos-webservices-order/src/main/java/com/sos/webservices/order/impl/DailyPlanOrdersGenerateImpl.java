@@ -61,7 +61,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                 dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
                 dailyPlanOrderSelector.getSelector().getFolders().add(root);
             }
-            // TODO @uwe: why lists with names and paths. We wanted only paths in which include also names  
+            // TODO @uwe: why lists with names and paths. We wanted only paths in which include also names
             if (dailyPlanOrderSelector.getSelector().getFolders() == null) {
                 dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
             }
@@ -101,12 +101,12 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             DailyPlanRunner orderInitiatorRunner = new DailyPlanRunner(orderInitiatorSettings, false);
 
             FolderPermissionEvaluator folderPermissionEvaluator = new FolderPermissionEvaluator();
-            folderPermissionEvaluator.setListOfScheduleFolders(dailyPlanOrderSelector.getSelector().getFolders());
-            folderPermissionEvaluator.setListOfSchedulePaths(dailyPlanOrderSelector.getSelector().getSchedulePaths());
-            folderPermissionEvaluator.setListOfWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
+            folderPermissionEvaluator.setScheduleFolders(dailyPlanOrderSelector.getSelector().getFolders());
+            folderPermissionEvaluator.setSchedulePaths(dailyPlanOrderSelector.getSelector().getSchedulePaths());
+            folderPermissionEvaluator.setWorkflowPaths(dailyPlanOrderSelector.getSelector().getWorkflowPaths());
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
-            
+
             for (String controllerId : allowedControllers) {
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
 
@@ -117,16 +117,16 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
                     dailyPlanOrderSelector.getSelector().getFolders().clear();
                     dailyPlanOrderSelector.getSelector().setFolders(new ArrayList<Folder>());
-                    if (filter.getSetOfScheduleFolders() != null) {
-                        dailyPlanOrderSelector.getSelector().getFolders().addAll(filter.getSetOfScheduleFolders());
+                    if (filter.getScheduleFolders() != null) {
+                        dailyPlanOrderSelector.getSelector().getFolders().addAll(filter.getScheduleFolders());
                     }
                     dailyPlanOrderSelector.getSelector().getSchedulePaths().clear();
                     dailyPlanOrderSelector.getSelector().getWorkflowPaths().clear();
-                    if (folderPermissionEvaluator.getListOfPermittedScheduleNames() != null) {
-                        dailyPlanOrderSelector.getSelector().getSchedulePaths().addAll(folderPermissionEvaluator.getListOfPermittedScheduleNames());
+                    if (folderPermissionEvaluator.getPermittedScheduleNames() != null) {
+                        dailyPlanOrderSelector.getSelector().getSchedulePaths().addAll(folderPermissionEvaluator.getPermittedScheduleNames());
                     }
-                    if (folderPermissionEvaluator.getListOfPermittedWorkflowNames() != null) {
-                        dailyPlanOrderSelector.getSelector().getWorkflowPaths().addAll(folderPermissionEvaluator.getListOfPermittedWorkflowNames());
+                    if (folderPermissionEvaluator.getPermittedWorkflowNames() != null) {
+                        dailyPlanOrderSelector.getSelector().getWorkflowPaths().addAll(folderPermissionEvaluator.getPermittedWorkflowNames());
                     }
 
                     ScheduleSource scheduleSource = null;
@@ -140,14 +140,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                     TimeZone.setDefault(savT);
 
                     for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
-                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(), controllerId));
+                        auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(),
+                                controllerId));
                     }
 
                 }
             }
             OrdersHelper.storeAuditLogDetails(auditLogDetails, dbItemJocAuditLog.getId()).thenAccept(either -> ProblemHelper
                     .postExceptionEventIfExist(either, accessToken, getJocError(), null));
-            
+
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (

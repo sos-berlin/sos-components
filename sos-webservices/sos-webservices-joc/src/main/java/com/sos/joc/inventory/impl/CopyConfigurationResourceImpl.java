@@ -125,7 +125,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                 
                 List<Integer> typesForReferences = Arrays.asList(ConfigurationType.WORKFLOW.intValue(), ConfigurationType.WORKINGDAYSCALENDAR
                         .intValue(), ConfigurationType.NONWORKINGDAYSCALENDAR.intValue(), ConfigurationType.LOCK.intValue(),
-                        ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.SCRIPT.intValue());
+                        ConfigurationType.NOTICEBOARD.intValue(), ConfigurationType.JOBRESOURCE.intValue(), ConfigurationType.INCLUDESCRIPT.intValue());
                 
                 Map<ConfigurationType, Map<String, String>> oldToNewName = (!in.getShallowCopy()) ? oldDBFolderContent.stream().filter(
                         item -> typesForReferences.contains(item.getType())).collect(Collectors.groupingBy(
@@ -212,7 +212,7 @@ public class CopyConfigurationResourceImpl extends JOCResourceImpl implements IC
                                 json = json.replaceAll("(\"workflowName\"\\s*:\\s*\")" + oldNewName.getKey() + "\"", "$1" + oldNewName.getValue() + "\"");
                             }
                             // include scripts
-                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.SCRIPT, Collections.emptyMap())
+                            for (Map.Entry<String, String> oldNewName : oldToNewName.getOrDefault(ConfigurationType.INCLUDESCRIPT, Collections.emptyMap())
                                     .entrySet()) {
                                 json = json.replaceAll(JsonConverter.scriptIncludeComments + JsonConverter.scriptInclude + "[ \t]+" + oldNewName
                                         .getKey() + "(\\s*)", "$1" + JsonConverter.scriptInclude + " " + oldNewName.getValue() + "$2");

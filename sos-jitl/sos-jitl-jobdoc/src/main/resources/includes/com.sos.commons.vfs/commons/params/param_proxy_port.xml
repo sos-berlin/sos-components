@@ -5,8 +5,8 @@
 	required="false" DataType="java.lang.Integer">
 	<note>
 		<p>
-			This parameter specifies the port number of the proxy,
-			should a proxy be used to create the connection to the SSH server.
+			The argument specifies the port of the proxy server
+			should a proxy be used to establish a connection to the SSH server.
 		</p>
 	</note>
 </param>

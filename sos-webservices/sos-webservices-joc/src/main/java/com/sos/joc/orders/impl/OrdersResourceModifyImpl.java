@@ -239,31 +239,37 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
     }
 
     private void updateUnknownOrders(String controllerId, Set<String> orders, Set<JOrder> jOrders) throws SOSHibernateException {
-        List<String> listOfOrderIds = new ArrayList<String>();
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection(API_CALL + "/modify updateUnknownOrders");
-            DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(session);
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
 
             FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
             filter.setControllerId(controllerId);
 
+            List<String> orderIds = new ArrayList<String>();
             for (String orderId : orders) {
                 filter.setOrderId(orderId);
-                if (dbLayerDailyPlannedOrders.getUniqueDailyPlan(filter) != null) {
-                    listOfOrderIds.add(orderId);
+                if (dbLayer.getUniqueDailyPlan(filter) != null) {
+                    orderIds.add(orderId);
                 }
             }
             Globals.disconnect(session);
             session = null; // to avoid nested openSessions
 
             for (String orderId : orders) {
-                addCyclicOrderIds(listOfOrderIds, orderId, controllerId, dbLayerDailyPlannedOrders);
+                addCyclicOrderIds(orderIds, orderId, controllerId, dbLayer);
             }
+            int orderIdsSize = orderIds.size();
 
-            Set<String> orderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
-            listOfOrderIds.removeAll(orderIds);
-            updateDailyPlan("updateUnknownOrders", listOfOrderIds);
+            Set<String> jOrderIds = jOrders.stream().map(o -> o.id().string()).collect(Collectors.toSet());
+            orderIds.removeAll(jOrderIds);
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[updateUnknownOrders][jOrderIds=%s][orderIds(before remove jOrderIds=%s)=%s]", jOrderIds.size(),
+                        orderIdsSize, orderIds.size()));
+            }
+            updateDailyPlan("updateUnknownOrders", orderIds);
         } finally {
             Globals.disconnect(session);
         }
@@ -290,7 +296,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         Instant surveyInstant = currentState.instant();
         long surveyDateMillis = surveyInstant.toEpochMilli();
         Stream<JOrder> orderStream = Stream.empty();
-        
+
         final boolean withStatesFilter = modifyOrders.getStates() != null && !modifyOrders.getStates().isEmpty();
         final boolean lookingForBlocked = withStatesFilter && modifyOrders.getStates().contains(OrderStateText.BLOCKED);
         final boolean lookingForInProgress = withStatesFilter && modifyOrders.getStates().contains(OrderStateText.INPROGRESS);
@@ -310,11 +316,11 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .pathToName(w.getPath()))).collect(Collectors.toSet());
             Function1<Order<Order.State>, Object> workflowFilter = o -> (workflowPaths.contains(o.workflowId()) || workflowPaths2.contains(o
                     .workflowId().path()));
-            
+
             Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter);
             orderStream = currentState.ordersBy(workflowStateFilter).parallel().filter(getDateToFilter(modifyOrders, surveyInstant));
             orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState);
-            
+
         } else if (withFolderFilter && (permittedFolders == null || permittedFolders.isEmpty())) {
             // no permission
         } else if (withFolderFilter && permittedFolders != null && !permittedFolders.isEmpty()) {
@@ -322,7 +328,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .collect(Collectors.toList()), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
                 Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
-                
+
                 Function1<Order<Order.State>, Object> workflowStateFilter = getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter);
                 orderStream = currentState.ordersBy(workflowStateFilter).parallel().filter(getDateToFilter(modifyOrders, surveyInstant));
                 orderStream = considerAdmissionOrders(orderStream, lookingForBlocked, lookingForInProgress, workflowStateFilter, currentState);
@@ -355,7 +361,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
 
         JControllerState currentState = Proxy.of(controllerId).currentState();
         Instant surveyInstant = currentState.instant();
-        long surveyDateMillis = surveyInstant.toEpochMilli(); 
+        long surveyDateMillis = surveyInstant.toEpochMilli();
 
         Set<String> orders = modifyOrders.getOrderIds();
         List<WorkflowId> workflowIds = modifyOrders.getWorkflowIds();
@@ -382,8 +388,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     .collect(Collectors.toList()), currentState, permittedFolders);
             if (workflowIds2 != null && !workflowIds2.isEmpty()) {
                 Function1<Order<Order.State>, Object> workflowFilter = o -> workflowIds2.contains(o.workflowId());
-                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter)).parallel().filter(getDateToFilter(
-                        modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
+                orders = currentState.ordersBy(getWorkflowStateFilter(modifyOrders, surveyDateMillis, workflowFilter)).parallel().filter(
+                        getDateToFilter(modifyOrders, surveyInstant)).map(JOrder::id).map(OrderId::string).collect(Collectors.toSet());
             }
         }
 
@@ -437,8 +443,8 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     either -> {
                         ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                         if (either.isRight()) {
-                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(either2 -> ProblemHelper
-                                    .postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
+                            OrdersHelper.storeAuditLogDetailsFromJOrders(jOrders, dbAuditLog.getId(), controllerId).thenAccept(
+                                    either2 -> ProblemHelper.postExceptionEventIfExist(either2, getAccessToken(), getJocError(), controllerId));
                         }
                     });
         } else if (cop.isSingleOrder()) {
@@ -714,13 +720,12 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         if (!orderIds.isEmpty()) {
             try {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug(String.format("[updateDailyPlan][caller=%s][orderIds]%s", caller, String.join(",", orderIds)));
+                    LOGGER.debug(String.format("[updateDailyPlan][caller=%s][orderIds=%s]%s", caller, orderIds.size(), String.join(",", orderIds)));
                 }
 
                 GlobalSettingsReader reader = new GlobalSettingsReader();
                 DailyPlanSettings settings;
                 if (Globals.configurationGlobals != null) {
-
                     AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
                     settings = reader.getSettings(configuration);
                 } else {
@@ -730,25 +735,27 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                 }
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setListOfOrders(orderIds);
+                filter.setOrderIds(orderIds);
                 filter.setSubmitted(false);
+                filter.setSortMode(null);
+                filter.setOrderCriteria(null);
 
-                session = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel");
+                session = Globals.createSosHibernateStatelessConnection(API_CALL + "/cancel(" + caller + ")");
                 session.setAutoCommit(false);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 Globals.beginTransaction(session);
                 dbLayer.setSubmitted(filter);
                 Globals.commit(session);
-                List<DBItemDailyPlanOrder> listOfOrders = dbLayer.getDailyPlanList(filter, 0);
+                List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
                 Globals.disconnect(session);
                 session = null;
 
-                Set<String> dailyPlanDays = new HashSet<String>();
-                for (DBItemDailyPlanOrder order : listOfOrders) {
-                    String dailyPlanDate = order.getDailyPlanDate(settings.getTimeZone());
-                    if (!dailyPlanDays.contains(dailyPlanDate)) {
-                        dailyPlanDays.add(dailyPlanDate);
-                        EventBus.getInstance().post(new DailyPlanEvent(dailyPlanDate));
+                Set<String> days = new HashSet<String>();
+                for (DBItemDailyPlanOrder item : items) {
+                    String date = item.getDailyPlanDate(settings.getTimeZone());
+                    if (!days.contains(date)) {
+                        days.add(date);
+                        EventBus.getInstance().post(new DailyPlanEvent(date));
                     }
                 }
 
@@ -771,20 +778,17 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
         return Globals.objectMapper.readValue(filterBytes, ModifyOrders.class);
     }
 
-    private void addSubmittedOrderIdsFromDailyplanDate(CancelDailyPlanOrders cancelDailyPlanOrders) throws Exception {
-        if (cancelDailyPlanOrders.getDailyPlanDate() != null) {
-            SOSHibernateSession sosHibernateSession = null;
-            if (cancelDailyPlanOrders.getOrderIds() == null) {
-                cancelDailyPlanOrders.setOrderIds(new LinkedHashSet<String>());
+    private void addSubmittedOrderIdsFromDailyplanDate(CancelDailyPlanOrders in) throws Exception {
+        if (in.getDailyPlanDate() != null) {
+            if (in.getOrderIds() == null) {
+                in.setOrderIds(new LinkedHashSet<String>());
             }
 
+            SOSHibernateSession session = null;
             try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
-                sosHibernateSession.setAutoCommit(false);
                 GlobalSettingsReader reader = new GlobalSettingsReader();
                 DailyPlanSettings settings;
                 if (Globals.configurationGlobals != null) {
-
                     AConfigurationSection configuration = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
                     settings = reader.getSettings(configuration);
                 } else {
@@ -792,20 +796,22 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
                     settings.setTimeZone("Etc/UTC");
                     settings.setPeriodBegin("00:00");
                 }
-                DBLayerDailyPlannedOrders dbLayerDailyPlannedOrders = new DBLayerDailyPlannedOrders(sosHibernateSession);
 
                 FilterDailyPlannedOrders filter = new FilterDailyPlannedOrders();
-                filter.setControllerId(cancelDailyPlanOrders.getControllerId());
-                filter.setDailyPlanDate(cancelDailyPlanOrders.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
+                filter.setControllerId(in.getControllerId());
+                filter.setDailyPlanDate(in.getDailyPlanDate(), settings.getTimeZone(), settings.getPeriodBegin());
                 filter.setSubmitted(true);
 
-                List<DBItemDailyPlanOrder> listOfPlannedOrders = dbLayerDailyPlannedOrders.getDailyPlanList(filter, 0);
-                if (listOfPlannedOrders != null) {
-                    cancelDailyPlanOrders.getOrderIds().addAll(listOfPlannedOrders.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors
-                            .toSet()));
+                session = Globals.createSosHibernateStatelessConnection(API_CALL);
+                session.setAutoCommit(false);
+
+                DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
+                List<DBItemDailyPlanOrder> items = dbLayer.getDailyPlanList(filter, 0);
+                if (items != null) {
+                    in.getOrderIds().addAll(items.stream().map(DBItemDailyPlanOrder::getOrderId).collect(Collectors.toSet()));
                 }
             } finally {
-                Globals.disconnect(sosHibernateSession);
+                Globals.disconnect(session);
             }
         }
     }
@@ -922,7 +928,7 @@ public class OrdersResourceModifyImpl extends JOCResourceImpl implements IOrders
             return JOrderPredicates.and(workflowFilter, stateFilter);
         }
     }
-    
+
     private static Stream<JOrder> considerAdmissionOrders(Stream<JOrder> orderStream, boolean lookingForBlocked, boolean lookingForInProgress,
             Function1<Order<Order.State>, Object> filter, JControllerState controllerState) {
 

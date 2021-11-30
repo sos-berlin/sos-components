@@ -5,13 +5,19 @@ public class OrderCounter {
     private long single;
     private long cyclic;
     private long cyclicTotal;
-    private long submitted;
+    private long storedSingle;
+    private long storedCyclicTotal;
+    private long storeSkippedSingle;
+    private long storeSkippedCyclicTotal;
 
     public OrderCounter() {
         single = 0;
         cyclic = 0;
         cyclicTotal = 0;
-        submitted = 0;
+        storedSingle = 0;
+        storedCyclicTotal = 0;
+        storeSkippedSingle = 0;
+        storeSkippedCyclicTotal = 0;
     }
 
     public void addSingle() {
@@ -26,24 +32,45 @@ public class OrderCounter {
         cyclicTotal += 1;
     }
 
-    public long getCount() {
-        return single + cyclic;
+    public void addStoredSingle() {
+        storedSingle += 1;
+    }
+
+    public void addStoredCyclicTotal() {
+        storedCyclicTotal += 1;
+    }
+
+    public void addStoreSkippedSingle() {
+        storeSkippedSingle += 1;
+    }
+
+    public void addStoreSkippedCyclicTotal() {
+        storeSkippedCyclicTotal += 1;
+    }
+
+    private long getCountTotal() {
+        return single + cyclicTotal;
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getCount()).append(" orders");
+        StringBuilder sb = new StringBuilder("total ");
+        sb.append(getCountTotal()).append(" orders");
         if (cyclic > 0) {
-            sb.append(" (");
+            sb.append("(");
             if (single > 0) {
-                sb.append("single=").append(single).append(", ");
+                sb.append("single=").append(single).append(",");
             }
-            sb.append("cyclic=").append(cyclic).append(", cyclic total=").append(cyclicTotal);
+            sb.append("cyclic=").append(cyclic).append("(total=").append(cyclicTotal).append(")");
             sb.append(")");
         }
-        if (submitted > 0) {
-            sb.append(" submitted=").append(submitted);
+        boolean storeDiffSingle = storedSingle > 0 && storedSingle != single;
+        boolean storeDiffCyclic = storedCyclicTotal > 0 && storedCyclicTotal != cyclicTotal;
+        if (storeDiffSingle || storeDiffCyclic || storeSkippedSingle > 0 || storeSkippedCyclicTotal > 0) {
+            sb.append("(store ");
+            sb.append("stored single=").append(storedSingle).append(",cyclic total=" + storedCyclicTotal).append(" ");
+            sb.append("skipped single=").append(storeSkippedSingle).append(",cyclic total=" + storeSkippedCyclicTotal);
+            sb.append(")");
         }
         return sb.toString();
     }

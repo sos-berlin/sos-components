@@ -18,9 +18,9 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
+import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.classes.JOCOrderResourceImpl;
@@ -38,15 +38,15 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
-            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
+            DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
-            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            this.checkRequiredParameter("filter", in.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
 
-            Set<String> allowedControllers = getAllowedControllersOrdersView(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getFilter()
-                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
-                            accessToken).getOrders().getView()).collect(Collectors.toSet());
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                            Collectors.toSet());
 
             boolean permitted = !allowedControllers.isEmpty();
 
@@ -56,18 +56,39 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                 return jocDefaultResponse;
             }
 
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
+
             setSettings();
-            LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            if (isDebugEnabled) {
+                LOGGER.debug("Reading the daily plan for day " + in.getFilter().getDailyPlanDate());
+            }
+            Date date = toUTCDate(in.getFilter().getDailyPlanDate());
 
             session = Globals.createSosHibernateStatelessConnection(API_CALL);
-
+            DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
-
             for (String controllerId : allowedControllers) {
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
+                List<Long> submissions = dbLayer.getSubmissionIds(controllerId, date);
+                if (submissions == null || submissions.size() == 0) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][skip]submissions not found", controllerId, in.getFilter().getDailyPlanDate()));
+                    }
+                    continue;
+                }
+                FilterDailyPlannedOrders filter = getOrderFilter(API_CALL, controllerId, in, true);
+                if (filter == null) {
+                    continue;
+                }
+                Date plannedStartFrom = filter.getOrderPlannedStartFrom();
+                Date plannedStartTo = filter.getOrderPlannedStartTo();
+
+                filter.setOrderPlannedStartFrom(null);
+                filter.setOrderPlannedStartTo(null);
+                filter.setSubmissionIds(null);
+                filter.setSubmissionForDate(date);
 
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, true);
-                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, result, true);
+                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, true);
             }
 
             PlannedOrders answer = new PlannedOrders();

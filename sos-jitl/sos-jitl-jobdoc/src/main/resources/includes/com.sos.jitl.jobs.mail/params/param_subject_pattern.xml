@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<param xmlns="http://www.sos-berlin.com/schema/js7_job_documentation_v1.1" 
+	xmlns:xhtml="http://www.w3.org/1999/xhtml" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    name="mail_subject_pattern" 
+    required="false">
+    <note>
+        <title>Checks the <i>Subject</i> field of a mail</title>
+        <p>
+        	This filter checks if the <i>Subject</i> field of a mail matches a regular expression.
+        	Only mails matching this expression will be processed.
+        	If you want to use substrings, you can use the <paramref>mail_subject_filter</paramref> parameter. 
+        </p>
+   	</note>
+   	<xi:include href="../../common/notes/note_regexp_remarks.xml" parse="xml"/>
+</param>

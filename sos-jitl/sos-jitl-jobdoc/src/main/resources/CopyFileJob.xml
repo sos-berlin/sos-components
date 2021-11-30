@@ -12,6 +12,7 @@
     <configuration>
         <xi:include href="./includes/com.sos.jitl.jobs.file/description_result_set.xml" parse="xml" />
       	<xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml"/>
+      	<xi:include href="./includes/common/notes/note_regexp_additional.xml" parse="xml" />
      
         <params id="job_parameter">
             <xi:include href="./includes/com.sos.jitl.jobs.file/param_source_file.xml" parse="xml" />
@@ -64,6 +65,7 @@
             </p>
             <xi:include href="./includes/com.sos.jitl.jobs.file/note_regexp_example_replace.xml" parse="xml" />
             <xi:include href="./includes/common/notes/note_regexp_remarks.xml" parse="xml" />
+            <xi:include href="./includes/common/notes/note_regexp_additional.xml" parse="xml" />
 
         </div>
     </documentation>

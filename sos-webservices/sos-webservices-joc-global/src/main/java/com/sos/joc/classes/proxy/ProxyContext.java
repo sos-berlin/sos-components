@@ -24,6 +24,7 @@ import com.sos.joc.exceptions.ControllerSSLCertificateException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
 
 import io.vavr.control.Either;
+import js7.base.auth.UserAndPassword;
 import js7.base.problem.Problem;
 import js7.base.web.Uri;
 import js7.data.node.NodeId;
@@ -38,6 +39,7 @@ import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
 import js7.proxy.javaapi.eventbus.JStandardEventBus;
 import reactor.core.publisher.Flux;
+import scala.compat.java8.OptionConverters;
 
 public class ProxyContext {
 
@@ -184,7 +186,13 @@ public class ProxyContext {
         LOGGER.info(toString() + ": " + proxyCoupled.toString());
         lastProblem = Optional.empty();
         if (!Boolean.TRUE.equals(coupled)) {
-            EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true));
+            Optional<UserAndPassword> account = OptionConverters.toJava(this.credentials.getAccount().toScala());
+            if (account.isPresent()) {
+                EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true, this.credentials
+                        .getUrl(), this.credentials.getBackupUrl(), account.get().userId().string(), account.get().password().string()));
+            } else {
+                EventBus.getInstance().post(new com.sos.joc.event.bean.proxy.ProxyCoupled(this.credentials.getControllerId(), true));
+            }
         }
         coupled = true;
         if (!coupledFuture.isDone()) {

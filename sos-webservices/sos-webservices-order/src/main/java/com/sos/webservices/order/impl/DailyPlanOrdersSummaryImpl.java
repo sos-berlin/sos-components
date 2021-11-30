@@ -17,7 +17,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanWithHistory;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.DailyPlanOrdersSummary;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
@@ -38,11 +37,11 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
         try {
 
             initLogging(API_CALL, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
-            DailyPlanOrderFilter dailyPlanOrderFilter = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
-            Set<String> allowedControllers = getAllowedControllersOrdersView(dailyPlanOrderFilter.getControllerId(), dailyPlanOrderFilter.getFilter()
-                    .getControllerIds(), accessToken).stream().filter(availableController -> getControllerPermissions(availableController,
-                            accessToken).getOrders().getView()).collect(Collectors.toSet());
+            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
+            DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+            Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
+                    .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
+                            Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
             JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
@@ -51,12 +50,15 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 return jocDefaultResponse;
             }
 
-            this.checkRequiredParameter("filter", dailyPlanOrderFilter.getFilter());
-            this.checkRequiredParameter("dailyPlanDate", dailyPlanOrderFilter.getFilter().getDailyPlanDate());
-            setSettings();
-            LOGGER.debug("Reading the daily plan for day " + dailyPlanOrderFilter.getFilter().getDailyPlanDate());
+            this.checkRequiredParameter("filter", in.getFilter());
+            this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            boolean isDebugEnabled = LOGGER.isDebugEnabled();
+            setSettings();
+
+            if (isDebugEnabled) {
+                LOGGER.debug("Reading the daily plan for day " + in.getFilter().getDailyPlanDate());
+            }
 
             DailyPlanOrdersSummary answer = new DailyPlanOrdersSummary();
             answer.setFinished(0);
@@ -65,12 +67,34 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
             answer.setPlanned(0);
             answer.setPlannedLate(0);
 
+            Date date = toUTCDate(in.getFilter().getDailyPlanDate());
+
+            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            // DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (String controllerId : allowedControllers) {
-                FilterDailyPlannedOrders filter = getOrderFilter(controllerId, dailyPlanOrderFilter, true);
+                // List<Long> submissions = dbLayer.getSubmissionIds(controllerId, date);
+                // if (submissions == null || submissions.size() == 0) {
+                // if (isDebugEnabled) {
+                // LOGGER.debug(String.format("[%s][%s][skip]submissions not found", controllerId, in.getFilter().getDailyPlanDate()));
+                // }
+                // continue;
+                // }
+
+                FilterDailyPlannedOrders filter = getOrderFilter(API_CALL, controllerId, in, true);
+                if (filter == null) {
+                    continue;
+                }
+                Date plannedStartFrom = filter.getOrderPlannedStartFrom();
+                Date plannedStartTo = filter.getOrderPlannedStartTo();
+
+                filter.setOrderPlannedStartFrom(null);
+                filter.setOrderPlannedStartTo(null);
+                filter.setSubmissionIds(null);
+                filter.setSubmissionForDate(date);
 
                 ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
                 List<DBItemDailyPlanWithHistory> orders = getOrders(session, controllerId, filter, false);
-                addOrders(session, filter, controllerId, dailyPlanOrderFilter, orders, result, false);
+                addOrders(session, controllerId, plannedStartFrom, plannedStartTo, in, orders, result, false);
 
                 for (PlannedOrderItem p : result) {
                     String state = p.getState().get_text().value();
@@ -89,11 +113,12 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                                 Date now = new Date();
                                 if (p.getPlannedStartTime().getTime() > now.getTime()) {
                                     boolean selectMinPlannedStart = true;
-                                    if (filter.getOrderPlannedStartFrom() != null && filter.getOrderPlannedStartFrom().getTime() > now.getTime()) {
+                                    if (plannedStartFrom != null && plannedStartFrom.getTime() > now.getTime()) {
                                         selectMinPlannedStart = false;
                                     }
                                     if (selectMinPlannedStart) {
-                                        Date minPlannedStart = getCyclicMinPlannedStart(session, filter, p.getOrderId(), controllerId);
+                                        Date minPlannedStart = getCyclicMinPlannedStart(session, controllerId, plannedStartFrom, plannedStartTo, p
+                                                .getOrderId());
                                         if (minPlannedStart != null && now.getTime() > minPlannedStart.getTime()) {
                                             answer.setPlannedLate(answer.getPlannedLate() + 1);
                                             addPlanned = false;
