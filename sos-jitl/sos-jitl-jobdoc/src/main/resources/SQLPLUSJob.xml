@@ -23,15 +23,6 @@
                 </note>
             </param>
 
-           <param name="command" required="false" default_value="">
-                <note>
-                    <title>Command to be executed by the SQL*Plus Client</title>
-                    <p>
-                        The argument specifies a command to be prepended at the begin of command_script_file (after the include files).
-					</p>
-                </note>
-            </param>
-
             <param name="command_line_options" required="false" default_value="">
                 <note>
                     <title>SQL*Plus Client Options</title>
@@ -91,6 +82,17 @@
                 </note>
             </param>
 
+           <param name="command" required="false" default_value="">
+                <note>
+                    <title>Command to be executed by the SQL*Plus Client</title>
+                    <p>
+                        The argument specifies a command to be prepended the SQL script file specified
+                        by the <paramref>command_script_file</paramref> argument and
+                        after optional files specified by the <paramref>include_files</paramref> argument are embedded.
+					</p>
+                </note>
+            </param>
+
             <xi:include href="./includes/com.sos.jitl.jobs.sql/param_variable_parser_reg_expr.xml" parse="xml"/>
 
             <param name="ignore_ora_messages" required="false" default_value="" DataType="SOSOptionStringValueList" Category="sql,pl/sql,sql*plus">
@@ -115,60 +117,7 @@
                 </note>
             </param>
 
-            <param name="credential_store_file" required="false">
-                <note>
-                    <title>Location of the Credential Store Database File</title>
-                    <p>
-                        The path to the KeepPass database file that contains the credentials for access to the database.
-                    </p>
-                    <p>
-                        Alternatively it is possible to specify the value in the URL with the <code>?file=</code> query parameter.
-                    </p>
-                </note>
-            </param>
-            
-            <param name="credential_store_key_file" required="false">
-                <note>
-                    <title>Location of the Credential Store Key File</title>
-                    <p>
-                        The path to the KeePass key file that represents the key for access to the credential store.
-                        This requires a key file to be assigned the KeePass database file. If no KeePass key file is specified, 
-                        the the file name is assumed from the basename of the KeePass database file and the extension .key.
-                    </p>
-                    <p>
-                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
-                    </p>
-                </note>
-            </param>
-            
-            <param name="credential_store_password" required="false">
-                <note>
-                    <title>Password of the Credential Store Key File</title>
-                    <p>
-                        The password for the credential store file.
-                        This requires a password to be assigned to the KeePass database file. 
-                    </p>
-                    <p>
-                        Alternatively it is possible to specify the value in the URL with <code>?keyfile=</code> query parameter.
-                    </p>
-                </note>
-            </param>
-            
-            <param name="credential_store_entry_path" required="false">
-                <note>
-                    <title>Path to entries in the Credential Store</title>
-                    <p>
-                        The argument is used to specify a common path that is added to all entries.<br/>
-                        Example: <br/>
-                        credential_store_entry_path=/sos/jobscheduler<br/>
-                        password=cs://mydb@password<br/>
-                        In the KeePass database the entry is found in /sos/jobscheduler/mydb@password.
-                    </p>
-                    <p>
-                        Alternatively it is possible to specify the value in the URL with the <code>?entry_path=</code> query parameter.
-                    </p>
-                </note>
-            </param>
+            <xi:include href="./includes/common/params/params_credential_store.xml" parse="xml" />
 
         </params>
 
