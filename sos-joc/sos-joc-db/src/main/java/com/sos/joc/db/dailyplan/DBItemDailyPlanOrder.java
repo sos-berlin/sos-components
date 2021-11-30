@@ -21,7 +21,7 @@ import org.hibernate.annotations.Type;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.dailyplan.classes.DailyPlanDate;
+import com.sos.joc.db.dailyplan.common.DailyPlanDate;
 
 // @Table(name = DBLayer.TABLE_DPL_ORDERS, uniqueConstraints = { @UniqueConstraint(columnNames = { "[CONTROLLER_ID]", "[WORKFLOW_NAME]",
 // "[ORDER_ID]" }) })

@@ -1,4 +1,4 @@
-package com.sos.joc.db.dailyplan.classes;
+package com.sos.joc.db.dailyplan.common;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -23,7 +23,7 @@ public class DailyPlanDate {
     }
 
     public DailyPlanDate() {
-     }
+    }
 
     private void setIsoDate() throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat(isoDateFormat);
@@ -31,7 +31,7 @@ public class DailyPlanDate {
     }
 
     public void setSchedule(String schedule) throws ParseException {
-        
+
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
         if ("now".equals(schedule)) {
             this.schedule = new Date();
@@ -41,9 +41,8 @@ public class DailyPlanDate {
         this.setIsoDate();
     }
 
-    
-   public void setSchedule(String dateformat, String schedule) throws ParseException {
-        
+    public void setSchedule(String dateformat, String schedule) throws ParseException {
+
         SimpleDateFormat formatter = new SimpleDateFormat(dateformat);
         if ("now".equals(schedule)) {
             this.schedule = new Date();
@@ -52,8 +51,8 @@ public class DailyPlanDate {
         }
         this.setIsoDate();
     }
-   
-    public void setSchedule(Date start,String schedule) throws ParseException {
+
+    public void setSchedule(Date start, String schedule) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormatOnlyDay);
         String d = formatter.format(start);
         formatter = new SimpleDateFormat(dateFormat);
@@ -65,10 +64,9 @@ public class DailyPlanDate {
         }
         this.setIsoDate();
     }
-    
-    public void setPeriod(Date start,String schedule) throws ParseException {
+
+    public void setPeriod(Date start, String schedule) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat(dateFormatOnlyDay);
-        String d = formatter.format(start);
         formatter = new SimpleDateFormat(dateFormat);
         schedule = "2000-01-01" + " " + schedule;
         if ("now".equals(schedule)) {
@@ -78,7 +76,7 @@ public class DailyPlanDate {
         }
         this.setIsoDate();
     }
-    
+
     public Date getSchedule() {
         return schedule;
     }

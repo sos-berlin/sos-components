@@ -24,7 +24,7 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.joc.model.dailyplan.Period;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.js7.order.initiator.DailyPlanSettings;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
+import com.sos.js7.order.initiator.common.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 

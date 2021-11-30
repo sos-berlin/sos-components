@@ -80,88 +80,88 @@ public class DBItemDailyPlanHistory extends DBItem {
         return controllerId;
     }
 
-    public void setControllerId(String jobschedulerId) {
-        this.controllerId = jobschedulerId;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getUserAccount() {
         return userAccount;
     }
 
-    public void setUserAccount(String userAccount) {
-        this.userAccount = userAccount;
+    public void setUserAccount(String val) {
+        userAccount = val;
     }
 
     public Date getDailyPlanDate() {
         return dailyPlanDate;
     }
 
-    public void setDailyPlanDate(Date dailyPlanDate) {
-        this.dailyPlanDate = dailyPlanDate;
+    public void setDailyPlanDate(Date val) {
+        dailyPlanDate = val;
     }
 
     public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
+    public void setCreated(Date val) {
+        created = val;
     }
 
     public String getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
+    public void setOrderId(String val) {
+        orderId = val;
     }
 
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setMessage(String val) {
+        message = val;
     }
 
     public Date getSubmissionTime() {
         return submissionTime;
     }
 
-    public void setSubmissionTime(Date submissionTime) {
-        this.submissionTime = submissionTime;
+    public void setSubmissionTime(Date val) {
+        submissionTime = val;
     }
 
     public boolean isSubmitted() {
         return submitted;
     }
 
-    public void setSubmitted(boolean submitted) {
-        this.submitted = submitted;
+    public void setSubmitted(boolean val) {
+        submitted = val;
     }
 
     public String getWorkflowPath() {
         return workflowPath;
     }
 
-    public void setWorkflowPath(String workflowPath) {
-        this.workflowPath = workflowPath;
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
     }
 
     public Date getScheduledFor() {
         return scheduledFor;
     }
 
-    public void setScheduledFor(Date scheduledFor) {
-        this.scheduledFor = scheduledFor;
+    public void setScheduledFor(Date val) {
+        scheduledFor = val;
     }
 
     public String getWorkflowFolder() {
         return workflowFolder;
     }
 
-    public void setWorkflowFolder(String workflowFolder) {
-        this.workflowFolder = workflowFolder;
+    public void setWorkflowFolder(String val) {
+        workflowFolder = val;
     }
 
 }

@@ -54,32 +54,32 @@ public class DBItemDailyPlanVariable extends DBItem {
         return plannedOrderId;
     }
 
-    public void setPlannedOrderId(Long plannedOrderId) {
-        this.plannedOrderId = plannedOrderId;
+    public void setPlannedOrderId(Long val) {
+        plannedOrderId = val;
     }
 
     public String getVariableValue() {
         return variableValue;
     }
 
-    public void setVariableValue(String variableValue) {
-        this.variableValue = variableValue;
+    public void setVariableValue(String val) {
+        variableValue = val;
     }
 
     public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
+    public void setCreated(Date val) {
+        created = val;
     }
 
     public Date getModified() {
         return modified;
     }
 
-    public void setModified(Date modified) {
-        this.modified = modified;
+    public void setModified(Date val) {
+        modified = val;
     }
 
 }

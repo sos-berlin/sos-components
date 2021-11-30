@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator.classes;
+package com.sos.js7.order.initiator.common;
 
 import java.nio.file.Paths;
 import java.text.DateFormat;

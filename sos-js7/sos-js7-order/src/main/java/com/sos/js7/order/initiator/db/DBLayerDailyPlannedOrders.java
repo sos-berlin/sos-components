@@ -35,8 +35,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
-import com.sos.js7.order.initiator.classes.DailyPlanHelper;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
+import com.sos.js7.order.initiator.common.DailyPlanHelper;
+import com.sos.js7.order.initiator.common.PlannedOrder;
 
 public class DBLayerDailyPlannedOrders {
 

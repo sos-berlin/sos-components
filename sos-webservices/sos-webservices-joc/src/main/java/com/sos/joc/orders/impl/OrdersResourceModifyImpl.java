@@ -60,7 +60,7 @@ import com.sos.joc.model.order.OrderStateText;
 import com.sos.joc.model.order.Positions;
 import com.sos.joc.orders.resource.IOrdersResourceModify;
 import com.sos.js7.order.initiator.DailyPlanSettings;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
+import com.sos.js7.order.initiator.common.GlobalSettingsReader;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 import com.sos.schema.JsonValidator;

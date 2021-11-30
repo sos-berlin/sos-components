@@ -4,258 +4,252 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import com.sos.joc.model.dailyplan.DailyPlanOrderState;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
-import com.sos.joc.model.order.OrderStateText;
 
 public class DBItemDailyPlanWithHistory {
 
-	private final int toleranceUnit = Calendar.SECOND;
-	private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
+    private final int toleranceUnit = Calendar.SECOND;
+    private static final int DAILY_PLAN_LATE_TOLERANCE = 60;
 
-	private Long plannedOrderId;
-	private Long submissionHistoryId;
-	private String controllerId;
-	private String workflowPath;
-	private String workflowName;
-	private String orderId;
-	private String schedulePath;
-	private String scheduleName;
-	private String orderName;
-	private Long calendarId;
-	private boolean submitted;
-	private Date submitTime;
-	private Date periodBegin;
-	private Date periodEnd;
-	private Long repeatInterval;
-	private Date plannedStart;
-	private Date expectedEnd;
-	private Date plannedOrderCreated;
+    private Long plannedOrderId;
+    private Long submissionHistoryId;
+    private String controllerId;
+    private String workflowPath;
+    private String workflowName;
+    private String orderId;
+    private String schedulePath;
+    private String scheduleName;
+    private String orderName;
+    private Long calendarId;
+    private boolean submitted;
+    private Date submitTime;
+    private Date periodBegin;
+    private Date periodEnd;
+    private Long repeatInterval;
+    private Date plannedStart;
+    private Date expectedEnd;
+    private Date plannedOrderCreated;
 
-	private Long orderHistoryId;
-	private Date startTime;
-	private Date endTime;
-	private Integer state;
+    private Long orderHistoryId;
+    private Date startTime;
+    private Date endTime;
+    private Integer state;
 
-	public Boolean isLate() {
-		Date planned = getPlannedStart();
-		Date start = null;
+    public Boolean isLate() {
+        Date planned = getPlannedStart();
+        Date start = getStartTime();
 
-		start = getStartTime();
+        if (start == null || start.getTime() == new Date(0).getTime()) {
+            return planned.before(new Date());
+        } else {
+            Calendar calendar = new GregorianCalendar();
+            calendar.setTime(planned);
+            calendar.add(toleranceUnit, DAILY_PLAN_LATE_TOLERANCE);
+            Date scheduleToleranz = calendar.getTime();
+            return start.after(scheduleToleranz);
+        }
+    }
 
-		if (start == null || start.getTime() == new Date(0).getTime()) {
-			return planned.before(new Date());
-		} else {
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTime(planned);
-			calendar.add(toleranceUnit, DAILY_PLAN_LATE_TOLERANCE);
-			Date scheduleToleranz = calendar.getTime();
-			return start.after(scheduleToleranz);
-		}
-	}
+    public DailyPlanOrderStateText getStateText() {
+        DailyPlanOrderStateText state;
+        try {
+            state = DailyPlanOrderStateText.fromValue(getState());
+        } catch (IllegalArgumentException e) {
+            state = null;
+        }
+        if (submitted) {
+            if (state != null && state.equals(DailyPlanOrderStateText.FINISHED)) {
+                return DailyPlanOrderStateText.FINISHED;
+            } else {
+                return DailyPlanOrderStateText.SUBMITTED;
+            }
+        } else {
+            return DailyPlanOrderStateText.PLANNED;
+        }
+    }
 
-	public DailyPlanOrderStateText getStateText() {
+    public Integer getStartMode() {
+        if (getPeriodBegin() == null) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 
-		DailyPlanOrderStateText state;
-		try {
-			state = DailyPlanOrderStateText.fromValue(this.getState());
-		} catch (IllegalArgumentException e) {
-			state = null;
-		}
-		if (submitted) {
-			if (this.getState() != null && state != null
-					&& DailyPlanOrderStateText.fromValue(this.getState()).equals(DailyPlanOrderStateText.FINISHED)) {
-				return DailyPlanOrderStateText.FINISHED;
-			} else {
-				return DailyPlanOrderStateText.SUBMITTED;
-			}
-		} else {
-			return DailyPlanOrderStateText.PLANNED;
-		}
-	}
+    public Long getPlannedOrderId() {
+        return plannedOrderId;
+    }
 
-	public Integer getStartMode() {
-		if (this.getPeriodBegin() == null) {
-			return 0;
-		} else {
-			return 1;
-		}
-	}
+    public void setPlannedOrderId(Long val) {
+        plannedOrderId = val;
+    }
 
-	public Long getPlannedOrderId() {
-		return plannedOrderId;
-	}
+    public Long getSubmissionHistoryId() {
+        return submissionHistoryId;
+    }
 
-	public void setPlannedOrderId(Long plannedOrderId) {
-		this.plannedOrderId = plannedOrderId;
-	}
+    public void setSubmissionHistoryId(Long val) {
+        submissionHistoryId = val;
+    }
 
-	public Long getSubmissionHistoryId() {
-		return submissionHistoryId;
-	}
+    public String getControllerId() {
+        return controllerId;
+    }
 
-	public void setSubmissionHistoryId(Long submissionHistoryId) {
-		this.submissionHistoryId = submissionHistoryId;
-	}
+    public void setControllerId(String val) {
+        controllerId = val;
+    }
 
-	public String getControllerId() {
-		return controllerId;
-	}
+    public String getWorkflowPath() {
+        return workflowPath;
+    }
 
-	public void setControllerId(String controllerId) {
-		this.controllerId = controllerId;
-	}
+    public void setWorkflowPath(String val) {
+        workflowPath = val;
+    }
 
-	public String getWorkflowPath() {
-		return workflowPath;
-	}
+    public String getOrderId() {
+        return orderId;
+    }
 
-	public void setWorkflowPath(String workflowPath) {
-		this.workflowPath = workflowPath;
-	}
+    public void setOrderId(String val) {
+        orderId = val;
+    }
 
-	public String getOrderId() {
-		return orderId;
-	}
+    public String getSchedulePath() {
+        return schedulePath;
+    }
 
-	public void setOrderId(String orderId) {
-		this.orderId = orderId;
-	}
+    public void setSchedulePath(String val) {
+        schedulePath = val;
+    }
 
-	public String getSchedulePath() {
-		return schedulePath;
-	}
+    public Long getCalendarId() {
+        return calendarId;
+    }
 
-	public void setSchedulePath(String schedulePath) {
-		this.schedulePath = schedulePath;
-	}
+    public void setCalendarId(Long val) {
+        calendarId = val;
+    }
 
-	public Long getCalendarId() {
-		return calendarId;
-	}
+    public boolean isSubmitted() {
+        return submitted;
+    }
 
-	public void setCalendarId(Long calendarId) {
-		this.calendarId = calendarId;
-	}
+    public void setSubmitted(boolean val) {
+        submitted = val;
+    }
 
-	public boolean isSubmitted() {
-		return submitted;
-	}
+    public Date getSubmitTime() {
+        return submitTime;
+    }
 
-	public void setSubmitted(boolean submitted) {
-		this.submitted = submitted;
-	}
+    public void setSubmitTime(Date val) {
+        submitTime = val;
+    }
 
-	public Date getSubmitTime() {
-		return submitTime;
-	}
+    public Date getPeriodBegin() {
+        return periodBegin;
+    }
 
-	public void setSubmitTime(Date submitTime) {
-		this.submitTime = submitTime;
-	}
+    public void setPeriodBegin(Date val) {
+        periodBegin = val;
+    }
 
-	public Date getPeriodBegin() {
-		return periodBegin;
-	}
+    public Date getPeriodEnd() {
+        return periodEnd;
+    }
 
-	public void setPeriodBegin(Date periodBegin) {
-		this.periodBegin = periodBegin;
-	}
+    public void setPeriodEnd(Date val) {
+        periodEnd = val;
+    }
 
-	public Date getPeriodEnd() {
-		return periodEnd;
-	}
+    public Long getRepeatInterval() {
+        return repeatInterval;
+    }
 
-	public void setPeriodEnd(Date periodEnd) {
-		this.periodEnd = periodEnd;
-	}
+    public void setRepeatInterval(Long val) {
+        repeatInterval = val;
+    }
 
-	public Long getRepeatInterval() {
-		return repeatInterval;
-	}
+    public Date getPlannedStart() {
+        return plannedStart;
+    }
 
-	public void setRepeatInterval(Long repeatInterval) {
-		this.repeatInterval = repeatInterval;
-	}
+    public void setPlannedStart(Date val) {
+        plannedStart = val;
+    }
 
-	public Date getPlannedStart() {
-		return plannedStart;
-	}
+    public Date getExpectedEnd() {
+        return expectedEnd;
+    }
 
-	public void setPlannedStart(Date plannedStart) {
-		this.plannedStart = plannedStart;
-	}
+    public void setExpectedEnd(Date val) {
+        this.expectedEnd = val;
+    }
 
-	public Date getExpectedEnd() {
-		return expectedEnd;
-	}
+    public Date getPlannedOrderCreated() {
+        return plannedOrderCreated;
+    }
 
-	public void setExpectedEnd(Date expectedEnd) {
-		this.expectedEnd = expectedEnd;
-	}
+    public void setPlannedOrderCreated(Date val) {
+        plannedOrderCreated = val;
+    }
 
-	public Date getPlannedOrderCreated() {
-		return plannedOrderCreated;
-	}
+    public Long getOrderHistoryId() {
+        return orderHistoryId;
+    }
 
-	public void setPlannedOrderCreated(Date plannedOrderCreated) {
-		this.plannedOrderCreated = plannedOrderCreated;
-	}
+    public void setOrderHistoryId(Long val) {
+        orderHistoryId = val;
+    }
 
-	public Long getOrderHistoryId() {
-		return orderHistoryId;
-	}
+    public Date getStartTime() {
+        return startTime;
+    }
 
-	public void setOrderHistoryId(Long orderHistoryId) {
-		this.orderHistoryId = orderHistoryId;
-	}
+    public void setStartTime(Date val) {
+        startTime = val;
+    }
 
-	public Date getStartTime() {
-		return startTime;
-	}
+    public Integer getState() {
+        return state;
+    }
 
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
+    public void setState(Integer val) {
+        state = val;
+    }
 
-	public Integer getState() {
-		return state;
-	}
+    public Date getEndTime() {
+        return endTime;
+    }
 
-	public void setState(Integer state) {
-		this.state = state;
-	}
+    public void setEndTime(Date val) {
+        endTime = val;
+    }
 
-	public Date getEndTime() {
-		return endTime;
-	}
+    public String getWorkflowName() {
+        return workflowName;
+    }
 
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
-	}
+    public void setWorkflowName(String val) {
+        workflowName = val;
+    }
 
-	public String getWorkflowName() {
-		return workflowName;
-	}
+    public String getScheduleName() {
+        return scheduleName;
+    }
 
-	public void setWorkflowName(String workflowName) {
-		this.workflowName = workflowName;
-	}
+    public void setScheduleName(String val) {
+        scheduleName = val;
+    }
 
-	public String getScheduleName() {
-		return scheduleName;
-	}
+    public String getOrderName() {
+        return orderName;
+    }
 
-	public void setScheduleName(String scheduleName) {
-		this.scheduleName = scheduleName;
-	}
-
-	public String getOrderName() {
-		return orderName;
-	}
-
-	public void setOrderName(String orderName) {
-		this.orderName = orderName;
-	}
+    public void setOrderName(String val) {
+        orderName = val;
+    }
 
 }

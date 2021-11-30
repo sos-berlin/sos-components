@@ -18,8 +18,8 @@ import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration.Action;
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.js7.order.initiator.classes.DailyPlanHelper;
-import com.sos.js7.order.initiator.classes.GlobalSettingsReader;
+import com.sos.js7.order.initiator.common.DailyPlanHelper;
+import com.sos.js7.order.initiator.common.GlobalSettingsReader;
 
 public class DailyPlanService extends AJocClusterService {
 

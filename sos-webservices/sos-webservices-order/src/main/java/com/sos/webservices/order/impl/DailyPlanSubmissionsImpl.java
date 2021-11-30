@@ -17,7 +17,7 @@ import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissions;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
-import com.sos.js7.order.initiator.classes.DailyPlanHelper;
+import com.sos.js7.order.initiator.common.DailyPlanHelper;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlanSubmissions;
 import com.sos.js7.order.initiator.db.FilterDailyPlanSubmissions;
 import com.sos.schema.JsonValidator;

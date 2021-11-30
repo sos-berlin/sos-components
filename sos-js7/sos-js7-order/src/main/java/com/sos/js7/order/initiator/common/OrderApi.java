@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator.classes;
+package com.sos.js7.order.initiator.common;
 
 import java.time.Instant;
 import java.util.List;

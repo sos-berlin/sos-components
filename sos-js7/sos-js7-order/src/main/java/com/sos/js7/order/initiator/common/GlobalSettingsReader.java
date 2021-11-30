@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator.classes;
+package com.sos.js7.order.initiator.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

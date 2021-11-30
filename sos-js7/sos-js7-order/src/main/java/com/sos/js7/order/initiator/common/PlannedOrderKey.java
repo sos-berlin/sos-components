@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator.classes;
+package com.sos.js7.order.initiator.common;
 
 public class PlannedOrderKey implements Comparable<PlannedOrderKey> {
 

@@ -47,11 +47,11 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.cluster.common.ClusterServices;
-import com.sos.js7.order.initiator.classes.CycleOrderKey;
-import com.sos.js7.order.initiator.classes.OrderApi;
-import com.sos.js7.order.initiator.classes.OrderCounter;
-import com.sos.js7.order.initiator.classes.PlannedOrder;
-import com.sos.js7.order.initiator.classes.PlannedOrderKey;
+import com.sos.js7.order.initiator.common.CycleOrderKey;
+import com.sos.js7.order.initiator.common.OrderApi;
+import com.sos.js7.order.initiator.common.OrderCounter;
+import com.sos.js7.order.initiator.common.PlannedOrder;
+import com.sos.js7.order.initiator.common.PlannedOrderKey;
 import com.sos.js7.order.initiator.db.DBLayerDailyPlannedOrders;
 import com.sos.js7.order.initiator.db.FilterDailyPlannedOrders;
 

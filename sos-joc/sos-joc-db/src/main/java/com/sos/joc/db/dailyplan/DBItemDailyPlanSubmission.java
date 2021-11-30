@@ -54,32 +54,32 @@ public class DBItemDailyPlanSubmission extends DBItem {
         return controllerId;
     }
 
-    public void setControllerId(String jobschedulerId) {
-        this.controllerId = jobschedulerId;
+    public void setControllerId(String val) {
+        controllerId = val;
     }
 
     public String getUserAccount() {
         return userAccount;
     }
 
-    public void setUserAccount(String userAccount) {
-        this.userAccount = userAccount;
+    public void setUserAccount(String val) {
+        userAccount = val;
     }
 
     public Date getSubmissionForDate() {
         return submissionForDate;
     }
 
-    public void setSubmissionForDate(Date submissionForDate) {
-        this.submissionForDate = submissionForDate;
+    public void setSubmissionForDate(Date val) {
+        submissionForDate = val;
     }
 
     public Date getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
+    public void setCreated(Date val) {
+        created = val;
     }
 
 }

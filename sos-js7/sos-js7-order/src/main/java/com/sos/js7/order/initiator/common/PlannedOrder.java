@@ -1,4 +1,4 @@
-package com.sos.js7.order.initiator.classes;
+package com.sos.js7.order.initiator.common;
 
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.calendar.Period;
