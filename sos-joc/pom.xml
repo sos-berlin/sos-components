@@ -17,6 +17,7 @@
 		<module>sos-joc-cluster</module>
 		<module>sos-joc-db</module>
 		<module>sos-joc-event</module>
+		<module>sos-joc-history</module>
 		<module>sos-joc-monitoring</module>
 	</modules>
 </project>
