@@ -2,7 +2,6 @@ package com.sos.joc.dailyplan.db;
 
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -867,7 +866,7 @@ public class DBLayerDailyPlannedOrders {
 
     public DBItemDailyPlanOrder store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException, ParseException, JsonProcessingException {
-        return store(plannedOrder, Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3), 0, 0);
+        return store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
     }
 
     public DBItemDailyPlanOrder insertFrom(DBItemDailyPlanOrder item) throws SOSHibernateException {

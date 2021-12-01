@@ -374,7 +374,7 @@ public class EventService {
                             orders.remove(mainOrderId);
                         } else {
                             //addEvent(createWorkflowEventOfDeletedOrder(eventId, orderId.string()));
-                            LOGGER.warn("OrderDeleted event without known orderId is received: " + event.toString());
+                            //LOGGER.warn("OrderDeleted event without known orderId is received: " + event.toString());
                         }
                     } else {
                         LOGGER.warn("Order event without orderId is received: " + event.toString());

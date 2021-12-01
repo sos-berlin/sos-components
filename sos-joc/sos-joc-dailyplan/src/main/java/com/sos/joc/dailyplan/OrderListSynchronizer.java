@@ -289,7 +289,8 @@ public class OrderListSynchronizer {
             for (Entry<CycleOrderKey, List<PlannedOrder>> entry : cyclic.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
-                String id = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
+                
+                String id = OrdersHelper.getUniqueOrderId();
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[store][%s][%s][cyclic]size=%s, order id main part=%s, key=%s", controllerId, date, size, id, entry
                             .getKey()));

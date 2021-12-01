@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -102,6 +104,8 @@ import reactor.core.publisher.Flux;
 import scala.Option;
 
 public class OrdersHelper {
+    
+    public static AtomicInteger no = new AtomicInteger(0);
 
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, OrderStateText>() {
@@ -770,10 +774,21 @@ public class OrdersHelper {
     public static CompletableFuture<Either<Problem, Void>> cancelOrders(ModifyOrders modifyOrders, Collection<OrderId> oIds) {
         return cancelOrders(ControllerApi.of(modifyOrders.getControllerId()), modifyOrders, oIds);
     }
+    
+    public static String getUniqueOrderId() {
+        int n = no.getAndUpdate(x -> (x == Integer.MAX_VALUE) ? 0 : x+1);
+        n = n % 10;
+        if (n == 0) {  // to provide unique id with milliseconds and no in [0-9] 
+            try {
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (InterruptedException e) {
+            }
+        }
+        return Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4) + n;
+    }
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
-        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-        String orderId = String.format("#%s#T%s-%s", yyyymmdd, uniqueId, order.getOrderName());
+        String orderId = String.format("#%s#T%s-%s", yyyymmdd, getUniqueOrderId(), order.getOrderName());
         Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(order.getScheduledFor(), order.getTimeZone());
         if (!scheduledFor.isPresent()) {
             scheduledFor = Optional.of(Instant.now());

@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import js7.data.order.OrderId;
 import js7.data.value.Value;
@@ -49,13 +48,7 @@ public class FreshOrder {
     }
     
     private static OrderId generateNewFromOldOrderId(OrderId orderId) {
-        String uniqueId = Long.valueOf(Instant.now().toEpochMilli()).toString().substring(3);
-        String sOrderId = orderId.string().replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10}(-.+)$", "$1" + uniqueId + "$2");
-        try { // to make sure that uniqueId is unique
-            TimeUnit.MILLISECONDS.sleep(1);
-        } catch (InterruptedException e) {
-        }
-        return OrderId.of(sOrderId);
+        return OrderId.of(orderId.string().replaceFirst("^(#\\d{4}-\\d{2}-\\d{2}#[A-Z])\\d{10}(-.+)$", "$1" + OrdersHelper.getUniqueOrderId() + "$2"));
     }
 
 }
