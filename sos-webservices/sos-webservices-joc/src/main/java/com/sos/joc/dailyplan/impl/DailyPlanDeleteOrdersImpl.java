@@ -16,6 +16,7 @@ import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -36,18 +37,17 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import com.sos.schema.JsonValidator;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanDeleteOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanDeleteOrdersImpl.class);
-    private static final String API_CALL_DELETE = "./daily_plan/orders/delete";
 
     @Override
     public JOCDefaultResponse postDeleteOrders(String accessToken, byte[] filterBytes) {
 
         LOGGER.debug("Delete orders from the daily plan");
         try {
-            initLogging(API_CALL_DELETE, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
@@ -56,10 +56,9 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
                     .collect(Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(null, permitted);
+            if (response != null) {
+                return response;
             }
             this.checkRequiredParameter("filter", in.getFilter());
             this.checkRequiredParameter("dailyPlanDate", in.getFilter().getDailyPlanDate());
@@ -94,7 +93,7 @@ public class DailyPlanDeleteOrdersImpl extends JOCOrderResourceImpl implements I
 
             SOSHibernateSession session = null;
             try {
-                session = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
+                session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
                 session.setAutoCommit(false);
                 Globals.beginTransaction(session);

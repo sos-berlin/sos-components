@@ -883,7 +883,7 @@ public class DBLayerDailyPlannedOrders {
         return item;
     }
 
-    public DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
+    public DBItemDailyPlanOrder addCyclicOrderIds(Collection<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
             throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {

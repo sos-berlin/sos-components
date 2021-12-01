@@ -10,6 +10,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
 import com.sos.joc.dailyplan.db.FilterOrderVariables;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrderVariablesResource;
@@ -19,37 +20,36 @@ import com.sos.joc.model.order.OrderFilter;
 import com.sos.schema.JsonValidator;
 import com.sos.webservices.order.initiator.model.OrderVariables;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDailyPlanOrderVariablesResource {
-
-    private static final String API_CALL = "./dailyplan/order/variables";
 
     @Override
     public JOCDefaultResponse postOrderVariables(String accessToken, byte[] filterBytes) {
-        SOSHibernateSession sosHibernateSession = null;
+        SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, OrderFilter.class);
-            OrderFilter orderFilter = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
+            OrderFilter in = Globals.objectMapper.readValue(filterBytes, OrderFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(orderFilter.getControllerId(), getControllerPermissions(orderFilter
-                    .getControllerId(), accessToken).getOrders().getView());
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getControllerPermissions(in.getControllerId(), accessToken)
+                    .getOrders().getView());
+            if (response != null) {
+                return response;
             }
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
 
-            DBLayerOrderVariables dbLayerOrderVariables = new DBLayerOrderVariables(sosHibernateSession);
-            FilterOrderVariables filterOrderVariables = new FilterOrderVariables();
+            FilterOrderVariables filter = new FilterOrderVariables();
+            filter.setOrderId(in.getOrderId());
 
-            filterOrderVariables.setOrderId(orderFilter.getOrderId());
-            OrderVariables orderVariables = new OrderVariables();
-            List<DBItemDailyPlanVariable> listOfOrderVariables = dbLayerOrderVariables.getOrderVariables(filterOrderVariables, 0);
-            Variables variables = new Variables();
-            if (listOfOrderVariables != null && listOfOrderVariables.size() > 0 && listOfOrderVariables.get(0).getVariableValue() != null) {
-                variables = Globals.objectMapper.readValue(listOfOrderVariables.get(0).getVariableValue(), Variables.class);
+            DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
+            List<DBItemDailyPlanVariable> items = dbLayer.getOrderVariables(filter, 0);
+            session.close();
+            session = null;
+
+            OrderVariables answer = new OrderVariables();
+            if (items != null && items.size() > 0 && items.get(0).getVariableValue() != null) {
+                answer.setVariables(Globals.objectMapper.readValue(items.get(0).getVariableValue(), Variables.class));
                 /*
                  * for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) { switch (VariableType.fromValue(orderVariable.getVariableType())) { case
                  * STRING: variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue()); break; case INTEGER:
@@ -62,18 +62,15 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
             } else {
                 // TODO @ur throw exception
             }
-            orderVariables.setVariables(variables);
-            orderVariables.setDeliveryDate(new Date());
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(orderVariables));
-
+            answer.setDeliveryDate(new Date());
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(answer));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         } finally {
-            Globals.disconnect(sosHibernateSession);
+            Globals.disconnect(session);
         }
 
     }

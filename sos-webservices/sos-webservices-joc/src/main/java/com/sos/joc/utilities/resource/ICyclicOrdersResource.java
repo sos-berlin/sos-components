@@ -8,11 +8,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 
 public interface ICyclicOrdersResource {
 
+    public static final String PATH = "cyclic_orders";
+    public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.UTILITIES, PATH);
+
     @POST
-    @Path("cyclic_orders")
+    @Path(PATH)
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postCyclicOrders(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

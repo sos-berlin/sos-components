@@ -8,11 +8,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
-   
+import com.sos.joc.classes.WebservicePaths;
+
 public interface IRelativeDateConverterResource {
 
+    public static final String PATH = "convert_relative_dates";
+    public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.UTILITIES, PATH);
+
     @POST
-    @Path("convert_relative_dates")
+    @Path(PATH)
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postConvertRelativeDates(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes)  ;
+    public JOCDefaultResponse postConvertRelativeDates(@HeaderParam("X-Access-Token") String accessToken, byte[] filterBytes);
 }

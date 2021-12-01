@@ -7,8 +7,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 
 public interface ISchedulesResource {
+
+    public static final String IMPL_PATH = WebservicePaths.getResourceImplPath(WebservicePaths.SCHEDULES);
 
     @POST
     @Produces({ MediaType.APPLICATION_JSON })

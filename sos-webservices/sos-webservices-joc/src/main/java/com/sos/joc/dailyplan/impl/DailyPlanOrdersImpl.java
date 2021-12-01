@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
@@ -26,18 +27,17 @@ import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.joc.model.dailyplan.PlannedOrders;
 import com.sos.schema.JsonValidator;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanOrdersResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersImpl.class);
-    private static final String API_CALL = "./daily_plan/orders";
 
     @Override
-    public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postDailyPlan(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
 
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
@@ -50,10 +50,9 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
 
             boolean permitted = !allowedControllers.isEmpty();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(null, permitted);
+            if (response != null) {
+                return response;
             }
 
             boolean isDebugEnabled = LOGGER.isDebugEnabled();
@@ -64,7 +63,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
             }
             Date date = toUTCDate(in.getFilter().getDailyPlanDate());
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             ArrayList<PlannedOrderItem> result = new ArrayList<PlannedOrderItem>();
             for (String controllerId : allowedControllers) {
@@ -75,7 +74,7 @@ public class DailyPlanOrdersImpl extends JOCOrderResourceImpl implements IDailyP
                     }
                     continue;
                 }
-                FilterDailyPlannedOrders filter = getOrderFilter(API_CALL, controllerId, in, true);
+                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, in, true);
                 if (filter == null) {
                     continue;
                 }

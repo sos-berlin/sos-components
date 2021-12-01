@@ -25,6 +25,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.DailyPlanRunner;
@@ -51,17 +52,16 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderFilter;
 import com.sos.joc.model.dailyplan.DailyPlanOrderFilterDef;
 import com.sos.schema.JsonValidator;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements IDailyPlanSubmitOrderResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanSubmitOrdersImpl.class);
-    private static final String API_CALL = "./daily_plan/orders/submit";
 
     @Override
-    public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postSubmitOrders(String accessToken, byte[] filterBytes) {
         LOGGER.debug("Submit orders to JS7 controller");
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
 
@@ -154,7 +154,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 SOSHibernateSession session = null;
                 List<DBItemDailyPlanOrder> items = null;
                 try {
-                    session = Globals.createSosHibernateStatelessConnection(API_CALL);
+                    session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
                     // sosHibernateSession.setAutoCommit(false);
                     // Globals.beginTransaction(sosHibernateSession);
 

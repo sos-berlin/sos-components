@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrdersSummaryResource;
@@ -25,29 +26,28 @@ import com.sos.joc.model.dailyplan.DailyPlanOrdersSummary;
 import com.sos.joc.model.dailyplan.PlannedOrderItem;
 import com.sos.schema.JsonValidator;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements IDailyPlanOrdersSummaryResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanOrdersSummaryImpl.class);
-    private static final String API_CALL = "./daily_plan/orders/summary";
 
     @Override
-    public JOCDefaultResponse postDailyPlanOrdersSummary(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postDailyPlanOrdersSummary(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
 
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanOrderFilter.class);
             DailyPlanOrderFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderFilter.class);
+
             Set<String> allowedControllers = getAllowedControllersOrdersView(in.getControllerId(), in.getFilter().getControllerIds(), accessToken)
                     .stream().filter(availableController -> getControllerPermissions(availableController, accessToken).getOrders().getView()).collect(
                             Collectors.toSet());
             boolean permitted = !allowedControllers.isEmpty();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(null, permitted);
+            if (response != null) {
+                return response;
             }
 
             this.checkRequiredParameter("filter", in.getFilter());
@@ -69,7 +69,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
 
             Date date = toUTCDate(in.getFilter().getDailyPlanDate());
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             // DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
             for (String controllerId : allowedControllers) {
                 // List<Long> submissions = dbLayer.getSubmissionIds(controllerId, date);
@@ -80,7 +80,7 @@ public class DailyPlanOrdersSummaryImpl extends JOCOrderResourceImpl implements 
                 // continue;
                 // }
 
-                FilterDailyPlannedOrders filter = getOrderFilter(API_CALL, controllerId, in, true);
+                FilterDailyPlannedOrders filter = getOrderFilter(IMPL_PATH, controllerId, in, true);
                 if (filter == null) {
                     continue;
                 }

@@ -14,6 +14,7 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.common.FolderPermissionEvaluator;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
@@ -27,18 +28,17 @@ import com.sos.webservices.order.initiator.model.ScheduleSelector;
 import com.sos.webservices.order.initiator.model.SchedulesList;
 import com.sos.webservices.order.initiator.model.SchedulesSelector;
 
-@Path("schedules")
+@Path(WebservicePaths.SCHEDULES)
 public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesResource {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SchedulesImpl.class);
-    private static final String API_CALL = "./schedules";
 
     @Override
     public JOCDefaultResponse postSchedules(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         LOGGER.debug("reading list of schedules");
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, ScheduleSelector.class);
             ScheduleSelector in = Globals.objectMapper.readValue(filterBytes, ScheduleSelector.class);
 
@@ -57,10 +57,9 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
 
             boolean permitted = !allowedControllers.isEmpty();
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(null, permitted);
-
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(null, permitted);
+            if (response != null) {
+                return response;
             }
 
             FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
@@ -71,7 +70,7 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
             SchedulesList answer = new SchedulesList();
             answer.setSchedules(new ArrayList<Schedule>());
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
             for (String controllerId : allowedControllers) {
                 folderPermissions.setSchedulerId(controllerId);
@@ -108,7 +107,6 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
         } finally {
             Globals.disconnect(session);
         }
-
     }
 
 }

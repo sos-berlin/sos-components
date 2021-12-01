@@ -40,6 +40,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.dailyplan.DailyPlanRunner;
@@ -81,24 +82,22 @@ import com.sos.schema.JsonValidator;
 import io.vavr.control.Either;
 import js7.base.problem.Problem;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements IDailyPlanModifyOrder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanModifyOrderImpl.class);
-    private static final String API_CALL_MODIFY_ORDER = "./daily_plan/orders/modify";
 
     @Override
-    public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postModifyOrder(String accessToken, byte[] filterBytes) {
 
         LOGGER.debug("Change start time for orders from the daily plan");
 
         try {
-            initLogging(API_CALL_MODIFY_ORDER, filterBytes, accessToken);
+            initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanModifyOrder.class);
             DailyPlanModifyOrder in = Globals.objectMapper.readValue(filterBytes, DailyPlanModifyOrder.class);
 
             JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
-
             if (response != null) {
                 return response;
             }
@@ -163,7 +162,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             filter.setId(id);
             filter.setType(ConfigurationType.WORKINGDAYSCALENDAR);
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[getCalendarById]");
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[getCalendarById]");
             DBLayerInventoryReleasedConfigurations dbLayer = new DBLayerInventoryReleasedConfigurations(session);
             DBItemInventoryReleasedConfiguration config = dbLayer.getSingleInventoryReleasedConfigurations(filter);
             if (config == null) {
@@ -200,7 +199,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             filterPO.setOrderIds(orderIds);
             filterPO.setSubmitted(true);
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[recreateCyclicOrder]");
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[recreateCyclicOrder]");
             DBLayerOrderVariables dbLayerOV = new DBLayerOrderVariables(session);
             List<DBItemDailyPlanVariable> variables = dbLayerOV.getOrderVariables(filterOV, 0);
 
@@ -237,7 +236,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             filter.setOrderIds(orderIds);
             filter.setSubmitted(submitted);
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[removeRecreateCyclicOrder]");
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[removeRecreateCyclicOrder]");
             session.setAutoCommit(false);
             session.beginTransaction();
 
@@ -497,7 +496,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
                             }
                         }
 
-                        newSession = Globals.createSosHibernateStatelessConnection(API_CALL_MODIFY_ORDER + "[removeFromJobSchedulerController]");
+                        newSession = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[removeFromJobSchedulerController]");
                         newSession.setAutoCommit(false);
 
                         if (scheduledForDate != null) {

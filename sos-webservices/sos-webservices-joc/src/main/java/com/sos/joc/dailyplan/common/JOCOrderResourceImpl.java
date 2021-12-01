@@ -1,6 +1,7 @@
 package com.sos.joc.dailyplan.common;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -248,7 +249,7 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
         return dbLayer.getCyclicMinPlannedStart(controllerId, OrdersHelper.getCyclicOrderIdMainPart(orderId), plannedStartFrom, plannedStartTo);
     }
 
-    protected DBItemDailyPlanOrder addCyclicOrderIds(List<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
+    protected DBItemDailyPlanOrder addCyclicOrderIds(Collection<String> orderIds, String orderId, String controllerId) throws SOSHibernateException {
         // re - a new session will be opened in the dbLayerDailyPlannedOrders.addCyclicOrderIds
         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(null);
         return dbLayer.addCyclicOrderIds(orderIds, orderId, controllerId, settings.getTimeZone(), settings.getPeriodBegin());

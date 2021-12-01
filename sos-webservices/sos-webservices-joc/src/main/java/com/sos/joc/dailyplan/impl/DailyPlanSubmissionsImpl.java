@@ -10,6 +10,7 @@ import javax.ws.rs.Path;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
+import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
@@ -24,33 +25,25 @@ import com.sos.joc.model.dailyplan.DailyPlanSubmissionsFilter;
 import com.sos.joc.model.dailyplan.DailyPlanSubmissionsItem;
 import com.sos.schema.JsonValidator;
 
-@Path("daily_plan")
+@Path(WebservicePaths.DAILYPLAN)
 public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements IDailyPlanSubmissionsResource {
 
-    private static final String API_CALL = "./daily_plan/submissions";
-
     @Override
-    public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postDailyPlanSubmissions(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
 
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH_MAIN, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
-            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
 
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getView());
+            if (response != null) {
+                return response;
             }
 
             this.checkRequiredParameter("filter", in.getFilter());
             this.checkRequiredParameter("dateTo", in.getFilter().getDateTo());
-
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
-
-            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
-
-            Globals.beginTransaction(session);
 
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(in.getControllerId());
@@ -62,12 +55,16 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
                 Date toDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateTo());
                 filter.setDateTo(toDate);
             }
-
             filter.setSortMode("desc");
             filter.setOrderCriteria("id");
 
-            List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
+            DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             List<DBItemDailyPlanSubmission> items = dbLayer.getDailyPlanSubmissions(filter, 0);
+            session.close();
+            session = null;
+
+            List<DailyPlanSubmissionsItem> result = new ArrayList<DailyPlanSubmissionsItem>();
             for (DBItemDailyPlanSubmission item : items) {
                 DailyPlanSubmissionsItem p = new DailyPlanSubmissionsItem();
                 p.setSubmissionHistoryId(item.getId());
@@ -82,7 +79,6 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             answer.setDeliveryDate(Date.from(Instant.now()));
 
             return JOCDefaultResponse.responseStatus200(answer);
-
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -94,16 +90,16 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
     }
 
     @Override
-    public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) throws JocException {
+    public JOCDefaultResponse postDeleteDailyPlanSubmissions(String accessToken, byte[] filterBytes) {
         SOSHibernateSession session = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(IMPL_PATH_DELETE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, DailyPlanSubmissionsFilter.class);
             DailyPlanSubmissionsFilter in = Globals.objectMapper.readValue(filterBytes, DailyPlanSubmissionsFilter.class);
 
-            JOCDefaultResponse jocDefaultResponse = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getManage());
-            if (jocDefaultResponse != null) {
-                return jocDefaultResponse;
+            JOCDefaultResponse response = initPermissions(in.getControllerId(), getJocPermissions(accessToken).getDailyPlan().getManage());
+            if (response != null) {
+                return response;
             }
 
             this.checkRequiredParameter("filter", in.getFilter());
@@ -125,7 +121,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
                 }
             }
 
-            session = Globals.createSosHibernateStatelessConnection(API_CALL);
+            session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_DELETE);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
             session.setAutoCommit(false);
             Globals.beginTransaction(session);
