@@ -60,7 +60,6 @@ import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
 import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
 import com.sos.joc.dailyplan.db.FilterInventoryReleasedConfigurations;
-import com.sos.joc.dailyplan.db.FilterOrderVariables;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -228,13 +227,10 @@ public class DailyPlanRunner extends TimerTask {
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
                 schedule.setVariableSets(new ArrayList<VariableSet>());
 
+                DBItemDailyPlanVariable orderVariable = dbLayer.getOrderVariable(item.getId());
                 Variables variables = new Variables();
-
-                FilterOrderVariables filter = new FilterOrderVariables();
-                filter.setPlannedOrderId(item.getId());
-                List<DBItemDailyPlanVariable> orderVariables = dbLayer.getOrderVariables(filter, 0);
-                if (orderVariables != null && orderVariables.size() > 0 && orderVariables.get(0).getVariableValue() != null) {
-                    variables = Globals.objectMapper.readValue(orderVariables.get(0).getVariableValue(), Variables.class);
+                if (orderVariable != null && orderVariable.getVariableValue() != null) {
+                    variables = Globals.objectMapper.readValue(orderVariable.getVariableValue(), Variables.class);
                 }
 
                 VariableSet variableSet = new VariableSet();

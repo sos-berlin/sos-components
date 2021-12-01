@@ -6,95 +6,54 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
+import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 
-public class DBLayerOrderVariables {
+public class DBLayerOrderVariables extends DBLayer {
 
-    private static final String DBItemDailyPlanVariables = com.sos.joc.db.dailyplan.DBItemDailyPlanVariable.class.getSimpleName();
-    private static final String DBItemDailyPlan = com.sos.joc.db.dailyplan.DBItemDailyPlanOrder.class.getSimpleName();
-    private final SOSHibernateSession sosHibernateSession;
+    private static final long serialVersionUID = 1L;
 
     public DBLayerOrderVariables(SOSHibernateSession session) {
-        this.sosHibernateSession = session;
+        super(session);
     }
 
-    public FilterOrderVariables resetFilter() {
-        FilterOrderVariables filter = new FilterOrderVariables();
-        return filter;
+    public DBItemDailyPlanVariable getOrderVariable(Long plannedOrderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("where plannedOrderId=:plannedOrderId ");
+
+        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
+        query.setParameter("plannedOrderId", plannedOrderId);
+        List<DBItemDailyPlanVariable> result = getSession().getResultList(query);
+        if (result != null && result.size() > 0) {
+            return result.get(0);
+        }
+        return null;
     }
 
-    private String getWhere(FilterOrderVariables filter) {
-        String where = " ";
-        String and = " ";
-        if ((filter.getVariableName() != null) && (!"".equals(filter.getVariableName()))) {
-            where += " variableName = :variableName";
-            and = " and ";
-        }
-        if (filter.getPlannedOrderId() != null) {
-            where += and + " plannedOrderId = :plannedOrderId";
-            and = " and ";
-        } else {
-            where = "v.plannedOrderId = p.id";
-            and = " and ";
-            if (filter.getOrderId() != null && !filter.getOrderId().isEmpty()) {
-                where += and + " p.orderId = :orderId";
-                and = " and ";
-            }
-        }
-        if (!"".equals(where.trim())) {
-            where = " where " + where;
-        }
-        return where;
-    }
+    public DBItemDailyPlanVariable getOrderVariable(String orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("where plannedOrderId in (");
+        hql.append("select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" where orderId=:orderId");
+        hql.append(")");
 
-    private <T> Query<T> bindParameters(FilterOrderVariables filter, Query<T> query) {
-        if (filter.getOrderId() != null) {
-            query.setParameter("orderId", filter.getOrderId());
+        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
+        query.setParameter("orderId", orderId);
+        List<DBItemDailyPlanVariable> result = getSession().getResultList(query);
+        if (result != null && result.size() > 0) {
+            return result.get(0);
         }
-        if (filter.getPlannedOrderId() != null) {
-            query.setParameter("plannedOrderId", filter.getPlannedOrderId());
-        }
-        if ((filter.getVariableName() != null) && (!"".equals(filter.getVariableName()))) {
-            query.setParameter("variableName", filter.getVariableName());
-        }
-
-        return query;
-    }
-
-    public List<com.sos.joc.db.dailyplan.DBItemDailyPlanVariable> getOrderVariables(FilterOrderVariables filter, final int limit)
-            throws SOSHibernateException {
-        String q = "";
-        if (filter.getPlannedOrderId() != null) {
-            q = "from " + DBItemDailyPlanVariables + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
-        } else {
-            q = "select v from " + DBItemDailyPlanVariables + " v, " + DBItemDailyPlan + " p " + getWhere(filter) + filter.getOrderCriteria() + filter
-                    .getSortMode();
-        }
-        Query<com.sos.joc.db.dailyplan.DBItemDailyPlanVariable> query = sosHibernateSession.createQuery(q);
-        query = bindParameters(filter, query);
-
-        if (limit > 0) {
-            query.setMaxResults(limit);
-        }
-        return sosHibernateSession.getResultList(query);
-    }
-
-    public int delete(FilterOrderVariables filter) throws SOSHibernateException {
-        int row = 0;
-        String hql = "delete from " + DBItemDailyPlanVariables + getWhere(filter);
-        Query<DBItemDailyPlanSubmission> query = sosHibernateSession.createQuery(hql);
-        query = bindParameters(filter, query);
-        row = row + sosHibernateSession.executeUpdate(query);
-        return row;
+        return null;
     }
 
     public int update(Long oldId, Long newId) throws SOSHibernateException {
-        int row = 0;
-        String hql = "update  " + DBItemDailyPlanVariables + " set plannedOrderId=:newId where plannedOrderId = :oldId";
-        Query<DBItemDailyPlanSubmission> query = sosHibernateSession.createQuery(hql);
+        StringBuilder hql = new StringBuilder("update  ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("set plannedOrderId=:newId ");
+        hql.append("where plannedOrderId=:oldId");
+
+        Query<DBItemDailyPlanSubmission> query = getSession().createQuery(hql);
         query.setParameter("newId", newId);
         query.setParameter("oldId", oldId);
-        row = row + sosHibernateSession.executeUpdate(query);
-        return row;
+        return getSession().executeUpdate(query);
     }
 }

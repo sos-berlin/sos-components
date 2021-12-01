@@ -1,7 +1,6 @@
 package com.sos.joc.dailyplan.impl;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.ws.rs.Path;
 
@@ -12,7 +11,6 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
-import com.sos.joc.dailyplan.db.FilterOrderVariables;
 import com.sos.joc.dailyplan.resource.IDailyPlanOrderVariablesResource;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
 import com.sos.joc.exceptions.JocException;
@@ -38,18 +36,14 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
             }
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-
-            FilterOrderVariables filter = new FilterOrderVariables();
-            filter.setOrderId(in.getOrderId());
-
             DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
-            List<DBItemDailyPlanVariable> items = dbLayer.getOrderVariables(filter, 0);
+            DBItemDailyPlanVariable item = dbLayer.getOrderVariable(in.getOrderId());
             session.close();
             session = null;
 
             OrderVariables answer = new OrderVariables();
-            if (items != null && items.size() > 0 && items.get(0).getVariableValue() != null) {
-                answer.setVariables(Globals.objectMapper.readValue(items.get(0).getVariableValue(), Variables.class));
+            if (item != null && item.getVariableValue() != null) {
+                answer.setVariables(Globals.objectMapper.readValue(item.getVariableValue(), Variables.class));
                 /*
                  * for (DBItemDailyPlanVariables orderVariable : listOfOrderVariables) { switch (VariableType.fromValue(orderVariable.getVariableType())) { case
                  * STRING: variables.setAdditionalProperty(orderVariable.getVariableName(), orderVariable.getVariableValue()); break; case INTEGER:
