@@ -15,8 +15,8 @@ import org.apache.shiro.session.InvalidSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.SOSShiroCurrentUser;
-import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
+import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.joc.exceptions.JocAuthenticationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.exceptions.JocException;
@@ -147,7 +147,7 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             String entityStr = String.format(ERROR_HTML, "JOC-440", StringEscapeUtils.escapeHtml4(errorOutput));
             responseBuilder.entity(entityStr);
         } else {
-            SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = new SOSShiroCurrentUserAnswer();
+            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
             sosShiroCurrentUserAnswer.setHasRole(false); 
             sosShiroCurrentUserAnswer.setIsAuthenticated(false);
             sosShiroCurrentUserAnswer.setIsPermitted(false);
@@ -304,14 +304,14 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return responseStatus419(listOfErrors);
     }
 
-    public static JOCDefaultResponse responseStatus401(SOSShiroCurrentUserAnswer entity) {
+    public static JOCDefaultResponse responseStatus401(SOSAuthCurrentAccountAnswer entity) {
         Response.ResponseBuilder responseBuilder = Response.status(401).header("Content-Type", MediaType.APPLICATION_JSON).cacheControl(setNoCaching());
         LOGGER.error(entity.getMessage());
         responseBuilder.entity(entity);
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus403(SOSShiroCurrentUserAnswer entity, String mediaType) {
+    public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity, String mediaType) {
         Response.ResponseBuilder responseBuilder = Response.status(403).header("Content-Type", mediaType).cacheControl(setNoCaching());
         LOGGER.error(entity.getMessage());
         if (mediaType.contains(MediaType.TEXT_HTML)) {
@@ -323,11 +323,11 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
     
-    public static JOCDefaultResponse responseStatus403(SOSShiroCurrentUserAnswer entity) {
+    public static JOCDefaultResponse responseStatus403(SOSAuthCurrentAccountAnswer entity) {
         return responseStatus403(entity, MediaType.APPLICATION_JSON);
     }
 
-    public static JOCDefaultResponse responseStatus440(SOSShiroCurrentUserAnswer entity, String mediaType) {
+    public static JOCDefaultResponse responseStatus440(SOSAuthCurrentAccountAnswer entity, String mediaType) {
         Response.ResponseBuilder responseBuilder = Response.status(440).header("Content-Type", mediaType).cacheControl(setNoCaching());
         LOGGER.error(entity.getMessage());
         if (mediaType.contains(MediaType.TEXT_HTML)) {
@@ -339,21 +339,21 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
         return new JOCDefaultResponse(responseBuilder.build());
     }
 
-    public static JOCDefaultResponse responseStatus440(SOSShiroCurrentUserAnswer entity) {
+    public static JOCDefaultResponse responseStatus440(SOSAuthCurrentAccountAnswer entity) {
         return responseStatus440(entity, MediaType.APPLICATION_JSON);
     }
     
-    public static JOCDefaultResponse responseHTMLStatus440(SOSShiroCurrentUserAnswer entity) {
+    public static JOCDefaultResponse responseHTMLStatus440(SOSAuthCurrentAccountAnswer entity) {
         return responseStatus440(entity, MediaType.TEXT_HTML + "; charset=UTF-8");
     }
     
-    public static SOSShiroCurrentUserAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser) {
+    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser) {
         return getError401Schema(sosJobschedulerUser, null);
     }
 
-    public static SOSShiroCurrentUserAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
-        SOSShiroCurrentUserAnswer entity = new SOSShiroCurrentUserAnswer();
-        SOSShiroCurrentUser sosShiroCurrentUser=null;
+    public static SOSAuthCurrentAccountAnswer getError401Schema(JobSchedulerUser sosJobschedulerUser, JocError err) {
+        SOSAuthCurrentAccountAnswer entity = new SOSAuthCurrentAccountAnswer();
+        SOSAuthCurrentAccount sosShiroCurrentUser=null;
         String message = "Authentication failure";
         if (err != null && err.getMessage() != null) {
             if (err.getMessage() != null) {
@@ -364,17 +364,17 @@ public class JOCDefaultResponse extends com.sos.joc.classes.ResponseWrapper {
             }
         }
         try {
-            sosShiroCurrentUser = sosJobschedulerUser.getSosShiroCurrentUser();
+            sosShiroCurrentUser = sosJobschedulerUser.getSOSAuthCurrentAccount();
         } catch (SessionNotExistException e) {
             message += ": "+e.getMessage();
         }
         if (sosShiroCurrentUser != null) {
             entity.setAccessToken(sosShiroCurrentUser.getAccessToken());
-            entity.setUser(sosShiroCurrentUser.getUsername());
+            entity.setAccount(sosShiroCurrentUser.getAccountname());
             entity.setRole(String.join(", ", sosShiroCurrentUser.getRoles()));
         } else {
             entity.setAccessToken("");
-            entity.setUser("");
+            entity.setAccount("");
             entity.setHasRole(false);
         }
         entity.setIsPermitted(false);

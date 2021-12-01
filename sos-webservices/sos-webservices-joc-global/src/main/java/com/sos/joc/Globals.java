@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateConfigurationException;
@@ -56,9 +57,9 @@ public class Globals {
     public static org.apache.shiro.config.IniSecurityManagerFactory factory = null;
     public static ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
             SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false).configure(
-                    SerializationFeature.INDENT_OUTPUT, true);
+    public static ObjectMapper prettyPrintObjectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
+            .configure(SerializationFeature.INDENT_OUTPUT, true);
     public static JocCockpitProperties sosCockpitProperties;
     public static TimeZone jocTimeZone = TimeZone.getDefault();
     public static Path servletContextRealPath = null;
@@ -77,11 +78,13 @@ public class Globals {
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
     public static boolean withHostnameVerification = false;
+    public static SOSIdentityService identityServices;
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
     private static final Logger LOGGER = LoggerFactory.getLogger(Globals.class);
     private static JocSecurityLevel jocSecurityLevel = null;
+    
 
     public static synchronized SOSHibernateFactory getHibernateFactory() throws JocConfigurationException {
         if (sosHibernateFactory == null || sosHibernateFactory.getSessionFactory() == null) {
@@ -109,27 +112,25 @@ public class Globals {
             throw new DBOpenSessionException(e);
         }
     }
-    
-    private static boolean shiroNeedFactoryReloadAfterIniChanged(Ini oldShiroIni,Ini currentShiroIni) {
-            RealmSecurityManager mgr = (RealmSecurityManager) SecurityUtils.getSecurityManager();
 
-            Collection<Realm> realmCollection = mgr.getRealms();
-            if (realmCollection != null) {
-                for (Realm realm : realmCollection) {
-                    if (realm instanceof IniRealm) {
-                       return true;
-                    }
+    private static boolean shiroNeedFactoryReloadAfterIniChanged(Ini oldShiroIni, Ini currentShiroIni) {
+        RealmSecurityManager mgr = (RealmSecurityManager) SecurityUtils.getSecurityManager();
+
+        Collection<Realm> realmCollection = mgr.getRealms();
+        if (realmCollection != null) {
+            for (Realm realm : realmCollection) {
+                if (realm instanceof IniRealm) {
+                    return true;
                 }
             }
-            Section oldMain = oldShiroIni.getSection(MAIN_SECTION);
-            Section currentMain = currentShiroIni.getSection(MAIN_SECTION);
-            if (!oldMain.equals(currentMain)){
-                return true;
-            }
-            return false;
         }
-
-    
+        Section oldMain = oldShiroIni.getSection(MAIN_SECTION);
+        Section currentMain = currentShiroIni.getSection(MAIN_SECTION);
+        if (!oldMain.equals(currentMain)) {
+            return true;
+        }
+        return false;
+    }
 
     @SuppressWarnings("deprecation")
     public static IniSecurityManagerFactory getShiroIniSecurityManagerFactory() {
@@ -139,7 +140,7 @@ public class Globals {
         } else {
             Ini oldShiroIni = factory.getIni();
             Ini currentShiroIni = Ini.fromResourcePath(getIniFileForShiro(iniFile));
-            if (shiroNeedFactoryReloadAfterIniChanged(oldShiroIni,currentShiroIni) && !oldShiroIni.equals(currentShiroIni)) {
+            if (shiroNeedFactoryReloadAfterIniChanged(oldShiroIni, currentShiroIni) && !oldShiroIni.equals(currentShiroIni)) {
                 LOGGER.debug(getIniFileForShiro(iniFile) + " is changed");
                 factory = new IniSecurityManagerFactory();
                 factory.setIni(currentShiroIni);
@@ -383,6 +384,8 @@ public class Globals {
         }
     }
 
+  
+
     public static void disconnect(SOSHibernateSession sosHibernateSession) {
         if (sosHibernateSession != null) {
             sosHibernateSession.close();
@@ -465,23 +468,23 @@ public class Globals {
         return Globals.configurationGlobals == null ? new ConfigurationGlobalsJoc() : (ConfigurationGlobalsJoc) Globals.configurationGlobals
                 .getConfigurationSection(DefaultSections.joc);
     }
-    
+
     public static ConfigurationGlobalsUser getConfigurationGlobalsUser() {
         return Globals.configurationGlobals == null ? new ConfigurationGlobalsUser() : (ConfigurationGlobalsUser) Globals.configurationGlobals
                 .getConfigurationSection(DefaultSections.user);
     }
-    
+
     public static ConfigurationGlobalsDailyPlan getConfigurationGlobalsDailyPlan() {
-        return Globals.configurationGlobals == null ? new ConfigurationGlobalsDailyPlan() : (ConfigurationGlobalsDailyPlan) Globals.configurationGlobals
-                .getConfigurationSection(DefaultSections.dailyplan);
+        return Globals.configurationGlobals == null ? new ConfigurationGlobalsDailyPlan()
+                : (ConfigurationGlobalsDailyPlan) Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
     }
-    
+
     // -1: current version is older, 0: current version is equal, 1: current version is younger
     public static int curVersionCompareWith(String version) {
         try {
             String currentVersion = curVersion;
             if (currentVersion == null || currentVersion.isEmpty()) {
-                currentVersion = "1.0.0-SNAPSHOT"; 
+                currentVersion = "1.0.0-SNAPSHOT";
             }
             String[] curVersionsComplete = (currentVersion + "- ").split("-");
             String[] curVersions = curVersionsComplete[0].split("\\.");
@@ -504,5 +507,6 @@ public class Globals {
             return 1;
         }
     }
+
 
 }

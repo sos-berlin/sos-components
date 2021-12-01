@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.rest.SOSShiroCurrentUser;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -87,7 +87,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             Controllers entity = new Controllers();
-            entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb, jobschedulerUser.getSosShiroCurrentUser()));
+            entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb, jobschedulerUser.getSOSAuthCurrentAccount()));
             if (onlyDb) {
                 entity.setAgents(getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors.toSet()), connection));
             }
@@ -125,7 +125,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
     }
 
     private static List<Controller> getControllers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection, boolean onlyDb,
-            SOSShiroCurrentUser user) throws InterruptedException, JocException, Exception {
+            SOSAuthCurrentAccount user) throws InterruptedException, JocException, Exception {
         return getControllerAnswers(allowedControllers, accessToken, connection, onlyDb).stream()
                 .map(Controller.class::cast).collect(Collectors.toList());
     }

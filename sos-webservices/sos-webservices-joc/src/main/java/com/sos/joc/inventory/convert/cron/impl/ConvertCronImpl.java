@@ -100,7 +100,7 @@ public class ConvertCronImpl extends JOCResourceImpl implements IConvertCronReso
             }
             
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
             if (filter.getFolder() == null || filter.getFolder().isEmpty()) {

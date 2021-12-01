@@ -1,35 +1,35 @@
 package com.sos.joc.classes;
 
-import com.sos.auth.rest.SOSShiroCurrentUser;
-import com.sos.auth.rest.SOSShiroSession;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
+import com.sos.auth.classes.SOSSessionHandler;
 import com.sos.joc.Globals;
 import com.sos.joc.exceptions.SessionNotExistException;
 
 public class JobSchedulerUser {
 
 	private String accessToken;
-	private SOSShiroCurrentUser sosShiroCurrentUser;
+	private SOSAuthCurrentAccount sosAuthCurrentAccount;
 
 	public JobSchedulerUser(String accessToken) {
 		super();
 		this.accessToken = accessToken;
 	}
 
-	public SOSShiroCurrentUser getSosShiroCurrentUser() throws SessionNotExistException {
-		if (sosShiroCurrentUser == null && Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
-			sosShiroCurrentUser = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUser(accessToken);
+	public SOSAuthCurrentAccount getSOSAuthCurrentAccount() throws SessionNotExistException {
+		if (sosAuthCurrentAccount == null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
+			sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
 		}
-		if (sosShiroCurrentUser == null) {
+		if (sosAuthCurrentAccount == null) {
 			throw new SessionNotExistException("Session doesn't exist [" + accessToken + "]");
 		}
-		return sosShiroCurrentUser;
+		return sosAuthCurrentAccount;
 	}
 
 	public boolean isAuthenticated() {
-		if (sosShiroCurrentUser == null && Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
-			sosShiroCurrentUser = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUser(accessToken);
+		if (sosAuthCurrentAccount == null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
+			sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
 		}
-		return (sosShiroCurrentUser != null);
+		return (sosAuthCurrentAccount != null);
 	}
 
 	public String getAccessToken() {
@@ -38,14 +38,14 @@ public class JobSchedulerUser {
 
 	public boolean resetTimeOut() throws SessionNotExistException {
 
-		if (sosShiroCurrentUser != null) {
-			SOSShiroSession sosShiroSession = new SOSShiroSession(sosShiroCurrentUser);
+		if (sosAuthCurrentAccount != null) {
+			SOSSessionHandler sosShiroSession = new SOSSessionHandler(sosAuthCurrentAccount);
 			sosShiroSession.touch();
 		} else {
 			throw new org.apache.shiro.session.InvalidSessionException("Session doesn't exist");
 		}
 
-		return (sosShiroCurrentUser != null);
+		return (sosAuthCurrentAccount != null);
 	}
 
 }

@@ -76,7 +76,7 @@ public class DeployImpl extends JOCResourceImpl implements IDeploy {
             allowedControllerIds = Proxies.getControllerDbInstances().keySet().stream()
             		.filter(availableController -> getControllerPermissions(availableController, xAccessToken).getDeployments().getDeploy()).collect(Collectors.toSet());
             
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             // process filter

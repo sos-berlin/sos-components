@@ -14,6 +14,7 @@ import javax.ws.rs.Path;
 
 import org.apache.shiro.session.Session;
 
+import com.sos.auth.interfaces.ISOSSession;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -43,7 +44,7 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
     public JOCDefaultResponse postEvent(String accessToken, byte[] inBytes) {
 
         Event entity = new Event();
-        Session session = null;
+        ISOSSession session = null;
         try {
             initLogging(API_CALL, inBytes, accessToken);
             JsonValidator.validateFailFast(inBytes, Controller.class);
@@ -81,9 +82,9 @@ public class EventResourceImpl extends JOCResourceImpl implements IEventResource
         return JOCDefaultResponse.responseStatus200(entity);
     }
 
-    private Session checkSession() throws SessionNotExistException {
+    private ISOSSession checkSession() throws SessionNotExistException {
         try {
-            Session session = getJobschedulerUser().getSosShiroCurrentUser().getCurrentSubject().getSession(false);
+            ISOSSession session = getJobschedulerUser().getSOSAuthCurrentAccount().getCurrentSubject().getSession();
             long timeout = session.getTimeout();
             // LOGGER.info("Session timeout: " + timeout);
             if (timeout < 0L) {

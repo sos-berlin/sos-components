@@ -65,7 +65,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername(),
+                    jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(),
                     JocSecurityLevel.LOW);
 //            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
 //                    String.format("new Private Key generated for profile - %1$s -", ClusterSettings.getDefaultProfileAccount(Globals.getConfigurationGlobalsJoc())));

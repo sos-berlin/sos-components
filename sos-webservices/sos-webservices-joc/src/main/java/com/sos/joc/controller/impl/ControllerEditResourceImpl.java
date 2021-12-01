@@ -319,7 +319,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             }
             
             if (firstController) { // GUI needs permissions directly for the first controller(s)
-                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSosShiroCurrentUser()
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(getJobschedulerUser().getSOSAuthCurrentAccount()
                         .getSosPermissionJocCockpitControllers()));
             } else {
                 return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));

@@ -48,9 +48,9 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             if (SOSKeyConstants.PGP_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 if (validUntil != null) {
                     Long secondsToExpire = validUntil.getTime() / 1000;
-                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, secondsToExpire);
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), null, secondsToExpire);
                 } else {
-                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), null, null);
+                    keyPair = KeyUtil.createKeyPair(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), null, null);
                 }                
             } else if (SOSKeyConstants.RSA_ALGORITHM_NAME.equals(filter.getKeyAlgorithm())) {
                 keyPair = KeyUtil.createRSAJocKeyPair();
@@ -63,7 +63,7 @@ public class GenerateKeyImpl extends JOCResourceImpl implements IGenerateKey {
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
             // store private key to the db
             dbLayerKeys.saveOrUpdateGeneratedKey(keyPair, 
-                    jobschedulerUser.getSosShiroCurrentUser().getUsername(),
+                    jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(),
                     JocSecurityLevel.MEDIUM);
 //            DeployAudit audit = new DeployAudit(filter.getAuditLog(), 
 //                    String.format("new Private Key generated for profile - %1$s -", jobschedulerUser.getSosShiroCurrentUser().getUsername()));

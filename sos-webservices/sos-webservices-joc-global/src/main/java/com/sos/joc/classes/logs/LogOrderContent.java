@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSPath;
@@ -57,9 +57,9 @@ public class LogOrderContent {
     private Long mainParentHistoryId;
     private String orderId;
     private Long unCompressedLength = null;
-    private final SOSShiroFolderPermissions folderPermissions;
+    private final SOSAuthFolderPermissions folderPermissions;
 
-    public LogOrderContent(Long historyId, SOSShiroFolderPermissions folderPermissions) {
+    public LogOrderContent(Long historyId, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = historyId;
         this.folderPermissions = folderPermissions;
     }

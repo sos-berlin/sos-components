@@ -77,7 +77,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             JocKeyPair keyPair = new JocKeyPair();
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             String publicKey = null;
             String reason = null;
             if (keyFromFile != null) {

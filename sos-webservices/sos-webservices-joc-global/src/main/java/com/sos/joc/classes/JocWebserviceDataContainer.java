@@ -1,13 +1,13 @@
 package com.sos.joc.classes;
  
 
-import com.sos.auth.rest.SOSShiroCurrentUsersList;
+import com.sos.auth.classes.SOSAuthCurrentAccountsList;
  
 
 public final class JocWebserviceDataContainer {
     private static JocWebserviceDataContainer instance;
     
-    public static SOSShiroCurrentUsersList currentUsersList;
+    public static SOSAuthCurrentAccountsList currentAccountsList;
     
 
     private JocWebserviceDataContainer() {
@@ -21,12 +21,12 @@ public final class JocWebserviceDataContainer {
         return instance;
     }
 
-    public  SOSShiroCurrentUsersList getCurrentUsersList() {
-        return currentUsersList;
+    public  SOSAuthCurrentAccountsList getCurrentAccountsList() {
+        return currentAccountsList;
     }
 
-    public  void setCurrentUsersList(SOSShiroCurrentUsersList currentUsersList) {
-        JocWebserviceDataContainer.currentUsersList = currentUsersList;
+    public  void setCurrentAccountsList(SOSAuthCurrentAccountsList currentAccountsList) {
+        JocWebserviceDataContainer.currentAccountsList = currentAccountsList;
     }
 
    

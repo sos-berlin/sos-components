@@ -12,7 +12,7 @@ import javax.ws.rs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -103,7 +103,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
     
-    private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions,
+    private static List<Err419> delete(List<RequestFilter> toDelete, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
             JocError jocError, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
         
         List<Err419> bulkErrors = new ArrayList<>();
@@ -168,7 +168,7 @@ public class ReleaseResourceImpl extends JOCResourceImpl implements IReleaseReso
         }
     }
     
-    public static List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSShiroFolderPermissions folderPermissions,
+    public static List<Err419> update(List<RequestFilter> toUpdate, InventoryDBLayer dbLayer, SOSAuthFolderPermissions folderPermissions,
             JocError jocError, DBItemJocAuditLog dbAuditLog, boolean withDeletionOfEmptyFolders) {
         
         List<Err419> bulkErrors = new ArrayList<>();

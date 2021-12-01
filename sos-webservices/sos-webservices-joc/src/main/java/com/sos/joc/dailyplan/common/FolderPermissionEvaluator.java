@@ -10,7 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -32,7 +32,7 @@ public class FolderPermissionEvaluator {
     private List<String> permittedScheduleNames;
     private boolean hasPermission;
 
-    public void getPermittedNames(SOSShiroFolderPermissions folderPermissions, String controllerId, FilterDailyPlannedOrders filter)
+    public void getPermittedNames(SOSAuthFolderPermissions folderPermissions, String controllerId, FilterDailyPlannedOrders filter)
             throws SOSHibernateException {
 
         folderPermissions.setSchedulerId(controllerId);
@@ -125,7 +125,7 @@ public class FolderPermissionEvaluator {
 
     }
 
-    private Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSShiroFolderPermissions folderPermissions) {
+    private Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
         return folderPermissions.getPermittedFolders(folders);
     }
 

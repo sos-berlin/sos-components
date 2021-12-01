@@ -57,7 +57,7 @@ public class SetRootCaImpl extends JOCResourceImpl implements ISetRootCa {
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             if (keyPair.getCertificate() != null && !keyPair.getCertificate().isEmpty()) {
                 DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-                dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSosShiroCurrentUser().getUsername(), Globals.getJocSecurityLevel().intValue());
+                dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), Globals.getJocSecurityLevel().intValue());
             } 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

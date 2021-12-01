@@ -106,7 +106,7 @@ public class ImportImpl extends JOCResourceImpl implements IImportResource {
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.INVENTORY);
             Long auditLogId = dbAuditItem.getId();
             
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             Set<ConfigurationObject> configurations = new HashSet<ConfigurationObject>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();

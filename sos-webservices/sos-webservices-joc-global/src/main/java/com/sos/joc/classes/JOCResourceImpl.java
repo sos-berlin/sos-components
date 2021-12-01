@@ -22,9 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSPermissionsCreator;
-import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -52,7 +52,7 @@ import com.sos.joc.model.security.permissions.JocPermissions;
 public class JOCResourceImpl {
 
     protected JobSchedulerUser jobschedulerUser;
-    protected SOSShiroFolderPermissions folderPermissions;
+    protected SOSAuthFolderPermissions folderPermissions;
     private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCResourceImpl.class);
     private String accessToken;
@@ -60,18 +60,12 @@ public class JOCResourceImpl {
 
     private JocError jocError = new JocError();
 
-    protected void initGetPermissions(String accessToken) throws JocException, InvalidSessionException {
+    private void initGetPermissions(String accessToken) throws JocException, InvalidSessionException {
         if (jobschedulerUser == null) {
-            this.accessToken = accessToken;
+            this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
-        try {
-            sosPermissionsCreator.loginFromAccessToken(accessToken);
-        } catch (IOException e) {
-            throw new JocException(e);
-        }
-
+    
         updateUserInMetaInfo();
     }
 
@@ -93,34 +87,26 @@ public class JOCResourceImpl {
     protected ControllerPermissions getControllerPermissions(String masterId, String accessToken) throws JocException, InvalidSessionException {
         initGetPermissions(accessToken);
         masterId = getMasterId(masterId);
-        return jobschedulerUser.getSosShiroCurrentUser().getControllerPermissions(masterId);
+        return jobschedulerUser.getSOSAuthCurrentAccount().getControllerPermissions(masterId);
     }
-    
+
     protected JocPermissions getJocPermissions(String accessToken) throws JocException, InvalidSessionException {
         initGetPermissions(accessToken);
-        return jobschedulerUser.getSosShiroCurrentUser().getJocPermissions();
+        return jobschedulerUser.getSOSAuthCurrentAccount().getJocPermissions();
     }
 
     public String getAccessToken() {
         return accessToken;
     }
 
-    public String getAccessToken(String xAccessToken, String oldAccessToken) {
-        if (xAccessToken != null && !xAccessToken.isEmpty()) {
-            return xAccessToken;
+    public String getAccessToken(String accessToken, String oldAccessToken) {
+        if (accessToken != null && !accessToken.isEmpty()) {
+            return accessToken;
         }
         return oldAccessToken;
     }
 
     public JobSchedulerUser getJobschedulerUser() {
-        return jobschedulerUser;
-    }
-
-    public JobSchedulerUser getJobschedulerUser(String accessToken) {
-        if (jobschedulerUser == null) {
-            this.accessToken = accessToken;
-            jobschedulerUser = new JobSchedulerUser(accessToken);
-        }
         return jobschedulerUser;
     }
 
@@ -149,14 +135,11 @@ public class JOCResourceImpl {
 
     public JOCDefaultResponse init(String request, Object body, String accessToken, String controllerId, boolean permission) throws JocException,
             InvalidSessionException, JsonParseException, JsonMappingException, IOException {
-        this.accessToken = accessToken;
+        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
         initLogging(request, body);
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
-        sosPermissionsCreator.loginFromAccessToken(accessToken);
-
         return initPermissions(controllerId, permission);
     }
 
@@ -243,33 +226,33 @@ public class JOCResourceImpl {
     public JocAuditLog getJocAuditLog() {
         return jocAuditLog;
     }
-    
+
     public void logAuditMessage(AuditParams audit) {
         jocAuditLog.logAuditMessage(audit);
     }
-    
+
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, CategoryType category) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
         return jocAuditLog.storeAuditLogEntry(audit, category.intValue());
     }
-    
+
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
         return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue());
     }
-    
+
     public DBItemJocAuditLog storeAuditLog(AuditParams audit, String controllerId, CategoryType category, SOSHibernateSession connection) {
         checkRequiredComment(audit);
         jocAuditLog.logAuditMessage(audit);
         return jocAuditLog.storeAuditLogEntry(audit, controllerId, category.intValue(), connection);
     }
-    
+
     public void storeAuditLogDetails(Collection<AuditLogDetail> details, DBItemJocAuditLog dbAuditLog) {
         storeAuditLogDetails(details, null, dbAuditLog);
     }
-    
+
     public void storeAuditLogDetails(Collection<AuditLogDetail> details, SOSHibernateSession connection, DBItemJocAuditLog dbAuditLog) {
         if (dbAuditLog != null) {
             JocAuditLog.storeAuditLogDetails(details, connection, dbAuditLog.getId(), dbAuditLog.getCreated());
@@ -322,37 +305,36 @@ public class JOCResourceImpl {
 
     public void initLogging(String request, byte[] body, String accessToken) throws JocException, InvalidSessionException, JsonParseException,
             JsonMappingException, IOException {
-        this.accessToken = accessToken;
+        this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
         if (jobschedulerUser == null) {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
         initLogging(request, body);
-        SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(null);
-        sosPermissionsCreator.loginFromAccessToken(accessToken);
+   
+        if (SOSAuthHelper.isShiro() && Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
 
-        if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentUsersList() != null) {
-            SessionKey s = new DefaultSessionKey(accessToken);
+            SessionKey s = new DefaultSessionKey(this.accessToken);
             Session session = null;
             session = SecurityUtils.getSecurityManager().getSession(s);
 
             if (session != null && "true".equals(session.getAttribute("dao"))) {
                 if (!sessionExistInDb(accessToken)) {
-                    Globals.jocWebserviceDataContainer.getCurrentUsersList().removeUser(accessToken);
+                    Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
                 }
             }
         }
 
-        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentUsersList() == null) {
+        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
         }
 
-        SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentUsersList().getUserByToken(accessToken);
+        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(accessToken);
         if (sosShiroCurrentUserAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }
 
         if (jobschedulerUser == null) {
-            jobschedulerUser = new JobSchedulerUser(accessToken);
+            jobschedulerUser = new JobSchedulerUser(this.accessToken);
         }
 
     }
@@ -360,7 +342,7 @@ public class JOCResourceImpl {
     private void initLogging(String request, Object body) {
         String user;
         try {
-            user = jobschedulerUser.getSosShiroCurrentUser().getUsername().trim();
+            user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
         } catch (Exception e) {
             user = "-";
         }
@@ -381,7 +363,7 @@ public class JOCResourceImpl {
     public void initLogging(String request, byte[] body) {
         String user;
         try {
-            user = jobschedulerUser.getSosShiroCurrentUser().getUsername().trim();
+            user = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
         } catch (Exception e) {
             user = "-";
         }
@@ -400,7 +382,7 @@ public class JOCResourceImpl {
                 bodyStr = bodyStr.substring(0, 4093) + "...";
             }
         }
-        
+
         jocAuditLog = new JocAuditLog(user, request, bodyStr);
         LOGGER.debug("REQUEST: " + request + ", PARAMS: " + bodyStr);
         jocError.addMetaInfoOnTop("\nREQUEST: " + request, "PARAMS: " + bodyStr, "USER: " + user);
@@ -412,7 +394,7 @@ public class JOCResourceImpl {
         if (!permission) {
             return accessDeniedResponse();
         }
-        folderPermissions = jobschedulerUser.getSosShiroCurrentUser().getSosShiroFolderPermissions();
+        folderPermissions = jobschedulerUser.getSOSAuthCurrentAccount().getSosShiroFolderPermissions();
         folderPermissions.setSchedulerId(controllerId);
         return jocDefaultResponse;
     }
@@ -427,7 +409,7 @@ public class JOCResourceImpl {
     private void updateUserInMetaInfo() {
         try {
             if (jocError != null) {
-                String userMetaInfo = "USER: " + jobschedulerUser.getSosShiroCurrentUser().getUsername();
+                String userMetaInfo = "USER: " + jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
                 List<String> metaInfo = jocError.getMetaInfo();
                 if (metaInfo.size() > 2) {
                     metaInfo.remove(2);
@@ -447,7 +429,7 @@ public class JOCResourceImpl {
 
     protected static void checkFolderPermissions(String path, Collection<Folder> listOfFolders) throws JocFolderPermissionsException {
         String folder = getParent(path);
-        if (!SOSShiroFolderPermissions.isPermittedForFolder(folder, listOfFolders)) {
+        if (!SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders)) {
             throw new JocFolderPermissionsException(folder);
         }
     }
@@ -459,30 +441,27 @@ public class JOCResourceImpl {
         if (listOfFolders == null || listOfFolders.isEmpty()) {
             return true;
         }
-        return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
+        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
     protected Set<Folder> addPermittedFolder(Collection<Folder> folders) {
         return folderPermissions.getPermittedFolders(folders);
     }
-    
-    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSShiroFolderPermissions folderPermissions) {
+
+    protected static Set<Folder> addPermittedFolder(Collection<Folder> folders, SOSAuthFolderPermissions folderPermissions) {
         return folderPermissions.getPermittedFolders(folders);
     }
-    
+
     protected static boolean folderIsPermitted(String folder, Set<Folder> listOfFolders) {
-        return SOSShiroFolderPermissions.isPermittedForFolder(folder, listOfFolders);
+        return SOSAuthFolderPermissions.isPermittedForFolder(folder, listOfFolders);
     }
 
     public String getAccount() {
         try {
-            return jobschedulerUser.getSosShiroCurrentUser().getUsername().trim();
+            return jobschedulerUser.getSOSAuthCurrentAccount().getAccountname().trim();
         } catch (Exception e) {
             return null;
         }
     }
-    
-    
 
-  
 }

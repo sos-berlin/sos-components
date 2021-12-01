@@ -83,7 +83,7 @@ public class ImportKeyImpl extends JOCResourceImpl implements IImportKey {
             String keyFromFile = readFileContent(stream, filter);
             keyPair.setPrivateKey(null);
             keyPair.setKeyAlgorithm(filter.getKeyAlgorithm());
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             String reason = null;
             if (keyFromFile != null) {
                 if (keyFromFile.startsWith(SOSKeyConstants.PRIVATE_PGP_KEY_HEADER) 

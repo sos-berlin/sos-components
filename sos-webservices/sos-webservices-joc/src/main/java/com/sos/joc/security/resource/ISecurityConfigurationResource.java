@@ -9,17 +9,24 @@ import javax.ws.rs.core.MediaType;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 
-public interface ISecurityConfigurationResource
-{
+public interface ISecurityConfigurationResource {
 
     @POST
     @Path("shiro")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postShiroRead(@HeaderParam("X-Access-Token") String xAccessToken);
-    
+    public JOCDefaultResponse postAuthRead(@HeaderParam("X-Access-Token") String xAccessToken);
+
     @POST
     @Path("shiro/store")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postShiroStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+    public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
 
+    /*
+     * @POST
+     * @Path("auth")
+     * @Produces({ MediaType.APPLICATION_JSON }) public JOCDefaultResponse postAuthRead(@HeaderParam("X-Access-Token") String xAccessToken);
+     * @POST
+     * @Path("auth/store")
+     * @Produces({ MediaType.APPLICATION_JSON }) public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
+     */
 }

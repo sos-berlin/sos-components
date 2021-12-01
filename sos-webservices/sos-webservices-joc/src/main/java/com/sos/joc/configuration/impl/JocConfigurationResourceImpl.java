@@ -69,7 +69,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             checkRequiredParameter("configurationType", configuration.getConfigurationType());
             checkRequiredParameter("configurationItem", configuration.getConfigurationItem());
             
-            String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+            String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_SAVE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
@@ -293,7 +293,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
 //                }
                 break;
             default:
-                String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission or it is shared
                 boolean owner = account.equals(dbItem.getAccount());
                 if (!owner && !dbItem.getShared()) {
@@ -367,7 +367,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             default:
-                String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission
                 boolean owner = account.equals(dbItem.getAccount());
 
@@ -423,7 +423,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // Nothing to do, always shared = false
                 break;
             default:
-                String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission
                 boolean owner = account.equals(dbItem.getAccount());
 
@@ -476,7 +476,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 // Nothing to do, always shared = false
                 break;
             default:
-                String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+                String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
                 // owner doesn't need any permission
                 boolean owner = account.equals(dbItem.getAccount());
 

@@ -35,7 +35,7 @@ public class ControllerResourceIdsImpl extends JOCResourceImpl implements IContr
                 return jocDefaultResponse;
             }
 
-            JOCPreferences jocPreferences = new JOCPreferences(jobschedulerUser.getSosShiroCurrentUser().getUsername());
+            JOCPreferences jocPreferences = new JOCPreferences(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname());
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryInstancesDBLayer dbLayer = new InventoryInstancesDBLayer(connection);

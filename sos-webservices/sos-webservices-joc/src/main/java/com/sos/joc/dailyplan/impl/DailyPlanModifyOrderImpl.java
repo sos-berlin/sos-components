@@ -263,7 +263,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             setSettings();
 
             DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             settings.setOverwrite(false);
             settings.setSubmit(item.getSubmitted());
             settings.setTimeZone(settings.getTimeZone());
@@ -337,7 +337,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         if (items.size() > 0) {
             DailyPlanSettings settings = new DailyPlanSettings();
-            settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+            settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             settings.setOverwrite(false);
             settings.setSubmit(true);
             settings.setTimeZone(settings.getTimeZone());
@@ -567,7 +567,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
         DBItemDailyPlanSubmission item = new DBItemDailyPlanSubmission();
         item.setControllerId(controllerId);
         item.setSubmissionForDate(dateWithoutTime);
-        item.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+        item.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
         item.setCreated(new Date());
         return item;
     }

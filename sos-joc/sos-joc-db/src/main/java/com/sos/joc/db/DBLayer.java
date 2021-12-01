@@ -5,10 +5,11 @@ import java.io.Serializable;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.util.SOSClassList;
-import com.sos.joc.db.authentication.SOSUser2RoleDBItem;
-import com.sos.joc.db.authentication.SOSUserDBItem;
-import com.sos.joc.db.authentication.SOSUserPermissionDBItem;
-import com.sos.joc.db.authentication.SOSUserRoleDBItem;
+import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
+import com.sos.joc.db.authentication.DBItemIamPermission;
+import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -244,6 +245,22 @@ public class DBLayer implements Serializable {
     public static final String TABLE_YADE_FILES = "YADE_FILES";
     public static final String TABLE_YADE_FILES_SEQUENCE = "SEQ_YADE_FIL";
 
+    public static final String TABLE_IAM_ACCOUNTS = "IAM_ACCOUNTS";
+    public static final String TABLE_IAM_ACCOUNTS_SEQUENCE = "SEQ_IAM_ACCOUNTS";
+
+    public static final String TABLE_IAM_ACCOUNT2ROLES = "IAM_ACCOUNT2ROLES";
+    public static final String TABLE_IAM_ACCOUNT2ROLES_SEQUENCE = "SEQ_IAM_ACCOUNT2ROLES";
+
+    public static final String TABLE_IAM_IDENTITY_SERVICES = "IAM_IDENTITY_SERVICES";
+    public static final String TABLE_IAM_IDENTITY_SERVICES_SEQUENCE = "SEQ_IAM_IDENTITY_SERVICES";
+
+    public static final String TABLE_IAM_PERMISSIONS = "IAM_PERMISSIONS";
+    public static final String TABLE_IAM_PERMISSIONS_SEQUENCE = "SEQ_IAM_PERMISSIONS";
+
+    public static final String TABLE_IAM_ROLES = "IAM_ROLES";
+    public static final String TABLE_IAM_ROLES_SEQUENCE = "SEQ_IAM_ROLES";
+
+     
     // public static final String DEFAULT_FOLDER = "/";
     // public static final Long DEFAULT_ID = 0L;
     public static final String DEFAULT_KEY = ".";
@@ -388,10 +405,11 @@ public class DBLayer implements Serializable {
         cl.add(DBItemDepCommitIds.class);
         cl.add(DBItemDepNamePaths.class);
 
-        cl.add(SOSUserDBItem.class);
-        cl.add(SOSUser2RoleDBItem.class);
-        cl.add(SOSUserPermissionDBItem.class);
-        cl.add(SOSUserRoleDBItem.class);
+        cl.add(DBItemIamAccount.class);
+        cl.add(DBItemIamIdentityService.class);
+        cl.add(DBItemIamAccount2Roles.class);
+        cl.add(DBItemIamPermission.class);
+        cl.add(DBItemIamRole.class);
 
         cl.merge(getHistoryClassMapping().getClasses());
         cl.merge(getOrderInitatorClassMapping().getClasses());

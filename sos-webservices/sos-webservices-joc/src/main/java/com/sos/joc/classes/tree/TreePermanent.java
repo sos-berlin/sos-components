@@ -17,7 +17,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
@@ -399,13 +399,13 @@ public class TreePermanent {
         }
     }
 
-    public static Tree getTree(SortedSet<Tree> folders, String controllerId, SOSShiroFolderPermissions sosShiroFolderPermissions) {
+    public static Tree getTree(SortedSet<Tree> folders, String controllerId, SOSAuthFolderPermissions sosAuthFolderPermissions) {
         Map<Path, TreeModel> treeMap = new HashMap<Path, TreeModel>();
-        Set<Folder> listOfFolders = sosShiroFolderPermissions.getListOfFolders();
-        Set<String> notPermittedParentFolders = sosShiroFolderPermissions.getNotPermittedParentFolders().getOrDefault(controllerId, Collections
+        Set<Folder> listOfFolders = sosAuthFolderPermissions.getListOfFolders();
+        Set<String> notPermittedParentFolders = sosAuthFolderPermissions.getNotPermittedParentFolders().getOrDefault(controllerId, Collections
                 .emptySet());
         for (Tree folder : folders) {
-            boolean isPermittedForFolder = SOSShiroFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders);
+            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(folder.getPath(), listOfFolders);
             boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(folder.getPath());
             
             if (isPermittedForFolder || isNotPermittedParentFolder) {

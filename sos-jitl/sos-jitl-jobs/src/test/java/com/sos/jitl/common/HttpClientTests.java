@@ -86,24 +86,24 @@ public class HttpClientTests {
         }
     }
 
-    @Ignore
+     
     @Test
     public void testHttpClient() {
         KeyStore keyStore = null;
         KeyStore truststore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeyStoreType.PKCS12);
-            truststore = KeyStoreUtil.readTrustStore(TRUSTORE_PATH, KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore("C:/temp/laptop-7rsacscv.p12", KeyStoreType.PKCS12);
+            truststore = KeyStoreUtil.readTrustStore("C:/temp/https-truststore.p12", KeyStoreType.PKCS12);
             SOSRestApiClient restApiClient = new SOSRestApiClient();
             // restApiClient.setAutoCloseHttpClient(true);
             restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
-            String response = restApiClient.postRestService(URI.create("https://joc-2-0-secondary.sos:7543/joc/api/authentication/login"), null);
+            String response = restApiClient.postRestService(URI.create("https://joc-1-13-secondary.sos:17543/joc/api/security/login"), null);
             String accessToken = restApiClient.getResponseHeader("X-Access-Token");
             LOGGER.info(accessToken);
             assertNotNull(response);
             if (accessToken != null) {
                 restApiClient.addHeader("X-Access-Token", accessToken);
-                response = restApiClient.postRestService(URI.create("https://joc-2-0-secondary.sos:7543/joc/api/authentication/logout"), null);
+                response = restApiClient.postRestService(URI.create("https://joc-1-13-secondary.sos:17543/joc/api/security/logout"), null);
                 LOGGER.info(response);
                 assertNotNull(response);
             }

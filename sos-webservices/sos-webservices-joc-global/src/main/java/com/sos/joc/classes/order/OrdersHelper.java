@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.controller.model.order.OrderCycleState;
 import com.sos.controller.model.order.OrderItem;
 import com.sos.controller.model.order.OrderModeType;
@@ -650,7 +650,7 @@ public class OrdersHelper {
     }
 
     public static List<Err419> cancelAndAddFreshOrder(Set<String> temporaryOrderIds, DailyPlanModifyOrder dailyplanModifyOrder, String accessToken,
-            JocError jocError, Long auditlogId, SOSShiroFolderPermissions folderPermissions) throws ControllerConnectionResetException,
+            JocError jocError, Long auditlogId, SOSAuthFolderPermissions folderPermissions) throws ControllerConnectionResetException,
             ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, DBInvalidDataException,
             DBConnectionRefusedException, ExecutionException {
 
@@ -857,7 +857,7 @@ public class OrdersHelper {
         if (path == null || !path.startsWith("/")) {
             return false;
         }
-        return SOSShiroFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
+        return SOSAuthFolderPermissions.isPermittedForFolder(getParent(path), listOfFolders);
     }
 
     private static String getParent(String path) {

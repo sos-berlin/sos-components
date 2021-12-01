@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -463,17 +463,17 @@ public class JocInventory {
     }
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            SOSShiroFolderPermissions folderPermissions) throws Exception {
+            SOSAuthFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSShiroFolderPermissions folderPermissions) throws Exception {
+            SOSAuthFolderPermissions folderPermissions) throws Exception {
         return getConfiguration(dbLayer, id, path, type, folderPermissions, false);
     }
 
     public static DBItemInventoryConfiguration getConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSShiroFolderPermissions folderPermissions, boolean withIsNotPermittedParentFolder) throws Exception {
+            SOSAuthFolderPermissions folderPermissions, boolean withIsNotPermittedParentFolder) throws Exception {
         DBItemInventoryConfiguration config = null;
         String name = null;
 
@@ -541,7 +541,7 @@ public class JocInventory {
         return config;
     }
 
-    private static boolean isNotPermittedParentFolder(SOSShiroFolderPermissions folderPermissions, String path,
+    private static boolean isNotPermittedParentFolder(SOSAuthFolderPermissions folderPermissions, String path,
             boolean withIsNotPermittedParentFolder) {
         if (!withIsNotPermittedParentFolder) {
             return true;
@@ -551,12 +551,12 @@ public class JocInventory {
     }
 
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, RequestFilter in,
-            SOSShiroFolderPermissions folderPermissions) throws Exception {
+            SOSAuthFolderPermissions folderPermissions) throws Exception {
         return getTrashConfiguration(dbLayer, in.getId(), in.getPath(), in.getObjectType(), folderPermissions);
     }
 
     public static DBItemInventoryConfigurationTrash getTrashConfiguration(InventoryDBLayer dbLayer, Long id, String path, ConfigurationType type,
-            SOSShiroFolderPermissions folderPermissions) throws Exception {
+            SOSAuthFolderPermissions folderPermissions) throws Exception {
         DBItemInventoryConfigurationTrash config = null;
         if (id != null) {
             config = dbLayer.getTrashConfiguration(id);

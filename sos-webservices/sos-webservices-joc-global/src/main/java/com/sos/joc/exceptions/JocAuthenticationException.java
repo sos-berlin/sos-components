@@ -1,19 +1,19 @@
 package com.sos.joc.exceptions;
 
-import com.sos.auth.rest.SOSShiroCurrentUserAnswer;
+import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 
 public class JocAuthenticationException extends JocException {
     
     private static final long serialVersionUID = 1L;
     private static final String ERROR_CODE = "JOC-401";
-    private SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer = null;
+    private SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer = null;
 
     public JocAuthenticationException() {
     }
 
-    public JocAuthenticationException(SOSShiroCurrentUserAnswer sosShiroCurrentUserAnswer) {
-        super(new JocError(ERROR_CODE, sosShiroCurrentUserAnswer.getMessage()));
-        this.sosShiroCurrentUserAnswer = sosShiroCurrentUserAnswer;
+    public JocAuthenticationException(SOSAuthCurrentAccountAnswer sosAuthCurrentAccountAnswer) {
+        super(new JocError(ERROR_CODE, sosAuthCurrentAccountAnswer.getMessage()));
+        this.sosAuthCurrentAccountAnswer = sosAuthCurrentAccountAnswer;
     }
     
     public JocAuthenticationException(Throwable cause) {
@@ -46,8 +46,8 @@ public class JocAuthenticationException extends JocException {
         super(updateJocErrorCode(error, ERROR_CODE), cause, enableSuppression, writableStackTrace);
     }
     
-    public SOSShiroCurrentUserAnswer getSosShiroCurrentUserAnswer() {
-        return sosShiroCurrentUserAnswer;
+    public SOSAuthCurrentAccountAnswer getSosAuthCurrentAccountAnswer() {
+        return sosAuthCurrentAccountAnswer;
     }
 
 }

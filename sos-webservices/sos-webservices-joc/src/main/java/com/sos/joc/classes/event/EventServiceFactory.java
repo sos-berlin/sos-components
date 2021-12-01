@@ -18,10 +18,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.shiro.session.InvalidSessionException;
-import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.interfaces.ISOSSession;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -97,7 +97,7 @@ public class EventServiceFactory {
         EventServiceFactory.isClosed.set(true);
     }
     
-    public static Event getEvents(String controllerId, Long eventId, String accessToken, Session session) throws SessionNotExistException {
+    public static Event getEvents(String controllerId, Long eventId, String accessToken, ISOSSession session) throws SessionNotExistException {
         return EventServiceFactory.getInstance()._getEvents(controllerId, eventId, accessToken, session);
     }
     
@@ -126,7 +126,7 @@ public class EventServiceFactory {
         return new EventCondition(lock.newCondition());
     }
     
-    private Event _getEvents(String controllerId, Long eventId, String accessToken, Session session) throws SessionNotExistException {
+    private Event _getEvents(String controllerId, Long eventId, String accessToken, ISOSSession session) throws SessionNotExistException {
         Event events = new Event();
         events.setControllerId(controllerId);
         events.setEventId(eventId); //default
@@ -245,7 +245,7 @@ public class EventServiceFactory {
         return es;
     }
     
-    private long getSessionTimeout(Session session) throws SessionNotExistException {
+    private long getSessionTimeout(ISOSSession session) throws SessionNotExistException {
         try {
             if (session == null) {
                 throw new SessionNotExistException("session is invalid");

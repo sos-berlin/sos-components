@@ -104,7 +104,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         setSettings();
 
         DailyPlanSettings settings = new DailyPlanSettings();
-        settings.setUserAccount(this.getJobschedulerUser().getSosShiroCurrentUser().getUsername());
+        settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
         settings.setOverwrite(false);
         settings.setSubmit(true);
         settings.setTimeZone(settings.getTimeZone());

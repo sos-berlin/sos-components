@@ -113,7 +113,7 @@ public class ImportDeployImpl extends JOCResourceImpl implements IImportDeploy {
             DBItemJocAuditLog dbAuditItem = storeAuditLog(filter.getAuditLog(), CategoryType.DEPLOYMENT);
             Long auditLogId = dbAuditItem != null ? dbAuditItem.getId() : 0L;
             
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             stream = body.getEntityAs(InputStream.class);
             Map<ControllerObject, SignaturePath> objectsWithSignature = new HashMap<ControllerObject, SignaturePath>();
             JocMetaInfo jocMetaInfo = new JocMetaInfo();

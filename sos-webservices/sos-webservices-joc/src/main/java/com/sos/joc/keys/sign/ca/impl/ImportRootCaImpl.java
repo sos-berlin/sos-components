@@ -82,7 +82,7 @@ public class ImportRootCaImpl extends JOCResourceImpl implements IImportRootCa {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayer = new DBLayerKeys(hibernateSession);
-            dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSosShiroCurrentUser().getUsername(), 
+            dbLayer.saveOrUpdateSigningRootCaCertificate(keyPair, jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), 
                     Globals.getJocSecurityLevel().intValue());
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

@@ -116,7 +116,7 @@ public class JocConfigurationsResourceImpl extends JOCResourceImpl implements IJ
 
             // if profile is new then try default_profile_account from settings if exists
             // only processed if controllerId is set and exists and requested account is equal current account
-            String account = getJobschedulerUser().getSosShiroCurrentUser().getUsername();
+            String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
             Date now = Date.from(Instant.now());
             if (configurationsFilter.getConfigurationType() == null || ConfigurationType.PROFILE.equals(configurationsFilter
                     .getConfigurationType())) {

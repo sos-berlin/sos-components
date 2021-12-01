@@ -58,7 +58,7 @@ public class RedeployImpl extends JOCResourceImpl implements IRedeploy {
             }
             DBItemJocAuditLog dbAuditlog = storeAuditLog(redeployFilter.getAuditLog(), CategoryType.DEPLOYMENT);
 
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             dbLayer = new DBLayerDeploy(hibernateSession);
             String controllerId = redeployFilter.getControllerId();

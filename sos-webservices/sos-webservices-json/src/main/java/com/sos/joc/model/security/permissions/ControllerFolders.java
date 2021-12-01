@@ -1,7 +1,7 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -21,7 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class ControllerFolders {
 
     @JsonIgnore
-    private Map<String, List<Folder>> additionalProperties = new LinkedHashMap<String, List<Folder>>();
+    private Map<String, List<Folder>> additionalProperties = new HashMap<String, List<Folder>>();
 
     @JsonAnyGetter
     public Map<String, List<Folder>> getAdditionalProperties() {

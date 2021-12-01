@@ -24,7 +24,6 @@
 		<module>sos-webservices-configuration</module>
 		<module>sos-webservices-json</module>
 		<!--module>sos-webservices-server</module-->
-		<module>sos-webservices-security</module>
 		<module>sos-webservices-patch-executor</module>
 		<module>sos-webservices-publish</module>
 	</modules>

@@ -23,7 +23,7 @@ import javax.ws.rs.core.StreamingOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
@@ -51,15 +51,15 @@ public class LogTaskContent {
     private Long unCompressedLength = null;
     private Long eventId = null;
     private boolean complete = false;
-    private SOSShiroFolderPermissions folderPermissions = null;
+    private SOSAuthFolderPermissions folderPermissions = null;
 
-    public LogTaskContent(TaskFilter taskFilter, SOSShiroFolderPermissions folderPermissions) {
+    public LogTaskContent(TaskFilter taskFilter, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskFilter.getTaskId();
         this.folderPermissions = folderPermissions;
         // this.controllerId = taskFilter.getControllerId();
     }
 
-    public LogTaskContent(Long taskId, SOSShiroFolderPermissions folderPermissions) {
+    public LogTaskContent(Long taskId, SOSAuthFolderPermissions folderPermissions) {
         this.historyId = taskId;
         this.folderPermissions = folderPermissions;
     }

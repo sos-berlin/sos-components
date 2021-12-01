@@ -1,7 +1,7 @@
 
 package com.sos.joc.model.security.permissions;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class IniControllers {
 
     @JsonIgnore
-    private Map<String, List<IniPermission>> additionalProperties = new LinkedHashMap<String, List<IniPermission>>();
+    private Map<String, List<IniPermission>> additionalProperties = new HashMap<String, List<IniPermission>>();
 
     @JsonAnyGetter
     public Map<String, List<IniPermission>> getAdditionalProperties() {

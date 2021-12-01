@@ -25,7 +25,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "deliveryDate",
     "main",
-    "users",
+    "accounts",
     "profiles",
     "roles"
 })
@@ -47,8 +47,8 @@ public class SecurityConfiguration {
      */
     @JsonProperty("main")
     private List<SecurityConfigurationMainEntry> main = new ArrayList<SecurityConfigurationMainEntry>();
-    @JsonProperty("users")
-    private List<SecurityConfigurationUser> users = new ArrayList<SecurityConfigurationUser>();
+    @JsonProperty("accounts")
+    private List<SecurityConfigurationAccount> accounts = new ArrayList<SecurityConfigurationAccount>();
     @JsonProperty("profiles")
     private List<Profile> profiles = new ArrayList<Profile>();
     @JsonProperty("roles")
@@ -66,14 +66,14 @@ public class SecurityConfiguration {
      * @param roles
      * @param profiles
      * @param main
+     * @param accounts
      * @param deliveryDate
-     * @param users
      */
-    public SecurityConfiguration(Date deliveryDate, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationUser> users, List<Profile> profiles, SecurityConfigurationRoles roles) {
+    public SecurityConfiguration(Date deliveryDate, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
         super();
         this.deliveryDate = deliveryDate;
         this.main = main;
-        this.users = users;
+        this.accounts = accounts;
         this.profiles = profiles;
         this.roles = roles;
     }
@@ -120,14 +120,14 @@ public class SecurityConfiguration {
         this.main = main;
     }
 
-    @JsonProperty("users")
-    public List<SecurityConfigurationUser> getUsers() {
-        return users;
+    @JsonProperty("accounts")
+    public List<SecurityConfigurationAccount> getAccounts() {
+        return accounts;
     }
 
-    @JsonProperty("users")
-    public void setUsers(List<SecurityConfigurationUser> users) {
-        this.users = users;
+    @JsonProperty("accounts")
+    public void setAccounts(List<SecurityConfigurationAccount> accounts) {
+        this.accounts = accounts;
     }
 
     @JsonProperty("profiles")
@@ -152,12 +152,12 @@ public class SecurityConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("main", main).append("users", users).append("profiles", profiles).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(profiles).append(main).append(deliveryDate).append(users).append(roles).toHashCode();
+        return new HashCodeBuilder().append(profiles).append(main).append(accounts).append(deliveryDate).append(roles).toHashCode();
     }
 
     @Override
@@ -169,7 +169,7 @@ public class SecurityConfiguration {
             return false;
         }
         SecurityConfiguration rhs = ((SecurityConfiguration) other);
-        return new EqualsBuilder().append(profiles, rhs.profiles).append(main, rhs.main).append(deliveryDate, rhs.deliveryDate).append(users, rhs.users).append(roles, rhs.roles).isEquals();
+        return new EqualsBuilder().append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).append(roles, rhs.roles).isEquals();
     }
 
 }

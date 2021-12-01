@@ -52,7 +52,7 @@ public class ShowKeyImpl extends JOCResourceImpl implements IShowKey {
             }
             hibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL);
             DBLayerKeys dbLayerKeys = new DBLayerKeys(hibernateSession);
-            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSosShiroCurrentUser().getUsername(), JocSecurityLevel.HIGH);
+            JocKeyPair jocKeyPair = dbLayerKeys.getKeyPair(jobschedulerUser.getSOSAuthCurrentAccount().getAccountname(), JocSecurityLevel.HIGH);
             if (!PublishUtils.jocKeyPairNotEmpty(jocKeyPair)) {
                 jocKeyPair = new JocKeyPair();
             } else {

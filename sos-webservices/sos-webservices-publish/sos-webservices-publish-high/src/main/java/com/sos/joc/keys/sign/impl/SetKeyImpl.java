@@ -45,7 +45,7 @@ public class SetKeyImpl extends JOCResourceImpl implements ISetKey {
             storeAuditLog(setKeyFilter.getAuditLog(), CategoryType.CERTIFICATES);
             
             JocKeyPair keyPair = setKeyFilter.getKeys();
-            String account = jobschedulerUser.getSosShiroCurrentUser().getUsername();
+            String account = jobschedulerUser.getSOSAuthCurrentAccount().getAccountname();
             String reason = null;
             if (PublishUtils.jocKeyPairNotEmpty(keyPair)) {
                 if (KeyUtil.isKeyPairValid(keyPair)) {

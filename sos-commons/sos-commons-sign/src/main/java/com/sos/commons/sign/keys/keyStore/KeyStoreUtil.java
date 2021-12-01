@@ -1,18 +1,21 @@
 package com.sos.commons.sign.keys.keyStore;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 public abstract class KeyStoreUtil {
 
 	
-    public static KeyStore readKeyStore(String keyStorePath, KeyStoreType keyStoreType) throws Exception {
+    public static KeyStore readKeyStore(String keyStorePath, KeyStoreType keyStoreType) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException   {
     	return readKeyStore(Paths.get(keyStorePath), keyStoreType, null);
     }
     
@@ -24,7 +27,7 @@ public abstract class KeyStoreUtil {
     	return readKeyStore(Paths.get(keyStorePath), keyStoreType, keyStorePassword);
     }
     
-    public static KeyStore readKeyStore(Path keyStorePath, KeyStoreType keyStoreType, String keyStorePassword) throws Exception {
+    public static KeyStore readKeyStore(Path keyStorePath, KeyStoreType keyStoreType, String keyStorePassword) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException  {
         InputStream keyStoreStream = null;
         try {
             boolean fileAlreadyExist = Files.exists(keyStorePath);
@@ -52,7 +55,7 @@ public abstract class KeyStoreUtil {
         }
     }
 
-    public static KeyStore readTrustStore(String trustStorePath, KeyStoreType trustStoreType) throws Exception {
+    public static KeyStore readTrustStore(String trustStorePath, KeyStoreType trustStoreType) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException  {
     	return readTrustStore(Paths.get(trustStorePath), trustStoreType, null);
     }
     
@@ -64,7 +67,7 @@ public abstract class KeyStoreUtil {
     	return readTrustStore(Paths.get(trustStorePath), trustStoreType, trustStorePassword);
     }
     
-    public static KeyStore readTrustStore(Path trustStorePath, KeyStoreType trustStoreType, String trustStorePassword) throws Exception {
+    public static KeyStore readTrustStore(Path trustStorePath, KeyStoreType trustStoreType, String trustStorePassword) throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
         InputStream trustStoreStream = null;
         try {
             boolean fileAlreadyExist = Files.exists(trustStorePath);

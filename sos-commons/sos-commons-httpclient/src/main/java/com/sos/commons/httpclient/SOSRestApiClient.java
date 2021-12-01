@@ -93,7 +93,7 @@ public class SOSRestApiClient {
     private char[] clientCertificatePass = null;
     private KeyStore truststore = null;
     private SSLContext sslContext = null;
-    
+
     public enum HttpMethod {
         POST, GET, PUT, DELETE
     }
@@ -117,7 +117,7 @@ public class SOSRestApiClient {
     public int statusCode() {
         return httpResponse.getStatusLine().getStatusCode();
     }
-    
+
     public String printStatusLine() {
         StatusLine s = httpResponse.getStatusLine();
         return String.format("%s %d %s", s.getProtocolVersion(), s.getStatusCode(), s.getReasonPhrase());
@@ -271,7 +271,7 @@ public class SOSRestApiClient {
         }
         return builder;
     }
-    
+
     public void setHttpClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
@@ -315,7 +315,7 @@ public class SOSRestApiClient {
     public void setAutoCloseHttpClient(boolean autoCloseHttpClient) {
         this.autoCloseHttpClient = autoCloseHttpClient;
     }
-    
+
     public void setSSLContext() throws SOSSSLException {
         if (clientCertificate != null || truststore != null) {
             try {
@@ -332,13 +332,15 @@ public class SOSRestApiClient {
             }
         }
     }
-    
+
     public void setSSLContext(KeyStore clientCertificate, char[] clientCertificatePass, KeyStore truststore) throws SOSSSLException {
-        setClientCertificate(clientCertificate, clientCertificatePass);
+        if (clientCertificate != null) {
+            setClientCertificate(clientCertificate, clientCertificatePass);
+        }
         setTruststore(truststore);
         setSSLContext();
     }
-    
+
     public void setSSLContext(SSLContext sslContext) {
         this.sslContext = sslContext;
     }
@@ -360,7 +362,7 @@ public class SOSRestApiClient {
     public String executeRestServiceCommand(String restCommand, URI uri) throws SOSException, SocketException {
         return executeRestServiceCommand(restCommand, uri, null);
     }
-    
+
     public String executeRestService(String urlParam) throws SOSException, SocketException {
         return executeRestServiceCommand("get", urlParam);
     }
@@ -384,32 +386,26 @@ public class SOSRestApiClient {
         }
         return result;
     }
-    
-    /**
-     * 
-     * @param method
+
+    /** @param method
      * @param uri
      * @param body (could be String, byte[] or InputStream)
      * @return T (could be String, byte[] or InputStream)
      * @throws SocketException
-     * @throws SOSException
-     */
+     * @throws SOSException */
     public <B> String executeRestService(HttpMethod method, URI uri, B body) throws SocketException, SOSException {
         return executeRestService(method, uri, body, String.class);
     }
-    
-    /**
-     * 
-     * @param method
+
+    /** @param method
      * @param uri
      * @param body (could be String, byte[] or InputStream)
      * @param clazz (could be String, byte[] or InputStream)
      * @return T (could be String, byte[] or InputStream)
      * @throws SocketException
-     * @throws SOSException
-     */
+     * @throws SOSException */
     public <T, B> T executeRestService(HttpMethod method, URI uri, B body, Class<T> clazz) throws SocketException, SOSException {
-        switch(method) {
+        switch (method) {
         case GET:
             return getRestService(uri, clazz);
         case POST:
@@ -425,16 +421,16 @@ public class SOSRestApiClient {
     public void addHeader(String header, String value) {
         headers.put(header, value);
     }
-    
+
     public void addCookieHeader() {
         addCookieHeader(cookies);
     }
-    
+
     /*
      * List entry of the form : key=val
      */
     public void addCookieHeader(List<String> _cookies) {
-        if (_cookies != null & !_cookies.isEmpty() ) {
+        if (_cookies != null & !_cookies.isEmpty()) {
             headers.put("Cookie", String.join("; ", _cookies));
         }
     }
@@ -454,7 +450,7 @@ public class SOSRestApiClient {
     public String getRestService(HttpHost target, String path) throws SOSException, SocketException {
         return getResponse(target, new HttpGet(path), String.class);
     }
-    
+
     public String getRestService(URI uri) throws SOSException, SocketException {
         return getResponse(new HttpGet(uri), String.class);
     }
@@ -479,7 +475,7 @@ public class SOSRestApiClient {
         }
         return getResponse(target, requestPost, String.class);
     }
-    
+
     public <T, B> T postRestService(HttpHost target, String path, B body, Class<T> clazz) throws SOSException {
         HttpPost requestPost = new HttpPost(path);
         HttpEntity entity = getEntity(body);
@@ -488,7 +484,7 @@ public class SOSRestApiClient {
         }
         return getResponse(target, requestPost, clazz);
     }
-    
+
     public <B> String postRestService(URI uri, B body) throws SOSException {
         HttpPost requestPost = new HttpPost(uri);
         HttpEntity entity = getEntity(body);
@@ -533,7 +529,7 @@ public class SOSRestApiClient {
         }
         return getResponse(requestPut, String.class);
     }
-    
+
     public <T, B> T putRestService(URI uri, B body, Class<T> clazz) throws SOSException, SocketException {
         HttpPut requestPut = new HttpPut(uri);
         HttpEntity entity = getEntity(body);
@@ -542,11 +538,11 @@ public class SOSRestApiClient {
         }
         return getResponse(requestPut, clazz);
     }
-    
+
     public String printHttpRequestHeaders() {
         return printHttpRequestHeaders(Collections.emptySet(), true);
     }
-    
+
     public String printHttpRequestHeaders(Set<String> maskedHeaders, boolean pretty) {
         Map<String, String> h = new HashMap<>();
         h.put("Accept", accept);
@@ -557,22 +553,22 @@ public class SOSRestApiClient {
             h.put("Authorization", "********");
         }
         for (String maskedHeader : maskedHeaders) {
-           if (h.containsKey(maskedHeader)) {
-               h.put(maskedHeader, "********");
-           }
+            if (h.containsKey(maskedHeader)) {
+                h.put(maskedHeader, "********");
+            }
         }
-        Stream<String> s = h.entrySet().stream().map(e -> e.getKey() +": "+ e.getValue());
+        Stream<String> s = h.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue());
         if (pretty) {
             return s.collect(Collectors.joining(" \n\t> ", "Request headers \n\t> ", ""));
         } else {
             return s.collect(Collectors.joining("; ", "Request headers: ", ""));
         }
     }
-    
+
     public String printHttpResponseHeaders() {
         return printHttpResponseHeaders(true);
     }
-    
+
     public String printHttpResponseHeaders(boolean pretty) {
         Stream<String> s = origResponseHeaders.stream();
         if (pretty) {
@@ -581,7 +577,7 @@ public class SOSRestApiClient {
             return s.collect(Collectors.joining("; ", "Response headers: ", ""));
         }
     }
-    
+
     private <B> HttpEntity getEntity(B body) throws SOSBadRequestException {
         HttpEntity entity = null;
         if (body != null) {
@@ -879,14 +875,14 @@ public class SOSRestApiClient {
                 if ("set-cookie".equals(header.getName().toLowerCase())) {
                     String[] cookieParts = header.getValue().split(";", 2);
                     if (cookieParts.length >= 1) {
-                       cookies.add(cookieParts[0]);
+                        cookies.add(cookieParts[0]);
                     }
                 } else {
                     responseHeaders.put(header.getName().toLowerCase(), header.getValue());
                 }
                 origResponseHeaders.add(String.format("%s: %s", header.getName(), header.getValue()));
             }
-            
+
         }
     }
 
@@ -899,12 +895,13 @@ public class SOSRestApiClient {
         String authStringEnc = new String(authEncBytes);
         addHeader("Authorization", "Basic " + authStringEnc);
     }
-    
-    public void setClientCertificate() throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+
+    public void setClientCertificate() throws SOSMissingDataException, KeyStoreException, NoSuchAlgorithmException, CertificateException,
+            IOException {
         clientCertificate = readKeyStore();
         clientCertificatePass = getKeyPass();
     }
-    
+
     public void setClientCertificate(KeyStore clientCertificate, char[] clientCertificatePass) {
         this.clientCertificate = clientCertificate;
         this.clientCertificatePass = clientCertificatePass;
@@ -936,7 +933,7 @@ public class SOSRestApiClient {
             }
         }
     }
-    
+
     public void setTruststore(KeyStore truststore) {
         this.truststore = truststore;
     }

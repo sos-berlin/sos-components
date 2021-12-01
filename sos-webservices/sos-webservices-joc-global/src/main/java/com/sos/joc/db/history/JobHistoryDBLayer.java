@@ -17,7 +17,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
-import com.sos.auth.rest.SOSShiroFolderPermissions;
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
@@ -138,7 +138,7 @@ public class JobHistoryDBLayer {
                 if (result == null) {
                     return 0L;
                 } else {
-                    return result.stream().filter(folder -> SOSShiroFolderPermissions.isPermittedForFolder(folder, permittedFolders)).count();
+                    return result.stream().filter(folder -> SOSAuthFolderPermissions.isPermittedForFolder(folder, permittedFolders)).count();
                 }
             }
         } catch (SOSHibernateInvalidSessionException ex) {
