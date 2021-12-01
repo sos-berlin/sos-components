@@ -50,10 +50,9 @@ import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.common.PlannedOrderKey;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
-import com.sos.joc.dailyplan.db.DBLayerInventoryReleasedConfigurations;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
+import com.sos.joc.dailyplan.db.DBLayerReleasedConfigurations;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
-import com.sos.joc.dailyplan.db.FilterInventoryReleasedConfigurations;
 import com.sos.joc.dailyplan.resource.IDailyPlanModifyOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -75,7 +74,6 @@ import com.sos.joc.exceptions.JocMissingRequiredParameterException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Err419;
 import com.sos.joc.model.dailyplan.DailyPlanModifyOrder;
-import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.schema.JsonValidator;
 
 import io.vavr.control.Either;
@@ -157,13 +155,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
 
         SOSHibernateSession session = null;
         try {
-            FilterInventoryReleasedConfigurations filter = new FilterInventoryReleasedConfigurations();
-            filter.setId(id);
-            filter.setType(ConfigurationType.WORKINGDAYSCALENDAR);
-
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH + "[getCalendarById]");
-            DBLayerInventoryReleasedConfigurations dbLayer = new DBLayerInventoryReleasedConfigurations(session);
-            DBItemInventoryReleasedConfiguration config = dbLayer.getSingleInventoryReleasedConfigurations(filter);
+            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
+            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(id);
             if (config == null) {
                 throw new DBMissingDataException(String.format("calendar '%s' not found", id));
             }

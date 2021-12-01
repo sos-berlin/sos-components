@@ -33,6 +33,34 @@ public class DBLayerDailyPlanSubmissions {
         return filter;
     }
 
+    public List<DBItemDailyPlanSubmission> getSubmissions(FilterDailyPlanSubmissions filter, final int limit) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append(getWhere(filter));
+        hql.append(filter.getOrderCriteria());
+        hql.append(filter.getSortMode());
+
+        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
+        query = bindParameters(filter, query);
+        if (limit > 0) {
+            query.setMaxResults(limit);
+        }
+        return session.getResultList(query);
+    }
+
+    public int deleteSubmission(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
+        hql.append(getWhere(filter));
+
+        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
+        bindParameters(filter, query);
+        return session.executeUpdate(query);
+    }
+
+    public void storeSubmission(DBItemDailyPlanSubmission item, Date submissionTime) throws SOSHibernateException {
+        item.setCreated(submissionTime);
+        session.save(item);
+    }
+
     public int delete(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
         Long countSubmitted = getCountSubmittedOrders(filter);
         int result = 0;
@@ -174,30 +202,6 @@ public class DBLayerDailyPlanSubmissions {
 
         return query;
 
-    }
-
-    public List<DBItemDailyPlanSubmission> getDailyPlanSubmissions(FilterDailyPlanSubmissions filter, final int limit) throws SOSHibernateException {
-        String q = "from " + DBLayer.DBITEM_DPL_SUBMISSIONS + getWhere(filter) + filter.getOrderCriteria() + filter.getSortMode();
-        Query<DBItemDailyPlanSubmission> query = session.createQuery(q);
-        query = bindParameters(filter, query);
-
-        if (limit > 0) {
-            query.setMaxResults(limit);
-        }
-        return session.getResultList(query);
-    }
-
-    public int deleteSubmission(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
-        String hql = "delete from " + DBLayer.DBITEM_DPL_SUBMISSIONS + getWhere(filter);
-        Query<DBItemDailyPlanSubmission> query = session.createQuery(hql);
-        bindParameters(filter, query);
-        int row = session.executeUpdate(query);
-        return row;
-    }
-
-    public void storeSubmission(DBItemDailyPlanSubmission dbItemDailyPlanSubmissions, Date submissionTime) throws SOSHibernateException {
-        dbItemDailyPlanSubmissions.setCreated(submissionTime);
-        session.save(dbItemDailyPlanSubmissions);
     }
 
 }

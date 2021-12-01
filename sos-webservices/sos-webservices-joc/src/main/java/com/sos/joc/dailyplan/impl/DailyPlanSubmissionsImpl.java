@@ -60,7 +60,7 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH_MAIN);
             DBLayerDailyPlanSubmissions dbLayer = new DBLayerDailyPlanSubmissions(session);
-            List<DBItemDailyPlanSubmission> items = dbLayer.getDailyPlanSubmissions(filter, 0);
+            List<DBItemDailyPlanSubmission> items = dbLayer.getSubmissions(filter, 0);
             session.close();
             session = null;
 

@@ -55,11 +55,10 @@ import com.sos.joc.dailyplan.common.ScheduleSource;
 import com.sos.joc.dailyplan.common.ScheduleSourceDB;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
-import com.sos.joc.dailyplan.db.DBLayerInventoryReleasedConfigurations;
 import com.sos.joc.dailyplan.db.DBLayerOrderVariables;
+import com.sos.joc.dailyplan.db.DBLayerReleasedConfigurations;
 import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.FilterDailyPlannedOrders;
-import com.sos.joc.dailyplan.db.FilterInventoryReleasedConfigurations;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -272,7 +271,7 @@ public class DailyPlanRunner extends TimerTask {
             filter.setControllerId(controllerId);
             filter.setDateFor(calendar.getTime());
 
-            return dbLayer.getDailyPlanSubmissions(filter, 0);
+            return dbLayer.getSubmissions(filter, 0);
         } finally {
             Globals.disconnect(session);
         }
@@ -409,13 +408,9 @@ public class DailyPlanRunner extends TimerTask {
 
         SOSHibernateSession session = null;
         try {
-            session = Globals.createSosHibernateStatelessConnection("OrderInitiatorRunner");
-            DBLayerInventoryReleasedConfigurations dbLayer = new DBLayerInventoryReleasedConfigurations(session);
-            FilterInventoryReleasedConfigurations filter = new FilterInventoryReleasedConfigurations();
-            filter.setName(calendarName);
-            filter.setType(type);
-
-            DBItemInventoryReleasedConfiguration config = dbLayer.getSingleInventoryReleasedConfigurations(filter);
+            session = Globals.createSosHibernateStatelessConnection(IDENTIFIER + "-getCalendar");
+            DBLayerReleasedConfigurations dbLayer = new DBLayerReleasedConfigurations(session);
+            DBItemInventoryReleasedConfiguration config = dbLayer.getReleasedConfiguration(type, calendarName);
             session.close();
             session = null;
 
