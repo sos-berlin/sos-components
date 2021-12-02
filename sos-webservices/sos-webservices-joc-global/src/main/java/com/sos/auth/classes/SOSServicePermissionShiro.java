@@ -757,7 +757,7 @@ public class SOSServicePermissionShiro {
         }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
-        SOSHibernateSession sosHibernateSession = null;
+       // SOSHibernateSession sosHibernateSession = null;
 
         if (basicAuthorization == null || basicAuthorization.isEmpty()) {
             if (user == null) {
@@ -774,7 +774,7 @@ public class SOSServicePermissionShiro {
 
         try {
 
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Login");
+           // sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Login");
 
             // checkInitialState(sosHibernateSession);
 
@@ -818,7 +818,7 @@ public class SOSServicePermissionShiro {
             }
 
         } finally {
-            Globals.disconnect(sosHibernateSession);
+        //    Globals.disconnect(sosHibernateSession);
         }
     }
 

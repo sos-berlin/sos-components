@@ -24,6 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "identityServiceType",
     "main",
     "accounts",
     "profiles",
@@ -41,10 +42,13 @@ public class SecurityConfiguration {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
+     * Identity Service Types
+     * <p>
      * 
-     * (Required)
      * 
      */
+    @JsonProperty("identityServiceType")
+    private IdentityServiceTypes identityServiceType;
     @JsonProperty("main")
     private List<SecurityConfigurationMainEntry> main = new ArrayList<SecurityConfigurationMainEntry>();
     @JsonProperty("accounts")
@@ -63,15 +67,17 @@ public class SecurityConfiguration {
 
     /**
      * 
+     * @param identityServiceType
      * @param roles
      * @param profiles
      * @param main
      * @param accounts
      * @param deliveryDate
      */
-    public SecurityConfiguration(Date deliveryDate, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
+    public SecurityConfiguration(Date deliveryDate, IdentityServiceTypes identityServiceType, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
         super();
         this.deliveryDate = deliveryDate;
+        this.identityServiceType = identityServiceType;
         this.main = main;
         this.accounts = accounts;
         this.profiles = profiles;
@@ -101,20 +107,32 @@ public class SecurityConfiguration {
     }
 
     /**
+     * Identity Service Types
+     * <p>
      * 
-     * (Required)
      * 
      */
+    @JsonProperty("identityServiceType")
+    public IdentityServiceTypes getIdentityServiceType() {
+        return identityServiceType;
+    }
+
+    /**
+     * Identity Service Types
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("identityServiceType")
+    public void setIdentityServiceType(IdentityServiceTypes identityServiceType) {
+        this.identityServiceType = identityServiceType;
+    }
+
     @JsonProperty("main")
     public List<SecurityConfigurationMainEntry> getMain() {
         return main;
     }
 
-    /**
-     * 
-     * (Required)
-     * 
-     */
     @JsonProperty("main")
     public void setMain(List<SecurityConfigurationMainEntry> main) {
         this.main = main;
@@ -152,12 +170,12 @@ public class SecurityConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceType", identityServiceType).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(profiles).append(main).append(accounts).append(deliveryDate).append(roles).toHashCode();
+        return new HashCodeBuilder().append(identityServiceType).append(roles).append(profiles).append(main).append(accounts).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -169,7 +187,7 @@ public class SecurityConfiguration {
             return false;
         }
         SecurityConfiguration rhs = ((SecurityConfiguration) other);
-        return new EqualsBuilder().append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).append(roles, rhs.roles).isEquals();
+        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(roles, rhs.roles).append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

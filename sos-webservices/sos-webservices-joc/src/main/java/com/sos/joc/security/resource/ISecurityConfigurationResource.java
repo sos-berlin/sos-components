@@ -12,21 +12,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface ISecurityConfigurationResource {
 
     @POST
-    @Path("shiro")
+    @Path("auth")
     @Produces({ MediaType.APPLICATION_JSON })
-    public JOCDefaultResponse postAuthRead(@HeaderParam("X-Access-Token") String xAccessToken);
+    public JOCDefaultResponse postAuthRead(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
 
     @POST
-    @Path("shiro/store")
+    @Path("auth/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
 
-    /*
-     * @POST
-     * @Path("auth")
-     * @Produces({ MediaType.APPLICATION_JSON }) public JOCDefaultResponse postAuthRead(@HeaderParam("X-Access-Token") String xAccessToken);
-     * @POST
-     * @Path("auth/store")
-     * @Produces({ MediaType.APPLICATION_JSON }) public JOCDefaultResponse postAuthStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] body);
-     */
 }

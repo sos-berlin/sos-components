@@ -4,6 +4,7 @@ import java.security.KeyStore;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
@@ -22,6 +23,7 @@ public class TestSOSVaultHandler {
     public static void testIsAuthenticated() {
     }
 
+    @Ignore
     @Test
     public void testVaultGetStatus() throws Exception {
         KeyStore keyStore = null;
@@ -40,6 +42,7 @@ public class TestSOSVaultHandler {
 
     }
 
+    @Ignore
     @Test
     public void testStoreUserPassword() throws Exception {
         KeyStore keyStore = null;
@@ -62,6 +65,7 @@ public class TestSOSVaultHandler {
 
     }
 
+    @Ignore
     @Test
     public void testGetUserToken() throws Exception {
         KeyStore keyStore = null;
@@ -82,6 +86,7 @@ public class TestSOSVaultHandler {
         sosVaultHandler.userAccessTokenIsValid(sosVaultUserAccessToken);
     }
 
+    @Ignore
     @Test
     public void testVaultGetAuthenticationMethods() throws Exception {
         KeyStore keyStore = null;

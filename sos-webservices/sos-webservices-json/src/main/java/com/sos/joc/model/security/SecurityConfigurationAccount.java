@@ -19,6 +19,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class SecurityConfigurationAccount {
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("account")
     private String account;
     @JsonProperty("password")
@@ -61,11 +66,21 @@ public class SecurityConfigurationAccount {
         this.roles = roles;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("account")
     public String getAccount() {
         return account;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("account")
     public void setAccount(String account) {
         this.account = account;

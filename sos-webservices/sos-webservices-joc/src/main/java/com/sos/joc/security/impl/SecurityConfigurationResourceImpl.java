@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.interfaces.ISOSSecurityConfiguration;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
@@ -17,6 +16,7 @@ import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
@@ -26,11 +26,11 @@ import com.sos.schema.exception.SOSJsonSchemaException;
 @Path("authentication")
 public class SecurityConfigurationResourceImpl extends JOCResourceImpl implements ISecurityConfigurationResource {
 
-    private static final String API_CALL_READ = "./authentication/shiro";
-    private static final String API_CALL_WRITE = "./authentication/shiro/store";
+    private static final String API_CALL_READ = "./authentication/auth";
+    private static final String API_CALL_WRITE = "./authentication/auth/store";
 
     @Override
-    public JOCDefaultResponse postAuthRead(String accessToken) {
+    public JOCDefaultResponse postAuthRead(String accessToken, byte[] body) {
         SOSHibernateSession sosHibernateSession = null;
         try {
             initLogging(API_CALL_READ, null, accessToken);
@@ -39,14 +39,23 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 return jocDefaultResponse;
             }
 
+            SecurityConfiguration securityConfiguration = null;
+            if (body.length > 0) {
+                JsonValidator.validate(body, SecurityConfiguration.class);
+                securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            } else {
+                securityConfiguration = new SecurityConfiguration();
+            }
+
             ISOSSecurityConfiguration sosSecurityConfiguration = null;
-            if (SOSAuthHelper.isShiro()) {
+            if (securityConfiguration.getIdentityServiceType() == null || securityConfiguration
+                    .getIdentityServiceType() == IdentityServiceTypes.SHIRO) {
                 sosSecurityConfiguration = new SOSSecurityConfiguration();
             } else {
                 sosSecurityConfiguration = new SOSSecurityDBConfiguration();
             }
 
-            SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration();
+            securityConfiguration = sosSecurityConfiguration.readConfiguration();
 
             sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
@@ -90,7 +99,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             }
 
             ISOSSecurityConfiguration sosSecurityConfiguration = null;
-            if (SOSAuthHelper.isShiro()) {
+            if (securityConfiguration.getIdentityServiceType() == IdentityServiceTypes.SHIRO) {
                 sosSecurityConfiguration = new SOSSecurityConfiguration();
             } else {
                 sosSecurityConfiguration = new SOSSecurityDBConfiguration();
