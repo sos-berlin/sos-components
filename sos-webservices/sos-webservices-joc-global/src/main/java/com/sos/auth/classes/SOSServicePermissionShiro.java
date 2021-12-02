@@ -76,18 +76,17 @@ public class SOSServicePermissionShiro {
     private static final String X_ACCESS_TOKEN = "X-Access-Token";
     private static final String UTC = "UTC";
     private static final String EMPTY_STRING = "";
-    private static final String ACCOUNT_IS_NULL = "account is null";
     private static final String ACCESS_TOKEN_EXPECTED = "Access token header expected";
     private static final String AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED = "Authorization header with basic based64part expected";
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSServicePermissionShiro.class);
     private static final String SHIRO_SESSION = "SHIRO_SESSION";
     private static final String ThreadCtx = "authentication";
-    
+
     @Context
     UriInfo uriInfo;
 
-    private JOCDefaultResponse getJocCockpitControllerPermissions(String accessToken) throws JocException,
-            InvalidFileFormatException, SOSHibernateException, IOException {
+    private JOCDefaultResponse getJocCockpitControllerPermissions(String accessToken) throws JocException, InvalidFileFormatException,
+            SOSHibernateException, IOException {
         SOSAuthCurrentAccount currentAccount = this.getCurrentAccount(accessToken);
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
 
@@ -131,8 +130,8 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccount currentAccount = getCurrentAccount(sosWebserviceAuthenticationRecord.getAccessToken());
 
             if (currentAccount == null) {
-                LOGGER.debug(ACCOUNT_IS_NULL + " for access token " + accessToken);
-                return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_NULL + " for access token " + accessToken);
+                LOGGER.debug("Access token " + accessToken + " is not valid");
+                return JOCDefaultResponse.responseStatusJSError("Access token " + accessToken + " is not valid");
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount
@@ -290,8 +289,8 @@ public class SOSServicePermissionShiro {
             return JOCDefaultResponse.responseStatusJSError(ACCESS_TOKEN_EXPECTED);
         }
 
-            SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-        
+        SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
+
         String account = "";
         String comment = "";
         if (currentAccount != null) {
@@ -416,12 +415,12 @@ public class SOSServicePermissionShiro {
     @Path("/role")
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse hasRole(@HeaderParam(X_ACCESS_TOKEN) String xAccessTokenFromHeader,
-            @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery,@QueryParam("role") String role) {
+            @QueryParam(ACCESS_TOKEN) String accessTokenFromQuery, @QueryParam("role") String role) {
 
         MDC.put("context", ThreadCtx);
         try {
             String accessToken = getAccessToken(xAccessTokenFromHeader, accessTokenFromQuery);
-            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = hasRole(accessToken,role);
+            SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = hasRole(accessToken, role);
             return JOCDefaultResponse.responseStatus200(sosShiroCurrentUserAnswer);
         } catch (Exception e) {
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -429,12 +428,12 @@ public class SOSServicePermissionShiro {
             MDC.remove("context");
         }
     }
- 
-    protected SOSAuthCurrentAccountAnswer hasRoleTest(String accessToken,String role) {
-        return hasRole(accessToken,role);
+
+    protected SOSAuthCurrentAccountAnswer hasRoleTest(String accessToken, String role) {
+        return hasRole(accessToken, role);
     }
-        
-    private SOSAuthCurrentAccountAnswer hasRole(String accessToken,String role) {
+
+    private SOSAuthCurrentAccountAnswer hasRole(String accessToken, String role) {
         SOSAuthCurrentAccount currentAccount = getCurrentAccount(accessToken);
 
         SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
@@ -466,7 +465,7 @@ public class SOSServicePermissionShiro {
     protected SOSAuthCurrentAccountAnswer isPermittedTest(String accessToken, String permission) {
         return isPermitted(accessToken, permission);
     }
-    
+
     private SOSAuthCurrentAccountAnswer isPermitted(String accessToken, String permission) {
         SOSAuthCurrentAccount currentAccount = getCurrentAccount(accessToken);
 
@@ -515,7 +514,8 @@ public class SOSServicePermissionShiro {
         return accessTokenFromQuery;
     }
 
-    private String createAccount(SOSAuthCurrentAccount currentAccount,String identityServiceName, IdentityServiceTypes identityService) throws Exception {
+    private String createAccount(SOSAuthCurrentAccount currentAccount, String identityServiceName, IdentityServiceTypes identityService)
+            throws Exception {
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
         }
@@ -656,52 +656,39 @@ public class SOSServicePermissionShiro {
             try {
 
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                    msg = createAccount(currentAccount,dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService
-                            .getIdentityServiceType()));
+                    msg = createAccount(currentAccount, dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(
+                            dbItemIamIdentityService.getIdentityServiceType()));
                 }
 
-                filter.setRequired(false);
-                listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-                msg = "";
-                
-                if (listOfIdentityServices.size()== 0) {
-                    DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
-                    dbItemIamIdentityService.setDisabled(false);
-                    dbItemIamIdentityService.setId(1L);
-                    dbItemIamIdentityService.setIdentityServiceName("shiro");
-                    dbItemIamIdentityService.setIdentityServiceType("SHIRO");
-                    dbItemIamIdentityService.setOrdering(1);
-                    dbItemIamIdentityService.setRequierd(false);
-                    listOfIdentityServices.add(dbItemIamIdentityService);
-                 }
-
-                for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                    try {
-                        msg = createAccount(currentAccount, dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(dbItemIamIdentityService
-                                .getIdentityServiceType()));
-                        if (msg.isEmpty()) {
-                            break;
-                        }
-                    } catch (JocAuthenticationException e) {
-                        continue;
-                    }
-                }
                 if (currentAccount.getCurrentSubject() == null) {
                     filter.setRequired(false);
                     listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
+                    if (listOfIdentityServices.size()== 0) {
+                        DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
+                        dbItemIamIdentityService.setDisabled(false);
+                        dbItemIamIdentityService.setId(1L);
+                        dbItemIamIdentityService.setIdentityServiceName("shiro");
+                        dbItemIamIdentityService.setIdentityServiceType("SHIRO");
+                        dbItemIamIdentityService.setOrdering(1);
+                        dbItemIamIdentityService.setRequierd(false);
+                        listOfIdentityServices.add(dbItemIamIdentityService);
+                     }
+
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                         try {
-                            msg = createAccount(currentAccount,dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(
+                            msg = createAccount(currentAccount, dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(
                                     dbItemIamIdentityService.getIdentityServiceType()));
-                            break;
+                            if (msg.isEmpty()) {
+                                break;
+                            }
 
                         } catch (JocAuthenticationException e) {
                             continue;
                         }
                     }
                 }
-            } catch (JocAuthenticationException e) { 
+            } catch (JocAuthenticationException e) {
                 msg = e.getMessage();
                 LOGGER.info(e.getSosAuthCurrentAccountAnswer().getIdentityService());
                 LOGGER.info(e.getMessage());
@@ -757,7 +744,7 @@ public class SOSServicePermissionShiro {
         }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
-       // SOSHibernateSession sosHibernateSession = null;
+        // SOSHibernateSession sosHibernateSession = null;
 
         if (basicAuthorization == null || basicAuthorization.isEmpty()) {
             if (user == null) {
@@ -774,7 +761,7 @@ public class SOSServicePermissionShiro {
 
         try {
 
-           // sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Login");
+            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Login");
 
             // checkInitialState(sosHibernateSession);
 
@@ -783,7 +770,7 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccount currentAccount = getUserPwdFromHeaderOrQuery(basicAuthorization, clientCertCN, user, pwd);
 
             if (currentAccount == null || currentAccount.getAuthorization() == null) {
-                return JOCDefaultResponse.responseStatusJSError(ACCOUNT_IS_NULL + " " + AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
+                return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
             }
 
             currentAccount.setAuthorization(basicAuthorization);
@@ -818,7 +805,7 @@ public class SOSServicePermissionShiro {
             }
 
         } finally {
-        //    Globals.disconnect(sosHibernateSession);
+            // Globals.disconnect(sosHibernateSession);
         }
     }
 
@@ -829,7 +816,7 @@ public class SOSServicePermissionShiro {
             sosSessionHandler.touch();
 
         } else {
-            LOGGER.error(ACCOUNT_IS_NULL);
+            LOGGER.error("No valid account");
         }
     }
 
