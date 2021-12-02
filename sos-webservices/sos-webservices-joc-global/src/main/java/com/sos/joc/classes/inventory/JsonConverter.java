@@ -35,6 +35,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.sign.model.workflow.ListParameters;
 import com.sos.sign.model.workflow.OrderPreparation;
@@ -323,8 +324,8 @@ public class JsonConverter {
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
         }
-        String idPattern =
-                "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1') ++ '0-' ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#D' ++ " + OrdersHelper.mainOrderIdControllerPattern
+                + " ++ replaceAll($js7OrderId, '^#([0-9]{4}-[0-9]{2}-[0-9]{2}[^-]+).*$', '$1')";
         sao.setOrderId(String.format(idPattern, timeZone));
 
         if (sao.getArguments() != null && sao.getArguments().getAdditionalProperties() != null) {

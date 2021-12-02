@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.controller.model.workflow.WorkflowId;
 import com.sos.joc.classes.event.EventServiceFactory.EventCondition;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.event.EventBus;
@@ -344,10 +345,10 @@ public class EventService {
 
             if (evt instanceof OrderEvent) {
                 final OrderId orderId = (OrderId) key;
+                String mainOrderId = orderId.string().substring(0, OrdersHelper.mainOrderIdLength);
                 Optional<JOrder> opt = currentState.idToOrder(orderId);
                 if (opt.isPresent()) {
                     //LOGGER.info(opt.get().toString());
-                    String mainOrderId = orderId.string().substring(0, 24);
                     WorkflowId w = orders.get(mainOrderId);
                     if (w == null) {
                         w = mapWorkflowId(opt.get().workflowId());
@@ -368,7 +369,6 @@ public class EventService {
                 } else {
                     //LOGGER.info("Order is not in current state");
                     if (evt instanceof OrderDeleted$) {
-                        String mainOrderId = orderId.string().substring(0, 24);
                         if (orders.containsKey(mainOrderId)) {
                             addEvent(createWorkflowEventOfOrder(eventId, orders.get(mainOrderId)));
                             orders.remove(mainOrderId);
@@ -646,8 +646,8 @@ public class EventService {
 //        try {
 //            // possibly IllegalStateException
 //            // orders = Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any())
-//            // .collect(Collectors.toMap(o -> o.id().string().substring(0,24), o -> mapWorkflowId(o.workflowId())));
-//            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, 24),
+//            // .collect(Collectors.toMap(o -> o.id().string().substring(0,OrdersHelper.mainOrderIdLength), o -> mapWorkflowId(o.workflowId())));
+//            Proxy.of(controllerId).currentState().ordersBy(JOrderPredicates.any()).forEach(o -> orders.put(o.id().string().substring(0, OrdersHelper.mainOrderIdLength),
 //                    mapWorkflowId(o.workflowId())));
 //        } catch (Exception e) {
 //            //

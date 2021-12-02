@@ -149,16 +149,10 @@ public class DBLayerDailyPlannedOrders {
     }
 
     private String getOrderListSql(Collection<String> list) {
-        StringBuilder sql = new StringBuilder();
-        sql.append("p.orderId in (");
-        for (String s : list) {
-            sql.append("'" + s + "',");
+        if (list != null && !list.isEmpty()) {
+            return list.stream().collect(Collectors.joining("','", "(p.orderId in (", "))"));
         }
-        String s = sql.toString();
-        s = s.substring(0, s.length() - 1);
-        s = s + ")";
-
-        return " (" + s + ") ";
+        return "";
     }
 
     private String getCyclicOrderListSql(List<String> list) {

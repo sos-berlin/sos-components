@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -88,8 +87,8 @@ import js7.data.value.NumberValue;
 import js7.data.value.ObjectValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
-import js7.data.workflow.instructions.ImplicitEnd;
 import js7.data.workflow.WorkflowPath;
+import js7.data.workflow.instructions.ImplicitEnd;
 import js7.data_for_java.command.JCancellationMode;
 import js7.data_for_java.controller.JControllerState;
 import js7.data_for_java.order.JFreshOrder;
@@ -105,7 +104,9 @@ import scala.Option;
 
 public class OrdersHelper {
     
-    public static AtomicInteger no = new AtomicInteger(0);
+    private static AtomicInteger no = new AtomicInteger(0);
+    public static final int mainOrderIdLength = 25;
+    public static final String mainOrderIdControllerPattern = "replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1') ++ '00-'";
 
     public static final Map<Class<? extends Order.State>, OrderStateText> groupByStateClasses = Collections.unmodifiableMap(
             new HashMap<Class<? extends Order.State>, OrderStateText>() {
@@ -776,15 +777,8 @@ public class OrdersHelper {
     }
     
     public static String getUniqueOrderId() {
-        int n = no.getAndUpdate(x -> (x == Integer.MAX_VALUE) ? 0 : x+1);
-        n = n % 10;
-        if (n == 0) {  // to provide unique id with milliseconds and no in [0-9] 
-            try {
-                TimeUnit.MILLISECONDS.sleep(1);
-            } catch (InterruptedException e) {
-            }
-        }
-        return Long.valueOf(Instant.now().toEpochMilli()).toString().substring(4) + n;
+        int n = no.getAndUpdate(x -> x == Integer.MAX_VALUE ? 0 : x+1);
+        return Long.valueOf((Instant.now().toEpochMilli() * 100) + (n % 100)).toString().substring(4);
     }
 
     public static JFreshOrder mapToFreshOrder(AddOrder order, String yyyymmdd) {
@@ -906,7 +900,7 @@ public class OrdersHelper {
     // #2021-10-12#C4038226057-00012-12-dailyplan_shedule_cyclic
     // #2021-10-12#C4038226057-
     public static String getCyclicOrderIdMainPart(String orderId) {
-        return orderId.substring(0, 24);
+        return orderId.substring(0, mainOrderIdLength);
     }
 
     public static boolean isCyclicOrderId(String orderId) {

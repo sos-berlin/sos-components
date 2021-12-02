@@ -181,14 +181,15 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 // numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
                 // Optional<Instant> scheduledFor = o.scheduledFor();
                 // return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
-                // }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                // }).map(o -> o.id().string().substring(0, OrdersHelper.mainOrderIdLength)).distinct().mapToInt(item -> 1).sum();
 
-                numOfBlockedOrders = blockedOrderIds.stream().map(oId -> oId.string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                numOfBlockedOrders = blockedOrderIds.stream().map(oId -> OrdersHelper.getCyclicOrderIdMainPart(oId.string())).distinct()
+                        .mapToInt(item -> 1).sum();
 
                 numOfPendingOrders = freshOrderSet.stream().filter(o -> {
                     Optional<Instant> scheduledFor = o.scheduledFor();
                     return scheduledFor.isPresent() && scheduledFor.get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS;
-                }).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(item -> 1).sum();
+                }).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(item -> 1).sum();
 
                 if (body.getDateTo() != null && !body.getDateTo().isEmpty()) {
                     String dateTo = body.getDateTo();
@@ -201,11 +202,11 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                         Optional<Instant> scheduledFor = o.scheduledFor();
                         return !scheduledFor.isPresent() || !scheduledFor.get().isAfter(until);
                     };
-                    numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(
-                            e -> 1).sum();
+                    numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))
+                            .distinct().mapToInt(e -> 1).sum();
                 } else {
-                    numOfFreshOrders = freshOrderSet.stream().map(o -> o.id().string().substring(0, 24)).distinct().mapToInt(e -> 1).sum()
-                            - numOfPendingOrders;
+                    numOfFreshOrders = freshOrderSet.stream().map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string())).distinct().mapToInt(
+                            e -> 1).sum() - numOfPendingOrders;
                 }
 
             }

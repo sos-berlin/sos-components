@@ -290,8 +290,8 @@ public class OrdersResourceImpl extends JOCResourceImpl implements IOrdersResour
             // grouping cycledOrders and return the first pending Order of the group to orderStream
             Comparator<JOrder> comp = Comparator.comparing(o -> o.id().string());
             Collection<TreeSet<JOrder>> cycledOrderColl = cycledOrderStream.filter(o -> !blockedButWaitingForAdmissionOrderIds.contains(o.id()))
-                    .collect(Collectors.groupingBy(o -> o.id().string().substring(0, 24), Collectors.toCollection(() -> new TreeSet<>(comp))))
-                    .values();
+                    .collect(Collectors.groupingBy(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()), Collectors.toCollection(
+                            () -> new TreeSet<>(comp)))).values();
             cycledOrderStream = cycledOrderColl.stream().parallel().map(t -> t.first());
 
             Function<TreeSet<JOrder>, CyclicOrderInfos> getCyclicOrderInfos = t -> {
