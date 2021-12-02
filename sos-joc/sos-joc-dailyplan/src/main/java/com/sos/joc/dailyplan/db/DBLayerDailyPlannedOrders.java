@@ -105,11 +105,14 @@ public class DBLayerDailyPlannedOrders {
     }
 
     private int executeDeleteVariables(FilterDailyPlannedOrders filter) throws SOSHibernateException {
-        StringBuilder subSelect = new StringBuilder("select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
+        StringBuilder subSelect = new StringBuilder("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" p ");
         subSelect.append(getWhere(filter, "p.schedulePath", true));
 
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where plannedOrderId in (").append(subSelect).append(")");
+        hql.append("where orderId in (").append(subSelect).append(") ");
+        if (!SOSString.isEmpty(filter.getControllerId())) {
+            hql.append("and controllerId=:controllerId ");
+        }
 
         Query<DBItemDailyPlanVariable> query = session.createQuery(hql);
         query = bindParameters(filter, query);
@@ -694,13 +697,14 @@ public class DBLayerDailyPlannedOrders {
         }
     }
 
-    public void storeVariables(PlannedOrder order, Long id) throws SOSHibernateException, JsonProcessingException {
+    public void storeVariables(PlannedOrder order, String controllerId, String orderId) throws SOSHibernateException, JsonProcessingException {
         DBItemDailyPlanVariable item = new DBItemDailyPlanVariable();
         if (order.getFreshOrder().getArguments() != null) {
+            item.setControllerId(controllerId);
+            item.setOrderId(orderId);
+            item.setVariableValue(new ObjectMapper().writeValueAsString(order.getFreshOrder().getArguments()));
             item.setCreated(JobSchedulerDate.nowInUtc());
             item.setModified(JobSchedulerDate.nowInUtc());
-            item.setPlannedOrderId(id);
-            item.setVariableValue(new ObjectMapper().writeValueAsString(order.getFreshOrder().getArguments()));
             session.save(item);
         }
     }
@@ -740,7 +744,7 @@ public class DBLayerDailyPlannedOrders {
         item.setExpectedEnd(new Date(plannedOrder.getFreshOrder().getScheduledFor() + plannedOrder.getAverageDuration()));
         item.setModified(JobSchedulerDate.nowInUtc());
 
-        if (nr != 0) {
+        if (nr != 0) {// cyclic
             String nrAsString = "00000" + String.valueOf(nr);
             nrAsString = nrAsString.substring(nrAsString.length() - 5);
 
@@ -751,7 +755,10 @@ public class DBLayerDailyPlannedOrders {
         item.setOrderId(item.getOrderId().replaceAll("<id.*>", id));
         plannedOrder.getFreshOrder().setId(item.getOrderId());
         session.save(item);
-        storeVariables(plannedOrder, item.getId());
+
+        if (nr < 2) { // 0-single, 1-first cyclic
+            storeVariables(plannedOrder, item.getControllerId(), item.getOrderId());
+        }
         return item;
     }
 
@@ -864,7 +871,7 @@ public class DBLayerDailyPlannedOrders {
         return Math.abs(result);
     }
 
-    public DBItemDailyPlanOrder store(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
+    public DBItemDailyPlanOrder storeSingle(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
             SOSHibernateException, ParseException, JsonProcessingException {
         return store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
     }
@@ -882,8 +889,8 @@ public class DBLayerDailyPlannedOrders {
         return item;
     }
 
-    public DBItemDailyPlanOrder addCyclicOrderIds(Collection<String> orderIds, String orderId, String controllerId, String timeZone, String periodBegin)
-            throws SOSHibernateException {
+    public DBItemDailyPlanOrder addCyclicOrderIds(Collection<String> orderIds, String orderId, String controllerId, String timeZone,
+            String periodBegin) throws SOSHibernateException {
         SOSHibernateSession session = null;
         try {
             session = Globals.createSosHibernateStatelessConnection("addCyclicOrderIds");

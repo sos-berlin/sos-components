@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
@@ -92,14 +93,17 @@ public class DBLayerDailyPlanSubmissions {
 
     private int deleteOrderVariabless(FilterDailyPlanSubmissions filter) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where plannedOrderId in (");
-        hql.append("select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where orderId in (");
+        hql.append("select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("where submitted=false ");
         hql.append("and submissionHistoryId in (");
         hql.append("select id from " + DBLayer.DBITEM_DPL_SUBMISSIONS).append(" ");
         hql.append(getWhere(filter));
         hql.append(")");
-        hql.append(")");
+        hql.append(") ");
+        if(!SOSString.isEmpty(filter.getControllerId())) {
+            hql.append("and controllerId=:controllerId ");
+        }
 
         Query<DBItemDailyPlanVariable> query = session.createQuery(hql.toString());
         bindParameters(filter, query);

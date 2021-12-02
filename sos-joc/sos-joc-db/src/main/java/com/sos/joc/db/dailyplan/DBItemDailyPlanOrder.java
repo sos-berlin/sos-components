@@ -291,6 +291,11 @@ public class DBItemDailyPlanOrder extends DBItem {
     }
 
     @Transient
+    public boolean isCyclic() {
+        return startMode != null && startMode.equals(new Integer(1));
+    }
+
+    @Transient
     public void setPeriodBegin(Date start, String periodBegin) throws ParseException {
         DailyPlanDate date = new DailyPlanDate();
         date.setPeriod(start, periodBegin);

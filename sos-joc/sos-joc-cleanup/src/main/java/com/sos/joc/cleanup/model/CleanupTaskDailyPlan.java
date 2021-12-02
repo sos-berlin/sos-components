@@ -69,8 +69,8 @@ public class CleanupTaskDailyPlan extends CleanupTaskModel {
         // getDbLayer().beginTransaction();
         StringBuilder hql = new StringBuilder("delete from ");
         hql.append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where plannedOrderId in (");
-        hql.append("    select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where orderId in (");
+        hql.append("    select orderId from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
         hql.append("    where submissionHistoryId in (:ids)");
         hql.append(")");
         Query<?> query = getDbLayer().getSession().createQuery(hql.toString());

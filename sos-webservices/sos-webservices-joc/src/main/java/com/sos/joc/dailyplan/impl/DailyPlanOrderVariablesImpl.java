@@ -37,7 +37,7 @@ public class DailyPlanOrderVariablesImpl extends JOCResourceImpl implements IDai
 
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
-            DBItemDailyPlanVariable item = dbLayer.getOrderVariable(in.getOrderId());
+            DBItemDailyPlanVariable item = dbLayer.getOrderVariable(in.getControllerId(), in.getOrderId());
             session.close();
             session = null;
 

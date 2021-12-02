@@ -80,20 +80,21 @@ public class OrderListSynchronizer {
             return false;
         }
         String workflow = null;
+        String dateLog = SOSString.isEmpty(date) ? "" : "[" + date + "]";
         try {
             workflow = o.getSchedule().getWorkflowName();
             String wpath = WorkflowPaths.getPathOrNull(workflow);
             if (wpath == null) {
-                LOGGER.info(String.format("[%s][%s][workflow=%s not deployed][skip]%s", controllerId, date, workflow, SOSString.toString(o)));
+                LOGGER.info(String.format("[%s]%s[workflow=%s not deployed][skip]%s", controllerId, dateLog, workflow, SOSString.toString(o)));
                 return false;
             }
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s][workflow=%s][added]%s", controllerId, date, workflow, SOSString.toString(o)));
+                LOGGER.debug(String.format("[%s]%s[workflow=%s][added]%s", controllerId, dateLog, workflow, SOSString.toString(o)));
             }
             plannedOrders.put(o.uniqueOrderkey(), o);
             return true;
         } catch (Throwable e) {
-            LOGGER.error(String.format("[%s][%s][workflow=%s][order %s]%s", controllerId, date, workflow, SOSString.toString(o), e.toString()), e);
+            LOGGER.error(String.format("[%s]%s[workflow=%s][order %s]%s", controllerId, dateLog, workflow, SOSString.toString(o), e.toString()), e);
             return false;
         }
     }
@@ -259,7 +260,7 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        dbLayer.store(plannedOrder);
+                        dbLayer.storeSingle(plannedOrder);
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
                     } else {
@@ -289,7 +290,6 @@ public class OrderListSynchronizer {
             for (Entry<CycleOrderKey, List<PlannedOrder>> entry : cyclic.entrySet()) {
                 int size = entry.getValue().size();
                 int nr = 1;
-                
                 String id = OrdersHelper.getUniqueOrderId();
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[store][%s][%s][cyclic]size=%s, order id main part=%s, key=%s", controllerId, date, size, id, entry

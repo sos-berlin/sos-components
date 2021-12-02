@@ -6,6 +6,8 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanSubmission;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanVariable;
@@ -18,27 +20,43 @@ public class DBLayerOrderVariables extends DBLayer {
         super(session);
     }
 
-    public DBItemDailyPlanVariable getOrderVariable(Long plannedOrderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where plannedOrderId=:plannedOrderId ");
-
-        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
-        query.setParameter("plannedOrderId", plannedOrderId);
-        List<DBItemDailyPlanVariable> result = getSession().getResultList(query);
-        if (result != null && result.size() > 0) {
-            return result.get(0);
+    public DBItemDailyPlanVariable getOrderVariable(String controllerId, String orderId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select controllerId,startMode from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" ");
+        hql.append("where orderId=:orderId ");
+        if (!SOSString.isEmpty(controllerId)) {
+            hql.append("and controllerId=:controllerId ");
         }
-        return null;
-    }
 
-    public DBItemDailyPlanVariable getOrderVariable(String orderId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("where plannedOrderId in (");
-        hql.append("select id from ").append(DBLayer.DBITEM_DPL_ORDERS).append(" where orderId=:orderId");
-        hql.append(")");
-
-        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
+        Query<Object[]> query = getSession().createQuery(hql);
         query.setParameter("orderId", orderId);
+        if (!SOSString.isEmpty(controllerId)) {
+            query.setParameter("controllerId", controllerId);
+        }
+        List<Object[]> result = getSession().getResultList(query);
+        if (result != null && result.size() > 0) {
+            Object[] o = result.get(0);
+            return getOrderVariable(o[0].toString(), orderId, ((Integer) o[1]).equals(new Integer(1)));
+        }
+        return null;
+    }
+
+    public DBItemDailyPlanVariable getOrderVariable(String controllerId, String orderId, boolean isCyclic) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and orderId ");
+        if (isCyclic) {
+            hql.append("like :mainPart ");
+        } else {
+            hql.append("=:orderId");
+        }
+
+        Query<DBItemDailyPlanVariable> query = getSession().createQuery(hql);
+        query.setParameter("controllerId", controllerId);
+        if (isCyclic) {
+            query.setParameter("mainPart", OrdersHelper.getCyclicOrderIdMainPart(orderId) + "%");
+        } else {
+            query.setParameter("orderId", orderId);
+        }
         List<DBItemDailyPlanVariable> result = getSession().getResultList(query);
         if (result != null && result.size() > 0) {
             return result.get(0);
@@ -46,14 +64,16 @@ public class DBLayerOrderVariables extends DBLayer {
         return null;
     }
 
-    public int update(Long oldId, Long newId) throws SOSHibernateException {
+    public int update(String controllerId, String oldOrderId, String newOrderId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("update  ").append(DBLayer.DBITEM_DPL_ORDER_VARIABLES).append(" ");
-        hql.append("set plannedOrderId=:newId ");
-        hql.append("where plannedOrderId=:oldId");
+        hql.append("set orderId=:newOrderId ");
+        hql.append("where orderId=:oldOrderId ");
+        hql.append("and controllerId=:controllerId");
 
         Query<DBItemDailyPlanSubmission> query = getSession().createQuery(hql);
-        query.setParameter("newId", newId);
-        query.setParameter("oldId", oldId);
+        query.setParameter("newOrderId", newOrderId);
+        query.setParameter("oldOrderId", oldOrderId);
+        query.setParameter("controllerId", controllerId);
         return getSession().executeUpdate(query);
     }
 }

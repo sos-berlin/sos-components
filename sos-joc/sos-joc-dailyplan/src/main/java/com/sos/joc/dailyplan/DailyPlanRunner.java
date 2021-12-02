@@ -42,6 +42,7 @@ import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.calendar.FrequencyResolver;
+import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.cluster.configuration.controller.ControllerConfiguration;
@@ -199,9 +200,9 @@ public class DailyPlanRunner extends TimerTask {
         return synchronizer.getPlannedOrders();
     }
 
-    public void submitOrders(String controllerId, List<DBItemDailyPlanOrder> plannedOrders, String submissionForDate, JocError jocError,
-            String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException,
-            DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
+    public void submitOrders(String controllerId, List<DBItemDailyPlanOrder> items, String submissionForDate, JocError jocError, String accessToken)
+            throws JsonParseException, JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException,
+            JocConfigurationException, DBOpenSessionException, IOException, ParseException, SOSException, URISyntaxException,
             ControllerConnectionResetException, ControllerConnectionRefusedException, InterruptedException, ExecutionException, TimeoutException {
 
         SOSHibernateSession session = null;
@@ -217,7 +218,8 @@ public class DailyPlanRunner extends TimerTask {
             session = Globals.createSosHibernateStatelessConnection(sessionIdentifier);
             DBLayerOrderVariables dbLayer = new DBLayerOrderVariables(session);
 
-            for (DBItemDailyPlanOrder item : plannedOrders) {
+            Map<String, DBItemDailyPlanVariable> cyclicVariables = new HashMap<>();
+            for (DBItemDailyPlanOrder item : items) {
 
                 Schedule schedule = new Schedule();
                 schedule.setPath(item.getSchedulePath());
@@ -226,7 +228,18 @@ public class DailyPlanRunner extends TimerTask {
                 schedule.setSubmitOrderToControllerWhenPlanned(true);
                 schedule.setVariableSets(new ArrayList<VariableSet>());
 
-                DBItemDailyPlanVariable orderVariable = dbLayer.getOrderVariable(item.getId());
+                DBItemDailyPlanVariable orderVariable = null;
+                if (item.isCyclic()) {
+                    String cyclicMainPart = OrdersHelper.getCyclicOrderIdMainPart(item.getOrderId());
+                    if (cyclicVariables.containsKey(cyclicMainPart)) {
+                        orderVariable = cyclicVariables.get(cyclicMainPart);
+                    } else {
+                        orderVariable = dbLayer.getOrderVariable(item.getControllerId(), item.getOrderId(), true);
+                        cyclicVariables.put(cyclicMainPart, orderVariable);
+                    }
+                } else {
+                    orderVariable = dbLayer.getOrderVariable(item.getControllerId(), item.getOrderId(), false);
+                }
                 Variables variables = new Variables();
                 if (orderVariable != null && orderVariable.getVariableValue() != null) {
                     variables = Globals.objectMapper.readValue(orderVariable.getVariableValue(), Variables.class);
