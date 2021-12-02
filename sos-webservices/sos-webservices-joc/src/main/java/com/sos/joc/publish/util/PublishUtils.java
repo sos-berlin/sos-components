@@ -2569,7 +2569,8 @@ public abstract class PublishUtils {
     }
 
     private static String getFileOrderIdPattern(FileOrderSource fileOrderSource) {
-        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$js7EpochSecond-$orderWatchPath:$0\"";
+        String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ '#F' ++ replaceAll(\"$js7EpochMilli\", '^.*([0-9]{9})$', '$1') ++ \"0-$orderWatchPath:$0\"";
+        //String idPattern = "'#' ++ now(format='yyyy-MM-dd', timezone='%s') ++ \"#F$js7EpochSecond-$orderWatchPath:$0\"";
         String timeZone = fileOrderSource.getTimeZone();
         if (timeZone == null || timeZone.isEmpty()) {
             timeZone = "Etc/UTC";
