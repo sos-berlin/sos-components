@@ -46,6 +46,7 @@ import io.vavr.control.Either;
 import js7.base.problem.Problem;
 import js7.data.agent.AgentPath;
 import js7.data.agent.AgentRefState;
+import js7.data.agent.DelegateCouplingState;
 import js7.data.controller.ControllerCommand;
 import js7.data.order.Order;
 import js7.data.order.OrderId;
@@ -126,7 +127,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                     }
                     agents.setSurveyDate(Date.from(currentStateMoment));
                     
-                    Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
+                    Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
                             .attached() != null && o.attached().isRight());
                     if (agentsParam.getCompact() == Boolean.TRUE) {
                         ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
@@ -155,20 +156,20 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                             if (either.isRight()) {
                                 LOGGER.debug("Agent '" + dbAgent.getAgentId() + "',  state = " + either.get().toJson());
                                 AgentRefState agentRefState = either.get().asScala();
-                                AgentRefState.CouplingState couplingState = agentRefState.couplingState();
+                                DelegateCouplingState couplingState = agentRefState.couplingState();
                                 Optional<Problem> optProblem = OptionConverters.toJava(agentRefState.problem());
                                 if (optProblem.isPresent()) {
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                 }
-                                if (couplingState instanceof AgentRefState.Coupled$) {
+                                if (couplingState instanceof DelegateCouplingState.Coupled$) {
                                     stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof AgentRefState.ShutDown$) {
+                                } else if (couplingState instanceof DelegateCouplingState.ShutDown$) {
                                     stateText = AgentStateText.SHUTDOWN;
                                 } else if (optProblem.isPresent()) {
                                     stateText = AgentStateText.COUPLINGFAILED;
-                                } else if (couplingState instanceof AgentRefState.Resetting$) {
+                                } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
                                     stateText = AgentStateText.RESETTING;
-                                } else if (couplingState instanceof AgentRefState.Reset$) {
+                                } else if (couplingState instanceof DelegateCouplingState.Reset$) {
                                     stateText = AgentStateText.RESET;
                                 }
                             } else {

@@ -32,8 +32,8 @@ import js7.data.value.NumberValue;
 import js7.data.value.StringValue;
 import js7.data.value.Value;
 import js7.data_for_java.order.JOutcome;
-import js7.executor.forjava.internal.BlockingInternalJob;
-import js7.executor.forjava.internal.BlockingInternalJob.JobContext;
+import js7.launcher.forjava.internal.BlockingInternalJob;
+import js7.launcher.forjava.internal.BlockingInternalJob.JobContext;
 import scala.collection.JavaConverters;
 
 public class JobStep<A extends JobArguments> {

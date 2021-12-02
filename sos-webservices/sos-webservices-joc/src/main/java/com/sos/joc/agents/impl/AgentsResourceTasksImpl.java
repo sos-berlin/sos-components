@@ -67,7 +67,7 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
                 agents.setSurveyDate(Date.from(currentState.instant()));
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
                 Map<String, List<String>> ordersPerAgent = new HashMap<>();
-                Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing$.class)).filter(o -> o
+                Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
                         .attached() != null && o.attached().isRight());
                 if (agentsParam.getCompact() == Boolean.TRUE) {
                     ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,

@@ -125,7 +125,7 @@ public class OrdersHelper {
                     put(Order.FailedWhileFresh$.class, OrderStateText.FAILED);
                     put(Order.Ready$.class, OrderStateText.INPROGRESS);
                     put(Order.Processed$.class, OrderStateText.INPROGRESS);
-                    put(Order.Processing$.class, OrderStateText.RUNNING);
+                    put(Order.Processing.class, OrderStateText.RUNNING);
                     put(Order.Finished$.class, OrderStateText.FINISHED);
                     put(Order.ProcessingKilled$.class, OrderStateText.CANCELLED);
                     put(Order.Cancelled$.class, OrderStateText.CANCELLED);

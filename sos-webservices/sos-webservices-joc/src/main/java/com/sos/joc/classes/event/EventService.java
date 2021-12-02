@@ -78,7 +78,7 @@ import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderNoticeEvent;
 import js7.data.order.OrderEvent.OrderProcessed;
 import js7.data.order.OrderEvent.OrderProcessingKilled$;
-import js7.data.order.OrderEvent.OrderProcessingStarted$;
+import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderPromptAnswered;
 import js7.data.order.OrderEvent.OrderPrompted;
 import js7.data.order.OrderEvent.OrderResumed;
@@ -109,7 +109,7 @@ public class EventService {
             AgentRefStateEvent.class, OrderStarted$.class, OrderProcessingKilled$.class, OrderFailed.class, OrderFailedInFork.class,
             OrderRetrying.class, OrderBroken.class, OrderTerminated.class, OrderAdded.class, OrderProcessed.class, OrderSuspended$.class, 
             OrderSuspensionMarked.class, OrderResumed.class, OrderResumptionMarked.class, OrderCancellationMarked.class, 
-            OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted$.class, OrderDeleted$.class, 
+            OrderPrompted.class, OrderPromptAnswered.class, OrderProcessingStarted.class, OrderDeleted$.class, 
             VersionedItemAddedOrChanged.class, UnsignedSimpleItemEvent.class, ItemDeleted.class, BoardEvent.class,
             OrderLockAcquired.class, OrderLockQueued.class, OrderLockReleased.class, OrderNoticeEvent.class);
     private String controllerId;
@@ -354,7 +354,7 @@ public class EventService {
                         orders.put(mainOrderId, w);
                     }
                     addEvent(createWorkflowEventOfOrder(eventId, w));
-                    if (evt instanceof OrderProcessingStarted$ || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
+                    if (evt instanceof OrderProcessingStarted || evt instanceof OrderProcessed || evt instanceof OrderProcessingKilled$) {
                         addEvent(createTaskEventOfOrder(eventId, w));
                     } else if (evt instanceof OrderLockEvent) {
                         OrderLockEvent lockEvt = (OrderLockEvent) evt;
