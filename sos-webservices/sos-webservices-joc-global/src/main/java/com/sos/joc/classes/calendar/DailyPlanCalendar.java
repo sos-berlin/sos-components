@@ -3,7 +3,6 @@ package com.sos.joc.classes.calendar;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +17,6 @@ import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
 import com.sos.joc.event.bean.proxy.ProxyCoupled;
-import com.sos.joc.event.bean.proxy.ProxyRemoved;
-import com.sos.joc.event.bean.proxy.ProxyStarted;
 import com.sos.joc.exceptions.JocError;
 
 import io.vavr.control.Either;
@@ -36,7 +33,6 @@ public class DailyPlanCalendar {
     private static final CalendarPath dailyPlanCalendarPath = CalendarPath.of(dailyPlanCalendarName);
     private static DailyPlanCalendar instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanCalendar.class);
-    private volatile CopyOnWriteArraySet<String> failedControllerIds = new CopyOnWriteArraySet<>();
     private boolean initIsCalled = false;
     
     private DailyPlanCalendar() {
@@ -58,14 +54,9 @@ public class DailyPlanCalendar {
         }
     }
     
-    @Subscribe({ ProxyRemoved.class })
-    public void removeProxy(ProxyRemoved evt) {
-        failedControllerIds.remove(evt.getControllerId());
-    }
-    
     @Subscribe({ ProxyCoupled.class })
     public void updateProxy(ProxyCoupled evt) {
-        if (failedControllerIds.contains(evt.getControllerId())) {
+        if (evt.isCoupled() && initIsCalled) {
             JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
             try {
                 JControllerProxy proxy = Proxy.of(evt.getControllerId());
@@ -74,32 +65,12 @@ public class DailyPlanCalendar {
                         ProblemHelper.postProblemEventIfExist(e, null, null, null);
                         if (e.isRight()) {
                             LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
-                            failedControllerIds.remove(evt.getControllerId());
                         }
                     });
                 }
             } catch (Exception e) {
                 //
             }
-        }
-    }
-    
-    @Subscribe({ ProxyStarted.class })
-    public void updateProxy(ProxyStarted evt) {
-        JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
-        try {
-            JControllerProxy proxy = Proxy.of(evt.getControllerId());
-            if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
-                proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
-                    if (e.isRight()) {
-                        LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
-                    } else {
-                        failedControllerIds.add(evt.getControllerId());
-                    }
-                });
-            }
-        } catch (Exception e) {
-            failedControllerIds.add(evt.getControllerId());
         }
     }
     
@@ -127,12 +98,10 @@ public class DailyPlanCalendar {
                 LOGGER.error(e.toString());
             }
         }
-        ;
     }
 
     private void deployDailyPlanCalendar(JCalendar calendar, String curControllerId, String accessToken, JocError jocError) {
 
-        failedControllerIds.clear();
         Flux<JUpdateItemOperation> itemOperation = Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar));
         for (String controllerId : Proxies.getControllerDbInstances().keySet()) {
             try {
@@ -146,27 +115,15 @@ public class DailyPlanCalendar {
                         }
                         if (e.isRight()) {
                             LOGGER.info("DailyPlanCalendar submitted to " + controllerId);
-                        } else {
-                            failedControllerIds.add(controllerId);
                         }
                     });
                 } else {
                     LOGGER.info("DailyPlanCalendar already submitted to " + controllerId);
                 }
             } catch (Exception e) {
-                failedControllerIds.add(controllerId);
-                if (jocError != null && !jocError.getMetaInfo().isEmpty()) {
-                    LOGGER.info(jocError.printMetaInfo());
-                    jocError.clearMetaInfo();
-                }
-                LOGGER.error(e.toString());
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, curControllerId);
             }
         };
-        
-//        if (!failedControllerIds.isEmpty()) {
-//            LOGGER.warn("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
-//            //throw new JocDeployException("DailyPlan-Calendar is not submitted to: " + failedControllerIds.toString());
-//        }
     }
     
     private static boolean dailyPlanCalendarIsAlreadySubmitted(JControllerProxy proxy, JCalendar newCalendar) {
@@ -183,20 +140,6 @@ public class DailyPlanCalendar {
     private static JCalendar getDailyPlanCalendar(ConfigurationGlobalsDailyPlan conf) {
         return getCalendar(getValue(conf.getTimeZone()), convertPeriodBeginToLong(getValue(conf.getPeriodBegin())));
     }
-    
-//    private static Flux<JUpdateItemOperation> getItemOperation(String timezone, long dateOffset) {
-//        scala.util.Either<Problem, Timezone> t = Timezone.checked(timezone);
-//        Timezone _timezone = null;
-//        if (t.isRight()) {
-//            _timezone = t.toOption().get();
-//        } else {
-//            throw new IllegalArgumentException("Time zone (" + timezone + ") is not available");
-//        }
-//        Calendar c = Calendar.apply(dailyPlanCalendarPath, _timezone, FiniteDuration.apply(dateOffset, TimeUnit.SECONDS), "#([^#]+)#.*",
-//                "yyyy-MM-dd", scala.Option.empty());
-//        LOGGER.info("Try to submit DailyPlanCalendar: " + c.toString());
-//        return Flux.just(JUpdateItemOperation.apply(new AddOrChangeSimple(c)));
-//    }
     
     private static JCalendar getCalendar(String timezone, long dateOffset) {
         return JCalendar.of(dailyPlanCalendarPath, ZoneId.of(timezone), Duration.ofSeconds(dateOffset), "#([^#]+)#.*", "yyyy-MM-dd");

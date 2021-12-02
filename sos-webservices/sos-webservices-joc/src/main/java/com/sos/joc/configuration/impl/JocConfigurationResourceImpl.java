@@ -249,7 +249,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
            
             if (oldConfiguration != null && configuration.getConfigurationType().equals(ConfigurationType.GLOBALS)) {
                 postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem(),
-                        updateControllerCalendar, accessToken, getJocError());
+                        accessToken, getJocError());
+            }
+            if (updateControllerCalendar) {
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
             }
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
@@ -510,8 +513,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         return Globals.objectMapper.readValue(body, Configuration.class);
     }
     
-    private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings, boolean updateControllerCalendar,
-            String accessToken, JocError jocError) {
+    private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings, String accessToken, JocError jocError) {
         try {
             GlobalSettings old = getSettings(oldSettings);
             GlobalSettings current = getSettings(currentSettings);
@@ -543,10 +545,6 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 configurations.setConfigurationValues(current);
                 Globals.configurationGlobals = configurations;
                 
-                if (updateControllerCalendar) {
-                    DailyPlanCalendar.getInstance().updateDailyPlanCalendar(controllerId, accessToken, jocError);
-                }
-
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
             }
         } catch (Throwable e) {
