@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSSession;
+import com.sos.joc.Globals;
 import com.sos.joc.exceptions.SessionNotExistException;
 import com.sos.joc.model.common.Err;
 import com.sos.joc.model.event.Event;
@@ -33,7 +34,8 @@ public class EventServiceFactory {
     private static EventServiceFactory eventServiceFactory;
     private volatile ConcurrentMap<String, EventService> eventServices = new ConcurrentHashMap<>();
     private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
-//    private volatile CopyOnWriteArraySet<EventCondition> conditions = new CopyOnWriteArraySet<>();
+    private static long responsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
+    private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -89,6 +91,19 @@ public class EventServiceFactory {
         }
     }
     
+    public static void setResponsePeriodInMillis() {
+        String seconds = Globals.getConfigurationGlobalsJoc().getMaxResponseDuration().getValue();
+        if (!seconds.matches("\\d+")) {
+            seconds = Globals.getConfigurationGlobalsJoc().getMaxResponseDuration().getDefault();
+        }
+        setResponsePeriodInMillis(Long.valueOf(seconds));
+    }
+
+    public static void setResponsePeriodInMillis(long duration) {
+        // responsePeriodInMillis between cleanupPeriodInMillis=3min and minResponsePeriodInMillis=30s
+        responsePeriodInMillis = Math.min(cleanupPeriodInMillis, Math.max(TimeUnit.SECONDS.toMillis(duration), minResponsePeriodInMillis));
+    }
+    
     public static void closeEventServices() {
         LOGGER.info("closing all event services");
         EventServiceFactory.getInstance().eventServices.values().parallelStream().forEach(service -> {
@@ -135,6 +150,7 @@ public class EventServiceFactory {
         if (isDebugEnabled) {
             LOGGER.debug("Listen Events of '" + controllerId + "' since " + eventId);
         }
+        setResponsePeriodInMillis();
         EventCondition eventArrived = createCondition();
         try {
             service = getEventService(controllerId);
@@ -142,7 +158,7 @@ public class EventServiceFactory {
             Set<EventSnapshot> evt = new HashSet<>();
             Mode mode = service.hasOldEvent(eventId, eventArrived);
             if (Mode.FALSE.equals(mode)) {
-                long delay = Math.min(cleanupPeriodInMillis - 1000, getSessionTimeout(session));
+                long delay = Math.min(responsePeriodInMillis - 1000, getSessionTimeout(session));
                 if (isDebugEnabled) {
                     LOGGER.debug("waiting for Events for " + controllerId + ": maxdelay " + delay + "ms");
                 }
@@ -252,7 +268,7 @@ public class EventServiceFactory {
             }
             long timeout = session.getTimeout();
             if (timeout < 0L) {
-                return cleanupPeriodInMillis;
+                return responsePeriodInMillis;
             }
             return Math.max(0L, timeout - 1000L);
         } catch (SessionNotExistException e) {

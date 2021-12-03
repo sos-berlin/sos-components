@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.sos.joc.cluster.configuration.globals.common.AConfigurationSection;
 import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
@@ -23,6 +24,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
             GlobalSettingsSectionValueType.BOOLEAN);
     private ConfigurationEntry commentsForAuditLog = new ConfigurationEntry("comments_for_audit_log", String.join(";", AUDIT_LOG_COMMENTS),
             GlobalSettingsSectionValueType.ARRAY);
+    private ConfigurationEntry maxResponseDuration = new ConfigurationEntry("max_response_duration", Long.valueOf(TimeUnit.MINUTES.toSeconds(3))
+            .toString(), GlobalSettingsSectionValueType.POSITIVEINTEGER);
 
     private ConfigurationEntry defaultProfileAccount = new ConfigurationEntry("default_profile_account", "root",
             GlobalSettingsSectionValueType.STRING);
@@ -87,6 +90,8 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
         
         jocPwd.setOrdering(++index);
         historyPwd.setOrdering(++index);
+        
+        maxResponseDuration.setOrdering(++index);
     }
 
     public static List<String> getAuditLogComments() {
@@ -99,6 +104,10 @@ public class ConfigurationGlobalsJoc extends AConfigurationSection {
 
     public ConfigurationEntry getCommentsForAuditLog() {
         return commentsForAuditLog;
+    }
+    
+    public ConfigurationEntry getMaxResponseDuration() {
+        return maxResponseDuration;
     }
 
     public ConfigurationEntry getDefaultProfileAccount() {
