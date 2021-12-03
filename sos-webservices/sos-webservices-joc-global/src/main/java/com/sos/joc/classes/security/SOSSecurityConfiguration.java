@@ -63,7 +63,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
             Long idendityService = 0L;
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
-            iamIdentityServiceFilter.setIamIdentityService(IdentityServiceTypes.SHIRO);
+            iamIdentityServiceFilter.setIamIdentityServiceType(IdentityServiceTypes.SHIRO);
             try {
                 List<DBItemIamIdentityService> listOfIamIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(
                         iamIdentityServiceFilter, 0);
@@ -351,7 +351,8 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    public SecurityConfiguration readConfiguration() throws InvalidFileFormatException, IOException, JocException, SOSHibernateException {
+    @Override
+    public SecurityConfiguration readConfiguration(Long identityServiceId,String identityServiceName) throws InvalidFileFormatException, IOException, JocException, SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("Export shiro.ini");
@@ -376,6 +377,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         return secConfig;
     }
 
+    @Override
     public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,DBItemIamIdentityService dbItemIamIdentityService) throws IOException, SOSHibernateException,
             JocException {
         SOSHibernateSession sosHibernateSession = null;
@@ -399,5 +401,9 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
+    }
+
+    public SecurityConfiguration readConfiguration() throws InvalidFileFormatException, JocException, SOSHibernateException, IOException {
+        return readConfiguration(null,"");
     }
 }

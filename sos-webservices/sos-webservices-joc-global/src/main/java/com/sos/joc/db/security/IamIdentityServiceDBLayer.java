@@ -6,9 +6,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 
 public class IamIdentityServiceDBLayer {
 
@@ -38,8 +36,8 @@ public class IamIdentityServiceDBLayer {
             query.setParameter("required", filter.getRequired());
         }
 
-        if (filter.getIamIdentityService() != null) {
-            query.setParameter("identityServiceType", filter.getIamIdentityService().value());
+        if (filter.getIamIdentityServiceType() != null) {
+            query.setParameter("identityServiceType", filter.getIamIdentityServiceType().value());
         }
         if (filter.getIdentityServiceName() != null && !filter.getIdentityServiceName().isEmpty()) {
             query.setParameter("identityServiceName", filter.getIdentityServiceName());
@@ -62,6 +60,11 @@ public class IamIdentityServiceDBLayer {
             and = " and ";
         }
 
+        if (filter.getIamIdentityServiceType() != null) {
+            where += and + " identityServiceType = :identityServiceType";
+            and = " and ";
+        }
+
         if (filter.getDisabled() != null) {
             where += and + " disabled = :disabled";
             and = " and ";
@@ -72,7 +75,7 @@ public class IamIdentityServiceDBLayer {
             and = " and ";
         }
 
-        if (filter.getIamIdentityService() != null) {
+        if (filter.getIamIdentityServiceType() != null) {
             where += and + " identityServiceType = :identityServiceType";
             and = " and ";
         }

@@ -584,7 +584,7 @@ public class SOSServicePermissionShiro {
             sosSecurityConfiguration = new SOSSecurityDBConfiguration();
         }
 
-        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration();
+        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null,identityServiceName);
         currentAccount.setRoles(securityConfiguration);
 
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);

@@ -6,7 +6,7 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 public class IamIdentityServiceFilter extends SOSHibernateFilter {
 
     private Long id;
-    private IdentityServiceTypes iamIdentityService; 
+    private IdentityServiceTypes iamIdentityServiceType; 
     private String identityServiceName;
     private Boolean disabled;
     private Boolean required;
@@ -34,13 +34,13 @@ public class IamIdentityServiceFilter extends SOSHibernateFilter {
     }
 
     
-    public IdentityServiceTypes getIamIdentityService() {
-        return iamIdentityService;
+    public IdentityServiceTypes getIamIdentityServiceType() {
+        return iamIdentityServiceType;
     }
 
     
-    public void setIamIdentityService(IdentityServiceTypes iamIdentityService) {
-        this.iamIdentityService = iamIdentityService;
+    public void setIamIdentityServiceType(IdentityServiceTypes iamIdentityServiceType) {
+        this.iamIdentityServiceType = iamIdentityServiceType;
     }
 
     

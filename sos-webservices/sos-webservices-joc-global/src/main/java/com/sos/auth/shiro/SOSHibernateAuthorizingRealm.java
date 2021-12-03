@@ -18,8 +18,12 @@ import com.sos.auth.interfaces.ISOSAuthorizing;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
+import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
 
@@ -65,8 +69,15 @@ public class SOSHibernateAuthorizingRealm extends AuthorizingRealm {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSHibernateAuthorizingRealm");
+            
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+            iamIdentityServiceFilter.setIamIdentityServiceType(IdentityServiceTypes.SHIRO);
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+
             sosUserDBLayer = new IamAccountDBLayer(sosHibernateSession);
             IamAccountFilter filter = new IamAccountFilter();
+            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             filter.setAccountName(authToken.getUsername());
             List<DBItemIamAccount> sosUserList = null;

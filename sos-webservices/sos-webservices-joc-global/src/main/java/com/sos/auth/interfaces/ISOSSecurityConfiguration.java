@@ -11,7 +11,7 @@ import com.sos.joc.model.security.SecurityConfiguration;
 
 public interface ISOSSecurityConfiguration {
 
-    public SecurityConfiguration readConfiguration() throws InvalidFileFormatException, IOException, JocException, SOSHibernateException;
+    public SecurityConfiguration readConfiguration(Long identityServiceId, String identityServiceName) throws InvalidFileFormatException, IOException, JocException, SOSHibernateException;
     public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,DBItemIamIdentityService dbItemIamIdentityService) throws Exception;
 
 }

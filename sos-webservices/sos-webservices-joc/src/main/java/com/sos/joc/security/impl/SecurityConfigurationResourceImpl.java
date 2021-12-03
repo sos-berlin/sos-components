@@ -64,7 +64,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     sosSecurityConfiguration = new SOSSecurityDBConfiguration();
                 }
 
-                securityConfiguration = sosSecurityConfiguration.readConfiguration();
+                securityConfiguration = sosSecurityConfiguration.readConfiguration(dbItemIamIdentityService.getId(),dbItemIamIdentityService.getIdentityServiceName());
 
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);

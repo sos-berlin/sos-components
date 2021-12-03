@@ -14,15 +14,17 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.joc.Globals;
-import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount;
+import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
 import com.sos.joc.db.authentication.DBItemIamIdentityService;
-import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamPermission;
+import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.IniPermissions;
@@ -64,10 +66,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountDBLayer.deleteCascading(iamAccountFilter);
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            iamAccountFilter.setAccountName(securityConfigurationAccount.getAccount());
+            iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
-            dbItemIamAcount.setAccountPassword(securityConfigurationAccount.getPassword());
+            dbItemIamAcount.setAccountPassword(SOSAuthHelper.getSHA512(securityConfigurationAccount.getPassword()));
             dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             sosHibernateSession.save(dbItemIamAcount);
@@ -190,6 +192,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
+    @Override
     public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
             throws Exception {
         SOSHibernateSession sosHibernateSession = null;
@@ -209,10 +212,20 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession) throws SOSHibernateException {
+    private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession, Long identityServiceId,
+            String identityServiceName) throws SOSHibernateException {
+        
+        if (identityServiceId == null) {
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+            iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+            identityServiceId = dbItemIamIdentityService.getId();
+        }
+
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
-
+        iamAccountFilter.setIdentityServiceId(identityServiceId);
         List<SecurityConfigurationAccount> listOfAccountEntries = new ArrayList<SecurityConfigurationAccount>();
         List<DBItemIamAccount> listOfAccounts = iamAccountDBLayer.getIamAccountList(iamAccountFilter, 0);
         for (DBItemIamAccount dbItemIamAccount : listOfAccounts) {
@@ -312,13 +325,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    public SecurityConfiguration readConfiguration() throws SOSHibernateException {
+    @Override
+    public SecurityConfiguration readConfiguration(Long identityServiceId, String identityServiceName) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         SecurityConfiguration secConfig = new SecurityConfiguration();
 
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration.readConfiguration");
-            secConfig.setAccounts(getAccounts(sosHibernateSession));
+            secConfig.setAccounts(getAccounts(sosHibernateSession, identityServiceId, identityServiceName));
             secConfig.setRoles(getRoles(sosHibernateSession));
 
         } finally {

@@ -109,12 +109,16 @@ public class IamAccountDBLayer {
     private String getWhere(IamAccountFilter filter) {
         String where = " ";
         String and = "";
-        if (filter.getAccountName() != null && !filter.getAccountName().equals("")) {
-            where += and + " accountName = :accountName";
+        if (filter.getIdentityServiceId() != null) {
+            where += and + " identity_service_id = :identity_service_id";
             and = " and ";
         }
         if (filter.getId() != null) {
             where += and + " accountId = :accountId";
+            and = " and ";
+        }
+        if (filter.getAccountName() != null && !filter.getAccountName().isEmpty()) {
+            where += and + " accountName = :accountName";
             and = " and ";
         }
         if (!where.trim().equals("")) {
@@ -127,8 +131,8 @@ public class IamAccountDBLayer {
         List<DBItemIamAccount> iamAccountList = null;
         Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria() + filter
                 .getSortMode());
-        if (filter.getAccountName() != null && !filter.getAccountName().equals("")) {
-            query.setParameter("accountName", filter.getAccountName());
+        if (filter.getIdentityServiceId() != null ) {
+            query.setParameter("identity_service_id", filter.getIdentityServiceId());
         }
         if (limit > 0) {
             query.setMaxResults(limit);
