@@ -29,11 +29,11 @@ import com.sos.joc.model.dailyplan.PlannedOrderItem;
 
 public class JOCOrderResourceImpl extends JOCResourceImpl {
 
-    protected DailyPlanSettings settings;
     private static final Logger LOGGER = LoggerFactory.getLogger(JOCOrderResourceImpl.class);
+    private DailyPlanSettings settings;
 
     protected void setSettings() {
-        if (Globals.configurationGlobals == null) {
+        if (Globals.configurationGlobals == null) {// TODO to remove
             settings = new DailyPlanSettings();
             settings.setTimeZone("Etc/UTC");
             settings.setPeriodBegin("00:00");
@@ -43,6 +43,10 @@ public class JOCOrderResourceImpl extends JOCResourceImpl {
             AConfigurationSection section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.dailyplan);
             this.settings = reader.getSettings(section);
         }
+    }
+
+    protected DailyPlanSettings getSettings() {
+        return settings;
     }
 
     protected FilterDailyPlannedOrders getOrderFilter(String caller, String controllerId, DailyPlanOrderFilter in, boolean selectCyclicOrders)

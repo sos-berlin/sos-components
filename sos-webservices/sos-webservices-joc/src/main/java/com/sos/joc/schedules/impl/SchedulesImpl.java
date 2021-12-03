@@ -78,7 +78,6 @@ public class SchedulesImpl extends JOCOrderResourceImpl implements ISchedulesRes
 
                 if (evaluator.isHasPermission()) {
                     FilterSchedules filter = new FilterSchedules();
-                    filter.addControllerId(controllerId);
                     filter.setScheduleNames(evaluator.getPermittedScheduleNames());
                     filter.setWorkflowNames(evaluator.getPermittedWorkflowNames());
                     filter.setFolders(in.getSelector().getFolders());

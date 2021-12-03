@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
@@ -267,15 +269,10 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             settings.setOverwrite(false);
             settings.setSubmit(item.getSubmitted());
-            settings.setTimeZone(settings.getTimeZone());
-            settings.setPeriodBegin(settings.getPeriodBegin());
+            settings.setTimeZone(getSettings().getTimeZone());
+            settings.setPeriodBegin(getSettings().getPeriodBegin());
             settings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dDate));
             settings.setSubmissionTime(new Date());
-
-            DailyPlanRunner runner = new DailyPlanRunner(settings, false);
-
-            // TimeZone savT = TimeZone.getDefault();
-            // TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
             Schedule schedule = new Schedule();
             schedule.setVersion("");
@@ -309,10 +306,9 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             calendars.getPeriods().add(period);
             schedule.getCalendars().add(calendars);
 
-            runner.addSchedule(schedule);
-            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(controllerId, getJocError(), getAccessToken(), item
-                    .getDailyPlanDate(settings.getTimeZone()), item.getSubmitted());
-            // TimeZone.setDefault(savT);
+            DailyPlanRunner runner = new DailyPlanRunner(settings);
+            Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, Collections.singletonList(
+                    schedule), item.getDailyPlanDate(settings.getTimeZone()), item.getSubmitted(), getJocError(), getAccessToken());
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
             for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
@@ -344,8 +340,8 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setTimeZone(settings.getTimeZone());
             settings.setPeriodBegin(settings.getPeriodBegin());
 
-            DailyPlanRunner runner = new DailyPlanRunner(settings, false);
-            runner.submitOrders(items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
+            DailyPlanRunner runner = new DailyPlanRunner(settings);
+            runner.submitOrders(StartupMode.manual, items.get(0).getControllerId(), items, null, getJocError(), getAccessToken());
         }
     }
 

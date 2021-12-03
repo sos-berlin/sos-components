@@ -19,6 +19,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
@@ -33,8 +34,8 @@ import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.joc.model.common.Folder;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelector;
-import com.sos.joc.model.dailyplan.DailyPlanOrderSelectorDef;
+import com.sos.joc.model.dailyplan.generate.GenerateRequest;
+import com.sos.joc.model.dailyplan.generate.common.GenerateSelector;
 import com.sos.schema.JsonValidator;
 
 @Path(WebservicePaths.DAILYPLAN)
@@ -47,15 +48,15 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
         LOGGER.debug("Generate the orders for the daily plan");
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, DailyPlanOrderSelector.class);
-            DailyPlanOrderSelector in = Globals.objectMapper.readValue(filterBytes, DailyPlanOrderSelector.class);
+            JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
+            GenerateRequest in = Globals.objectMapper.readValue(filterBytes, GenerateRequest.class);
 
             DBItemJocAuditLog auditLog = storeAuditLog(in.getAuditLog(), CategoryType.DAILYPLAN);
             if (in.getSelector() == null) {
                 Folder root = new Folder();
                 root.setFolder("/");
                 root.setRecursive(true);
-                in.setSelector(new DailyPlanOrderSelectorDef());
+                in.setSelector(new GenerateSelector());
                 in.getSelector().setFolders(new ArrayList<Folder>());
                 in.getSelector().getFolders().add(root);
             }
@@ -87,12 +88,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             settings.setUserAccount(this.getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname());
             settings.setOverwrite(in.getOverwrite());
             settings.setSubmit(in.getWithSubmit());
-            settings.setTimeZone(settings.getTimeZone());
-            settings.setPeriodBegin(settings.getPeriodBegin());
+            settings.setTimeZone(getSettings().getTimeZone());
+            settings.setPeriodBegin(getSettings().getPeriodBegin());
             settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(in.getDailyPlanDate()).getTime()));
             settings.setSubmissionTime(new Date());
-
-            DailyPlanRunner runner = new DailyPlanRunner(settings, false);
 
             FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();
             evaluator.setScheduleFolders(in.getSelector().getFolders());
@@ -122,10 +121,10 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
                         in.getSelector().getWorkflowPaths().addAll(evaluator.getPermittedWorkflowNames());
                     }
 
-                    runner.readSchedules(new ScheduleSourceDB(in));
-
-                    Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(controllerId, getJocError(), accessToken, in
-                            .getDailyPlanDate(), in.getWithSubmit());
+                    DailyPlanRunner runner = new DailyPlanRunner(settings);
+                    Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId,
+                            new ScheduleSourceDB(in.getSelector()).getSchedules(), in.getDailyPlanDate(), in.getWithSubmit(), getJocError(),
+                            accessToken);
                     for (Entry<PlannedOrderKey, PlannedOrder> entry : generatedOrders.entrySet()) {
                         auditLogDetails.add(new AuditLogDetail(entry.getValue().getWorkflowPath(), entry.getValue().getFreshOrder().getId(),
                                 controllerId));

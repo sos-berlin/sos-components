@@ -38,6 +38,15 @@ public class DBLayerSchedules {
         this.session = session;
     }
 
+    public List<DBItemInventoryReleasedConfiguration> getAllSchedules() throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type");
+
+        Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        return session.getResultList(query);
+    }
+
     private String getWhere(FilterSchedules filter) {
         String where = " type = " + ConfigurationType.SCHEDULE.intValue();
         String and = " and (";

@@ -45,20 +45,20 @@ public class DailyPlanService extends AJocClusterService {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s] start", getIdentifier(), mode));
 
-            DailyPlanSettings settings = getSettings(mode, globalSettings);
+            DailyPlanSettings settings = getSettings(mode, controllers, globalSettings);
 
             String startTime = DailyPlanHelper.getStartTimeAsString(settings.getTimeZone(), settings.getDailyPlanStartTime(), settings
                     .getPeriodBegin());
 
             if (settings.getDayAheadPlan() > 0) {
                 if (!StartupMode.manual_restart.equals(mode)) {
-                    LOGGER.info(String.format("[planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead", startTime,
-                            settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
+                    LOGGER.info(String.format("[%s][planned][%s %s]creating daily plan for %s days ahead, submitting for %s days ahead", mode,
+                            startTime, settings.getTimeZone(), settings.getDayAheadPlan(), settings.getDayAheadSubmit()));
                 }
-                resetStartPlannedOrderTimer(controllers, settings);
+                schedule(settings);
             } else {
-                LOGGER.info(String.format("[planned][%s %s][skip]because creating daily plan for %s days ahead", startTime, settings.getTimeZone(),
-                        settings.getDayAheadPlan()));
+                LOGGER.info(String.format("[%s][planned][%s %s][skip]because creating daily plan for %s days ahead", mode, startTime, settings
+                        .getTimeZone(), settings.getDayAheadPlan()));
             }
 
             lastActivityEnd = Instant.now();
@@ -103,29 +103,28 @@ public class DailyPlanService extends AJocClusterService {
 
     }
 
-    private void resetStartPlannedOrderTimer(List<ControllerConfiguration> controllers, DailyPlanSettings settings) {
+    private void schedule(DailyPlanSettings settings) {
         if (timer != null) {
             timer.cancel();
             timer.purge();
         }
         timer = new Timer();
-        runner = new DailyPlanRunner(controllers, settings, true);
+        runner = new DailyPlanRunner(settings);
         timer.schedule(runner, 0, 60 * 1000);
     }
 
-    private DailyPlanSettings getSettings(StartupMode mode, AConfigurationSection globalSettings) throws Exception {
+    private DailyPlanSettings getSettings(StartupMode mode, List<ControllerConfiguration> controllers, AConfigurationSection globalSettings)
+            throws Exception {
         DailyPlanSettings dailyPlanGlobalSettings = new GlobalSettingsReader().getSettings(globalSettings);
 
-        // TODO why create new DailyPlanSettings?
         DailyPlanSettings settings = new DailyPlanSettings();
+        settings.setStartMode(mode);
+        settings.setControllers(controllers);
         settings.setTimeZone(dailyPlanGlobalSettings.getTimeZone());
         settings.setPeriodBegin(dailyPlanGlobalSettings.getPeriodBegin());
         settings.setDailyPlanStartTime(dailyPlanGlobalSettings.getDailyPlanStartTime());
         settings.setDayAheadPlan(dailyPlanGlobalSettings.getDayAheadPlan());
         settings.setDayAheadSubmit(dailyPlanGlobalSettings.getDayAheadSubmit());
-
-        settings.setHibernateConfigurationFile(getJocConfig().getHibernateConfiguration());
-        settings.setStartMode(mode);
 
         return settings;
     }

@@ -28,6 +28,7 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.WebservicePaths;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.FolderPermissionEvaluator;
@@ -109,7 +110,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
         settings.setSubmit(true);
         settings.setTimeZone(settings.getTimeZone());
         settings.setPeriodBegin(settings.getPeriodBegin());
-        DailyPlanRunner runner = new DailyPlanRunner(settings, false);
+        DailyPlanRunner runner = new DailyPlanRunner(settings);
 
         if (in.getFilter() == null) {
             in.setFilter(new DailyPlanOrderFilterDef());
@@ -165,7 +166,7 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                     Globals.disconnect(session);
                 }
 
-                runner.submitOrders(controllerId, items, null, getJocError(), getAccessToken());
+                runner.submitOrders(StartupMode.manual, controllerId, items, null, getJocError(), getAccessToken());
 
                 EventBus.getInstance().post(new DailyPlanEvent(in.getFilter().getDailyPlanDate()));
 

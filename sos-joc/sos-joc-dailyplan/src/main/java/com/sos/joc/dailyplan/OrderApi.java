@@ -24,6 +24,7 @@ import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.cluster.AJocClusterService;
+import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.common.PlannedOrder;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlannedOrders;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
@@ -63,7 +64,7 @@ public class OrderApi {
         return JFreshOrder.of(OrderId.of(order.getId()), WorkflowPath.of(order.getWorkflowPath()), scheduledFor, arguments);
     }
 
-    public static Set<PlannedOrder> addOrdersToController(String controllerId, String submissionForDate, boolean fromService,
+    public static Set<PlannedOrder> addOrdersToController(StartupMode startupMode, String controllerId, String submissionForDate,
             Set<PlannedOrder> orders, List<DBItemDailyPlanHistory> items, JocError jocError, String accessToken)
             throws ControllerConnectionResetException, ControllerConnectionRefusedException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, DBInvalidDataException, DBConnectionRefusedException, InterruptedException, ExecutionException {
@@ -82,7 +83,8 @@ public class OrderApi {
         };
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(String.format("[%s][%s]%s update submit state for history and order", method, controllerId, logSubmissionForDate));
+            LOGGER.debug(String.format("[%s][%s][%s]%s update submit state for history and order", startupMode, method, controllerId,
+                    logSubmissionForDate));
         }
         Map<Boolean, Set<Either<Err419, JFreshOrder>>> freshOrders = orders.stream().map(mapper).collect(Collectors.groupingBy(Either::isRight,
                 Collectors.toSet()));
@@ -93,9 +95,10 @@ public class OrderApi {
             JControllerApi controllerApi = ControllerApi.of(controllerId);
             final Set<OrderId> set = map.keySet();
             String add = Proxies.isCoupled(controllerId) ? "" : "not ";
-            LOGGER.info(String.format("[%s][%s]%s[%scoupled with proxy]start submitting %s orders ...", method, controllerId, logSubmissionForDate,
-                    add, set.size()));
+            LOGGER.info(String.format("[%s][%s][%s]%s[%scoupled with proxy]start submitting %s orders ...", startupMode, method, controllerId,
+                    logSubmissionForDate, add, set.size()));
 
+            final boolean fromService = DailyPlanRunner.isFromService(startupMode);
             final JControllerProxy proxy = Proxy.of(controllerId);
             proxy.api().addOrders(Flux.fromIterable(map.values())).thenAccept(either -> {
                 if (fromService) {
@@ -124,11 +127,11 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s]%s[submitted=%s][updated orders=%s(%s), history=%s(%s)]", method, controllerId,
-                                logSubmissionForDate, set.size(), updateOrders, SOSDate.getDuration(start, updateOrdersEnd), updateHistory, SOSDate
-                                        .getDuration(updateOrdersEnd, end)));
+                        LOGGER.info(String.format("[%s][%s][%s]%s[submitted=%s][updated orders=%s(%s), history=%s(%s)]", startupMode, method,
+                                controllerId, logSubmissionForDate, set.size(), updateOrders, SOSDate.getDuration(start, updateOrdersEnd),
+                                updateHistory, SOSDate.getDuration(updateOrdersEnd, end)));
                     } catch (Exception e) {
-                        LOGGER.error(String.format("[%s][%s]%s %s", method, controllerId, logSubmissionForDate, e.toString()), e);
+                        LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logSubmissionForDate, e.toString()), e);
                         Globals.rollback(session);
                         ProblemHelper.postExceptionEventIfExist(Either.left(e), accessToken, jocError, controllerId);
                     } finally {
@@ -139,7 +142,7 @@ public class OrderApi {
                     SOSHibernateSession session = null;
                     try {
                         String msg = either.getLeft().toString();
-                        LOGGER.error(String.format("[%s][%s]%s[error]%s", method, controllerId, logSubmissionForDate, msg));
+                        LOGGER.error(String.format("[%s][%s][%s]%s[error]%s", startupMode, method, controllerId, logSubmissionForDate, msg));
 
                         session = Globals.createSosHibernateStatelessConnection(method);
                         DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -153,12 +156,12 @@ public class OrderApi {
                         session = null;
 
                         Instant end = Instant.now();
-                        LOGGER.info(String.format("[%s][%s]%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", method, controllerId,
-                                logSubmissionForDate, updateHistory, SOSDate.getDuration(start, end), msg));
+                        LOGGER.info(String.format("[%s][%s][%s]%s[onError][rollback  submitted=false][updated history=%s(%s)]%s", startupMode, method,
+                                controllerId, logSubmissionForDate, updateHistory, SOSDate.getDuration(start, end), msg));
 
                         ProblemHelper.postProblemEventIfExist(either, accessToken, jocError, controllerId);
                     } catch (Throwable e) {
-                        LOGGER.error(String.format("[%s][%s]%s %s", method, controllerId, logSubmissionForDate, e.toString()), e);
+                        LOGGER.error(String.format("[%s][%s][%s]%s %s", startupMode, method, controllerId, logSubmissionForDate, e.toString()), e);
                         Globals.rollback(session);
                     } finally {
                         Globals.disconnect(session);
