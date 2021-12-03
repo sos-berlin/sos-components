@@ -22,6 +22,8 @@ import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
+import com.sos.joc.db.documentation.DBItemDocumentation;
+import com.sos.joc.db.documentation.DBItemDocumentationImage;
 import com.sos.joc.db.history.DBItemHistoryAgent;
 import com.sos.joc.db.history.DBItemHistoryController;
 import com.sos.joc.db.history.DBItemHistoryLog;
@@ -36,6 +38,9 @@ import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.db.inventory.DBItemInventoryOperatingSystem;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentCluster;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentClusterMember;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.db.joc.DBItemJocCluster;
@@ -164,6 +169,18 @@ public class DBLayer implements Serializable {
     public static final String DBITEM_INV_AGENT_NAMES = DBItemInventoryAgentName.class.getSimpleName();
     public static final String TABLE_INV_AGENT_NAMES = "INV_AGENT_NAME_ALIASES";
 
+    public static final String DBITEM_INV_SUBAGENT_INSTANCES = DBItemInventorySubAgentInstance.class.getSimpleName();
+    public static final String TABLE_INV_SUBAGENT_INSTANCES = "INV_SUBAGENT_INSTANCES";
+    public static final String TABLE_INV_SUBAGENT_INSTANCES_SEQUENCE = "SEQ_INV_SAI";
+
+    public static final String DBITEM_INV_SUBAGENT_CLUSTERS = DBItemInventorySubAgentCluster.class.getSimpleName();
+    public static final String TABLE_INV_SUBAGENT_CLUSTERS = "INV_SUBAGENT_CLUSTERS";
+    public static final String TABLE_INV_SUBAGENT_CLUSTERS_SEQUENCE = "SEQ_INV_SAC";
+
+    public static final String DBITEM_INV_SUBAGENT_CLUSTER_MEMBERS = DBItemInventorySubAgentClusterMember.class.getSimpleName();
+    public static final String TABLE_INV_SUBAGENT_CLUSTER_MEMBERS = "INV_SUBAGENT_CLUSTER_MEMBERS";
+    public static final String TABLE_INV_SUBAGENT_CLUSTER_MEMBERS_SEQUENCE = "SEQ_INV_SACM";
+
     public static final String DBITEM_INV_CONFIGURATIONS = DBItemInventoryConfiguration.class.getSimpleName();
     public static final String TABLE_INV_CONFIGURATIONS = "INV_CONFIGURATIONS";
     public static final String TABLE_INV_CONFIGURATIONS_SEQUENCE = "SEQ_INV_C";
@@ -180,11 +197,11 @@ public class DBLayer implements Serializable {
     public static final String TABLE_INV_CERTS = "INV_CERTS";
     public static final String TABLE_INV_CERTS_SEQUENCE = "SEQ_INV_CRTS";
 
-    public static final String DBITEM_INV_DOCUMENTATIONS = com.sos.joc.db.documentation.DBItemDocumentation.class.getSimpleName();
+    public static final String DBITEM_INV_DOCUMENTATIONS = DBItemDocumentation.class.getSimpleName();
     public static final String TABLE_INV_DOCUMENTATIONS = "INV_DOCUMENTATIONS";
     public static final String TABLE_INV_DOCUMENTATIONS_SEQUENCE = "SEQ_INV_D";
 
-    public static final String DBITEM_INV_DOCUMENTATION_IMAGES = com.sos.joc.db.documentation.DBItemDocumentationImage.class.getSimpleName();
+    public static final String DBITEM_INV_DOCUMENTATION_IMAGES = DBItemDocumentationImage.class.getSimpleName();
     public static final String TABLE_INV_DOCUMENTATION_IMAGES = "INV_DOCUMENTATION_IMAGES";
     public static final String TABLE_INV_DOCUMENTATION_IMAGES_SEQUENCE = "SEQ_INV_DI";
 
@@ -380,14 +397,15 @@ public class DBLayer implements Serializable {
         cl.add(DBItemInventoryJSInstance.class);
         cl.add(DBItemInventoryAgentInstance.class);
         cl.add(DBItemInventoryAgentName.class);
+        cl.add(DBItemInventorySubAgentInstance.class);
         cl.add(DBItemInventoryConfiguration.class);
         cl.add(DBItemInventoryConfigurationTrash.class);
         cl.add(DBItemInventoryReleasedConfiguration.class);
         cl.add(DBItemInventoryCertificate.class);
         cl.add(DBItemSearchWorkflow.class);
         cl.add(DBItemSearchWorkflow2DeploymentHistory.class);
-        cl.add(com.sos.joc.db.documentation.DBItemDocumentation.class);
-        cl.add(com.sos.joc.db.documentation.DBItemDocumentationImage.class);
+        cl.add(DBItemDocumentation.class);
+        cl.add(DBItemDocumentationImage.class);
 
         cl.add(DBItemJocConfiguration.class);
         cl.add(DBItemJocInstance.class);
