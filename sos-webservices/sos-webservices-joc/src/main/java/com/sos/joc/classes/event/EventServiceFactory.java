@@ -33,9 +33,10 @@ public class EventServiceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(EventServiceFactory.class);
     private static EventServiceFactory eventServiceFactory;
     private volatile ConcurrentMap<String, EventService> eventServices = new ConcurrentHashMap<>();
-    private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
-    private static long responsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
-    private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
+    //private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
+    private static long responsePeriodInMillis = TimeUnit.SECONDS.toMillis(55);
+    private final static long maxResponsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
+    private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(20);
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -45,6 +46,7 @@ public class EventServiceFactory {
     }
     
     private EventServiceFactory() {
+        setResponsePeriodInMillis();
     }
     
     private static EventServiceFactory getInstance() {
@@ -91,17 +93,10 @@ public class EventServiceFactory {
         }
     }
     
-    public static void setResponsePeriodInMillis() {
-        String seconds = Globals.getConfigurationGlobalsJoc().getMaxResponseDuration().getValue();
-        if (!seconds.matches("\\d+")) {
-            seconds = Globals.getConfigurationGlobalsJoc().getMaxResponseDuration().getDefault();
-        }
-        setResponsePeriodInMillis(Long.valueOf(seconds));
-    }
-
-    public static void setResponsePeriodInMillis(long duration) {
+    private static void setResponsePeriodInMillis() {
         // responsePeriodInMillis between cleanupPeriodInMillis=3min and minResponsePeriodInMillis=30s
-        responsePeriodInMillis = Math.min(cleanupPeriodInMillis, Math.max(TimeUnit.SECONDS.toMillis(duration), minResponsePeriodInMillis));
+        responsePeriodInMillis = Math.min(maxResponsePeriodInMillis, Math.max(TimeUnit.SECONDS.toMillis(Globals.maxResponseDuration),
+                minResponsePeriodInMillis));
     }
     
     public static void closeEventServices() {
@@ -125,11 +120,11 @@ public class EventServiceFactory {
 
                     @Override
                     public void run() {
-                        Long eventId = (Instant.now().toEpochMilli() - cleanupPeriodInMillis - TimeUnit.SECONDS.toMillis(30)) / 1000;
+                        Long eventId = (Instant.now().toEpochMilli() - responsePeriodInMillis - TimeUnit.SECONDS.toMillis(30)) / 1000;
                         eventServices.get(controllerId).getEvents().removeIf(e -> e.getEventId() < eventId);
                     }
 
-                }, cleanupPeriodInMillis, cleanupPeriodInMillis);
+                }, responsePeriodInMillis, responsePeriodInMillis);
             }
             EventService es = eventServices.get(controllerId);
             es.startEventService();

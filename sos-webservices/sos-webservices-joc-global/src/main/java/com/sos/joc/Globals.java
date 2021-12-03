@@ -77,6 +77,7 @@ public class Globals {
     public static long timeoutToDeleteTempFiles = 1000 * 60 * 3L;
     public static int httpConnectionTimeout = 2000;
     public static int httpSocketTimeout = 5000;
+    public static int maxResponseDuration = 55;
     public static boolean withHostnameVerification = false;
     public static SOSIdentityService identityServices;
 
@@ -182,6 +183,7 @@ public class Globals {
         readApiSchemaVersion();
         readInventorySchemaVersion();
         LOGGER.info("Security Level = " + Globals.getJocSecurityLevel().value());
+        setMaxResponseDuration();
     }
 
     public static void setProperties() {
@@ -355,6 +357,13 @@ public class Globals {
                 }
             } catch (Exception e) {
             }
+        }
+    }
+    
+    private static void setMaxResponseDuration() {
+        if (sosCockpitProperties != null) {
+            maxResponseDuration = sosCockpitProperties.getProperty("max_response_duration", maxResponseDuration);
+            //LOGGER.info("Max. response duration for ./events api = " + maxResponseDuration + "s");
         }
     }
 
