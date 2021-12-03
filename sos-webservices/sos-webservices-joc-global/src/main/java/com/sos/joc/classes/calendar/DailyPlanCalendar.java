@@ -16,7 +16,6 @@ import com.sos.joc.cluster.configuration.globals.common.ConfigurationEntry;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.event.annotation.Subscribe;
 import com.sos.joc.event.bean.dailyplan.DailyPlanCalendarEvent;
-import com.sos.joc.event.bean.proxy.ProxyCoupled;
 import com.sos.joc.exceptions.JocError;
 
 import io.vavr.control.Either;
@@ -54,17 +53,37 @@ public class DailyPlanCalendar {
         }
     }
     
-    @Subscribe({ ProxyCoupled.class })
-    public void updateProxy(ProxyCoupled evt) {
-        if (evt.isCoupled() && initIsCalled) {
-            JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
+//    @Subscribe({ ProxyCoupled.class })
+//    public void updateProxy(ProxyCoupled evt) {
+//        if (evt.isCoupled() && initIsCalled) {
+//            try {
+//                JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
+//                JControllerProxy proxy = Proxy.of(evt.getControllerId());
+//                if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
+//                    proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
+//                        ProblemHelper.postProblemEventIfExist(e, null, null, null);
+//                        if (e.isRight()) {
+//                            LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
+//                        }
+//                    });
+//                }
+//            } catch (Exception e) {
+//                //
+//            }
+//        }
+//    }
+    
+    // this method is called directly in onProxyCoupled so that we don't need longer to listen ProxyCoupled event
+    public void updateDailyPlanCalendar(JControllerProxy proxy, String controller) {
+        if (initIsCalled) {
             try {
-                JControllerProxy proxy = Proxy.of(evt.getControllerId());
+                JCalendar calendar = getDailyPlanCalendar(Globals.getConfigurationGlobalsDailyPlan());
                 if (!dailyPlanCalendarIsAlreadySubmitted(proxy, calendar)) {
                     proxy.api().updateItems(Flux.just(JUpdateItemOperation.addOrChangeSimple(calendar))).thenAccept(e -> {
-                        ProblemHelper.postProblemEventIfExist(e, null, null, null);
                         if (e.isRight()) {
-                            LOGGER.info("DailyPlanCalendar submitted to " + evt.getControllerId());
+                            LOGGER.info("DailyPlanCalendar submitted to " + controller);
+                        } else {
+                            LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
                         }
                     });
                 }

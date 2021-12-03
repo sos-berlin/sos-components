@@ -54,11 +54,11 @@ public class JocServletContainer extends ServletContainer {
         } catch (Exception e) {
             throw new ServletException(e);
         }
+        DailyPlanCalendar.getInstance();
         Proxies.startAll(Globals.sosCockpitProperties, ProxyUser.JOC);
         CompletableFuture.runAsync(() -> JitlDocumentation.saveOrUpdate());
         Globals.setProperties();
         WorkflowPaths.init();
-        DailyPlanCalendar.getInstance();
         CompletableFuture.runAsync(() -> {
             SOSShell.printSystemInfos();
             SOSShell.printJVMInfos();

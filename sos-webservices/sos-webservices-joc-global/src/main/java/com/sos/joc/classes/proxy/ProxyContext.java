@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
@@ -162,7 +163,7 @@ public class ProxyContext {
         }
     }
     
-    private void reDeployAgents() {
+    private void reDeployAgentsAndCalendar() {
         proxyFuture.thenAcceptAsync(p -> {
             try {
                 List<JAgentRef> agents = Proxies.getAgents(credentials.getControllerId(), null);
@@ -176,6 +177,7 @@ public class ProxyContext {
                         });
                     }
                 }
+                DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p, toString());
             } catch (Exception e) {
                 LOGGER.error(e.toString());
             }
@@ -199,7 +201,7 @@ public class ProxyContext {
             coupledFuture.complete(null);
         }
         checkCluster();
-        reDeployAgents();
+        reDeployAgentsAndCalendar();
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {
