@@ -83,7 +83,7 @@ public class IamIdentityServiceDBLayer {
         return where;
     }
 
-    public DBItemIamIdentityService getUniqueIdentityServiceList(IamIdentityServiceFilter filter) throws SOSHibernateException {
+    public DBItemIamIdentityService getUniqueIdentityService(IamIdentityServiceFilter filter) throws SOSHibernateException {
         List<DBItemIamIdentityService> identityList = null;
         Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery("from " + DBItemIamIdentityService + getWhere(filter) + filter
                 .getOrderCriteria() + filter.getSortMode());

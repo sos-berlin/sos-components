@@ -17,12 +17,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamPermissionWithName;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.authentication.DBItemIamAccount2Roles;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.authentication.DBItemIamAccount2RoleWithName;
 import com.sos.joc.db.authentication.DBItemIamPermission;
 import com.sos.joc.db.authentication.DBItemIamRole;
 import com.sos.joc.db.security.IamAccountDBLayer;
 import com.sos.joc.db.security.IamAccountFilter;
 import com.sos.joc.model.common.Folder;
+import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.IniPermissions;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.SecurityConfigurationAccount;
@@ -56,7 +58,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration) throws Exception {
+    private void storeAccounts(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
+            DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
         iamAccountDBLayer.deleteCascading(iamAccountFilter);
@@ -65,10 +68,12 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             DBItemIamAccount dbItemIamAcount = new DBItemIamAccount();
             dbItemIamAcount.setAccountName(securityConfigurationAccount.getAccount());
             dbItemIamAcount.setAccountPassword(securityConfigurationAccount.getPassword());
-            dbItemIamAcount.setIdentityServiceId(securityConfigurationAccount.getIdentityServiceId());
+            dbItemIamAcount.setIdentityServiceId(dbItemIamIdentityService.getId());
 
             sosHibernateSession.save(dbItemIamAcount);
-            storeInVault(dbItemIamAcount);
+            if (IdentityServiceTypes.VAULT_JOC.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                storeInVault(dbItemIamAcount);
+            }
         }
     }
 
@@ -185,13 +190,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration) throws Exception {
+    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration, DBItemIamIdentityService dbItemIamIdentityService)
+            throws Exception {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
-            storeAccounts(sosHibernateSession, securityConfiguration);
+            storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
             storeRoles(sosHibernateSession, securityConfiguration);
             storePermissions(sosHibernateSession, securityConfiguration);
 

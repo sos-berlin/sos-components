@@ -376,7 +376,7 @@ public class SOSSecurityConfiguration implements ISOSSecurityConfiguration {
         return secConfig;
     }
 
-    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration) throws IOException, SOSHibernateException,
+    public SecurityConfiguration writeConfiguration(SecurityConfiguration securityConfiguration,DBItemIamIdentityService dbItemIamIdentityService) throws IOException, SOSHibernateException,
             JocException {
         SOSHibernateSession sosHibernateSession = null;
         try {

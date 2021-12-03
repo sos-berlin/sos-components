@@ -24,7 +24,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
-    "identityServiceType",
+    "identityServiceName",
     "main",
     "accounts",
     "profiles",
@@ -42,13 +42,13 @@ public class SecurityConfiguration {
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
     /**
-     * Identity Service Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("identityServiceType")
-    private IdentityServiceTypes identityServiceType;
+    @JsonProperty("identityServiceName")
+    private String identityServiceName;
     @JsonProperty("main")
     private List<SecurityConfigurationMainEntry> main = new ArrayList<SecurityConfigurationMainEntry>();
     @JsonProperty("accounts")
@@ -67,17 +67,17 @@ public class SecurityConfiguration {
 
     /**
      * 
-     * @param identityServiceType
+     * @param identityServiceName
      * @param roles
      * @param profiles
      * @param main
      * @param accounts
      * @param deliveryDate
      */
-    public SecurityConfiguration(Date deliveryDate, IdentityServiceTypes identityServiceType, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
+    public SecurityConfiguration(Date deliveryDate, String identityServiceName, List<SecurityConfigurationMainEntry> main, List<SecurityConfigurationAccount> accounts, List<Profile> profiles, SecurityConfigurationRoles roles) {
         super();
         this.deliveryDate = deliveryDate;
-        this.identityServiceType = identityServiceType;
+        this.identityServiceName = identityServiceName;
         this.main = main;
         this.accounts = accounts;
         this.profiles = profiles;
@@ -107,25 +107,25 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Identity Service Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("identityServiceType")
-    public IdentityServiceTypes getIdentityServiceType() {
-        return identityServiceType;
+    @JsonProperty("identityServiceName")
+    public String getIdentityServiceName() {
+        return identityServiceName;
     }
 
     /**
-     * Identity Service Types
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("identityServiceType")
-    public void setIdentityServiceType(IdentityServiceTypes identityServiceType) {
-        this.identityServiceType = identityServiceType;
+    @JsonProperty("identityServiceName")
+    public void setIdentityServiceName(String identityServiceName) {
+        this.identityServiceName = identityServiceName;
     }
 
     @JsonProperty("main")
@@ -170,12 +170,12 @@ public class SecurityConfiguration {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceType", identityServiceType).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("identityServiceName", identityServiceName).append("main", main).append("accounts", accounts).append("profiles", profiles).append("roles", roles).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(identityServiceType).append(roles).append(profiles).append(main).append(accounts).append(deliveryDate).toHashCode();
+        return new HashCodeBuilder().append(identityServiceName).append(roles).append(profiles).append(main).append(accounts).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -187,7 +187,7 @@ public class SecurityConfiguration {
             return false;
         }
         SecurityConfiguration rhs = ((SecurityConfiguration) other);
-        return new EqualsBuilder().append(identityServiceType, rhs.identityServiceType).append(roles, rhs.roles).append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).isEquals();
+        return new EqualsBuilder().append(identityServiceName, rhs.identityServiceName).append(roles, rhs.roles).append(profiles, rhs.profiles).append(main, rhs.main).append(accounts, rhs.accounts).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

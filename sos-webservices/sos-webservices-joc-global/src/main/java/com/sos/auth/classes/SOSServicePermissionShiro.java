@@ -663,7 +663,7 @@ public class SOSServicePermissionShiro {
                 if (currentAccount.getCurrentSubject() == null) {
                     filter.setRequired(false);
                     listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
-                    if (listOfIdentityServices.size()== 0) {
+                    if (listOfIdentityServices.size() == 0) {
                         DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
                         dbItemIamIdentityService.setDisabled(false);
                         dbItemIamIdentityService.setId(1L);
@@ -672,7 +672,7 @@ public class SOSServicePermissionShiro {
                         dbItemIamIdentityService.setOrdering(1);
                         dbItemIamIdentityService.setRequierd(false);
                         listOfIdentityServices.add(dbItemIamIdentityService);
-                     }
+                    }
 
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
@@ -728,13 +728,6 @@ public class SOSServicePermissionShiro {
 
     }
 
-    private void checkInitialState(SOSHibernateSession sosHibernateSession) throws Exception {
-        SOSSecurityConfiguration sosInSecurityConfiguration = new SOSSecurityConfiguration();
-        SecurityConfiguration securityConfiguration = sosInSecurityConfiguration.readConfiguration();
-        SOSSecurityDBConfiguration sosOutSecurityConfiguration = new SOSSecurityDBConfiguration();
-        sosOutSecurityConfiguration.writeConfiguration(securityConfiguration);
-    }
-
     protected JOCDefaultResponse login(HttpServletRequest request, String basicAuthorization, String clientCertCN, String user, String pwd)
             throws Exception {
         Globals.setServletBaseUri(uriInfo);
@@ -759,54 +752,45 @@ public class SOSServicePermissionShiro {
             basicAuthorization = "Basic " + authStringEnc;
         }
 
-        try {
+        TimeZone.setDefault(TimeZone.getTimeZone(UTC));
 
-            // sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Login");
+        SOSAuthCurrentAccount currentAccount = getUserPwdFromHeaderOrQuery(basicAuthorization, clientCertCN, user, pwd);
 
-            // checkInitialState(sosHibernateSession);
-
-            TimeZone.setDefault(TimeZone.getTimeZone(UTC));
-
-            SOSAuthCurrentAccount currentAccount = getUserPwdFromHeaderOrQuery(basicAuthorization, clientCertCN, user, pwd);
-
-            if (currentAccount == null || currentAccount.getAuthorization() == null) {
-                return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
-            }
-
-            currentAccount.setAuthorization(basicAuthorization);
-            currentAccount.setHttpServletRequest(request);
-
-            Globals.loginUserName = currentAccount.getAccountname();
-
-            SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = authenticate(currentAccount);
-
-            if (request != null) {
-                sosAuthCurrentUserAnswer.setCallerIpAddress(request.getRemoteAddr());
-                sosAuthCurrentUserAnswer.setCallerHostName(request.getRemoteHost());
-            }
-
-            LOGGER.debug(String.format("Method: %s, User: %s, access_token: %s", "login", currentAccount.getAccountname(), currentAccount
-                    .getAccessToken()));
-
-            Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
-
-            JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
-            AuditParams audit = new AuditParams();
-            audit.setComment(currentAccount.getRolesAsString());
-            jocAuditLog.logAuditMessage(audit);
-
-            if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
-                LOGGER.info(sosAuthCurrentUserAnswer.getMessage());
-                return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
-            } else {
-                SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-                return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
-                        sosSessionHandler.getTimeout());
-            }
-
-        } finally {
-            // Globals.disconnect(sosHibernateSession);
+        if (currentAccount == null || currentAccount.getAuthorization() == null) {
+            return JOCDefaultResponse.responseStatusJSError(AUTHORIZATION_HEADER_WITH_BASIC_BASED64PART_EXPECTED);
         }
+
+        currentAccount.setAuthorization(basicAuthorization);
+        currentAccount.setHttpServletRequest(request);
+
+        Globals.loginUserName = currentAccount.getAccountname();
+
+        SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = authenticate(currentAccount);
+
+        if (request != null) {
+            sosAuthCurrentUserAnswer.setCallerIpAddress(request.getRemoteAddr());
+            sosAuthCurrentUserAnswer.setCallerHostName(request.getRemoteHost());
+        }
+
+        LOGGER.debug(String.format("Method: %s, User: %s, access_token: %s", "login", currentAccount.getAccountname(), currentAccount
+                .getAccessToken()));
+
+        Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
+
+        JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
+        AuditParams audit = new AuditParams();
+        audit.setComment(currentAccount.getRolesAsString());
+        jocAuditLog.logAuditMessage(audit);
+
+        if (!sosAuthCurrentUserAnswer.isAuthenticated()) {
+            LOGGER.info(sosAuthCurrentUserAnswer.getMessage());
+            return JOCDefaultResponse.responseStatus401(sosAuthCurrentUserAnswer);
+        } else {
+            SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
+            return JOCDefaultResponse.responseStatus200WithHeaders(sosAuthCurrentUserAnswer, sosAuthCurrentUserAnswer.getAccessToken(),
+                    sosSessionHandler.getTimeout());
+        }
+
     }
 
     private void resetTimeOut(SOSAuthCurrentAccount currentAccount) throws SessionNotExistException {

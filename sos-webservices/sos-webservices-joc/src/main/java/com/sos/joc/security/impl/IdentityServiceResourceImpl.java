@@ -57,7 +57,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityServiceFilter.getIdentityServiceName());
-            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityServiceList(filter);
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
             if (dbItemIamIdentityService != null) {
                 identityService.setDisabled(dbItemIamIdentityService.getDisabled());
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
@@ -101,7 +101,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
             IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
             filter.setIdentityServiceName(identityService.getIdentityServiceName());
-            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityServiceList(filter);
+            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
             if (dbItemIamIdentityService == null) {
                 dbItemIamIdentityService = new DBItemIamIdentityService();
                 dbItemIamIdentityService.setIdentityServiceName(identityService.getIdentityServiceName());

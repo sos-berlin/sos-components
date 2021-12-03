@@ -13,8 +13,11 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.security.SOSSecurityConfiguration;
 import com.sos.joc.classes.security.SOSSecurityDBConfiguration;
+import com.sos.joc.db.authentication.DBItemIamIdentityService;
 import com.sos.joc.db.configuration.JocConfigurationDbLayer;
 import com.sos.joc.db.configuration.JocConfigurationFilter;
+import com.sos.joc.db.security.IamIdentityServiceDBLayer;
+import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.SecurityConfiguration;
@@ -47,26 +50,36 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 securityConfiguration = new SecurityConfiguration();
             }
 
-            ISOSSecurityConfiguration sosSecurityConfiguration = null;
-            if (securityConfiguration.getIdentityServiceType() == null || securityConfiguration
-                    .getIdentityServiceType() == IdentityServiceTypes.SHIRO) {
-                sosSecurityConfiguration = new SOSSecurityConfiguration();
-            } else {
-                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+                iamIdentityServiceFilter.setIdentityServiceName(securityConfiguration.getIdentityServiceName());
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+
+                ISOSSecurityConfiguration sosSecurityConfiguration = null;
+                if (dbItemIamIdentityService == null || IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                    sosSecurityConfiguration = new SOSSecurityConfiguration();
+                } else {
+                    sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                }
+
+                securityConfiguration = sosSecurityConfiguration.readConfiguration();
+
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
+                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+                JocConfigurationFilter filter = new JocConfigurationFilter();
+                filter.setConfigurationType("PROFILE");
+
+                securityConfiguration.setProfiles(jocConfigurationDBLayer.getJocConfigurationProfiles(filter));
+
+                securityConfiguration.setDeliveryDate(Date.from(Instant.now()));
+
+                return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
+            } finally {
+                Globals.disconnect(sosHibernateSession);
             }
 
-            securityConfiguration = sosSecurityConfiguration.readConfiguration();
-
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
-            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-            JocConfigurationFilter filter = new JocConfigurationFilter();
-            filter.setConfigurationType("PROFILE");
-
-            securityConfiguration.setProfiles(jocConfigurationDBLayer.getJocConfigurationProfiles(filter));
-
-            securityConfiguration.setDeliveryDate(Date.from(Instant.now()));
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
@@ -99,16 +112,33 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             }
 
             ISOSSecurityConfiguration sosSecurityConfiguration = null;
-            if (securityConfiguration.getIdentityServiceType() == IdentityServiceTypes.SHIRO) {
-                sosSecurityConfiguration = new SOSSecurityConfiguration();
-            } else {
-                sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
+                filter.setIdentityServiceName(securityConfiguration.getIdentityServiceName());
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
+
+                if (dbItemIamIdentityService != null) {
+
+                    if (IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
+                        sosSecurityConfiguration = new SOSSecurityConfiguration();
+                    } else {
+                        sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                    }
+                    SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+
+                    s.setDeliveryDate(Date.from(Instant.now()));
+
+                    return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
+                } else {
+                    return null;
+                }
+            } finally {
+                Globals.disconnect(sosHibernateSession);
             }
-            SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration);
-
-            s.setDeliveryDate(Date.from(Instant.now()));
-
-            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
