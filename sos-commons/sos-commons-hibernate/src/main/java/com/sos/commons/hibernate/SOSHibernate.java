@@ -3,6 +3,7 @@ package com.sos.commons.hibernate;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +34,7 @@ public class SOSHibernate {
     public static final String HIBERNATE_PROPERTY_JDBC_FETCH_SIZE = "hibernate.jdbc.fetch_size";
     public static final String HIBERNATE_PROPERTY_TRANSACTION_ISOLATION = "hibernate.connection.isolation";
     public static final String HIBERNATE_PROPERTY_USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
-    
+
     // SOS configuration properties
     public static final String HIBERNATE_SOS_PROPERTY_MSSQL_LOCK_TIMEOUT = "hibernate.sos.mssql_lock_timeout";
     public static final String HIBERNATE_SOS_PROPERTY_SHOW_CONFIGURATION_PROPERTIES = "hibernate.sos.show_configuration_properties";
@@ -141,17 +142,33 @@ public class SOSHibernate {
 
         return SOSString.toString(o, excludeFieldNames);
     }
-    
+
     public static <T> List<T> getInClausePartition(int part, List<T> list) {
         return list.subList(part, Math.min(part + LIMIT_IN_CLAUSE, list.size()));
     }
-    
+
     public static <T> List<List<T>> getInClausePartitions(List<T> list) {
         List<List<T>> partitions = new ArrayList<>();
         for (int i = 0; i < list.size(); i += LIMIT_IN_CLAUSE) {
             partitions.add(getInClausePartition(i, list));
         }
         return partitions;
+    }
+
+    /** creates a string "'a','b','c'" */
+    public static String convertStrings(Collection<String> items) {
+        if (items == null || items.size() == 0) {
+            return null;
+        }
+        return new StringBuilder("'").append(String.join("','", items)).append("'").toString();
+    }
+
+    /** creates a string "1,2,3" */
+    public static String convertNumbers(Collection<Number> items) {
+        if (items == null || items.size() == 0) {
+            return null;
+        }
+        return items.stream().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     protected static String getLogIdentifier(String identifier) {

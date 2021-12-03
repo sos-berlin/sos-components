@@ -199,7 +199,7 @@ public class DailyPlanRunner extends TimerTask {
         return synchronizer.getPlannedOrders();
     }
 
-    /* DailyPlanModifyOrderImpl, DailyPlanSubmitOrdersImpl **/
+    /* submitDaysAhead, DailyPlanModifyOrderImpl, DailyPlanSubmitOrdersImpl **/
     public void submitOrders(StartupMode startupMode, String controllerId, List<DBItemDailyPlanOrder> items, String submissionForDate,
             JocError jocError, String accessToken) throws JsonParseException, JsonMappingException, DBConnectionRefusedException,
             DBInvalidDataException, DBMissingDataException, JocConfigurationException, DBOpenSessionException, IOException, ParseException,
@@ -355,6 +355,7 @@ public class DailyPlanRunner extends TimerTask {
         }
     }
 
+    // service
     private void submitDaysAhead(StartupMode startupMode, String controllerId, java.util.Calendar calendar) throws JsonParseException,
             JsonMappingException, DBConnectionRefusedException, DBInvalidDataException, DBMissingDataException, JocConfigurationException,
             DBOpenSessionException, ControllerConnectionResetException, ControllerConnectionRefusedException, IOException, ParseException,

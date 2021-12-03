@@ -148,23 +148,6 @@ public class DBLayerDailyPlannedOrders {
         return executeUpdate("executeDelete", query);
     }
 
-    private String getOrderListSql(Collection<String> list) {
-        // if (list != null && !list.isEmpty()) {
-        // return list.stream().collect(Collectors.joining("','", "(p.orderId in (", "))"));
-        // }
-        // return "";
-        StringBuilder sql = new StringBuilder();
-        sql.append("p.orderId in (");
-        for (String s : list) {
-            sql.append("'" + s + "',");
-        }
-        String s = sql.toString();
-        s = s.substring(0, s.length() - 1);
-        s = s + ")";
-
-        return " (" + s + ") ";
-    }
-
     private String getCyclicOrderListSql(List<String> list) {
         StringBuilder sql = new StringBuilder(" (");
         for (int i = 0; i < list.size(); i++) {
@@ -393,7 +376,10 @@ public class DBLayerDailyPlannedOrders {
             if (hasCyclics) {
                 where.append(" ( ");
             }
-            where.append(getOrderListSql(filter.getOrderIds()));
+            String orderIdsAsIn = SOSHibernate.convertStrings(filter.getOrderIds());
+            if (orderIdsAsIn != null) {
+                where.append(" p.orderId in (").append(orderIdsAsIn).append(") ");
+            }
             if (hasCyclics) {
                 where.append(" or ").append(getCyclicOrderListSql(filter.getCyclicOrdersMainParts()));
                 where.append(") ");
