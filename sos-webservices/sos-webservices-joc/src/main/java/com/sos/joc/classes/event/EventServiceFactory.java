@@ -36,7 +36,7 @@ public class EventServiceFactory {
     //private final static long cleanupPeriodInMillis = TimeUnit.MINUTES.toMillis(3);
     private static long responsePeriodInMillis = TimeUnit.SECONDS.toMillis(55);
     private final static long maxResponsePeriodInMillis = TimeUnit.MINUTES.toMillis(3);
-    private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(20);
+    private final static long minResponsePeriodInMillis = TimeUnit.SECONDS.toMillis(30);
     protected static Lock lock = new ReentrantLock();
     public static AtomicBoolean isClosed = new AtomicBoolean(false);
     
@@ -96,7 +96,7 @@ public class EventServiceFactory {
     private static void setResponsePeriodInMillis() {
         // responsePeriodInMillis between cleanupPeriodInMillis=3min and minResponsePeriodInMillis=30s
         responsePeriodInMillis = Math.min(maxResponsePeriodInMillis, Math.max(TimeUnit.SECONDS.toMillis(Globals.maxResponseDuration),
-                minResponsePeriodInMillis));
+                minResponsePeriodInMillis)) - 1015; //1015 is empirically determined from the measured response times of the web developer tools
     }
     
     public static void closeEventServices() {
