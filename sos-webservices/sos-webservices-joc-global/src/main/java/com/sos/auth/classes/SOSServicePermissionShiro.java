@@ -671,11 +671,14 @@ public class SOSServicePermissionShiro {
                         LOGGER.info("No Identity Service is configured. Using SHIRO as the default identity service");
                         DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
                         dbItemIamIdentityService.setDisabled(false);
-                        dbItemIamIdentityService.setId(1L);
                         dbItemIamIdentityService.setIdentityServiceName("shiro");
                         dbItemIamIdentityService.setIdentityServiceType("SHIRO");
                         dbItemIamIdentityService.setOrdering(1);
                         dbItemIamIdentityService.setRequierd(false);
+                        sosHibernateSession.setAutoCommit(false);
+                        sosHibernateSession.beginTransaction();
+                        sosHibernateSession.save(dbItemIamIdentityService);
+                        sosHibernateSession.commit();
                         listOfIdentityServices.add(dbItemIamIdentityService);
                     }
 
