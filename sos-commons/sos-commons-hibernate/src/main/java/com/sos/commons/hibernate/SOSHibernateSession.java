@@ -539,7 +539,7 @@ public class SOSHibernateSession implements Serializable {
         }
         debugQuery("getResultListAsMaps", nativeQuery, null);
         try {
-            nativeQuery.setResultTransformer(getNativeQueryResultToMapTransformer(false, null));
+            nativeQuery.setResultTransformer(getNativeQueryResultToMapTransformer(false, SOSDate.DATETIME_FORMAT));
             return (List<Map<String, Object>>) nativeQuery.getResultList();
         } catch (IllegalStateException e) {
             throwException(e, new SOSHibernateQueryException(e, nativeQuery));
@@ -668,7 +668,7 @@ public class SOSHibernateSession implements Serializable {
             throw new SOSHibernateInvalidSessionException("currentSession is NULL", nativeQuery);
         }
         debugQuery("getSingleResultAsMap", nativeQuery, null);
-        nativeQuery.setResultTransformer(getNativeQueryResultToMapTransformer(false, null));
+        nativeQuery.setResultTransformer(getNativeQueryResultToMapTransformer(false, SOSDate.DATETIME_FORMAT));
         Map<String, Object> result = null;
         try {
             result = (Map<String, Object>) nativeQuery.getSingleResult();
@@ -1180,7 +1180,7 @@ public class SOSHibernateSession implements Serializable {
                                 value = origValue + "";
                                 if (dateTimeFormat != null && origValue instanceof java.sql.Timestamp) {
                                     try {
-                                        value = SOSDate.getDateTimeAsString(value, dateTimeFormat);
+                                        value = SOSDate.format(value, dateTimeFormat);
                                     } catch (Exception e) {
                                     }
                                 }

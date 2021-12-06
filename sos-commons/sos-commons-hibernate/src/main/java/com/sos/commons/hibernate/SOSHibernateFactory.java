@@ -295,10 +295,10 @@ public class SOSHibernateFactory implements Serializable {
                 return "'" + value.toString().replaceAll("'", "''") + "'";
             } else if (type instanceof org.hibernate.type.TimestampType) {
                 if (dbms.equals(Dbms.ORACLE)) {
-                    String val = SOSDate.getDateAsString((Date) value, "yyyy-MM-dd HH:mm:ss");
+                    String val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss");
                     return "to_date('" + val + "','yyyy-mm-dd HH24:MI:SS')";
                 } else if (dbms.equals(Dbms.MSSQL)) {
-                    String val = SOSDate.getDateAsString((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
+                    String val = SOSDate.format((Date) value, "yyyy-MM-dd HH:mm:ss.SSS");
                     return "'" + val.replace(" ", "T") + "'";
                 } else {
                     return TimestampType.INSTANCE.objectToSQLString((Date) value, dialect);

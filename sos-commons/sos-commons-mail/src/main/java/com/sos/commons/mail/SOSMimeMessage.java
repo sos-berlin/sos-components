@@ -55,7 +55,7 @@ public class SOSMimeMessage {
 	private String dumpedFileName = "";
 	private Vector<SOSMailAttachment> sosMailAttachmentList = new Vector<SOSMailAttachment>();
 
-	public SOSMimeMessage(final Message message) throws SOSMissingDataException, MessagingException, IOException {
+	public SOSMimeMessage(final Message message) throws SOSMissingDataException, MessagingException, IOException, SOSInvalidDataException {
 		this((MimeMessage) message);
 	}
 
@@ -63,7 +63,7 @@ public class SOSMimeMessage {
 		this.mimeMessage = (MimeMessage) message;
 	}
 
-	public SOSMimeMessage(final MimeMessage mimeMessage) throws SOSMissingDataException, MessagingException, IOException {
+	public SOSMimeMessage(final MimeMessage mimeMessage) throws SOSMissingDataException, MessagingException, IOException, SOSInvalidDataException {
 		this.mimeMessage = mimeMessage;
 		init();
 	}
@@ -72,7 +72,7 @@ public class SOSMimeMessage {
 		return mimeMessage;
 	}
 
-	public void init() throws MessagingException, IOException, SOSMissingDataException {
+	public void init() throws MessagingException, IOException, SOSMissingDataException, SOSInvalidDataException {
 		if (this.mimeMessage != null) {
 			setSentDateAsString();
 			setFrom();
@@ -120,13 +120,13 @@ public class SOSMimeMessage {
 		return subject;
 	}
 
-	public String getSentDateAsString(final String dateFormat) throws MessagingException {
-		return SOSDate.getDateAsString(mimeMessage.getSentDate(), dateFormat);
+	public String getSentDateAsString(final String dateFormat) throws MessagingException, SOSInvalidDataException {
+		return SOSDate.format(mimeMessage.getSentDate(), dateFormat);
 	}
 
-	public final void setSentDateAsString() throws MessagingException {
+	public final void setSentDateAsString() throws MessagingException, SOSInvalidDataException {
 		if (mimeMessage.getSentDate() != null) {
-			sentDateAsString = SOSDate.getDateAsString(mimeMessage.getSentDate(), localDateFormat);
+			sentDateAsString = SOSDate.format(mimeMessage.getSentDate(), localDateFormat);
 		}
 	}
 
@@ -178,7 +178,7 @@ public class SOSMimeMessage {
 		return localDateFormat;
 	}
 
-	public void setLocalDateFormat(final String localDateFormat) throws MessagingException {
+	public void setLocalDateFormat(final String localDateFormat) throws MessagingException, SOSInvalidDataException {
 		this.localDateFormat = localDateFormat;
 		setSentDateAsString();
 	}

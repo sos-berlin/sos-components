@@ -3,7 +3,6 @@ package com.sos.commons.hibernate;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +114,7 @@ public class SOSHibernate {
                     }
                     Object val = query.getParameterValue(parameter.getName());
                     if (val != null && val instanceof Date) {
-                        val = SOSDate.getDateTimeAsString((Date) val, SOSDate.dateTimeFormat);
+                        val = SOSDate.getDateTimeAsString((Date) val);
                     }
                     sb.append(parameter.getName() + "=" + val);
                     i++;
@@ -153,22 +152,6 @@ public class SOSHibernate {
             partitions.add(getInClausePartition(i, list));
         }
         return partitions;
-    }
-
-    /** creates a string "'a','b','c'" */
-    public static String convertStrings(Collection<String> items) {
-        if (items == null || items.size() == 0) {
-            return null;
-        }
-        return new StringBuilder("'").append(String.join("','", items)).append("'").toString();
-    }
-
-    /** creates a string "1,2,3" */
-    public static String convertNumbers(Collection<Number> items) {
-        if (items == null || items.size() == 0) {
-            return null;
-        }
-        return items.stream().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     protected static String getLogIdentifier(String identifier) {

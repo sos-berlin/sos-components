@@ -14,6 +14,8 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -23,34 +25,19 @@ public class DailyPlanHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(DailyPlanHelper.class);
     private static final String UTC = "UTC";
 
-    public static Date stringAsDate(String date) throws ParseException {
-        // TimeZone savT = TimeZone.getDefault();
-        // TimeZone.setDefault(TimeZone.getTimeZone(UTC));
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        Date d = format.parse(date);
-        // TimeZone.setDefault(savT);
-        return d;
-    }
-
-    public static String dateAsString(Date date, String timeZone) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        format.setTimeZone(TimeZone.getTimeZone(timeZone));
-        return format.format(date);
-    }
-
-    public static String getDailyPlanDateAsString(Long startTime, String timeZone, String periodBegin) {
-        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
-        calendar.setTime(new Date(startTime));
-        return DailyPlanHelper.dateAsString(calendar.getTime(), timeZone);
-    }
-
     public static Date getDailyPlanDateAsDate(Long startTime) {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         calendar.setTime(new Date(startTime));
         return calendar.getTime();
     }
 
-    public static java.util.Calendar getDailyplanCalendar(String time, String timeZoneName) {
+    private static String getDailyPlanDateAsString(Long startTime, String timeZone) throws SOSInvalidDataException {
+        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
+        calendar.setTime(new Date(startTime));
+        return SOSDate.getDateWithTimeZoneAsString(calendar.getTime(), timeZone);
+    }
+
+    public static java.util.Calendar getCalendar(String time, String timeZoneName) {
 
         if (time == null) {
             time = "00:00";
@@ -97,6 +84,18 @@ public class DailyPlanHelper {
         calendar.set(java.util.Calendar.MILLISECOND, 0);
         calendar.getTimeInMillis();
 
+        return calendar;
+    }
+
+    // service
+    public static java.util.Calendar getNextDayCalendar() {
+        java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.add(java.util.Calendar.DATE, 1);
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        calendar.set(java.util.Calendar.MINUTE, 0);
+        calendar.set(java.util.Calendar.SECOND, 0);
+        calendar.set(java.util.Calendar.MILLISECOND, 0);
+        calendar.set(java.util.Calendar.MINUTE, 0);
         return calendar;
     }
 
@@ -160,9 +159,9 @@ public class DailyPlanHelper {
         java.util.Calendar now = java.util.Calendar.getInstance(timeZone);
 
         if (!"".equals(dailyPlanStartTime)) {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(dailyPlanStartTime, timeZoneName);
+            startCalendar = DailyPlanHelper.getCalendar(dailyPlanStartTime, timeZoneName);
         } else {
-            startCalendar = DailyPlanHelper.getDailyplanCalendar(periodBegin, timeZoneName);
+            startCalendar = DailyPlanHelper.getCalendar(periodBegin, timeZoneName);
             startCalendar.add(java.util.Calendar.DATE, 1);
             startCalendar.add(java.util.Calendar.MINUTE, -30);
         }
@@ -171,36 +170,20 @@ public class DailyPlanHelper {
             startCalendar.add(java.util.Calendar.DATE, 1);
         }
 
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat(SOSDate.DATETIME_FORMAT);
         format.setTimeZone(timeZone);
         return format.format(startCalendar.getTime());
     }
 
-    public static String getDate(java.util.Calendar calendar) {
-        return new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
-    }
-
-    public static String getDateTime(java.util.Calendar calendar) {
-        return getDateTime(calendar.getTime());
-    }
-
-    public static String getDateTime(Date date) {
-        if (date == null) {
-            return null;
-        }
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return format.format(date);
-    }
-
-    public static String getDateTime(java.util.Calendar calendar, String timeZone) {
+    public static String getDateTimeX(java.util.Calendar calendar, String timeZone) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone(timeZone));
         return format.format(calendar.getTime());
     }
 
-    private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone, String periodBegin) {
+    private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone) throws SOSInvalidDataException {
         String orderId = "";
-        String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone, periodBegin);
+        String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone);
         if (startMode == 0) {
             orderId = "#" + dailyPlanDate + "#P" + "<id" + startTime + ">-" + orderName;
         } else {
@@ -209,8 +192,7 @@ public class DailyPlanHelper {
         return orderId;
     }
 
-    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone,
-            String periodBegin) {
+    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone) throws SOSInvalidDataException {
         String orderName = "";
         if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();
@@ -221,12 +203,12 @@ public class DailyPlanHelper {
             orderName = orderName.substring(0, 30);
         }
 
-        return buildOrderId(orderName, startTime, startMode, timeZone, periodBegin);
+        return buildOrderId(orderName, startTime, startMode, timeZone);
     }
 
-    public static Date getNextDay(Date dateForPlan, DailyPlanSettings settings) throws ParseException {
+    public static Date getNextDay(Date date, DailyPlanSettings settings) throws ParseException {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(settings.getTimeZone()));
-        calendar.setTime(dateForPlan);
+        calendar.setTime(date);
         calendar.add(java.util.Calendar.DATE, 1);
         return calendar.getTime();
     }

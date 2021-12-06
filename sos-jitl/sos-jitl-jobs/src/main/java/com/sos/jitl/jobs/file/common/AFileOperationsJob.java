@@ -85,8 +85,8 @@ public abstract class AFileOperationsJob extends ABlockingInternalJob<FileOperat
                 File file = new File(fd.getFileName());
                 if (logger.isDebugEnabled()) {
                     logger.debug("[steady state][%s][modified last=%s current=%s][file length last=%sb current=%sb]", file.getCanonicalPath(), SOSDate
-                            .getDateTimeAsISO(fd.getLastModificationDate()), SOSDate.getDateTimeAsISO(file.lastModified()), fd.getLastFileLength(),
-                            file.length());
+                            .getDateTimeAsString(fd.getLastModificationDate()), SOSDate.getDateTimeAsString(file.lastModified()), fd
+                                    .getLastFileLength(), file.length());
                 }
                 if (args.getUseFileLock().getValue()) {
                     try {

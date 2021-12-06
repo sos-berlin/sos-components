@@ -215,8 +215,8 @@ public abstract class ANotifier {
         String endTime = tableFields.get(tablePrefix + "_END_TIME");
         if (!SOSString.isEmpty(startTime) && !SOSString.isEmpty(endTime)) {
             try {
-                Date s = SOSDate.getDateFromISOString(startTime);
-                Date e = SOSDate.getDateFromISOString(endTime);
+                Date s = SOSDate.getDateTime(startTime);
+                Date e = SOSDate.getDateTime(endTime);
                 Long diffSeconds = e.getTime() / 1000 - s.getTime() / 1000;
                 tableFields.put(newField, diffSeconds.toString());
             } catch (Exception e) {

@@ -376,10 +376,7 @@ public class DBLayerDailyPlannedOrders {
             if (hasCyclics) {
                 where.append(" ( ");
             }
-            String orderIdsAsIn = SOSHibernate.convertStrings(filter.getOrderIds());
-            if (orderIdsAsIn != null) {
-                where.append(" p.orderId in (").append(orderIdsAsIn).append(") ");
-            }
+            where.append(" p.orderId in (:orderIds) ");
             if (hasCyclics) {
                 where.append(" or ").append(getCyclicOrderListSql(filter.getCyclicOrdersMainParts()));
                 where.append(") ");
@@ -437,6 +434,9 @@ public class DBLayerDailyPlannedOrders {
 
         if (filter.getOrderId() != null && !"".equals(filter.getOrderId())) {
             query.setParameter("orderId", filter.getOrderId());
+        }
+        if (filter.getOrderIds() != null && filter.getOrderIds().size() > 0) {
+            query.setParameterList("orderIds", filter.getOrderIds());
         }
 
         if (filter.getWorkflowName() != null && !"".equals(filter.getWorkflowName())) {

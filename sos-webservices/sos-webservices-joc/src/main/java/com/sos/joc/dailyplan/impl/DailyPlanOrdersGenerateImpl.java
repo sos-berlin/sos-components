@@ -13,6 +13,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.ProblemHelper;
@@ -90,7 +91,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             settings.setSubmit(in.getWithSubmit());
             settings.setTimeZone(getSettings().getTimeZone());
             settings.setPeriodBegin(getSettings().getPeriodBegin());
-            settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(DailyPlanHelper.stringAsDate(in.getDailyPlanDate()).getTime()));
+            settings.setDailyPlanDate(DailyPlanHelper.getDailyPlanDateAsDate(SOSDate.getDate(in.getDailyPlanDate()).getTime()));
             settings.setSubmissionTime(new Date());
 
             FolderPermissionEvaluator evaluator = new FolderPermissionEvaluator();

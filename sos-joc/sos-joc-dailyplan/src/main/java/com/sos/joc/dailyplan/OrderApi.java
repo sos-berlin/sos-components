@@ -98,10 +98,10 @@ public class OrderApi {
             LOGGER.info(String.format("[%s][%s][%s]%s[%scoupled with proxy]start submitting %s orders ...", startupMode, method, controllerId,
                     logSubmissionForDate, add, set.size()));
 
-            final boolean fromService = DailyPlanRunner.isFromService(startupMode);
+            final boolean log2serviceFile = true; // !StartupMode.manual.equals(startupMode);
             final JControllerProxy proxy = Proxy.of(controllerId);
             proxy.api().addOrders(Flux.fromIterable(map.values())).thenAccept(either -> {
-                if (fromService) {
+                if (log2serviceFile) {
                     AJocClusterService.setLogger(ClusterServices.dailyplan.name());
                 }
                 if (either.isRight()) {

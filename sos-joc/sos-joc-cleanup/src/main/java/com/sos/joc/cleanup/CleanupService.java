@@ -168,7 +168,7 @@ public class CleanupService extends AJocClusterService {
 
     public static String toString(Date date) {
         try {
-            return SOSDate.getDateTimeAsString(date, SOSDate.dateTimeFormat);
+            return SOSDate.getDateTimeAsString(date);
         } catch (Exception e) {
             return date == null ? "null" : date.toString();
         }

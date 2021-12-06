@@ -340,7 +340,6 @@ public class OrderListSynchronizer {
 
         calculateDurations(controllerId, date);
         if (settings.isOverwrite()) {
-            final boolean fromService = DailyPlanRunner.isFromService(startupMode);
             SOSHibernateSession session = null;
             List<DBItemDailyPlanOrder> orders = new ArrayList<DBItemDailyPlanOrder>();
             try {
@@ -361,11 +360,12 @@ public class OrderListSynchronizer {
             } finally {
                 Globals.disconnect(session);
             }
+            final boolean log2serviceFile = true;// !StartupMode.manual.equals(startupMode);
             CompletableFuture<Either<Problem, Void>> c = OrdersHelper.removeFromJobSchedulerController(controllerId, orders);
             c.thenAccept(either -> {
                 ProblemHelper.postProblemEventIfExist(either, getAccessToken(), getJocError(), controllerId);
                 if (either.isRight()) {
-                    if (fromService) {
+                    if (log2serviceFile) {
                         AJocClusterService.setLogger(ClusterServices.dailyplan.name());
                     }
                     SOSHibernateSession session4delete = null;

@@ -1877,11 +1877,11 @@ public class HistoryModel {
     }
 
     private String getDateAsString(Date date, String timeZone) throws Exception {
-        return SOSDate.getDateAsString(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
+        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ", TimeZone.getTimeZone(timeZone));
     }
 
     private String getDateAsString(Date date) throws Exception {
-        return SOSDate.getDateAsString(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ");
+        return SOSDate.format(date, "yyyy-MM-dd HH:mm:ss.SSSZZZZ");
     }
 
     private Path storeLog2File(LogEntry entry) throws Exception {

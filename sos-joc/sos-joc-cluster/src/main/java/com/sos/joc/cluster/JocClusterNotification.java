@@ -40,7 +40,7 @@ public class JocClusterNotification {
             sb.append(String.join(",", notification.get()));
             sb.append(DELIMITER_VALUES);
             try {
-                sb.append(SOSDate.getCurrentTimeAsString(SOSDate.dateTimeFormat));
+                sb.append(SOSDate.getCurrentDateTimeAsString());
             } catch (Exception e) {
             }
             sb.append("]");
@@ -63,7 +63,7 @@ public class JocClusterNotification {
             return;
         }
         try {
-            Date d = SOSDate.getDate(arr[1], SOSDate.dateTimeFormat);
+            Date d = SOSDate.getDateTime(arr[1]);
             long diff = (new Date().getTime() - d.getTime()) / 1_000;
             LOGGER.debug("diff = " + diff + "s, expiredInterval=" + expiredInterval);
             expired = diff >= expiredInterval ? true : false;

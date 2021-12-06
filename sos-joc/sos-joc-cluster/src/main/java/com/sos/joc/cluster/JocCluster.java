@@ -553,7 +553,7 @@ public class JocCluster {
                     }
                     if (isHeartBeatExceeded(switchInstance.getHeartBeat())) {
                         return getErrorAnswer(new Exception(String.format("[memberId=%s][last heart beat too old]%s", newMemberId, SOSDate
-                                .getDateTimeAsString(switchInstance.getHeartBeat(), SOSDate.getDateTimeFormat()))));
+                                .getDateTimeAsString(switchInstance.getHeartBeat()))));
                     }
                 }
             } catch (Exception e) {

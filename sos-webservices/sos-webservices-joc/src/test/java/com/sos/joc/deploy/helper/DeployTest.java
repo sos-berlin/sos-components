@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -199,7 +200,7 @@ public class DeployTest {
 
     private void addOrder(JControllerApi api, int counter) {
         try {
-            String orderId = "test-" + SOSDate.getCurrentDateAsString("yyyyMMddHHmmss") + "_" + counter;
+            String orderId = "test-" + SOSDate.format(new Date(),"yyyyMMddHHmmss") + "_" + counter;
             JFreshOrder order = JFreshOrder.of(OrderId.of(orderId), WorkflowPath.of("shell"), Optional.empty(), Collections.emptyMap(), true);
             api.addOrder(order).thenAccept(either -> {
                 if (either.isRight()) {

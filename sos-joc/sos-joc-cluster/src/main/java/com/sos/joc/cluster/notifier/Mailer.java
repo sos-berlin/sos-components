@@ -77,7 +77,7 @@ public class Mailer extends DefaultNotifier {
 
     private String getBody(Range range, String subjectPart, String bodyPart, Throwable t) throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append(SOSDate.getCurrentTimeAsString());
+        sb.append(SOSDate.getCurrentDateTimeAsString());
         sb.append("Z ");
         sb.append(DefaultNotifier.NEW_LINE).append(DefaultNotifier.NEW_LINE);
         sb.append("[").append(range.name()).append("]");

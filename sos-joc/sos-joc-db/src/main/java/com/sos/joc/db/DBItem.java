@@ -104,7 +104,7 @@ public abstract class DBItem implements Serializable {
                 Object oVal = field.get(this);
                 if (oVal != null) {
                     if (oVal instanceof Date) {
-                        val = SOSDate.getDateTimeAsString((Date) oVal, SOSDate.dateTimeFormat);
+                        val = SOSDate.getDateTimeAsString((Date) oVal);
                     } else if (oVal instanceof Boolean) {
                         val = (Boolean) oVal ? "true" : "false";
                     } else {

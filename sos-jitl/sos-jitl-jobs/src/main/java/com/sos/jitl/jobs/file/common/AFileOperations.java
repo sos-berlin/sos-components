@@ -15,6 +15,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -822,9 +823,9 @@ public abstract class AFileOperations {
                     if (posEnd > -1) {
                         String dateTimeFormat = targetFilename.substring(posBegin + 6, posEnd);
                         if (dateTimeFormat.isEmpty()) {
-                            dateTimeFormat = new String("yyyy-MM-dd HH:mm:ss");
+                            dateTimeFormat = new String(SOSDate.DATETIME_FORMAT);
                         }
-                        String dateTime = SOSDate.getCurrentTimeAsString(dateTimeFormat);
+                        String dateTime = SOSDate.format(new Date(), dateTimeFormat);
                         String strT = (posBegin > 0 ? targetFilename.substring(0, posBegin) : "") + dateTime;
                         if (targetFilename.length() > posEnd) {
                             strT += targetFilename.substring(posEnd + 1);

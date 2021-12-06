@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.Calendar;
 import com.sos.inventory.model.calendar.Period;
@@ -46,7 +47,6 @@ import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.dailyplan.DailyPlanRunner;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.DailyPlanSettings;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.common.PlannedOrder;
@@ -271,7 +271,7 @@ public class DailyPlanModifyOrderImpl extends JOCOrderResourceImpl implements ID
             settings.setSubmit(item.getSubmitted());
             settings.setTimeZone(getSettings().getTimeZone());
             settings.setPeriodBegin(getSettings().getPeriodBegin());
-            settings.setDailyPlanDate(DailyPlanHelper.stringAsDate(dDate));
+            settings.setDailyPlanDate(SOSDate.getDate(dDate));
             settings.setSubmissionTime(new Date());
 
             Schedule schedule = new Schedule();

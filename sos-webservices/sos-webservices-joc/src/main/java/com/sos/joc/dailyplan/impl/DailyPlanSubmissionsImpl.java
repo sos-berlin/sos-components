@@ -8,10 +8,10 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.util.SOSDate;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.WebservicePaths;
-import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.dailyplan.common.JOCOrderResourceImpl;
 import com.sos.joc.dailyplan.db.DBLayerDailyPlanSubmissions;
 import com.sos.joc.dailyplan.db.FilterDailyPlanSubmissions;
@@ -48,11 +48,11 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(in.getControllerId());
             if (in.getFilter().getDateFrom() != null) {
-                Date fromDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateFrom());
+                Date fromDate = SOSDate.getDate(in.getFilter().getDateFrom());
                 filter.setDateFrom(fromDate);
             }
             if (in.getFilter().getDateTo() != null) {
-                Date toDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateTo());
+                Date toDate = SOSDate.getDate(in.getFilter().getDateTo());
                 filter.setDateTo(toDate);
             }
             filter.setSortMode("desc");
@@ -108,15 +108,15 @@ public class DailyPlanSubmissionsImpl extends JOCOrderResourceImpl implements ID
             FilterDailyPlanSubmissions filter = new FilterDailyPlanSubmissions();
             filter.setControllerId(in.getControllerId());
             if (in.getFilter().getDateFor() != null) {
-                Date date = DailyPlanHelper.stringAsDate(in.getFilter().getDateFor());
+                Date date = SOSDate.getDate(in.getFilter().getDateFor());
                 filter.setDateFor(date);
             } else {
                 if (in.getFilter().getDateFrom() != null) {
-                    Date fromDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateFrom());
+                    Date fromDate = SOSDate.getDate(in.getFilter().getDateFrom());
                     filter.setDateFrom(fromDate);
                 }
                 if (in.getFilter().getDateTo() != null) {
-                    Date toDate = DailyPlanHelper.stringAsDate(in.getFilter().getDateTo());
+                    Date toDate = SOSDate.getDate(in.getFilter().getDateTo());
                     filter.setDateTo(toDate);
                 }
             }
