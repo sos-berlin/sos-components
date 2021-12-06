@@ -64,6 +64,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             DBItemIamIdentityService dbItemIamIdentityService) throws Exception {
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
+        iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
         iamAccountDBLayer.deleteCascading(iamAccountFilter);
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
             iamAccountFilter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -79,12 +80,14 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    private void storeRoles(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration) throws SOSHibernateException {
+    private void storeRoles(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
+            DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        iamAccountDBLayer.deleteRoles();
+        iamAccountDBLayer.deleteRoles(dbItemIamIdentityService.getId());
         for (String role : securityConfiguration.getRoles().getAdditionalProperties().keySet()) {
             DBItemIamRole dbItemIamRole = new DBItemIamRole();
             dbItemIamRole.setRoleName(role);
+            dbItemIamRole.setIdentityServiceId(dbItemIamIdentityService.getId());
             sosHibernateSession.save(dbItemIamRole);
         }
 
@@ -106,9 +109,10 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
     }
 
-    private void storePermissions(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration) throws SOSHibernateException {
+    private void storePermissions(SOSHibernateSession sosHibernateSession, SecurityConfiguration securityConfiguration,
+            DBItemIamIdentityService dbItemIamIdentityService) throws SOSHibernateException {
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-        iamAccountDBLayer.deleteRole2Permissions();
+        iamAccountDBLayer.deleteRole2Permissions(dbItemIamIdentityService.getId());
 
         if (securityConfiguration.getRoles() != null) {
             for (Entry<String, SecurityConfigurationRole> roles : securityConfiguration.getRoles().getAdditionalProperties().entrySet()) {
@@ -126,6 +130,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             } else {
                                 dbItemIamPermission.setExcluded(iniPermission.getExcluded());
                             }
+                            dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRecursive(false);
                             dbItemIamPermission.setRoleId(roleId);
                             dbItemIamPermission.setAccountPermission(iniPermission.getPath());
@@ -201,8 +206,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             sosHibernateSession.setAutoCommit(false);
             Globals.beginTransaction(sosHibernateSession);
             storeAccounts(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
-            storeRoles(sosHibernateSession, securityConfiguration);
-            storePermissions(sosHibernateSession, securityConfiguration);
+            storeRoles(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
+            storePermissions(sosHibernateSession, securityConfiguration, dbItemIamIdentityService);
 
             Globals.commit(sosHibernateSession);
             return securityConfiguration;
@@ -212,16 +217,8 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession, Long identityServiceId,
-            String identityServiceName) throws SOSHibernateException {
-        
-        if (identityServiceId == null) {
-            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
-            IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
-            iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
-            DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
-            identityServiceId = dbItemIamIdentityService.getId();
-        }
+    private List<SecurityConfigurationAccount> getAccounts(SOSHibernateSession sosHibernateSession, Long identityServiceId)
+            throws SOSHibernateException {
 
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         IamAccountFilter iamAccountFilter = new IamAccountFilter();
@@ -244,11 +241,11 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
     }
 
-    private SecurityConfigurationRoles getRoles(SOSHibernateSession sosHibernateSession) throws SOSHibernateException {
+    private SecurityConfigurationRoles getRoles(SOSHibernateSession sosHibernateSession, Long identityServiceId) throws SOSHibernateException {
 
         IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
         SecurityConfigurationRoles securityConfigurationRoles = new SecurityConfigurationRoles();
-        List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsWithName();
+        List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsWithName(identityServiceId);
         for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
             SecurityConfigurationRole securityConfigurationRole = new SecurityConfigurationRole();
             IniPermissions permissions = new IniPermissions();
@@ -332,8 +329,17 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration.readConfiguration");
-            secConfig.setAccounts(getAccounts(sosHibernateSession, identityServiceId, identityServiceName));
-            secConfig.setRoles(getRoles(sosHibernateSession));
+
+            if (identityServiceId == null) {
+                IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+                IamIdentityServiceFilter iamIdentityServiceFilter = new IamIdentityServiceFilter();
+                iamIdentityServiceFilter.setIdentityServiceName(identityServiceName);
+                DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(iamIdentityServiceFilter);
+                identityServiceId = dbItemIamIdentityService.getId();
+            }
+
+            secConfig.setAccounts(getAccounts(sosHibernateSession, identityServiceId));
+            secConfig.setRoles(getRoles(sosHibernateSession, identityServiceId));
 
         } finally {
             Globals.disconnect(sosHibernateSession);

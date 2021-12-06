@@ -15,6 +15,9 @@ public class DBItemIamPermission {
     @Column(name = "[ID]")
     private Long id;
 
+    @Column(name = "[IDENTITY_SERVICE_ID]")
+    private Long identityServiceId;
+
     @Column(name = "[ROLE_ID]")
     private Long roleId;
 
@@ -101,6 +104,16 @@ public class DBItemIamPermission {
 
     public void setAccountPermission(String accountPermission) {
         this.accountPermission = accountPermission;
+    }
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }

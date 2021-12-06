@@ -21,7 +21,8 @@ public class SOSAuthHelper {
         }
         return Globals.identityServices.getIdentyServiceType() == IdentityServiceTypes.SHIRO;
     }
-
+    
+    
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];

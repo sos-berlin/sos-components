@@ -20,7 +20,10 @@ public class DBItemIamRole {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "[ID]")
     private Long id;
-
+    
+    @Column(name = "[IDENTITY_SERVICE_ID]")
+    private Long identityServiceId;
+    
     @Column(name = "[ROLE_NAME`", nullable = false)
     private String roleName;
 
@@ -42,6 +45,16 @@ public class DBItemIamRole {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    
+    public Long getIdentityServiceId() {
+        return identityServiceId;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }
