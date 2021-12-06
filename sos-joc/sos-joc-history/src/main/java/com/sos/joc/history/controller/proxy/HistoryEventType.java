@@ -19,7 +19,7 @@ import js7.data.order.OrderEvent.OrderLockAcquired;
 import js7.data.order.OrderEvent.OrderLockQueued;
 import js7.data.order.OrderEvent.OrderLockReleased;
 import js7.data.order.OrderEvent.OrderProcessed;
-import js7.data.order.OrderEvent.OrderProcessingStarted$;
+import js7.data.order.OrderEvent.OrderProcessingStarted;
 import js7.data.order.OrderEvent.OrderResumed;
 import js7.data.order.OrderEvent.OrderResumptionMarked;
 import js7.data.order.OrderEvent.OrderStarted$;
@@ -72,7 +72,7 @@ public enum HistoryEventType {
 
     OrderFinished(OrderFinished$.class.getSimpleName()),
 
-    OrderStepStarted(OrderProcessingStarted$.class.getSimpleName()),
+    OrderStepStarted(OrderProcessingStarted.class.getSimpleName()),
 
     OrderStepStdoutWritten(OrderStdoutWritten.class.getSimpleName()),
 
