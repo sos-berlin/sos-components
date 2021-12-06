@@ -9,6 +9,7 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsJoc;
 import com.sos.joc.cluster.configuration.globals.ConfigurationGlobalsUser;
@@ -52,6 +53,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
             entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
+            entity.setClusterLicense(JocClusterService.getInstance().getCluster().getConfig().getClusterMode() );
             
             entity.setDeliveryDate(Date.from(Instant.now()));
             

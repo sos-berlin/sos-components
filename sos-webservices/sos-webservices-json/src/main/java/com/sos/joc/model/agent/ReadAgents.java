@@ -21,7 +21,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentIds",
-    "urls",
     "onlyEnabledAgents"
 })
 public class ReadAgents {
@@ -30,15 +29,12 @@ public class ReadAgents {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
     @JsonProperty("agentIds")
     private List<String> agentIds = new ArrayList<String>();
-    @JsonProperty("urls")
-    private List<String> urls = new ArrayList<String>();
     @JsonProperty("onlyEnabledAgents")
     private Boolean onlyEnabledAgents = false;
 
@@ -46,7 +42,6 @@ public class ReadAgents {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -58,7 +53,6 @@ public class ReadAgents {
      * controllerId
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -76,16 +70,6 @@ public class ReadAgents {
         this.agentIds = agentIds;
     }
 
-    @JsonProperty("urls")
-    public List<String> getUrls() {
-        return urls;
-    }
-
-    @JsonProperty("urls")
-    public void setUrls(List<String> urls) {
-        this.urls = urls;
-    }
-
     @JsonProperty("onlyEnabledAgents")
     public Boolean getOnlyEnabledAgents() {
         return onlyEnabledAgents;
@@ -98,12 +82,12 @@ public class ReadAgents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("urls", urls).append("onlyEnabledAgents", onlyEnabledAgents).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("onlyEnabledAgents", onlyEnabledAgents).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(urls).append(controllerId).append(onlyEnabledAgents).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).toHashCode();
     }
 
     @Override
@@ -115,7 +99,7 @@ public class ReadAgents {
             return false;
         }
         ReadAgents rhs = ((ReadAgents) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(urls, rhs.urls).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).isEquals();
     }
 
 }

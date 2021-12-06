@@ -11,10 +11,12 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.model.agent.SubagentDirectorType;
 
 @Entity
 @Table(name = DBLayer.TABLE_INV_SUBAGENT_INSTANCES, uniqueConstraints = { @UniqueConstraint(columnNames = { "[SUB_AGENT_ID]" }) })
@@ -86,6 +88,20 @@ public class DBItemInventorySubAgentInstance extends DBItem {
 
     public void setIsDirector(Integer val) {
         isDirector = val;
+    }
+    
+    @Transient
+    public SubagentDirectorType getDirectorAsEnum() {
+        try {
+            return SubagentDirectorType.fromValue(isDirector);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Transient
+    public void setIsDirector(SubagentDirectorType val) {
+        setIsDirector(val == null ? null : val.intValue());
     }
 
     public void setModified(Date val) {

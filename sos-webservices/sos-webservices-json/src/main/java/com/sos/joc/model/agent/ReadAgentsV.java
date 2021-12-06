@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentIds",
-    "urls",
     "states",
     "onlyEnabledAgents",
     "compact"
@@ -40,8 +39,6 @@ public class ReadAgentsV {
     private String controllerId;
     @JsonProperty("agentIds")
     private List<String> agentIds = new ArrayList<String>();
-    @JsonProperty("urls")
-    private List<String> urls = new ArrayList<String>();
     @JsonProperty("states")
     private List<AgentStateText> states = new ArrayList<AgentStateText>();
     @JsonProperty("onlyEnabledAgents")
@@ -90,16 +87,6 @@ public class ReadAgentsV {
         this.agentIds = agentIds;
     }
 
-    @JsonProperty("urls")
-    public List<String> getUrls() {
-        return urls;
-    }
-
-    @JsonProperty("urls")
-    public void setUrls(List<String> urls) {
-        this.urls = urls;
-    }
-
     @JsonProperty("states")
     public List<AgentStateText> getStates() {
         return states;
@@ -144,12 +131,12 @@ public class ReadAgentsV {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("urls", urls).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).append("compact", compact).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("states", states).append("onlyEnabledAgents", onlyEnabledAgents).append("compact", compact).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(urls).append(controllerId).append(compact).append(onlyEnabledAgents).append(states).toHashCode();
+        return new HashCodeBuilder().append(agentIds).append(controllerId).append(onlyEnabledAgents).append(compact).append(states).toHashCode();
     }
 
     @Override
@@ -161,7 +148,7 @@ public class ReadAgentsV {
             return false;
         }
         ReadAgentsV rhs = ((ReadAgentsV) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(urls, rhs.urls).append(controllerId, rhs.controllerId).append(compact, rhs.compact).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(states, rhs.states).isEquals();
+        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(onlyEnabledAgents, rhs.onlyEnabledAgents).append(compact, rhs.compact).append(states, rhs.states).isEquals();
     }
 
 }

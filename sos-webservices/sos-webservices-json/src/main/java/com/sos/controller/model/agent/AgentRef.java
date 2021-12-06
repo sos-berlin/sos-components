@@ -18,9 +18,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "id",
-    "uri",
-    "maxProcesses",
-    "title"
+    "director",
+    "standbyDirector"
 })
 public class AgentRef {
 
@@ -40,18 +39,16 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("uri")
-    private String uri;
+    @JsonProperty("director")
+    private String director;
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    private Integer maxProcesses;
-    @JsonProperty("title")
-    private String title;
+    @JsonProperty("standbyDirector")
+    private String standbyDirector;
 
     /**
      * No args constructor for use in serialization
@@ -62,17 +59,15 @@ public class AgentRef {
 
     /**
      * 
-     * @param maxProcesses
+     * @param standbyDirector
+     * @param director
      * @param id
-     * @param title
-     * @param uri
      */
-    public AgentRef(String id, String uri, Integer maxProcesses, String title) {
+    public AgentRef(String id, String director, String standbyDirector) {
         super();
         this.id = id;
-        this.uri = uri;
-        this.maxProcesses = maxProcesses;
-        this.title = title;
+        this.director = director;
+        this.standbyDirector = standbyDirector;
     }
 
     /**
@@ -106,9 +101,9 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("uri")
-    public String getUri() {
-        return uri;
+    @JsonProperty("director")
+    public String getDirector() {
+        return director;
     }
 
     /**
@@ -118,51 +113,41 @@ public class AgentRef {
      * (Required)
      * 
      */
-    @JsonProperty("uri")
-    public void setUri(String uri) {
-        this.uri = uri;
+    @JsonProperty("director")
+    public void setDirector(String director) {
+        this.director = director;
     }
 
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public Integer getMaxProcesses() {
-        return maxProcesses;
+    @JsonProperty("standbyDirector")
+    public String getStandbyDirector() {
+        return standbyDirector;
     }
 
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * 
      */
-    @JsonProperty("maxProcesses")
-    public void setMaxProcesses(Integer maxProcesses) {
-        this.maxProcesses = maxProcesses;
-    }
-
-    @JsonProperty("title")
-    public String getTitle() {
-        return title;
-    }
-
-    @JsonProperty("title")
-    public void setTitle(String title) {
-        this.title = title;
+    @JsonProperty("standbyDirector")
+    public void setStandbyDirector(String standbyDirector) {
+        this.standbyDirector = standbyDirector;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("uri", uri).append("maxProcesses", maxProcesses).append("title", title).toString();
+        return new ToStringBuilder(this).append("id", id).append("director", director).append("standbyDirector", standbyDirector).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(maxProcesses).append(id).append(title).append(uri).toHashCode();
+        return new HashCodeBuilder().append(id).append(standbyDirector).append(director).toHashCode();
     }
 
     @Override
@@ -174,7 +159,7 @@ public class AgentRef {
             return false;
         }
         AgentRef rhs = ((AgentRef) other);
-        return new EqualsBuilder().append(maxProcesses, rhs.maxProcesses).append(id, rhs.id).append(title, rhs.title).append(uri, rhs.uri).isEquals();
+        return new EqualsBuilder().append(id, rhs.id).append(standbyDirector, rhs.standbyDirector).append(director, rhs.director).isEquals();
     }
 
 }

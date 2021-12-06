@@ -9,13 +9,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.joc.Globals;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.calendar.DailyPlanCalendar;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.event.EventBus;
 import com.sos.joc.exceptions.ControllerAuthorizationException;
 import com.sos.joc.exceptions.JocBadRequestException;
@@ -31,6 +35,7 @@ import js7.base.web.Uri;
 import js7.data.node.NodeId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.subagent.JSubagentRef;
 import js7.proxy.data.event.ProxyEvent;
 import js7.proxy.data.event.ProxyEvent.ProxyCoupled;
 import js7.proxy.data.event.ProxyEvent.ProxyCouplingError;
@@ -165,21 +170,57 @@ public class ProxyContext {
     
     private void reDeployAgentsAndCalendar() {
         proxyFuture.thenAcceptAsync(p -> {
+            SOSHibernateSession sosHibernateSession = null;
             try {
-                List<JAgentRef> agents = Proxies.getAgents(credentials.getControllerId(), null);
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
+                InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
+//                boolean versionBefore220beta20211201 = false;
+                Map<JAgentRef, List<JSubagentRef>> agents = Proxies.getAgents(credentials.getControllerId(), dbLayer);
                 if (!agents.isEmpty()) {
-                    if (p.currentState().pathToAgentRef(agents.get(0).path()).isLeft()) { // Agents doesn't exists
+                    boolean redeploy = false;
+                    Either<Problem, JAgentRef> agnetE = p.currentState().pathToAgentRef(agents.keySet().iterator().next().path());
+                    if (agnetE.isLeft()) {
+                        redeploy = true;
+                    } else if (!agnetE.get().director().isPresent() || agnetE.get().directors().isEmpty()) {
+                        redeploy = true;
+//                        versionBefore220beta20211201 = true;
+                    }
+                    // Agents doesn't exists (e.g. journal is deleted) or before version v2.2.0-beta.20211201
+                    if (redeploy) {
                         LOGGER.info(toString() + ": Redeploy Agents");
-                        p.api().updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(e -> {
-                            if (e.isLeft()) {
-                                LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
-                            }
-                        });
+                        
+                        Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
+                        Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(
+                                JUpdateItemOperation::addOrChangeSimple));
+
+                        // old agent before version v2.2.0-beta.20211201 have to deleted then update
+//                        if (versionBefore220beta20211201) {
+//                            Stream<JUpdateItemOperation> da = agents.keySet().stream().map(JAgentRef::path).map(JUpdateItemOperation::deleteSimple);
+//                            p.api().updateItems(Flux.fromStream(da)).thenAccept(e1 -> {
+//                                if (e1.isLeft()) {
+//                                    LOGGER.error(ProblemHelper.getErrorMessage(e1.getLeft()));
+//                                } else {
+//                                    p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+//                                        if (e.isLeft()) {
+//                                            LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
+//                                        }
+//                                    });
+//                                }
+//                            });
+//                        } else {
+                            p.api().updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s))).thenAccept(e -> {
+                                if (e.isLeft()) {
+                                    LOGGER.error(ProblemHelper.getErrorMessage(e.getLeft()));
+                                }
+                            });
+//                        }
                     }
                 }
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(p, toString());
             } catch (Exception e) {
                 LOGGER.error(e.toString());
+            } finally {
+                Globals.disconnect(sosHibernateSession);
             }
         });
     }
@@ -200,8 +241,8 @@ public class ProxyContext {
         if (!coupledFuture.isDone()) {
             coupledFuture.complete(null);
         }
-        checkCluster();
         reDeployAgentsAndCalendar();
+        checkCluster();
     }
 
     private void onProxyDecoupled(ProxyDecoupled$ proxyDecoupled) {

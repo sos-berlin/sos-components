@@ -22,7 +22,6 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentIds",
-    "urls",
     "dateFrom",
     "dateTo",
     "timeZone"
@@ -39,8 +38,6 @@ public class AgentReportFilter {
     private String controllerId;
     @JsonProperty("agentIds")
     private List<String> agentIds = new ArrayList<String>();
-    @JsonProperty("urls")
-    private List<String> urls = new ArrayList<String>();
     /**
      * string for dateFrom and dateTo as search filter
      * <p>
@@ -99,16 +96,6 @@ public class AgentReportFilter {
     @JsonProperty("agentIds")
     public void setAgentIds(List<String> agentIds) {
         this.agentIds = agentIds;
-    }
-
-    @JsonProperty("urls")
-    public List<String> getUrls() {
-        return urls;
-    }
-
-    @JsonProperty("urls")
-    public void setUrls(List<String> urls) {
-        this.urls = urls;
     }
 
     /**
@@ -179,12 +166,12 @@ public class AgentReportFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("urls", urls).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentIds", agentIds).append("dateFrom", dateFrom).append("dateTo", dateTo).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentIds).append(urls).append(controllerId).append(dateTo).append(timeZone).append(dateFrom).toHashCode();
+        return new HashCodeBuilder().append(dateTo).append(timeZone).append(agentIds).append(controllerId).append(dateFrom).toHashCode();
     }
 
     @Override
@@ -196,7 +183,7 @@ public class AgentReportFilter {
             return false;
         }
         AgentReportFilter rhs = ((AgentReportFilter) other);
-        return new EqualsBuilder().append(agentIds, rhs.agentIds).append(urls, rhs.urls).append(controllerId, rhs.controllerId).append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(dateFrom, rhs.dateFrom).isEquals();
+        return new EqualsBuilder().append(dateTo, rhs.dateTo).append(timeZone, rhs.timeZone).append(agentIds, rhs.agentIds).append(controllerId, rhs.controllerId).append(dateFrom, rhs.dateFrom).isEquals();
     }
 
 }

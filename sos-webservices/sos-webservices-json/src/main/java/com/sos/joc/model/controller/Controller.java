@@ -13,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler Controller
+ * Controller
  * <p>
  * 
  * 
@@ -85,7 +85,7 @@ public class Controller {
     @JsonProperty("clusterUrl")
     private String clusterUrl;
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -112,7 +112,7 @@ public class Controller {
     @JsonProperty("version")
     private String version;
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -283,7 +283,7 @@ public class Controller {
     }
 
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -295,7 +295,7 @@ public class Controller {
     }
 
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -359,7 +359,7 @@ public class Controller {
     }
 
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -370,7 +370,7 @@ public class Controller {
     }
 
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 

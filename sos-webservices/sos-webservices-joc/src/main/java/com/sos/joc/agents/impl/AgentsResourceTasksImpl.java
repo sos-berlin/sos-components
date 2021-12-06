@@ -22,6 +22,7 @@ import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
+import com.sos.joc.model.agent.AgentTaskOrder;
 import com.sos.joc.model.agent.AgentTasks;
 import com.sos.joc.model.agent.AgentsTasks;
 import com.sos.joc.model.agent.ReadAgentsV;
@@ -56,8 +57,8 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(Collections.singleton(controllerId),
-                    agentsParam.getAgentIds(), agentsParam.getUrls(), false, agentsParam.getOnlyEnabledAgents());
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
+                    agentsParam.getAgentIds(), false, agentsParam.getOnlyEnabledAgents());
 
             List<AgentTasks> agentsList = new ArrayList<>();
             AgentsTasks agents = new AgentsTasks();
@@ -66,15 +67,19 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
                 JControllerState currentState = Proxy.of(controllerId).currentState();
                 agents.setSurveyDate(Date.from(currentState.instant()));
                 Map<String, Integer> ordersCountPerAgent = new HashMap<>();
-                Map<String, List<String>> ordersPerAgent = new HashMap<>();
+                Map<String, List<AgentTaskOrder>> ordersPerAgent = new HashMap<>();
                 Stream<JOrder> jOrderStream = currentState.ordersBy(JOrderPredicates.byOrderState(Order.Processing.class)).filter(o -> o
                         .attached() != null && o.attached().isRight());
                 if (agentsParam.getCompact() == Boolean.TRUE) {
                     ordersCountPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.reducing(0,
                             o -> 1, Integer::sum))));
                 } else {
-                    ordersPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.mapping(o -> o.id()
-                            .string(), Collectors.toList()))));
+                    ordersPerAgent.putAll(jOrderStream.collect(Collectors.groupingBy(o -> o.attached().get().string(), Collectors.mapping(o -> {
+                        AgentTaskOrder ao = new AgentTaskOrder();
+                        ao.setOrderId(o.id().string());
+                        ao.setSubagentId(((Order.Processing) o.asScala().state()).subagentId().string());
+                        return ao;
+                    }, Collectors.toList()))));
                 }
 
                 agentsList.addAll(dbAgents.stream().map(dbAgent -> {
@@ -82,16 +87,15 @@ public class AgentsResourceTasksImpl extends JOCResourceImpl implements IAgentsR
                     agent.setAgentId(dbAgent.getAgentId());
                     agent.setAgentName(dbAgent.getAgentName());
                     agent.setControllerId(controllerId);
-                    agent.setUrl(dbAgent.getUri());
                     agent.setIsClusterWatcher(dbAgent.getIsWatcher());
                     agent.setRunningTasks(0);
                     if (agentsParam.getCompact() == Boolean.TRUE) {
                         agent.setRunningTasks(ordersCountPerAgent.getOrDefault(dbAgent.getAgentId(), 0));
-                        agent.setOrderIds(null);
+                        agent.setOrders(null);
                     } else {
                         if (ordersPerAgent.containsKey(dbAgent.getAgentId())) {
-                            agent.setOrderIds(ordersPerAgent.get(dbAgent.getAgentId()));
-                            agent.setRunningTasks(agent.getOrderIds().size());
+                            agent.setOrders(ordersPerAgent.get(dbAgent.getAgentId()));
+                            agent.setRunningTasks(agent.getOrders().size());
                         }
                     }
                     return agent;

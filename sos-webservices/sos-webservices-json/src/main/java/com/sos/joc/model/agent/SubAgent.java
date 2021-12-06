@@ -1,8 +1,6 @@
 
 package com.sos.joc.model.agent;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -21,12 +19,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentId",
-    "agentName",
-    "orders",
-    "runningTasks",
-    "isClusterWatcher"
+    "subagentId",
+    "url",
+    "isDirector"
 })
-public class AgentTasks {
+public class SubAgent {
 
     /**
      * controllerId
@@ -40,7 +37,6 @@ public class AgentTasks {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -52,21 +48,25 @@ public class AgentTasks {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    private String agentName;
-    @JsonProperty("orders")
-    private List<AgentTaskOrder> orders = new ArrayList<AgentTaskOrder>();
+    @JsonProperty("subagentId")
+    private String subagentId;
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("runningTasks")
-    private Integer runningTasks;
-    @JsonProperty("isClusterWatcher")
-    private Boolean isClusterWatcher = false;
+    @JsonProperty("url")
+    private String url;
+    /**
+     * SubagentDiretoryType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("isDirector")
+    private SubagentDirectorType isDirector = SubagentDirectorType.fromValue("NO_DIRECTOR");
 
     /**
      * controllerId
@@ -94,7 +94,6 @@ public class AgentTasks {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -106,7 +105,6 @@ public class AgentTasks {
      * string without < and >
      * <p>
      * 
-     * (Required)
      * 
      */
     @JsonProperty("agentId")
@@ -121,9 +119,9 @@ public class AgentTasks {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    public String getAgentName() {
-        return agentName;
+    @JsonProperty("subagentId")
+    public String getSubagentId() {
+        return subagentId;
     }
 
     /**
@@ -133,63 +131,65 @@ public class AgentTasks {
      * (Required)
      * 
      */
-    @JsonProperty("agentName")
-    public void setAgentName(String agentName) {
-        this.agentName = agentName;
-    }
-
-    @JsonProperty("orders")
-    public List<AgentTaskOrder> getOrders() {
-        return orders;
-    }
-
-    @JsonProperty("orders")
-    public void setOrders(List<AgentTaskOrder> orders) {
-        this.orders = orders;
+    @JsonProperty("subagentId")
+    public void setSubagentId(String subagentId) {
+        this.subagentId = subagentId;
     }
 
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("runningTasks")
-    public Integer getRunningTasks() {
-        return runningTasks;
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
     }
 
     /**
-     * non negative integer
+     * string without < and >
      * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("runningTasks")
-    public void setRunningTasks(Integer runningTasks) {
-        this.runningTasks = runningTasks;
+    @JsonProperty("url")
+    public void setUrl(String url) {
+        this.url = url;
     }
 
-    @JsonProperty("isClusterWatcher")
-    public Boolean getIsClusterWatcher() {
-        return isClusterWatcher;
+    /**
+     * SubagentDiretoryType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("isDirector")
+    public SubagentDirectorType getIsDirector() {
+        return isDirector;
     }
 
-    @JsonProperty("isClusterWatcher")
-    public void setIsClusterWatcher(Boolean isClusterWatcher) {
-        this.isClusterWatcher = isClusterWatcher;
+    /**
+     * SubagentDiretoryType
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("isDirector")
+    public void setIsDirector(SubagentDirectorType isDirector) {
+        this.isDirector = isDirector;
     }
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("agentName", agentName).append("orders", orders).append("runningTasks", runningTasks).append("isClusterWatcher", isClusterWatcher).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(agentName).append(orders).append(isClusterWatcher).append(runningTasks).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(subagentId).append(controllerId).append(url).append(isDirector).toHashCode();
     }
 
     @Override
@@ -197,11 +197,11 @@ public class AgentTasks {
         if (other == this) {
             return true;
         }
-        if ((other instanceof AgentTasks) == false) {
+        if ((other instanceof SubAgent) == false) {
             return false;
         }
-        AgentTasks rhs = ((AgentTasks) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(agentName, rhs.agentName).append(orders, rhs.orders).append(isClusterWatcher, rhs.isClusterWatcher).append(runningTasks, rhs.runningTasks).isEquals();
+        SubAgent rhs = ((SubAgent) other);
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(controllerId, rhs.controllerId).append(url, rhs.url).append(isDirector, rhs.isDirector).isEquals();
     }
 
 }

@@ -94,8 +94,8 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
 
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(Collections.singleton(controllerId),
-                    agentsParam.getAgentIds(), agentsParam.getUrls(), false, agentsParam.getOnlyEnabledAgents());
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(Collections.singleton(controllerId),
+                    agentsParam.getAgentIds(), false, agentsParam.getOnlyEnabledAgents());
 
             List<AgentV> agentsList = new ArrayList<>();
 
@@ -161,12 +161,12 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
                                 if (optProblem.isPresent()) {
                                     agent.setErrorMessage(ProblemHelper.getErrorMessage(optProblem.get()));
                                 }
-                                if (couplingState instanceof DelegateCouplingState.Coupled$) {
-                                    stateText = AgentStateText.COUPLED;
-                                } else if (couplingState instanceof DelegateCouplingState.ShutDown$) {
+                                if (couplingState instanceof DelegateCouplingState.ShutDown$) {
                                     stateText = AgentStateText.SHUTDOWN;
                                 } else if (optProblem.isPresent()) {
                                     stateText = AgentStateText.COUPLINGFAILED;
+                                } else if (couplingState instanceof DelegateCouplingState.Coupled$) {
+                                    stateText = AgentStateText.COUPLED;
                                 } else if (couplingState instanceof DelegateCouplingState.Resetting$) {
                                     stateText = AgentStateText.RESETTING;
                                 } else if (couplingState instanceof DelegateCouplingState.Reset$) {
@@ -232,7 +232,6 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setAgentId(dbAgent.getAgentId());
         agent.setAgentName(dbAgent.getAgentName());
         agent.setControllerId(dbAgent.getControllerId());
-        agent.setUrl(dbAgent.getUri());
         agent.setIsClusterWatcher(dbAgent.getIsWatcher());
         agent.setState(getState(AgentStateText.UNKNOWN));
         return agent;

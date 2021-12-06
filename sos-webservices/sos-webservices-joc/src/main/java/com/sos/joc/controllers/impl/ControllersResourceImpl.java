@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.Path;
 
-import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -31,6 +30,7 @@ import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
@@ -87,7 +87,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
 
             connection = Globals.createSosHibernateStatelessConnection(apiCall);
             Controllers entity = new Controllers();
-            entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb, jobschedulerUser.getSOSAuthCurrentAccount()));
+            entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb));
             if (onlyDb) {
                 entity.setAgents(getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors.toSet()), connection));
             }
@@ -104,30 +104,29 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
         }
     }
     
-    private static List<Agent> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
+    private static List<ClusterAgent> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
         InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
         List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
         if (agents != null) {
-            Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(agents.stream().map(DBItemInventoryAgentInstance::getAgentId)
-                    .collect(Collectors.toSet()));
+            Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(controllerIds);
             return agents.stream().map(a -> {
-                Agent agent = new Agent();
+                ClusterAgent agent = new ClusterAgent();
                 agent.setAgentId(a.getAgentId());
                 agent.setAgentName(a.getAgentName());
                 agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                 agent.setDisabled(a.getDisabled());
                 agent.setIsClusterWatcher(a.getIsWatcher());
-                agent.setUrl(a.getUri());
+                agent.setSubagents(null);
                 return agent;
             }).collect(Collectors.toList());
         }
         return null;
     }
 
-    private static List<Controller> getControllers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection, boolean onlyDb,
-            SOSAuthCurrentAccount user) throws InterruptedException, JocException, Exception {
-        return getControllerAnswers(allowedControllers, accessToken, connection, onlyDb).stream()
-                .map(Controller.class::cast).collect(Collectors.toList());
+    private static List<Controller> getControllers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection, boolean onlyDb)
+            throws InterruptedException, JocException, Exception {
+        return getControllerAnswers(allowedControllers, accessToken, connection, onlyDb).stream().map(Controller.class::cast).collect(Collectors
+                .toList());
     }
 
     public static List<ControllerAnswer> getControllerAnswers(String controllerId, String accessToken, SOSHibernateSession connection)

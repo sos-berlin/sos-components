@@ -3,7 +3,6 @@ package com.sos.joc.controller.impl;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -81,14 +80,8 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 controllerId = ""; 
             }
             
-            if (body.getAgents() == null) {
-                body.setAgents(Collections.emptyList());
-            }
             Agent clusterWatcher = body.getClusterWatcher();
-            // only for compatibility
-            if (clusterWatcher == null && body.getAgents().size() == 1) {
-                clusterWatcher = body.getAgents().get(0); 
-            }
+            
             if (body.getControllers().size() < 2) {
                 clusterWatcher = null;
             }
@@ -105,14 +98,6 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
                 if (index == 1 && body.getControllers().stream().anyMatch(c -> Role.STANDALONE.equals(c.getRole()))) {
                     throw new JocBadRequestException("The members of a Controller Cluster must have roles PRIMARY and BACKUP."); 
                 }
-//                if (index == 1 && (body.getAgents().isEmpty() || !body.getAgents()
-//                        .stream().anyMatch(Agent::getIsClusterWatcher))) {
-//                    throw new JobSchedulerBadRequestException("A Controller Cluster needs at least one Agent Cluster Watcher.");
-//                }
-//                if (index == 1 && !body.getAgents().isEmpty() && body.getAgents()
-//                        .stream().filter(Agent::getIsClusterWatcher).count() > 0) {
-//                    throw new JobSchedulerBadRequestException("Only one Agent may be a Cluster Watcher.");
-//                }
 
                 URI otherUri = index == 0 ? null : body.getControllers().get(0).getUrl();
                 Controller jobScheduler = testConnection(controller.getUrl(), controllerId, otherUri);
@@ -139,7 +124,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             if (clusterWatcher != null) {
                 clusterWatcher.setIsClusterWatcher(true);
                 CheckJavaVariableName.test("Agent ID", clusterWatcher.getAgentId());
-                agentDBLayer.agentIdAlreadyExists(Arrays.asList(clusterWatcher.getAgentId()), controllerId);
+                agentDBLayer.agentIdAlreadyExists(Collections.singleton(clusterWatcher.getAgentId()), controllerId);
             }
             
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers()
@@ -239,7 +224,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             
             if (clusterWatcher != null) {
                 final String agentId = clusterWatcher.getAgentId();
-                List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Arrays.asList(controllerId));
+                List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(Collections.singleton(controllerId));
                 boolean clusterWatcherIsNew = true;
                 
                 if (dbAgents != null && !dbAgents.isEmpty()) {

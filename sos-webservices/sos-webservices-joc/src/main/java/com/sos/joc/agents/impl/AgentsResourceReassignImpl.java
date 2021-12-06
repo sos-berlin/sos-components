@@ -3,6 +3,8 @@ package com.sos.joc.agents.impl;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -20,6 +22,7 @@ import com.sos.schema.JsonValidator;
 
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.subagent.JSubagentRef;
 import reactor.core.publisher.Flux;
 
 @Path("agents")
@@ -43,9 +46,11 @@ public class AgentsResourceReassignImpl extends JOCResourceImpl implements IAgen
             }
             storeAuditLog(body.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
-            List<JAgentRef> agents = Proxies.getAgents(controllerId, null);
+            Map<JAgentRef, List<JSubagentRef>> agents = Proxies.getAgents(controllerId, null);
             if (!agents.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agents).map(JUpdateItemOperation::addOrChangeSimple))
+                Stream<JUpdateItemOperation> a = agents.keySet().stream().map(JUpdateItemOperation::addOrChangeSimple);
+                Stream<JUpdateItemOperation> s = agents.values().stream().flatMap(l -> l.stream().map(JUpdateItemOperation::addOrChangeSimple));
+                ControllerApi.of(controllerId).updateItems(Flux.concat(Flux.fromStream(a), Flux.fromStream(s)))
                     .thenAccept(e -> ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
 

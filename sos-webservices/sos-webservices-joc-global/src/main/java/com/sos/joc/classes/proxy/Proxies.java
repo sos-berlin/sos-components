@@ -2,9 +2,12 @@ package com.sos.joc.classes.proxy;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +15,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +23,10 @@ import org.slf4j.LoggerFactory;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JocCockpitProperties;
+import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.event.EventBus;
@@ -43,11 +49,15 @@ import com.sos.joc.exceptions.ProxyNotCoupledException;
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
 import js7.data.cluster.ClusterSetting.Watch;
+import js7.data.subagent.SubagentId;
 import js7.data_for_java.agent.JAgentRef;
 import js7.data_for_java.auth.JHttpsConfig;
+import js7.data_for_java.item.JUpdateItemOperation;
+import js7.data_for_java.subagent.JSubagentRef;
 import js7.proxy.javaapi.JControllerApi;
 import js7.proxy.javaapi.JControllerProxy;
 import js7.proxy.javaapi.JProxyContext;
+import reactor.core.publisher.Flux;
 
 public class Proxies {
 
@@ -470,7 +480,7 @@ public class Proxies {
         }
     }
     
-    public static List<JAgentRef> getAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocException,
+    public static Map<JAgentRef, List<JSubagentRef>> getAgents(String controllerId, InventoryAgentInstancesDBLayer dbLayer) throws JocException,
             DBConnectionRefusedException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -478,12 +488,24 @@ public class Proxies {
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection("GetAgents");
                 dbLayer = new InventoryAgentInstancesDBLayer(sosHibernateSession);
             }
-            List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Arrays.asList(controllerId), false, true);
+            List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
             if (dbAvailableAgents != null) {
-                return dbAvailableAgents.stream().map(a -> JAgentRef.of(AgentPath.of(a.getAgentId()), Uri.of(a.getUri()))).collect(Collectors.toList());
-
+                Map<JAgentRef, List<JSubagentRef>> result = new LinkedHashMap<>(dbAvailableAgents.size());
+                Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerId(controllerId, false, true);
+                for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
+                    List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
+                    if (subs == null || subs.isEmpty()) { // single agent
+                        subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
+                    }
+                    List<JSubagentRef> subRefs = subs.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
+                            .getAgentId()), Uri.of(s.getUri()))).collect(Collectors.toList());
+                    Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > 0).sorted().map(s -> SubagentId.of(s.getSubAgentId()))
+                            .collect(Collectors.toSet());
+                    result.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), directors), subRefs);
+                }
+                return result;
             }
-            return Collections.emptyList();
+            return Collections.emptyMap();
         } finally {
             Globals.disconnect(sosHibernateSession);
         }

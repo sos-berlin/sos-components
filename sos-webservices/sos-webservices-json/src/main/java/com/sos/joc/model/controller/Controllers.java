@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.agent.ClusterAgent;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * JobScheduler Controllers
+ * Controllers
  * <p>
  * 
  * 
@@ -47,7 +47,7 @@ public class Controllers {
     @JsonProperty("controllers")
     private List<Controller> controllers = new ArrayList<Controller>();
     @JsonProperty("agents")
-    private List<Agent> agents = new ArrayList<Agent>();
+    private List<ClusterAgent> agents = new ArrayList<ClusterAgent>();
     @JsonProperty("currentSecurityLevel")
     private Object currentSecurityLevel;
 
@@ -96,12 +96,12 @@ public class Controllers {
     }
 
     @JsonProperty("agents")
-    public List<Agent> getAgents() {
+    public List<ClusterAgent> getAgents() {
         return agents;
     }
 
     @JsonProperty("agents")
-    public void setAgents(List<Agent> agents) {
+    public void setAgents(List<ClusterAgent> agents) {
         this.agents = agents;
     }
 

@@ -80,10 +80,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     });
             
             // check uniqueness of AgentUrl
-            agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
-                    e -> e.getValue() > 1L).findAny().ifPresent(e -> {
-                        throw new JocBadRequestException(getUniquenessMsg("Agent url", e));
-                    });
+//            agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
+//                    e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+//                        throw new JocBadRequestException(getUniquenessMsg("Agent url", e));
+//                    });
 
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
@@ -132,11 +132,11 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         dbAgent.setAgentName(agent.getAgentName());
                         dbUpdateRequired = true;
                     }
-                    if (!dbAgent.getUri().equals(agent.getUrl())) {
-                        dbAgent.setUri(agent.getUrl());
-                        dbUpdateRequired = true;
-                        //controllerUpdateRequired = true;
-                    }
+//                    if (!dbAgent.getUri().equals(agent.getUrl())) {
+//                        dbAgent.setUri(agent.getUrl());
+//                        dbUpdateRequired = true;
+//                        //controllerUpdateRequired = true;
+//                    }
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
@@ -163,7 +163,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
-                dbAgent.setUri(agent.getUrl());
+//                dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
 

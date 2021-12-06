@@ -17,12 +17,15 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
+import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.AgentNames;
 import com.sos.joc.model.agent.Agents;
 import com.sos.joc.model.agent.ReadAgents;
+import com.sos.joc.model.agent.SubAgent;
+import com.sos.joc.model.agent.SubagentDirectorType;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.schema.JsonValidator;
 
@@ -65,12 +68,13 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_P);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(allowedControllers, agentParameter
-                    .getAgentIds(), agentParameter.getUrls(), false, agentParameter.getOnlyEnabledAgents());
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
+                    .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
-                Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(dbAgents.stream().map(DBItemInventoryAgentInstance::getAgentId)
-                        .collect(Collectors.toSet()));
+                Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
+                Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
+                Map<String, Map<SubagentDirectorType, DBItemInventorySubAgentInstance>> directors = dbLayer.getDirectorInstances(controllerIds);
                 agents.setAgents(dbAgents.stream().map(a -> {
                     Agent agent = new Agent();
                     agent.setAgentId(a.getAgentId());
@@ -78,8 +82,11 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                     agent.setDisabled(a.getDisabled());
                     agent.setIsClusterWatcher(a.getIsWatcher());
-                    agent.setUrl(a.getUri());
                     agent.setControllerId(a.getControllerId());
+                    agent.setUrl(a.getUri()); // TODO
+//                    Map<SubagentDirectorType, DBItemInventorySubAgentInstance> direcs = directors.getOrDefault(a.getAgentId(), Collections.emptyMap());
+//                    agent.setDirector(mapDBSubAgentToSubAgent(direcs.get(SubagentDirectorType.PRIMARY_DIRECTOR)));
+//                    agent.setStandbyDirector(mapDBSubAgentToSubAgent(direcs.get(SubagentDirectorType.STANDBY_DIRECTOR)));
                     return agent;
                 }).collect(Collectors.toList()));
             }
@@ -94,6 +101,16 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
         } finally {
             Globals.disconnect(connection);
         }
+    }
+    
+    private static SubAgent mapDBSubAgentToSubAgent(DBItemInventorySubAgentInstance dbSubagent) {
+        if (dbSubagent == null) {
+            return null;
+        }
+        SubAgent subagent = new SubAgent();
+        subagent.setSubagentId(dbSubagent.getSubAgentId());
+        subagent.setUrl(dbSubagent.getUri());
+        return subagent;
     }
 
     @Override
