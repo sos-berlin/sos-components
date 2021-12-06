@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.shiro.session.UnknownSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +52,12 @@ public class SOSAuthCurrentAccountsList {
             boolean found = account.equals(entry.getValue().getAccountname());
             if (found) {
                 if (entry.getValue().getCurrentSubject() != null && entry.getValue().getCurrentSubject().getSession() != null) {
-                    long sessionTimeout = entry.getValue().getCurrentSubject().getSession().getTimeout();
-                    if (sessionTimeout == 0) {
+                    try {
+                        long sessionTimeout = entry.getValue().getCurrentSubject().getSession().getTimeout();
+                        if (sessionTimeout == 0) {
+                            toBeRemoved.add(entry.getValue().getAccessToken());
+                        }
+                    } catch (Exception e) {
                         toBeRemoved.add(entry.getValue().getAccessToken());
                     }
                 }

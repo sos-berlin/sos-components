@@ -64,7 +64,8 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     sosSecurityConfiguration = new SOSSecurityDBConfiguration();
                 }
 
-                securityConfiguration = sosSecurityConfiguration.readConfiguration(dbItemIamIdentityService.getId(),dbItemIamIdentityService.getIdentityServiceName());
+                securityConfiguration = sosSecurityConfiguration.readConfiguration(dbItemIamIdentityService.getId(), dbItemIamIdentityService
+                        .getIdentityServiceName());
 
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
                 JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
@@ -123,13 +124,13 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
                 if (dbItemIamIdentityService != null) {
 
+                    sosSecurityConfiguration = new SOSSecurityDBConfiguration();
+                    SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+                    
                     if (IdentityServiceTypes.SHIRO.name().equals(dbItemIamIdentityService.getIdentityServiceType())) {
                         sosSecurityConfiguration = new SOSSecurityConfiguration();
-                    } else {
-                        sosSecurityConfiguration = new SOSSecurityDBConfiguration();
-                    }
-                    SecurityConfiguration s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
-
+                        s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
+                    }  
                     s.setDeliveryDate(Date.from(Instant.now()));
 
                     return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));

@@ -567,13 +567,13 @@ public class SOSServicePermissionShiro {
             throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
         }
 
-        resetTimeOut(currentAccount);
-
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
         String accessToken = sosSessionHandler.getAccessToken().toString();
 
         currentAccount.setAccessToken(identityServiceName, accessToken);
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
+
+        resetTimeOut(currentAccount);
 
         ISOSSecurityConfiguration sosSecurityConfiguration;
         switch (identityService) {
@@ -584,7 +584,7 @@ public class SOSServicePermissionShiro {
             sosSecurityConfiguration = new SOSSecurityDBConfiguration();
         }
 
-        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null,identityServiceName);
+        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null, identityServiceName);
         currentAccount.setRoles(securityConfiguration);
 
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);
@@ -722,6 +722,13 @@ public class SOSServicePermissionShiro {
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
 
             return sosAuthCurrentUserAnswer;
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
+            sosAuthCurrentUserAnswer.setMessage(e.getMessage());
+            sosAuthCurrentUserAnswer.setIsAuthenticated(false);
+            return sosAuthCurrentUserAnswer;
+
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
