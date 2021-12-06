@@ -130,8 +130,8 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccount currentAccount = getCurrentAccount(sosWebserviceAuthenticationRecord.getAccessToken());
 
             if (currentAccount == null) {
-                LOGGER.debug("Access token " + accessToken + " is not valid");
-                return JOCDefaultResponse.responseStatusJSError("Access token " + accessToken + " is not valid");
+                LOGGER.debug("Account is not valid");
+                return JOCDefaultResponse.responseStatusJSError("Account is not valid");
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(currentAccount
@@ -296,7 +296,6 @@ public class SOSServicePermissionShiro {
         if (currentAccount != null) {
             account = currentAccount.getAccountname();
         }
-        LOGGER.debug(String.format("Method: %s, Account: %s, access_token: %s", "logout", account, accessToken));
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
         if (SOSAuthHelper.isShiro()) {
             try {
@@ -482,7 +481,6 @@ public class SOSServicePermissionShiro {
         SOSAuthCurrentAccount currentAccount = null;
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null && accessToken != null && accessToken.length() > 0) {
             currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-            LOGGER.debug(String.format("Method: %s, access_token: %s", "setCurrentUserfromAccessToken", accessToken));
         }
         resetTimeOut(currentAccount);
         return currentAccount;
@@ -514,17 +512,20 @@ public class SOSServicePermissionShiro {
         return accessTokenFromQuery;
     }
 
-    private String createAccount(SOSAuthCurrentAccount currentAccount, String identityServiceName, IdentityServiceTypes identityService)
-            throws Exception {
+    private String createAccount(SOSAuthCurrentAccount currentAccount, DBItemIamIdentityService dbItemIdentityService) throws Exception {
         if (Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             Globals.jocWebserviceDataContainer.setCurrentAccountsList(new SOSAuthCurrentAccountsList());
         }
-        Globals.identityServices = new SOSIdentityService(identityServiceName, identityService);
+
+        IdentityServiceTypes identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
+        String identityServiceName = dbItemIdentityService.getIdentityServiceName();
+        Globals.identityServices = new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+                identityServiceType);
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
 
         ISOSLogin sosLogin = null;
 
-        switch (identityService) {
+        switch (identityServiceType) {
         case SHIRO:
             SOSHibernateSession sosHibernateSession = null;
             try {
@@ -562,12 +563,10 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             sosShiroCurrentUserAnswer.setIsAuthenticated(false);
             sosShiroCurrentUserAnswer.setMessage(sosLogin.getMsg());
-            sosShiroCurrentUserAnswer.setIdentityService(identityService.name() + ":" + identityServiceName);
+            sosShiroCurrentUserAnswer.setIdentityService(identityServiceType.name() + ":" + identityServiceName);
             currentAccount.setCurrentSubject(null);
             throw new JocAuthenticationException(sosShiroCurrentUserAnswer);
         }
-
-        resetTimeOut(currentAccount);
 
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
         String accessToken = sosSessionHandler.getAccessToken().toString();
@@ -575,8 +574,10 @@ public class SOSServicePermissionShiro {
         currentAccount.setAccessToken(identityServiceName, accessToken);
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().addAccount(currentAccount);
 
+        resetTimeOut(currentAccount);
+
         ISOSSecurityConfiguration sosSecurityConfiguration;
-        switch (identityService) {
+        switch (identityServiceType) {
         case SHIRO:
             sosSecurityConfiguration = new SOSSecurityConfiguration();
             break;
@@ -584,7 +585,7 @@ public class SOSServicePermissionShiro {
             sosSecurityConfiguration = new SOSSecurityDBConfiguration();
         }
 
-        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null,identityServiceName);
+        SecurityConfiguration securityConfiguration = sosSecurityConfiguration.readConfiguration(null, identityServiceName);
         currentAccount.setRoles(securityConfiguration);
 
         Permissions sosPermissionJocCockpitControllers = sosPermissionsCreator.createJocCockpitPermissionControllerObjectList(securityConfiguration);
@@ -656,30 +657,37 @@ public class SOSServicePermissionShiro {
             try {
 
                 for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
-                    msg = createAccount(currentAccount, dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(
-                            dbItemIamIdentityService.getIdentityServiceType()));
+                    msg = createAccount(currentAccount, dbItemIamIdentityService);
+                    if (!msg.isEmpty()) {
+                        LOGGER.info("Login with required Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " failed." + msg);
+
+                    }
                 }
 
                 if (currentAccount.getCurrentSubject() == null) {
                     filter.setRequired(false);
                     listOfIdentityServices = iamIdentityServiceDBLayer.getIdentityServiceList(filter, 0);
                     if (listOfIdentityServices.size() == 0) {
+                        LOGGER.info("No Identity Service is configured. Using SHIRO as the default identity service");
                         DBItemIamIdentityService dbItemIamIdentityService = new DBItemIamIdentityService();
                         dbItemIamIdentityService.setDisabled(false);
-                        dbItemIamIdentityService.setId(1L);
                         dbItemIamIdentityService.setIdentityServiceName("shiro");
                         dbItemIamIdentityService.setIdentityServiceType("SHIRO");
                         dbItemIamIdentityService.setOrdering(1);
                         dbItemIamIdentityService.setRequierd(false);
+                        sosHibernateSession.setAutoCommit(false);
+                        sosHibernateSession.beginTransaction();
+                        sosHibernateSession.save(dbItemIamIdentityService);
+                        sosHibernateSession.commit();
                         listOfIdentityServices.add(dbItemIamIdentityService);
                     }
 
                     msg = "";
                     for (DBItemIamIdentityService dbItemIamIdentityService : listOfIdentityServices) {
                         try {
-                            msg = createAccount(currentAccount, dbItemIamIdentityService.getIdentityServiceName(), IdentityServiceTypes.fromValue(
-                                    dbItemIamIdentityService.getIdentityServiceType()));
+                            msg = createAccount(currentAccount, dbItemIamIdentityService);
                             if (msg.isEmpty()) {
+                                LOGGER.info("Login with Identity Service " + dbItemIamIdentityService.getIdentityServiceName() + " successful.");
                                 break;
                             }
 
@@ -696,7 +704,7 @@ public class SOSServicePermissionShiro {
             SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
             if (currentAccount.getCurrentSubject() == null || !currentAccount.getCurrentSubject().isAuthenticated()) {
                 sosAuthCurrentUserAnswer.setIsAuthenticated(false);
-                sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with user: %s password:*******", msg, currentAccount
+                sosAuthCurrentUserAnswer.setMessage(String.format("%s: Could not login with account: %s password:*******", msg, currentAccount
                         .getAccountname()));
                 throw new JocAuthenticationException(sosAuthCurrentUserAnswer);
             }
@@ -715,13 +723,20 @@ public class SOSServicePermissionShiro {
                     .getIdentityServiceName());
             sosAuthCurrentUserAnswer.setMessage(msg);
 
-            LOGGER.info("CallerIpAddress=" + currentAccount.getCallerIpAddress());
+            LOGGER.debug("CallerIpAddress=" + currentAccount.getCallerIpAddress());
 
             boolean enableTouch = "true".equals(Globals.sosCockpitProperties.getProperty(WebserviceConstants.ENABLE_SESSION_TOUCH,
                     WebserviceConstants.ENABLE_SESSION_TOUCH_DEFAULT));
             sosAuthCurrentUserAnswer.setEnableTouch(enableTouch);
 
             return sosAuthCurrentUserAnswer;
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            SOSAuthCurrentAccountAnswer sosAuthCurrentUserAnswer = new SOSAuthCurrentAccountAnswer();
+            sosAuthCurrentUserAnswer.setMessage(e.getMessage());
+            sosAuthCurrentUserAnswer.setIsAuthenticated(false);
+            return sosAuthCurrentUserAnswer;
+
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
@@ -737,7 +752,6 @@ public class SOSServicePermissionShiro {
         }
         Globals.jocTimeZone = TimeZone.getDefault();
         Globals.setProperties();
-        // SOSHibernateSession sosHibernateSession = null;
 
         if (basicAuthorization == null || basicAuthorization.isEmpty()) {
             if (user == null) {
@@ -772,8 +786,7 @@ public class SOSServicePermissionShiro {
             sosAuthCurrentUserAnswer.setCallerHostName(request.getRemoteHost());
         }
 
-        LOGGER.debug(String.format("Method: %s, User: %s, access_token: %s", "login", currentAccount.getAccountname(), currentAccount
-                .getAccessToken()));
+        LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
 
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
 

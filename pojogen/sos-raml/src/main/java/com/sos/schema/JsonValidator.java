@@ -188,6 +188,8 @@ public class JsonValidator {
             // utilities
             put("com.sos.joc.model.dailyplan.RelativeDatesConverter", "orderManagement/dailyplan/relativeDatesConverter-schema.json");
 
+            // auth            
+            put("com.sos.joc.model.security.IdentityServiceFilter", "security/identityServiceFilter-schema.json");
             // put("com.sos.joc.model.publish.RedeployFilter", "publish/redeploy-schema.json");
 
             // TODO complete the map

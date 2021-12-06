@@ -1,14 +1,12 @@
 
 package com.sos.joc.model.dailyplan.generate;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.sos.joc.model.audit.AuditParams;
-import com.sos.joc.model.dailyplan.generate.common.GenerateSelector;
+import com.sos.joc.model.dailyplan.generate.items.PathItem;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -23,9 +21,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "controllerIds",
     "dailyPlanDate",
-    "selector",
+    "schedulePaths",
+    "workflowPaths",
     "overwrite",
     "withSubmit",
     "auditLog"
@@ -36,30 +34,39 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
     private String controllerId;
-    @JsonProperty("controllerIds")
-    private List<String> controllerIds = new ArrayList<String>();
     /**
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
     @JsonPropertyDescription("ISO date YYYY-MM-DD")
     private String dailyPlanDate;
     /**
-     * Daily Plan  Order Filter Definition
+     * Daily Plan  Path Item Definition
      * <p>
-     * Define the selector to generate orders for the daily plan
+     * Define the path item of the selector to generate orders for the daily plan
      * 
      */
-    @JsonProperty("selector")
-    @JsonPropertyDescription("Define the selector to generate orders for the daily plan")
-    private GenerateSelector selector;
+    @JsonProperty("schedulePaths")
+    @JsonPropertyDescription("Define the path item of the selector to generate orders for the daily plan")
+    private PathItem schedulePaths;
+    /**
+     * Daily Plan  Path Item Definition
+     * <p>
+     * Define the path item of the selector to generate orders for the daily plan
+     * 
+     */
+    @JsonProperty("workflowPaths")
+    @JsonPropertyDescription("Define the path item of the selector to generate orders for the daily plan")
+    private PathItem workflowPaths;
     /**
      * overwrite parameter
      * <p>
@@ -91,6 +98,7 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -102,6 +110,7 @@ public class GenerateRequest {
      * controllerId
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("controllerId")
@@ -109,20 +118,11 @@ public class GenerateRequest {
         this.controllerId = controllerId;
     }
 
-    @JsonProperty("controllerIds")
-    public List<String> getControllerIds() {
-        return controllerIds;
-    }
-
-    @JsonProperty("controllerIds")
-    public void setControllerIds(List<String> controllerIds) {
-        this.controllerIds = controllerIds;
-    }
-
     /**
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -134,6 +134,7 @@ public class GenerateRequest {
      * date
      * <p>
      * ISO date YYYY-MM-DD
+     * (Required)
      * 
      */
     @JsonProperty("dailyPlanDate")
@@ -142,25 +143,47 @@ public class GenerateRequest {
     }
 
     /**
-     * Daily Plan  Order Filter Definition
+     * Daily Plan  Path Item Definition
      * <p>
-     * Define the selector to generate orders for the daily plan
+     * Define the path item of the selector to generate orders for the daily plan
      * 
      */
-    @JsonProperty("selector")
-    public GenerateSelector getSelector() {
-        return selector;
+    @JsonProperty("schedulePaths")
+    public PathItem getSchedulePaths() {
+        return schedulePaths;
     }
 
     /**
-     * Daily Plan  Order Filter Definition
+     * Daily Plan  Path Item Definition
      * <p>
-     * Define the selector to generate orders for the daily plan
+     * Define the path item of the selector to generate orders for the daily plan
      * 
      */
-    @JsonProperty("selector")
-    public void setSelector(GenerateSelector selector) {
-        this.selector = selector;
+    @JsonProperty("schedulePaths")
+    public void setSchedulePaths(PathItem schedulePaths) {
+        this.schedulePaths = schedulePaths;
+    }
+
+    /**
+     * Daily Plan  Path Item Definition
+     * <p>
+     * Define the path item of the selector to generate orders for the daily plan
+     * 
+     */
+    @JsonProperty("workflowPaths")
+    public PathItem getWorkflowPaths() {
+        return workflowPaths;
+    }
+
+    /**
+     * Daily Plan  Path Item Definition
+     * <p>
+     * Define the path item of the selector to generate orders for the daily plan
+     * 
+     */
+    @JsonProperty("workflowPaths")
+    public void setWorkflowPaths(PathItem workflowPaths) {
+        this.workflowPaths = workflowPaths;
     }
 
     /**
@@ -231,12 +254,12 @@ public class GenerateRequest {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("controllerIds", controllerIds).append("dailyPlanDate", dailyPlanDate).append("selector", selector).append("overwrite", overwrite).append("withSubmit", withSubmit).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("dailyPlanDate", dailyPlanDate).append("schedulePaths", schedulePaths).append("workflowPaths", workflowPaths).append("overwrite", overwrite).append("withSubmit", withSubmit).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(dailyPlanDate).append(controllerId).append(auditLog).append(controllerIds).append(withSubmit).append(selector).append(overwrite).toHashCode();
+        return new HashCodeBuilder().append(schedulePaths).append(dailyPlanDate).append(controllerId).append(auditLog).append(withSubmit).append(workflowPaths).append(overwrite).toHashCode();
     }
 
     @Override
@@ -248,7 +271,7 @@ public class GenerateRequest {
             return false;
         }
         GenerateRequest rhs = ((GenerateRequest) other);
-        return new EqualsBuilder().append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(controllerIds, rhs.controllerIds).append(withSubmit, rhs.withSubmit).append(selector, rhs.selector).append(overwrite, rhs.overwrite).isEquals();
+        return new EqualsBuilder().append(schedulePaths, rhs.schedulePaths).append(dailyPlanDate, rhs.dailyPlanDate).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(withSubmit, rhs.withSubmit).append(workflowPaths, rhs.workflowPaths).append(overwrite, rhs.overwrite).isEquals();
     }
 
 }

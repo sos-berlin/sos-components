@@ -211,14 +211,14 @@ public class SOSPermissionsCreator {
 
     }
 
-    private SOSPermissionRoles getRolesFromDb() throws SOSHibernateException {
+    private SOSPermissionRoles getRolesFromDb(Long identityServiceId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         ObjectFactory o = new ObjectFactory();
         roles = o.createSOSPermissionRoles();
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSPermissionCreator");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamRole> listOfRoles = iamAccountDBLayer.getListOfAllRoles();
+            List<DBItemIamRole> listOfRoles = iamAccountDBLayer.getListOfAllRoles(identityServiceId);
             for (DBItemIamRole dbItemIamRole : listOfRoles) {
                 addRole(roles.getSOSPermissionRole(), dbItemIamRole.getRoleName(), false);
             }
@@ -236,7 +236,7 @@ public class SOSPermissionsCreator {
                 return getRolesFromShiro();
             } else {
                 try {
-                    return getRolesFromDb();
+                    return getRolesFromDb(Globals.identityServices.getIdentityServiceId());
                 } catch (SOSHibernateException e) {
                     
                 }
