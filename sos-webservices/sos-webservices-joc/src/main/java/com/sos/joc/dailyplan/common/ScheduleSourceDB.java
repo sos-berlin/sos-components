@@ -14,16 +14,16 @@ import com.sos.joc.Globals;
 import com.sos.joc.dailyplan.db.DBLayerSchedules;
 import com.sos.joc.dailyplan.db.FilterSchedules;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.model.dailyplan.generate.common.GenerateSelector;
+import com.sos.joc.model.dailyplan.generate.GenerateRequest;
 
 @Deprecated
 public class ScheduleSourceDB {
 
-    private GenerateSelector selector;
+    private GenerateRequest request;
     private boolean useAllSchedules;
 
-    public ScheduleSourceDB(GenerateSelector selector) {
-        this.selector = selector;
+    public ScheduleSourceDB(GenerateRequest request) {
+        this.request = request;
         this.useAllSchedules = true;
     }
 
@@ -36,12 +36,12 @@ public class ScheduleSourceDB {
             session = Globals.createSosHibernateStatelessConnection("ScheduleSourceDB");
             DBLayerSchedules dbLayer = new DBLayerSchedules(session);
 
-            filter.setFolders(selector.getFolders());
-            if (selector.getWorkflowPaths() != null) {
-                filter.setWorkflowNames(selector.getWorkflowPaths().stream().map(pathToName).distinct().collect(Collectors.toList()));
+            // filter.setFolders(selector.getFolders());
+            if (request.getWorkflowPaths() != null && request.getWorkflowPaths().getSingles() != null) {
+                filter.setWorkflowNames(request.getWorkflowPaths().getSingles().stream().map(pathToName).distinct().collect(Collectors.toList()));
             }
-            if (selector.getSchedulePaths() != null) {
-                filter.setScheduleNames(selector.getSchedulePaths().stream().map(pathToName).distinct().collect(Collectors.toList()));
+            if (request.getSchedulePaths() != null && request.getSchedulePaths().getSingles() != null) {
+                filter.setScheduleNames(request.getSchedulePaths().getSingles().stream().map(pathToName).distinct().collect(Collectors.toList()));
             }
             List<DBItemInventoryReleasedConfiguration> items = dbLayer.getSchedules(filter, 0);
             session.close();
