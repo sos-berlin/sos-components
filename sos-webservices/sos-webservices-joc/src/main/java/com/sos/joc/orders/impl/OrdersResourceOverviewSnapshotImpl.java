@@ -170,18 +170,13 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                 Set<JOrder> freshOrderSet = freshOrders.collect(Collectors.toSet());
 
                 Set<OrderId> blockedOrderIds = freshOrderSet.stream().filter(o -> {
-                    Optional<Instant> scheduledFor = o.scheduledFor();
-                    return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
+                    Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                    return scheduledFor != null && scheduledFor.isBefore(now);
                 }).map(o -> o.id()).collect(Collectors.toSet());
 
                 Set<OrderId> waitingForAdmissionOrderIds = OrdersHelper.getWaitingForAdmissionOrderIds(blockedOrderIds, controllerState);
                 blockedOrderIds.removeAll(waitingForAdmissionOrderIds);
                 numOfWaitingForAdmissionOrders = waitingForAdmissionOrderIds.size();
-
-                // numOfBlockedOrders = freshOrderSet.stream().filter(o -> {
-                // Optional<Instant> scheduledFor = o.scheduledFor();
-                // return scheduledFor.isPresent() && scheduledFor.get().isBefore(now);
-                // }).map(o -> o.id().string().substring(0, OrdersHelper.mainOrderIdLength)).distinct().mapToInt(item -> 1).sum();
 
                 numOfBlockedOrders = blockedOrderIds.stream().map(oId -> OrdersHelper.getCyclicOrderIdMainPart(oId.string())).distinct()
                         .mapToInt(item -> 1).sum();
@@ -199,8 +194,8 @@ public class OrdersResourceOverviewSnapshotImpl extends JOCResourceImpl implemen
                     Instant dateToInstant = JobSchedulerDate.getInstantFromDateStr(dateTo, false, body.getTimeZone());
                     final Instant until = (dateToInstant.isBefore(now)) ? now : dateToInstant;
                     Predicate<JOrder> dateToFilter = o -> {
-                        Optional<Instant> scheduledFor = o.scheduledFor();
-                        return !scheduledFor.isPresent() || !scheduledFor.get().isAfter(until);
+                        Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                        return scheduledFor == null || !scheduledFor.isAfter(until);
                     };
                     numOfFreshOrders = freshOrderSet.stream().filter(dateToFilter).map(o -> OrdersHelper.getCyclicOrderIdMainPart(o.id().string()))
                             .distinct().mapToInt(e -> 1).sum();

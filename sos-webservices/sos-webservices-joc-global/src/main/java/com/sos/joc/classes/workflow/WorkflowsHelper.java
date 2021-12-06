@@ -649,8 +649,9 @@ public class WorkflowsHelper {
                 final Instant until = (dateToInstant.isBefore(surveyInstant)) ? surveyInstant : dateToInstant;
                 dateToFilter = o -> {
                     if (!o.asScala().isSuspended() && OrderStateText.SCHEDULED.equals(OrdersHelper.getGroupedState(o.asScala().state().getClass()))) {
-                        if (o.scheduledFor().isPresent() && o.scheduledFor().get().isAfter(until)) {
-                            if (o.scheduledFor().get().toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
+                        Instant scheduledFor = OrdersHelper.getScheduledForInstant(o);
+                        if (scheduledFor != null && scheduledFor.isAfter(until)) {
+                            if (scheduledFor.toEpochMilli() == JobSchedulerDate.NEVER_MILLIS.longValue()) {
                                 return true;
                             }
                             return false;
@@ -679,7 +680,7 @@ public class WorkflowsHelper {
         Function1<Order<Order.State>, Object> notCycledOrderFilter = JOrderPredicates.not(cycledOrderFilter);
         
         Function1<Order<Order.State>, Object> blockedFilter = JOrderPredicates.and(JOrderPredicates.byOrderState(Order.Fresh$.class), o -> !o
-                .isSuspended() && !o.scheduledFor().isEmpty() && o.scheduledFor().get().toEpochMilli() < surveyDateMillis);
+                .isSuspended() && OrdersHelper.getScheduledForMillis(o, surveyDateMillis) < surveyDateMillis);
 
         Set<JOrder> blockedOrders = currentstate.ordersBy(JOrderPredicates.and(workflowFilter, blockedFilter)).collect(Collectors.toSet());
         ConcurrentMap<OrderId, JOrder> blockedButWaitingForAdmissionOrders = OrdersHelper.getWaitingForAdmissionOrders(blockedOrders, currentstate);
@@ -709,15 +710,17 @@ public class WorkflowsHelper {
         if (order.asScala().isSuspended() && !(OrderStateText.CANCELLED.equals(groupedState) || OrderStateText.FINISHED.equals(groupedState))) {
             groupedState = OrderStateText.SUSPENDED;
         }
-        if (OrderStateText.SCHEDULED.equals(groupedState) && order.scheduledFor().isPresent()) {
-            Instant scheduledInstant = order.scheduledFor().get();
-            if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
-                groupedState = OrderStateText.PENDING;
-            } else if (scheduledInstant.isBefore(surveyInstant)) {
-                if (blockedButWaitingForAdmissionOrderIds.contains(order.id())) {
-                    groupedState = OrderStateText.INPROGRESS;
-                } else {
-                    groupedState = OrderStateText.BLOCKED;
+        if (OrderStateText.SCHEDULED.equals(groupedState)) {
+            Instant scheduledInstant = OrdersHelper.getScheduledForInstant(order);
+            if (scheduledInstant != null) {
+                if (JobSchedulerDate.NEVER_MILLIS.longValue() == scheduledInstant.toEpochMilli()) {
+                    groupedState = OrderStateText.PENDING;
+                } else if (scheduledInstant.isBefore(surveyInstant)) {
+                    if (blockedButWaitingForAdmissionOrderIds.contains(order.id())) {
+                        groupedState = OrderStateText.INPROGRESS;
+                    } else {
+                        groupedState = OrderStateText.BLOCKED;
+                    }
                 }
             }
         }

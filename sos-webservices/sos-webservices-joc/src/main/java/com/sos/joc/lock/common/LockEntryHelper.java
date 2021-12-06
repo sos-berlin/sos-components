@@ -111,8 +111,7 @@ public class LockEntryHelper {
             if (controllerState != null) {
                 if (compact != Boolean.TRUE) {
                     Long surveyDateMillis = controllerState.instant().toEpochMilli();
-                    ToLongFunction<JOrder> compareScheduleFor = o -> o.scheduledFor().isPresent() ? o.scheduledFor().get().toEpochMilli()
-                            : surveyDateMillis;
+                    ToLongFunction<JOrder> compareScheduleFor =  OrdersHelper.getCompareScheduledFor(surveyDateMillis);
 
                     List<JOrder> lockJOrders = controllerState.ordersBy(o -> lockOrderIds.contains(o.id())).sorted(Comparator.comparingLong(
                             compareScheduleFor).reversed()).collect(Collectors.toList());

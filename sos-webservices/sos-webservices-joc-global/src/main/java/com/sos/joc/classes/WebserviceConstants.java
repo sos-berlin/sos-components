@@ -37,7 +37,6 @@ public class WebserviceConstants {
     public static final String WAITING_FOR_PROCESS = "waiting_for_process";
     public static final String ENABLE_SESSION_TOUCH = "ENABLE_SESSION_TOUCH";
     public static final String ENABLE_SESSION_TOUCH_DEFAULT = "true";
-    public static final String CYCLIC_ORDER_ID_REGEX = ".*#C[0-9]+-.*";
     public static final int DEFAULT_LIMIT = 30;
     public static final int HISTORY_RESULTSET_LIMIT = 10000;
     

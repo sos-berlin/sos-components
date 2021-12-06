@@ -20,7 +20,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "TYPE",
     "noticeId",
-    "cycleState"
+    "cycleState",
+    "subagentId"
 })
 public class OrderState {
 
@@ -36,12 +37,14 @@ public class OrderState {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
-    @JsonPropertyDescription("set if state == BetweenCycles")
+    @JsonPropertyDescription("set if state == BetweenCycles or processing inside a cycle")
     private OrderCycleState cycleState;
+    @JsonProperty("subagentId")
+    private String subagentId;
 
     /**
      * No args constructor for use in serialization
@@ -52,15 +55,17 @@ public class OrderState {
 
     /**
      * 
+     * @param subagentId
      * @param tYPE
      * @param noticeId
      * @param cycleState
      */
-    public OrderState(String tYPE, String noticeId, OrderCycleState cycleState) {
+    public OrderState(String tYPE, String noticeId, OrderCycleState cycleState, String subagentId) {
         super();
         this.tYPE = tYPE;
         this.noticeId = noticeId;
         this.cycleState = cycleState;
+        this.subagentId = subagentId;
     }
 
     @JsonProperty("TYPE")
@@ -94,7 +99,7 @@ public class OrderState {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
@@ -105,7 +110,7 @@ public class OrderState {
     /**
      * OrderCycleState
      * <p>
-     * set if state == BetweenCycles
+     * set if state == BetweenCycles or processing inside a cycle
      * 
      */
     @JsonProperty("cycleState")
@@ -113,14 +118,24 @@ public class OrderState {
         this.cycleState = cycleState;
     }
 
+    @JsonProperty("subagentId")
+    public String getSubagentId() {
+        return subagentId;
+    }
+
+    @JsonProperty("subagentId")
+    public void setSubagentId(String subagentId) {
+        this.subagentId = subagentId;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).append("cycleState", cycleState).toString();
+        return new ToStringBuilder(this).append("tYPE", tYPE).append("noticeId", noticeId).append("cycleState", cycleState).append("subagentId", subagentId).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(tYPE).append(noticeId).append(cycleState).toHashCode();
+        return new HashCodeBuilder().append(subagentId).append(tYPE).append(noticeId).append(cycleState).toHashCode();
     }
 
     @Override
@@ -132,7 +147,7 @@ public class OrderState {
             return false;
         }
         OrderState rhs = ((OrderState) other);
-        return new EqualsBuilder().append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).append(cycleState, rhs.cycleState).isEquals();
+        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(tYPE, rhs.tYPE).append(noticeId, rhs.noticeId).append(cycleState, rhs.cycleState).isEquals();
     }
 
 }

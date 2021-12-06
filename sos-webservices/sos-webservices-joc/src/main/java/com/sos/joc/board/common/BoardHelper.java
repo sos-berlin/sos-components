@@ -100,7 +100,7 @@ public class BoardHelper {
         item.setState(SyncStateHelper.getState(stateText));
         item.setNumOfExpectingOrders(expectings.values().stream().mapToInt(List::size).sum());
 
-        ToLongFunction<JOrder> compareScheduleFor = o -> o.scheduledFor().isPresent() ? o.scheduledFor().get().toEpochMilli() : surveyDateMillis;
+        ToLongFunction<JOrder> compareScheduleFor = OrdersHelper.getCompareScheduledFor(surveyDateMillis);
         List<Notice> notices = new ArrayList<>();
 
         expectings.forEach((noticeId, jOrders) -> {
