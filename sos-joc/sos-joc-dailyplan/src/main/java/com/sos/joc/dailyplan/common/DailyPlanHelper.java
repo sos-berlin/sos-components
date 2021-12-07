@@ -31,6 +31,18 @@ public class DailyPlanHelper {
         return calendar.getTime();
     }
 
+    // TODO move to SOSPath (see duplicate in HistoryUtil)
+    public static String getFolderFromPath(String path) {
+        if (!path.startsWith("/")) {
+            return "/";
+        }
+        int li = path.lastIndexOf("/");
+        if (li == 0) {
+            return path.substring(0, 1);
+        }
+        return li > -1 ? path.substring(0, li) : path;
+    }
+
     private static String getDailyPlanDateAsString(Long startTime, String timeZone) throws SOSInvalidDataException {
         java.util.Calendar calendar = java.util.Calendar.getInstance(TimeZone.getTimeZone(UTC));
         calendar.setTime(new Date(startTime));
@@ -192,7 +204,8 @@ public class DailyPlanHelper {
         return orderId;
     }
 
-    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone) throws SOSInvalidDataException {
+    public static String buildOrderId(Schedule schedule, VariableSet variableSet, Long startTime, Integer startMode, String timeZone)
+            throws SOSInvalidDataException {
         String orderName = "";
         if ((variableSet.getOrderName() == null) || (variableSet.getOrderName().isEmpty())) {
             orderName = Paths.get(schedule.getPath()).getFileName().toString();

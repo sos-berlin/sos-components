@@ -55,7 +55,7 @@ public class MonitorService extends AJocClusterService {
         } catch (Exception e) {
             return JocCluster.getErrorAnswer(e);
         } finally {
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
         }
     }
 
@@ -68,7 +68,7 @@ public class MonitorService extends AJocClusterService {
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
-        AJocClusterService.clearLogger();
+        // AJocClusterService.clearAllLoggers();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 

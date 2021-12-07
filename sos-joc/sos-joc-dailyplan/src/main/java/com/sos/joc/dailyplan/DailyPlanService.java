@@ -67,7 +67,7 @@ public class DailyPlanService extends AJocClusterService {
             LOGGER.error(e.toString(), e);
             return JocCluster.getErrorAnswer(e);
         } finally {
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
         }
     }
 
@@ -79,7 +79,7 @@ public class DailyPlanService extends AJocClusterService {
             timer.cancel();
             timer.purge();
         }
-        AJocClusterService.clearLogger();
+        // AJocClusterService.clearAllLoggers();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 

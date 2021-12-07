@@ -88,14 +88,14 @@ public class YadeHandler {
                 if (session != null) {
                     session.close();
                 }
-                AJocClusterService.clearLogger();
+                // AJocClusterService.clearAllLoggers();
             }
         });
         save.thenAccept(transferId -> {
             if (transferId != null) {
                 AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug("[stored]transferId=" + transferId);
-                AJocClusterService.clearLogger();
+                // AJocClusterService.clearAllLoggers();
                 postEventTransferHistoryTerminated(transferId);
             }
         });

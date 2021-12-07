@@ -1,163 +1,186 @@
 package com.sos.joc.dailyplan.db;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
-import com.sos.commons.util.SOSString;
-import com.sos.inventory.model.schedule.Schedule;
-import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
-import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
-public class DBLayerSchedules {
+public class DBLayerSchedules extends DBLayer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DBLayerSchedules.class);
-    private final SOSHibernateSession session;
+    private static final long serialVersionUID = 1L;
 
     public DBLayerSchedules(SOSHibernateSession session) {
-        this.session = session;
+        super(session);
     }
 
     public List<DBItemInventoryReleasedConfiguration> getAllSchedules() throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
         hql.append("where type=:type");
 
-        Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
         query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
-        return session.getResultList(query);
+        return getSession().getResultList(query);
     }
 
-    private String getWhere(FilterSchedules filter) {
-        String where = " type = " + ConfigurationType.SCHEDULE.intValue();
-        String and = " and (";
-        String kzu = "";
+    public List<DBItemInventoryReleasedConfiguration> getSchedules(Set<Folder> scheduleFolders, Set<String> scheduleSingles)
+            throws SOSHibernateException {
+        boolean hasFolders = scheduleFolders != null && scheduleFolders.size() > 0;
+        boolean hasSingles = scheduleSingles != null && scheduleSingles.size() > 0;
 
-        if (filter.getScheduleNames() != null && filter.getScheduleNames().size() > 0) {
-            where += and + SearchStringHelper.getStringListSql(filter.getScheduleNames(), "name");
-            and = " or ";
-            kzu = ")";
-        }
-
-        if (filter.getFolders() != null && filter.getFolders().size() > 0) {
-            where += and + "(";
-            kzu = ")";
-            for (Folder filterFolder : filter.getFolders()) {
-                if (filterFolder.getRecursive()) {
-                    String likeFolder = (filterFolder.getFolder() + "/%").replaceAll("//+", "/");
-                    where += " ( folder ='" + filterFolder.getFolder() + "' or folder like '" + likeFolder + "') ";
-                } else {
-                    where += String.format(" folder %s '" + filterFolder.getFolder() + "'", SearchStringHelper.getSearchOperator(filterFolder
-                            .getFolder()));
-                }
-                where += " or ";
-            }
-            where += " 0=1)";
-            and = " or ";
-        }
-
-        if (!"".equals(where.trim())) {
-            where = " where " + where + kzu;
-        }
-        return where;
-    }
-
-    public List<DBItemInventoryReleasedConfiguration> getSchedules(FilterSchedules filter, final int limit) throws SOSHibernateException,
-            JsonParseException, JsonMappingException, IOException {
-        boolean isDebugEnabled = LOGGER.isDebugEnabled();
-        if (filter.getWorkflowNames() != null && filter.getWorkflowNames().size() > 0) {
-            InventoryDBLayer dbLayer = new InventoryDBLayer(session);
-            List<DBItemInventoryReleasedConfiguration> result = dbLayer.getUsedReleasedSchedulesByWorkflowNames(filter.getWorkflowNames());
-
-            List<String> scheduleNames = filter.getScheduleNames();
-            if (scheduleNames == null) {
-                scheduleNames = new ArrayList<>();
-            }
-            if (result != null && result.size() > 0) {
-                for (DBItemInventoryReleasedConfiguration item : result) {
-                    if (scheduleNames.contains(item.getName())) {
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[schedulesByWorkflowNames][%s][skip][already added]%s", item.getName(), SOSString.toString(
-                                    item)));
-                        }
-                    } else {
-                        scheduleNames.add(item.getName());
-                        if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[schedulesByWorkflowNames][%s][added]%s", item.getName(), SOSString.toString(item)));
-                        }
-                    }
-                }
-            } else {
-                LOGGER.debug("[schedulesByWorkflowNames]not found");
-            }
-            filter.setScheduleNames(scheduleNames);
+        if (!hasFolders && !hasSingles) {
+            return getAllSchedules();
         }
 
         StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_RELEASED_CONFIGURATIONS).append(" ");
-        hql.append(getWhere(filter));
-        hql.append(filter.getOrderCriteria());
-        hql.append(filter.getSortMode());
-        Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(hql.toString());
-        if (limit > 0) {
-            query.setMaxResults(limit);
+        hql.append("where type=:type ");
+
+        // folders
+        Map<String, String> paramsFolder = new HashMap<>();
+        Map<String, String> paramsLikeFolder = new HashMap<>();
+        if (hasFolders) {
+            hql.append("and (");
+            int i = 0;
+            for (Folder folder : scheduleFolders) {
+                if (i > 0) {
+                    hql.append(" or ");
+                }
+                String paramNameFolder = "folder" + i;
+                if (folder.getRecursive()) {
+                    String paramNameLikeFolder = "likeFolder" + i;
+                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
+                } else {
+                    hql.append("folder=:").append(paramNameFolder).append(" ");
+                }
+                paramsFolder.put(paramNameFolder, folder.getFolder());
+                i++;
+            }
+            hql.append(") ");
         }
 
-        List<DBItemInventoryReleasedConfiguration> filtered = new ArrayList<DBItemInventoryReleasedConfiguration>();
-        ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        List<DBItemInventoryReleasedConfiguration> result = session.getResultList(query);
-        for (DBItemInventoryReleasedConfiguration item : result) {
-            Schedule schedule;
-            if (item.getSchedule() != null) {
-                schedule = item.getSchedule();
-            } else {
-                schedule = objectMapper.readValue(item.getContent(), Schedule.class);
-                schedule.setPath(item.getPath());
-            }
-            if (schedule == null) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[filtered][skip][schedule is null]%s", SOSString.toString(item)));
+        // single paths
+        Map<String, String> paramsPaths = new HashMap<>();
+        if (hasSingles) {
+            hql.append("and (");
+            int i = 0;
+            for (String single : scheduleSingles) {
+                if (i > 0) {
+                    hql.append(" or ");
                 }
-                continue;
+                String paramName = "path" + i;
+                hql.append("path=:").append(paramName).append(" ");
+                paramsPaths.put(paramName, single);
+                i++;
             }
+            hql.append(") ");
+        }
 
-            String path = WorkflowPaths.getPathOrNull(schedule.getWorkflowName());
-            if (path == null) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[filtered][skip][deployment path not found]%s", SOSString.toString(item)));
-                }
-            } else {
-                schedule.setWorkflowPath(path);
-                item.setSchedule(schedule);
-                filtered.add(item);
-            }
+        Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
+        if (hasFolders) {
+            paramsFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+            paramsLikeFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
         }
-        if (isDebugEnabled) {
-            for (DBItemInventoryReleasedConfiguration item : filtered) {
-                LOGGER.debug(String.format("[filtered]%s", SOSString.toString(item)));
-            }
+        if (hasSingles) {
+            paramsPaths.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
         }
-        return filtered;
+        return getSession().getResultList(query);
     }
 
+    public List<String> getWorkflowNames(String controllerId, Set<Folder> workflowFolders, Set<String> workflowSingles) throws SOSHibernateException {
+        boolean hasFolders = workflowFolders != null && workflowFolders.size() > 0;
+        boolean hasSingles = workflowSingles != null && workflowSingles.size() > 0;
+
+        if (!hasFolders && !hasSingles) {
+            return null; // getAllWorkflowNames(controllerId);
+        }
+
+        StringBuilder hql = new StringBuilder("select name from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(" ");
+        hql.append("where type=:type ");
+        hql.append("and controllerId=:controllerId ");
+
+        // folders
+        Map<String, String> paramsFolder = new HashMap<>();
+        Map<String, String> paramsLikeFolder = new HashMap<>();
+        if (hasFolders) {
+            hql.append("and (");
+            int i = 0;
+            for (Folder folder : workflowFolders) {
+                if (i > 0) {
+                    hql.append(" or ");
+                }
+                String paramNameFolder = "folder" + i;
+                if (folder.getRecursive()) {
+                    String paramNameLikeFolder = "likeFolder" + i;
+                    hql.append("(folder=:").append(paramNameFolder).append(" or folder like :").append(paramNameLikeFolder).append(") ");
+                    paramsLikeFolder.put(paramNameLikeFolder, (folder.getFolder() + "/%").replaceAll("//+", "/"));
+                } else {
+                    hql.append("folder=:").append(paramNameFolder).append(" ");
+                }
+                paramsFolder.put(paramNameFolder, folder.getFolder());
+                i++;
+            }
+            hql.append(") ");
+        }
+
+        // single paths
+        Map<String, String> paramsName = new HashMap<>();
+        if (hasSingles) {
+            hql.append("and (");
+            int i = 0;
+            for (String single : workflowSingles) {
+                if (i > 0) {
+                    hql.append(" or ");
+                }
+                String paramName = "name" + i;
+                hql.append("name=:").append(paramName).append(" ");
+                paramsName.put(paramName, single);
+                i++;
+            }
+            hql.append(") ");
+        }
+
+        Query<String> query = getSession().createQuery(hql.toString());
+        query.setParameter("type", DeployType.WORKFLOW.intValue());
+        query.setParameter("controllerId", controllerId);
+        if (hasFolders) {
+            paramsFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+            paramsLikeFolder.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+        }
+        if (hasSingles) {
+            paramsName.entrySet().stream().forEach(e -> {
+                query.setParameter(e.getKey(), e.getValue());
+            });
+        }
+        return getSession().getResultList(query);
+    }
+
+    @Deprecated
     public Map<String, String> getSchedulePathNameMap(List<String> scheduleNamesOrPaths) throws SOSHibernateException {
 
         if (scheduleNamesOrPaths == null || scheduleNamesOrPaths.isEmpty()) {
@@ -186,7 +209,7 @@ public class DBLayerSchedules {
 
             sql.append(" and type=:type");
 
-            Query<DBItemInventoryReleasedConfiguration> query = session.createQuery(sql);
+            Query<DBItemInventoryReleasedConfiguration> query = getSession().createQuery(sql);
             query.setParameter("type", ConfigurationType.SCHEDULE.intValue());
 
             if (namesAndPaths.containsKey(true)) { // paths
@@ -196,7 +219,7 @@ public class DBLayerSchedules {
                 query.setParameterList("names", namesAndPaths.get(false));
             }
 
-            List<DBItemInventoryReleasedConfiguration> resultset = session.getResultList(query);
+            List<DBItemInventoryReleasedConfiguration> resultset = getSession().getResultList(query);
             if (resultset == null || resultset.isEmpty()) {
                 return Collections.emptyMap();
             }

@@ -44,6 +44,7 @@ import com.sos.inventory.model.common.Variables;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.Globals;
+import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.calendar.FrequencyResolver;
 import com.sos.joc.classes.order.OrdersHelper;
 import com.sos.joc.classes.workflow.WorkflowPaths;
@@ -78,6 +79,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocError;
 import com.sos.joc.model.calendar.CalendarDatesFilter;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 
 class CalendarCacheItem {
@@ -164,7 +166,7 @@ public class DailyPlanRunner extends TimerTask {
                 }
             }
         }
-        AJocClusterService.clearLogger();
+        // AJocClusterService.clearAllLoggers();
     }
 
     /* service */
@@ -354,13 +356,25 @@ public class DailyPlanRunner extends TimerTask {
             session.close();
             session = null;
 
-            return convert(result, true);
+            return convert(result);
         } finally {
             Globals.disconnect(session);
         }
     }
 
-    public Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean onlyPlanOrderAutomatically) {
+    // service - use only with getPlanOrderAutomatically and not check the folder permissions
+    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items) {
+        return convert(items, true, false, null, null);
+    }
+
+    // DailyPlanOrdersGenerateImpl, SchedulesImpl
+    public Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, Set<Folder> permittedFolders,
+            Map<String, Boolean> checkedFolders) {
+        return convert(items, false, true, permittedFolders, checkedFolders);
+    }
+
+    private Collection<Schedule> convert(List<DBItemInventoryReleasedConfiguration> items, boolean onlyPlanOrderAutomatically,
+            boolean checkPermissions, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
         if (items == null || items.size() == 0) {
             return new ArrayList<Schedule>();
         }
@@ -393,6 +407,18 @@ public class DailyPlanRunner extends TimerTask {
                         .toString(item)));
                 continue;
             }
+            if (isDebugEnabled) {
+                LOGGER.debug(String.format("[%s][schedule=%s]workflow=%s", method, item.getPath(), path));
+            }
+            if (checkPermissions) {
+                if (!isWorkflowPermitted(path, permittedFolders, checkedFolders)) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][skip][not permitted]workflow=%s", method, path));
+                    }
+                    continue;
+                }
+            }
+
             if (onlyPlanOrderAutomatically && !schedule.getPlanOrderAutomatically()) {
                 if (isDebugEnabled) {
                     LOGGER.debug(String.format("[%s][skip][onlyPlanOrderAutomatically=true][schedule.getPlanOrderAutomatically=false]%s", method,
@@ -404,6 +430,16 @@ public class DailyPlanRunner extends TimerTask {
             schedule.setPath(item.getPath());
             schedule.setWorkflowPath(path);
             result.add(schedule);
+        }
+        return result;
+    }
+
+    private boolean isWorkflowPermitted(String workflowPath, Set<Folder> permittedFolders, Map<String, Boolean> checkedFolders) {
+        String folder = DailyPlanHelper.getFolderFromPath(workflowPath);
+        Boolean result = checkedFolders.get(folder);
+        if (result == null) {
+            result = JOCResourceImpl.canAdd(workflowPath, permittedFolders);
+            checkedFolders.put(folder, result);
         }
         return result;
     }
@@ -507,7 +543,7 @@ public class DailyPlanRunner extends TimerTask {
         return order;
     }
 
-    private void generateNonWorkingDays(String controllerId, Schedule o, Date date, String dateAsString) throws SOSMissingDataException,
+    private void generateNonWorkingDays(String controllerId, Schedule schedule, Date date, String dateAsString) throws SOSMissingDataException,
             SOSInvalidDataException, JsonParseException, JsonMappingException, DBMissingDataException, DBConnectionRefusedException,
             DBInvalidDataException, IOException, ParseException, JocConfigurationException, DBOpenSessionException, SOSHibernateException {
 
@@ -517,12 +553,12 @@ public class DailyPlanRunner extends TimerTask {
 
         Date nextDate = DailyPlanHelper.getNextDay(date, settings);
 
-        if (o.getNonWorkingDayCalendars() != null) {
+        if (schedule.getNonWorkingDayCalendars() != null) {
             FrequencyResolver fr = new FrequencyResolver();
-            for (AssignedNonWorkingDayCalendars calendars : o.getNonWorkingDayCalendars()) {
+            for (AssignedNonWorkingDayCalendars calendars : schedule.getNonWorkingDayCalendars()) {
                 if (isDebugEnabled) {
-                    LOGGER.debug(String.format("[%s][%s][%s]NonWorkingDayCalendar=%s", method, controllerId, dateAsString, calendars
-                            .getCalendarPath()));
+                    LOGGER.debug(String.format("[%s][%s][%s][%s]NonWorkingDayCalendar=%s", method, controllerId, dateAsString, schedule.getPath(),
+                            calendars.getCalendarPath()));
                 }
                 nonWorkingDays = new HashMap<String, String>();
 
@@ -530,8 +566,8 @@ public class DailyPlanRunner extends TimerTask {
                 try {
                     calendar = getCalendar(controllerId, calendars.getCalendarName(), ConfigurationType.NONWORKINGDAYSCALENDAR);
                 } catch (DBMissingDataException e) {
-                    LOGGER.warn(String.format("[%s][%s][%s][NonWorkingDayCalendar=%s][skip]not found", method, controllerId, dateAsString, calendars
-                            .getCalendarPath()));
+                    LOGGER.warn(String.format("[%s][%s][%s][%s][NonWorkingDayCalendar=%s][skip]not found", method, controllerId, dateAsString,
+                            schedule.getPath(), calendars.getCalendarPath()));
                     continue;
                 }
 
@@ -545,7 +581,7 @@ public class DailyPlanRunner extends TimerTask {
             Set<String> s = fr.getDates().keySet();
             for (String d : s) {
                 if (isTraceEnabled) {
-                    LOGGER.trace(String.format("[%s][%s][%s]Non working date=%s", method, controllerId, dateAsString, d));
+                    LOGGER.trace(String.format("[%s][%s][%s][%s]Non working date=%s", method, controllerId, dateAsString, schedule.getPath(), d));
                 }
                 nonWorkingDays.put(d, controllerId);
             }
@@ -588,6 +624,9 @@ public class DailyPlanRunner extends TimerTask {
                             date, schedule.getPath()));
                 }
             } else {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("[%s][%s][%s]schedule=%s", method, controllerId, date, schedule.getPath()));
+                }
                 generateNonWorkingDays(controllerId, schedule, dailyPlanDate, date);
 
                 for (AssignedCalendars assignedCalendar : schedule.getCalendars()) {
@@ -595,7 +634,8 @@ public class DailyPlanRunner extends TimerTask {
                         assignedCalendar.setTimeZone(UTC);
                     }
                     if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s]calendar=%s", method, controllerId, date, assignedCalendar.getCalendarName()));
+                        LOGGER.debug(String.format("[%s][%s][%s][%s]calendar=%s", method, controllerId, date, schedule.getPath(), assignedCalendar
+                                .getCalendarName()));
                     }
 
                     CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
@@ -609,16 +649,16 @@ public class DailyPlanRunner extends TimerTask {
                         try {
                             calendar = getCalendar(controllerId, assignedCalendar.getCalendarName(), ConfigurationType.WORKINGDAYSCALENDAR);
                         } catch (DBMissingDataException e) {
-                            LOGGER.warn(String.format("[%s][%s][%s][WorkingDayCalendar=%s][skip]not found", method, controllerId, date,
-                                    assignedCalendar.getCalendarName()));
+                            LOGGER.warn(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][skip]not found", method, controllerId, date, schedule
+                                    .getPath(), assignedCalendar.getCalendarName()));
                             continue;
                         }
                         calendarCacheItem.calendar = calendar;
                         calendarCache.put(assignedCalendar.getCalendarName() + "#" + schedule.getPath(), calendarCacheItem);
                     } else {
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, date, assignedCalendar
-                                    .getCalendarName(), SOSString.toString(calendarCacheItem)));
+                            LOGGER.debug(String.format("[%s][%s][%s][%s][WorkingDayCalendar=%s][cache]%s", method, controllerId, date, schedule
+                                    .getPath(), assignedCalendar.getCalendarName(), SOSString.toString(calendarCacheItem)));
                         }
                     }
                     PeriodResolver periodResolver = new PeriodResolver(settings);
@@ -643,15 +683,16 @@ public class DailyPlanRunner extends TimerTask {
                         periodResolver.addStartTimes(_period, dailyPlanDateAsString, assignedCalendar.getTimeZone());
                     }
 
+                    int plannedOrdersCount = 0;
                     for (String d : dates) {
                         if (isTraceEnabled) {
-                            LOGGER.trace(String.format("[%s][%s][%s][calendar=%s]date=%s", method, controllerId, date, assignedCalendar
-                                    .getCalendarName(), d));
+                            LOGGER.trace(String.format("[%s][%s][%s][%s][calendar=%s]date=%s", method, controllerId, date, schedule.getPath(),
+                                    assignedCalendar.getCalendarName(), d));
                         }
                         if (nonWorkingDays != null && nonWorkingDays.get(d) != null) {
                             if (isDebugEnabled) {
-                                LOGGER.debug(String.format("[%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day", method, controllerId,
-                                        date, assignedCalendar.getCalendarName(), d));
+                                LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][date=%s][skip]date is a non working day", method,
+                                        controllerId, date, schedule.getPath(), assignedCalendar.getCalendarName(), d));
                             }
                         } else {
                             Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
@@ -695,9 +736,15 @@ public class DailyPlanRunner extends TimerTask {
                                         plannedOrder.setOrderName(Paths.get(schedule.getPath()).getFileName().toString());
                                     }
                                     synchronizer.add(startupMode, plannedOrder, controllerId, date);
+                                    plannedOrdersCount++;
                                 }
                             }
                         }
+                    }
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s]%s planned orders", method, controllerId, date, schedule.getPath(),
+                                assignedCalendar.getCalendarName(), plannedOrdersCount));
                     }
                 }
             }

@@ -97,7 +97,7 @@ public class HistoryService extends AJocClusterService {
             createFactory(getJocConfig().getHibernateConfiguration(), controllers.size());
             handleLogsOnStart(mode);
             threadPool = Executors.newFixedThreadPool((controllers.size() + 1), new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER));
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
 
             for (ControllerConfiguration controllerConfig : controllers) {
                 HistoryControllerHandler controllerHandler = new HistoryControllerHandler(factory, config, controllerConfig, mailer, IDENTIFIER);
@@ -113,7 +113,7 @@ public class HistoryService extends AJocClusterService {
                         controllerHandler.start();
                         LOGGER.info(String.format("[%s][run]end", controllerHandler.getIdentifier()));
 
-                        AJocClusterService.clearLogger();
+                        // AJocClusterService.clearAllLoggers();
                     }
 
                 };
@@ -131,7 +131,7 @@ public class HistoryService extends AJocClusterService {
         try {
             AJocClusterService.setLogger(IDENTIFIER);
             LOGGER.info(String.format("[%s][%s]stop...", getIdentifier(), mode));
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
 
             int size = closeEventHandlers(mode);
 
@@ -200,7 +200,7 @@ public class HistoryService extends AJocClusterService {
                     h.start();
                 }
                 LOGGER.info(String.format("[%s][%s]end", controllerId, action));
-                AJocClusterService.clearLogger();
+                // AJocClusterService.clearAllLoggers();
             }
         };
         threadPool.submit(task);
@@ -218,7 +218,7 @@ public class HistoryService extends AJocClusterService {
         } catch (Exception ex) {
             LOGGER.error(ex.toString(), ex);
         } finally {
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
         }
     }
 
@@ -462,7 +462,7 @@ public class HistoryService extends AJocClusterService {
         int size = activeHandlers.size();
         AJocClusterService.setLogger(IDENTIFIER);
         LOGGER.info(String.format("[%s]found %s active handlers", method, size));
-        AJocClusterService.clearLogger();
+        // AJocClusterService.clearAllLoggers();
         if (size > 0) {
             // close all event handlers
             ExecutorService threadPool = Executors.newFixedThreadPool(size, new JocClusterThreadFactory(getThreadGroup(), IDENTIFIER + "-stop"));
@@ -476,20 +476,20 @@ public class HistoryService extends AJocClusterService {
                         LOGGER.info(String.format("[%s][%s]start...", method, h.getIdentifier()));
                         h.close();
                         LOGGER.info(String.format("[%s][%s]end", method, h.getIdentifier()));
-                        AJocClusterService.clearLogger();
+                        // AJocClusterService.clearAllLoggers();
                     }
                 };
                 threadPool.submit(thread);
             }
             AJocClusterService.setLogger(IDENTIFIER);
             JocCluster.shutdownThreadPool(mode, threadPool, AWAIT_TERMINATION_TIMEOUT_EVENTHANDLER);
-            AJocClusterService.clearLogger();
+            // AJocClusterService.clearAllLoggers();
             activeHandlers = new CopyOnWriteArrayList<>();
         } else {
             if (LOGGER.isDebugEnabled()) {
                 AJocClusterService.setLogger(IDENTIFIER);
                 LOGGER.debug(String.format("[%s][skip]already closed", method));
-                AJocClusterService.clearLogger();
+                // AJocClusterService.clearAllLoggers();
             }
         }
         return size;

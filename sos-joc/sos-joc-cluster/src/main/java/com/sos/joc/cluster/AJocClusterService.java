@@ -51,11 +51,19 @@ public abstract class AJocClusterService implements IJocClusterService {
         setLogger(ClusterServices.cluster.name());
     }
 
+    public static void removeLogger() {
+        removeLogger(ClusterServices.cluster.name());
+    }
+
     public static void setLogger(String identifier) {
         MDC.put("clusterService", "service-" + identifier);
     }
 
-    public static void clearLogger() {
+    public static void removeLogger(String identifier) {
+        MDC.remove("service-" + identifier);
+    }
+
+    public static void clearAllLoggers() {
         MDC.clear();
     }
 }
