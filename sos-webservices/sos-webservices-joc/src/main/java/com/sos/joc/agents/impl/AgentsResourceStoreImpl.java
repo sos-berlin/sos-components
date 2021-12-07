@@ -193,7 +193,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
     public JOCDefaultResponse clusterStore(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_STORE, filterBytes, accessToken);
+            initLogging(API_CLUSTER_STORE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
             StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();

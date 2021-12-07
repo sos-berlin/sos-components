@@ -11,7 +11,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface ISubAgentCommandResource {
 
     @POST
-    @Path("remove")
+    @Path("subagents/remove")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse remove(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);

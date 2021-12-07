@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
 
+import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
@@ -410,6 +411,25 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
+//    public List<DBItemInventorySubAgentInstance> getSubAgentInstances(List<String> subagentIds) {
+//        try {
+//            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where subAgentId in (:subagentIds)");
+//            Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
+//            query.setParameterList("subagentIds", subagentIds);
+//            List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
+//            if (result != null) {
+//                return result;
+//            }
+//            return Collections.emptyList();
+//        } catch (DBMissingDataException ex) {
+//            throw ex;
+//        } catch (SOSHibernateInvalidSessionException ex) {
+//            throw new DBConnectionRefusedException(ex);
+//        } catch (Exception ex) {
+//            throw new DBInvalidDataException(ex);
+//        }
+//    }
+    
     public Map<String, Map<SubagentDirectorType, DBItemInventorySubAgentInstance>> getDirectorInstances(Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -546,6 +566,22 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("subagentId", subagentId);
         return getSession().executeUpdate(query);
+    }
+    
+    public int deleteSubAgents(List<String> subagentIds) throws SOSHibernateException {
+        if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+            int j = 0;
+            for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                j += deleteSubAgents(SOSHibernate.getInClausePartition(i, subagentIds));
+            }
+            return j;
+        } else {
+            StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
+                    " where subAgentId in (:subagentIds)");
+            Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameterList("subagentIds", subagentIds);
+            return getSession().executeUpdate(query);
+        }
     }
     
     public boolean subAgentIdAlreadyExists(Collection<String> subAgentIds, String controllerId) throws DBInvalidDataException,

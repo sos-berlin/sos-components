@@ -1,6 +1,8 @@
 
 package com.sos.joc.model.agent;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,7 +13,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * sub agent (e.g. remove)
+ * sub agents (e.g. remove)
  * <p>
  * 
  * 
@@ -19,10 +21,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "subagentId",
+    "subagentIds",
     "auditLog"
 })
-public class SubAgentCommand {
+public class SubAgentsCommand {
 
     /**
      * controllerId
@@ -34,14 +36,12 @@ public class SubAgentCommand {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("subagentId")
-    private String subagentId;
+    @JsonProperty("subagentIds")
+    private List<String> subagentIds = new ArrayList<String>();
     /**
      * auditParams
      * <p>
@@ -76,27 +76,23 @@ public class SubAgentCommand {
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("subagentId")
-    public String getSubagentId() {
-        return subagentId;
+    @JsonProperty("subagentIds")
+    public List<String> getSubagentIds() {
+        return subagentIds;
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
      * (Required)
      * 
      */
-    @JsonProperty("subagentId")
-    public void setSubagentId(String subagentId) {
-        this.subagentId = subagentId;
+    @JsonProperty("subagentIds")
+    public void setSubagentIds(List<String> subagentIds) {
+        this.subagentIds = subagentIds;
     }
 
     /**
@@ -123,12 +119,12 @@ public class SubAgentCommand {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentId", subagentId).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("subagentIds", subagentIds).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(subagentId).append(controllerId).append(auditLog).toHashCode();
+        return new HashCodeBuilder().append(subagentIds).append(controllerId).append(auditLog).toHashCode();
     }
 
     @Override
@@ -136,11 +132,11 @@ public class SubAgentCommand {
         if (other == this) {
             return true;
         }
-        if ((other instanceof SubAgentCommand) == false) {
+        if ((other instanceof SubAgentsCommand) == false) {
             return false;
         }
-        SubAgentCommand rhs = ((SubAgentCommand) other);
-        return new EqualsBuilder().append(subagentId, rhs.subagentId).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
+        SubAgentsCommand rhs = ((SubAgentsCommand) other);
+        return new EqualsBuilder().append(subagentIds, rhs.subagentIds).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).isEquals();
     }
 
 }

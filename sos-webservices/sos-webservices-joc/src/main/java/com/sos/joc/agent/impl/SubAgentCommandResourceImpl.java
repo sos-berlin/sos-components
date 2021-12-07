@@ -2,6 +2,7 @@ package com.sos.joc.agent.impl;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Path;
 
@@ -11,11 +12,12 @@ import com.sos.joc.agent.resource.ISubAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.AgentCommand;
-import com.sos.joc.model.agent.SubAgentCommand;
+import com.sos.joc.exceptions.JocMissingLicenseException;
+import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
@@ -24,17 +26,22 @@ import js7.data.subagent.SubagentId;
 import js7.data_for_java.item.JUpdateItemOperation;
 import reactor.core.publisher.Flux;
 
-@Path("subagent")
+@Path("agent")
 public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISubAgentCommandResource {
 
-    private static String API_CALL_REMOVE = "./subagent/remove";
+    private static String API_CALL_REMOVE = "./agent/subagents/remove";
 
     @Override
     public JOCDefaultResponse remove(String accessToken, byte[] filterBytes) {
         try {
             initLogging(API_CALL_REMOVE, filterBytes, accessToken);
-            JsonValidator.validateFailFast(filterBytes, SubAgentCommand.class);
-            SubAgentCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentCommand.class);
+            
+            if (!JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+                throw new JocMissingLicenseException("missing license for Agent cluster");
+            }
+            
+            JsonValidator.validateFailFast(filterBytes, SubAgentsCommand.class);
+            SubAgentsCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentsCommand.class);
             
             String controllerId = subAgentCommand.getControllerId();
             JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getControllers().getManage());
@@ -44,9 +51,10 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
             
             storeAuditLog(subAgentCommand.getAuditLog(), subAgentCommand.getControllerId(), CategoryType.CONTROLLER);
             
-            JUpdateItemOperation subAgent = JUpdateItemOperation.deleteSimple(SubagentId.of(subAgentCommand.getSubagentId()));
+            Stream<JUpdateItemOperation> subAgents = subAgentCommand.getSubagentIds().stream().distinct().map(SubagentId::of).map(
+                    JUpdateItemOperation::deleteSimple);
             
-            ControllerApi.of(controllerId).updateItems(Flux.just(subAgent)).thenAccept(e -> {
+            ControllerApi.of(controllerId).updateItems(Flux.fromStream(subAgents)).thenAccept(e -> {
                 ProblemHelper.postProblemEventIfExist(e, accessToken, getJocError(), controllerId);
                 if (e.isRight()) {
                     SOSHibernateSession connection = null;
@@ -55,7 +63,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
                         connection.setAutoCommit(false);
                         Globals.beginTransaction(connection);
                         InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-                        dbLayer.deleteSubAgent(subAgentCommand.getSubagentId());
+                        dbLayer.deleteSubAgents(subAgentCommand.getSubagentIds());
                         Globals.commit(connection);
                     } catch (Exception e1) {
                         Globals.rollback(connection);
