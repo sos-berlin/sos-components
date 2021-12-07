@@ -169,10 +169,11 @@ public class IamAccountDBLayer {
     public List<DBItemIamAccount2RoleWithName> getListOfRolesWithName(DBItemIamAccount dbitemIamAccount) throws SOSHibernateException {
 
         String q = "select u.roleId as roleId,u.accountId as accountId," + "r.roleName as roleName, '" + dbitemIamAccount.getAccountName() + "' as accountName"
-                + " from " + DBItemIamAccount2Roles + " u, " + DBItemIamRole + " r where r.id=u.roleId and u.accountId=:accountId";
+                + " from " + DBItemIamAccount2Roles + " u, " + DBItemIamRole + " r where r.id=u.roleId and u.accountId=:accountId and r.identityServiceId=:identityServiceId";
 
         Query<DBItemIamAccount2RoleWithName> query = sosHibernateSession.createQuery(q);
         query.setParameter("accountId", dbitemIamAccount.getId());
+        query.setParameter("identityServiceId", dbitemIamAccount.getIdentityServiceId());
         query.setResultTransformer(Transformers.aliasToBean(DBItemIamAccount2RoleWithName.class));
         return sosHibernateSession.getResultList(query);
 
@@ -242,11 +243,11 @@ public class IamAccountDBLayer {
         return iamPermissionList;
     }
 
-    public com.sos.joc.db.authentication.DBItemIamAccount getIamAccountByName(String accountName) throws SOSHibernateException {
+    public com.sos.joc.db.authentication.DBItemIamAccount getIamAccountByName(IamAccountFilter filter) throws SOSHibernateException {
         List<DBItemIamAccount> iamAccountList = null;
-        Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + " where accountName=:accountName");
+        Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter));
 
-        query.setParameter("accountName", accountName);
+        bindParameters(filter, query);
 
         iamAccountList = query.getResultList();
         if (iamAccountList.size() > 0) {

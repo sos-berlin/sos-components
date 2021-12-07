@@ -85,4 +85,9 @@ public class SOSVaultLogin implements ISOSLogin {
         return sosVaultSubject;
     }
 
+    @Override
+    public void setIdentityServiceId(Long value) {
+      // Not needed for vault
+    }
+
 }

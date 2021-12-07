@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
+import com.sos.joc.Globals;
+import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfiguration;
 import com.sos.joc.model.security.permissions.ControllerPermissions;
@@ -53,6 +55,7 @@ public class SOSAuthCurrentAccount {
     private String accountName;
     private String password;
     private String accessToken;
+    private SOSIdentityService identityServices;
     private Map<String, String> identyServiceAccessToken;
     private String authorization;
     private Set<String> roles = Collections.emptySet();
@@ -417,4 +420,20 @@ public class SOSAuthCurrentAccount {
         return identyServiceAccessToken.get(identityServiceName);
     }
 
+    
+    public SOSIdentityService getIdentityServices() {
+        return identityServices;
+    }
+
+    
+    public void setIdentityServices(SOSIdentityService identityServices) {
+        this.identityServices = identityServices;
+    }
+
+    public  boolean isShiro() {
+        if (identityServices == null) {
+            return false;
+        }
+        return identityServices.getIdentyServiceType() == IdentityServiceTypes.SHIRO;
+    }
 }

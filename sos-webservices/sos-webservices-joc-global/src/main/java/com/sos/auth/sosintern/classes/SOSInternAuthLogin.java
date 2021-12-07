@@ -17,6 +17,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
     private String msg="";
+    private Long identityServiceId;
     private SOSInternAuthSubject sosInternAuthSubject;
 
     public SOSInternAuthLogin() {
@@ -29,6 +30,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
         try {
 
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
+            sosInternAuthWebserviceCredentials.setIdentityServiceId(identityServiceId);
             sosInternAuthWebserviceCredentials.setAccount(account);
             sosInternAuthWebserviceCredentials.setPassword(pwd);
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
@@ -71,6 +73,11 @@ public class SOSInternAuthLogin implements ISOSLogin {
     @Override
     public ISOSAuthSubject getCurrentSubject() {
         return sosInternAuthSubject;
+    }
+
+    
+    public void setIdentityServiceId(Long identityServiceId) {
+        this.identityServiceId = identityServiceId;
     }
 
 }

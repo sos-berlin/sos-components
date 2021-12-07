@@ -20,7 +20,7 @@ public class SOSListOfPermissions {
 
     private void initList(SOSAuthCurrentAccount currentAccount, Boolean forAccount) {
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
-        SOSPermissionRoles roles = sosPermissionsCreator.getRoles(forAccount);
+        SOSPermissionRoles roles = sosPermissionsCreator.getRoles(currentAccount,forAccount);
 
         if (forAccount == null) {
             forAccount = false;

@@ -61,7 +61,7 @@ public class SOSPermissionsCreator {
 
     public Map<String, List<String>> getMapOfFolder() {
         Map<String, List<String>> resultMap = new HashMap<String, List<String>>();
-        if (SOSAuthHelper.isShiro()) {
+        if (currentAccount.isShiro()) {
             Section section = getIni().getSection("folders");
             if (section != null) {
                 for (String role : section.keySet()) {
@@ -229,14 +229,14 @@ public class SOSPermissionsCreator {
 
     }
 
-    public SOSPermissionRoles getRoles(boolean forAccount){
+    public SOSPermissionRoles getRoles(SOSAuthCurrentAccount currentAccount,boolean forAccount){
         if (roles == null || !forAccount) {
 
-            if (SOSAuthHelper.isShiro()) {
+            if (currentAccount.isShiro()) {
                 return getRolesFromShiro();
             } else {
                 try {
-                    return getRolesFromDb(Globals.identityServices.getIdentityServiceId());
+                    return getRolesFromDb(currentAccount.getIdentityServices().getIdentityServiceId());
                 } catch (SOSHibernateException e) {
                     
                 }

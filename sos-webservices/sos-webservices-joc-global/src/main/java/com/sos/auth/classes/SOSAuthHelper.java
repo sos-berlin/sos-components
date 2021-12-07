@@ -11,18 +11,9 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 import com.sos.joc.Globals;
-import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSAuthHelper {
 
-    public static boolean isShiro() {
-        if (Globals.identityServices == null) {
-            return false;
-        }
-        return Globals.identityServices.getIdentyServiceType() == IdentityServiceTypes.SHIRO;
-    }
-    
-    
     public static String getSHA512(String pwd) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
@@ -42,15 +33,15 @@ public class SOSAuthHelper {
         byte[] randomBytes = new byte[24];
         secureRandom.nextBytes(randomBytes);
         String s = base64Encoder.encodeToString(randomBytes);
-        s = s.substring(0,8) + "-" + s.substring(8,12) + "-" + s.substring(12,16) + "-" + s.substring(16);
+        s = s.substring(0, 8) + "-" + s.substring(8, 12) + "-" + s.substring(12, 16) + "-" + s.substring(16);
         return s;
-     }
+    }
 
     public static String getIdentityServiceAccessToken(String accessToken) {
         if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
             SOSAuthCurrentAccount sosAuthCurrentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
-            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getAccessToken(Globals.identityServices.getIdentityServiceName()) != null) {
-                return sosAuthCurrentAccount.getAccessToken(Globals.identityServices.getIdentityServiceName());
+            if (sosAuthCurrentAccount != null && sosAuthCurrentAccount.getIdentityServices() != null) {
+                return sosAuthCurrentAccount.getAccessToken(sosAuthCurrentAccount.getIdentityServices().getIdentityServiceName());
             }
         }
         return null;

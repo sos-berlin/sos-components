@@ -92,7 +92,11 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(securityConfigurationAccount.getAccount());
+            
+            IamAccountFilter filter = new IamAccountFilter();
+            filter.setAccountName(securityConfigurationAccount.getAccount());
+            filter.setIdentityServiceId(dbItemIamIdentityService.getId());
+            DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
 
             if (dbItemIamAccount != null) {
                 Long accountId = dbItemIamAccount.getId();

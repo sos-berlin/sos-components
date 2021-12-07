@@ -180,4 +180,9 @@ public class SOSShiroLogin implements ISOSLogin {
         this.msg = msg;
     }
 
+    @Override
+    public void setIdentityServiceId(Long value) {
+        // not needed for shiro
+    }
+
 }

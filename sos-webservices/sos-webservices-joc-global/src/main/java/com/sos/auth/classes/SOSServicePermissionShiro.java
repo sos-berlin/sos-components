@@ -249,38 +249,37 @@ public class SOSServicePermissionShiro {
     }
 
     private void removeTimeOutShiroDBSessions() throws SOSHibernateException, JocConfigurationException, DBOpenSessionException {
-        if (SOSAuthHelper.isShiro()) {
-            SOSHibernateSession sosHibernateSession = null;
-            try {
-                sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Logout");
-                Globals.beginTransaction(sosHibernateSession);
-                JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
-                JocConfigurationFilter filter = new JocConfigurationFilter();
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection("JOC: Logout");
+            Globals.beginTransaction(sosHibernateSession);
+            JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(sosHibernateSession);
+            JocConfigurationFilter filter = new JocConfigurationFilter();
 
-                filter.setAccount(".");
-                filter.setConfigurationType(SHIRO_SESSION);
-                List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
+            filter.setAccount(".");
+            filter.setConfigurationType(SHIRO_SESSION);
+            List<DBItemJocConfiguration> listOfConfigurtions = jocConfigurationDBLayer.getJocConfigurationList(filter, 0);
 
-                IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
-                SecurityManager securityManager = factory.getInstance();
-                SecurityUtils.setSecurityManager(securityManager);
+            IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
+            SecurityManager securityManager = factory.getInstance();
+            SecurityUtils.setSecurityManager(securityManager);
 
-                for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
-                    SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
-                    try {
-                        SecurityUtils.getSecurityManager().getSession(s);
-                    } catch (ExpiredSessionException e) {
-                        LOGGER.debug("Session " + jocConfigurationDbItem.getName() + " removed");
-                    }
+            for (DBItemJocConfiguration jocConfigurationDbItem : listOfConfigurtions) {
+                SessionKey s = new DefaultSessionKey(jocConfigurationDbItem.getName());
+                try {
+                    SecurityUtils.getSecurityManager().getSession(s);
+                } catch (ExpiredSessionException e) {
+                    LOGGER.trace("Session " + jocConfigurationDbItem.getName() + " removed");
                 }
-                Globals.commit(sosHibernateSession);
-            } catch (Exception e) {
-                Globals.rollback(sosHibernateSession);
-                throw e;
-            } finally {
-                Globals.disconnect(sosHibernateSession);
             }
+            Globals.commit(sosHibernateSession);
+        } catch (Exception e) {
+            Globals.rollback(sosHibernateSession);
+            throw e;
+        } finally {
+            Globals.disconnect(sosHibernateSession);
         }
+
     }
 
     protected JOCDefaultResponse logout(String accessToken) {
@@ -297,38 +296,6 @@ public class SOSServicePermissionShiro {
             account = currentAccount.getAccountname();
         }
         SOSSessionHandler sosSessionHandler = new SOSSessionHandler(currentAccount);
-        if (SOSAuthHelper.isShiro()) {
-            try {
-
-                if (currentAccount == null || currentAccount.getCurrentSubject() == null) {
-                    try {
-                        if (Globals.sosCockpitProperties == null) {
-                            Globals.sosCockpitProperties = new JocCockpitProperties();
-                        }
-                        Globals.setProperties();
-                        IniSecurityManagerFactory factory = Globals.getShiroIniSecurityManagerFactory();
-                        SecurityManager securityManager = factory.getInstance();
-                        SecurityUtils.setSecurityManager(securityManager);
-                        SessionKey s = new DefaultSessionKey(accessToken);
-                        Session session = SecurityUtils.getSecurityManager().getSession(s);
-                        session.stop();
-                    } catch (Exception e) {
-                        throw new SessionNotExistException("Session doesn't exist");
-                    }
-                    throw new SessionNotExistException("Session doesn't exist");
-                }
-
-                sosSessionHandler.getTimeout();
-
-            } catch (ExpiredSessionException ex) {
-                comment = "Session time out: " + ex.getMessage();
-            } catch (SessionNotExistException e) {
-                comment = "Session time out: " + e.getMessage();
-            } catch (UnknownSessionException u) {
-                comment = "Session time out: " + u.getMessage();
-            }
-        }
-
         JocAuditLog jocAuditLog = new JocAuditLog(account, "./logout");
         AuditParams audit = new AuditParams();
         audit.setComment(comment);
@@ -519,8 +486,6 @@ public class SOSServicePermissionShiro {
 
         IdentityServiceTypes identityServiceType = IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType());
         String identityServiceName = dbItemIdentityService.getIdentityServiceName();
-        Globals.identityServices = new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
-                identityServiceType);
         SOSPermissionsCreator sosPermissionsCreator = new SOSPermissionsCreator(currentAccount);
 
         ISOSLogin sosLogin = null;
@@ -545,6 +510,7 @@ public class SOSServicePermissionShiro {
             break;
         case JOC:
             sosLogin = new SOSInternAuthLogin();
+            sosLogin.setIdentityServiceId(dbItemIdentityService.getId());
             LOGGER.debug("Login with idendity service sosintern");
             break;
         default:
@@ -558,6 +524,8 @@ public class SOSServicePermissionShiro {
         ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
 
         currentAccount.setCurrentSubject(sosAuthSubject);
+        currentAccount.setIdentityServices(new SOSIdentityService(dbItemIdentityService.getId(), dbItemIdentityService.getIdentityServiceName(),
+                identityServiceType));
 
         if (sosAuthSubject == null || !sosAuthSubject.isAuthenticated()) {
             SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = new SOSAuthCurrentAccountAnswer(currentAccount.getAccountname());
@@ -719,8 +687,8 @@ public class SOSServicePermissionShiro {
             sosAuthCurrentUserAnswer.setSessionTimeout(sosSessionHandler.getTimeout());
             sosAuthCurrentUserAnswer.setCallerHostName(currentAccount.getCallerHostName());
             sosAuthCurrentUserAnswer.setCallerIpAddress(currentAccount.getCallerIpAddress());
-            sosAuthCurrentUserAnswer.setIdentityService(Globals.identityServices.getIdentyServiceType() + ":" + Globals.identityServices
-                    .getIdentityServiceName());
+            sosAuthCurrentUserAnswer.setIdentityService(currentAccount.getIdentityServices().getIdentyServiceType() + ":" + currentAccount
+                    .getIdentityServices().getIdentityServiceName());
             sosAuthCurrentUserAnswer.setMessage(msg);
 
             LOGGER.debug("CallerIpAddress=" + currentAccount.getCallerIpAddress());

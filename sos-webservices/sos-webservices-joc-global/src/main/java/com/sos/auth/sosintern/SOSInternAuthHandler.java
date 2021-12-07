@@ -20,6 +20,7 @@ import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.joc.Globals;
 import com.sos.joc.db.authentication.DBItemIamAccount;
 import com.sos.joc.db.security.IamAccountDBLayer;
+import com.sos.joc.db.security.IamAccountFilter;
 
 public class SOSInternAuthHandler {
 
@@ -43,8 +44,11 @@ public class SOSInternAuthHandler {
             String accountPwd;
             try {
                 accountPwd = SOSAuthHelper.getSHA512(sosInternAuthWebserviceCredentials.getPassword());
-
-                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(sosInternAuthWebserviceCredentials.getAccount());
+                IamAccountFilter filter = new IamAccountFilter();
+                filter.setAccountName(sosInternAuthWebserviceCredentials.getAccount());
+                filter.setIdentityServiceId(sosInternAuthWebserviceCredentials.getIdentityServiceId());
+                
+                DBItemIamAccount dbItemIamAccount = iamAccountDBLayer.getIamAccountByName(filter);
                 if (dbItemIamAccount != null && dbItemIamAccount.getAccountPassword().equals(accountPwd)) {
                     sosInternAuthAccessToken = new SOSInternAuthAccessToken();
                     sosInternAuthAccessToken.setAccessToken(UUID.randomUUID().toString());

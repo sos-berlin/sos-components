@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.sos.auth.classes.SOSAuthCurrentAccount;
 import com.sos.auth.classes.SOSAuthCurrentAccountAnswer;
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.auth.classes.SOSAuthHelper;
@@ -65,7 +66,7 @@ public class JOCResourceImpl {
             this.accessToken = SOSAuthHelper.getIdentityServiceAccessToken(accessToken);
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
-    
+
         updateUserInMetaInfo();
     }
 
@@ -310,25 +311,31 @@ public class JOCResourceImpl {
             jobschedulerUser = new JobSchedulerUser(accessToken);
         }
         initLogging(request, body);
-   
-        if (SOSAuthHelper.isShiro() && Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
 
-            SessionKey s = new DefaultSessionKey(this.accessToken);
-            Session session = null;
-            session = SecurityUtils.getSecurityManager().getSession(s);
+        if (Globals.jocWebserviceDataContainer != null && Globals.jocWebserviceDataContainer.getCurrentAccountsList() != null) {
+            SOSAuthCurrentAccount currentAccount = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccount(accessToken);
+            if (currentAccount != null && currentAccount.isShiro()) {
+                SessionKey s = new DefaultSessionKey(this.accessToken);
 
-            if (session != null && "true".equals(session.getAttribute("dao"))) {
-                if (!sessionExistInDb(accessToken)) {
-                    Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
+                Session session = null;
+                session = SecurityUtils.getSecurityManager().getSession(s);
+
+                if (session != null && "true".equals(session.getAttribute("dao"))) {
+                    if (!sessionExistInDb(accessToken)) {
+                        Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(accessToken);
+                    }
                 }
             }
         }
 
-        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
+        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null)
+
+        {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
         }
 
-        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(accessToken);
+        SOSAuthCurrentAccountAnswer sosShiroCurrentUserAnswer = Globals.jocWebserviceDataContainer.getCurrentAccountsList().getAccountByToken(
+                accessToken);
         if (sosShiroCurrentUserAnswer.getSessionTimeout() == 0L) {
             throw new SessionNotExistException("Session has expired. New login is neccessary");
         }

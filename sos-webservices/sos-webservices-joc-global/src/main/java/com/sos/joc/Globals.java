@@ -79,7 +79,6 @@ public class Globals {
     public static int httpSocketTimeout = 5000;
     public static int maxResponseDuration = 55;
     public static boolean withHostnameVerification = false;
-    public static SOSIdentityService identityServices;
 
     private static final String SHIRO_INI_FILENAME = "shiro.ini";
     private static final String HIBERNATE_CONFIGURATION_FILE = "hibernate_configuration_file";
