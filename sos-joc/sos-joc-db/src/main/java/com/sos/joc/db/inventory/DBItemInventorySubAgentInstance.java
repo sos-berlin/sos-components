@@ -60,12 +60,6 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Column(name = "[JAVA_VERSION]", nullable = true)
     private String javaVersion;
 
-    /* 0=no, 1=yes */
-    @Column(name = "[DISABLED]", nullable = false)
-    @Type(type = "numeric_boolean")
-    private boolean disabled;
-
-    
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
     
@@ -167,16 +161,6 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setIsWatcher(boolean val) {
         isWatcher = val;
     }
-
-    public boolean getDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(boolean val) {
-        disabled = val;
-    }
-
-    
 
     public Date getModified() {
         return modified;
