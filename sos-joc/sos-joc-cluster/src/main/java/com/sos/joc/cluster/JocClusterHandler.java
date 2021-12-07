@@ -88,7 +88,7 @@ public class JocClusterHandler {
                 public JocClusterAnswer get() {
                     AJocClusterService.setLogger();
                     LOGGER.info(String.format("[%s][%s][%s]start...", mode, method, s.getIdentifier()));
-                    // AJocClusterService.clearLogger();
+                    AJocClusterService.removeLogger();
                     JocClusterAnswer answer = null;
                     if (isStart) {
                         AConfigurationSection configuration = null;
@@ -110,7 +110,7 @@ public class JocClusterHandler {
                     }
                     AJocClusterService.setLogger();
                     LOGGER.info(String.format("[%s][%s][%s]completed", mode, method, s.getIdentifier()));
-                    // AJocClusterService.clearLogger();
+                    AJocClusterService.removeLogger();
                     return answer;
                 }
             };
@@ -207,7 +207,7 @@ public class JocClusterHandler {
         if (!os.isPresent()) {
             AJocClusterService.setLogger();
             LOGGER.error((String.format("handler not found for %s", identifier)));
-            // AJocClusterService.clearAllLoggers();
+            AJocClusterService.removeLogger();
             return;
         }
         IJocClusterService s = os.get();
@@ -222,7 +222,7 @@ public class JocClusterHandler {
 
         AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]start...", mode, identifier));
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
 
         IJocClusterService s = os.get();
         JocServiceAnswer answer = s.getInfo();
@@ -245,28 +245,28 @@ public class JocClusterHandler {
 
         AJocClusterService.setLogger(identifier);
         ThreadHelper.print(mode, "[" + identifier + "]before stop");
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
 
         s.stop(mode);
 
         AJocClusterService.setLogger(identifier);
         ThreadHelper.tryStop(mode, s.getThreadGroup());
         ThreadHelper.print(mode, "[" + identifier + "]after stop");
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
 
         try {
             s.start(cluster.getControllers(), configuration, mode);
         } catch (Exception e) {
             AJocClusterService.setLogger();
             LOGGER.error(String.format("[%s][restart][%s]%s", mode, identifier, e.toString()), e);
-            // AJocClusterService.clearAllLoggers();
+            AJocClusterService.removeLogger();
 
             return JocCluster.getErrorAnswer(e);
         }
 
         AJocClusterService.setLogger();
         LOGGER.info(String.format("[%s][restart][%s]completed", mode, identifier));
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
 
         return JocCluster.getOKAnswer(JocClusterAnswerState.RESTARTED);
     }

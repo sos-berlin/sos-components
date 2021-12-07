@@ -28,6 +28,7 @@ import com.sos.joc.classes.documentation.JitlDocumentation;
 import com.sos.joc.classes.proxy.Proxies;
 import com.sos.joc.classes.proxy.ProxyUser;
 import com.sos.joc.classes.workflow.WorkflowPaths;
+import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.configuration.JocClusterConfiguration.StartupMode;
 import com.sos.joc.db.DbInstaller;
 
@@ -80,21 +81,22 @@ public class JocServletContainer extends ServletContainer {
 
         // 1 - stop cluster
         JocClusterService.getInstance().stop(StartupMode.automatic, true);
+        AJocClusterService.clearAllLoggers();
         // 2 - close proxies
         Proxies.closeAll();
 
         if (Globals.sosHibernateFactory != null) {
-//            if (Globals.sosHibernateFactory.dbmsIsH2()) {
-//                SOSHibernateSession connection = null;
-//                try {
-//                    connection = Globals.createSosHibernateStatelessConnection("closeH2");
-//                    connection.createQuery("SHUTDOWN").executeUpdate();
-//                } catch (Exception e) {
-//                    LOGGER.warn("shutdown H2 database: " + e.toString());
-//                } finally {
-//                    Globals.disconnect(connection);
-//                }
-//            }
+            // if (Globals.sosHibernateFactory.dbmsIsH2()) {
+            // SOSHibernateSession connection = null;
+            // try {
+            // connection = Globals.createSosHibernateStatelessConnection("closeH2");
+            // connection.createQuery("SHUTDOWN").executeUpdate();
+            // } catch (Exception e) {
+            // LOGGER.warn("shutdown H2 database: " + e.toString());
+            // } finally {
+            // Globals.disconnect(connection);
+            // }
+            // }
             LOGGER.info("----> closing DB Connections");
             Globals.sosHibernateFactory.close();
         }
@@ -108,7 +110,7 @@ public class JocServletContainer extends ServletContainer {
 
     private Set<Path> getDeployedFolders() throws IOException {
         final Path deployParentDir = Paths.get(System.getProperty("java.io.tmpdir").toString());
-        //final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
+        // final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,5}-joc.war-_joc-.+\\.dir$").asPredicate();
         // ...with version 9.4.41.v20210516
         final Predicate<String> pattern = Pattern.compile("^jetty-\\d{1,3}([._]\\d{1,3}){3}-\\d{1,5}-joc[._]war-.+-any-\\d+$").asPredicate();
         return Files.list(deployParentDir).filter(p -> pattern.test(p.getFileName().toString())).collect(Collectors.toSet());
@@ -156,7 +158,7 @@ public class JocServletContainer extends ServletContainer {
             }
         }
     }
-    
+
     private void cleanupOldLogFiles(int retainDays) {
         // TODO retainDays???
         try {

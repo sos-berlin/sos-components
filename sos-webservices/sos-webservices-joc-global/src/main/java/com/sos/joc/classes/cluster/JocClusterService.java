@@ -83,7 +83,7 @@ public class JocClusterService {
                 .getResourceDir(), Globals.getJocSecurityLevel(), Globals.sosCockpitProperties.getProperty("title"), Globals.sosCockpitProperties
                         .getProperty("ordering", 0));
         startTime = new Date();
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
 
         EventBus.getInstance().register(this);
     }
@@ -122,7 +122,7 @@ public class JocClusterService {
                         LOGGER.error(e.toString(), e);
                     }
                     LOGGER.info("[" + mode + "][start][end]");
-                    // AJocClusterService.clearAllLoggers();
+                    AJocClusterService.removeLogger();
                 }
 
             };
@@ -131,7 +131,7 @@ public class JocClusterService {
             AJocClusterService.setLogger();
             LOGGER.info("[" + mode + "][start][skip]already started");
             answer.setState(JocClusterAnswerState.ALREADY_STARTED);
-            // AJocClusterService.clearAllLoggers();
+            AJocClusterService.removeLogger();
         }
         return answer;
     }
@@ -151,7 +151,7 @@ public class JocClusterService {
             ThreadHelper.tryStop(mode, tg);
         }
         ThreadHelper.print(mode, String.format("after stop %s", JocClusterConfiguration.IDENTIFIER));
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
         return answer;
     }
 
@@ -225,7 +225,7 @@ public class JocClusterService {
     }
 
     private void handleGlobalsOnActiveMember(ConfigurationGlobalsChanged evt) {
-        AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+        AJocClusterService.setLogger();
         stopSettingsChangedTimer();
 
         // LOGGER.info("COUNT=" + evt.getSections() + "=" + evt.getSections().size());
@@ -244,16 +244,16 @@ public class JocClusterService {
 
                 @Override
                 public void run() {
-                    AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                    AJocClusterService.setLogger();
                     List<String> sections = settingsChanged.get();
                     if (sections != null && sections.size() > 0) {
                         sections = sections.stream().distinct().collect(Collectors.toList());
 
                         cluster.setConfigurationGlobalsChanged(new AtomicReference<List<String>>(sections));
 
-                        AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                        AJocClusterService.setLogger();
                         LOGGER.info(String.format("[%s]restart %s services", StartupMode.settings_changed.name(), sections.size()));
-                        // AJocClusterService.clearAllLoggers();
+                        AJocClusterService.removeLogger();
                         // TODO restart asynchronous
                         for (String identifier : sections) {
                             AConfigurationSection section = null;
@@ -261,14 +261,14 @@ public class JocClusterService {
                                 ClusterServices.valueOf(identifier);
                                 section = Globals.configurationGlobals.getConfigurationSection(DefaultSections.valueOf(identifier));
                             } catch (Throwable e) {
-                                AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                                AJocClusterService.setLogger();
                                 LOGGER.info(String.format("[%s][%s][skip]is not a service", StartupMode.settings_changed.name(), identifier));
-                                // AJocClusterService.clearAllLoggers();
+                                AJocClusterService.removeLogger();
                             }
                             if (section != null) {
-                                AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+                                AJocClusterService.setLogger();
                                 LOGGER.info(String.format("[%s][%s]restart", StartupMode.settings_changed.name(), identifier));
-                                // AJocClusterService.clearAllLoggers();
+                                AJocClusterService.removeLogger();
                                 cluster.getHandler().restartService(identifier, StartupMode.settings_changed, section);
                             }
                         }
@@ -281,7 +281,7 @@ public class JocClusterService {
     }
 
     private void handleGlobalsOnNonActiveMember(ConfigurationGlobalsChanged evt) {
-        AJocClusterService.setLogger(JocClusterConfiguration.IDENTIFIER);
+        AJocClusterService.setLogger();
         Globals.configurationGlobals = cluster.getConfigurationGlobals(StartupMode.unknown);
         LOGGER.info(String.format("[%s]%s updated", StartupMode.settings_changed.name(), ConfigurationGlobals.class.getSimpleName()));
     }
@@ -337,18 +337,18 @@ public class JocClusterService {
         default:
             answer = JocCluster.getErrorAnswer(new Exception(String.format("%s restart not yet supported for %s", mode, r.getType())));
         }
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
         return answer;
     }
 
     public JocClusterAnswer switchMember(StartupMode mode, String memberId) {
         AJocClusterService.setLogger();
         if (cluster == null) {
-            // AJocClusterService.clearAllLoggers();
+            AJocClusterService.removeLogger();
             return JocCluster.getErrorAnswer(new Exception("cluster not running"));
         }
         JocClusterAnswer answer = cluster.switchMember(mode, Globals.configurationGlobals, memberId);
-        // AJocClusterService.clearAllLoggers();
+        AJocClusterService.removeLogger();
         return answer;
     }
 

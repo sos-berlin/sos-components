@@ -121,7 +121,7 @@ public class CleanupService extends AJocClusterService {
         closed.set(true);
         close(mode);
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
-
+        removeServiceLogger();
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
@@ -156,6 +156,7 @@ public class CleanupService extends AJocClusterService {
             JocCluster.shutdownThreadPool(mode, threadPool, JocCluster.MAX_AWAIT_TERMINATION_TIMEOUT);
             threadPool = null;
         }
+        removeServiceLogger();
     }
 
     public static Date toDate(ZonedDateTime dateTime) {
@@ -205,5 +206,9 @@ public class CleanupService extends AJocClusterService {
 
     protected static void setServiceLogger() {
         AJocClusterService.setLogger(IDENTIFIER);
+    }
+
+    private static void removeServiceLogger() {
+        AJocClusterService.removeLogger(IDENTIFIER);
     }
 }

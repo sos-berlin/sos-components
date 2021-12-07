@@ -147,6 +147,7 @@ public class HistoryService extends AJocClusterService {
         }
         LOGGER.info(String.format("[%s][%s]stopped", getIdentifier(), mode));
 
+        AJocClusterService.removeLogger(IDENTIFIER);
         return JocCluster.getOKAnswer(JocClusterAnswerState.STOPPED);
     }
 
@@ -334,27 +335,31 @@ public class HistoryService extends AJocClusterService {
                             dbLayer.handleLogsVariable(getJocConfig().getMemberId(), null);
                             dbLayer.commit();
                         } else {
-                            if (subfolders != orderLogs.longValue()) {
+                            if (subfolders > 0 && subfolders != orderLogs.longValue()) {
                                 cleanupNotReferencedLogs(dbLayer, method);
                             }
                             dbLayer.close();
 
-                            // compress
-                            LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
-                            SOSGzipResult gr = SOSGzip.compress(logDir, false);
+                            if (subfolders == 0 || SOSPath.isDirectoryEmpty(logDir)) {
+                                LOGGER.info(String.format("[%s][compress][skip][%s]is empty", method, logDir));
+                            } else {
+                                // compress
+                                LOGGER.info(String.format("[%s][compress][%s]start..", method, logDir));
+                                SOSGzipResult gr = SOSGzip.compress(logDir, false);
 
-                            // write compressed to database
-                            dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
-                            compress(method, dbLayer, gr);
-                            dbLayer.close();
+                                // write compressed to database
+                                dbLayer.setSession(factory.openStatelessSession(IDENTIFIER + "_" + method));
+                                compress(method, dbLayer, gr);
+                                dbLayer.close();
 
-                            // log compressed results
-                            gr.getDirectories().forEach(d -> {
-                                LOGGER.info(String.format("    [compressed]%s", d));
-                            });
+                                // log compressed results
+                                gr.getDirectories().forEach(d -> {
+                                    LOGGER.info(String.format("    [compressed]%s", d));
+                                });
 
-                            // cleanup whole history log directory
-                            cleanupAllLogs(method);
+                                // cleanup whole history log directory
+                                cleanupAllLogs(method);
+                            }
                         }
                         break;
                     }

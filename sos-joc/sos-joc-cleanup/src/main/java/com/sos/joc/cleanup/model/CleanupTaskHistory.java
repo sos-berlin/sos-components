@@ -352,30 +352,34 @@ public class CleanupTaskHistory extends CleanupTaskModel {
             LOGGER.info(String.format("[%s][logDirectory]%s", getIdentifier(), dir));
 
             try {
-                tryOpenSession();
-                int i = 0;
-                try (Stream<Path> stream = Files.walk(dir)) {
-                    for (Path p : stream.filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
-                        File f = p.toFile();
-                        if (f.isDirectory()) {
-                            try {
-                                Long id = Long.parseLong(f.getName());
-                                if (!getDbLayer().mainOrderLogNotFinished(id)) {
-                                    try {
-                                        if (SOSPath.deleteIfExists(p)) {
-                                            LOGGER.info(String.format("[%s][logDirectory][deleted]%s", getIdentifier(), p));
-                                            i++;
+                if (SOSPath.isDirectoryEmpty(dir)) {
+                    LOGGER.info(String.format("[%s][logDirectory][skip]is empty", getIdentifier()));
+                } else {
+                    tryOpenSession();
+                    int i = 0;
+                    try (Stream<Path> stream = Files.walk(dir)) {
+                        for (Path p : stream.filter(f -> !f.equals(dir)).collect(Collectors.toList())) {
+                            File f = p.toFile();
+                            if (f.isDirectory()) {
+                                try {
+                                    Long id = Long.parseLong(f.getName());
+                                    if (!getDbLayer().mainOrderLogNotFinished(id)) {
+                                        try {
+                                            if (SOSPath.deleteIfExists(p)) {
+                                                LOGGER.info(String.format("[%s][logDirectory][deleted]%s", getIdentifier(), p));
+                                                i++;
+                                            }
+                                        } catch (Throwable e) {// in the same moment deleted by history
                                         }
-                                    } catch (Throwable e) {// in the same moment deleted by history
                                     }
+                                } catch (Throwable e) {
+                                    LOGGER.info(String.format("[%s][logDirectory][skip][non numeric]%s", getIdentifier(), p));
                                 }
-                            } catch (Throwable e) {
-                                LOGGER.info(String.format("[%s][logDirectory][skip][non numeric]%s", getIdentifier(), p));
                             }
                         }
                     }
+                    LOGGER.info(String.format("[%s][logDirectory][deleted][total]%s", getIdentifier(), i));
                 }
-                LOGGER.info(String.format("[%s][logDirectory][deleted][total]%s", getIdentifier(), i));
             } catch (Throwable e) {
                 LOGGER.warn(String.format("[%s][logDirectory]%s", getIdentifier(), e.toString()), e);
             }

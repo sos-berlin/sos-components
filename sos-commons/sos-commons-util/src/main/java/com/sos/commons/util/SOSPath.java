@@ -413,6 +413,15 @@ public class SOSPath {
         return count;
     }
 
+    public static boolean isDirectoryEmpty(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (Stream<Path> entries = Files.list(path)) {
+                return !entries.findFirst().isPresent();
+            }
+        }
+        return false;
+    }
+
     public class SOSPathResult {
 
         private final Instant start;
