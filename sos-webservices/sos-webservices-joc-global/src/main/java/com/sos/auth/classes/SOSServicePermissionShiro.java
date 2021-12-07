@@ -508,6 +508,10 @@ public class SOSServicePermissionShiro {
             sosLogin = new SOSVaultLogin();
             LOGGER.debug("Login with idendity service vault");
             break;
+        case VAULT_JOC:
+            sosLogin = new SOSVaultLogin();
+            LOGGER.debug("Login with idendity service vault");
+            break;
         case JOC:
             sosLogin = new SOSInternAuthLogin();
             sosLogin.setIdentityServiceId(dbItemIdentityService.getId());

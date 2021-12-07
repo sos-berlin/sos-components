@@ -72,7 +72,9 @@ public class SOSPermissionsCreator {
                 }
             }
         } else {
-            resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());
+            if (currentAccount.getCurrentSubject().getMapOfFolderPermissions() != null) {
+                resultMap.putAll(currentAccount.getCurrentSubject().getMapOfFolderPermissions());
+            }
         }
 
         return resultMap;
@@ -229,7 +231,7 @@ public class SOSPermissionsCreator {
 
     }
 
-    public SOSPermissionRoles getRoles(SOSAuthCurrentAccount currentAccount,boolean forAccount){
+    public SOSPermissionRoles getRoles(SOSAuthCurrentAccount currentAccount, boolean forAccount) {
         if (roles == null || !forAccount) {
 
             if (currentAccount.isShiro()) {
@@ -238,7 +240,7 @@ public class SOSPermissionsCreator {
                 try {
                     return getRolesFromDb(currentAccount.getIdentityServices().getIdentityServiceId());
                 } catch (SOSHibernateException e) {
-                    
+
                 }
             }
         }

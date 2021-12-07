@@ -34,7 +34,7 @@ public class DBItemIamIdentityService {
     private Boolean disabled;
 
     @Column(name = "[REQUIRED`", nullable = false)
-    private Boolean requierd;
+    private Boolean required;
 
     public DBItemIamIdentityService() {
 
@@ -64,12 +64,13 @@ public class DBItemIamIdentityService {
         this.disabled = disabled;
     }
 
-    public Boolean getRequierd() {
-        return requierd;
+    public Boolean getRequired() {
+        
+        return required;
     }
 
-    public void setRequierd(Boolean requierd) {
-        this.requierd = requierd;
+    public void setRequired(Boolean required) {
+        this.required = required;
     }
 
 

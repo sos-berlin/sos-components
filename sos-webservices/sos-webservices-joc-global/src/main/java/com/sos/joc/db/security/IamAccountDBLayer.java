@@ -206,11 +206,12 @@ public class IamAccountDBLayer {
 
     }
 
-    public DBItemIamRole getRoleByName(String roleName) throws SOSHibernateException {
+    public DBItemIamRole getRoleByName(String roleName,Long identityServiceId) throws SOSHibernateException {
         List<DBItemIamRole> iamRoleList = null;
-        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + " where roleName=:roleName");
+        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + " where roleName=:roleName and identityServiceId=:identityServiceId");
 
         query.setParameter("roleName", roleName);
+        query.setParameter("identityServiceId", identityServiceId);
 
         iamRoleList = query.getResultList();
         if (iamRoleList.size() > 0) {

@@ -71,13 +71,14 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         SOSHibernateSession sosHibernateSession = null;
         try {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            IamAccountDBLayer sosUserDbLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamPermissionWithName> listOfRoles = sosUserDbLayer.getListOfRolesForAccountName(userName);
+            IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
+            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(userName);
             setOfRoles = new HashSet<String>();
+            setOfAccountPermissions = new HashSet<String>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                 setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
             }
-            List<DBItemIamPermissionWithName> listOfPermissions = sosUserDbLayer.getListOfPermissionsFromRoleNames(setOfRoles,account);
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles,account);
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
                 setOfPermissions.add(dbItemSOSPermissionWithName);
