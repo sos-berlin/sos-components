@@ -64,11 +64,12 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                 return jocDefaultResponse;
             }
             
-            boolean withAgentFilter = (agentParameter.getAgentIds() != null && !agentParameter.getAgentIds().isEmpty());
+            boolean withAgentFilter = (agentParameter.getAgentIds() != null && !agentParameter.getAgentIds().isEmpty()) || (agentParameter
+                    .getUrls() != null && !agentParameter.getUrls().isEmpty());
             connection = Globals.createSosHibernateStatelessConnection(API_CALL);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
-                    .getAgentIds(), false, true);
+            List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIdsAndUrls(allowedControllers, agentParameter
+                    .getAgentIds(), agentParameter.getUrls(), false, true);
             AgentReports agentReports = new AgentReports();
             if (dbAgents != null) {
                 
@@ -107,6 +108,7 @@ public class AgentsReportResourceImpl extends JOCResourceImpl implements IAgents
                     AgentReport a = new AgentReport();
                     a.setControllerId(dbAgent.getControllerId());
                     a.setAgentId(dbAgent.getAgentId());
+                    a.setUrl(dbAgent.getUri());
                     a.setNumOfJobs(numOfJobs);
                     a.setNumOfSuccessfulTasks(numOfSuccessfulTasks);
                     agents.add(a);

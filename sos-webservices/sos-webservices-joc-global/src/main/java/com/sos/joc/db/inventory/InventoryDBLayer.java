@@ -68,7 +68,7 @@ public class InventoryDBLayer extends DBLayer {
         hql.append("(");
         hql.append("  select max(dhsub.id) from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" dhsub ");
         hql.append("  where dhsub.inventoryConfigurationId=:configId");
-        hql.append("  and state = :state");
+        hql.append("  and dhsub.state = :state");
         hql.append(") ");
         Query<InventoryDeploymentItem> query = getSession().createQuery(hql.toString());
         query.setParameter("configId", configId);

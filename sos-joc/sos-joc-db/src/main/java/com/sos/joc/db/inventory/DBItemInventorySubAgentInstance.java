@@ -14,6 +14,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Type;
+
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.model.agent.SubagentDirectorType;
@@ -42,7 +44,28 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     /* 0=no, 1=primary, 2=standby */
     @Column(name = "[IS_DIRECTOR]", nullable = false)
     private Integer isDirector;
+    
+    /* 0=no, 1=yes */
+    @Column(name = "[IS_WATCHER]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean isWatcher;
 
+    /* foreign key INVENTORY_OPERTATION_SYSTEM.ID */
+    @Column(name = "[OS_ID]", nullable = false)
+    private Long osId;
+
+    @Column(name = "[VERSION]", nullable = true)
+    private String version;
+
+    @Column(name = "[JAVA_VERSION]", nullable = true)
+    private String javaVersion;
+
+    /* 0=no, 1=yes */
+    @Column(name = "[DISABLED]", nullable = false)
+    @Type(type = "numeric_boolean")
+    private boolean disabled;
+
+    
     @Column(name = "[CERTIFICATE]", nullable = true)
     private String certificate;
     
@@ -103,10 +126,57 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     public void setIsDirector(SubagentDirectorType val) {
         setIsDirector(val == null ? null : val.intValue());
     }
+    
+    public Long getOsId() {
+        return osId;
+    }
+
+    public void setOsId(Long val) {
+        if (val == null) {
+            val = 0L;
+        }
+        osId = val;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String val) {
+        version = val;
+    }
+    
+    public String getJavaVersion() {
+        return javaVersion;
+    }
+
+    public void setJavaVersion(String val) {
+        javaVersion = val;
+    }
+
+    
 
     public void setModified(Date val) {
         modified = val;
     }
+    
+    public boolean getIsWatcher() {
+        return isWatcher;
+    }
+
+    public void setIsWatcher(boolean val) {
+        isWatcher = val;
+    }
+
+    public boolean getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean val) {
+        disabled = val;
+    }
+
+    
 
     public Date getModified() {
         return modified;

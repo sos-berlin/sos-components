@@ -475,6 +475,7 @@ public class ControllerEditResourceImpl extends JOCResourceImpl implements ICont
             instance.setOsId(0L);
             instance.setStartedAt(null);
             instance.setVersion(null);
+            instance.setJavaVersion(null);
         }
         Role role = controller.getRole();
         instance.setSecurityLevel(Globals.getJocSecurityLevel().intValue());

@@ -31,6 +31,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "isCoupled",
     "startedAt",
     "version",
+    "javaVersion",
     "os",
     "securityLevel",
     "componentState",
@@ -111,6 +112,8 @@ public class Controller {
     private Date startedAt;
     @JsonProperty("version")
     private String version;
+    @JsonProperty("javaVersion")
+    private String javaVersion;
     /**
      * Controller platform
      * <p>
@@ -358,6 +361,16 @@ public class Controller {
         this.version = version;
     }
 
+    @JsonProperty("javaVersion")
+    public String getJavaVersion() {
+        return javaVersion;
+    }
+
+    @JsonProperty("javaVersion")
+    public void setJavaVersion(String javaVersion) {
+        this.javaVersion = javaVersion;
+    }
+
     /**
      * Controller platform
      * <p>
@@ -470,12 +483,12 @@ public class Controller {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("os", os).append("securityLevel", securityLevel).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("isCoupled", isCoupled).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("securityLevel", securityLevel).append("componentState", componentState).append("connectionState", connectionState).append("clusterNodeState", clusterNodeState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(connectionState).append(clusterUrl).append(startedAt).append(title).append(version).append(url).append(securityLevel).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(connectionState).append(clusterUrl).append(startedAt).append(title).append(version).append(url).append(securityLevel).append(componentState).append(isCoupled).append(host).append(clusterNodeState).append(id).toHashCode();
     }
 
     @Override
@@ -487,7 +500,7 @@ public class Controller {
             return false;
         }
         Controller rhs = ((Controller) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(securityLevel, rhs.securityLevel).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(connectionState, rhs.connectionState).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(securityLevel, rhs.securityLevel).append(componentState, rhs.componentState).append(isCoupled, rhs.isCoupled).append(host, rhs.host).append(clusterNodeState, rhs.clusterNodeState).append(id, rhs.id).isEquals();
     }
 
 }

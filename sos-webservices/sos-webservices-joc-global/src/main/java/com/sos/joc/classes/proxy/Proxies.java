@@ -45,6 +45,7 @@ import com.sos.joc.exceptions.DBOpenSessionException;
 import com.sos.joc.exceptions.JocConfigurationException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.exceptions.ProxyNotCoupledException;
+import com.sos.joc.model.agent.SubagentDirectorType;
 
 import js7.base.web.Uri;
 import js7.data.agent.AgentPath;
@@ -491,7 +492,8 @@ public class Proxies {
             List<DBItemInventoryAgentInstance> dbAvailableAgents = dbLayer.getAgentsByControllerIds(Collections.singleton(controllerId), false, true);
             if (dbAvailableAgents != null) {
                 Map<JAgentRef, List<JSubagentRef>> result = new LinkedHashMap<>(dbAvailableAgents.size());
-                Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerId(controllerId, false, true);
+                Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerId(Collections.singleton(
+                        controllerId), false, true);
                 for (DBItemInventoryAgentInstance agent : dbAvailableAgents) {
                     List<DBItemInventorySubAgentInstance> subs = subAgents.get(agent.getAgentId());
                     if (subs == null || subs.isEmpty()) { // single agent
@@ -499,8 +501,8 @@ public class Proxies {
                     }
                     List<JSubagentRef> subRefs = subs.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
                             .getAgentId()), Uri.of(s.getUri()))).collect(Collectors.toList());
-                    Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > 0).sorted().map(s -> SubagentId.of(s.getSubAgentId()))
-                            .collect(Collectors.toSet());
+                    Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
+                            .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
                     result.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), directors), subRefs);
                 }
                 return result;

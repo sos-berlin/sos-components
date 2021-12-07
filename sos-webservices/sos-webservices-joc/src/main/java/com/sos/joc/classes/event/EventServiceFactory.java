@@ -96,7 +96,7 @@ public class EventServiceFactory {
     private static void setResponsePeriodInMillis() {
         // responsePeriodInMillis between cleanupPeriodInMillis=3min and minResponsePeriodInMillis=30s
         responsePeriodInMillis = Math.min(maxResponsePeriodInMillis, Math.max(TimeUnit.SECONDS.toMillis(Globals.maxResponseDuration),
-                minResponsePeriodInMillis)) - 1015; //1015 is empirically determined from the measured response times of the web developer tools
+                minResponsePeriodInMillis)) - 1010; //1010 is empirically determined from the measured response times of the web developer tools
     }
     
     public static void closeEventServices() {

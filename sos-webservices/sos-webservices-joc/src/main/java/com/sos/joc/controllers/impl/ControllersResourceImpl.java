@@ -29,7 +29,6 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
@@ -116,6 +115,7 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
                 agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                 agent.setDisabled(a.getDisabled());
                 agent.setIsClusterWatcher(a.getIsWatcher());
+                agent.setUrl(a.getUri());
                 agent.setSubagents(null);
                 return agent;
             }).collect(Collectors.toList());

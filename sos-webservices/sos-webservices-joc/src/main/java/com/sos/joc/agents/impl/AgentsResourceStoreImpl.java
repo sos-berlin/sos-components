@@ -28,7 +28,9 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocBadRequestException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.agent.Agent;
+import com.sos.joc.model.agent.ClusterAgent;
 import com.sos.joc.model.agent.StoreAgents;
+import com.sos.joc.model.agent.StoreClusterAgents;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
 
@@ -41,13 +43,14 @@ import reactor.core.publisher.Flux;
 @Path("agents")
 public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsResourceStore {
 
-    private static String API_CALL = "./agents/store";
+    private static String API_STORE = "./agents/store";
+    private static String API_CLUSTER_STORE = "./agents/clusterstore";
 
     @Override
     public JOCDefaultResponse store(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
-            initLogging(API_CALL, filterBytes, accessToken);
+            initLogging(API_STORE, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, StoreAgents.class);
             StoreAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
@@ -80,10 +83,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     });
             
             // check uniqueness of AgentUrl
-//            agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
-//                    e -> e.getValue() > 1L).findAny().ifPresent(e -> {
-//                        throw new JocBadRequestException(getUniquenessMsg("Agent url", e));
-//                    });
+            agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
+                    e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+                        throw new JocBadRequestException(getUniquenessMsg("Agent url", e));
+                    });
 
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
@@ -92,7 +95,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
-            connection = Globals.createSosHibernateStatelessConnection(API_CALL);
+            connection = Globals.createSosHibernateStatelessConnection(API_STORE);
             connection.setAutoCommit(false);
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
 
@@ -117,26 +120,19 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbAgent.getDisabled() != agent.getDisabled()) {
                         dbAgent.setDisabled(agent.getDisabled());
                         dbUpdateRequired = true;
-//                        if (!agent.getDisabled()) {
-//                            controllerUpdateRequired = true;
-//                        }
                         if (agent.getDisabled()) {
                             controllerUpdateRequired = false;
                         }
                     }
-//                    if (dbAgent.getIsWatcher() != agent.getIsClusterWatcher()) {
-//                        dbAgent.setIsWatcher(agent.getIsClusterWatcher());
-//                        dbUpdateRequired = true;
-//                    }
                     if (!dbAgent.getAgentName().equals(agent.getAgentName())) {
                         dbAgent.setAgentName(agent.getAgentName());
                         dbUpdateRequired = true;
                     }
-//                    if (!dbAgent.getUri().equals(agent.getUrl())) {
-//                        dbAgent.setUri(agent.getUrl());
-//                        dbUpdateRequired = true;
-//                        //controllerUpdateRequired = true;
-//                    }
+                    if (!dbAgent.getUri().equals(agent.getUrl())) {
+                        dbAgent.setUri(agent.getUrl());
+                        dbUpdateRequired = true;
+                        //controllerUpdateRequired = true;
+                    }
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
@@ -159,11 +155,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 if (agent.getDisabled()) {
                     controllerUpdateRequired = false;
                 }
-                //dbAgent.setIsWatcher(agent.getIsClusterWatcher());
                 dbAgent.setIsWatcher(false);
                 dbAgent.setOsId(0L);
                 dbAgent.setStartedAt(null);
-//                dbAgent.setUri(agent.getUrl());
+                dbAgent.setUri(agent.getUrl());
                 dbAgent.setVersion(null);
                 agentDBLayer.saveAgent(dbAgent);
 
@@ -176,18 +171,49 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             
             Globals.commit(connection);
 
-            // List<JAgentRef> agentRefs = Proxies.getAgents(controllerId, agentDBLayer);
             if (!agentRefs.isEmpty()) {
                 ControllerApi.of(controllerId).updateItems(Flux.fromIterable(agentRefs).map(JUpdateItemOperation::addOrChangeSimple)).thenAccept(
                         e -> ProblemHelper.postProblemEventIfExist(e, getAccessToken(), getJocError(), controllerId));
             }
 
-            // ask for cluster
-            // List<DBItemInventoryJSInstance> controllerInstances = Proxies.getControllerDbInstances().get(controllerId);
-            // if (watcherUpdateRequired && (controllerInstances == null || controllerInstances.size() == 2)) { // is cluster
-            // JobSchedulerResourceModifyJobSchedulerClusterImpl.appointNodes(agentStoreParameter.getControllerId(), agentDBLayer, getJocError());
-            // }
+            return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
+        } catch (JocException e) {
+            Globals.rollback(connection);
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            Globals.rollback(connection);
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.disconnect(connection);
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse clusterStore(String accessToken, byte[] filterBytes) {
+        SOSHibernateSession connection = null;
+        try {
+            initLogging(API_STORE, filterBytes, accessToken);
+            JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
+            StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
+            boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
+            String controllerId = agentStoreParameter.getControllerId();
 
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", permission);
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+            
+            Map<String, Long> agentIds = agentStoreParameter.getClusterAgents().stream().collect(Collectors.groupingBy(ClusterAgent::getAgentId,
+                    Collectors.counting()));
+
+            // check uniqueness of AgentId
+            agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
+                throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
+            });
+            
+            // TODO
+            
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(connection);

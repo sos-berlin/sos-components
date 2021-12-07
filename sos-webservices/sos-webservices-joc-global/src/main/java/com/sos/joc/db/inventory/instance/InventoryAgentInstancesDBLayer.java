@@ -133,6 +133,64 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
+    public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(Collection<String> controllerIds, Collection<String> agentIds,
+            Collection<String> agentUrls, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
+            DBConnectionRefusedException {
+        boolean withAgentIds = agentIds != null && !agentIds.isEmpty();
+        boolean withAgentUrls = agentUrls != null && !agentUrls.isEmpty();
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            List<String> clauses = new ArrayList<>();
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    clauses.add("controllerId = :controllerId");
+                } else {
+                    clauses.add("controllerId in (:controllerIds)");
+                }
+            }
+            if (withAgentIds || withAgentUrls) {
+                if (withAgentIds && withAgentUrls) {
+                    clauses.add("(agentId in (:agentIds) or uri in (:agentUrls))");
+                } else if (withAgentIds) {
+                    clauses.add("agentId in (:agentIds)");
+                } else {
+                    clauses.add("uri in (:agentUrls)");
+                }
+            }
+            if (onlyWatcher) {
+                clauses.add("isWatcher = 1");
+            }
+            if (onlyEnabledAgents) {
+                clauses.add("disabled = 0");
+            }
+            if (!clauses.isEmpty()) {
+                hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+            }
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
+            }
+            if (withAgentIds) {
+                query.setParameterList("agentIds", agentIds);
+            }
+            if (withAgentUrls) {
+                query.setParameterList("agentUrls", agentUrls);
+            }
+            return getSession().getResultList(query);
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(null, true);
     }
@@ -420,15 +478,19 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerId(String controllerId, boolean onlyWatcher,
+    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerId(Collection<String> controllerIds, boolean onlyWatcher,
             boolean onlyEnabledAgents) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
-            if ((controllerId != null && !controllerId.isEmpty()) || onlyWatcher || onlyEnabledAgents) {
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyWatcher || onlyEnabledAgents) {
                 List<String> clauses = new ArrayList<>(3);
                 hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
-                if (controllerId != null) {
-                    clauses.add("controllerId = :controllerId");
+                if (controllerIds != null && !controllerIds.isEmpty()) {
+                    if (controllerIds.size() == 1) {
+                        clauses.add("controllerId = :controllerId");
+                    } else {
+                        clauses.add("controllerId in (:controllerIds)");
+                    }
                 }
                 if (onlyWatcher) {
                     clauses.add("isWatcher = 1");
@@ -442,8 +504,12 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 hql.append(")");
             }
             Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
-            if (controllerId != null && !controllerId.isEmpty()) {
-                query.setParameter("controllerId", controllerId);
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
             }
             List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
             if (result != null) {
@@ -460,31 +526,25 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
     
     public DBItemInventorySubAgentInstance solveAgentWithoutSubAgent(DBItemInventoryAgentInstance agent) {
-        try {
-            Date now = Date.from(Instant.now());
-            DBItemInventorySubAgentInstance subAgent = new DBItemInventorySubAgentInstance();
-            subAgent.setId(null);
-            subAgent.setCertificate(agent.getCertificate());
-            subAgent.setAgentId(agent.getAgentId());
-            subAgent.setIsDirector(1);
-            subAgent.setSubAgentId(agent.getAgentId());
-            subAgent.setUri(agent.getUri());
-            subAgent.setModified(now);
-            //getSession().save(subAgent);
-            return subAgent;
-        } catch (DBMissingDataException ex) {
-            throw ex;
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-        } catch (Exception ex) {
-            throw new DBInvalidDataException(ex);
-        }
+        DBItemInventorySubAgentInstance subAgent = new DBItemInventorySubAgentInstance();
+        subAgent.setAgentId(agent.getAgentId());
+        subAgent.setSubAgentId(agent.getAgentId());
+        subAgent.setUri(agent.getUri());
+        subAgent.setIsDirector(SubagentDirectorType.PRIMARY_DIRECTOR.intValue());
+        return subAgent;
     }
     
     private int deleteSubAgents(String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where agentId =: agentId");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("agentId", agentId);
+        return getSession().executeUpdate(query);
+    }
+    
+    public int deleteSubAgent(String subagentId) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where subagentId =: subagentId");
+        Query<?> query = getSession().createQuery(hql.toString());
+        query.setParameter("subagentId", subagentId);
         return getSession().executeUpdate(query);
     }
     

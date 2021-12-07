@@ -29,6 +29,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "role",
     "startedAt",
     "version",
+    "javaVersion",
     "os",
     "timeZone"
 })
@@ -75,7 +76,7 @@ public class JobSchedulerP {
     @JsonProperty("clusterUrl")
     private String clusterUrl;
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -94,8 +95,10 @@ public class JobSchedulerP {
     private Date startedAt;
     @JsonProperty("version")
     private String version;
+    @JsonProperty("javaVersion")
+    private String javaVersion;
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -226,7 +229,7 @@ public class JobSchedulerP {
     }
 
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -238,7 +241,7 @@ public class JobSchedulerP {
     }
 
     /**
-     * jobscheduler role
+     * Controller role
      * <p>
      * 
      * (Required)
@@ -281,8 +284,18 @@ public class JobSchedulerP {
         this.version = version;
     }
 
+    @JsonProperty("javaVersion")
+    public String getJavaVersion() {
+        return javaVersion;
+    }
+
+    @JsonProperty("javaVersion")
+    public void setJavaVersion(String javaVersion) {
+        this.javaVersion = javaVersion;
+    }
+
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -293,7 +306,7 @@ public class JobSchedulerP {
     }
 
     /**
-     * jobscheduler platform
+     * Controller platform
      * <p>
      * 
      * 
@@ -315,12 +328,12 @@ public class JobSchedulerP {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("os", os).append("timeZone", timeZone).toString();
+        return new ToStringBuilder(this).append("id", id).append("surveyDate", surveyDate).append("controllerId", controllerId).append("title", title).append("host", host).append("url", url).append("clusterUrl", clusterUrl).append("role", role).append("startedAt", startedAt).append("version", version).append("javaVersion", javaVersion).append("os", os).append("timeZone", timeZone).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).toHashCode();
+        return new HashCodeBuilder().append(role).append(surveyDate).append(controllerId).append(os).append(javaVersion).append(clusterUrl).append(startedAt).append(timeZone).append(title).append(version).append(url).append(host).append(id).toHashCode();
     }
 
     @Override
@@ -332,7 +345,7 @@ public class JobSchedulerP {
             return false;
         }
         JobSchedulerP rhs = ((JobSchedulerP) other);
-        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).isEquals();
+        return new EqualsBuilder().append(role, rhs.role).append(surveyDate, rhs.surveyDate).append(controllerId, rhs.controllerId).append(os, rhs.os).append(javaVersion, rhs.javaVersion).append(clusterUrl, rhs.clusterUrl).append(startedAt, rhs.startedAt).append(timeZone, rhs.timeZone).append(title, rhs.title).append(version, rhs.version).append(url, rhs.url).append(host, rhs.host).append(id, rhs.id).isEquals();
     }
 
 }

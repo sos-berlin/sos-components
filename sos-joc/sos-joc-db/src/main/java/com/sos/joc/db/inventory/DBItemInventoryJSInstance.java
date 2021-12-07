@@ -49,6 +49,9 @@ public class DBItemInventoryJSInstance extends DBItem {
     @Column(name = "[VERSION]", nullable = true)
     private String version;
 
+    @Column(name = "[JAVA_VERSION]", nullable = true)
+    private String javaVersion;
+
     @Column(name = "[STARTED_AT]", nullable = true)
     private Date startedAt;
 
@@ -131,6 +134,14 @@ public class DBItemInventoryJSInstance extends DBItem {
         version = val;
     }
 
+    public String getJavaVersion() {
+        return javaVersion;
+    }
+
+    public void setJavaVersion(String val) {
+        javaVersion = val;
+    }
+    
     public Date getStartedAt() {
         return startedAt;
     }

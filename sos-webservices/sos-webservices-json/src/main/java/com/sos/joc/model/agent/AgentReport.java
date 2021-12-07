@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "controllerId",
     "agentId",
+    "url",
     "numOfSuccessfulTasks",
     "numOfJobs"
 })
@@ -35,6 +36,15 @@ public class AgentReport {
      */
     @JsonProperty("agentId")
     private String agentId;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("url")
+    private String url;
     /**
      * non negative long
      * <p>
@@ -89,6 +99,30 @@ public class AgentReport {
     }
 
     /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("url")
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * (Required)
+     * 
+     */
+    @JsonProperty("url")
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
      * non negative long
      * <p>
      * 
@@ -138,12 +172,12 @@ public class AgentReport {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("numOfSuccessfulTasks", numOfSuccessfulTasks).append("numOfJobs", numOfJobs).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("url", url).append("numOfSuccessfulTasks", numOfSuccessfulTasks).append("numOfJobs", numOfJobs).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(numOfSuccessfulTasks).append(agentId).append(controllerId).append(numOfJobs).toHashCode();
+        return new HashCodeBuilder().append(numOfSuccessfulTasks).append(agentId).append(controllerId).append(numOfJobs).append(url).toHashCode();
     }
 
     @Override
@@ -155,7 +189,7 @@ public class AgentReport {
             return false;
         }
         AgentReport rhs = ((AgentReport) other);
-        return new EqualsBuilder().append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(numOfJobs, rhs.numOfJobs).isEquals();
+        return new EqualsBuilder().append(numOfSuccessfulTasks, rhs.numOfSuccessfulTasks).append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(numOfJobs, rhs.numOfJobs).append(url, rhs.url).isEquals();
     }
 
 }

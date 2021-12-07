@@ -127,6 +127,14 @@ public class ControllerAnswer extends Controller {
 				dbInstance.setVersion(version);
 				updateDbInstance = true;
 			}
+			String javaVersion = overviewJson.getJava().getVersion();
+			if (javaVersion.length() > 30) {
+			    javaVersion = javaVersion.substring(0, 30);
+			}
+            if (!javaVersion.equals(dbInstance.getJavaVersion())) {
+                dbInstance.setJavaVersion(javaVersion);
+                updateDbInstance = true;
+            }
 //			if (dbInstance.getIsCluster() && isActive != null) {
 //			    dbInstance.setIsActive(isActive);
 //                updateDbInstance = true;
@@ -151,7 +159,8 @@ public class ControllerAnswer extends Controller {
 		setOs(getOperatingSystem());
 		setHost(dbOs.getHostname());
 		setVersion(dbInstance.getVersion());
-		setSecurityLevel(Globals.getJocSecurityLevel());
+		setJavaVersion(dbInstance.getJavaVersion());
+        setSecurityLevel(Globals.getJocSecurityLevel());
 	}
 	
 	@JsonIgnore

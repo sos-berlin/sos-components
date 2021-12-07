@@ -17,22 +17,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "controllerId",
     "agentId",
     "subagentId",
     "url",
-    "isDirector"
+    "isDirector",
+    "isClusterWatcher"
 })
 public class SubAgent {
 
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    private String controllerId;
     /**
      * string without < and >
      * <p>
@@ -67,28 +59,8 @@ public class SubAgent {
      */
     @JsonProperty("isDirector")
     private SubagentDirectorType isDirector = SubagentDirectorType.fromValue("NO_DIRECTOR");
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public String getControllerId() {
-        return controllerId;
-    }
-
-    /**
-     * controllerId
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("controllerId")
-    public void setControllerId(String controllerId) {
-        this.controllerId = controllerId;
-    }
+    @JsonProperty("isClusterWatcher")
+    private Boolean isClusterWatcher = false;
 
     /**
      * string without < and >
@@ -182,14 +154,24 @@ public class SubAgent {
         this.isDirector = isDirector;
     }
 
+    @JsonProperty("isClusterWatcher")
+    public Boolean getIsClusterWatcher() {
+        return isClusterWatcher;
+    }
+
+    @JsonProperty("isClusterWatcher")
+    public void setIsClusterWatcher(Boolean isClusterWatcher) {
+        this.isClusterWatcher = isClusterWatcher;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).toString();
+        return new ToStringBuilder(this).append("agentId", agentId).append("subagentId", subagentId).append("url", url).append("isDirector", isDirector).append("isClusterWatcher", isClusterWatcher).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(subagentId).append(controllerId).append(url).append(isDirector).toHashCode();
+        return new HashCodeBuilder().append(agentId).append(subagentId).append(isClusterWatcher).append(url).append(isDirector).toHashCode();
     }
 
     @Override
@@ -201,7 +183,7 @@ public class SubAgent {
             return false;
         }
         SubAgent rhs = ((SubAgent) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(controllerId, rhs.controllerId).append(url, rhs.url).append(isDirector, rhs.isDirector).isEquals();
+        return new EqualsBuilder().append(agentId, rhs.agentId).append(subagentId, rhs.subagentId).append(isClusterWatcher, rhs.isClusterWatcher).append(url, rhs.url).append(isDirector, rhs.isDirector).isEquals();
     }
 
 }

@@ -15,4 +15,10 @@ public interface IAgentsResourceStore {
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse store(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
+    @Path("cluster/store")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse clusterStore(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
 }

@@ -231,6 +231,7 @@ public class AgentsResourceStateImpl extends JOCResourceImpl implements IAgentsR
         agent.setOrders(null);
         agent.setAgentId(dbAgent.getAgentId());
         agent.setAgentName(dbAgent.getAgentName());
+        agent.setUrl(dbAgent.getUri());
         agent.setControllerId(dbAgent.getControllerId());
         agent.setIsClusterWatcher(dbAgent.getIsWatcher());
         agent.setState(getState(AgentStateText.UNKNOWN));

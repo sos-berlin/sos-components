@@ -17,6 +17,12 @@ public interface IAgentsResource {
     public JOCDefaultResponse post(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
+    @Path("cluster/p")
+    @Consumes("application/json")
+    @Produces({ "application/json" })
+    public JOCDefaultResponse postCluster(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
+    
+    @POST
     @Path("names")
     @Consumes("application/json")
     @Produces({ "application/json" })
