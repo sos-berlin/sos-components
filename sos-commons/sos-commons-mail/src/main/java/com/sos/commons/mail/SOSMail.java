@@ -544,7 +544,7 @@ public class SOSMail {
                 }
                 return false;
             } else {
-                throw new Exception(lastError, ee);
+                throw ee;
             }
         } catch (javax.mail.MessagingException e) {
             if (queueMailOnError) {
@@ -563,7 +563,7 @@ public class SOSMail {
                     throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
                 }
             } else {
-                throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
+                throw e;
             }
         } catch (SocketTimeoutException e) {
             if (queueMailOnError) {
@@ -579,10 +579,10 @@ public class SOSMail {
                     throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
                 }
             } else {
-                throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
+                throw e;
             }
         } catch (Exception e) {
-            throw new Exception(String.format("error occurred on send: %s", e.toString()), e);
+            throw e;
         }
     }
 
