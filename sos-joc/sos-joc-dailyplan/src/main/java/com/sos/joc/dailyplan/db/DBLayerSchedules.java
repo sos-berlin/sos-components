@@ -8,13 +8,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.inventory.model.deploy.DeployType;
+import com.sos.joc.dailyplan.common.DailyPlanHelper;
 import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryReleasedConfiguration;
 import com.sos.joc.model.common.Folder;
@@ -155,7 +154,7 @@ public class DBLayerSchedules extends DBLayer {
                 }
                 String paramName = "name" + i;
                 hql.append("name=:").append(paramName).append(" ");
-                paramsName.put(paramName, single);
+                paramsName.put(paramName, DailyPlanHelper.getBasenameFromPath(single));
                 i++;
             }
             hql.append(") ");

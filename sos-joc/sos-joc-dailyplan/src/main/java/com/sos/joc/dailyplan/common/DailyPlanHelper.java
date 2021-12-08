@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
 import com.sos.commons.util.SOSDate;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.schedule.Schedule;
 import com.sos.inventory.model.schedule.VariableSet;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
@@ -33,7 +34,7 @@ public class DailyPlanHelper {
 
     // TODO move to SOSPath (see duplicate in HistoryUtil)
     public static String getFolderFromPath(String path) {
-        if (!path.startsWith("/")) {
+        if (path == null || !path.startsWith("/")) {
             return "/";
         }
         int li = path.lastIndexOf("/");
@@ -41,6 +42,15 @@ public class DailyPlanHelper {
             return path.substring(0, 1);
         }
         return li > -1 ? path.substring(0, li) : path;
+    }
+
+    // TODO move to SOSPath (see duplicate in HistoryUtil)
+    public static String getBasenameFromPath(String path) {
+        if (SOSString.isEmpty(path)) {
+            return path;
+        }
+        int li = path.lastIndexOf("/");
+        return li > -1 ? path.substring(li + 1) : path;
     }
 
     private static String getDailyPlanDateAsString(Long startTime, String timeZone) throws SOSInvalidDataException {
