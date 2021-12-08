@@ -23,8 +23,6 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.config.IniSecurityManagerFactory;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.ExpiredSessionException;
-import org.apache.shiro.session.Session;
-import org.apache.shiro.session.UnknownSessionException;
 import org.apache.shiro.session.mgt.DefaultSessionKey;
 import org.apache.shiro.session.mgt.SessionKey;
 import org.ini4j.InvalidFileFormatException;
@@ -646,7 +644,7 @@ public class SOSServicePermissionShiro {
                         dbItemIamIdentityService.setIdentityServiceName("shiro");
                         dbItemIamIdentityService.setIdentityServiceType("SHIRO");
                         dbItemIamIdentityService.setOrdering(1);
-                        dbItemIamIdentityService.setRequierd(false);
+                        dbItemIamIdentityService.setRequired(false);
                         sosHibernateSession.setAutoCommit(false);
                         sosHibernateSession.beginTransaction();
                         sosHibernateSession.save(dbItemIamIdentityService);

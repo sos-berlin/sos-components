@@ -109,7 +109,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
         try {
             initLogging(API_CALL_CLUSTER_P, filterBytes, accessToken);
             
-            if (!JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
             
@@ -143,7 +143,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
                     .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
-            Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerId(allowedControllers, false,
+            Map<String, List<DBItemInventorySubAgentInstance>> subAgents = dbLayer.getSubAgentInstancesByControllerIds(allowedControllers, false,
                     agentParameter.getOnlyEnabledAgents());
             ClusterAgents agents = new ClusterAgents();
             if (dbAgents != null) {

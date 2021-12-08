@@ -402,8 +402,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 return result;
             }
             return Collections.emptyList();
-        } catch (DBMissingDataException ex) {
-            throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -450,8 +448,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                         DBItemInventorySubAgentInstance::getDirectorAsEnum, Function.identity(), (k, v) -> v)));
             }
             return Collections.emptyMap();
-        } catch (DBMissingDataException ex) {
-            throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -470,6 +466,27 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             query.setParameter("agentId", agentId);
             query.setParameter("isDirector", isDirector);
             return getSession().getSingleResult(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<String> getDirectorSubAgentIds(String agentId) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+            hql.append(" where agentId = :agentId");
+            hql.append(" and isDirector in (:isDirectors) order by isDirector");
+            Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
+            query.setParameter("agentId", agentId);
+            query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(), SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+            List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
+            if (result == null || result.isEmpty() || (result != null && result.size() == 1 && SubagentDirectorType.STANDBY_DIRECTOR
+                    .intValue() == result.get(0).getIsDirector())) {
+                throw new DBMissingDataException("The Agent '" + agentId + "' must have a primary director.");
+            }
+            return result.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList());
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -489,8 +506,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 return result;
             }
             return Collections.emptyList();
-        } catch (DBMissingDataException ex) {
-            throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
@@ -498,7 +513,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerId(Collection<String> controllerIds, boolean onlyWatcher,
+    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
             boolean onlyEnabledAgents) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -536,8 +551,38 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 return result.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getAgentId));
             }
             return Collections.emptyMap();
-        } catch (DBMissingDataException ex) {
-            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<DBItemInventorySubAgentInstance> getSubAgentInstancesByControllerIds(Collection<String> controllerIds) {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+                if (controllerIds.size() == 1) {
+                    hql.append(" where controllerId = :controllerId");
+                } else {
+                    hql.append(" where controllerId in (:controllerIds)");
+                }
+                hql.append(")");
+            }
+            Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
+            }
+            List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
+            if (result != null) {
+                return result;
+            }
+            return Collections.emptyList();
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

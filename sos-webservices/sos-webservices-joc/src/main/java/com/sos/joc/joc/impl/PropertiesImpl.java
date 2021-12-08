@@ -53,7 +53,7 @@ public class PropertiesImpl extends JOCResourceImpl implements IPropertiesResour
             ConfigurationGlobalsUser userSettings = Globals.getConfigurationGlobalsUser();
             entity.setWelcomeDoNotRemindMe(ClusterSettings.getWelcomeDoNotRemindMe(userSettings));
             entity.setWelcomeGotIt(ClusterSettings.getWelcomeGotIt(userSettings));
-            entity.setClusterLicense(JocClusterService.getInstance().getCluster().getConfig().getClusterMode() );
+            entity.setClusterLicense(JocClusterService.getInstance().getCluster() != null && JocClusterService.getInstance().getCluster().getConfig().getClusterMode() );
             
             entity.setDeliveryDate(Date.from(Instant.now()));
             

@@ -36,7 +36,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
         try {
             initLogging(API_CALL_REMOVE, filterBytes, accessToken);
             
-            if (!JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
             
@@ -49,7 +49,7 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
                 return jocDefaultResponse;
             }
             
-            storeAuditLog(subAgentCommand.getAuditLog(), subAgentCommand.getControllerId(), CategoryType.CONTROLLER);
+            storeAuditLog(subAgentCommand.getAuditLog(), controllerId, CategoryType.CONTROLLER);
             
             Stream<JUpdateItemOperation> subAgents = subAgentCommand.getSubagentIds().stream().distinct().map(SubagentId::of).map(
                     JUpdateItemOperation::deleteSimple);

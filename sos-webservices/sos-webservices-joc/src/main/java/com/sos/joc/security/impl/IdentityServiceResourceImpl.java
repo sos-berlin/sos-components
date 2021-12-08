@@ -63,7 +63,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
-                identityService.setRequired(dbItemIamIdentityService.getRequierd());
+                identityService.setRequired(dbItemIamIdentityService.getRequired());
             }
 
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
@@ -109,7 +109,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             dbItemIamIdentityService.setDisabled(identityService.getDisabled());
             dbItemIamIdentityService.setIdentityServiceType(identityService.getIdentityServiceType().value());
             dbItemIamIdentityService.setOrdering(identityService.getOrdering());
-            dbItemIamIdentityService.setRequierd(identityService.getRequired());
+            dbItemIamIdentityService.setRequired(identityService.getRequired());
 
             if (dbItemIamIdentityService.getId() == null) {
                 sosHibernateSession.save(dbItemIamIdentityService);
@@ -209,7 +209,7 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
                 identityService.setIdentityServiceName(dbItemIamIdentityService.getIdentityServiceName());
                 identityService.setIdentityServiceType(IdentityServiceTypes.fromValue(dbItemIamIdentityService.getIdentityServiceType()));
                 identityService.setOrdering(dbItemIamIdentityService.getOrdering());
-                identityService.setRequired(dbItemIamIdentityService.getRequierd());
+                identityService.setRequired(dbItemIamIdentityService.getRequired());
                 identityServices.getIdentityServiceItems().add(identityService);
             }
 
