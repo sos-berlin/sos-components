@@ -58,7 +58,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
     @Override
     public JOCDefaultResponse postOrdersGenerate(String accessToken, byte[] filterBytes) {
-        LOGGER.debug("Generate the orders for the daily plan");
         try {
             initLogging(IMPL_PATH, filterBytes, accessToken);
             JsonValidator.validateFailFast(filterBytes, GenerateRequest.class);
@@ -135,9 +134,6 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             DailyPlanRunner runner = new DailyPlanRunner(settings);
             Collection<Schedule> schedules = getSchedules(runner, controllerId, scheduleFolders, scheduleSingles, workflowFolders, workflowSingles,
                     permittedFolders, checkedFolders);
-
-            LOGGER.info(String.format("[%s][generateDailyPlan][%s][%s]found %s schedules", StartupMode.manual, controllerId, in.getDailyPlanDate(),
-                    schedules.size()));
 
             Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, schedules, in
                     .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);

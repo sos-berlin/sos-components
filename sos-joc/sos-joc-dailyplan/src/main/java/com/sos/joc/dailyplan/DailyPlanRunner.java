@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
@@ -244,12 +245,18 @@ public class DailyPlanRunner extends TimerTask {
             IOException, ParseException, SOSException, URISyntaxException, ControllerConnectionResetException, ControllerConnectionRefusedException,
             InterruptedException, ExecutionException, TimeoutException {
 
+        String operation = withSubmit ? "creating/submitting" : "creating";
+        if (schedules == null || schedules.size() == 0) {
+            LOGGER.info(String.format("[%s][%s][%s][%s][skip]found 0 schedules", startupMode, operation, controllerId, date));
+            //TODO initialize OrderListSynchronizer before calculateStartTimes and return synchronizer.getPlannedOrders()
+            return new TreeMap<PlannedOrderKey, PlannedOrder>();
+        }
+
         OrderListSynchronizer synchronizer = calculateStartTimes(startupMode, controllerId, schedules, date);
         synchronizer.setJocError(jocError);
         synchronizer.setAccessToken(accessToken);
         OrderCounter c = DailyPlanHelper.getOrderCount(synchronizer.getPlannedOrders());
 
-        String operation = withSubmit ? "creating/submitting" : "creating";
         if (synchronizer.getPlannedOrders().size() > 0) {
             String submissionId = "unknown";
             String submissionDate = "unknown";
