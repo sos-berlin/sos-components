@@ -487,20 +487,23 @@ public class SOSMail {
     private boolean sendJavaMail() throws Exception {
         try {
             prepareJavaMail();
-            String sTO = getRecipientsAsString();
-            String logMessage = "sending email:" + "   host:port=" + getHost() + ":" + getPort() + "   to=" + sTO;
-            String sCC = getCCsAsString();
-            if (!"".equals(sCC)) {
-                logMessage += "   sCC=" + sCC;
+
+            StringBuilder msg = new StringBuilder("sending email: host:port=").append(getHost()).append(":").append(getPort());
+            msg.append(" to=").append(getRecipientsAsString());
+            String cc = getCCsAsString();
+            if (!"".equals(cc)) {
+                msg.append(" CC=").append(cc);
             }
-            String sBCC = this.getBCCsAsString();
-            if (!"".equals(sBCC)) {
-                logMessage += "   sBCC=" + sBCC;
+            String bcc = getBCCsAsString();
+            if (!"".equals(bcc)) {
+                msg.append(" BCC=").append(bcc);
             }
-            LOGGER.info(logMessage);
-            LOGGER.debug("Subject=" + subject);
-            LOGGER.debug(dumpHeaders());
-            LOGGER.debug(dumpMessageAsString(false));
+            LOGGER.info(msg.toString());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Subject=" + subject);
+                LOGGER.debug(dumpHeaders());
+                LOGGER.debug(dumpMessageAsString(false));
+            }
             if (!sendToOutputStream) {
                 Transport transport;
                 if ("ssl".equalsIgnoreCase(securityProtocol) || "starttls".equalsIgnoreCase(securityProtocol)) {
@@ -530,8 +533,9 @@ public class SOSMail {
             }
             return true;
         } catch (javax.mail.AuthenticationFailedException ee) {
-            lastError = "AuthenticationFailedException while connecting to " + getHost() + ":" + getPort() + " " + getUser() + "/******** -->" + ee
-                    .getMessage();
+            lastError = String.format("%s while connecting to %s:%s %s /******** --> %s", ee.getClass().getSimpleName(), getHost(), getPort(),
+                    getUser(), ee.toString());
+
             if (queueMailOnError) {
                 try {
                     dumpMessageToFile(true);
@@ -540,14 +544,14 @@ public class SOSMail {
                 }
                 return false;
             } else {
-                throw new Exception(lastError + ": error occurred on send: " + ee.toString(), ee);
+                throw new Exception(lastError, ee);
             }
         } catch (javax.mail.MessagingException e) {
             if (queueMailOnError) {
                 if (!SOSString.isEmpty(queueDir) && e.getMessage().startsWith("Could not connect to SMTP host") || e.getMessage().startsWith(
                         "Unknown SMTP host") || e.getMessage().startsWith("Read timed out") || e.getMessage().startsWith(
                                 "Exception reading response")) {
-                    lastError = e.getMessage() + " ==> " + getHost() + ":" + getPort() + " " + getUser() + "/********";
+                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), getHost(), getPort(), getUser());
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
@@ -556,15 +560,15 @@ public class SOSMail {
                     return false;
 
                 } else {
-                    throw new Exception("error occurred on send: " + e.toString(), e);
+                    throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
                 }
             } else {
-                throw new Exception("error occurred on send: " + e.toString());
+                throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
             }
         } catch (SocketTimeoutException e) {
             if (queueMailOnError) {
                 if (!SOSString.isEmpty(queueDir)) {
-                    lastError = e.getMessage() + " ==> " + getHost() + ":" + getPort() + " " + getUser() + "/********";
+                    lastError = String.format("%s ==> %s:%s %s /********", e.getMessage(), getHost(), getPort(), getUser());
                     try {
                         dumpMessageToFile(true);
                     } catch (Exception ee) {
@@ -572,14 +576,14 @@ public class SOSMail {
                     }
                     return false;
                 } else {
-                    throw new Exception("error occurred on send: " + e.toString(), e);
+                    throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
                 }
+            } else {
+                throw new Exception(String.format("%s occurred on send: %s", e.getClass().getSimpleName(), e.toString()), e);
             }
         } catch (Exception e) {
-            throw new Exception("error occurred on send: " + e.toString(), e);
+            throw new Exception(String.format("error occurred on send: %s", e.toString()), e);
         }
-        return true;
-
     }
 
     private boolean haveAlternative() {
