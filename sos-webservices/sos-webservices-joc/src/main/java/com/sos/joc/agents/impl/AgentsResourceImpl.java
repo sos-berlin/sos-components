@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -74,11 +75,15 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             List<DBItemInventoryAgentInstance> dbAgents = dbLayer.getAgentsByControllerIdAndAgentIds(allowedControllers, agentParameter
                     .getAgentIds(), false, agentParameter.getOnlyEnabledAgents());
+            List<String> dbClusterAgentIds = dbLayer.getClusterAgentIds(allowedControllers, agentParameter.getOnlyEnabledAgents());
             Agents agents = new Agents();
             if (dbAgents != null) {
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
                 agents.setAgents(dbAgents.stream().map(a -> {
+                    if (dbClusterAgentIds.contains(a.getAgentId())) {
+                        return null;
+                    }
                     Agent agent = new Agent();
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
@@ -88,7 +93,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setControllerId(a.getControllerId());
                     agent.setUrl(a.getUri());
                     return agent;
-                }).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
             }
             agents.setDeliveryDate(Date.from(Instant.now()));
             
@@ -150,6 +155,9 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 Set<String> controllerIds = dbAgents.stream().map(DBItemInventoryAgentInstance::getControllerId).collect(Collectors.toSet());
                 Map<String, Set<String>> allAliases = dbLayer.getAgentNamesByAgentIds(controllerIds);
                 agents.setAgents(dbAgents.stream().map(a -> {
+                    if (!subAgents.containsKey(a.getAgentId())) { // solo agent
+                        return null;
+                    }
                     ClusterAgent agent = new ClusterAgent();
                     agent.setAgentId(a.getAgentId());
                     agent.setAgentName(a.getAgentName());
@@ -159,7 +167,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                     agent.setUrl(a.getUri());
                     agent.setSubagents(mapDBSubAgentsToSubAgents(subAgents.get(a.getAgentId())));
                     return agent;
-                }).collect(Collectors.toList()));
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
             }
             agents.setDeliveryDate(Date.from(Instant.now()));
             

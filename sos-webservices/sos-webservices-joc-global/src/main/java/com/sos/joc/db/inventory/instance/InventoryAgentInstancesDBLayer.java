@@ -558,6 +558,47 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
+    public List<String> getClusterAgentIds(Collection<String> controllerIds, boolean onlyEnabledAgents) {
+        try {
+            StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+            if ((controllerIds != null && !controllerIds.isEmpty()) || onlyEnabledAgents) {
+                List<String> clauses = new ArrayList<>(3);
+                hql.append(" where agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+                if (controllerIds != null && !controllerIds.isEmpty()) {
+                    if (controllerIds.size() == 1) {
+                        clauses.add("controllerId = :controllerId");
+                    } else {
+                        clauses.add("controllerId in (:controllerIds)");
+                    }
+                }
+                if (onlyEnabledAgents) {
+                    clauses.add("disabled = 0");
+                }
+                if (!clauses.isEmpty()) {
+                    hql.append(clauses.stream().collect(Collectors.joining(" and ", " where ", "")));
+                }
+                hql.append(")");
+            }
+            Query<String> query = getSession().createQuery(hql.toString());
+            if (controllerIds != null && !controllerIds.isEmpty()) {
+                if (controllerIds.size() == 1) {
+                    query.setParameter("controllerId", controllerIds.iterator().next());
+                } else {
+                    query.setParameterList("controllerIds", controllerIds);
+                }
+            }
+            List<String> result = getSession().getResultList(query);
+            if (result != null) {
+                return result;
+            }
+            return Collections.emptyList();
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
     public List<DBItemInventorySubAgentInstance> getSubAgentInstancesByControllerIds(Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
