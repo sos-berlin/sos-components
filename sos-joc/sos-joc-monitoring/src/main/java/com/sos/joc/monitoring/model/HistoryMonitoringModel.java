@@ -557,9 +557,13 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private void serialize() {
-        if (payloads.size() > 0 || longerThan.size() > 0) {
+        int payloadsSize = payloads.size();
+        int longerThanSize = longerThan.size();
+        if (payloadsSize > 0 || longerThanSize > 0) {
             try {
                 saveJocVariable(new SOSSerializer<SerializedResult>().serializeCompressed2bytes(new SerializedResult(payloads, longerThan)));
+                LOGGER.info(String.format("[%s][%s][serialized]payloads=%s,longerThan=%s", serviceIdentifier, IDENTIFIER, payloadsSize,
+                        longerThanSize));
             } catch (Exception e) {
                 LOGGER.error(e.toString(), e);
             }
@@ -577,14 +581,20 @@ public class HistoryMonitoringModel implements Serializable {
                 return;
             }
             SerializedResult sr = new SOSSerializer<SerializedResult>().deserializeCompressed(var.getBinaryValue());
+            int payloadsSize = 0;
+            int longerThanSize = 0;
             if (sr.getPayloads() != null) {
+                payloadsSize = sr.getPayloads().size();
                 // payloads on start is maybe not empty (because event subscription)
                 payloads.addAll(sr.getPayloads());
             }
             if (sr.getLongerThan() != null) {
+                longerThanSize = sr.getLongerThan().size();
                 // longerThan on start is empty ... ?
                 longerThan.putAll(sr.getLongerThan());
             }
+            LOGGER.info(String.format("[%s][%s][deserialized]payloads=%s,longerThan=%s", serviceIdentifier, IDENTIFIER, payloadsSize,
+                    longerThanSize));
 
         } catch (Throwable e) {
             LOGGER.error(e.toString(), e);
