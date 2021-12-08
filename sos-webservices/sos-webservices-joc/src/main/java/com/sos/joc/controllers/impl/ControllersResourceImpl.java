@@ -29,7 +29,7 @@ import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryInstancesDBLayer;
 import com.sos.joc.db.inventory.os.InventoryOperatingSystemsDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.model.agent.ClusterAgent;
+import com.sos.joc.model.agent.Agent;
 import com.sos.joc.model.controller.Controller;
 import com.sos.joc.model.controller.ControllerId;
 import com.sos.joc.model.controller.Controllers;
@@ -88,7 +88,10 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
             Controllers entity = new Controllers();
             entity.setControllers(getControllers(allowedControllers, accessToken, connection, onlyDb));
             if (onlyDb) {
-                entity.setAgents(getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors.toSet()), connection));
+                Map<Boolean, List<Agent>> agents = getAgents(entity.getControllers().stream().map(Controller::getControllerId).collect(Collectors
+                        .toSet()), connection);
+                entity.setAgents(agents.get(false));
+                entity.setClusterAgents(agents.get(true));
             }
             entity.setDeliveryDate(Date.from(Instant.now()));
             
@@ -103,24 +106,28 @@ public class ControllersResourceImpl extends JOCResourceImpl implements IControl
         }
     }
     
-    private static List<ClusterAgent> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
+    private static Map<Boolean, List<Agent>> getAgents(Set<String> controllerIds, SOSHibernateSession connection) {
         InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
+        List<String> clusterAgentIds = agentDBLayer.getClusterAgentIds(controllerIds, true);
         List<DBItemInventoryAgentInstance> agents = agentDBLayer.getAgentsByControllerIds(controllerIds);
         if (agents != null) {
             Map<String, Set<String>> allAliases = agentDBLayer.getAgentNamesByAgentIds(controllerIds);
             return agents.stream().map(a -> {
-                ClusterAgent agent = new ClusterAgent();
+                Agent agent = new Agent();
                 agent.setAgentId(a.getAgentId());
                 agent.setAgentName(a.getAgentName());
                 agent.setAgentNameAliases(allAliases.get(a.getAgentId()));
                 agent.setDisabled(a.getDisabled());
                 agent.setIsClusterWatcher(a.getIsWatcher());
-                agent.setUrl(a.getUri());
-                agent.setSubagents(null);
+                if (clusterAgentIds.contains(a.getAgentId())) {
+                    agent.setUrl(null);
+                } else {
+                    agent.setUrl(a.getUri());
+                }
                 return agent;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.groupingBy(a -> a.getUrl() == null));
         }
-        return null;
+        return Collections.emptyMap();
     }
 
     private static List<Controller> getControllers(Set<String> allowedControllers, String accessToken, SOSHibernateSession connection, boolean onlyDb)

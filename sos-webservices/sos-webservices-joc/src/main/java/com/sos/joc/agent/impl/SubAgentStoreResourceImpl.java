@@ -86,7 +86,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                     Function.identity(), (k, v) -> v));
             List<DBItemInventorySubAgentInstance> dbSubAgents = dbLayer.getSubAgentInstancesByControllerIds(Collections.singleton(controllerId));
             
-            List<JUpdateItemOperation> subAgentsToController = saveOrUpdate(dbLayer, agentId, dbSubAgents, subAgentsMap);
+            List<JUpdateItemOperation> subAgentsToController = saveOrUpdate(dbLayer, dbAgent, dbSubAgents, subAgentsMap);
             Globals.commit(connection);
             Globals.disconnect(connection);
             connection = null;
@@ -109,8 +109,10 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
         }
     }
     
-    public static List<JUpdateItemOperation> saveOrUpdate(InventoryAgentInstancesDBLayer dbLayer, String agentId,
+    public static List<JUpdateItemOperation> saveOrUpdate(InventoryAgentInstancesDBLayer dbLayer, DBItemInventoryAgentInstance dbAgent,
             Collection<DBItemInventorySubAgentInstance> dbSubAgents, Map<String, SubAgent> subAgentsMap) throws SOSHibernateException {
+        String agentId = dbAgent.getAgentId();
+        
         Map<Boolean, List<DBItemInventorySubAgentInstance>> mapOfAgentIds = dbSubAgents.stream().collect(Collectors.groupingBy(s -> s.getAgentId()
                 .equals(agentId)));
         
@@ -212,9 +214,8 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                     dbLayer.getSession().update(primaryDirector);
                 }
                 if (primaryDirectorUrl != null) {
-                    DBItemInventoryAgentInstance a = dbLayer.getAgentInstance(agentId);
-                    a.setUri(primaryDirectorUrl);
-                    dbLayer.updateAgent(a);
+                    dbAgent.setUri(primaryDirectorUrl);
+                    dbLayer.updateAgent(dbAgent);
                 }
             }
             if (standbyDirectorIsChanged && standbyDirector != null) {

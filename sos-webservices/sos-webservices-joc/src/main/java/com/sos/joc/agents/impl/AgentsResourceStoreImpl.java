@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -269,8 +268,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                             controllerId));
                     Map<String, SubAgent> subAgentsMap = agent.getSubagents().stream().distinct().collect(Collectors.toMap(SubAgent::getSubagentId,
                             Function.identity(), (k, v) -> v));
-                    subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, agent.getAgentId(),
-                            dbSubAgents, subAgentsMap));
+                    subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, subAgentsMap));
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
@@ -294,8 +292,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         controllerId));
                 Map<String, SubAgent> subAgentsMap = agent.getSubagents().stream().distinct().collect(Collectors.toMap(SubAgent::getSubagentId,
                         Function.identity(), (k, v) -> v));
-                subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, agent.getAgentId(),
-                        dbSubAgents, subAgentsMap));
+                subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, subAgentsMap));
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }

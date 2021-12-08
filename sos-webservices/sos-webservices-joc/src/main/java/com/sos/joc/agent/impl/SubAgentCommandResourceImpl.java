@@ -12,11 +12,9 @@ import com.sos.joc.agent.resource.ISubAgentCommandResource;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
-import com.sos.joc.classes.cluster.JocClusterService;
 import com.sos.joc.classes.proxy.ControllerApi;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.exceptions.JocException;
-import com.sos.joc.exceptions.JocMissingLicenseException;
 import com.sos.joc.model.agent.SubAgentsCommand;
 import com.sos.joc.model.audit.CategoryType;
 import com.sos.schema.JsonValidator;
@@ -36,9 +34,9 @@ public class SubAgentCommandResourceImpl extends JOCResourceImpl implements ISub
         try {
             initLogging(API_CALL_REMOVE, filterBytes, accessToken);
             
-            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
-            }
+//            if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
+//                throw new JocMissingLicenseException("missing license for Agent cluster");
+//            }
             
             JsonValidator.validateFailFast(filterBytes, SubAgentsCommand.class);
             SubAgentsCommand subAgentCommand = Globals.objectMapper.readValue(filterBytes, SubAgentsCommand.class);

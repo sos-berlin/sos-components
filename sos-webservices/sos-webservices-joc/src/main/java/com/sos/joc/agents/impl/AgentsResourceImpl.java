@@ -115,7 +115,10 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             initLogging(API_CALL_CLUSTER_P, filterBytes, accessToken);
             
             if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
-                throw new JocMissingLicenseException("missing license for Agent cluster");
+                ClusterAgents agents = new ClusterAgents();
+                agents.setDeliveryDate(Date.from(Instant.now()));
+                
+                return JOCDefaultResponse.responseStatus200(agents);
             }
             
             JsonValidator.validateFailFast(filterBytes, ReadAgents.class);
@@ -225,10 +228,12 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
                 return jocDefaultResponse;
             }
             
+            boolean withClusterLicense = JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster()
+                    .getConfig().getClusterMode();
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_NAMES);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
             AgentNames agentNames = new AgentNames();
-            agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers));
+            agentNames.setAgentNames(dbLayer.getEnabledAgentNames(allowedControllers, withClusterLicense));
             agentNames.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(agentNames);

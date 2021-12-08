@@ -193,20 +193,24 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
     
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
-        return getAgentNames(null, true);
+        return getAgentNames(null, true, true);
     }
 
-    public Set<String> getEnabledAgentNames(Collection<String> controllerIds) throws DBInvalidDataException, DBMissingDataException,
+    public Set<String> getEnabledAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
-        return getAgentNames(controllerIds, true);
+        return getAgentNames(controllerIds, true, withClusterLicense);
     }
 
-    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents) throws DBInvalidDataException,
+    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents, boolean withClusterLicense) throws DBInvalidDataException,
             DBMissingDataException, DBConnectionRefusedException {
         try {
             List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
             if (agents == null || agents.isEmpty()) {
                 return Collections.emptySet();
+            }
+            if (!withClusterLicense) {
+                List<String> clusterAgentIds = getClusterAgentIds(controllerIds, onlyEnabledAgents);
+                agents = agents.stream().filter(a -> !clusterAgentIds.contains(a.getAgentId())).collect(Collectors.toList());
             }
             Set<String> agentNames = agents.stream().map(DBItemInventoryAgentInstance::getAgentName).filter(Objects::nonNull).collect(Collectors
                     .toSet());
