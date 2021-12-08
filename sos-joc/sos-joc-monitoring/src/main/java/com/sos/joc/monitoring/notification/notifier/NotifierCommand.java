@@ -23,7 +23,8 @@ public class NotifierCommand extends ANotifier {
 
     private final MonitorCommand monitor;
 
-    public NotifierCommand(MonitorCommand monitor) {
+    public NotifierCommand(int nr, MonitorCommand monitor) {
+        super.setNr(nr);
         this.monitor = monitor;
     }
 

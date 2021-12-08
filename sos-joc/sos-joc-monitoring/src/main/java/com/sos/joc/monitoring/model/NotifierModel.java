@@ -217,6 +217,14 @@ public class NotifierModel {
             return false;
         }
 
+        if (notification.getMonitors().size() == 0) {
+            LOGGER.info(String.format("[notification id=%s][%s][store to database only]%s", notification.getNotificationId(), ANotifier
+                    .getTypeAsString(type), ANotifier.getInfo(analyzer)));
+        } else {
+            LOGGER.info(String.format("[notification id=%s][%s][send to %s monitors]%s", notification.getNotificationId(), ANotifier.getTypeAsString(
+                    type), notification.getMonitors().size(), notification.getMonitorsAsString()));
+        }
+
         DBItemNotification mn = null;
         try {
             mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
@@ -225,16 +233,16 @@ public class NotifierModel {
                     .value(), analyzer.getRange().value(), analyzer.getOrderId(), analyzer.getStepId(), analyzer.getWorkflowPosition(), recoveredId, e
                             .toString()), e);
         }
-
+        int i = 1;
         for (AMonitor m : notification.getMonitors()) {
             ANotifier n = null;
             try {
-                n = m.createNotifier(conf);
+                n = m.createNotifier(i, conf);
             } catch (Throwable e) {
                 LOGGER.error(e.toString());// contains all informations about the type etc
                 if (mn == null) {
-                    LOGGER.info(String.format("[type=%s name=%s][skip save monitor]due to save a new notification failed", m.getType().value(), m
-                            .getMonitorName()));
+                    LOGGER.info(String.format("[%s][type=%s name=%s][skip save monitor]due to save a new notification failed", i, m.getType().value(),
+                            m.getMonitorName()));
                 } else {
                     dbLayer.saveNotificationMonitor(mn, m, e);
                 }
@@ -247,8 +255,8 @@ public class NotifierModel {
                         LOGGER.error(nr.getError());
                     }
                     if (mn == null) {
-                        LOGGER.info(String.format("[type=%s name=%s][skip save monitor]due to save a new notification failed", m.getType().value(), m
-                                .getMonitorName()));
+                        LOGGER.info(String.format("[%s][type=%s name=%s][skip save monitor]due to save a new notification failed", i, m.getType()
+                                .value(), m.getMonitorName()));
                     } else {
                         dbLayer.saveNotificationMonitor(mn, m, nr);
                     }
@@ -258,6 +266,7 @@ public class NotifierModel {
                     n.close();
                 }
             }
+            i++;
         }
         postEvent(mn, analyzer);
         return true;

@@ -14,7 +14,7 @@ import com.sos.monitoring.MonitorType;
 
 public class MonitorMail extends AMonitor {
 
-   private static final String ELEMENT_NAME_FROM = "From";
+    private static final String ELEMENT_NAME_FROM = "From";
     private static final String ELEMENT_NAME_TO = "To";
     private static final String ELEMENT_NAME_CC = "CC";
     private static final String ELEMENT_NAME_BCC = "BCC";
@@ -53,8 +53,8 @@ public class MonitorMail extends AMonitor {
     }
 
     @Override
-    public NotifierMail createNotifier(Configuration conf) throws Exception {
-        return new NotifierMail(this, conf);
+    public NotifierMail createNotifier(int nr, Configuration conf) throws Exception {
+        return new NotifierMail(nr, this, conf);
     }
 
     @Override

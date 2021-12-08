@@ -16,6 +16,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.monitoring.model.NotifyAnalyzer;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationStatus;
 import com.sos.monitoring.notification.NotificationType;
@@ -31,6 +32,7 @@ public abstract class ANotifier {
     private JocHref jocHref;
     private Map<String, String> tableFields;
     private NotificationStatus status;
+    private int nr;
 
     public abstract NotifyResult notify(NotificationType type, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, DBItemNotification mn);
 
@@ -91,8 +93,10 @@ public abstract class ANotifier {
 
     protected String getInfo4execute(boolean isExecute, DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type,
             String addInfo) {
-        StringBuilder sb = new StringBuilder("[notification]");
-        sb.append("[").append(isExecute ? "execute" : "executed").append("]");
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(nr).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append("]");
+        sb.append("[").append(isExecute ? "execute" : "successful").append("]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);
@@ -102,7 +106,10 @@ public abstract class ANotifier {
 
     protected String getInfo4executeException(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo,
             Throwable e) {
-        StringBuilder sb = new StringBuilder("[notification][executed]");
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(nr).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append("]");
+        sb.append("[failed]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);
@@ -114,9 +121,22 @@ public abstract class ANotifier {
         return sb.toString();
     }
 
-    private StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
+    public static String getTypeAsString(NotificationType type) {
+        return "on " + type.value();
+    }
+
+    public static StringBuilder getInfo(NotifyAnalyzer analyzer) {
+        if (analyzer == null) {
+            return null;
+        }
+        return getInfo(analyzer.getOrder(), analyzer.getOrderStep(), null);
+    }
+
+    private static StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[on ").append(type.value()).append("]");
+        if (type != null) {
+            sb.append("[").append(getTypeAsString(type)).append("]");
+        }
         sb.append("[");
         if (mo != null) {
             sb.append("controllerId=").append(mo.getControllerId());
@@ -235,6 +255,10 @@ public abstract class ANotifier {
 
     protected JocHref getJocHref() {
         return jocHref;
+    }
+
+    public void setNr(int val) {
+        nr = val;
     }
 
 }

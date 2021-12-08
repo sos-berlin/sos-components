@@ -56,8 +56,8 @@ public class MonitorNSCA extends AMonitor {
     }
 
     @Override
-    public NotifierNSCA createNotifier(Configuration conf) throws Exception {
-        return new NotifierNSCA(this, conf);
+    public NotifierNSCA createNotifier(int nr, Configuration conf) throws Exception {
+        return new NotifierNSCA(nr, this, conf);
     }
 
     @Override

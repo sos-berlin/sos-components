@@ -43,7 +43,7 @@ public abstract class AMonitor extends AElement {
         monitorName = getValue(refElement.getAttribute(ATTRIBUTE_NAME_NAME));
     }
 
-    public abstract ANotifier createNotifier(Configuration conf) throws Exception;
+    public abstract ANotifier createNotifier(int nr, Configuration conf) throws Exception;
 
     public abstract MonitorType getType();
 

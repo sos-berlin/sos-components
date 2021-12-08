@@ -27,7 +27,8 @@ public class NotifierMail extends ANotifier {
 
     private SOSMail mail = null;
 
-    public NotifierMail(MonitorMail monitor, Configuration conf) throws Exception {
+    public NotifierMail(int nr, MonitorMail monitor, Configuration conf) throws Exception {
+        super.setNr(nr);
         this.monitor = monitor;
         init(conf);
     }
@@ -117,7 +118,6 @@ public class NotifierMail extends ANotifier {
     }
 
     private void createMail(MailResource res) throws Exception {
-        LOGGER.info(String.format("[%s][known properties2]%s", monitor.getInfo(), res.getProperties()));
         mail = new SOSMail(res.copyProperties());
         mail.init();
         mail.setQueueMailOnError(QUEUE_MAIL_ON_ERROR);

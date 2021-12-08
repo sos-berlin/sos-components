@@ -35,7 +35,8 @@ public class NotifierJMS extends ANotifier {
     private String userName;
     private String password;
 
-    public NotifierJMS(MonitorJMS monitor, Configuration conf) throws Exception {
+    public NotifierJMS(int nr, MonitorJMS monitor, Configuration conf) throws Exception {
+        super.setNr(nr);
         this.monitor = monitor;
         try {
             createConnection();

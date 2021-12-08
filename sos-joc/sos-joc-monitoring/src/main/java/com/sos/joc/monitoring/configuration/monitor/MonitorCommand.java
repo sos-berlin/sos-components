@@ -23,8 +23,8 @@ public class MonitorCommand extends AMonitor {
     }
 
     @Override
-    public NotifierCommand createNotifier(Configuration conf) throws Exception {
-        return new NotifierCommand(this);
+    public NotifierCommand createNotifier(int nr, Configuration conf) throws Exception {
+        return new NotifierCommand(nr, this);
     }
 
     @Override

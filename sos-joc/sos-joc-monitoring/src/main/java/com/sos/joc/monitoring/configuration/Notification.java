@@ -2,6 +2,7 @@ package com.sos.joc.monitoring.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,6 +183,13 @@ public class Notification extends AElement {
 
     public List<AMonitor> getMonitors() {
         return monitors;
+    }
+
+    public String getMonitorsAsString() {
+        if (monitors == null || monitors.size() == 0) {
+            return "";
+        }
+        return monitors.stream().map(n -> n.getClass().getSimpleName()).collect(Collectors.joining(","));
     }
 
     public List<Workflow> getWorkflows() {

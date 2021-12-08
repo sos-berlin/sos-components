@@ -73,8 +73,8 @@ public class MonitorJMS extends AMonitor {
     }
 
     @Override
-    public NotifierJMS createNotifier(Configuration conf) throws Exception {
-        return new NotifierJMS(this, conf);
+    public NotifierJMS createNotifier(int nr, Configuration conf) throws Exception {
+        return new NotifierJMS(nr, this, conf);
     }
 
     @Override

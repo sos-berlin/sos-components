@@ -55,7 +55,8 @@ public class NotifierNSCA extends ANotifier {
     private String serviceName;
     private Level level;
 
-    public NotifierNSCA(MonitorNSCA monitor, Configuration conf) throws Exception {
+    public NotifierNSCA(int nr, MonitorNSCA monitor, Configuration conf) throws Exception {
+        super.setNr(nr);
         this.monitor = monitor;
         init();
     }
