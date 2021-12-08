@@ -56,7 +56,9 @@ import com.sos.joc.monitoring.configuration.monitor.mail.MailResource;
 import com.sos.joc.monitoring.db.DBLayerMonitoring;
 import com.sos.monitoring.notification.NotificationType;
 
-public class HistoryMonitoringModel {
+public class HistoryMonitoringModel implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HistoryMonitoringModel.class);
 
@@ -74,7 +76,8 @@ public class HistoryMonitoringModel {
 
     private ScheduledExecutorService threadPool;
     private CopyOnWriteArraySet<AHistoryBean> payloads = new CopyOnWriteArraySet<>();
-    private Map<Long, HistoryOrderStepBean> longerThan = new HashMap<>();// new ConcurrentHashMap<>();
+    // HashMap type on the left side for serializing
+    private HashMap<Long, HistoryOrderStepBean> longerThan = new HashMap<>();// new ConcurrentHashMap<>();
     private AtomicLong lastActivityStart = new AtomicLong();
     private AtomicLong lastActivityEnd = new AtomicLong();
     private AtomicBoolean closed = new AtomicBoolean();
@@ -82,6 +85,14 @@ public class HistoryMonitoringModel {
 
     // TODO ? commit after n db operations
     // private int maxTransactions = 100;
+
+    protected HistoryMonitoringModel() {// only for Test
+        this.factory = null;
+        this.jocConfiguration = null;
+        this.dbLayer = null;
+        this.notifier = null;
+        this.serviceIdentifier = "";
+    }
 
     public HistoryMonitoringModel(ThreadGroup threadGroup, SOSHibernateFactory factory, JocConfiguration jocConfiguration, String serviceIdentifier) {
         this.factory = factory;
