@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 public class SOSClassUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSClassUtil.class);
+    private static final String NEW_LINE = "\r\n";
 
     public static String getMethodName() {
         return getMethodName(1);
@@ -40,20 +41,42 @@ public class SOSClassUtil {
     }
 
     public static void printStackTrace(boolean onlySOS, final Logger logger) {
-        StackTraceElement trace[] = new Throwable().getStackTrace();
-        for (int i = 1; i < trace.length; i++) {
-            StackTraceElement el = trace[i];
-            if (onlySOS) {
-                if (!el.getClassName().matches("^com\\.sos.*|^sos\\..*")) {
-                    continue;
+        try {
+            StackTraceElement trace[] = new Throwable().getStackTrace();
+            for (int i = 1; i < trace.length; i++) {
+                StackTraceElement el = trace[i];
+                if (onlySOS) {
+                    if (!el.getClassName().matches("^com\\.sos.*|^sos\\..*")) {
+                        continue;
+                    }
                 }
+                Logger log = logger == null ? LOGGER : logger;
+                log.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
             }
-            Logger log = logger == null ? LOGGER : logger;
-            log.info(String.format("[%s][%s:%s]", el.getClassName(), el.getMethodName(), el.getLineNumber()));
+        } catch (Throwable ee) {
+            LOGGER.error(ee.toString(), ee);
+        }
+
+    }
+
+    public static String getStackTrace(Throwable e) {
+        if (e == null) {
+            return null;
+        }
+        try {
+            StringBuilder sb = new StringBuilder();
+            StackTraceElement trace[] = e.getStackTrace();
+            for (int i = 1; i < trace.length; i++) {
+                sb.append(trace[i].toString()).append(NEW_LINE);
+            }
+            return sb.toString().trim();
+        } catch (Throwable ee) {
+            LOGGER.error(ee.toString(), ee);
+            return null;
         }
     }
 
-    public static String getSimpleName(String className) {
+    private static String getSimpleName(String className) {
         return className.substring(className.lastIndexOf('.') + 1);
     }
 

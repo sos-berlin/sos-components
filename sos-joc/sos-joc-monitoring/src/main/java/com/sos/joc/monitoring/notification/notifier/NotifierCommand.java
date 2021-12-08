@@ -39,10 +39,7 @@ public class NotifierCommand extends ANotifier {
             StringBuilder info = new StringBuilder();
             info.append("[").append(monitor.getInfo()).append("]");
             info.append(result);
-
-            String err = getInfo4executeException(mo, mos, type, info.toString(), null);
-            LOGGER.error(err);
-            return new NotifyResult(result.getCommand(), getSendInfo(), err);
+            return new NotifyResult(result.getCommand(), getSendInfo(), getInfo4executeException(mo, mos, type, info.toString(), null));
         }
 
         LOGGER.info("    " + getInfo4execute(false, mo, mos, type, result.getCommand()));

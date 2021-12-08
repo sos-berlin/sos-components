@@ -2,7 +2,6 @@ package com.sos.joc.monitoring.notification.notifier;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.mail.MessagingException;
 
@@ -59,10 +58,8 @@ public class NotifierMail extends ANotifier {
             }
             return new NotifyResult(mail.getBody(), getSendInfo());
         } catch (Throwable e) {
-            String err = getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]", e);
-            LOGGER.error(err);
-            LOGGER.info(SOSString.toString(mail));
-            return new NotifyResult(mail.getBody(), getSendInfo(), err);
+            return new NotifyResult(mail.getBody(), getSendInfo(), getInfo4executeException(mo, mos, type, "[" + monitor.getInfo().toString() + "]",
+                    e));
         } finally {
             try {
                 mail.clearRecipients();
@@ -85,14 +82,10 @@ public class NotifierMail extends ANotifier {
             MailResource mr = getMailResource(conf);
             createMail(mr);
             if (SOSString.isEmpty(mail.getHost())) {
-                String knownProperties = null;
-                if (mr != null) {
-                    Properties p = mr.getMaskedProperties();
-                    if (p != null) {
-                        knownProperties = p.toString();
-                    }
-                }
-                throw new Exception(String.format("[%s][missing host]known properties: %s", monitor.getInfo(), knownProperties));
+                throw new Exception(String.format("[%s][missing host][known properties]%s", monitor.getInfo(), mr.getMaskedProperties()));
+            }
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug(String.format("[%s][known properties]%s", monitor.getInfo(), mr.getMaskedProperties()));
             }
         } catch (Throwable e) {
             mail = null;
@@ -124,7 +117,8 @@ public class NotifierMail extends ANotifier {
     }
 
     private void createMail(MailResource res) throws Exception {
-        mail = new SOSMail(res.getProperties());
+        LOGGER.info(String.format("[%s][known properties2]%s", monitor.getInfo(), res.getProperties()));
+        mail = new SOSMail(res.copyProperties());
         mail.init();
         mail.setQueueMailOnError(QUEUE_MAIL_ON_ERROR);
         setMailHeaders(res);

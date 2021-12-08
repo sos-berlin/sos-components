@@ -111,14 +111,23 @@ public class MailResource {
         return properties;
     }
 
+    public Properties copyProperties() {
+        Properties p = new Properties();
+        if (properties != null) {
+            properties.forEach((k, v) -> {
+                p.put(k, v);
+            });
+        }
+        return p;
+    }
+
     public Properties getMaskedProperties() {
-        if (properties == null) {
-            return null;
-        }
-        Properties p = new Properties(properties);
-        if (p.contains("mail.smtp.password")) {
-            p.put("mail.smtp.password", DisplayMode.MASKED.getValue());
-        }
+        Properties p = copyProperties();
+        p.forEach((k, v) -> {
+            if (k.toString().contains("password")) {
+                p.replace(k, DisplayMode.MASKED.getValue());
+            }
+        });
         return p;
     }
 

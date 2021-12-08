@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.joc.cluster.AJocClusterService;
 import com.sos.joc.cluster.JocCluster;
 import com.sos.joc.cluster.JocClusterHibernateFactory;
@@ -216,10 +217,13 @@ public class NotifierModel {
             return false;
         }
 
-        DBItemNotification mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
-        if (mn == null) {
-            LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]", type
-                    .value(), analyzer.getRange().value(), analyzer.getOrderId(), analyzer.getStepId(), analyzer.getWorkflowPosition(), recoveredId));
+        DBItemNotification mn = null;
+        try {
+            mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
+        } catch (Throwable e) {
+            LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]%s", type
+                    .value(), analyzer.getRange().value(), analyzer.getOrderId(), analyzer.getStepId(), analyzer.getWorkflowPosition(), recoveredId, e
+                            .toString()), e);
         }
 
         for (AMonitor m : notification.getMonitors()) {
@@ -227,8 +231,9 @@ public class NotifierModel {
             try {
                 n = m.createNotifier(conf);
             } catch (Throwable e) {
+                LOGGER.error(e.toString());// contains all informations about the type etc
                 if (mn == null) {
-                    LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType().value(), m
+                    LOGGER.info(String.format("[type=%s name=%s][skip save monitor]due to save a new notification failed", m.getType().value(), m
                             .getMonitorName()));
                 } else {
                     dbLayer.saveNotificationMonitor(mn, m, e);
@@ -238,8 +243,11 @@ public class NotifierModel {
             if (n != null) {
                 try {
                     NotifyResult nr = n.notify(type, analyzer.getOrder(), os, mn);
+                    if (nr != null && !SOSString.isEmpty(nr.getError())) {
+                        LOGGER.error(nr.getError());
+                    }
                     if (mn == null) {
-                        LOGGER.info(String.format("[skip save monitor type=%s name=%s]due to save new notification failed", m.getType().value(), m
+                        LOGGER.info(String.format("[type=%s name=%s][skip save monitor]due to save a new notification failed", m.getType().value(), m
                                 .getMonitorName()));
                     } else {
                         dbLayer.saveNotificationMonitor(mn, m, nr);

@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sos.commons.util.SOSClassUtil;
 import com.sos.commons.util.SOSDate;
 import com.sos.commons.util.SOSParameterSubstitutor;
 import com.sos.commons.util.SOSString;
@@ -101,21 +102,21 @@ public abstract class ANotifier {
 
     protected String getInfo4executeException(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type, String addInfo,
             Throwable e) {
-        StringBuilder sb = new StringBuilder("[notification][EXCEPTION]");
+        StringBuilder sb = new StringBuilder("[notification][executed]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
             sb.append(addInfo);
         }
         if (e != null) {
             sb.append(e.toString());
-            e.printStackTrace();
+            sb.append(SOSClassUtil.getStackTrace(e));
         }
         return sb.toString();
     }
 
     private StringBuilder getInfo(DBItemMonitoringOrder mo, DBItemMonitoringOrderStep mos, NotificationType type) {
         StringBuilder sb = new StringBuilder();
-        sb.append("[").append(type.value()).append("]");
+        sb.append("[on ").append(type.value()).append("]");
         sb.append("[");
         if (mo != null) {
             sb.append("controllerId=").append(mo.getControllerId());
