@@ -134,6 +134,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             } else {
                                 dbItemIamPermission.setExcluded(iniPermission.getExcluded());
                             }
+                            
                             dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRecursive(false);
                             dbItemIamPermission.setRoleId(roleId);
@@ -146,6 +147,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                             dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRoleId(roleId);
                             dbItemIamPermission.setAccountPermission(iniPermission.getPath());
+                            dbItemIamPermission.setRecursive(false);
                             dbItemIamPermission.setExcluded(iniPermission.getExcluded());
                             sosHibernateSession.save(dbItemIamPermission);
                         }
@@ -160,6 +162,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                                     dbItemIamPermission.setAccountPermission(iniPermission.getPath());
                                     dbItemIamPermission.setControllerId(controller.getKey());
                                     dbItemIamPermission.setExcluded(iniPermission.getExcluded());
+                                    dbItemIamPermission.setRecursive(false);
                                     sosHibernateSession.save(dbItemIamPermission);
                                 }
                             }
@@ -192,6 +195,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                                     dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                                     dbItemIamPermission.setControllerId(controller.getKey());
                                     dbItemIamPermission.setFolderPermission(folder.getFolder());
+                                    dbItemIamPermission.setExcluded(false);
                                     dbItemIamPermission.setRecursive(folder.getRecursive());
                                     dbItemIamPermission.setRoleId(roleId);
                                     sosHibernateSession.save(dbItemIamPermission);
