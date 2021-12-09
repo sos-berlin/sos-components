@@ -4,14 +4,16 @@ package com.sos.joc.model.controller;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.sos.joc.model.agent.ClusterAgent;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import com.sos.joc.model.agent.Agent;
 
 
 /**
@@ -25,6 +27,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deliveryDate",
     "controllers",
     "agents",
+    "clusterAgents",
     "currentSecurityLevel"
 })
 public class Controllers {
@@ -47,7 +50,9 @@ public class Controllers {
     @JsonProperty("controllers")
     private List<Controller> controllers = new ArrayList<Controller>();
     @JsonProperty("agents")
-    private List<ClusterAgent> agents = new ArrayList<ClusterAgent>();
+    private List<Agent> agents = new ArrayList<Agent>();
+    @JsonProperty("clusterAgents")
+    private List<Agent> clusterAgents = new ArrayList<Agent>();
     @JsonProperty("currentSecurityLevel")
     private Object currentSecurityLevel;
 
@@ -96,13 +101,23 @@ public class Controllers {
     }
 
     @JsonProperty("agents")
-    public List<ClusterAgent> getAgents() {
+    public List<Agent> getAgents() {
         return agents;
     }
 
     @JsonProperty("agents")
-    public void setAgents(List<ClusterAgent> agents) {
+    public void setAgents(List<Agent> agents) {
         this.agents = agents;
+    }
+
+    @JsonProperty("clusterAgents")
+    public List<Agent> getClusterAgents() {
+        return clusterAgents;
+    }
+
+    @JsonProperty("clusterAgents")
+    public void setClusterAgents(List<Agent> clusterAgents) {
+        this.clusterAgents = clusterAgents;
     }
 
     @JsonProperty("currentSecurityLevel")
@@ -117,12 +132,12 @@ public class Controllers {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).append("agents", agents).append("currentSecurityLevel", currentSecurityLevel).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("controllers", controllers).append("agents", agents).append("clusterAgents", clusterAgents).append("currentSecurityLevel", currentSecurityLevel).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(controllers).append(deliveryDate).append(currentSecurityLevel).append(agents).toHashCode();
+        return new HashCodeBuilder().append(controllers).append(deliveryDate).append(currentSecurityLevel).append(clusterAgents).append(agents).toHashCode();
     }
 
     @Override
@@ -134,7 +149,7 @@ public class Controllers {
             return false;
         }
         Controllers rhs = ((Controllers) other);
-        return new EqualsBuilder().append(controllers, rhs.controllers).append(deliveryDate, rhs.deliveryDate).append(currentSecurityLevel, rhs.currentSecurityLevel).append(agents, rhs.agents).isEquals();
+        return new EqualsBuilder().append(controllers, rhs.controllers).append(deliveryDate, rhs.deliveryDate).append(currentSecurityLevel, rhs.currentSecurityLevel).append(clusterAgents, rhs.clusterAgents).append(agents, rhs.agents).isEquals();
     }
 
 }
