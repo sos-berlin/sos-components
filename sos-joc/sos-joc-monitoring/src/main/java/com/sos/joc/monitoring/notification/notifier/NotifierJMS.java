@@ -20,6 +20,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.jms.MonitorJMS;
 import com.sos.joc.monitoring.configuration.monitor.jms.ObjectHelper;
 import com.sos.monitoring.notification.NotificationType;
@@ -44,6 +45,11 @@ public class NotifierJMS extends ANotifier {
             closeConnection();
             throw e;
         }
+    }
+
+    @Override
+    public AMonitor getMonitor() {
+        return monitor;
     }
 
     @Override

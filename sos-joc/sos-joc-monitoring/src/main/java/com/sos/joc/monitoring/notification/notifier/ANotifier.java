@@ -16,6 +16,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.model.order.OrderStateText;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.model.NotifyAnalyzer;
 import com.sos.monitoring.notification.NotificationRange;
 import com.sos.monitoring.notification.NotificationStatus;
@@ -39,6 +40,8 @@ public abstract class ANotifier {
     public abstract void close();
 
     public abstract StringBuilder getSendInfo();
+
+    public abstract AMonitor getMonitor();
 
     protected Map<String, String> getTableFields() {
         return tableFields;
@@ -95,7 +98,7 @@ public abstract class ANotifier {
             String addInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(nr).append("]");
-        sb.append("[").append(getClass().getSimpleName()).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" monitor=").append(getMonitor().getMonitorName()).append("]");
         sb.append("[").append(isExecute ? "execute" : "successful").append("]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
@@ -108,7 +111,7 @@ public abstract class ANotifier {
             Throwable e) {
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(nr).append("]");
-        sb.append("[").append(getClass().getSimpleName()).append("]");
+        sb.append("[").append(getClass().getSimpleName()).append(" monitor=").append(getMonitor().getMonitorName()).append("]");
         sb.append("[failed]");
         sb.append(getInfo(mo, mos, type));
         if (addInfo != null) {
@@ -123,6 +126,16 @@ public abstract class ANotifier {
 
     public static String getTypeAsString(NotificationType type) {
         return "on " + type.value();
+    }
+
+    public static StringBuilder getInfo(NotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
+        if (analyzer == null || monitor == null || type == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("[").append(monitor.getType().value()).append(" monitor=").append(monitor.getMonitorName()).append("]");
+        sb.append("[").append(getTypeAsString(type)).append("]");
+        return sb.append(getInfo(analyzer));
     }
 
     public static StringBuilder getInfo(NotifyAnalyzer analyzer) {
@@ -257,8 +270,8 @@ public abstract class ANotifier {
         return jocHref;
     }
 
-    public void setNr(int val) {
-        nr = val;
+    public void setNr(int nr) {
+        this.nr = nr;
     }
 
 }

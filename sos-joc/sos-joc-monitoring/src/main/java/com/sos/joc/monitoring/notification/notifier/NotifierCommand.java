@@ -12,6 +12,7 @@ import com.sos.commons.util.common.SOSEnv;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorCommand;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -26,6 +27,11 @@ public class NotifierCommand extends ANotifier {
     public NotifierCommand(int nr, MonitorCommand monitor) {
         super.setNr(nr);
         this.monitor = monitor;
+    }
+
+    @Override
+    public AMonitor getMonitor() {
+        return monitor;
     }
 
     @Override

@@ -18,6 +18,7 @@ import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
 import com.sos.joc.monitoring.configuration.Configuration;
+import com.sos.joc.monitoring.configuration.monitor.AMonitor;
 import com.sos.joc.monitoring.configuration.monitor.MonitorNSCA;
 import com.sos.monitoring.notification.NotificationType;
 
@@ -59,6 +60,11 @@ public class NotifierNSCA extends ANotifier {
         super.setNr(nr);
         this.monitor = monitor;
         init();
+    }
+
+    @Override
+    public AMonitor getMonitor() {
+        return monitor;
     }
 
     @Override
