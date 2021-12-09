@@ -229,9 +229,8 @@ public class NotifierModel {
         try {
             mn = dbLayer.saveNotification(notification, analyzer, type, recoveredId);
         } catch (Throwable e) {
-            LOGGER.error(String.format("[save new notification failed][%s][%s][orderId=%s][stepId=%s][workflowPosition=%s][recoveredId=%s]%s", type
-                    .value(), analyzer.getRange().value(), analyzer.getOrderId(), analyzer.getStepId(), analyzer.getWorkflowPosition(), recoveredId, e
-                            .toString()), e);
+            LOGGER.error(String.format("[notification id=%s][%s]%s[failed]%s", notification.getNotificationId(), ANotifier.getTypeAsString(type),
+                    ANotifier.getInfo(analyzer), e.toString()), e);
         }
         int i = 1;
         for (AMonitor m : notification.getMonitors()) {
@@ -241,8 +240,8 @@ public class NotifierModel {
             } catch (Throwable e) {
                 LOGGER.error(e.toString());// contains all informations about the type etc
                 if (mn == null) {
-                    LOGGER.info(String.format("[%s][type=%s name=%s][skip save monitor]due to save a new notification failed", i, m.getType().value(),
-                            m.getMonitorName()));
+                    LOGGER.info(String.format("[%s]%s[skip save notification monitor]due to save notification failed", i, ANotifier.getInfo(analyzer,
+                            m, type)));
                 } else {
                     dbLayer.saveNotificationMonitor(mn, m, e);
                 }
@@ -255,8 +254,8 @@ public class NotifierModel {
                         LOGGER.error(nr.getError());
                     }
                     if (mn == null) {
-                        LOGGER.info(String.format("[%s][type=%s name=%s][skip save monitor]due to save a new notification failed", i, m.getType()
-                                .value(), m.getMonitorName()));
+                        LOGGER.info(String.format("[%s]%s[skip save notification result]due to save notification failed", i, ANotifier.getInfo(
+                                analyzer, m, type)));
                     } else {
                         dbLayer.saveNotificationMonitor(mn, m, nr);
                     }
