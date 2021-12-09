@@ -23,6 +23,7 @@ import com.sos.joc.db.DBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryAgentName;
 import com.sos.joc.db.inventory.DBItemInventorySubAgentInstance;
+import com.sos.joc.db.inventory.items.SubAgentItem;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
 import com.sos.joc.exceptions.DBMissingDataException;
@@ -480,10 +481,16 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     public List<String> getDirectorSubAgentIds(String agentId) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
-            hql.append(" where agentId = :agentId");
-            hql.append(" and isDirector in (:isDirectors) order by isDirector");
+            if (agentId != null && !agentId.isEmpty()) {
+                hql.append(" where agentId = :agentId");
+                hql.append(" and isDirector in (:isDirectors) order by isDirector");
+            } else {
+                hql.append(" where isDirector in (:isDirectors)");
+            }
             Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
-            query.setParameter("agentId", agentId);
+            if (agentId != null && !agentId.isEmpty()) {
+                query.setParameter("agentId", agentId);
+            }
             query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(), SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
             List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
             if (result == null || result.isEmpty() || (result != null && result.size() == 1 && SubagentDirectorType.STANDBY_DIRECTOR
@@ -491,6 +498,47 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 throw new DBMissingDataException("The Agent '" + agentId + "' must have a primary director.");
             }
             return result.stream().map(DBItemInventorySubAgentInstance::getSubAgentId).collect(Collectors.toList());
+        } catch (DBMissingDataException ex) {
+            throw ex;
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public List<SubAgentItem> getDirectorSubAgentIdsByControllerId(String controllerId, List<String> subagentIds) {
+        if (subagentIds == null) {
+            subagentIds = Collections.emptyList(); 
+        }
+        try {
+            if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
+                List<SubAgentItem> s = new ArrayList<>();
+                for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
+                    s.addAll(getDirectorSubAgentIdsByControllerId(controllerId, SOSHibernate.getInClausePartition(i, subagentIds)));
+                }
+                return s;
+            } else {
+                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+                hql.append(" where isDirector in (:isDirectors)");
+                hql.append(" and agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
+                        " where controllerId = :controllerId)");
+                if (!subagentIds.isEmpty()) {
+                    hql.append(" and  subAgentId in (:subagentIds)");
+                }
+                Query<SubAgentItem> query = getSession().createQuery(hql.toString(), SubAgentItem.class);
+                query.setParameter("controllerId", controllerId);
+                if (!subagentIds.isEmpty()) {
+                    query.setParameterList("subagentIds", subagentIds);
+                }
+                query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(),
+                        SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+                List<SubAgentItem> result = getSession().getResultList(query);
+                if (result == null) {
+                    return Collections.emptyList();
+                }
+                return result;
+            }
         } catch (DBMissingDataException ex) {
             throw ex;
         } catch (SOSHibernateInvalidSessionException ex) {
@@ -651,24 +699,20 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         return getSession().executeUpdate(query);
     }
     
-    public int deleteSubAgent(String subagentId) throws SOSHibernateException {
-        StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where subagentId =: subagentId");
-        Query<?> query = getSession().createQuery(hql.toString());
-        query.setParameter("subagentId", subagentId);
-        return getSession().executeUpdate(query);
-    }
-    
-    public int deleteSubAgents(List<String> subagentIds) throws SOSHibernateException {
+    public int deleteSubAgents(String controllerId, List<String> subagentIds) throws SOSHibernateException {
         if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
             for (int i = 0; i < subagentIds.size(); i += SOSHibernate.LIMIT_IN_CLAUSE) {
-                j += deleteSubAgents(SOSHibernate.getInClausePartition(i, subagentIds));
+                j += deleteSubAgents(controllerId, SOSHibernate.getInClausePartition(i, subagentIds));
             }
             return j;
         } else {
             StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
                     " where subAgentId in (:subagentIds)");
+            hql.append(" and agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            hql.append(" where controllerId = :controllerId)");
             Query<?> query = getSession().createQuery(hql.toString());
+            query.setParameter("controllerId", controllerId);
             query.setParameterList("subagentIds", subagentIds);
             return getSession().executeUpdate(query);
         }

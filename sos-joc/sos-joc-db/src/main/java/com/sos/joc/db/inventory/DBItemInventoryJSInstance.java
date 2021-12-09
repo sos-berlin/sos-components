@@ -131,6 +131,9 @@ public class DBItemInventoryJSInstance extends DBItem {
     }
 
     public void setVersion(String val) {
+        if (val != null && val.length() > 30) {
+            val = val.substring(0, 30);
+        }
         version = val;
     }
 
@@ -139,6 +142,9 @@ public class DBItemInventoryJSInstance extends DBItem {
     }
 
     public void setJavaVersion(String val) {
+        if (val != null && val.length() > 30) {
+            val = val.substring(0, 30);
+        }
         javaVersion = val;
     }
     

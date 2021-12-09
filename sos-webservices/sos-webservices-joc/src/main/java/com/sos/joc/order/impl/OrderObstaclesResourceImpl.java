@@ -1,6 +1,7 @@
 package com.sos.joc.order.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +13,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.exceptions.ControllerObjectNotExistException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.order.Obstacle;
 import com.sos.joc.model.order.Obstacle200;
@@ -46,26 +48,35 @@ public class OrderObstaclesResourceImpl extends JOCResourceImpl implements IOrde
             JControllerState currentState = Proxy.of(orderFilter.getControllerId()).currentState();
             Instant surveyDateInstant = currentState.instant();
             Either<Problem, Set<JOrderObstacle>> obstaclesE = currentState.orderToObstacles(OrderId.of(orderFilter.getOrderId()), surveyDateInstant);
-            ProblemHelper.throwProblemIfExist(obstaclesE);
             
             Obstacle200 entry = new Obstacle200();
             entry.setSurveyDate(Date.from(surveyDateInstant));
             entry.setOrderId(orderFilter.getOrderId());
-            Set<Obstacle> obstacles = new HashSet<>();
-            
-            for (JOrderObstacle obstacle : obstaclesE.get()) {
-                Obstacle ob = new Obstacle();
-                if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
-                    ob.setType(ObstacleType.WaitingForAdmission);
-                    ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
-                    obstacles.add(ob);
-                } else if (obstacle instanceof JOrderObstacle.JobParallelismLimitReached) {
-                    ob.setType(ObstacleType.JobParallelismLimitReached);
-                    obstacles.add(ob);
+            try {
+                ProblemHelper.throwProblemIfExist(obstaclesE);
+                
+                Set<Obstacle> obstacles = new HashSet<>();
+                
+                for (JOrderObstacle obstacle : obstaclesE.get()) {
+                    Obstacle ob = new Obstacle();
+                    if (obstacle instanceof JOrderObstacle.WaitingForAdmission) {
+                        ob.setType(ObstacleType.WaitingForAdmission);
+                        ob.setUntil(Date.from(((JOrderObstacle.WaitingForAdmission) obstacle).until()));
+                        obstacles.add(ob);
+                    } else if (obstacle instanceof JOrderObstacle.JobParallelismLimitReached) {
+                        ob.setType(ObstacleType.JobParallelismLimitReached);
+                        obstacles.add(ob);
+                    }
                 }
+                
+                entry.setObstacles(obstacles);
+                
+            } catch (ControllerObjectNotExistException e) {
+                Obstacle ob = new Obstacle();
+                ob.setType(ObstacleType.OrderNotExisting);
+                entry.setObstacles(Collections.singleton(ob));
             }
             
-            entry.setObstacles(obstacles);
             entry.setDeliveryDate(Date.from(Instant.now()));
             
             return JOCDefaultResponse.responseStatus200(entry);

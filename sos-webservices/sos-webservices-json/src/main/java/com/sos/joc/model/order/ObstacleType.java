@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ObstacleType {
 
+    OrderNotExisting("OrderNotExisting"),
     WaitingForAdmission("WaitingForAdmission"),
     JobParallelismLimitReached("JobParallelismLimitReached");
     private final String value;

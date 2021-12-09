@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.JocCockpitProperties;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.security.resource.ITouchResource;
@@ -37,6 +38,23 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
         }catch (DBConnectionRefusedException e) {
         	LOGGER.info(e.getMessage());
         	return JOCDefaultResponse.responseStatusJSOk(null);
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse postTouchLog4j(String accessToken) {
+        try {
+            initLogging(API_CALL, null, accessToken);
+            new JocCockpitProperties();
+            return JOCDefaultResponse.responseStatusJSOk(null);
+        }catch (DBConnectionRefusedException e) {
+            LOGGER.info(e.getMessage());
+            return JOCDefaultResponse.responseStatusJSOk(null);
         } catch (JocException e) {
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
