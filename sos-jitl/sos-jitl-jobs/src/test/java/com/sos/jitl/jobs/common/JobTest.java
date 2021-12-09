@@ -93,7 +93,7 @@ public class JobTest {
         map.put(o1.getHibernateFile().getName(), "C://myfile");
         map.put(o2.getJocUri().getName(), "http://localhost");
         map.put(o3.getLogLevel().getName(), "xxx");
-        map.put(o3.getList().getName(), "xxx ; yyyy ;");
+        map.put(o3.getList().getName(), "xxx , yyyy ,");
         map.put(o3.getLinkedList().getName(), "lxxx ; lyyyy ;");
         map.put(o3.getAuthMethods().getName(), "password;publickey");
         // map.put(o3.getTest().getName(), BASE64_VALUE_PREFIX + "aGVsbG8gd2VsdA==");
@@ -205,11 +205,13 @@ public class JobTest {
                 } else if (SOSReflection.isList(type)) {
                     LOGGER.info(arg.getName() + " = " + type);
                     boolean asStringList = true;
+                    String listVal = val.toString().replaceAll(SOSArgumentHelper.LIST_VALUE_DELIMITER_SECONDARY,
+                            SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY);
                     try {
                         Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
                         if (subType.equals(String.class)) {
                         } else if (SOSReflection.isEnum(subType)) {
-                            val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
+                            val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(v -> {
                                 Object e = null;
                                 try {
                                     e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
@@ -223,7 +225,7 @@ public class JobTest {
                     } catch (Throwable e) {
                     }
                     if (asStringList) {
-                        val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                        val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(String::trim).collect(Collectors.toList());
                     }
 
                 } else if (SOSReflection.isEnum(type)) {
