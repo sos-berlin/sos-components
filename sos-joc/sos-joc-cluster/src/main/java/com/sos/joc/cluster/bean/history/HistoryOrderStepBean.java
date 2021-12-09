@@ -38,11 +38,14 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private Integer warnIfLonger;
     private Integer warnIfShorter;
 
+    private String notification;
+
     public HistoryOrderStepBean(EventType eventType, Long eventId, String controllerId, Long historyId) {
         super(eventType, eventId, controllerId, historyId);
     }
 
-    public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter) {
+    public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter,
+            String notification) {
         super(eventType, eventId, item.getControllerId(), item.getId());
 
         this.workflowPosition = item.getWorkflowPosition();
@@ -73,6 +76,9 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
         this.warnIfLonger = warnIfLonger;
         this.warnIfShorter = warnIfShorter;
+
+        this.notification = notification;
+
     }
 
     public String getWorkflowPosition() {
@@ -289,6 +295,10 @@ public class HistoryOrderStepBean extends AHistoryBean {
 
     public Integer getWarnIfShorter() {
         return warnIfShorter;
+    }
+
+    public String getNotification() {
+        return notification;
     }
 
 }

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernate;
 import com.sos.commons.hibernate.SOSHibernateFactory;
 import com.sos.commons.hibernate.exception.SOSHibernateObjectOperationException;
@@ -1319,6 +1319,7 @@ public class HistoryModel {
             item.setJobLabel(entry.getJobLabel());
             item.setJobTitle(job.getTitle());
             item.setCriticality(job.getCriticality());
+            item.setJobNotification(job.getNotification());
 
             item.setAgentId(entry.getAgentId());
             item.setAgentUri(ca.getUri());
@@ -1359,8 +1360,8 @@ public class HistoryModel {
 
             tryStoreCurrentState(dbLayer, entry.getEventId());
 
-            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, entry.getEventId(), item, job.getWarnIfLonger(), job
-                    .getWarnIfShorter());
+            return new HistoryOrderStepBean(EventType.OrderProcessingStarted, entry.getEventId(), item, job.getWarnIfLonger(), job.getWarnIfShorter(),
+                    item.getJobNotification());
         } catch (SOSHibernateObjectOperationException e) {
             Exception cve = SOSHibernate.findConstraintViolationException(e);
             if (cve == null) {
@@ -1712,7 +1713,7 @@ public class HistoryModel {
                 path = result[0].toString();
                 Workflow w = getWorkflow(workflowName, workflowVersionId, result[1].toString());
                 if (w != null) {
-                    jobs = getWorkflowJobs(w);
+                    jobs = getWorkflowJobs(w, workflowName);
                     title = w.getTitle();
                 }
             } catch (Throwable e) {
@@ -1738,12 +1739,18 @@ public class HistoryModel {
         return null;
     }
 
-    private Map<String, CachedWorkflowJob> getWorkflowJobs(Workflow w) {
+    private Map<String, CachedWorkflowJob> getWorkflowJobs(Workflow w, String workflowName) {
         WorkflowSearcher s = new WorkflowSearcher(w);
         Map<String, CachedWorkflowJob> map = new HashMap<>();
         for (WorkflowJob job : s.getJobs()) {
+            String notification = null;
+            try {
+                notification = HistoryUtil.json2String(job.getJob().getNotification());
+            } catch (JsonProcessingException e) {
+                LOGGER.error(String.format("[workflow=%s][job=%s][error on read notification]%s", workflowName, job.getName(), e.toString()), e);
+            }
             map.put(job.getName(), new CachedWorkflowJob(job.getJob().getCriticality(), job.getJob().getTitle(), job.getJob().getWarnIfLonger(), job
-                    .getJob().getWarnIfShorter()));
+                    .getJob().getWarnIfShorter(), notification));
         }
         return map;
     }
@@ -1909,7 +1916,7 @@ public class HistoryModel {
             orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
-            orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
             postEventOrderLog(entry, orderEntry);
             log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
 
@@ -1930,7 +1937,7 @@ public class HistoryModel {
             // orderEntry.setAgentUrl(entry.getAgentUri());
             orderEntry.setJob(entry.getJobName());
             orderEntry.setTaskId(entry.getHistoryOrderStepId());
-            orderEntryContent = new StringBuilder((new ObjectMapper()).writeValueAsString(orderEntry));
+            orderEntryContent = new StringBuilder(HistoryUtil.json2String(orderEntry));
             postEventOrderLog(entry, orderEntry);
             log2file(getOrderLog(dir, entry.getHistoryOrderId()), orderEntryContent, newLine, entry.getEventType());
 
@@ -1986,7 +1993,7 @@ public class HistoryModel {
             if (entry.getAgentDatetime() != null && entry.getAgentTimezone() != null) {
                 orderEntry.setAgentDatetime(getDateAsString(entry.getAgentDatetime(), entry.getAgentTimezone()));
             }
-            content.append((new ObjectMapper()).writeValueAsString(orderEntry));
+            content.append(HistoryUtil.json2String(orderEntry));
             postEventOrderLog(entry, orderEntry);
         }
 

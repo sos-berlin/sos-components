@@ -451,6 +451,7 @@ public class HistoryMonitoringModel implements Serializable {
         item.setJobTitle(hosb.getJobTitle());
 
         item.setJobCriticality(hosb.getCriticality());
+        item.setJobNotification(hosb.getNotification());
         item.setSeverity(hosb.getSeverity());
 
         item.setAgentId(hosb.getAgentId());

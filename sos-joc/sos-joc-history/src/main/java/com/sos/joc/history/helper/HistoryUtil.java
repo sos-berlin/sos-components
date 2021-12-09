@@ -8,11 +8,14 @@ import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.util.SOSParameterSubstitutor;
 
 public class HistoryUtil {
 
     public static final String NEW_LINE = "\r\n";
+
+    private static ObjectMapper MAPPER = new ObjectMapper();
 
     public static String getFolderFromPath(String path) {
         if (!path.startsWith("/")) {
@@ -60,6 +63,13 @@ public class HistoryUtil {
 
     public static Long getDateAsEventId(Date date) {
         return date == null ? null : date.getTime() * 1_000;
+    }
+
+    public static String json2String(Object o) throws JsonProcessingException {
+        if (o == null) {
+            return null;
+        }
+        return MAPPER.writeValueAsString(o);
     }
 
     public static String map2Json(Map<String, js7.data.value.Value> map) throws JsonProcessingException {

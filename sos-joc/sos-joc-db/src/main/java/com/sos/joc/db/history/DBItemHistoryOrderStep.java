@@ -76,6 +76,9 @@ public class DBItemHistoryOrderStep extends DBItem {
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;// event
 
+    @Column(name = "[JOB_NOTIFICATION]", nullable = true)
+    private String jobNotification;
+
     @Column(name = "[CRITICALITY]", nullable = false)
     private Integer criticality;
 
@@ -268,6 +271,14 @@ public class DBItemHistoryOrderStep extends DBItem {
 
     public void setJobTitle(String val) {
         jobTitle = val;
+    }
+
+    public String getJobNotification() {
+        return jobNotification;
+    }
+
+    public void setJobNotification(String val) {
+        jobNotification = normalizeValue(val, HistoryConstants.MAX_LEN_NOTIFICATION);
     }
 
     public Integer getCriticality() {

@@ -257,7 +257,11 @@ public class NotifierModel {
                         LOGGER.info(String.format("[%s]%s[skip save notification result]due to save notification failed", i, ANotifier.getInfo(
                                 analyzer, m, type)));
                     } else {
-                        dbLayer.saveNotificationMonitor(mn, m, nr);
+                        if (nr.getSkipCause() == null) {
+                            dbLayer.saveNotificationMonitor(mn, m, nr);
+                        } else {
+                            LOGGER.info(String.format("[%s][skip]%s%s", i, nr.getSkipCause(), ANotifier.getInfo(analyzer, m, type)));
+                        }
                     }
                 } catch (Throwable e) {
                     LOGGER.error(e.toString(), e);

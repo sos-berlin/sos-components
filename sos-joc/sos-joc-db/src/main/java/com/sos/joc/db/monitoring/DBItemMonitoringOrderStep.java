@@ -40,6 +40,7 @@ public class DBItemMonitoringOrderStep extends DBItem {
     @Column(name = "[POSITION]", nullable = false)
     private Integer position; // last position of the workflowPosition. e.g.: wp=1#fork_1#3. p=3
 
+    // prefix JOB_ - because notification sets the variables based on the column names
     @Column(name = "[JOB_NAME]", nullable = false)
     private String jobName;
 
@@ -48,6 +49,9 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     @Column(name = "[JOB_TITLE]", nullable = true)
     private String jobTitle;
+
+    @Column(name = "[JOB_NOTIFICATION]", nullable = true)
+    private String jobNotification;
 
     @Column(name = "[JOB_CRITICALITY]", nullable = false)
     private Integer jobCriticality;
@@ -182,6 +186,14 @@ public class DBItemMonitoringOrderStep extends DBItem {
 
     public void setJobTitle(String val) {
         jobTitle = val;
+    }
+
+    public String getJobNotification() {
+        return jobNotification;
+    }
+
+    public void setJobNotification(String val) {
+        jobNotification = normalizeValue(val, HistoryConstants.MAX_LEN_NOTIFICATION);
     }
 
     public Integer getJobCriticality() {
