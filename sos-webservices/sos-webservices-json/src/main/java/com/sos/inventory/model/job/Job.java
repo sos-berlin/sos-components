@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.inventory.model.job.notification.JobNotification;
 import com.sos.joc.model.common.IConfigurationObject;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -37,7 +38,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "documentationName",
     "criticality",
     "warnIfShorter",
-    "warnIfLonger"
+    "warnIfLonger",
+    "notification"
 })
 public class Job implements IConfigurationObject
 {
@@ -166,6 +168,14 @@ public class Job implements IConfigurationObject
      */
     @JsonProperty("warnIfLonger")
     private Integer warnIfLonger;
+    /**
+     * job notification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notification")
+    private JobNotification notification;
 
     /**
      * No args constructor for use in serialization
@@ -188,13 +198,14 @@ public class Job implements IConfigurationObject
      * @param warnIfShorter
      * @param admissionTimeScheme
      * @param returnCodeMeaning
+     * @param notification
      * @param graceTimeout
      * @param defaultArguments
      * @param jobClass
      * @param skipIfNoAdmissionForOrderDay
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger) {
+    public Job(String agentName, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger, JobNotification notification) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -213,6 +224,7 @@ public class Job implements IConfigurationObject
         this.criticality = criticality;
         this.warnIfShorter = warnIfShorter;
         this.warnIfLonger = warnIfLonger;
+        this.notification = notification;
     }
 
     /**
@@ -533,14 +545,36 @@ public class Job implements IConfigurationObject
         this.warnIfLonger = warnIfLonger;
     }
 
+    /**
+     * job notification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notification")
+    public JobNotification getNotification() {
+        return notification;
+    }
+
+    /**
+     * job notification
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("notification")
+    public void setNotification(JobNotification notification) {
+        this.notification = notification;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).toString();
+        return new ToStringBuilder(this).append("agentName", agentName).append("executable", executable).append("admissionTimeScheme", admissionTimeScheme).append("skipIfNoAdmissionForOrderDay", skipIfNoAdmissionForOrderDay).append("returnCodeMeaning", returnCodeMeaning).append("parallelism", parallelism).append("timeout", timeout).append("graceTimeout", graceTimeout).append("failOnErrWritten", failOnErrWritten).append("jobClass", jobClass).append("defaultArguments", defaultArguments).append("jobResourceNames", jobResourceNames).append("title", title).append("documentationName", documentationName).append("criticality", criticality).append("warnIfShorter", warnIfShorter).append("warnIfLonger", warnIfLonger).append("notification", notification).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(returnCodeMeaning).append(graceTimeout).append(defaultArguments).append(jobClass).append(skipIfNoAdmissionForOrderDay).append(documentationName).toHashCode();
+        return new HashCodeBuilder().append(warnIfLonger).append(parallelism).append(jobResourceNames).append(criticality).append(agentName).append(failOnErrWritten).append(title).append(executable).append(timeout).append(warnIfShorter).append(admissionTimeScheme).append(returnCodeMeaning).append(notification).append(graceTimeout).append(defaultArguments).append(jobClass).append(skipIfNoAdmissionForOrderDay).append(documentationName).toHashCode();
     }
 
     @Override
@@ -552,7 +586,7 @@ public class Job implements IConfigurationObject
             return false;
         }
         Job rhs = ((Job) other);
-        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(returnCodeMeaning, rhs.returnCodeMeaning).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(documentationName, rhs.documentationName).isEquals();
+        return new EqualsBuilder().append(warnIfLonger, rhs.warnIfLonger).append(parallelism, rhs.parallelism).append(jobResourceNames, rhs.jobResourceNames).append(criticality, rhs.criticality).append(agentName, rhs.agentName).append(failOnErrWritten, rhs.failOnErrWritten).append(title, rhs.title).append(executable, rhs.executable).append(timeout, rhs.timeout).append(warnIfShorter, rhs.warnIfShorter).append(admissionTimeScheme, rhs.admissionTimeScheme).append(returnCodeMeaning, rhs.returnCodeMeaning).append(notification, rhs.notification).append(graceTimeout, rhs.graceTimeout).append(defaultArguments, rhs.defaultArguments).append(jobClass, rhs.jobClass).append(skipIfNoAdmissionForOrderDay, rhs.skipIfNoAdmissionForOrderDay).append(documentationName, rhs.documentationName).isEquals();
     }
 
 }
