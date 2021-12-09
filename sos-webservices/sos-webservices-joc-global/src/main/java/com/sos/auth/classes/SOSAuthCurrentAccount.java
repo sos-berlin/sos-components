@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.auth.interfaces.ISOSAuthSubject;
-import com.sos.joc.Globals;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.Permissions;
 import com.sos.joc.model.security.SecurityConfiguration;

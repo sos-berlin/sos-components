@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.vault.SOSVaultHandler;
@@ -51,12 +50,11 @@ public class SOSVaultLogin implements ISOSLogin {
             if (sosVaultUserAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
                 setMsg("There is no user with the given username/password combination");
-
             } else {
                 sosVaultSubject.setAccount(user);
                 sosVaultSubject.setAuthenticated(true);
                 sosVaultSubject.setPermissionAndRoles(user);
-                sosVaultSubject.setAccessToken(sosVaultUserAccessToken.getAuth().getClient_token());
+                sosVaultSubject.setAccessToken(sosVaultUserAccessToken);
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {

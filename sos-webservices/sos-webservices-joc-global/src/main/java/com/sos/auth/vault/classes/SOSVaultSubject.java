@@ -63,7 +63,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         return getVaultSession();
     }
 
-    public void setAccessToken(String accessToken) {
+    public void setAccessToken(SOSVaultAccountAccessToken accessToken) {
         getVaultSession().setAccessToken(accessToken);
     }
 

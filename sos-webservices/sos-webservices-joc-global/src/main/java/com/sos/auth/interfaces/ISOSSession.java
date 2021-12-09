@@ -2,6 +2,8 @@ package com.sos.auth.interfaces;
 
 import java.io.Serializable;
 
+import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
+
 public interface ISOSSession {
 
     public void setAttribute(String key, Object value);
@@ -12,9 +14,15 @@ public interface ISOSSession {
 
     public void stop();
 
+    public boolean renew();
+
     public Long getTimeout();
 
+    public Long getStartSession();
+
     public Serializable getAccessToken();
+
+    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken();
 
     public void touch();
 

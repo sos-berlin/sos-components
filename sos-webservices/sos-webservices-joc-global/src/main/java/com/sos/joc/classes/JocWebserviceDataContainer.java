@@ -1,17 +1,19 @@
 package com.sos.joc.classes;
  
 
+import com.sos.auth.classes.SOSAuthAccessTokenHandler;
 import com.sos.auth.classes.SOSAuthCurrentAccountsList;
  
 
 public final class JocWebserviceDataContainer {
     private static JocWebserviceDataContainer instance;
     
-    public static SOSAuthCurrentAccountsList currentAccountsList;
+    private static SOSAuthAccessTokenHandler sosAuthAccessTokenHandler;
+    private static SOSAuthCurrentAccountsList currentAccountsList;
     
 
     private JocWebserviceDataContainer() {
-
+        sosAuthAccessTokenHandler = new SOSAuthAccessTokenHandler();
     }
 
     public static synchronized JocWebserviceDataContainer getInstance() {
@@ -27,6 +29,16 @@ public final class JocWebserviceDataContainer {
 
     public  void setCurrentAccountsList(SOSAuthCurrentAccountsList currentAccountsList) {
         JocWebserviceDataContainer.currentAccountsList = currentAccountsList;
+    }
+
+    
+    public SOSAuthAccessTokenHandler getSosAuthAccessTokenHandler() {
+        return sosAuthAccessTokenHandler;
+    }
+
+    
+    public void setSosAuthAccessTokenHandler(SOSAuthAccessTokenHandler sosAuthAccessTokenHandler) {
+        JocWebserviceDataContainer.sosAuthAccessTokenHandler = sosAuthAccessTokenHandler;
     }
 
    

@@ -121,4 +121,12 @@ public class IamIdentityServiceDBLayer {
         return identityServiceList;
     }
 
+    public void  rename(String identityServiceOldName, String identityServiceNewName) throws SOSHibernateException {
+        String hql = "update " + DBItemIamIdentityService + " set identityServiceName=:identityServiceNewName where identityServiceName=:identityServiceOldName";
+        Query<DBItemIamIdentityService> query = sosHibernateSession.createQuery(hql);
+        query.setParameter("identityServiceNewName", identityServiceNewName);
+        query.setParameter("identityServiceOldName", identityServiceOldName);
+        sosHibernateSession.executeUpdate(query);
+    }
+
 }

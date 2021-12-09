@@ -17,6 +17,11 @@ public interface IIdentityServiceResource {
     public JOCDefaultResponse postIdentityServiceRead(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
 
     @POST
+    @Path("identityservice/rename")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public JOCDefaultResponse postIdentityServiceRename(@HeaderParam("X-Access-Token") String accessToken, byte[] body);
+
+    @POST
     @Path("identityservice/store")
     @Produces({ MediaType.APPLICATION_JSON })
     public JOCDefaultResponse postIdentityServiceStore(@HeaderParam("X-Access-Token") String accessToken, byte[] body);

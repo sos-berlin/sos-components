@@ -759,6 +759,14 @@ public class SOSServicePermissionShiro {
         LOGGER.debug(String.format("Method: %s, Account: %s", "login", currentAccount.getAccountname()));
 
         Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeTimedOutAccount(currentAccount.getAccountname());
+        if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
+            Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
+            do {
+            }
+            while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+        }
+        Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
+        Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();
 
         JocAuditLog jocAuditLog = new JocAuditLog(currentAccount.getAccountname(), "./login");
         AuditParams audit = new AuditParams();

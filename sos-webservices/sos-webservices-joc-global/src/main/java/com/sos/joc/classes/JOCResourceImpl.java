@@ -328,9 +328,7 @@ public class JOCResourceImpl {
             }
         }
 
-        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null)
-
-        {
+        if (Globals.jocWebserviceDataContainer == null || Globals.jocWebserviceDataContainer.getCurrentAccountsList() == null) {
             throw new SessionNotExistException("Session is broken and no longer valid. New login is neccessary");
         }
 

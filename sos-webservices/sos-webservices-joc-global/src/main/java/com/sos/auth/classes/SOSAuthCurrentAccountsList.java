@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.shiro.session.UnknownSessionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ public class SOSAuthCurrentAccountsList {
     private Map<String, SOSAuthCurrentAccount> currentAccounts;
 
     public SOSAuthCurrentAccountsList() {
-        this.currentAccounts = new HashMap<String, SOSAuthCurrentAccount>();
+        this.currentAccounts = new ConcurrentHashMap <String, SOSAuthCurrentAccount>();
     }
 
     public void addAccount(SOSAuthCurrentAccount account) {

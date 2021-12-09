@@ -92,7 +92,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
         }
 
         for (SecurityConfigurationAccount securityConfigurationAccount : securityConfiguration.getAccounts()) {
-            
+
             IamAccountFilter filter = new IamAccountFilter();
             filter.setAccountName(securityConfigurationAccount.getAccount());
             filter.setIdentityServiceId(dbItemIamIdentityService.getId());
@@ -101,7 +101,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
             if (dbItemIamAccount != null) {
                 Long accountId = dbItemIamAccount.getId();
                 for (String role : securityConfigurationAccount.getRoles()) {
-                    DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role,dbItemIamIdentityService.getId());
+                    DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(role, dbItemIamIdentityService.getId());
                     if (dbItemIamRole != null) {
                         DBItemIamAccount2Roles dbItemIamAccount2Roles = new DBItemIamAccount2Roles();
                         dbItemIamAccount2Roles.setRoleId(dbItemIamRole.getId());
@@ -120,7 +120,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
         if (securityConfiguration.getRoles() != null) {
             for (Entry<String, SecurityConfigurationRole> roles : securityConfiguration.getRoles().getAdditionalProperties().entrySet()) {
-                DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(roles.getKey(),dbItemIamIdentityService.getId());
+                DBItemIamRole dbItemIamRole = iamAccountDBLayer.getRoleByName(roles.getKey(), dbItemIamIdentityService.getId());
 
                 if (dbItemIamRole != null) {
                     Long roleId = dbItemIamRole.getId();
@@ -143,6 +143,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         for (IniPermission iniPermission : roles.getValue().getPermissions().getControllerDefaults()) {
 
                             DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
+                            dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setRoleId(roleId);
                             dbItemIamPermission.setAccountPermission(iniPermission.getPath());
                             dbItemIamPermission.setExcluded(iniPermission.getExcluded());
@@ -154,6 +155,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                                     .getAdditionalProperties().entrySet()) {
                                 for (IniPermission iniPermission : controller.getValue()) {
                                     DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
+                                    dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                                     dbItemIamPermission.setRoleId(roleId);
                                     dbItemIamPermission.setAccountPermission(iniPermission.getPath());
                                     dbItemIamPermission.setControllerId(controller.getKey());
@@ -168,6 +170,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                         for (Folder folder : roles.getValue().getFolders().getJoc()) {
 
                             DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
+                            dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                             dbItemIamPermission.setFolderPermission(folder.getFolder());
                             dbItemIamPermission.setExcluded(false);
 
@@ -186,6 +189,7 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
 
                                 for (Folder folder : controller.getValue()) {
                                     DBItemIamPermission dbItemIamPermission = new DBItemIamPermission();
+                                    dbItemIamPermission.setIdentityServiceId(dbItemIamIdentityService.getId());
                                     dbItemIamPermission.setControllerId(controller.getKey());
                                     dbItemIamPermission.setFolderPermission(folder.getFolder());
                                     dbItemIamPermission.setRecursive(folder.getRecursive());
@@ -194,7 +198,6 @@ public class SOSSecurityDBConfiguration implements ISOSSecurityConfiguration {
                                 }
                             }
                         }
-
                     }
                 }
             }

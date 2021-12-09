@@ -20,6 +20,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityService;
 import com.sos.joc.model.security.IdentityServiceFilter;
+import com.sos.joc.model.security.IdentityServiceRename;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.IdentityServices;
 import com.sos.joc.security.resource.IIdentityServiceResource;
@@ -116,6 +117,42 @@ public class IdentityServiceResourceImpl extends JOCResourceImpl implements IIde
             } else {
                 sosHibernateSession.update(dbItemIamIdentityService);
             }
+ 
+            return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        } finally {
+            Globals.commit(sosHibernateSession);
+            Globals.disconnect(sosHibernateSession);
+        }
+
+    }
+    
+    @Override
+    public JOCDefaultResponse postIdentityServiceRename(String accessToken, byte[] body) {
+        SOSHibernateSession sosHibernateSession = null;
+        try {
+
+            IdentityServiceRename identityService = Globals.objectMapper.readValue(body, IdentityServiceRename.class);
+            JsonValidator.validateFailFast(body, IdentityServiceRename.class);
+
+            initLogging(API_CALL_SERVICES_STORE, body, accessToken);
+            JOCDefaultResponse jocDefaultResponse = initPermissions("", getJocPermissions(accessToken).getAdministration().getAccounts().getManage());
+            if (jocDefaultResponse != null) {
+                return jocDefaultResponse;
+            }
+
+            this.checkRequiredParameter("identityServiceOldName", identityService.getIdentityServiceOldName());
+            this.checkRequiredParameter("identityServiceNewName", identityService.getIdentityServiceNewName());
+
+            sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_SERVICES_READ);
+            sosHibernateSession.setAutoCommit(false);
+            sosHibernateSession.beginTransaction();
+            IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
+            iamIdentityServiceDBLayer.rename(identityService.getIdentityServiceOldName(),identityService.getIdentityServiceNewName());
  
             return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(identityService));
         } catch (JocException e) {

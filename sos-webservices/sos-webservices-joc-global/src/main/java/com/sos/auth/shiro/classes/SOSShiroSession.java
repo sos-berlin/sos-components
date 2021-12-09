@@ -5,6 +5,7 @@ import java.io.Serializable;
 import org.apache.shiro.session.Session;
 
 import com.sos.auth.interfaces.ISOSSession;
+import com.sos.auth.vault.classes.SOSVaultAccountAccessToken;
 
 public class SOSShiroSession implements ISOSSession {
 
@@ -51,6 +52,26 @@ public class SOSShiroSession implements ISOSSession {
 
     public void setShiroSession(Session shiroSession) {
         this.shiroSession = shiroSession;
+    }
+
+    @Override
+    public SOSVaultAccountAccessToken getSOSVaultAccountAccessToken() {
+        return null;
+    }
+
+    @Override
+    public boolean renew() {
+        if (shiroSession.getTimeout() > 0) {
+            shiroSession.touch();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public Long getStartSession() {
+        return shiroSession.getStartTimestamp().getTime();
     }
 
 }

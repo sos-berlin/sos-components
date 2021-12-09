@@ -83,7 +83,7 @@ public class TestSOSVaultHandler {
         SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login();
 
         System.out.println(sosVaultUserAccessToken.getAuth().getClient_token());
-        sosVaultHandler.userAccessTokenIsValid(sosVaultUserAccessToken);
+        sosVaultHandler.accountAccessTokenIsValid(sosVaultUserAccessToken);
     }
 
     @Ignore
