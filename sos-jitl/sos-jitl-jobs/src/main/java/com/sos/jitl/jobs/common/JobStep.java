@@ -552,7 +552,7 @@ public class JobStep<A extends JobArguments> {
             List<?> l = (List<?>) o;
             String s = (String) l.stream().map(e -> {
                 return e.toString();
-            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER));
+            }).collect(Collectors.joining(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY));
             return StringValue.of(s);
         }
         return null;

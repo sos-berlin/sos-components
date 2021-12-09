@@ -302,11 +302,13 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     val = URI.create(val.toString());
                 } else if (SOSReflection.isList(type)) {
                     boolean asStringList = true;
+                    String listVal = val.toString().replaceAll(SOSArgumentHelper.LIST_VALUE_DELIMITER_SECONDARY,
+                            SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY);
                     try {
                         Type subType = ((ParameterizedType) type).getActualTypeArguments()[0];
                         if (subType.equals(String.class)) {
                         } else if (SOSReflection.isEnum(subType)) {
-                            val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(v -> {
+                            val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(v -> {
                                 Object e = null;
                                 try {
                                     e = SOSReflection.enumIgnoreCaseValueOf(subType.getTypeName(), v.trim());
@@ -320,7 +322,7 @@ public abstract class ABlockingInternalJob<A extends JobArguments> implements Bl
                     } catch (Throwable e) {
                     }
                     if (asStringList) {
-                        val = Stream.of(val.toString().split(SOSArgumentHelper.LIST_VALUE_DELIMITER)).map(String::trim).collect(Collectors.toList());
+                        val = Stream.of(listVal.split(SOSArgumentHelper.LIST_VALUE_DELIMITER_PRIMARY)).map(String::trim).collect(Collectors.toList());
                     }
                 } else if (SOSReflection.isEnum(type)) {
                     Object v = SOSReflection.enumIgnoreCaseValueOf(type.getTypeName(), val.toString());

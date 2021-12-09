@@ -248,7 +248,7 @@ public class DailyPlanRunner extends TimerTask {
         String operation = withSubmit ? "creating/submitting" : "creating";
         if (schedules == null || schedules.size() == 0) {
             LOGGER.info(String.format("[%s][%s][%s][%s][skip]found 0 schedules", startupMode, operation, controllerId, date));
-            //TODO initialize OrderListSynchronizer before calculateStartTimes and return synchronizer.getPlannedOrders()
+            // TODO initialize OrderListSynchronizer before calculateStartTimes and return synchronizer.getPlannedOrders()
             return new TreeMap<PlannedOrderKey, PlannedOrder>();
         }
 
@@ -640,15 +640,17 @@ public class DailyPlanRunner extends TimerTask {
                     if (assignedCalendar.getTimeZone() == null) {
                         assignedCalendar.setTimeZone(UTC);
                     }
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s]calendar=%s", method, controllerId, date, schedule.getPath(), assignedCalendar
-                                .getCalendarName()));
-                    }
 
                     CalendarCacheItem calendarCacheItem = calendarCache.get(assignedCalendar.getCalendarName() + "#" + schedule.getPath());
                     String actDateAsString = SOSDate.getDateWithTimeZoneAsString(actDate, settings.getTimeZone());
                     String nextDateAsString = SOSDate.getDateWithTimeZoneAsString(nextDate, settings.getTimeZone());
                     String dailyPlanDateAsString = SOSDate.getDateWithTimeZoneAsString(dailyPlanDate, settings.getTimeZone());
+
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][timeZone=%s][actDate=%s][nextDate=%s]dailyPlanDate=%s", method,
+                                controllerId, date, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone(),
+                                actDateAsString, nextDateAsString, dailyPlanDateAsString));
+                    }
 
                     if (calendarCacheItem == null) {
                         calendarCacheItem = new CalendarCacheItem();
@@ -680,6 +682,11 @@ public class DailyPlanRunner extends TimerTask {
                     List<String> dates = new FrequencyResolver().resolveRestrictions(calendarJson, restrictionJson, actDateAsString, nextDateAsString)
                             .getDates();
 
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][FrequencyResolver]dates=%s", method, controllerId, date, schedule
+                                .getPath(), assignedCalendar.getCalendarName(), String.join(",", dates)));
+                    }
+
                     for (Period p : assignedCalendar.getPeriods()) {
                         Period _period = new Period();
                         _period.setBegin(p.getBegin());
@@ -703,6 +710,13 @@ public class DailyPlanRunner extends TimerTask {
                             }
                         } else {
                             Map<Long, Period> startTimes = periodResolver.getStartTimes(d, dailyPlanDateAsString, assignedCalendar.getTimeZone());
+
+                            if (isDebugEnabled) {
+                                LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s][timeZone=%s][date=%s][periodResolver]startTimes size=%s",
+                                        method, controllerId, date, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar
+                                                .getTimeZone(), d, startTimes.size()));
+                            }
+
                             for (Entry<Long, Period> periodEntry : startTimes.entrySet()) {
                                 Integer startMode;
                                 if (periodEntry.getValue().getSingleStart() == null) {
@@ -749,9 +763,15 @@ public class DailyPlanRunner extends TimerTask {
                         }
                     }
 
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s]%s planned orders", method, controllerId, date, schedule.getPath(),
-                                assignedCalendar.getCalendarName(), plannedOrdersCount));
+                    if (plannedOrdersCount == 0) {
+                        LOGGER.info(String.format("[%s][%s][%s][%s][skip][schedule=%s][calendar=%s][timeZone=%s]0 planned orders", startupMode,
+                                method, controllerId, date, schedule.getPath(), assignedCalendar.getCalendarName(), assignedCalendar.getTimeZone()));
+
+                    } else {
+                        if (isDebugEnabled) {
+                            LOGGER.debug(String.format("[%s][%s][%s][%s][calendar=%s]%s planned orders", method, controllerId, date, schedule
+                                    .getPath(), assignedCalendar.getCalendarName(), plannedOrdersCount));
+                        }
                     }
                 }
             }
