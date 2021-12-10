@@ -1,5 +1,6 @@
 package com.sos.joc.history.helper;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -7,15 +8,15 @@ import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sos.commons.util.SOSParameterSubstitutor;
+import com.sos.joc.Globals;
 
 public class HistoryUtil {
 
     public static final String NEW_LINE = "\r\n";
-
-    private static ObjectMapper MAPPER = new ObjectMapper();
 
     public static String getFolderFromPath(String path) {
         if (!path.startsWith("/")) {
@@ -69,7 +70,14 @@ public class HistoryUtil {
         if (o == null) {
             return null;
         }
-        return MAPPER.writeValueAsString(o);
+        return Globals.objectMapper.writeValueAsString(o);
+    }
+
+    public static <T> T json2object(String content, Class<T> clazz) throws JsonParseException, JsonMappingException, IOException {
+        if (content == null) {
+            return null;
+        }
+        return (T) Globals.objectMapper.readValue(content, clazz);
     }
 
     public static String map2Json(Map<String, js7.data.value.Value> map) throws JsonProcessingException {

@@ -8,10 +8,10 @@ import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sos.commons.mail.SOSMail;
 import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.job.notification.JobNotification;
+import com.sos.joc.Globals;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrder;
 import com.sos.joc.db.monitoring.DBItemMonitoringOrderStep;
 import com.sos.joc.db.monitoring.DBItemNotification;
@@ -25,8 +25,6 @@ public class NotifierMail extends ANotifier {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NotifierMail.class);
     private static final boolean QUEUE_MAIL_ON_ERROR = false;
-
-    private static ObjectMapper MAPPER = new ObjectMapper();
 
     private final MonitorMail monitor;
 
@@ -49,50 +47,9 @@ public class NotifierMail extends ANotifier {
             return new NotifyResult(monitor.getMessage(), getSendInfo(), "mail is null");
         }
 
-        StringBuilder skipCause = null;
-        if (mos != null) {
-            if (!SOSString.isEmpty(mos.getJobNotification())) {
-                try {
-                    JobNotification jn = MAPPER.readValue(mos.getJobNotification(), JobNotification.class);
-                    if (jn != null && jn.getMail() != null) {
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(String.format("[job=%s][use job notification]%s", mos.getJobName(), mos.getJobNotification()));
-                        }
-                        String to = jn.getMail().getTo();
-                        if (to != null && (to.trim().length() == 0 || to.indexOf("@") == -1)) {
-                            skipCause = new StringBuilder();
-                            skipCause.append("[job=").append(mos.getJobName()).append("]");
-                            skipCause.append("[job notification setting \"to\"");
-                            if (to.indexOf("@") == -1) {
-                                skipCause.append("=" + to);
-                            } else {
-                                skipCause.append(" is empty");
-                            }
-                            skipCause.append("]");
-                        } else {
-                            if (!SOSString.isEmpty(jn.getMail().getTo())) {
-                                mail.clearRecipients();
-                                mail.addRecipient(jn.getMail().getTo());
-                            }
-                            if (!SOSString.isEmpty(jn.getMail().getCc())) {
-                                mail.clearCC();
-                                mail.clearBCC();
-                                mail.addCC(jn.getMail().getCc());
-                            }
-                            if (!SOSString.isEmpty(jn.getMail().getBcc())) {
-                                mail.clearBCC();
-                                mail.addBCC(jn.getMail().getBcc());
-                            }
-                        }
-                    }
-                } catch (Throwable e) {
-                    LOGGER.error(String.format("[job=%s][error on read job notification][%s]%s", mos.getJobName(), mos.getJobNotification(), e
-                            .toString()), e);
-                }
-            }
-        }
-        if (skipCause != null) {
-            return new NotifyResult(mail.getBody(), getSendInfo(), skipCause);
+        NotifyResult skip = checkJobNotification(mos);
+        if (skip != null) {
+            return skip;
         }
 
         set(type, mo, mos, mn);
@@ -271,4 +228,58 @@ public class NotifierMail extends ANotifier {
             break;
         }
     }
+
+    private NotifyResult checkJobNotification(DBItemMonitoringOrderStep mos) {
+        if (mos != null && !SOSString.isEmpty(mos.getJobNotification())) {
+            try {
+                JobNotification jn = Globals.objectMapper.readValue(mos.getJobNotification(), JobNotification.class);
+                if (jn != null && jn.getMail() != null) {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[job=%s][use job notification]%s", mos.getJobName(), mos.getJobNotification()));
+                    }
+                    String to = jn.getMail().getTo();
+                    if (to != null && (to.trim().length() == 0 || !hasAt(to))) {
+                        StringBuilder skipCause = new StringBuilder();
+                        skipCause.append("[job=").append(mos.getJobName()).append("]");
+                        skipCause.append("[job notification setting \"to\"");
+
+                        if (to.trim().length() == 0) {
+                            skipCause.append(" is empty");
+                        } else {
+                            skipCause.append("=" + to);
+                        }
+                        skipCause.append("]");
+                        return new NotifyResult(mail.getBody(), getSendInfo(), skipCause);
+                    } else {
+                        if (!SOSString.isEmpty(jn.getMail().getTo())) {
+                            mail.clearRecipients();
+                            mail.addRecipient(jn.getMail().getTo());
+                        }
+                        if (!SOSString.isEmpty(jn.getMail().getCc())) {
+                            mail.clearCC();
+                            mail.clearBCC();
+                            mail.addCC(jn.getMail().getCc());
+                        }
+                        if (!SOSString.isEmpty(jn.getMail().getBcc())) {
+                            mail.clearBCC();
+                            mail.addBCC(jn.getMail().getBcc());
+                        }
+                    }
+                } else {
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug(String.format("[job=%s][job notification][%s]missing settings", mos.getJobName(), mos.getJobNotification()));
+                    }
+                }
+            } catch (Throwable e) {
+                LOGGER.error(String.format("[job=%s][error on read job notification][%s]%s", mos.getJobName(), mos.getJobNotification(), e
+                        .toString()), e);
+            }
+        }
+        return null;
+    }
+
+    private boolean hasAt(String s) {
+        return s.indexOf("@") > -1;
+    }
+
 }

@@ -31,7 +31,6 @@ import com.sos.commons.util.SOSPath;
 import com.sos.commons.util.SOSString;
 import com.sos.controller.model.event.EventType;
 import com.sos.inventory.model.workflow.Workflow;
-import com.sos.joc.Globals;
 import com.sos.joc.classes.history.HistoryPosition;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher;
 import com.sos.joc.classes.inventory.search.WorkflowSearcher.WorkflowJob;
@@ -1731,7 +1730,7 @@ public class HistoryModel {
 
     private Workflow getWorkflow(String workflowName, String workflowVersionId, String content) {
         try {
-            return (Workflow) Globals.objectMapper.readValue(content, Workflow.class);
+            return HistoryUtil.json2object(content, Workflow.class);
         } catch (Throwable e) {
             LOGGER.warn(String.format("[workflowName=%s,workflowVersionId=%s][can't parse workflow]%s", workflowName, workflowVersionId, e
                     .toString()));

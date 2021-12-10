@@ -8,13 +8,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.sos.commons.util.SOSString;
 import com.sos.commons.util.common.SOSArgumentHelper.DisplayMode;
 import com.sos.inventory.model.job.Environment;
 import com.sos.inventory.model.jobresource.JobResource;
+import com.sos.joc.Globals;
 
 public class MailResource {
 
@@ -26,10 +24,7 @@ public class MailResource {
     private static final String ARG_TO = "to";
     private static final String ARG_CC = "cc";
     private static final String ARG_BCC = "bcc";
-
-    private static ObjectMapper MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).configure(
-            SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false);
-
+   
     private Properties properties;
     private String from;
     private String fromName;
@@ -41,7 +36,7 @@ public class MailResource {
     public void parse(String content) {
         init();
         try {
-            Environment env = MAPPER.readValue(content, JobResource.class).getArguments();
+            Environment env = Globals.objectMapper.readValue(content, JobResource.class).getArguments();
             Map<String, String> arguments = env.getAdditionalProperties();
 
             if (LOGGER.isDebugEnabled()) {
