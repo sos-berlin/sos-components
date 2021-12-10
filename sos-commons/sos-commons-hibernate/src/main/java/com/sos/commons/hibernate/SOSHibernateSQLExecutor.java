@@ -132,7 +132,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
         return result;
     }
 
-    public int[] executeBatch(String tableName, String sql, Collection<SOSBatchObject> values) throws SOSHibernateException {
+    public int[] executeBatch(String tableName, String sql, Collection<Collection<SOSBatchObject>> rows) throws SOSHibernateException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
         int[] result = null;
@@ -141,16 +141,18 @@ public class SOSHibernateSQLExecutor implements Serializable {
             Connection conn = getConnection();
             Map<String, Integer> columnsMeta = getColumnsMeta(conn, tableName);
             stmt = conn.prepareStatement(sql);
-            for (SOSBatchObject v : values) {
-                if (isDebugEnabled) {
-                    LOGGER.debug(String.format("%s[addBatch][%s]%s", method, v.getIndex(), v.getValue()));
+            for (Collection<SOSBatchObject> row : rows) {
+                for (SOSBatchObject bo : row) {
+                    if (isDebugEnabled) {
+                        LOGGER.debug(String.format("%s[addBatch][%s]%s", method, bo.getIndex(), bo.getValue()));
+                    }
+                    try {
+                        stmt.setObject(bo.getIndex(), bo.getValue(), columnsMeta.get(bo.getColumnName().toLowerCase()));
+                    } catch (SQLException e) {
+                        throw new SOSHibernateSQLExecutorException(e, sql);
+                    }
                 }
-                try {
-                    stmt.setObject(v.getIndex(), v.getValue(), columnsMeta.get(v.getColumnName().toLowerCase()));
-                    stmt.addBatch();
-                } catch (SQLException e) {
-                    throw new SOSHibernateSQLExecutorException(e, sql);
-                }
+                stmt.addBatch();
             }
             result = stmt.executeBatch();
         } catch (SQLException e) {

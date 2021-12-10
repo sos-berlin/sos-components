@@ -2,6 +2,7 @@ package com.sos.commons.hibernate;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -17,20 +18,25 @@ public class SOSHibernateExecuterTest {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
+            // prepare
+            StringBuilder sql = new StringBuilder();
+            sql.append("INSERT INTO TABLE_TEST(NAME,AGE,COUNTRY)");
+            sql.append("VALUES(?,?,?)");// count ? = count columns
+
+            Collection<Collection<SOSBatchObject>> rows = new ArrayList<>();
+            rows.add(addRow());
+            rows.add(addRow());
+            rows.add(addRow());
+            rows.add(addRow());
+
+            // create connection
             factory = createFactory();
             session = factory.openStatelessSession();
-
             SOSHibernateSQLExecutor executor = session.getSQLExecutor();
-            StringBuilder sql = new StringBuilder();
-            sql.append("INSERT INTO TABLE_TEST(NAME,AGE)");
-            sql.append("VALUES(?,?)");
 
-            List<SOSBatchObject> values = new ArrayList<>();
-            values.add(new SOSBatchObject(0, "NAME", "Tester"));
-            values.add(new SOSBatchObject(1, "AGE", new Integer(33)));
-
+            // execute
             session.beginTransaction();
-            executor.executeBatch("TABLE_TEST", sql.toString(), values);
+            executor.executeBatch("TABLE_TEST", sql.toString(), rows);
             session.commit();
         } catch (Exception e) {
             throw e;
@@ -42,6 +48,18 @@ public class SOSHibernateExecuterTest {
                 factory.close();
             }
         }
+    }
+
+    private List<SOSBatchObject> addRow() {
+        // index - see INSERT INTO TABLE_TEST(NAME,AGE,COUNTRY)
+        // NAME <- index 1 etc
+
+        List<SOSBatchObject> rowValues = new ArrayList<>();
+        int index = 1;// beginning with 1
+        rowValues.add(new SOSBatchObject(index, "NAME", "Tester"));
+        rowValues.add(new SOSBatchObject(++index, "AGE", new Integer(33)));
+        rowValues.add(new SOSBatchObject(++index, "COUNTRY", "DE"));
+        return rowValues;
     }
 
     private SOSHibernateFactory createFactory() throws Exception {
