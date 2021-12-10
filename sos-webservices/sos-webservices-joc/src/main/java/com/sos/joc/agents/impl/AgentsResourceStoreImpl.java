@@ -68,15 +68,16 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 return jocDefaultResponse;
             }
 
-            Map<String, Long> agentIds = agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getAgentId, Collectors.counting()));
-            
+            Map<String, Long> agentIds = agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getAgentId, Collectors
+                    .counting()));
+
             // check uniqueness of AgentId
             agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                 throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
             });
-            
+
             checkUniquenessOfAgentNames(agentStoreParameter.getAgents());
-            
+
             // check uniqueness of AgentUrl
             agentStoreParameter.getAgents().stream().collect(Collectors.groupingBy(Agent::getUrl, Collectors.counting())).entrySet().stream().filter(
                     e -> e.getValue() > 1L).findAny().ifPresent(e -> {
@@ -87,7 +88,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             for (String agentId : agentIds.keySet()) {
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
-            
+
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
 
             connection = Globals.createSosHibernateStatelessConnection(API_STORE);
@@ -110,7 +111,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         throw new JocBadRequestException(String.format("Agent '%s' is already assigned for Controller '%s'", dbAgent.getAgentId(),
                                 dbAgent.getControllerId()));
                     }
-                    boolean controllerUpdateRequired = true; //false;
+                    boolean controllerUpdateRequired = true; // false;
                     boolean dbUpdateRequired = false;
                     if (dbAgent.getDisabled() != agent.getDisabled()) {
                         dbAgent.setDisabled(agent.getDisabled());
@@ -126,7 +127,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (!dbAgent.getUri().equals(agent.getUrl())) {
                         dbAgent.setUri(agent.getUrl());
                         dbUpdateRequired = true;
-                        //controllerUpdateRequired = true;
+                        // controllerUpdateRequired = true;
                     }
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
@@ -169,7 +170,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
-            
+
             Globals.commit(connection);
 
             if (!agentRefs.isEmpty()) {
@@ -189,17 +190,17 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             Globals.disconnect(connection);
         }
     }
-    
+
     @Override
     public JOCDefaultResponse clusterStore(String accessToken, byte[] filterBytes) {
         SOSHibernateSession connection = null;
         try {
             initLogging(API_CLUSTER_STORE, filterBytes, accessToken);
-            
+
             if (JocClusterService.getInstance().getCluster() != null && !JocClusterService.getInstance().getCluster().getConfig().getClusterMode()) {
                 throw new JocMissingLicenseException("missing license for Agent cluster");
             }
-            
+
             JsonValidator.validateFailFast(filterBytes, StoreClusterAgents.class);
             StoreClusterAgents agentStoreParameter = Globals.objectMapper.readValue(filterBytes, StoreClusterAgents.class);
             boolean permission = getJocPermissions(accessToken).getAdministration().getControllers().getManage();
@@ -209,7 +210,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             Map<String, Long> agentIds = agentStoreParameter.getClusterAgents().stream().collect(Collectors.groupingBy(ClusterAgent::getAgentId,
                     Collectors.counting()));
 
@@ -217,33 +218,33 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             agentIds.entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                 throw new JocBadRequestException(getUniquenessMsg("AgentId", e));
             });
-            
+
             checkUniquenessOfAgentNames(agentStoreParameter.getClusterAgents());
-            
+
             // check uniqueness of SubagentUrl
             agentStoreParameter.getClusterAgents().stream().map(ClusterAgent::getSubagents).flatMap(List::stream).collect(Collectors.groupingBy(
                     SubAgent::getUrl, Collectors.counting())).entrySet().stream().filter(e -> e.getValue() > 1L).findAny().ifPresent(e -> {
                         throw new JocBadRequestException(getUniquenessMsg("Subagent url", e));
                     });
-            
-            
+
             // check java name rules of AgentIds
             for (String agentId : agentIds.keySet()) {
                 CheckJavaVariableName.test("Agent ID", agentId);
             }
-            
+
             storeAuditLog(agentStoreParameter.getAuditLog(), controllerId, CategoryType.CONTROLLER);
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CLUSTER_STORE);
             connection.setAutoCommit(false);
             connection.beginTransaction();
             InventoryAgentInstancesDBLayer agentDBLayer = new InventoryAgentInstancesDBLayer(connection);
-            
-            Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function.identity()));
+
+            Map<String, ClusterAgent> agentMap = agentStoreParameter.getClusterAgents().stream().collect(Collectors.toMap(Agent::getAgentId, Function
+                    .identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
             List<JUpdateItemOperation> subAgentsToController = new ArrayList<>();
-            
+
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
                     ClusterAgent agent = agentMap.remove(dbAgent.getAgentId());
@@ -267,7 +268,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     if (dbUpdateRequired) {
                         agentDBLayer.updateAgent(dbAgent);
                     }
-                    
+
                     List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                             controllerId));
                     Map<String, SubAgent> subAgentsMap = agent.getSubagents().stream().distinct().collect(Collectors.toMap(SubAgent::getSubagentId,
@@ -300,7 +301,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
-            
+
             Globals.commit(connection);
             Globals.disconnect(connection);
             connection = null;
@@ -309,7 +310,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper
                         .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
             }
-            
+
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {
             Globals.rollback(connection);
@@ -343,7 +344,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             }
         }
     }
-    
+
     // check uniqueness of AgentName/-aliases
     private static void checkUniquenessOfAgentNames(List<? extends Agent> agents) throws JocBadRequestException {
         agents.stream().map(a -> {
@@ -358,7 +359,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     throw new JocBadRequestException(getUniquenessMsg("AgentName/-aliase", e));
                 });
     }
-    
+
     private static String getUniquenessMsg(String key, Map.Entry<String, Long> e) {
         return key + " has to be unique: " + e.getKey() + " is used " + (e.getValue() == 2L ? "twice" : e.getValue() + " times");
     }
