@@ -414,25 +414,6 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
     
-//    public List<DBItemInventorySubAgentInstance> getSubAgentInstances(List<String> subagentIds) {
-//        try {
-//            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where subAgentId in (:subagentIds)");
-//            Query<DBItemInventorySubAgentInstance> query = getSession().createQuery(hql.toString());
-//            query.setParameterList("subagentIds", subagentIds);
-//            List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
-//            if (result != null) {
-//                return result;
-//            }
-//            return Collections.emptyList();
-//        } catch (DBMissingDataException ex) {
-//            throw ex;
-//        } catch (SOSHibernateInvalidSessionException ex) {
-//            throw new DBConnectionRefusedException(ex);
-//        } catch (Exception ex) {
-//            throw new DBInvalidDataException(ex);
-//        }
-//    }
-    
     public Map<String, Map<SubagentDirectorType, DBItemInventorySubAgentInstance>> getDirectorInstances(Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -519,7 +500,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 return s;
             } else {
-                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
+                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId, priority from ");
+                hql.append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
                 hql.append(" where isDirector in (:isDirectors)");
                 hql.append(" and agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
                         " where controllerId = :controllerId)");
@@ -550,7 +532,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     
     public List<String> getSubAgentIdsByAgentId(String agentId) {
         try {
-            StringBuilder hql = new StringBuilder("select subAgentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where agentId = :agentId");
+            StringBuilder hql = new StringBuilder("select subAgentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
+                    " where agentId = :agentId");
             Query<String> query = getSession().createQuery(hql.toString());
             query.setParameter("agentId", agentId);
             List<String> result = getSession().getResultList(query);
@@ -565,8 +548,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         }
     }
 
-    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds, boolean onlyWatcher,
-            boolean onlyEnabledAgents) {
+    public Map<String, List<DBItemInventorySubAgentInstance>> getSubAgentInstancesByControllerIds(Collection<String> controllerIds,
+            boolean onlyWatcher, boolean onlyEnabledAgents) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
             if ((controllerIds != null && !controllerIds.isEmpty()) || onlyWatcher || onlyEnabledAgents) {

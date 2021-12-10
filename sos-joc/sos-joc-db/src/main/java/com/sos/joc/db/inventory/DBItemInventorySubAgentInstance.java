@@ -45,6 +45,9 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Column(name = "[IS_DIRECTOR]", nullable = false)
     private Integer isDirector;
     
+    @Column(name = "[PRIOTITY]", nullable = false)
+    private Integer priority;
+    
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
     @Type(type = "numeric_boolean")
@@ -119,6 +122,14 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Transient
     public void setIsDirector(SubagentDirectorType val) {
         setIsDirector(val == null ? null : val.intValue());
+    }
+    
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer val) {
+        priority = val;
     }
     
     public Long getOsId() {

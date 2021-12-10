@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -495,7 +496,8 @@ public class Proxies {
                         subs = Collections.singletonList(dbLayer.solveAgentWithoutSubAgent(agent));
                     }
                     List<JSubagentRef> subRefs = subs.stream().map(s -> JSubagentRef.of(SubagentId.of(s.getSubAgentId()), AgentPath.of(s
-                            .getAgentId()), Uri.of(s.getUri()))).collect(Collectors.toList());
+                            .getAgentId()), Uri.of(s.getUri()), s.getPriority() == null ? Optional.empty() : Optional.of(s.getPriority()))).collect(
+                                    Collectors.toList());
                     Set<SubagentId> directors = subs.stream().filter(s -> s.getIsDirector() > SubagentDirectorType.NO_DIRECTOR.intValue()).sorted()
                             .map(s -> SubagentId.of(s.getSubAgentId())).collect(Collectors.toSet());
                     result.put(JAgentRef.of(AgentPath.of(agent.getAgentId()), directors), subRefs);

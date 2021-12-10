@@ -132,8 +132,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                         agentDBLayer.updateAgent(dbAgent);
                     }
                     if (controllerUpdateRequired) {
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
-                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent.getAgentId()))));
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent
+                                .getAgentId()), Uri.of(dbAgent.getUri()))));
+                        agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent
+                                .getAgentId()))));
                     }
 
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
@@ -159,8 +161,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                 agentDBLayer.saveAgent(dbAgent);
 
                 if (controllerUpdateRequired) {
-                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent.getAgentId()), Uri.of(dbAgent.getUri()))));
-                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent.getAgentId()))));
+                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(dbAgent.getAgentId()), AgentPath.of(dbAgent
+                            .getAgentId()), Uri.of(dbAgent.getUri()))));
+                    agentRefs.add(JUpdateItemOperation.addOrChangeSimple(JAgentRef.of(AgentPath.of(dbAgent.getAgentId()), SubagentId.of(dbAgent
+                            .getAgentId()))));
                 }
 
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));

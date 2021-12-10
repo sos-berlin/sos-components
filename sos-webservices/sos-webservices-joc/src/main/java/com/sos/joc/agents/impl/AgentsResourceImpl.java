@@ -195,6 +195,7 @@ public class AgentsResourceImpl extends JOCResourceImpl implements IAgentsResour
             subagent.setUrl(dbSubagent.getUri());
             subagent.setIsDirector(dbSubagent.getDirectorAsEnum());
             subagent.setIsClusterWatcher(dbSubagent.getIsWatcher());
+            subagent.setPriority(dbSubagent.getPriority());
             return subagent;
         }).collect(Collectors.toList());
     }

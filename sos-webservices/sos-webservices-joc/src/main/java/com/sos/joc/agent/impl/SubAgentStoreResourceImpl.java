@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -175,10 +176,12 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             }
             if (!dbSubAgent.getUri().equals(subAgent.getUrl())) {
                 subAgentsToController.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(subAgent.getSubagentId()), AgentPath
-                        .of(agentId), Uri.of(subAgent.getUrl()))));
+                        .of(agentId), Uri.of(subAgent.getUrl()), subAgent.getPriority() == null ? Optional.empty() : Optional.of(subAgent
+                                .getPriority()))));
             }
             dbSubAgent.setIsDirector(subAgent.getIsDirector());
             dbSubAgent.setUri(subAgent.getUrl());
+            dbSubAgent.setPriority(subAgent.getPriority());
             dbSubAgent.setModified(now);
             dbLayer.getSession().update(dbSubAgent);
 
@@ -196,6 +199,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             dbSubAgent.setAgentId(agentId);
             dbSubAgent.setSubAgentId(subAgent.getSubagentId());
             dbSubAgent.setIsDirector(subAgent.getIsDirector());
+            dbSubAgent.setPriority(subAgent.getPriority());
             dbSubAgent.setUri(subAgent.getUrl());
             dbSubAgent.setIsWatcher(false);
             dbSubAgent.setOsId(0L);
@@ -203,7 +207,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             dbLayer.getSession().save(dbSubAgent);
 
             subAgentsToController.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(subAgent.getSubagentId()), AgentPath.of(
-                    agentId), Uri.of(subAgent.getUrl()))));
+                    agentId), Uri.of(subAgent.getUrl()), subAgent.getPriority() == null ? Optional.empty() : Optional.of(subAgent.getPriority()))));
         }
 
         if (primaryDirectorIsChanged || standbyDirectorIsChanged) {
