@@ -149,7 +149,7 @@ public class SOSHibernateFactory implements Serializable {
     public boolean dbmsIsPostgres() {
         return dbms == SOSHibernateFactory.Dbms.PGSQL;
     }
-    
+
     public boolean dbmsIsH2() {
         return dbms == SOSHibernateFactory.Dbms.H2;
     }
@@ -311,21 +311,7 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public String quoteColumn(String columnName) {
-        if (dialect != null && columnName != null) {
-            String[] arr = columnName.split("\\.");
-            if (arr.length == 1) {
-                columnName = dialect.openQuote() + columnName + dialect.closeQuote();
-            } else {
-                StringBuilder sb = new StringBuilder();
-                String cn = arr[arr.length - 1];
-                for (int i = 0; i < arr.length - 1; i++) {
-                    sb.append(arr[i] + ".");
-                }
-                sb.append(dialect.openQuote() + cn + dialect.closeQuote());
-                columnName = sb.toString();
-            }
-        }
-        return columnName;
+        return SOSHibernate.quoteColumn(dialect, columnName);
     }
 
     public void setAutoCommit(boolean commit) {

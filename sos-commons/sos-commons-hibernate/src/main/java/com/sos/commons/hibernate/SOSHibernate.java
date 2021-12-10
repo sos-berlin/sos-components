@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.persistence.Id;
 import javax.persistence.Parameter;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.Query;
@@ -152,6 +153,24 @@ public class SOSHibernate {
             partitions.add(getInClausePartition(i, list));
         }
         return partitions;
+    }
+
+    public static String quoteColumn(Dialect dialect, String columnName) {
+        if (dialect != null && columnName != null) {
+            String[] arr = columnName.split("\\.");
+            if (arr.length == 1) {
+                columnName = dialect.openQuote() + columnName + dialect.closeQuote();
+            } else {
+                StringBuilder sb = new StringBuilder();
+                String cn = arr[arr.length - 1];
+                for (int i = 0; i < arr.length - 1; i++) {
+                    sb.append(arr[i] + ".");
+                }
+                sb.append(dialect.openQuote() + cn + dialect.closeQuote());
+                columnName = sb.toString();
+            }
+        }
+        return columnName;
     }
 
     protected static String getLogIdentifier(String identifier) {

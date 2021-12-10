@@ -14,7 +14,7 @@ public class SOSHibernateExecuterTest {
 
     @Ignore
     @Test
-    public void test() throws Exception {
+    public void testBatchInsert() throws Exception {
         SOSHibernateFactory factory = null;
         SOSHibernateSession session = null;
         try {
@@ -32,11 +32,10 @@ public class SOSHibernateExecuterTest {
             // create connection
             factory = createFactory();
             session = factory.openStatelessSession();
-            SOSHibernateSQLExecutor executor = session.getSQLExecutor();
 
             // execute
             session.beginTransaction();
-            executor.executeBatch("TABLE_TEST", sql.toString(), rows);
+            session.getSQLExecutor().executeBatch("TABLE_TEST", sql.toString(), rows);
             session.commit();
         } catch (Exception e) {
             throw e;
