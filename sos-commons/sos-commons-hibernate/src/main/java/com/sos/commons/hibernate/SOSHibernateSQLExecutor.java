@@ -18,6 +18,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +27,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.common.SOSBatchObject;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLCommandExtractorException;
 import com.sos.commons.hibernate.exception.SOSHibernateSQLExecutorException;
-
 import com.sos.commons.util.SOSString;
 
 public class SOSHibernateSQLExecutor implements Serializable {
@@ -120,6 +122,76 @@ public class SOSHibernateSQLExecutor implements Serializable {
         } catch (SQLException e) {
             throw new SOSHibernateSQLExecutorException(e);
         } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        return result;
+    }
+
+    public int[] executeBatch(String tableName, String sql, Collection<SOSBatchObject> values) throws SOSHibernateException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
+        int[] result = null;
+        PreparedStatement stmt = null;
+        try {
+            Connection conn = getConnection();
+            Map<String, Integer> columnsMeta = getColumnsMeta(conn, tableName);
+            stmt = conn.prepareStatement(sql);
+            for (SOSBatchObject v : values) {
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s[addBatch][%s]%s", method, v.getIndex(), v.getValue()));
+                }
+                try {
+                    stmt.setObject(v.getIndex(), v.getValue(), columnsMeta.get(v.getColumnName().toLowerCase()));
+                    stmt.addBatch();
+                } catch (SQLException e) {
+                    throw new SOSHibernateSQLExecutorException(e, sql);
+                }
+            }
+            result = stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new SOSHibernateSQLExecutorException(e);
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        return result;
+    }
+
+    /** @param connection
+     * @param tableName
+     * @return Map: key - column name lower case, value - SQL type
+     * @throws SOSHibernateException */
+    public Map<String, Integer> getColumnsMeta(Connection connection, String tableName) throws SOSHibernateException {
+        Map<String, Integer> result = new HashMap<>();
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = connection.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM " + tableName + " WHERE 1=0");
+
+            ResultSetMetaData meta = rs.getMetaData();
+            int count = meta.getColumnCount();
+            for (int i = 1; i <= count; i++) {
+                result.put(meta.getColumnName(i).toLowerCase(), meta.getColumnType(i));
+            }
+        } catch (SQLException e) {
+            throw new SOSHibernateSQLExecutorException(e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (Throwable e) {
+                }
+            }
             if (stmt != null) {
                 try {
                     stmt.close();
