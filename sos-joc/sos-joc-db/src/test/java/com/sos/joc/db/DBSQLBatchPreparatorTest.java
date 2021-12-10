@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate;
+package com.sos.joc.db;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -13,11 +13,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.commons.hibernate.SOSHibernateFactory;
+import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.common.SOSBatchObject;
 import com.sos.commons.util.SOSString;
-import com.sos.joc.db.DBItem;
-import com.sos.joc.db.DBLayer;
-import com.sos.joc.db.DBSQLBatchPreparator;
 import com.sos.joc.db.DBSQLBatchPreparator.BatchPreparator;
 import com.sos.joc.db.history.DBItemHistoryOrderStep;
 
@@ -86,7 +85,6 @@ public class DBSQLBatchPreparatorTest {
         return items;
     }
 
-    @SuppressWarnings("unused")
     private SOSHibernateFactory createFactory() throws Exception {
         SOSHibernateFactory factory = new SOSHibernateFactory(Paths.get("src/test/resources/hibernate.cfg.xml"));
         factory.addClassMapping(DBLayer.getHistoryClassMapping());
