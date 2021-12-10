@@ -176,12 +176,11 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             }
             if (!dbSubAgent.getUri().equals(subAgent.getUrl())) {
                 subAgentsToController.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(subAgent.getSubagentId()), AgentPath
-                        .of(agentId), Uri.of(subAgent.getUrl()), subAgent.getPriority() == null ? Optional.empty() : Optional.of(subAgent
-                                .getPriority()))));
+                        .of(agentId), Uri.of(subAgent.getUrl()))));
             }
             dbSubAgent.setIsDirector(subAgent.getIsDirector());
             dbSubAgent.setUri(subAgent.getUrl());
-            dbSubAgent.setPriority(subAgent.getPriority());
+            dbSubAgent.setOrdering(subAgent.getOrdering());
             dbSubAgent.setModified(now);
             dbLayer.getSession().update(dbSubAgent);
 
@@ -199,7 +198,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             dbSubAgent.setAgentId(agentId);
             dbSubAgent.setSubAgentId(subAgent.getSubagentId());
             dbSubAgent.setIsDirector(subAgent.getIsDirector());
-            dbSubAgent.setPriority(subAgent.getPriority());
+            dbSubAgent.setOrdering(subAgent.getOrdering());
             dbSubAgent.setUri(subAgent.getUrl());
             dbSubAgent.setIsWatcher(false);
             dbSubAgent.setOsId(0L);
@@ -207,7 +206,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
             dbLayer.getSession().save(dbSubAgent);
 
             subAgentsToController.add(JUpdateItemOperation.addOrChangeSimple(JSubagentRef.of(SubagentId.of(subAgent.getSubagentId()), AgentPath.of(
-                    agentId), Uri.of(subAgent.getUrl()), subAgent.getPriority() == null ? Optional.empty() : Optional.of(subAgent.getPriority()))));
+                    agentId), Uri.of(subAgent.getUrl()))));
         }
 
         if (primaryDirectorIsChanged || standbyDirectorIsChanged) {

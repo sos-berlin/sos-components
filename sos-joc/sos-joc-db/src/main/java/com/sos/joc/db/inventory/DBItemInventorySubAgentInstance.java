@@ -45,8 +45,8 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Column(name = "[IS_DIRECTOR]", nullable = false)
     private Integer isDirector;
     
-    @Column(name = "[PRIOTITY]", nullable = false)
-    private Integer priority;
+    @Column(name = "[ORDERING]", nullable = false)
+    private Integer ordering;
     
     /* 0=no, 1=yes */
     @Column(name = "[IS_WATCHER]", nullable = false)
@@ -124,12 +124,12 @@ public class DBItemInventorySubAgentInstance extends DBItem {
         setIsDirector(val == null ? null : val.intValue());
     }
     
-    public Integer getPriority() {
-        return priority;
+    public Integer getOrdering() {
+        return ordering;
     }
 
-    public void setPriority(Integer val) {
-        priority = val;
+    public void setOrdering(Integer val) {
+        ordering = val;
     }
     
     public Long getOsId() {

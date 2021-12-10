@@ -500,7 +500,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 return s;
             } else {
-                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId, priority from ");
+                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId, ordering from ");
                 hql.append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
                 hql.append(" where isDirector in (:isDirectors)");
                 hql.append(" and agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(

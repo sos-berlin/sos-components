@@ -7,13 +7,13 @@ public class SubAgentItem {
     private String agentId;
     private String subAgentId;
     private Integer isDirector;
-    private Integer priority;
+    private Integer ordering;
     
-    public SubAgentItem(String agentId, Integer isDirector, String subAgentId, Integer priority) {
+    public SubAgentItem(String agentId, Integer isDirector, String subAgentId, Integer ordering) {
         this.agentId = agentId;
         this.isDirector = isDirector;
         this.subAgentId = subAgentId;
-        this.priority = priority;
+        this.ordering = ordering;
     }
 
     public String getAgentId() {
@@ -24,8 +24,8 @@ public class SubAgentItem {
         return subAgentId;
     }
 
-    public Integer getPriority() {
-        return priority;
+    public Integer getOrdering() {
+        return ordering;
     }
 
     public Integer getIsDirector() {
