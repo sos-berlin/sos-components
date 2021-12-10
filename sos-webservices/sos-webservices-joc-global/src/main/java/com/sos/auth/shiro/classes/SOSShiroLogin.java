@@ -22,6 +22,7 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.shiro.SOSUsernameRequestToken;
@@ -181,7 +182,7 @@ public class SOSShiroLogin implements ISOSLogin {
     }
 
     @Override
-    public void setIdentityServiceId(Long value) {
+    public void setIdentityServiceId(SOSIdentityService value) {
         // not needed for shiro
     }
 

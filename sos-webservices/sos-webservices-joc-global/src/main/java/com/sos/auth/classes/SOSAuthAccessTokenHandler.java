@@ -3,12 +3,18 @@ package com.sos.auth.classes;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.slf4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.sos.joc.Globals;
 import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSAuthAccessTokenHandler extends Thread {
 
-    private static final int TIME_GAP_SECONDS = 28;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthAccessTokenHandler.class);
+    private static final int TIME_GAP_SECONDS = 20;
+    private static final String ThreadCtx = "authentication";
+
     private boolean stop;
 
     public class AccessTokenTimerTask extends TimerTask {
@@ -16,13 +22,15 @@ public class SOSAuthAccessTokenHandler extends Thread {
         SOSAuthCurrentAccount nextAccount;
 
         public AccessTokenTimerTask(SOSAuthCurrentAccount nextAccount) {
+            MDC.put("context", ThreadCtx);
             this.nextAccount = nextAccount;
         }
 
         public void run() {
             if (nextAccount != null) {
-                System.out.println(this.nextAccount.getAccountname() + " " + this.nextAccount.getCurrentSubject().getSession().getTimeout());
+                LOGGER.debug("Renew " + nextAccount.getAccountname());
                 if (!nextAccount.getCurrentSubject().getSession().renew()) {
+                    LOGGER.info(nextAccount.getAccountname() + " no longer valid");
                     Globals.jocWebserviceDataContainer.getCurrentAccountsList().removeAccount(nextAccount.getAccessToken());
                 }
             }
@@ -39,6 +47,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
             accessTokenTimer.purge();
         }
         accessTokenTimer = new Timer();
+        LOGGER.debug("will renew " + nextAccount.getAccountname() + " in " +  next/1000 + "s");
         accessTokenTimer.schedule(new AccessTokenTimerTask(nextAccount), next);
     }
 
@@ -56,7 +65,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
                         long leaseDuration = currentAccount.getCurrentSubject().getSession().getSOSVaultAccountAccessToken().getAuth()
                                 .getLease_duration() * 1000;
 
-                        long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000; 
+                        long n = currentAccount.getCurrentSubject().getSession().getStartSession() + leaseDuration - TIME_GAP_SECONDS * 1000;
 
                         if (next == null || next > n) {
                             next = leaseDuration - TIME_GAP_SECONDS * 1000;
@@ -72,6 +81,7 @@ public class SOSAuthAccessTokenHandler extends Thread {
     }
 
     public void run() {
+        MDC.put("context", ThreadCtx);
         stop = false;
         getNextAccessToken();
     }

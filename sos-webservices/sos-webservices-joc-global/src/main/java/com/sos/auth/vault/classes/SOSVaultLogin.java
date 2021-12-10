@@ -11,24 +11,28 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.vault.SOSVaultHandler;
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
+import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSVaultLogin implements ISOSLogin {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSVaultLogin.class);
 
-    private String msg="";
+    private String msg = "";
+    private SOSIdentityService identityService;
+
     SOSVaultSubject sosVaultSubject;
 
     public SOSVaultLogin() {
 
     }
 
-    public void login(String user, String pwd, HttpServletRequest httpServletRequest) {
+    public void login(String account, String pwd, HttpServletRequest httpServletRequest) {
         KeyStore keyStore = null;
         KeyStore trustStore = null;
 
@@ -41,20 +45,19 @@ public class SOSVaultLogin implements ISOSLogin {
             trustStore = KeyStoreUtil.readTrustStore(webserviceCredentials.getTrustStorePath(), webserviceCredentials.getTrustStoreType(),
                     webserviceCredentials.getTrustStorePassword());
 
-            webserviceCredentials.setAccount(user);
+            webserviceCredentials.setAccount(account);
             webserviceCredentials.setPassword(pwd);
             SOSVaultHandler sosVaultHandler = new SOSVaultHandler(webserviceCredentials, keyStore, trustStore);
-            
-            SOSVaultAccountAccessToken sosVaultUserAccessToken = sosVaultHandler.login();
+
+            SOSVaultAccountAccessToken sosVaultAccountAccessToken = sosVaultHandler.login();
             sosVaultSubject = new SOSVaultSubject();
-            if (sosVaultUserAccessToken.getAuth() == null) {
+            if (sosVaultAccountAccessToken.getAuth() == null) {
                 sosVaultSubject.setAuthenticated(false);
-                setMsg("There is no user with the given username/password combination");
+                setMsg("There is no user with the given account/password combination");
             } else {
-                sosVaultSubject.setAccount(user);
                 sosVaultSubject.setAuthenticated(true);
-                sosVaultSubject.setPermissionAndRoles(user);
-                sosVaultSubject.setAccessToken(sosVaultUserAccessToken);
+                sosVaultSubject.setPermissionAndRoles(sosVaultAccountAccessToken.getAuth().getToken_policies(),account, identityService);
+                sosVaultSubject.setAccessToken(sosVaultAccountAccessToken);
             }
 
         } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
@@ -85,8 +88,8 @@ public class SOSVaultLogin implements ISOSLogin {
     }
 
     @Override
-    public void setIdentityServiceId(Long value) {
-      // Not needed for vault
+    public void setIdentityServiceId(SOSIdentityService sosIdentityService) {
+        identityService = sosIdentityService;
     }
 
 }

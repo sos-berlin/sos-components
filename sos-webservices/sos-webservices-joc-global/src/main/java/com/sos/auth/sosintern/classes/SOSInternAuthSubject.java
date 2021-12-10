@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
 import com.sos.auth.sosintern.SOSInternAuthSession;
@@ -19,7 +20,6 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 public class SOSInternAuthSubject implements ISOSAuthSubject {
 
     private SOSInternAuthSession session;
-    private String account;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
@@ -68,17 +68,18 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
         getInternAuthSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(String accountName) throws SOSHibernateException {
+    public void setPermissionAndRoles(String accountName,SOSIdentityService identityServiceId) throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
+            setOfRoles = new HashSet<String>();
+            
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName);
-            setOfRoles = new HashSet<String>();
+            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName,identityServiceId.getIdentityServiceId());
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                 setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
             }
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles,accountName);
+            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles,accountName,identityServiceId.getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
             setOfAccountPermissions = new HashSet<String>();
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
@@ -99,11 +100,7 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
             Globals.disconnect(sosHibernateSession);
         }
     }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-
+ 
     @Override
     public Map<String, List<String>> getMapOfFolderPermissions() {
         return mapOfFolderPermissions;

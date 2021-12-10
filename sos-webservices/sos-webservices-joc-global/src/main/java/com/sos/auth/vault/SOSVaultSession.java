@@ -132,6 +132,7 @@ public class SOSVaultSession implements ISOSSession {
         try {
             if (sosVaultHandler.accountAccessTokenIsValid(accessToken)) {
                 sosVaultHandler.renewAccountAccess(accessToken);
+                startSession = new Date().getTime();
                 return true;
             } else {
                 return false;

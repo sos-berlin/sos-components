@@ -512,15 +512,15 @@ public class SOSServicePermissionShiro {
             break;
         case JOC:
             sosLogin = new SOSInternAuthLogin();
-            sosLogin.setIdentityServiceId(dbItemIdentityService.getId());
             LOGGER.debug("Login with idendity service sosintern");
             break;
         default:
             LOGGER.debug("Login with idendity service shiro");
             sosLogin = new SOSShiroLogin(Globals.getShiroIniSecurityManagerFactory());
-
         }
-
+        
+        
+        sosLogin.setIdentityServiceId(new SOSIdentityService(dbItemIdentityService.getId(),dbItemIdentityService.getIdentityServiceName(),IdentityServiceTypes.fromValue(dbItemIdentityService.getIdentityServiceType())));
         sosLogin.login(currentAccount.getAccountname(), currentAccount.getPassword(), currentAccount.getHttpServletRequest());
 
         ISOSAuthSubject sosAuthSubject = sosLogin.getCurrentSubject();
@@ -762,8 +762,7 @@ public class SOSServicePermissionShiro {
         if (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler() != null) {
             Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().endExecution();
             do {
-            }
-            while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
+            } while (Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().isAlive());
         }
         Globals.jocWebserviceDataContainer.setSosAuthAccessTokenHandler(new SOSAuthAccessTokenHandler());
         Globals.jocWebserviceDataContainer.getSosAuthAccessTokenHandler().start();

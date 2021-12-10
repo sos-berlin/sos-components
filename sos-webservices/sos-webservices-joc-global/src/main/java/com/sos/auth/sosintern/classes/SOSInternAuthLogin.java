@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSLogin;
 import com.sos.auth.sosintern.SOSInternAuthHandler;
@@ -17,7 +18,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSInternAuthLogin.class);
 
     private String msg="";
-    private Long identityServiceId;
+    private SOSIdentityService identityService;
     private SOSInternAuthSubject sosInternAuthSubject;
 
     public SOSInternAuthLogin() {
@@ -30,7 +31,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
         try {
 
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
-            sosInternAuthWebserviceCredentials.setIdentityServiceId(identityServiceId);
+            sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosInternAuthWebserviceCredentials.setAccount(account);
             sosInternAuthWebserviceCredentials.setPassword(pwd);
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
@@ -39,13 +40,11 @@ public class SOSInternAuthLogin implements ISOSLogin {
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
-                sosInternAuthSubject.setAccessToken("");
                 setMsg("There is no account with the given accountname/password combination");
 
             } else {
-                sosInternAuthSubject.setAccount(account);
                 sosInternAuthSubject.setAuthenticated(true);
-                sosInternAuthSubject.setPermissionAndRoles(account);
+                sosInternAuthSubject.setPermissionAndRoles(account,identityService);
                 sosInternAuthSubject.setAccessToken(sosInternAuthAccessToken.getAccessToken());
             }
 
@@ -76,8 +75,8 @@ public class SOSInternAuthLogin implements ISOSLogin {
     }
 
     
-    public void setIdentityServiceId(Long identityServiceId) {
-        this.identityServiceId = identityServiceId;
+    public void setIdentityServiceId(SOSIdentityService identityService) {
+        this.identityService = identityService;
     }
 
 }

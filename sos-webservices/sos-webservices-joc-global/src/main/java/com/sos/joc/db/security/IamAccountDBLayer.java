@@ -135,9 +135,9 @@ public class IamAccountDBLayer {
 
     public List<DBItemIamAccount> getIamAccountList(IamAccountFilter filter, final int limit) throws SOSHibernateException {
         List<DBItemIamAccount> iamAccountList = null;
-        Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria() + filter
-                .getSortMode());
-        if (filter.getIdentityServiceId() != null ) {
+        Query<DBItemIamAccount> query = sosHibernateSession.createQuery("from " + DBItemIamAccount + getWhere(filter) + filter.getOrderCriteria()
+                + filter.getSortMode());
+        if (filter.getIdentityServiceId() != null) {
             query.setParameter("identityServiceId", filter.getIdentityServiceId());
         }
         if (limit > 0) {
@@ -159,7 +159,7 @@ public class IamAccountDBLayer {
 
     public List<DBItemIamRole> getListOfAllRoles(Long identityServiceId) throws SOSHibernateException {
         List<DBItemIamRole> iamRolesList = null;
-        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + " where identityServiceId=:identityServiceId"   );
+        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + " where identityServiceId=:identityServiceId");
         query.setParameter("identityServiceId", identityServiceId);
 
         iamRolesList = query.getResultList();
@@ -168,8 +168,9 @@ public class IamAccountDBLayer {
 
     public List<DBItemIamAccount2RoleWithName> getListOfRolesWithName(DBItemIamAccount dbitemIamAccount) throws SOSHibernateException {
 
-        String q = "select u.roleId as roleId,u.accountId as accountId," + "r.roleName as roleName, '" + dbitemIamAccount.getAccountName() + "' as accountName"
-                + " from " + DBItemIamAccount2Roles + " u, " + DBItemIamRole + " r where r.id=u.roleId and u.accountId=:accountId and r.identityServiceId=:identityServiceId";
+        String q = "select u.roleId as roleId,u.accountId as accountId," + "r.roleName as roleName, '" + dbitemIamAccount.getAccountName()
+                + "' as accountName" + " from " + DBItemIamAccount2Roles + " u, " + DBItemIamRole
+                + " r where r.id=u.roleId and u.accountId=:accountId and r.identityServiceId=:identityServiceId";
 
         Query<DBItemIamAccount2RoleWithName> query = sosHibernateSession.createQuery(q);
         query.setParameter("accountId", dbitemIamAccount.getId());
@@ -183,8 +184,8 @@ public class IamAccountDBLayer {
 
         String q = "select p.controllerId as controllerId,p.accountId as accountId,p.roleId as roleId,"
                 + "p.accountPermission as accountPermission,p.folderPermission as folderPermission,"
-                + "p.excluded as excluded,p.recursive as recursive,r.roleName as roleName" + " from " + DBItemIamPermission + " p, "
-                + DBItemIamRole + " r where r.identityServiceId=p.identityServiceId and r.id=p.roleId and r.identityServiceId=:identityServiceId";
+                + "p.excluded as excluded,p.recursive as recursive,r.roleName as roleName" + " from " + DBItemIamPermission + " p, " + DBItemIamRole
+                + " r where r.identityServiceId=p.identityServiceId and r.id=p.roleId and r.identityServiceId=:identityServiceId";
 
         Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
         query.setParameter("identityServiceId", identityServiceId);
@@ -193,22 +194,24 @@ public class IamAccountDBLayer {
 
     }
 
-    public List<DBItemIamPermissionWithName> getListOfRolesForAccountName(String accountName) throws SOSHibernateException {
+    public List<DBItemIamPermissionWithName> getListOfRolesForAccountName(String accountName, Long identityServiceId) throws SOSHibernateException {
 
         String q = "select a.id as accountId,r.id as roleId," + "a.accountName as accountName," + "r.roleName as roleName" + " from " + DBItemIamAccount + " a, "
-                + DBItemIamAccount2Roles + " ar," + DBItemIamRole + " r" + " where a.accountName=:accountName" + " and ar.accountId=a.id and r.id=ar.roleId";
+                + DBItemIamAccount2Roles + " ar," + DBItemIamRole + " r" + " where a.accountName=:accountName" + " and ar.accountId=a.id and r.id=ar.roleId and r.identityServiceId=:identityServiceId";
 
         Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
         query.setParameter("accountName", accountName);
+        query.setParameter("identityServiceId", identityServiceId);
 
         query.setResultTransformer(Transformers.aliasToBean(DBItemIamPermissionWithName.class));
         return sosHibernateSession.getResultList(query);
 
     }
 
-    public DBItemIamRole getRoleByName(String roleName,Long identityServiceId) throws SOSHibernateException {
+    public DBItemIamRole getRoleByName(String roleName, Long identityServiceId) throws SOSHibernateException {
         List<DBItemIamRole> iamRoleList = null;
-        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole + " where roleName=:roleName and identityServiceId=:identityServiceId");
+        Query<DBItemIamRole> query = sosHibernateSession.createQuery("from " + DBItemIamRole
+                + " where roleName=:roleName and identityServiceId=:identityServiceId");
 
         query.setParameter("roleName", roleName);
         query.setParameter("identityServiceId", identityServiceId);
@@ -258,6 +261,9 @@ public class IamAccountDBLayer {
     }
 
     private String getRoleListSql(Collection<String> list) {
+        if (list.size()==0) {
+            return "1=0";
+        }
         StringBuilder sql = new StringBuilder();
         sql.append("r.roleName in (");
         for (String s : list) {
@@ -270,20 +276,26 @@ public class IamAccountDBLayer {
         return " (" + s + ") ";
     }
 
-    private List<DBItemIamPermissionWithName> getListOfPermissionsFromRoles(Set<String> setOfRoles,String accountName) throws SOSHibernateException {
-        String q = "select a.id as accountId, a.accountName as accountName, p.controllerId as controllerId,p.accountId as accountId,p.roleId as roleId,p.accountPermission as accountPermission,"
-                + "p.folderPermission as folderPermission,p.excluded as excluded,p.recursive as recursive,r.roleName as roleName " + "from "
-                + DBItemIamAccount + " a, " + DBItemIamPermission + " p," + DBItemIamRole + " r" + " where " + getRoleListSql(setOfRoles)
-                + " and p.roleId=r.id and a.accountName = :accountName";
+    private List<DBItemIamPermissionWithName> getListOfPermissionsFromRoles(Set<String> setOfRoles, String accountName, Long identityServiceId) throws SOSHibernateException {
+        if (setOfRoles.size()==0) {
+            return new ArrayList<DBItemIamPermissionWithName>();
+        }
+        String q =
+                "select a.id as accountId, a.accountName as accountName, p.controllerId as controllerId,p.accountId as accountId,p.roleId as roleId,p.accountPermission as accountPermission,"
+                        + "p.folderPermission as folderPermission,p.excluded as excluded,p.recursive as recursive,r.roleName as roleName " + "from "
+                        + DBItemIamAccount + " a, " + DBItemIamPermission + " p," + DBItemIamRole + " r" + " where " + getRoleListSql(setOfRoles)
+                        + " and p.roleId=r.id and a.accountName = :accountName and p.identityServiceId = :identityServiceId";
 
         Query<DBItemIamPermissionWithName> query = sosHibernateSession.createQuery(q);
         query.setParameter("accountName", accountName);
+        query.setParameter("identityServiceId", identityServiceId);
 
         query.setResultTransformer(Transformers.aliasToBean(DBItemIamPermissionWithName.class));
         return sosHibernateSession.getResultList(query);
     }
 
-    public List<DBItemIamPermissionWithName> getListOfPermissionsFromRoleNames(Set<String> setOfRoles,String accountName) throws SOSHibernateException {
+    public List<DBItemIamPermissionWithName> getListOfPermissionsFromRoleNames(Set<String> setOfRoles, String accountName, Long identityServiceId)
+            throws SOSHibernateException {
         List<DBItemIamPermissionWithName> resultList = new ArrayList<DBItemIamPermissionWithName>();
         int size = setOfRoles.size();
         if (size > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -296,11 +308,11 @@ public class IamAccountDBLayer {
                 } else {
                     s = copy.subList(i, size).stream().collect(Collectors.toSet());
                 }
-                resultList.addAll(getListOfPermissionsFromRoles(s,accountName));
+                resultList.addAll(getListOfPermissionsFromRoles(s, accountName,identityServiceId));
             }
             return resultList;
         } else {
-            return getListOfPermissionsFromRoles(setOfRoles,accountName);
+            return getListOfPermissionsFromRoles(setOfRoles, accountName,identityServiceId);
         }
     }
 
