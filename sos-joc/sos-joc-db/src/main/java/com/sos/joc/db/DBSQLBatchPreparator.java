@@ -24,7 +24,7 @@ public class DBSQLBatchPreparator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DBSQLBatchPreparator.class);
 
-    public static BatchPreparator prepareForSQLBatchInsert(Dialect dialect, List<DBItem> items) {
+    public static BatchPreparator prepareForSQLBatchInsert(Dialect dialect, List<? extends DBItem> items) {
         if (items == null || items.size() == 0) {
             return null;
         }
@@ -50,7 +50,7 @@ public class DBSQLBatchPreparator {
         return sql;
     }
 
-    private static Collection<Collection<SOSBatchObject>> getRows(Meta meta, List<DBItem> items) {
+    private static Collection<Collection<SOSBatchObject>> getRows(Meta meta, List<? extends DBItem> items) {
         Collection<Collection<SOSBatchObject>> rows = new ArrayList<>();
         for (DBItem item : items) {
             rows.add(getRow(meta, item));

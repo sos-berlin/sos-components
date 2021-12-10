@@ -71,7 +71,7 @@ public class DBSQLBatchPreparatorTest {
         }
     }
 
-    private List<DBItem> getTestItems() {
+    private List<DBItemHistoryOrderStep> getTestItems() {
         DBItemHistoryOrderStep item1 = new DBItemHistoryOrderStep();
         item1.setControllerId("controllerId_1");
         item1.setCreated(new Date());
@@ -79,7 +79,7 @@ public class DBSQLBatchPreparatorTest {
         item2.setControllerId("controllerId_2");
         item1.setCreated(new Date());
 
-        List<DBItem> items = new ArrayList<>();
+        List<DBItemHistoryOrderStep> items = new ArrayList<>();
         items.add(item1);
         items.add(item2);
         return items;
