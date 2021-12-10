@@ -21,6 +21,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.NumericBooleanType;
 import org.hibernate.type.TimestampType;
@@ -376,8 +377,7 @@ public class SOSHibernateFactory implements Serializable {
                 }
 
             }
-            dialect = Dialect.getDialect(configuration.getProperties());
-            setDbms(dialect);
+            setDbms(configuration.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT));
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
@@ -393,23 +393,27 @@ public class SOSHibernateFactory implements Serializable {
     }
 
     public static Enum<SOSHibernateFactory.Dbms> getDbms(Path configFile) throws SOSHibernateConfigurationException {
-        Dialect dt = null;
+        String dialect = null;
         try {
             Configuration conf = new Configuration();
             conf.configure(configFile.toUri().toURL());
-            dt = Dialect.getDialect(conf.getProperties());
+            dialect = conf.getProperties().getProperty(SOSHibernate.HIBERNATE_PROPERTY_DIALECT);
         } catch (MalformedURLException e) {
             throw new SOSHibernateConfigurationException(String.format("exception on get configFile %s as url", configFile), e);
         } catch (PersistenceException e) {
             throw new SOSHibernateConfigurationException(e);
         }
-        return getDbms(dt);
+        return getDbms(dialect);
     }
 
     public static Enum<SOSHibernateFactory.Dbms> getDbms(Dialect dialect) {
+        return getDbms(dialect == null ? null : dialect.getClass().getSimpleName());
+    }
+
+    public static Enum<SOSHibernateFactory.Dbms> getDbms(String dialect) {
         SOSHibernateFactory.Dbms db = SOSHibernateFactory.Dbms.UNKNOWN;
         if (dialect != null) {
-            String dialectClassName = dialect.getClass().getSimpleName().toLowerCase();
+            String dialectClassName = dialect.toLowerCase();
             if (dialectClassName.contains("db2")) {
                 db = Dbms.DB2;
             } else if (dialectClassName.contains("h2")) {
@@ -466,6 +470,7 @@ public class SOSHibernateFactory implements Serializable {
         }
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+        dialect = ((SessionFactoryImplementor) sessionFactory).getJdbcServices().getDialect();
     }
 
     private void showConfigurationProperties() {
@@ -549,7 +554,7 @@ public class SOSHibernateFactory implements Serializable {
         }
     }
 
-    private void setDbms(Dialect dialect) {
+    private void setDbms(String dialect) {
         dbms = getDbms(dialect);
     }
 

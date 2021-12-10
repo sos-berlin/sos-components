@@ -24,6 +24,7 @@ import com.sos.commons.util.SOSString;
 
 public class SOSHibernate {
 
+    public static final String HIBERNATE_PROPERTY_DIALECT = "hibernate.dialect";
     public static final String HIBERNATE_PROPERTY_CONNECTION_AUTO_COMMIT = "hibernate.connection.autocommit";
     public static final String HIBERNATE_PROPERTY_CONNECTION_URL = "hibernate.connection.url";
     public static final String HIBERNATE_PROPERTY_CONNECTION_USERNAME = "hibernate.connection.username";

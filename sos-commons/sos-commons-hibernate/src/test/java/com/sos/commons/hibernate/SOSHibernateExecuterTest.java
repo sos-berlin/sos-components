@@ -7,10 +7,38 @@ import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sos.commons.hibernate.common.SOSBatchObject;
 
 public class SOSHibernateExecuterTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SOSHibernateExecuterTest.class);
+
+    @Ignore
+    @Test
+    public void testInfos() throws Exception {
+        SOSHibernateFactory factory = null;
+        SOSHibernateSession session = null;
+        try {
+            // create connection
+            factory = createFactory();
+
+            LOGGER.info("DBMS=" + factory.getDbms());
+            LOGGER.info("DIALECT=" + factory.getDialect());
+
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
 
     @Ignore
     @Test
