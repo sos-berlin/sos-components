@@ -41,7 +41,6 @@ public class DBSQLBatchPreparator {
         sql.append(meta.columns.entrySet().stream().map(e -> {
             return SOSHibernate.quoteColumn(dialect, e.getKey());
         }).collect(Collectors.joining(",")));
-
         sql.append(") values (");
         sql.append(meta.columns.entrySet().stream().map(e -> {
             return "?";
@@ -61,17 +60,11 @@ public class DBSQLBatchPreparator {
     private static Collection<SOSBatchObject> getRow(Meta meta, DBItem item) {
         Collection<SOSBatchObject> row = new ArrayList<>();
 
-        List<Field> fields = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class)).collect(Collectors
-                .toList());
-
+        List<Field> fields = getFields(item);
         for (Field field : fields) {
-            if (field.getAnnotation(GeneratedValue.class) != null) {
-                continue;
-            }
-            String columnName = getColumnName(field);
-
             field.setAccessible(true);
             try {
+                String columnName = getColumnName(field);
                 row.add(new SOSBatchObject(meta.columns.get(columnName), columnName, field.get(item)));
             } catch (Throwable e) {
                 LOGGER.error(e.toString(), e);
@@ -85,18 +78,19 @@ public class DBSQLBatchPreparator {
         if (table == null) {
             return null;
         }
-        List<Field> fields = Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class)).collect(Collectors
-                .toList());
         Map<String, Integer> map = new LinkedHashMap<>();
+        List<Field> fields = getFields(item);
         int i = 1;
         for (Field field : fields) {
-            if (field.getAnnotation(GeneratedValue.class) != null) {
-                continue;
-            }
             map.put(getColumnName(field), i);
             i++;
         }
         return (new DBSQLBatchPreparator()).new Meta(table.name(), map);
+    }
+
+    private static List<Field> getFields(DBItem item) {
+        return Arrays.stream(item.getClass().getDeclaredFields()).filter(m -> m.isAnnotationPresent(Column.class) && !m.isAnnotationPresent(
+                GeneratedValue.class)).collect(Collectors.toList());
     }
 
     private static String getColumnName(Field field) {
