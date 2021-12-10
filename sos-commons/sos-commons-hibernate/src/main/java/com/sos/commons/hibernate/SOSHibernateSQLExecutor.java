@@ -134,6 +134,7 @@ public class SOSHibernateSQLExecutor implements Serializable {
 
     public int[] executeBatch(String tableName, String sql, Collection<Collection<SOSBatchObject>> rows) throws SOSHibernateException {
         boolean isDebugEnabled = LOGGER.isDebugEnabled();
+        boolean isTraceEnabled = LOGGER.isTraceEnabled();
         String method = isDebugEnabled ? SOSHibernate.getMethodName(logIdentifier, "executeBatch") : "";
         int[] result = null;
         PreparedStatement stmt = null;
@@ -141,10 +142,15 @@ public class SOSHibernateSQLExecutor implements Serializable {
             Connection conn = getConnection();
             Map<String, Integer> columnsMeta = getColumnsMeta(conn, tableName);
             stmt = conn.prepareStatement(sql);
+            int i = 0;
             for (Collection<SOSBatchObject> row : rows) {
+                i++;
+                if (isDebugEnabled) {
+                    LOGGER.debug(String.format("%s[%s][addBatch]%s", method, i, sql));
+                }
                 for (SOSBatchObject bo : row) {
-                    if (isDebugEnabled) {
-                        LOGGER.debug(String.format("%s[addBatch][%s]%s", method, bo.getIndex(), bo.getValue()));
+                    if (isTraceEnabled) {
+                        LOGGER.trace(String.format("%s[%s][addBatch][%s]%s", method, i, bo.getIndex(), bo.getValue()));
                     }
                     try {
                         stmt.setObject(bo.getIndex(), bo.getValue(), columnsMeta.get(bo.getColumnName().toLowerCase()));
