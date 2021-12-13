@@ -3,35 +3,26 @@ package com.sos.joc.dailyplan.common;
 import com.sos.controller.model.order.FreshOrder;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.inventory.model.schedule.Schedule;
-import com.sos.joc.db.dailyplan.DBItemDailyPlanOrder;
 
 public class PlannedOrder {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger(PlannedOrder.class);
-    private FreshOrder freshOrder;
-    private String controllerId;
-    private Long calendarId;
+    private final FreshOrder freshOrder;
+    private final Schedule schedule;
+    private final String controllerId;
+    private final Long calendarId;
+
     private Long submissionHistoryId;
     private Period period;
     private Long averageDuration = 0L;
     private boolean storedInDb = false;
-    private Schedule schedule;
     private String workflowPath;
     private String orderName;
 
-    public PlannedOrder() {
-    }
-
-    public PlannedOrder(DBItemDailyPlanOrder item) {
-        freshOrder = new FreshOrder();
-        freshOrder.setId(item.getOrderId());
-        freshOrder.setScheduledFor(item.getPlannedStart().getTime());
-        freshOrder.setWorkflowPath(item.getWorkflowPath());
-
-        schedule = new Schedule();
-        schedule.setWorkflowPath((item.getWorkflowPath()));
-        schedule.setPath(item.getSchedulePath());
-        schedule.setWorkflowName(item.getWorkflowName());
+    public PlannedOrder(String controllerId, FreshOrder freshOrder, Schedule schedule, Long calendarId) {
+        this.controllerId = controllerId;
+        this.freshOrder = freshOrder;
+        this.schedule = schedule;
+        this.calendarId = calendarId;
     }
 
     public PlannedOrderKey uniqueOrderkey() {
@@ -54,24 +45,12 @@ public class PlannedOrder {
         period = val;
     }
 
-    public void setFreshOrder(FreshOrder val) {
-        freshOrder = val;
-    }
-
     public Long getCalendarId() {
         return calendarId;
     }
 
-    public void setCalendarId(Long val) {
-        calendarId = val;
-    }
-
     public Schedule getSchedule() {
         return schedule;
-    }
-
-    public void setSchedule(Schedule val) {
-        schedule = val;
     }
 
     public void setAverageDuration(Long val) {
@@ -93,10 +72,6 @@ public class PlannedOrder {
 
     public String getControllerId() {
         return controllerId;
-    }
-
-    public void setControllerId(String val) {
-        controllerId = val;
     }
 
     public String getWorkflowPath() {

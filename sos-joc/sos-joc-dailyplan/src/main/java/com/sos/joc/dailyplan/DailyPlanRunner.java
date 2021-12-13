@@ -331,11 +331,7 @@ public class DailyPlanRunner extends TimerTask {
                         .getTimeZone());
                 freshOrder.setId(item.getOrderId());
 
-                PlannedOrder p = new PlannedOrder();
-                p.setControllerId(item.getControllerId());
-                p.setSchedule(schedule);
-                p.setFreshOrder(freshOrder);
-                p.setCalendarId(item.getCalendarId());
+                PlannedOrder p = new PlannedOrder(item.getControllerId(), freshOrder, schedule, item.getCalendarId());
                 p.setStoredInDb(true);
 
                 synchronizer.add(startupMode, p, controllerId, submissionForDate);
@@ -743,14 +739,11 @@ public class DailyPlanRunner extends TimerTask {
                                         synchronizer.setSubmission(addDailyPlanSubmission(controllerId, dailyPlanDate));
                                     }
 
-                                    PlannedOrder plannedOrder = new PlannedOrder();
-                                    plannedOrder.setControllerId(controllerId);
-                                    plannedOrder.setFreshOrder(freshOrder);
+                                    PlannedOrder plannedOrder = new PlannedOrder(controllerId, freshOrder, schedule, calendarCacheItem.calendar
+                                            .getId());
                                     plannedOrder.setWorkflowPath(schedule.getWorkflowPath());
-                                    plannedOrder.setCalendarId(calendarCacheItem.calendar.getId());
                                     plannedOrder.setPeriod(periodEntry.getValue());
                                     plannedOrder.setSubmissionHistoryId(synchronizer.getSubmission().getId());
-                                    plannedOrder.setSchedule(schedule);
                                     if (variableSet.getOrderName() != null && !variableSet.getOrderName().isEmpty()) {
                                         plannedOrder.setOrderName(variableSet.getOrderName());
                                     } else {

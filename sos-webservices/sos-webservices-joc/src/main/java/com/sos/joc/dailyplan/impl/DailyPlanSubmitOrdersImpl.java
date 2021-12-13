@@ -156,12 +156,8 @@ public class DailyPlanSubmitOrdersImpl extends JOCOrderResourceImpl implements I
                 List<DBItemDailyPlanOrder> items = null;
                 try {
                     session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
-                    // sosHibernateSession.setAutoCommit(false);
-                    // Globals.beginTransaction(sosHibernateSession);
-
                     dbLayer.setSession(session);
                     items = dbLayer.getDailyPlanList(filter, 0);
-                    // Globals.commit(sosHibernateSession);
                 } finally {
                     Globals.disconnect(session);
                 }

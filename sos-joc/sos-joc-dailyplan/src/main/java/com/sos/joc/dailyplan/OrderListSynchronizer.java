@@ -90,10 +90,11 @@ public class OrderListSynchronizer {
                         .toString(o)));
                 return false;
             }
+            PlannedOrderKey key = o.uniqueOrderkey();
+            plannedOrders.put(key, o);
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(String.format("[%s][%s]%s[workflow=%s][added]%s", startupMode, controllerId, dateLog, workflow, SOSString.toString(o)));
+                LOGGER.debug(String.format("[%s][%s]%s[added][key=%s]%s", startupMode, controllerId, dateLog, key, SOSString.toString(o)));
             }
-            plannedOrders.put(o.uniqueOrderkey(), o);
             return true;
         } catch (Throwable e) {
             LOGGER.error(String.format("[%s][%s]%s[workflow=%s][order %s]%s", startupMode, controllerId, dateLog, workflow, SOSString.toString(o), e
@@ -123,7 +124,8 @@ public class OrderListSynchronizer {
                 filter.setSortMode(null);
                 filter.setOrderCriteria(null);
                 filter.setControllerId(plannedOrder.getControllerId());
-                filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
+                // filter.addWorkflowName(plannedOrder.getSchedule().getWorkflowName());
+                filter.setWorkflowName(plannedOrder.getSchedule().getWorkflowName());
 
                 session = Globals.createSosHibernateStatelessConnection("calculateDurations-" + date);
                 DBLayerDailyPlannedOrders dbLayer = new DBLayerDailyPlannedOrders(session);
@@ -263,14 +265,14 @@ public class OrderListSynchronizer {
                     DBItemDailyPlanOrder item = dbLayer.getUniqueDailyPlan(plannedOrder);
                     if (settings.isOverwrite() || item == null) {
                         plannedOrder.setAverageDuration(durations.get(plannedOrder.getSchedule().getWorkflowName()));
-                        dbLayer.storeSingle(plannedOrder);
+                        dbLayer.store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
                         plannedOrder.setStoredInDb(true);
                         counter.addStoredSingle();
                     } else {
                         counter.addStoreSkippedSingle();
                         if (isDebugEnabled) {
-                            LOGGER.debug(String.format("[%s][store][%s][%s][single][skip][%s][isOverwrite=%s][item=%s]", startupMode, controllerId,
-                                    date, plannedOrder.uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
+                            LOGGER.debug(String.format("[%s][store][%s][%s][single][skip][key=%s][isOverwrite=%s][item=%s]", startupMode,
+                                    controllerId, date, plannedOrder.uniqueOrderkey(), settings.isOverwrite(), SOSHibernate.toString(item)));
                         }
                     }
                 } else {
@@ -352,7 +354,8 @@ public class OrderListSynchronizer {
                     filter.setOrderCriteria(null);
                     filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                     filter.setControllerId(controllerId);
-                    filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+                    // filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+                    filter.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
 
                     List<DBItemDailyPlanOrder> l = dbLayer.getDailyPlanList(filter, 0);
                     orders.addAll(l);
@@ -380,7 +383,8 @@ public class OrderListSynchronizer {
                             filter.setOrderCriteria(null);
                             filter.setPlannedStart(new Date(plannedOrder.getFreshOrder().getScheduledFor()));
                             filter.setControllerId(controllerId);
-                            filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+                            // filter.addWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
+                            filter.setWorkflowName(Paths.get(plannedOrder.getFreshOrder().getWorkflowPath()).getFileName().toString());
                             if (isTraceEnabled) {
                                 LOGGER.trace(String.format("[%s][%s][%s][%s][remove]workflowName=%s,plannedStart=%s", startupMode, method,
                                         controllerId, date, String.join(",", filter.getWorkflowNames()), filter.getPlannedStart()));

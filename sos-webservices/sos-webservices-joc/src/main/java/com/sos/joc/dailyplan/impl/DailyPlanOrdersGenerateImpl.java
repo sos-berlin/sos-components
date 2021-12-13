@@ -137,7 +137,7 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
 
             Map<PlannedOrderKey, PlannedOrder> generatedOrders = runner.generateDailyPlan(StartupMode.manual, controllerId, schedules, in
                     .getDailyPlanDate(), in.getWithSubmit(), getJocError(), accessToken);
-            AJocClusterService.removeLogger(ClusterServices.dailyplan.name());
+            AJocClusterService.clearAllLoggers();
 
             Set<AuditLogDetail> auditLogDetails = new HashSet<>();
 
@@ -151,11 +151,11 @@ public class DailyPlanOrdersGenerateImpl extends JOCOrderResourceImpl implements
             return JOCDefaultResponse.responseStatusJSOk(new Date());
 
         } catch (JocException e) {
-            AJocClusterService.removeLogger(ClusterServices.dailyplan.name());
+            AJocClusterService.clearAllLoggers();
             e.addErrorMetaInfo(getJocError());
             return JOCDefaultResponse.responseStatusJSError(e);
         } catch (Exception e) {
-            AJocClusterService.removeLogger(ClusterServices.dailyplan.name());
+            AJocClusterService.clearAllLoggers();
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }

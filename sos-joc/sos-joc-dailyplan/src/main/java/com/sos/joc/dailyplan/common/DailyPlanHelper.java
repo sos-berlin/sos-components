@@ -197,12 +197,6 @@ public class DailyPlanHelper {
         return format.format(startCalendar.getTime());
     }
 
-    public static String getDateTimeX(java.util.Calendar calendar, String timeZone) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        format.setTimeZone(TimeZone.getTimeZone(timeZone));
-        return format.format(calendar.getTime());
-    }
-
     private static String buildOrderId(String orderName, Long startTime, Integer startMode, String timeZone) throws SOSInvalidDataException {
         String orderId = "";
         String dailyPlanDate = getDailyPlanDateAsString(startTime, timeZone);

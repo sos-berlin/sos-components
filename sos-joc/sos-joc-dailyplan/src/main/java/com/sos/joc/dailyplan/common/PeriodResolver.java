@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSInvalidDataException;
+import com.sos.commons.util.SOSDate;
 import com.sos.inventory.model.calendar.Period;
 import com.sos.joc.classes.JobSchedulerDate;
 
@@ -203,12 +204,30 @@ public class PeriodResolver {
     }
 
     public Map<Long, Period> getStartTimes(String d, String dailyPlanDate, String timeZone) throws ParseException {
+        boolean isDebugEnabled = LOGGER.isDebugEnabled();
         startTimes = new HashMap<Long, Period>();
         for (Entry<String, Period> periodEntry : periods.entrySet()) {
             Date start = getDate(d, periodEntry.getKey(), DATE_FORMAT_SIMPLE);
+            if (isDebugEnabled) {
+                try {
+                    LOGGER.debug(String.format("[%s][%s][period=%s][timeZone=%s]start=%s", dailyPlanDate, d, periodEntry.getKey(), timeZone, SOSDate
+                            .format(start, DATE_FORMAT_SIMPLE)));
+                } catch (SOSInvalidDataException e) {
+
+                }
+            }
             if (dayIsInPlan(start, dailyPlanDate, timeZone)) {
                 Optional<Instant> scheduledFor = JobSchedulerDate.getScheduledForInUTC(dailyPlanDate + " " + periodEntry.getKey(), timeZone);
                 startTimes.put(scheduledFor.get().getEpochSecond() * 1000, periodEntry.getValue());
+            } else {
+                if (isDebugEnabled) {
+                    try {
+                        LOGGER.debug(String.format("[%s][%s][period=%s][timeZone=%s][skip][day is not in plan]start=%s", dailyPlanDate, d, periodEntry
+                                .getKey(), timeZone, SOSDate.format(start, DATE_FORMAT_SIMPLE)));
+                    } catch (SOSInvalidDataException e) {
+
+                    }
+                }
             }
         }
         return startTimes;

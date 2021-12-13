@@ -861,11 +861,6 @@ public class DBLayerDailyPlannedOrders {
         return Math.abs(result);
     }
 
-    public DBItemDailyPlanOrder storeSingle(PlannedOrder plannedOrder) throws JocConfigurationException, DBConnectionRefusedException,
-            SOSHibernateException, ParseException, JsonProcessingException {
-        return store(plannedOrder, OrdersHelper.getUniqueOrderId(), 0, 0);
-    }
-
     public DBItemDailyPlanOrder insertFrom(DBItemDailyPlanOrder item) throws SOSHibernateException {
         item.setSubmitted(false);
         item.setCreated(JobSchedulerDate.nowInUtc());

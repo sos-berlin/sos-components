@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBFilter;
 import com.sos.joc.exceptions.JocMissingRequiredParameterException;
@@ -21,8 +18,6 @@ import com.sos.joc.model.dailyplan.DailyPlanOrderStateText;
 import js7.data.order.OrderId;
 
 public class FilterDailyPlannedOrders extends DBFilter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FilterDailyPlannedOrders.class);
 
     private Collection<String> orderIds;
     private Set<Folder> workflowFolders;
@@ -158,13 +153,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
         }
     }
 
-    public void addScheduleName(String scheduleName) {
-        if (scheduleNames == null) {
-            scheduleNames = new ArrayList<String>();
-        }
-        scheduleNames.add(scheduleName);
-    }
-
     public void setOrderPlannedStartFrom(Date val) {
         orderPlannedStartFrom = val;
     }
@@ -198,17 +186,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
         }
     }
 
-    public void addWorkflowFolders(String workflowFolder, boolean recursive) {
-        LOGGER.debug("Add workflowFolder: " + workflowFolder);
-        if (workflowFolders == null) {
-            workflowFolders = new HashSet<Folder>();
-        }
-        Folder filterFolder = new Folder();
-        filterFolder.setFolder(workflowFolder);
-        filterFolder.setRecursive(recursive);
-        workflowFolders.add(filterFolder);
-    }
-
     public Set<Folder> getScheduleFolders() {
         return scheduleFolders;
     }
@@ -224,17 +201,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
         if (val != null) {
             scheduleFolders.addAll(val);
         }
-    }
-
-    public void addScheduleFolders(String scheduleFolder, boolean recursive) {
-        LOGGER.debug("Add scheduleFolder: " + scheduleFolder);
-        if (scheduleFolders == null) {
-            scheduleFolders = new HashSet<Folder>();
-        }
-        Folder filterFolder = new Folder();
-        filterFolder.setFolder(scheduleFolder);
-        filterFolder.setRecursive(recursive);
-        scheduleFolders.add(filterFolder);
     }
 
     public List<DailyPlanOrderStateText> getStates() {
@@ -273,7 +239,7 @@ public class FilterDailyPlannedOrders extends DBFilter {
     }
 
     public Date getPlannedStart() {
-        return this.plannedStart;
+        return plannedStart;
     }
 
     public Long getCalendarId() {
@@ -314,13 +280,6 @@ public class FilterDailyPlannedOrders extends DBFilter {
 
     public void setSubmissionForDate(Date val) {
         submissionForDate = val;
-    }
-
-    public void addWorkflowName(String workflowName) {
-        if (workflowNames == null) {
-            workflowNames = new ArrayList<String>();
-        }
-        workflowNames.add(workflowName);
     }
 
     public void setStates(List<DailyPlanOrderStateText> val) {
