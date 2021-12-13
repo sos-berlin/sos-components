@@ -217,6 +217,13 @@ public class SOSServicePermissionShiro {
     @Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON })
     public JOCDefaultResponse loginPost(@Context HttpServletRequest request, @HeaderParam("Authorization") String basicAuthorization,
             @HeaderParam("X-CLIENT-ID") String loginClientId, @QueryParam("user") String account, @QueryParam("pwd") String pwd) {
+        
+        if (Globals.sosCockpitProperties == null) {
+            Globals.sosCockpitProperties = new JocCockpitProperties();
+        } else {
+            Globals.sosCockpitProperties.touchLog4JConfiguration();
+        }
+        
         MDC.put("context", ThreadCtx);
         Globals.loginClientId = loginClientId;
         String clientCertCN = null;

@@ -5,6 +5,7 @@ import javax.ws.rs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.JocCockpitProperties;
@@ -50,7 +51,11 @@ public class TouchResourceImpl extends JOCResourceImpl implements ITouchResource
     public JOCDefaultResponse postTouchLog4j(String accessToken) {
         try {
             initLogging(API_CALL, null, accessToken);
-            new JocCockpitProperties();
+            if (Globals.sosCockpitProperties == null) {
+                Globals.sosCockpitProperties = new JocCockpitProperties();
+            } else {
+                Globals.sosCockpitProperties.touchLog4JConfiguration();
+            }
             return JOCDefaultResponse.responseStatusJSOk(null);
         }catch (DBConnectionRefusedException e) {
             LOGGER.info(e.getMessage());

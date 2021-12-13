@@ -27,6 +27,7 @@ public class JocCockpitProperties {
 	private Path propertiesPath;
 	private SOSParameterSubstitutor parameterSubstitutor = new SOSParameterSubstitutor();
 	private volatile long modTime = 0L;
+	private volatile long log4jModTime = 0L;
 
 	public JocCockpitProperties() {
 		readProperties();
@@ -157,6 +158,28 @@ public class JocCockpitProperties {
 		}
 		return null;
 	}
+	
+	public void touchLog4JConfiguration() {
+	    String propKeyLog4J = "log4j.configuration";
+        String log4jConf = getProperty(propKeyLog4J);
+        if (log4jConf != null) {
+            Path p = resolvePath(log4jConf);
+            if (p != null) {
+                if (Files.exists(p)) {
+                    try {
+                        if (log4jModTime != Files.getLastModifiedTime(p).toMillis()) {
+                            Configurator.reconfigure(p.toUri());
+                            log4jModTime = Files.getLastModifiedTime(p).toMillis();
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("", e);
+                    }
+                } else {
+                    LOGGER.warn(String.format("%1$s=%2$s is set but file (%3$s) not found.", propKeyLog4J, log4jConf, p.toString()));
+                }
+            }
+        }
+	}
 
     private void setLog4JConfiguration() {
         String propKeyLog4J = "log4j.configuration";
@@ -167,9 +190,7 @@ public class JocCockpitProperties {
                 if (Files.exists(p)) {
                     try {
                         Configurator.reconfigure(p.toUri());
-//                        LoggerContext context = (LoggerContext) LogManager.getContext(false);
-//                        context.setConfigLocation(p.toUri());
-//                        context.updateLoggers();
+                        log4jModTime = Files.getLastModifiedTime(p).toMillis();
                     } catch (Exception e) {
                         LOGGER.warn("", e);
                     }
