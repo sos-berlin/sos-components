@@ -136,7 +136,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
         });
         
         // checks that director and standby director can only exist once
-        List<SubagentDirectorType> direcs = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.STANDBY_DIRECTOR);
+        List<SubagentDirectorType> direcs = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
         Predicate<SubAgent> isDirector = s -> direcs.contains(s.getIsDirector());
         subAgents.stream().filter(isDirector).collect(Collectors.groupingBy(SubAgent::getIsDirector, Collectors.counting())).forEach((k,
                 v) -> {
@@ -149,7 +149,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
         // TODO check URL uniqueness?
         
         DBItemInventorySubAgentInstance primaryDirector = dbLayer.getDirectorInstance(agentId, SubagentDirectorType.PRIMARY_DIRECTOR.intValue());
-        DBItemInventorySubAgentInstance standbyDirector = dbLayer.getDirectorInstance(agentId, SubagentDirectorType.STANDBY_DIRECTOR.intValue());
+        DBItemInventorySubAgentInstance standbyDirector = dbLayer.getDirectorInstance(agentId, SubagentDirectorType.SECONDARY_DIRECTOR.intValue());
         
         boolean primaryDirectorIsChanged = false;
         boolean standbyDirectorIsChanged = false;
@@ -175,7 +175,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                 if (primaryDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.PRIMARY_DIRECTOR)) {
                     primaryDirectorIsChanged = true;
                 }
-                if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.STANDBY_DIRECTOR)) {
+                if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.SECONDARY_DIRECTOR)) {
                     standbyDirectorIsChanged = true;
                 }
                 DBItemInventorySubAgentInstance newDbSubAgent = new DBItemInventorySubAgentInstance();
@@ -211,7 +211,7 @@ public class SubAgentStoreResourceImpl extends JOCResourceImpl implements ISubAg
                         primaryDirectorIsChanged = true;
                     }
                 }
-                if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.STANDBY_DIRECTOR) && !subAgent.getSubagentId()
+                if (standbyDirector != null && subAgent.getIsDirector().equals(SubagentDirectorType.SECONDARY_DIRECTOR) && !subAgent.getSubagentId()
                         .equals(standbyDirector.getSubAgentId())) {
                     if (standbyDirectorIsChanged) {
                         throw new JocBadRequestException("At most one SubAgent can be a standby director");

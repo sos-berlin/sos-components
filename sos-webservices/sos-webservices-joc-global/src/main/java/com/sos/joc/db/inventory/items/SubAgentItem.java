@@ -57,6 +57,6 @@ public class SubAgentItem {
     }
     
     public boolean isStandbyDirector() {
-        return isDirector == SubagentDirectorType.STANDBY_DIRECTOR.intValue();
+        return isDirector == SubagentDirectorType.SECONDARY_DIRECTOR.intValue();
     }
 }

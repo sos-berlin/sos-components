@@ -426,7 +426,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 query.setParameterList("controllerIds", controllerIds);
             }
             query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(),
-                    SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+                    SubagentDirectorType.SECONDARY_DIRECTOR.intValue()));
             List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
             if (result != null) {
                 return result.stream().collect(Collectors.groupingBy(DBItemInventorySubAgentInstance::getAgentId, Collectors.toMap(
@@ -472,9 +472,9 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 query.setParameter("agentId", agentId);
             }
             query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(),
-                    SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+                    SubagentDirectorType.SECONDARY_DIRECTOR.intValue()));
             List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
-            if (result == null || result.isEmpty() || (result != null && result.size() == 1 && SubagentDirectorType.STANDBY_DIRECTOR
+            if (result == null || result.isEmpty() || (result != null && result.size() == 1 && SubagentDirectorType.SECONDARY_DIRECTOR
                     .intValue() == result.get(0).getIsDirector())) {
                 throw new DBMissingDataException("The Agent '" + agentId + "' must have a primary director.");
             }
@@ -515,7 +515,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     query.setParameterList("subagentIds", subagentIds);
                 }
                 query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(),
-                        SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+                        SubagentDirectorType.SECONDARY_DIRECTOR.intValue()));
                 List<SubAgentItem> result = getSession().getResultList(query);
                 if (result == null) {
                     return Collections.emptyList();

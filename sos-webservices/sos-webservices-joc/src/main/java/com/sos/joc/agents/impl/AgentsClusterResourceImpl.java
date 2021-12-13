@@ -153,7 +153,7 @@ public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgent
             
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DEPLOY);
             InventoryAgentInstancesDBLayer dbLayer = new InventoryAgentInstancesDBLayer(connection);
-            List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.STANDBY_DIRECTOR);
+            List<SubagentDirectorType> directorTypes = Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR, SubagentDirectorType.SECONDARY_DIRECTOR);
             List<JUpdateItemOperation> updateItems = new ArrayList<>();
             
             Set<DeployClusterAgent> agents = agentParameter.getClusterAgents();
