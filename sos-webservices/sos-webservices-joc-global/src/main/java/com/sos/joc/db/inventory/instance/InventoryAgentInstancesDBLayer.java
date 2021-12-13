@@ -86,8 +86,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     }
 
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIds(Collection<String> controllerIds, Collection<String> agentIds,
-            boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
+            boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         // TODO 1000 in in() clause
         boolean withAgentIds = agentIds != null && !agentIds.isEmpty();
         try {
@@ -134,7 +133,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemInventoryAgentInstance> getAgentsByControllerIdAndAgentIdsAndUrls(Collection<String> controllerIds, Collection<String> agentIds,
             Collection<String> agentUrls, boolean onlyWatcher, boolean onlyEnabledAgents) throws DBInvalidDataException, DBMissingDataException,
             DBConnectionRefusedException {
@@ -192,18 +191,18 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Set<String> getEnabledAgentNames() throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(null, true, true);
     }
 
-    public Set<String> getEnabledAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException, DBMissingDataException,
-            DBConnectionRefusedException {
+    public Set<String> getEnabledAgentNames(Collection<String> controllerIds, boolean withClusterLicense) throws DBInvalidDataException,
+            DBMissingDataException, DBConnectionRefusedException {
         return getAgentNames(controllerIds, true, withClusterLicense);
     }
 
-    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents, boolean withClusterLicense) throws DBInvalidDataException,
-            DBMissingDataException, DBConnectionRefusedException {
+    public Set<String> getAgentNames(Collection<String> controllerIds, boolean onlyEnabledAgents, boolean withClusterLicense)
+            throws DBInvalidDataException, DBMissingDataException, DBConnectionRefusedException {
         try {
             List<DBItemInventoryAgentInstance> agents = getAgentsByControllerIds(controllerIds, false, onlyEnabledAgents);
             if (agents == null || agents.isEmpty()) {
@@ -379,7 +378,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     private Integer deleteAliase(String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
         hql.append(" where agentId = :agentId");
@@ -396,7 +395,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         query.setParameter("agentId", agentId);
         return getSession().getSingleResult(query);
     }
-    
+
     public List<DBItemInventorySubAgentInstance> getSubAgentInstancesByAgentId(String agentId) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where agentId = :agentId");
@@ -413,7 +412,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public Map<String, Map<SubagentDirectorType, DBItemInventorySubAgentInstance>> getDirectorInstances(Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -440,7 +439,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemInventorySubAgentInstance getDirectorInstance(String agentId, Integer isDirector) {
         try {
             if (isDirector == null || !Arrays.asList(1, 2).contains(isDirector)) {
@@ -458,7 +457,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getDirectorSubAgentIds(String agentId) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -472,7 +471,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             if (agentId != null && !agentId.isEmpty()) {
                 query.setParameter("agentId", agentId);
             }
-            query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(), SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
+            query.setParameterList("isDirectors", Arrays.asList(SubagentDirectorType.PRIMARY_DIRECTOR.intValue(),
+                    SubagentDirectorType.STANDBY_DIRECTOR.intValue()));
             List<DBItemInventorySubAgentInstance> result = getSession().getResultList(query);
             if (result == null || result.isEmpty() || (result != null && result.size() == 1 && SubagentDirectorType.STANDBY_DIRECTOR
                     .intValue() == result.get(0).getIsDirector())) {
@@ -487,10 +487,10 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<SubAgentItem> getDirectorSubAgentIdsByControllerId(String controllerId, List<String> subagentIds) {
         if (subagentIds == null) {
-            subagentIds = Collections.emptyList(); 
+            subagentIds = Collections.emptyList();
         }
         try {
             if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
@@ -500,7 +500,8 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 return s;
             } else {
-                StringBuilder hql = new StringBuilder("select agentId, isDirector, subAgentId, ordering from ");
+                StringBuilder hql = new StringBuilder("select new ").append(SubAgentItem.class.getName());
+                hql.append("(agentId, isDirector, subAgentId, ordering) from ");
                 hql.append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
                 hql.append(" where isDirector in (:isDirectors)");
                 hql.append(" and agentId in (select agentId from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES).append(
@@ -508,7 +509,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 if (!subagentIds.isEmpty()) {
                     hql.append(" and  subAgentId in (:subagentIds)");
                 }
-                Query<SubAgentItem> query = getSession().createQuery(hql.toString(), SubAgentItem.class);
+                Query<SubAgentItem> query = getSession().createQuery(hql.toString());
                 query.setParameter("controllerId", controllerId);
                 if (!subagentIds.isEmpty()) {
                     query.setParameterList("subagentIds", subagentIds);
@@ -529,7 +530,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getSubAgentIdsByAgentId(String agentId) {
         try {
             StringBuilder hql = new StringBuilder("select subAgentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(
@@ -592,7 +593,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<String> getClusterAgentIds(Collection<String> controllerIds, boolean onlyEnabledAgents) {
         try {
             StringBuilder hql = new StringBuilder("select agentId from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -633,7 +634,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public List<DBItemInventorySubAgentInstance> getSubAgentInstancesByControllerIds(Collection<String> controllerIds) {
         try {
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES);
@@ -665,7 +666,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
     public DBItemInventorySubAgentInstance solveAgentWithoutSubAgent(DBItemInventoryAgentInstance agent) {
         DBItemInventorySubAgentInstance subAgent = new DBItemInventorySubAgentInstance();
         subAgent.setAgentId(agent.getAgentId());
@@ -674,14 +675,14 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
         subAgent.setIsDirector(SubagentDirectorType.PRIMARY_DIRECTOR.intValue());
         return subAgent;
     }
-    
+
     private int deleteSubAgents(String agentId) throws SOSHibernateException {
         StringBuilder hql = new StringBuilder("delete from ").append(DBLayer.DBITEM_INV_SUBAGENT_INSTANCES).append(" where agentId =: agentId");
         Query<?> query = getSession().createQuery(hql.toString());
         query.setParameter("agentId", agentId);
         return getSession().executeUpdate(query);
     }
-    
+
     public int deleteSubAgents(String controllerId, List<String> subagentIds) throws SOSHibernateException {
         if (subagentIds.size() > SOSHibernate.LIMIT_IN_CLAUSE) {
             int j = 0;
@@ -700,7 +701,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             return getSession().executeUpdate(query);
         }
     }
-    
+
     public boolean subAgentIdAlreadyExists(Collection<String> subAgentIds, String controllerId) throws DBInvalidDataException,
             DBConnectionRefusedException, JocObjectAlreadyExistException {
         try {
@@ -728,5 +729,5 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBInvalidDataException(ex);
         }
     }
-    
+
 }

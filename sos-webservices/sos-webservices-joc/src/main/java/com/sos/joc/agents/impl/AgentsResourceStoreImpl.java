@@ -243,7 +243,7 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
                     .identity()));
             List<DBItemInventoryAgentInstance> dbAgents = agentDBLayer.getAgentsByControllerIds(null);
             Map<String, Set<DBItemInventoryAgentName>> allAliases = agentDBLayer.getAgentNameAliases(agentIds.keySet());
-            List<JUpdateItemOperation> subAgentsToController = new ArrayList<>();
+            //List<JUpdateItemOperation> subAgentsToController = new ArrayList<>();
 
             if (dbAgents != null && !dbAgents.isEmpty()) {
                 for (DBItemInventoryAgentInstance dbAgent : dbAgents) {
@@ -271,10 +271,9 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
                     List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                             controllerId));
-                    Map<String, SubAgent> subAgentsMap = agent.getSubagents().stream().distinct().collect(Collectors.toMap(SubAgent::getSubagentId,
-                            Function.identity(), (k, v) -> v));
-                    subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, subAgentsMap));
-
+//                    subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents()));
+                    SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+                    
                     updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
                 }
             }
@@ -295,10 +294,9 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
 
                 List<DBItemInventorySubAgentInstance> dbSubAgents = agentDBLayer.getSubAgentInstancesByControllerIds(Collections.singleton(
                         controllerId));
-                Map<String, SubAgent> subAgentsMap = agent.getSubagents().stream().distinct().collect(Collectors.toMap(SubAgent::getSubagentId,
-                        Function.identity(), (k, v) -> v));
-                subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, subAgentsMap));
-
+//                subAgentsToController.addAll(SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents()));
+                SubAgentStoreResourceImpl.saveOrUpdate(agentDBLayer, dbAgent, dbSubAgents, agent.getSubagents());
+                
                 updateAliases(agentDBLayer, agent, allAliases.get(agent.getAgentId()));
             }
 
@@ -306,10 +304,10 @@ public class AgentsResourceStoreImpl extends JOCResourceImpl implements IAgentsR
             Globals.disconnect(connection);
             connection = null;
 
-            if (!subAgentsToController.isEmpty()) {
-                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper
-                        .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
-            }
+//            if (!subAgentsToController.isEmpty()) {
+//                ControllerApi.of(controllerId).updateItems(Flux.fromIterable(subAgentsToController)).thenAccept(e -> ProblemHelper
+//                        .postProblemEventIfExist(e, accessToken, getJocError(), controllerId));
+//            }
 
             return JOCDefaultResponse.responseStatusJSOk(Date.from(Instant.now()));
         } catch (JocException e) {

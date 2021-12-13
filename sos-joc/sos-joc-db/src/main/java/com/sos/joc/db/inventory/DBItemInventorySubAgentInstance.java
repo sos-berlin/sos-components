@@ -69,6 +69,9 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     @Column(name = "[MODIFIED]", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date modified;
+    
+    @Transient
+    private String transaction = "none";
 
     public Long getId() {
         return id;
@@ -159,8 +162,6 @@ public class DBItemInventorySubAgentInstance extends DBItem {
         javaVersion = val;
     }
 
-    
-
     public void setModified(Date val) {
         modified = val;
     }
@@ -183,6 +184,16 @@ public class DBItemInventorySubAgentInstance extends DBItem {
     
     public void setCertificate(String certificate) {
         this.certificate = certificate;
+    }
+    
+    @Transient
+    public String getTransaction() {
+        return transaction;
+    }
+
+    @Transient
+    public void setTransaction(String val) {
+        transaction = val == null ? "none" : val;
     }
 
 }

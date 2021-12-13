@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 
 /**
- * store/deploy sub agents
+ * deploy cluster agents
  * <p>
  * 
  * 
@@ -22,11 +22,10 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "controllerId",
-    "agentId",
-    "subagents",
+    "clusterAgents",
     "auditLog"
 })
-public class StoreSubAgents {
+public class DeployClusterAgents {
 
     /**
      * controllerId
@@ -38,21 +37,13 @@ public class StoreSubAgents {
     @JsonProperty("controllerId")
     private String controllerId;
     /**
-     * string without < and >
-     * <p>
-     * 
-     * 
-     */
-    @JsonProperty("agentId")
-    private String agentId;
-    /**
      * 
      * (Required)
      * 
      */
-    @JsonProperty("subagents")
+    @JsonProperty("clusterAgents")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
-    private Set<SubAgent> subagents = new LinkedHashSet<SubAgent>();
+    private Set<DeployClusterAgent> clusterAgents = new LinkedHashSet<DeployClusterAgent>();
     /**
      * auditParams
      * <p>
@@ -87,25 +78,13 @@ public class StoreSubAgents {
     }
 
     /**
-     * string without < and >
-     * <p>
      * 
-     * 
-     */
-    @JsonProperty("agentId")
-    public String getAgentId() {
-        return agentId;
-    }
-
-    /**
-     * string without < and >
-     * <p>
-     * 
+     * (Required)
      * 
      */
-    @JsonProperty("agentId")
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @JsonProperty("clusterAgents")
+    public Set<DeployClusterAgent> getClusterAgents() {
+        return clusterAgents;
     }
 
     /**
@@ -113,19 +92,9 @@ public class StoreSubAgents {
      * (Required)
      * 
      */
-    @JsonProperty("subagents")
-    public Set<SubAgent> getSubagents() {
-        return subagents;
-    }
-
-    /**
-     * 
-     * (Required)
-     * 
-     */
-    @JsonProperty("subagents")
-    public void setSubagents(Set<SubAgent> subagents) {
-        this.subagents = subagents;
+    @JsonProperty("clusterAgents")
+    public void setClusterAgents(Set<DeployClusterAgent> clusterAgents) {
+        this.clusterAgents = clusterAgents;
     }
 
     /**
@@ -152,12 +121,12 @@ public class StoreSubAgents {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("controllerId", controllerId).append("agentId", agentId).append("subagents", subagents).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("clusterAgents", clusterAgents).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(agentId).append(controllerId).append(auditLog).append(subagents).toHashCode();
+        return new HashCodeBuilder().append(controllerId).append(auditLog).append(clusterAgents).toHashCode();
     }
 
     @Override
@@ -165,11 +134,11 @@ public class StoreSubAgents {
         if (other == this) {
             return true;
         }
-        if ((other instanceof StoreSubAgents) == false) {
+        if ((other instanceof DeployClusterAgents) == false) {
             return false;
         }
-        StoreSubAgents rhs = ((StoreSubAgents) other);
-        return new EqualsBuilder().append(agentId, rhs.agentId).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(subagents, rhs.subagents).isEquals();
+        DeployClusterAgents rhs = ((DeployClusterAgents) other);
+        return new EqualsBuilder().append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(clusterAgents, rhs.clusterAgents).isEquals();
     }
 
 }

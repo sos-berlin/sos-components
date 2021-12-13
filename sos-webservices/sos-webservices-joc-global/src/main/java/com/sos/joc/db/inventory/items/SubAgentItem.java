@@ -9,6 +9,10 @@ public class SubAgentItem {
     private Integer isDirector;
     private Integer ordering;
     
+    public SubAgentItem() {
+        //
+    }
+    
     public SubAgentItem(String agentId, Integer isDirector, String subAgentId, Integer ordering) {
         this.agentId = agentId;
         this.isDirector = isDirector;
@@ -19,17 +23,33 @@ public class SubAgentItem {
     public String getAgentId() {
         return agentId;
     }
+    
+    public void setAgentId(String val) {
+        agentId = val;
+    }
 
     public String getSubAgentId() {
         return subAgentId;
+    }
+    
+    public void setSubAgentId(String val) {
+        subAgentId = val;
     }
 
     public Integer getOrdering() {
         return ordering;
     }
+    
+    public void setOrdering(Integer val) {
+        ordering = val;
+    }
 
     public Integer getIsDirector() {
         return isDirector;
+    }
+    
+    public void setIsDirector(Integer val) {
+        isDirector = val;
     }
     
     public boolean isPrimaryDirector() {
