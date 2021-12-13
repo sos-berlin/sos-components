@@ -255,7 +255,7 @@ public class NotifierMail extends ANotifier {
                         skipCause.append("[job=").append(mos.getJobName()).append("]");
                         skipCause.append("[missing to]");
                         skipCause.append("[");
-                        skipCause.append("to=").append(getValue(jn.getMail().getTo()));
+                        skipCause.append("to=").append(to);
                         skipCause.append(",cc=").append(getValue(jn.getMail().getCc()));
                         skipCause.append(",bcc=").append(getValue(jn.getMail().getBcc()));
                         skipCause.append("]");
