@@ -881,26 +881,8 @@ public class SOSMail {
 
     public void clearRecipients() throws Exception {
         LOGGER.debug("clearRecipients");
-        clearTo();
-        clearCC();
-        clearBCC();
-        changed = true;
-    }
-
-    public void clearTo() throws Exception {
-        LOGGER.debug("clearTo");
         toList.clear();
-        changed = true;
-    }
-
-    public void clearCC() throws Exception {
-        LOGGER.debug("clearCC");
         ccList.clear();
-        changed = true;
-    }
-
-    public void clearBCC() throws Exception {
-        LOGGER.debug("clearBCC");
         bccList.clear();
         changed = true;
     }

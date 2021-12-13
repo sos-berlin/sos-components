@@ -237,34 +237,49 @@ public class NotifierMail extends ANotifier {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(String.format("[job=%s][use job notification]%s", mos.getJobName(), mos.getJobNotification()));
                     }
-                    String to = jn.getMail().getTo();
-                    if (to != null && (to.trim().length() == 0 || !hasAt(to))) {
+                    if (jn.getMail().getSuppress() != null && jn.getMail().getSuppress()) {
                         StringBuilder skipCause = new StringBuilder();
                         skipCause.append("[job=").append(mos.getJobName()).append("]");
-                        skipCause.append("[job notification setting \"to\"");
-
-                        if (to.trim().length() == 0) {
-                            skipCause.append(" is empty");
-                        } else {
-                            skipCause.append("=" + to);
-                        }
+                        skipCause.append("[suppress=true]");
+                        skipCause.append("[");
+                        skipCause.append("to=").append(getValue(jn.getMail().getTo()));
+                        skipCause.append(",cc=").append(getValue(jn.getMail().getCc()));
+                        skipCause.append(",bcc=").append(getValue(jn.getMail().getBcc()));
                         skipCause.append("]");
                         return new NotifyResult(mail.getBody(), getSendInfo(), skipCause);
-                    } else {
-                        if (!SOSString.isEmpty(jn.getMail().getTo())) {
-                            mail.clearRecipients();
-                            mail.addRecipient(jn.getMail().getTo());
-                        }
-                        if (!SOSString.isEmpty(jn.getMail().getCc())) {
-                            mail.clearCC();
-                            mail.clearBCC();
-                            mail.addCC(jn.getMail().getCc());
-                        }
-                        if (!SOSString.isEmpty(jn.getMail().getBcc())) {
-                            mail.clearBCC();
-                            mail.addBCC(jn.getMail().getBcc());
-                        }
                     }
+
+                    String to = getValue(jn.getMail().getTo());
+                    if (to.length() == 0) {
+                        StringBuilder skipCause = new StringBuilder();
+                        skipCause.append("[job=").append(mos.getJobName()).append("]");
+                        skipCause.append("[missing to]");
+                        skipCause.append("[");
+                        skipCause.append("to=").append(getValue(jn.getMail().getTo()));
+                        skipCause.append(",cc=").append(getValue(jn.getMail().getCc()));
+                        skipCause.append(",bcc=").append(getValue(jn.getMail().getBcc()));
+                        skipCause.append("]");
+                        return new NotifyResult(mail.getBody(), getSendInfo(), skipCause);
+                    }
+
+                    // no merge of configuration items
+                    mail.clearRecipients();
+
+                    // add To - required
+                    mail.addRecipient(to);
+
+                    // add CC - optional
+                    String cc = getValue(jn.getMail().getCc());
+                    if (cc.length() > 0) {
+                        mail.addCC(cc);
+                    }
+
+                    // add BCC- optional
+                    String bcc = getValue(jn.getMail().getBcc());
+                    if (bcc.length() > 0) {
+                        mail.addBCC(bcc);
+                    }
+
                 } else {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(String.format("[job=%s][job notification][%s]missing settings", mos.getJobName(), mos.getJobNotification()));
@@ -278,8 +293,10 @@ public class NotifierMail extends ANotifier {
         return null;
     }
 
-    private boolean hasAt(String s) {
-        return s.indexOf("@") > -1;
+    private String getValue(String val) {
+        if (val == null) {
+            return "";
+        }
+        return val.trim();
     }
-
 }
