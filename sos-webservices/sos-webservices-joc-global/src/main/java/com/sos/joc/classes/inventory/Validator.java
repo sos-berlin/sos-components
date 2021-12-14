@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.util.SOSString;
 import com.sos.inventory.model.board.Board;
 import com.sos.inventory.model.calendar.AssignedCalendars;
 import com.sos.inventory.model.calendar.AssignedNonWorkingDayCalendars;
@@ -52,6 +53,7 @@ import com.sos.inventory.model.workflow.Requirements;
 import com.sos.inventory.model.workflow.Workflow;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.order.OrdersHelper;
+import com.sos.joc.db.common.HistoryConstants;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
@@ -196,7 +198,8 @@ public class Validator {
 
     private static void validateJobResourceRefs(List<String> jobResources, InventoryDBLayer dbLayer) throws SOSHibernateException {
         if (!jobResources.isEmpty()) {
-            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE.intValue());
+            List<DBItemInventoryConfiguration> dbJobResources = dbLayer.getConfigurationByNames(jobResources, ConfigurationType.JOBRESOURCE
+                    .intValue());
             if (dbJobResources == null || dbJobResources.isEmpty()) {
                 throw new JocConfigurationException("Missing assigned JobResources: " + jobResources.toString());
             } else {
@@ -208,7 +211,8 @@ public class Validator {
         }
     }
 
-    private static String validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer, String position) throws JocConfigurationException, SOSHibernateException {
+    private static String validateWorkflowRef(String workflowName, InventoryDBLayer dbLayer, String position) throws JocConfigurationException,
+            SOSHibernateException {
         List<DBItemInventoryConfiguration> workflowPaths = dbLayer.getConfigurationByName(workflowName, ConfigurationType.WORKFLOW.intValue());
         if (workflowPaths == null || !workflowPaths.stream().anyMatch(w -> workflowName.equals(w.getName()))) {
             throw new JocConfigurationException(position + ": Missing assigned Workflow: " + workflowName);
@@ -274,7 +278,7 @@ public class Validator {
             }
         }
     }
-    
+
     private static void validateBoardRefs(String json, InventoryDBLayer dbLayer) throws SOSHibernateException, JocConfigurationException {
         Matcher m = Pattern.compile("\"(?:noticeB|b)oardName\"\\s*:\\s*\"([^\"]+)\"").matcher(json);
         Set<String> boards = new HashSet<>();
@@ -296,15 +300,16 @@ public class Validator {
             }
         }
     }
-    
-    private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException, SOSJsonSchemaException {
+
+    private static List<String> validateWorkflowJobs(Workflow workflow, Set<String> releasedScripts) throws JsonProcessingException, IOException,
+            SOSJsonSchemaException {
         List<String> jobResources = new ArrayList<>();
         for (Map.Entry<String, Job> entry : workflow.getJobs().getAdditionalProperties().entrySet()) {
             // TODO check JobResources references in Job
             try {
                 Job job = entry.getValue();
-                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(JocInventory.SCHEMA_LOCATION
-                        .get(ConfigurationType.JOB)));
+                JsonValidator.validate(Globals.objectMapper.writeValueAsBytes(job), URI.create(JocInventory.SCHEMA_LOCATION.get(
+                        ConfigurationType.JOB)));
                 if (job.getJobResourceNames() != null) {
                     jobResources.addAll(job.getJobResourceNames());
                 }
@@ -334,10 +339,10 @@ public class Validator {
                                     + scriptName + "'");
                         }
                         try {
-                            JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ... 
+                            JsonConverter.parseReplaceInclude(m.group(3)); // m.group(3) = "--replace="","" ...
                         } catch (Exception e) {
-                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script: Invalid script include '"
-                                    + m.group(0) + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
+                            throw new JocConfigurationException("$.jobs['" + entry.getKey() + "'].executable.script: Invalid script include '" + m
+                                    .group(0) + "'. Replace arguments must have the form: --replace=\"...\",\"...\"");
                         }
                     }
                     m = scriptIncludeWithoutScriptPattern.matcher(es.getScript());
@@ -348,8 +353,34 @@ public class Validator {
                 }
                 break;
             }
+            validateJobNotification(entry.getKey(), entry.getValue());
         }
         return jobResources;
+    }
+
+    private static void validateJobNotification(String jobName, Job job) throws JocConfigurationException {
+        if (job == null || job.getNotification() == null || job.getNotification().getMail() == null) {
+            return;
+        }
+        if (job.getNotification().getMail().getSuppress() == null || !job.getNotification().getMail().getSuppress()) {
+            // to is required, when cc or bcc defined and the mail is not suppressed
+            if (SOSString.isEmpty(job.getNotification().getMail().getTo())) {
+                if (!SOSString.isEmpty(job.getNotification().getMail().getCc()) || !SOSString.isEmpty(job.getNotification().getMail().getBcc())) {
+                    throw new JocConfigurationException(String.format("$.jobs['%s'].notification.mail: missing \"to\"", jobName));
+                }
+            }
+        }
+        try {
+            String content = Globals.objectMapper.writeValueAsString(job.getNotification());
+            if (content.length() > HistoryConstants.MAX_LEN_NOTIFICATION) {
+                throw new JocConfigurationException(String.format(
+                        "$.jobs['%s'].notification: reduce recipients, max json length %s (current length=%s) exceeded", jobName,
+                        HistoryConstants.MAX_LEN_NOTIFICATION, content.length()));
+            }
+
+        } catch (JsonProcessingException e) {
+
+        }
     }
 
     private static void validateInstructions(Collection<Instruction> instructions, String position, Set<String> jobNames,
@@ -507,8 +538,8 @@ public class Validator {
                             new BigDecimal(_default.toString());
                             invalid = false;
                         } catch (Exception e) {
-                            throw new JocConfigurationException(String.format("$.orderPreparation.parameters['%s'].default: wrong number format: '%s'.",
-                                    key, _default.toString()));
+                            throw new JocConfigurationException(String.format(
+                                    "$.orderPreparation.parameters['%s'].default: wrong number format: '%s'.", key, _default.toString()));
                         }
                     }
                     break;
@@ -613,8 +644,9 @@ public class Validator {
             });
         }
     }
-    
-    private static void validateVariableSets(List<VariableSet> variableSets, Requirements orderPreparation, String position) throws JocConfigurationException {
+
+    private static void validateVariableSets(List<VariableSet> variableSets, Requirements orderPreparation, String position)
+            throws JocConfigurationException {
         if (variableSets != null) {
             if (variableSets.size() != variableSets.stream().map(VariableSet::getOrderName).distinct().mapToInt(e -> 1).sum()) {
                 throw new JocConfigurationException(position + ": Order names has to be unique");
@@ -641,27 +673,27 @@ public class Validator {
             });
         }
     }
-    
+
     private static void validateExpression(String prefix, Map<String, String> map) throws JocConfigurationException {
         if (map != null) {
             map.forEach((k, v) -> validateExpression(prefix, k, v));
         }
     }
-    
+
     private static void validateExpression(String prefix, String key, String value) throws JocConfigurationException {
         Either<Problem, JExpression> e = JExpression.parse(value);
         if (e.isLeft()) {
             throw new JocConfigurationException(prefix + "[" + key + "]:" + e.getLeft().message());
         }
     }
-    
+
     private static void validateExpression(String prefix, String value) throws JocConfigurationException {
         Either<Problem, JExpression> e = JExpression.parse(value);
         if (e.isLeft()) {
             throw new JocConfigurationException(prefix + e.getLeft().message());
         }
     }
-    
+
     public static void validateExpression(String value) throws JocConfigurationException {
         if (value != null) {
             Either<Problem, JExpression> e = JExpression.parse(value);
