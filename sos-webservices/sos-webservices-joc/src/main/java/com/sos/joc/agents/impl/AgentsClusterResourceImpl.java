@@ -48,7 +48,7 @@ import js7.data_for_java.item.JUpdateItemOperation;
 import js7.data_for_java.subagent.JSubagentRef;
 import reactor.core.publisher.Flux;
 
-@Path("agents/cluster")
+@Path("agents")
 public class AgentsClusterResourceImpl extends JOCResourceImpl implements IAgentsClusterResource {
 
     private static String API_CALL_P = "./agents/cluster/p";

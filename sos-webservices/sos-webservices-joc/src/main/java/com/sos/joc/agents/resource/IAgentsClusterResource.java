@@ -11,13 +11,13 @@ import com.sos.joc.classes.JOCDefaultResponse;
 public interface IAgentsClusterResource {
 
     @POST
-    @Path("p")
+    @Path("cluster/p")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postCluster(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
     
     @POST
-    @Path("deploy")
+    @Path("cluster/deploy")
     @Consumes("application/json")
     @Produces({ "application/json" })
     public JOCDefaultResponse postDeploy(@HeaderParam("X-Access-Token") String xAccessToken, byte[] filterBytes);
