@@ -2,6 +2,7 @@ package com.sos.joc.publish.impl;
 
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
 import com.sos.joc.classes.audit.AuditLogDetail;
 import com.sos.joc.classes.audit.JocAuditLog;
+import com.sos.joc.db.inventory.instance.InventoryAgentInstancesDBLayer;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.Version;
@@ -88,18 +90,25 @@ public class ExportImpl extends JOCResourceImpl implements IExportResource {
                 controllerId = forSigning.getControllerId();
                 folderPermissions.setSchedulerId(controllerId);
                 Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
+                
                 deployablesForSigning = PublishUtils.getDeployableControllerObjectsFromDB(forSigning.getDeployables(), dbLayer, commitId);
                 deployablesForSigning = deployablesForSigning.stream()
                 		.filter(item -> canAdd(item.getPath(), permittedFolders)).filter(Objects::nonNull).collect(Collectors.toSet());
                 final String controllerIdUsed = controllerId;
+
+                InventoryAgentInstancesDBLayer agentDbLayer = new InventoryAgentInstancesDBLayer(dbLayer.getSession());
+                Set<String> controllerIds = new HashSet<String>();
+                controllerIds.add(controllerIdUsed);
+                Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId = agentDbLayer.getAgentWithAliasesByControllerIds(controllerIds);
+
                 deployablesForSigning.stream()
                 .forEach(deployable -> {
                     if (DeployType.WORKFLOW.equals(deployable.getObjectType())) {
-                        updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(deployable.getPath(),
-                        		deployable.getContent(), DeployType.WORKFLOW.intValue(), controllerIdUsed, dbLayer));
+                        updateableWorkflowJobsAgentNames.addAll(PublishUtils.getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, 
+                                deployable.getPath(), deployable.getContent(), DeployType.WORKFLOW.intValue(), controllerIdUsed));
                     } else if (DeployType.FILEORDERSOURCE.equals(deployable.getObjectType())) {
-                        updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(deployable.getPath(),
-                                deployable.getContent(), controllerIdUsed, dbLayer));
+                        updateableFileOrderSourceAgentNames.add(PublishUtils.getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId,
+                                deployable.getPath(), deployable.getContent(), controllerIdUsed));
                     }
                 });
                 final Stream<ControllerObject> stream = deployablesForSigning.stream();

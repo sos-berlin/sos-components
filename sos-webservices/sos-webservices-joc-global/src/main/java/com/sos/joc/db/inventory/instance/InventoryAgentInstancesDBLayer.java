@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -230,6 +232,58 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {
             throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public Map<String, Map<String, Set<String>>> getAgentWithAliasesByControllerIds(Collection<String> controllerIds) {
+        try {
+            List<DBItemInventoryAgentInstance> agentIds = getAgentsByControllerIds(controllerIds);
+            Map<String, Set<DBItemInventoryAgentInstance>> agentIdsByControllerId = 
+                    agentIds.stream().collect(Collectors.groupingBy(DBItemInventoryAgentInstance::getControllerId, Collectors.toSet()));
+            Map<String, Map<String, Set<String>>> agentIdsWithAliasesByControllerIds = new HashMap<String, Map<String,Set<String>>>();
+            agentIdsByControllerId.entrySet().stream().forEach(item -> agentIdsWithAliasesByControllerIds.put(
+                    item.getKey(), 
+                    getAgentNameAliasesByAgentIds(item.getValue().stream()
+                            .map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()))));
+            agentIds.stream().forEach(item -> {
+                Optional<Set<String>> opt = agentIdsWithAliasesByControllerIds.entrySet().stream()
+                        .map(entry -> entry.getValue())
+                        .map(agentEntry -> agentEntry.get(item.getAgentId())).findFirst();
+                        if (opt.isPresent()) {
+                            opt.get().add(item.getAgentName());
+                        }
+            });
+            return agentIdsWithAliasesByControllerIds;
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public Map<String, Set<String>> getAgentNameAliasesByAgentIds(Collection<String> agentIds) throws DBInvalidDataException,
+            DBMissingDataException, DBConnectionRefusedException {
+        try {
+            StringBuilder hql = new StringBuilder();
+            hql.append("from ").append(DBLayer.DBITEM_INV_AGENT_NAMES);
+            if (agentIds != null && !agentIds.isEmpty()) {
+                hql.append(" where agentId in (:agentIds)");
+            }
+            Query<DBItemInventoryAgentName> query = getSession().createQuery(hql.toString());
+            if (agentIds != null && !agentIds.isEmpty()) {
+                query.setParameterList("agentIds", agentIds);
+            }
+            List<DBItemInventoryAgentName> result = getSession().getResultList(query);
+            if (result != null && !result.isEmpty()) {
+                return result.stream().collect(
+                        Collectors.groupingBy(DBItemInventoryAgentName::getAgentId, 
+                                Collectors.mapping(DBItemInventoryAgentName::getAgentName, Collectors.toSet())));
+            }
+            return Collections.emptyMap();
+        } catch (DBMissingDataException e) {
+            throw e;
+        } catch (SOSHibernateInvalidSessionException e) {
+            throw new DBConnectionRefusedException(e);
+        } catch (Exception e) {
+            throw new DBInvalidDataException(e);
         }
     }
 

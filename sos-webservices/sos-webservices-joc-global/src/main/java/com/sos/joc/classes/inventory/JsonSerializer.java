@@ -131,7 +131,7 @@ public class JsonSerializer {
             return null;
         }
         if (b.getEndOfLife() != null) {
-            b.setEndOfLife(b.getEndOfLife().replaceAll("\\$epochMilli", "$js7EpochMilli"));
+            b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
         }
         return b;
     }
@@ -142,7 +142,7 @@ public class JsonSerializer {
             return null;
         }
         if (b.getEndOfLife() != null) {
-            b.setEndOfLife(b.getEndOfLife().replaceAll("\\$epochMilli", "$js7EpochMilli"));
+            b.setEndOfLife(b.getEndOfLife().replaceAll("(\\$)epochMilli", "$1js7EpochMilli"));
         }
         return b;
     }

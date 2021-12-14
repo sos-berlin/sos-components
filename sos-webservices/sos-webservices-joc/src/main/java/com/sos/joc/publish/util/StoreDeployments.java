@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.exception.SOSException;
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.commons.hibernate.exception.SOSHibernateException;
 import com.sos.commons.sign.keys.SOSKeyConstants;
 import com.sos.commons.sign.keys.key.KeyUtil;
 import com.sos.inventory.model.deploy.DeployType;
@@ -31,6 +32,7 @@ import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.exceptions.JocError;
+import com.sos.joc.exceptions.JocSosHibernateException;
 import com.sos.joc.model.common.IDeployObject;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.publish.DeploymentState;
@@ -79,6 +81,9 @@ public class StoreDeployments {
             Set<DBItemDeploymentHistory> deployedObjects = new HashSet<DBItemDeploymentHistory>();
 
             if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
+                Date storeToDBStarted = Date.from(Instant.now());
+                LOGGER.trace("*** store to db started ***" + storeToDBStarted);
+                
                 for (Map.Entry<DBItemDeploymentHistory, DBItemDepSignatures> entry : signedItemsSpec.getVerifiedDeployables().entrySet()) {
                 	DBItemDeploymentHistory item = entry.getKey();
             		if (item.getId() == null) {
@@ -99,7 +104,7 @@ public class StoreDeployments {
                         PublishUtils.postDeployHistoryEvent(item);
                         if (signature != null) {
                             signature.setDepHistoryId(item.getId());
-                            dbLayer.getSession().update(signature);
+                            dbLayer.getSession().save(signature);
                         }
                         deployedObjects.add(item);
                         DBItemInventoryConfiguration toUpdate = dbLayer.getSession().get(DBItemInventoryConfiguration.class, item.getInventoryConfigurationId());
@@ -114,6 +119,9 @@ public class StoreDeployments {
                         deployedObjects.add(cloned);
                 	}
                 }
+                Date storeToDBFinished = Date.from(Instant.now());
+                LOGGER.trace("*** store to db finished ***" + storeToDBFinished);
+                LOGGER.trace("store to db took: " + (storeToDBFinished.getTime() - storeToDBStarted.getTime()) + " ms");
             }
             if (!deployedObjects.isEmpty()) {
                 long countWorkflows = deployedObjects.stream().filter(item -> ConfigurationType.WORKFLOW.intValue() == item.getType()).count();
@@ -124,7 +132,12 @@ public class StoreDeployments {
                 LOGGER.info(String.format(
                         "Update command send to Controller \"%1$s\" containing %2$d Workflow(s), %3$d Lock(s), %4$d FileOrderSource(s), %5$d JobResource(s) and %6$d Board(s).", 
                         controllerId, countWorkflows, countLocks, countFileOrderSources, countJobResources, countBoards));
+                Date handleWorkflowSearchStarted = Date.from(Instant.now());
+                LOGGER.trace("*** handle workflow search started ***" + handleWorkflowSearchStarted);
                  JocInventory.handleWorkflowSearch(dbLayer.getSession(), deployedObjects, false);
+                 Date handleWorkflowSearchFinished = Date.from(Instant.now());
+                 LOGGER.trace("*** handle workflow search finished ***" + handleWorkflowSearchFinished);
+                 LOGGER.trace("handle workflow search took: " + (handleWorkflowSearchFinished.getTime() - handleWorkflowSearchStarted.getTime()) + " ms");
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -186,14 +199,22 @@ public class StoreDeployments {
         
         if (signedItemsSpec.getVerifiedDeployables() != null && !signedItemsSpec.getVerifiedDeployables().isEmpty()) {
             
+            Date storeEntriesStarted = Date.from(Instant.now());
+            LOGGER.trace("*** store entries started ***" + storeEntriesStarted);
+
             // store new history entries and update inventory for update operation optimistically
             storeNewDepHistoryEntries(signedItemsSpec, account, commitId, controllerId, accessToken, jocError, dbLayer);
+            
+            Date storeEntriesFinished = Date.from(Instant.now());
+            LOGGER.trace("*** store entries finished ***" + storeEntriesFinished);
+            LOGGER.trace("store entries optimistically took: " + (storeEntriesFinished.getTime() - storeEntriesStarted.getTime()) + " ms");
 
             List<DBItemInventoryCertificate> caCertificates = dbLayer.getCaCertificates();
             boolean verified = false;
             String signerDN = null;
             X509Certificate cert = null;
             // call updateItems command via ControllerApi for the given controller
+
             switch(signedItemsSpec.getKeyPair().getKeyAlgorithm()) {
             case SOSKeyConstants.PGP_ALGORITHM_NAME:
                 PublishUtils.updateItemsAddOrUpdatePGP(commitId, signedItemsSpec.getVerifiedDeployables(), controllerId, dbLayer).thenAccept(either -> 

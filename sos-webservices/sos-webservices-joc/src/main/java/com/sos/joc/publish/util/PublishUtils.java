@@ -33,9 +33,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -73,6 +75,7 @@ import com.sos.joc.classes.settings.ClusterSettings;
 import com.sos.joc.db.DBItem;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -144,6 +147,7 @@ import js7.data_for_java.lock.JLock;
 import js7.data_for_java.orderwatch.JFileWatch;
 import js7.data_for_java.value.JExpression;
 import reactor.core.publisher.Flux;
+import shapeless.newtype;
 
 public abstract class PublishUtils {
 
@@ -260,7 +264,6 @@ public abstract class PublishUtils {
                     sig.setDepHistoryId(deployed.getId());
                     sig.setInvConfigurationId(deployed.getInventoryConfigurationId());
                     sig.setModified(Date.from(Instant.now()));
-                    session.save(sig);
                 } else {
                     deployed.setSignedContent(".");
                 }
@@ -905,6 +908,35 @@ public abstract class PublishUtils {
             ((Workflow) draft.readUpdateableContent()).setVersionId(commitId);
         }
     }
+    
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(
+            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, DBItemDeploymentHistory item, String controllerId) {
+        return getUpdateableAgentRefInWorkflowJobs(agentsWithAliasesByControllerId, item.getPath(), item.readUpdateableContent(), item.getType(), controllerId);
+    }
+    
+    public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String path, IDeployObject deployObject, Integer type,
+            String controllerId) {
+        Set<UpdateableWorkflowJobAgentName> update = new HashSet<UpdateableWorkflowJobAgentName>();
+        if (ConfigurationType.WORKFLOW.intValue() == type) {
+            Workflow workflow = (Workflow) deployObject;
+            workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
+                Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
+                String agentNameOrAlias = job.getAgentPath();
+
+                Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
+                    .filter(item -> controllerId.equals(item.getKey()))
+                    .map(item -> item.getValue()).findFirst();
+                if (opt.isPresent()) {
+                    Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
+                            .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
+                    if (agentId.isPresent()) {
+                        update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId.get(), controllerId));
+                    }
+                }
+            });
+        }
+        return update;
+    }
 
     public static Set<UpdateableWorkflowJobAgentName> getUpdateableAgentRefInWorkflowJobs(DBItemDeploymentHistory item, String controllerId,
             DBLayerDeploy dbLayer) {
@@ -923,6 +955,31 @@ public abstract class PublishUtils {
                 update.add(new UpdateableWorkflowJobAgentName(path, jobname, job.getAgentPath(), agentId, controllerId));
             });
         }
+        return update;
+    }
+
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(
+            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, DBItemDeploymentHistory item, String controllerId) {
+        return getUpdateableAgentRefInFileOrderSource(agentsWithAliasesByControllerId, item.getName(), item.readUpdateableContent(), controllerId);
+    }
+
+    public static UpdateableFileOrderSourceAgentName getUpdateableAgentRefInFileOrderSource(
+            Map<String, Map<String, Set<String>>> agentsWithAliasesByControllerId, String fileOrderSourceId, IDeployObject deployObject, 
+            String controllerId) {
+        UpdateableFileOrderSourceAgentName update = null;
+        FileOrderSource fileOrderSource = (FileOrderSource) deployObject;
+        String agentNameOrAlias = fileOrderSource.getAgentPath();
+        
+        Optional<Map<String, Set<String>>> opt = agentsWithAliasesByControllerId.entrySet().stream()
+                .filter(item -> controllerId.equals(item.getKey()))
+                .map(item -> item.getValue()).findFirst();
+            if (opt.isPresent()) {
+                Optional<String> agentId = opt.get().entrySet().stream().filter(item -> item.getValue().contains(agentNameOrAlias))
+                        .filter(Objects::nonNull).map(item -> item.getKey()).findFirst();
+                if (agentId.isPresent()) {
+                    update = new UpdateableFileOrderSourceAgentName(fileOrderSourceId, agentNameOrAlias, agentId.get(), controllerId);
+                }
+            }
         return update;
     }
 
@@ -1089,7 +1146,76 @@ public abstract class PublishUtils {
         }
         return deployedObjects;
     }
+    
+    private static void prepareDepHistoryItem(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
+            String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
+        try {
+            if (depHistoryItem.getId() != null) {
+                depHistoryItem.setId(null);
+            }
+            if (depSignatureItem != null) {
+                // signed item
+                depHistoryItem.setSignedContent(depSignatureItem.getSignature());
+            }
+            depHistoryItem.setAccount(account);
+            // TODO: get Version to set here
+            depHistoryItem.setVersion(null);
+            depHistoryItem.setContent(JsonSerializer.serializeAsString(depHistoryItem.readUpdateableContent()));
+            depHistoryItem.setCommitId(commitId);
+            depHistoryItem.setControllerId(controllerId);
+            DBItemInventoryJSInstance controllerInstance = dbLayerDeploy.getController(controllerId); // TODO obsolete or not?
+            depHistoryItem.setControllerInstanceId(controllerInstance.getId());
+            depHistoryItem.setDeploymentDate(deploymentDate);
+            depHistoryItem.setOperation(OperationType.UPDATE.value());
+            depHistoryItem.setState(DeploymentState.DEPLOYED.value());
+            depHistoryItem.setAuditlogId(auditlogId);
+            if(depHistoryItem.getSignedContent() == null || depHistoryItem.getSignedContent().isEmpty()) {
+                depHistoryItem.setSignedContent(".");
+            }
+        } catch (JsonProcessingException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } catch (SOSHibernateException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 
+    public static void cloneDepHistoryItemsToNewEntries(Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature,
+            DBLayerDeploy dbLayerDeploy) {
+        try {
+            // Step 1 store deployments in batch
+            dbLayerDeploy.insertNewHistoryEntriesInBatch(deployedWithSignature.keySet().stream().collect(Collectors.toList()));
+            // Step 2 update ids of newly stored items
+            List<DBItemDeploymentHistory> storedDepHistoryfromCommit = 
+                    dbLayerDeploy.getDepHistory(deployedWithSignature.keySet().iterator().next().getCommitId());
+            deployedWithSignature.keySet().stream().forEach(item -> {
+                Optional<DBItemDeploymentHistory> opt = storedDepHistoryfromCommit.stream()
+                    .filter(fromCommit -> fromCommit.getPath().equals(item.getPath()) && fromCommit.getType() == item.getType()).findFirst();
+                if (opt.isPresent()) {
+                    item.setId(opt.get().getId());
+                }
+            });
+            // Step 3 update already stored signatures with new historyId
+            deployedWithSignature.keySet().stream().filter(item -> deployedWithSignature.get(item) != null).forEach(item -> deployedWithSignature.get(item).setDepHistoryId(item.getId()));
+            dbLayerDeploy.insertSignaturesInBatch(deployedWithSignature.values().stream().filter(Objects::nonNull).collect(Collectors.toList()));
+            deployedWithSignature.values().forEach(item -> dbLayerDeploy.updateIdForDBItemDepSignature(item));
+//                postDeployHistoryEvent(depHistoryItem);
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
+    public static void cloneDepHistoryItemsToNewEntriesB(
+            Map<DBItemDeploymentHistory, DBItemDepSignatures> deployedWithSignature, String account, DBLayerDeploy dbLayerDeploy, String commitId,
+            String controllerId, Date deploymentDate, Long auditlogId) {
+            deployedWithSignature.entrySet().stream()
+            .filter(item -> item.getKey().getId() != null)
+            .forEach(deployed -> prepareDepHistoryItem(deployed.getKey(), deployed.getValue(), account, dbLayerDeploy, commitId, controllerId,
+                deploymentDate, auditlogId));
+            cloneDepHistoryItemsToNewEntries(deployedWithSignature, dbLayerDeploy);
+    }
+    
     public static DBItemDeploymentHistory cloneDepHistoryItemsToNewEntry(DBItemDeploymentHistory depHistoryItem, DBItemDepSignatures depSignatureItem,
             String account, DBLayerDeploy dbLayerDeploy, String commitId, String controllerId, Date deploymentDate, Long auditlogId) {
         try {
@@ -1129,8 +1255,9 @@ public abstract class PublishUtils {
                 postDeployHistoryEvent(depHistoryItem);
                 if (depSignatureItem != null) {
                     depSignatureItem.setDepHistoryId(depHistoryItem.getId());
-                    dbLayerDeploy.getSession().update(depSignatureItem);
+                    dbLayerDeploy.getSession().save(depSignatureItem);
                 }
+                
             }
         } catch (IOException e) {
             throw new JocException(e);
@@ -1962,51 +2089,49 @@ public abstract class PublishUtils {
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesFromFolders(List<Configuration> folders, DBLayerDeploy dbLayer) {
-        List<DBItemDeploymentHistory> allEntries = new ArrayList<DBItemDeploymentHistory>();
-        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-        Map<String, List<DBItemDeploymentHistory>> groupedEntries = allEntries.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
-        List<DBItemDeploymentHistory> entries = new ArrayList<DBItemDeploymentHistory>();
-        groupedEntries.entrySet().stream().map(item -> item.getValue()).forEach(item -> {
-            entries.add(item.stream().max(Comparator.comparing(DBItemDeploymentHistory::getId)).orElse(null));
-        });
-        return entries.stream().filter(Objects::nonNull).filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
-            .filter(Objects::nonNull).collect(Collectors.toSet());       
-//        allEntries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
-//            .collect(Collectors.toSet());
-//        // TODO: improve performance
-//        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getLatestDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
-//        return allEntries.stream().filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation()))).filter(Objects::nonNull)
-//                .collect(Collectors.toSet());
+//        List<DBItemDeploymentHistory> allEntries = new ArrayList<DBItemDeploymentHistory>();
+//        folders.stream().forEach(item -> allEntries.addAll(dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())));
+        ConcurrentMap<String, Optional<DBItemDeploymentHistory>> groupedEntries = 
+                folders.parallelStream().map(item -> dbLayer.getDepHistoryItemsFromFolder(item.getPath(), item.getRecursive())).flatMap(List::stream)
+                .collect(Collectors.groupingByConcurrent(DBItemDeploymentHistory::getPath, Collectors.maxBy(Comparator.comparing(DBItemDeploymentHistory::getId))));
+//        Map<String, List<DBItemDeploymentHistory>> groupedEntries = allEntries.stream().collect(Collectors.groupingBy(DBItemDeploymentHistory::getPath));
+        return groupedEntries.values().stream().filter(Optional::isPresent).map(Optional::get)
+                .filter(item -> OperationType.DELETE.value() != item.getOperation()).collect(Collectors.toSet());
+//        return entries.stream().filter(Objects::nonNull).filter(item -> !OperationType.DELETE.equals(OperationType.fromValue(item.getOperation())))
+//            .filter(Objects::nonNull).collect(Collectors.toSet());       
     }
 
     public static Set<DBItemDeploymentHistory> getLatestActiveDepHistoryEntriesWithoutDraftsFromFolders(List<Configuration> folders,
             DBLayerDeploy dbLayer) {
         Set<DBItemDeploymentHistory> allLatest = getLatestActiveDepHistoryEntriesFromFolders(folders, dbLayer);
-        // filter duplicates, if history item with same name but different folder exists
+        List<DBItemInventoryConfiguration> allCfgs = new ArrayList<DBItemInventoryConfiguration>(); 
+        folders.stream().forEach(item -> allCfgs.addAll(dbLayer.getDeployableInventoryConfigurationsByFolder(item.getPath(), item.getRecursive())));
         allLatest = allLatest.stream().filter(item -> {
-            DBItemInventoryConfiguration dbItem = dbLayer.getConfigurationByName(item.getName(), item.getType());
+            DBItemInventoryConfiguration dbItem = allCfgs.stream().filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst().get();
             if (dbItem != null && item.getPath().equals(dbItem.getPath())) {
                 return true;
             } else {
                 return false;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
-        return allLatest.stream().filter(item -> {
+        allLatest = allLatest.stream().filter(item -> {
             if (item.getName() == null || item.getName().isEmpty()) {
                 LOGGER.debug(String.format("No name found for item with path: %1$s ", item.getPath()));
                 String name = Paths.get(item.getPath()).getFileName().toString();
                 item.setName(name);
                 LOGGER.debug(String.format("Item name set to: %1$s ", item.getName()));
             }
-            Boolean deployed = dbLayer.getInventoryConfigurationDeployedByNameAndType(item.getName(), item.getType());
-            if (deployed == null) {
-                // history item does not exist in current configuration
+            Optional<DBItemInventoryConfiguration> dbItem = allCfgs.stream()
+                    .filter(cfg -> cfg.getName().equals(item.getName()) && cfg.getType().equals(item.getType())).findFirst();
+            if(dbItem.isPresent()) {
+                return dbItem.get().getDeployed();
+            } else {
+                // history items source does not exist in current configuration
                 // decision: ignore item as only objects from history with existing current configuration are relevant
                 return false;
-            } else {
-                return deployed;
             }
         }).filter(Objects::nonNull).collect(Collectors.toSet());
+        return allLatest;
     }
 
     public static Set<DBItemDeploymentHistory> getLatestDepHistoryEntriesDeleteForFolder(Config folder, String controllerId, DBLayerDeploy dbLayer) {

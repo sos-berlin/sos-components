@@ -34,11 +34,14 @@ import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.Validator;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.DBSQLBatchPreparator;
+import com.sos.joc.db.DBSQLBatchPreparator.BatchPreparator;
 import com.sos.joc.db.deployment.DBItemDepCommitIds;
 import com.sos.joc.db.deployment.DBItemDepSignatures;
 import com.sos.joc.db.deployment.DBItemDepVersions;
 import com.sos.joc.db.deployment.DBItemDeploymentHistory;
 import com.sos.joc.db.deployment.DBItemDeploymentSubmission;
+import com.sos.joc.db.inventory.DBItemInventoryAgentInstance;
 import com.sos.joc.db.inventory.DBItemInventoryCertificate;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryJSInstance;
@@ -148,6 +151,22 @@ public class DBLayerDeploy {
             if (type != null) {
                 query.setParameter("type", type.intValue());
             }
+            return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public List<DBItemDeploymentHistory> getDepHistoryItems(String commitId) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder sql = new StringBuilder();
+            sql.append(" from ").append(DBLayer.DBITEM_DEP_HISTORY);
+            sql.append(" where commitId = :commitId");
+            Query<DBItemDeploymentHistory> query = session.createQuery(sql.toString());
+            query.setParameter("commitId", commitId);
             return session.getResultList(query);
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
@@ -595,6 +614,9 @@ public class DBLayerDeploy {
 
     private List<DBItemInventoryConfiguration> getDraftInventoryConfigurationsByFolder(String folder, boolean onlyDeployables,
             boolean onlyReleasables, boolean recursive, boolean onlyValid) {
+        Date getDraftInventoryConfigurationsByFolderStarted = Date.from(Instant.now());
+        LOGGER.trace("*** call getDraftInventoryConfigurationsByFolder started ***" + getDraftInventoryConfigurationsByFolderStarted);
+
         try {
             StringBuilder hql = new StringBuilder();
             hql.append(" from ").append(DBLayer.DBITEM_INV_CONFIGURATIONS);
@@ -626,7 +648,11 @@ public class DBLayerDeploy {
             } else if (onlyReleasables) {
                 query.setParameterList("types", JocInventory.RELEASABLE_OBJECTS.stream().map(item -> item.intValue()).collect(Collectors.toList()));
             }
-            return session.getResultList(query);
+            List<DBItemInventoryConfiguration> result = session.getResultList(query);
+            Date getDraftInventoryConfigurationsByFolderFinished = Date.from(Instant.now());
+            LOGGER.trace("*** call getDraftInventoryConfigurationsByFolder finished ***" + getDraftInventoryConfigurationsByFolderFinished);
+            LOGGER.trace("call getDraftInventoryConfigurationsByFolder took: " + (getDraftInventoryConfigurationsByFolderFinished.getTime() - getDraftInventoryConfigurationsByFolderStarted.getTime()) + " ms");
+            return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
@@ -1343,6 +1369,8 @@ public class DBLayerDeploy {
     }
 
     public List<DBItemDeploymentHistory> getDepHistoryItemsFromFolder(String folder, boolean recursive) {
+        Date getDepHistoryItemsFromFolderStarted = Date.from(Instant.now());
+        LOGGER.trace("*** call getDepHistoryItemsFromFolder started ***" + getDepHistoryItemsFromFolderStarted);
         try {
             // TODO: improve performance
             StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
@@ -1363,7 +1391,11 @@ public class DBLayerDeploy {
             } else {
                 query.setParameter("folder", folder);
             }
-            return session.getResultList(query);
+            List<DBItemDeploymentHistory> result = session.getResultList(query);
+            Date getDepHistoryItemsFromFolderFinished = Date.from(Instant.now());
+            LOGGER.trace("*** call getDepHistoryItemsFromFolder finished ***" + getDepHistoryItemsFromFolderFinished);
+            LOGGER.trace("call getDepHistoryItemsFromFolder took: " + (getDepHistoryItemsFromFolderFinished.getTime() - getDepHistoryItemsFromFolderStarted.getTime()) + " ms");
+            return result;
         } catch (SOSHibernateException e) {
             throw new JocSosHibernateException(e);
         }
@@ -1916,6 +1948,21 @@ public class DBLayerDeploy {
         }
     }
 
+//    public void insertNewSignatures (Set<DBItemDepSignatures> signatures) {
+//        StringBuilder hql = new StringBuilder();
+//        hql.append("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig ");
+//        hql.append(" where sig.depHistoryId in (");
+//        hql.append(" select dep.id from ").append(DBLayer.DBITEM_DEP_HISTORY).append(" as dep ");
+//        hql.append(" where dep.commitId = :commitId ");
+//        hql.append(" and dep.controllerId = :controllerId ");
+//        hql.append(")");
+//        Query<DBItemDepSignatures> query = session.createQuery(hql.toString());
+//        query.setParameter("commitId", commitId);
+//        query.setParameter("controllerId", controllerId);
+//        List<DBItemDepSignatures> signaturesToDelete = session.getResultList(query);
+//        
+//    }
+    
     public void cleanupSignatures(Set<DBItemDepSignatures> signatures) {
         if (signatures != null && !signatures.isEmpty()) {
             for (DBItemDepSignatures sig : signatures) {
@@ -2091,37 +2138,16 @@ public class DBLayerDeploy {
         }
     }
 
-    // public List<DBItemDeploymentHistory> getDeploymentsToRedeploy(RedeployFilter filter) throws SOSHibernateException {
-    // StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_DEP_HISTORY);
-    // if (filter.getControllerId() != null) {
-    // hql.append(" where controllerId = :controllerId");
-    // }
-    // if (filter.getFolder() != null) {
-    // hql.append(" and (folder = :folder or folder like :likeFolder)");
-    // }
-    // Query<DBItemDeploymentHistory> query = getSession().createQuery(hql.toString());
-    // query.setParameter("controllerId", filter.getControllerId());
-    // query.setParameter("folder", filter.getFolder());
-    // query.setParameter("likeFolder", MatchMode.START.toMatchString(filter.getFolder()));
-    // List<DBItemDeploymentHistory> dbItems = query.getResultList();
-    // Set<DBItemDeploymentHistory> excludes = new HashSet<DBItemDeploymentHistory>();
-    // // remove excludes from result list
-    // if (filter.getExcludes() != null && !filter.getExcludes().isEmpty()) {
-    // for (ExcludeConfiguration exclude : filter.getExcludes()) {
-    // excludes.addAll(
-    // dbItems.stream().map(item -> {
-    // if(item.getPath().equals(exclude.getPath()) && DeployType.fromValue(item.getType()).equals(exclude.getDeployType())) {
-    // return item;
-    // }
-    // return null;
-    // }).collect(Collectors.toSet())
-    // );
-    // }
-    // }
-    // dbItems.removeAll(excludes);
-    // return dbItems;
-    // }
-    //
+    public List<DBItemInventoryAgentInstance> getAllAgents() {
+        try {
+            StringBuilder hql = new StringBuilder("from ").append(DBLayer.DBITEM_INV_AGENT_INSTANCES);
+            Query<DBItemInventoryAgentInstance> query = getSession().createQuery(hql.toString());
+            return query.getResultList();
+        }catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e.getMessage(), e);
+        }
+    }
+    
     public String getAgentIdFromAgentName(String agentName, String controllerId) {
         return getAgentIdFromAgentName(agentName, controllerId, null, null);
     }
@@ -2388,4 +2414,45 @@ public class DBLayerDeploy {
         return result.stream().collect(Collectors.toMap(DBItemInventoryReleasedConfiguration::getName,
                 DBItemInventoryReleasedConfiguration::getContent, (name, content) -> name));
     }
+    
+    public void insertSignaturesInBatch(List<DBItemDepSignatures> signatures) {
+        try {
+            // prepare items
+            BatchPreparator result = DBSQLBatchPreparator.prepareForSQLBatchInsert(session.getFactory().getDialect(), signatures);
+            session.getSQLExecutor().executeBatch(result.getTableName(), result.getSQL(), result.getRows());
+        } catch (SOSHibernateException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void insertNewHistoryEntriesInBatch(List<DBItemDeploymentHistory> depHistory) throws SOSHibernateException {
+        // prepare items
+        BatchPreparator result = DBSQLBatchPreparator.prepareForSQLBatchInsert(session.getFactory().getDialect(), depHistory);
+        session.getSQLExecutor().executeBatch(result.getTableName(), result.getSQL(), result.getRows());
+    }
+
+    public void updateIdForDBItemDepSignature(DBItemDepSignatures dbItemDepSignatures) {
+        // needed as batch stored items do not support id update
+        try {
+            StringBuilder hql = new StringBuilder("select sig from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig");
+            hql.append(" where sig.id = (").append("select max(sig2.id) from ").append(DBLayer.DBITEM_DEP_SIGNATURES).append(" as sig2");
+            hql.append(" where sig2.invConfigurationId = :invConfigurationId");
+            hql.append(" and sig2.signature = :signature");
+            hql.append(" and sig2.account = :account");
+            hql.append(" and sig2.modified = :modified)");
+            Query<DBItemDepSignatures> query = getSession().createQuery(hql.toString());
+            query.setParameter("invConfigurationId", dbItemDepSignatures.getInvConfigurationId());
+            query.setParameter("signature", dbItemDepSignatures.getSignature());
+            query.setParameter("account", dbItemDepSignatures.getAccount());
+            query.setParameter("modified", dbItemDepSignatures.getModified());
+            DBItemDepSignatures signature = getSession().getSingleResult(query);
+            if (signature != null) {
+                dbItemDepSignatures.setId(signature.getId());
+            }
+        } catch (SOSHibernateException e) {
+            throw new JocSosHibernateException(e);
+        }
+    }
+
 }
