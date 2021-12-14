@@ -1,8 +1,10 @@
 
 package com.sos.joc.model.inventory.deploy;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,6 +25,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "deliveryDate",
+    "name",
+    "path",
+    "folders",
     "deployables"
 })
 public class ResponseDeployables {
@@ -36,6 +41,25 @@ public class ResponseDeployables {
     @JsonProperty("deliveryDate")
     @JsonPropertyDescription("Value is UTC timestamp in ISO 8601 YYYY-MM-DDThh:mm:ss.sZ or empty")
     private Date deliveryDate;
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    private String name;
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    @JsonPropertyDescription("absolute path of an object.")
+    private String path;
+    @JsonProperty("folders")
+    private List<ResponseDeployables> folders = new ArrayList<ResponseDeployables>();
     @JsonProperty("deployables")
     @JsonDeserialize(as = java.util.LinkedHashSet.class)
     private Set<ResponseDeployableTreeItem> deployables = new LinkedHashSet<ResponseDeployableTreeItem>();
@@ -62,6 +86,60 @@ public class ResponseDeployables {
         this.deliveryDate = deliveryDate;
     }
 
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * string without < and >
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("name")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * path
+     * <p>
+     * absolute path of an object.
+     * 
+     */
+    @JsonProperty("path")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    @JsonProperty("folders")
+    public List<ResponseDeployables> getFolders() {
+        return folders;
+    }
+
+    @JsonProperty("folders")
+    public void setFolders(List<ResponseDeployables> folders) {
+        this.folders = folders;
+    }
+
     @JsonProperty("deployables")
     public Set<ResponseDeployableTreeItem> getDeployables() {
         return deployables;
@@ -74,12 +152,12 @@ public class ResponseDeployables {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("deployables", deployables).toString();
+        return new ToStringBuilder(this).append("deliveryDate", deliveryDate).append("name", name).append("path", path).append("folders", folders).append("deployables", deployables).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(deliveryDate).append(deployables).toHashCode();
+        return new HashCodeBuilder().append(name).append(deployables).append(path).append(folders).append(deliveryDate).toHashCode();
     }
 
     @Override
@@ -91,7 +169,7 @@ public class ResponseDeployables {
             return false;
         }
         ResponseDeployables rhs = ((ResponseDeployables) other);
-        return new EqualsBuilder().append(deliveryDate, rhs.deliveryDate).append(deployables, rhs.deployables).isEquals();
+        return new EqualsBuilder().append(name, rhs.name).append(deployables, rhs.deployables).append(path, rhs.path).append(folders, rhs.folders).append(deliveryDate, rhs.deliveryDate).isEquals();
     }
 
 }

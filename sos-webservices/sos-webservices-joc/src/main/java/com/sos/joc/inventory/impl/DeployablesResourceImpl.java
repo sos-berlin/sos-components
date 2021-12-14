@@ -1,24 +1,27 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.Path;
-
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -36,9 +39,10 @@ import com.sos.joc.model.inventory.deploy.DeployablesFilter;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableTreeItem;
 import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.inventory.deploy.ResponseDeployables;
+import com.sos.joc.model.tree.Tree;
 import com.sos.schema.JsonValidator;
 
-@Path(JocInventory.APPLICATION_PATH)
+@javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
 public class DeployablesResourceImpl extends JOCResourceImpl implements IDeployablesResource {
 
     @Override
@@ -52,10 +56,13 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
+                if (in.getFolder().isEmpty()) {
+                    in.setFolder("/");
+                }
                 if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
                 }
-                response = JOCDefaultResponse.responseStatus200(deployables(in));
+                response = JOCDefaultResponse.responseStatus200(deployables(in, false));
             }
             return response;
         } catch (JocException e) {
@@ -65,20 +72,50 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             return JOCDefaultResponse.responseStatusJSError(e, getJocError());
         }
     }
+    
+    @Override
+    public JOCDefaultResponse deployablesTree(final String accessToken, final byte[] inBytes) {
+        try {
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH_TREE, inBytes, accessToken);
+            JsonValidator.validate(inBytes, DeployablesFilter.class);
+            DeployablesFilter in = Globals.objectMapper.readValue(inBytes, DeployablesFilter.class);
 
-    private ResponseDeployables deployables(DeployablesFilter in) throws Exception {
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+
+            if (response == null) {
+                if (in.getFolder().isEmpty()) {
+                    in.setFolder("/");
+                }
+                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
+                }
+                response = JOCDefaultResponse.responseStatus200(deployables(in, true));
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    private ResponseDeployables deployables(DeployablesFilter in, boolean withTree) throws Exception {
         SOSHibernateSession session = null;
         try {
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Collection<Integer> deployableTypes = JocInventory.getDeployableTypes(in.getObjectTypes());
+            Set<Integer> deployableTypes = JocInventory.getDeployableTypes(in.getObjectTypes());
             if (in.getRecursive() || (in.getObjectTypes() != null && in.getObjectTypes().contains(ConfigurationType.FOLDER))) {
                 deployableTypes.add(ConfigurationType.FOLDER.intValue());
             }
-            Set<ResponseDeployableTreeItem> deployables = new TreeSet<>(Comparator.comparing(ResponseDeployableTreeItem::getFolder).thenComparing(
-                    ResponseDeployableTreeItem::getObjectName));
+            
+            Comparator<ResponseDeployableTreeItem> comp = Comparator.comparing(ResponseDeployableTreeItem::getFolder).thenComparing(
+                    ResponseDeployableTreeItem::getObjectName);
+            SortedSet<ResponseDeployableTreeItem> deployables = new TreeSet<>(comp);
             
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
             if (folder != null && folder.getDeleted()) {
@@ -97,10 +134,39 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         .getRecursive(), deletedFolders), in.getOnlyValidObjects(), permittedFolders, in.getWithoutDrafts(), in.getWithoutDeployed(),
                         in.getLatest()));
             }
-            ResponseDeployables result = new ResponseDeployables();
-            result.setDeliveryDate(Date.from(Instant.now()));
-            result.setDeployables(deployables);
-            return result;
+            
+            if (withTree) {
+                final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
+                        .emptySet());
+                final Map<String, TreeSet<ResponseDeployableTreeItem>> groupedDeployables = deployables.stream().filter(item -> !JocInventory
+                        .isFolder(item.getObjectType())).collect(Collectors.groupingBy(ResponseDeployableTreeItem::getFolder, Collectors.toCollection(
+                                () -> new TreeSet<>(comp))));
+
+                Path folderPath = Paths.get(in.getFolder());
+                SortedSet<ResponseDeployables> responseDeployablesFolder = initTreeByFolder(folderPath, in.getRecursive(), in.getOnlyValidObjects(),
+                        deployableTypes, dbLayer).stream().filter(fld -> {
+                            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(fld.getPath(), permittedFolders);
+                            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(fld.getPath());
+
+                            return isPermittedForFolder || isNotPermittedParentFolder;
+                        }).map(t -> {
+                            ResponseDeployables r = new ResponseDeployables();
+                            r.setPath(t.getPath());
+                            r.setDeployables(groupedDeployables.get(t.getPath()));
+                            return r;
+                        }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseDeployables::getPath).reversed())));
+
+                ResponseDeployables result = getTree(responseDeployablesFolder, folderPath);
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setName(in.getFolder());
+                return result;
+            } else {
+                ResponseDeployables result = new ResponseDeployables();
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setDeployables(deployables);
+                result.setFolders(null);
+                return result;
+            }
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -207,6 +273,74 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
     private static boolean folderIsNotEmpty(String folder, Set<String> paths) {
         Predicate<String> filter = f -> f.startsWith((folder + "/").replaceAll("//+", "/"));
         return paths.stream().parallel().anyMatch(filter);
+    }
+    
+    public static SortedSet<Tree> initTreeByFolder(Path path, Boolean recursive, Boolean onlyValidObjects, Set<Integer> deployableTypes,
+            InventoryDBLayer dbLayer) throws JocException {
+        Comparator<Tree> comparator = Comparator.comparing(Tree::getPath).reversed();
+        SortedSet<Tree> folders = new TreeSet<>(comparator);
+        Set<Tree> results = dbLayer.getFoldersByFolderAndTypeForInventory(path.toString().replace('\\', '/'), deployableTypes, onlyValidObjects);
+        final int parentDepth = path.getNameCount();
+        if (results != null && !results.isEmpty()) {
+            if (recursive != null && recursive) {
+                folders.addAll(results);
+            } else {
+                folders.addAll(results.stream().filter(item -> Paths.get(item.getPath()).getNameCount() <= parentDepth + 1).collect(Collectors
+                        .toSet()));
+            }
+        }
+        return folders;
+    }
+    
+    private static ResponseDeployables getTree(SortedSet<ResponseDeployables> folders, Path startFolder) {
+        Map<Path, ResponseDeployables> treeMap = new HashMap<>();
+        for (ResponseDeployables folder : folders) {
+
+                Path pFolder = Paths.get(folder.getPath());
+                ResponseDeployables tree = null;
+                if (treeMap.containsKey(pFolder)) {
+                    tree = treeMap.get(pFolder);
+                } else {
+                    tree = folder;
+                    tree.setFolders(Collections.emptyList());
+                    tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
+                    treeMap.put(pFolder, tree);
+                }
+                fillTreeMap(treeMap, pFolder, tree);
+        }
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+        return treeMap.get(startFolder);
+    }
+    
+    private static void fillTreeMap(Map<Path, ResponseDeployables> treeMap, Path folder, ResponseDeployables tree) {
+        Path parent = folder.getParent();
+        if (parent != null) {
+            ResponseDeployables parentTree = null;
+            if (treeMap.containsKey(parent)) {
+                parentTree = treeMap.get(parent);
+                List<ResponseDeployables> treeList = parentTree.getFolders();
+                if (treeList == null) {
+                    treeList = new ArrayList<>();
+                    treeList.add(tree);
+                    parentTree.setFolders(treeList);
+                } else {
+                    if (treeList.contains(tree)) {
+                        treeList.remove(tree);
+                    }
+                    treeList.add(0, tree);
+                }
+            } else {
+                parentTree = new ResponseDeployables();
+                parentTree.setPath(parent.toString().replace('\\', '/'));
+                List<ResponseDeployables> treeList = new ArrayList<>();
+                treeList.add(tree);
+                parentTree.setFolders(treeList);
+                treeMap.put(parent, parentTree);
+            }
+            fillTreeMap(treeMap, parent, parentTree);
+        }
     }
 
 }

@@ -1,24 +1,27 @@
 package com.sos.joc.inventory.impl;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.ws.rs.Path;
-
+import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
@@ -38,7 +41,7 @@ import com.sos.joc.model.inventory.release.ResponseReleasableVersion;
 import com.sos.joc.model.inventory.release.ResponseReleasables;
 import com.sos.schema.JsonValidator;
 
-@Path(JocInventory.APPLICATION_PATH)
+@javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
 public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasablesResource {
 
     @Override
@@ -52,10 +55,41 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
             JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
 
             if (response == null) {
+                if (in.getFolder().isEmpty()) {
+                    in.setFolder("/");
+                }
                 if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
                     throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
                 }
-                response = JOCDefaultResponse.responseStatus200(releasables(in));
+                response = JOCDefaultResponse.responseStatus200(releasables(in, false));
+            }
+            return response;
+        } catch (JocException e) {
+            e.addErrorMetaInfo(getJocError());
+            return JOCDefaultResponse.responseStatusJSError(e);
+        } catch (Exception e) {
+            return JOCDefaultResponse.responseStatusJSError(e, getJocError());
+        }
+    }
+    
+    @Override
+    public JOCDefaultResponse releasablesTree(final String accessToken, final byte[] inBytes) {
+        try {
+            // don't use JsonValidator.validateFailFast because of anyOf-Requirements
+            initLogging(IMPL_PATH_TREE, inBytes, accessToken);
+            JsonValidator.validate(inBytes, ReleasablesFilter.class);
+            ReleasablesFilter in = Globals.objectMapper.readValue(inBytes, ReleasablesFilter.class);
+
+            JOCDefaultResponse response = initPermissions(null, getJocPermissions(accessToken).getInventory().getView());
+
+            if (response == null) {
+                if (in.getFolder().isEmpty()) {
+                    in.setFolder("/");
+                }
+                if (!folderPermissions.isPermittedForFolder(in.getFolder())) {
+                    throw new JocFolderPermissionsException("Access denied for folder: " + in.getFolder());
+                }
+                response = JOCDefaultResponse.responseStatus200(releasables(in, true));
             }
             return response;
         } catch (JocException e) {
@@ -66,19 +100,20 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         }
     }
 
-    private ResponseReleasables releasables(ReleasablesFilter in) throws Exception {
+    private ResponseReleasables releasables(ReleasablesFilter in, boolean withTree) throws Exception {
         SOSHibernateSession session = null;
         try {
             final Set<Folder> permittedFolders = folderPermissions.getListOfFolders();
             session = Globals.createSosHibernateStatelessConnection(IMPL_PATH);
             InventoryDBLayer dbLayer = new InventoryDBLayer(session);
 
-            Collection<Integer> releasableTypes = JocInventory.getReleasableTypes(in.getObjectTypes());
+            Set<Integer> releasableTypes = JocInventory.getReleasableTypes(in.getObjectTypes());
             if (in.getRecursive() || (in.getObjectTypes() != null && in.getObjectTypes().contains(ConfigurationType.FOLDER))) {
                 releasableTypes.add(ConfigurationType.FOLDER.intValue());
             }
-            Set<ResponseReleasableTreeItem> releasables = new TreeSet<>(Comparator.comparing(ResponseReleasableTreeItem::getFolder).thenComparing(
-                    ResponseReleasableTreeItem::getObjectName));
+            Comparator<ResponseReleasableTreeItem> comp = Comparator.comparing(ResponseReleasableTreeItem::getFolder).thenComparing(
+                    ResponseReleasableTreeItem::getObjectName);
+            Set<ResponseReleasableTreeItem> releasables = new TreeSet<>(comp);
             
             DBItemInventoryConfiguration folder = dbLayer.getConfiguration(in.getFolder(), ConfigurationType.FOLDER.intValue());
             if (folder != null && folder.getDeleted()) {
@@ -103,10 +138,39 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                                 .getWithoutReleased()));
             }
             
-            ResponseReleasables result = new ResponseReleasables();
-            result.setDeliveryDate(Date.from(Instant.now()));
-            result.setReleasables(releasables);
-            return result;
+            if (withTree) {
+                final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
+                        .emptySet());
+                final Map<String, TreeSet<ResponseReleasableTreeItem>> groupedReleasables = releasables.stream().filter(item -> !JocInventory
+                        .isFolder(item.getObjectType())).collect(Collectors.groupingBy(ResponseReleasableTreeItem::getFolder, Collectors.toCollection(
+                                () -> new TreeSet<>(comp))));
+
+                Path folderPath = Paths.get(in.getFolder());
+                SortedSet<ResponseReleasables> responseReleasablesFolder = DeployablesResourceImpl.initTreeByFolder(folderPath, in.getRecursive(), in
+                        .getOnlyValidObjects(), releasableTypes, dbLayer).stream().filter(fld -> {
+                            boolean isPermittedForFolder = SOSAuthFolderPermissions.isPermittedForFolder(fld.getPath(), permittedFolders);
+                            boolean isNotPermittedParentFolder = notPermittedParentFolders.contains(fld.getPath());
+
+                            return isPermittedForFolder || isNotPermittedParentFolder;
+                        }).map(t -> {
+                            ResponseReleasables r = new ResponseReleasables();
+                            r.setPath(t.getPath());
+                            r.setReleasables(groupedReleasables.get(t.getPath()));
+                            return r;
+                        }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseReleasables::getPath).reversed())));
+
+                ResponseReleasables result = getTree(responseReleasablesFolder, folderPath);
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setName(in.getFolder());
+                return result;
+            } else {
+                ResponseReleasables result = new ResponseReleasables();
+                result.setDeliveryDate(Date.from(Instant.now()));
+                result.setReleasables(releasables);
+                result.setFolders(null);
+                return result;
+            }
+            
         } catch (Throwable e) {
             Globals.rollback(session);
             throw e;
@@ -222,6 +286,57 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
     private static boolean folderIsNotEmpty(String folder, Set<String> paths) {
         Predicate<String> filter = f -> f.startsWith((folder + "/").replaceAll("//+", "/"));
         return paths.stream().parallel().anyMatch(filter);
+    }
+    
+    private static ResponseReleasables getTree(SortedSet<ResponseReleasables> folders, Path startFolder) {
+        Map<Path, ResponseReleasables> treeMap = new HashMap<>();
+        for (ResponseReleasables folder : folders) {
+
+                Path pFolder = Paths.get(folder.getPath());
+                ResponseReleasables tree = null;
+                if (treeMap.containsKey(pFolder)) {
+                    tree = treeMap.get(pFolder);
+                } else {
+                    tree = folder;
+                    tree.setFolders(Collections.emptyList());
+                    tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
+                    treeMap.put(pFolder, tree);
+                }
+                fillTreeMap(treeMap, pFolder, tree);
+        }
+        if (treeMap.isEmpty()) {
+            return null;
+        }
+        return treeMap.get(startFolder);
+    }
+    
+    private static void fillTreeMap(Map<Path, ResponseReleasables> treeMap, Path folder, ResponseReleasables tree) {
+        Path parent = folder.getParent();
+        if (parent != null) {
+            ResponseReleasables parentTree = null;
+            if (treeMap.containsKey(parent)) {
+                parentTree = treeMap.get(parent);
+                List<ResponseReleasables> treeList = parentTree.getFolders();
+                if (treeList == null) {
+                    treeList = new ArrayList<>();
+                    treeList.add(tree);
+                    parentTree.setFolders(treeList);
+                } else {
+                    if (treeList.contains(tree)) {
+                        treeList.remove(tree);
+                    }
+                    treeList.add(0, tree);
+                }
+            } else {
+                parentTree = new ResponseReleasables();
+                parentTree.setPath(parent.toString().replace('\\', '/'));
+                List<ResponseReleasables> treeList = new ArrayList<>();
+                treeList.add(tree);
+                parentTree.setFolders(treeList);
+                treeMap.put(parent, parentTree);
+            }
+            fillTreeMap(treeMap, parent, parentTree);
+        }
     }
 
 }

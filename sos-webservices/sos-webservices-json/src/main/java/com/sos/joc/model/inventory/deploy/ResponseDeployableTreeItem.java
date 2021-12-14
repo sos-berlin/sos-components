@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.sos.controller.model.common.SyncState;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -29,6 +30,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "objectType",
     "valid",
     "deleted",
+    "syncState",
     "deployed",
     "deployablesVersions"
 })
@@ -79,6 +81,14 @@ public class ResponseDeployableTreeItem {
     private Boolean valid;
     @JsonProperty("deleted")
     private Boolean deleted;
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    private SyncState syncState;
     @JsonProperty("deployed")
     private Boolean deployed;
     @JsonProperty("deployablesVersions")
@@ -215,6 +225,28 @@ public class ResponseDeployableTreeItem {
         this.deleted = deleted;
     }
 
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public SyncState getSyncState() {
+        return syncState;
+    }
+
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public void setSyncState(SyncState syncState) {
+        this.syncState = syncState;
+    }
+
     @JsonProperty("deployed")
     public Boolean getDeployed() {
         return deployed;
@@ -237,12 +269,12 @@ public class ResponseDeployableTreeItem {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("deployablesVersions", deployablesVersions).toString();
+        return new ToStringBuilder(this).append("id", id).append("folder", folder).append("objectName", objectName).append("account", account).append("objectType", objectType).append("valid", valid).append("deleted", deleted).append("syncState", syncState).append("deployed", deployed).append("deployablesVersions", deployablesVersions).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(valid).append(folder).append(deleted).append(syncState).append(objectName).append(deployed).append(id).append(deployablesVersions).append(account).append(objectType).toHashCode();
     }
 
     @Override
@@ -254,7 +286,7 @@ public class ResponseDeployableTreeItem {
             return false;
         }
         ResponseDeployableTreeItem rhs = ((ResponseDeployableTreeItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(valid, rhs.valid).append(folder, rhs.folder).append(deleted, rhs.deleted).append(syncState, rhs.syncState).append(objectName, rhs.objectName).append(deployed, rhs.deployed).append(id, rhs.id).append(deployablesVersions, rhs.deployablesVersions).append(account, rhs.account).append(objectType, rhs.objectType).isEquals();
     }
 
 }
