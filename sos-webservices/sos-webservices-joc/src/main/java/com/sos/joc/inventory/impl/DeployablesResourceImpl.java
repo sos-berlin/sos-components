@@ -331,7 +331,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 fillTreeMap(treeMap, pFolder, tree);
         }
         if (treeMap.isEmpty()) {
-            return null;
+            return new ResponseDeployables();
         }
         return treeMap.get(startFolder);
     }

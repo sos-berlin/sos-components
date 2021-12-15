@@ -306,7 +306,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 fillTreeMap(treeMap, pFolder, tree);
         }
         if (treeMap.isEmpty()) {
-            return null;
+            return new ResponseReleasables();
         }
         return treeMap.get(startFolder);
     }
