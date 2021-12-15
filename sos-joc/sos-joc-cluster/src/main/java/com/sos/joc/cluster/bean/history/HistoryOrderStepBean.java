@@ -35,8 +35,8 @@ public class HistoryOrderStepBean extends AHistoryBean {
     private String errorText;
     private Long logId;
 
-    private Integer warnIfLonger;
-    private Integer warnIfShorter;
+    private String warnIfLonger;
+    private String warnIfShorter;
 
     private String notification;
 
@@ -44,7 +44,7 @@ public class HistoryOrderStepBean extends AHistoryBean {
         super(eventType, eventId, controllerId, historyId);
     }
 
-    public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, Integer warnIfLonger, Integer warnIfShorter,
+    public HistoryOrderStepBean(EventType eventType, Long eventId, DBItemHistoryOrderStep item, String warnIfLonger, String warnIfShorter,
             String notification) {
         super(eventType, eventId, item.getControllerId(), item.getId());
 
@@ -281,19 +281,19 @@ public class HistoryOrderStepBean extends AHistoryBean {
         logId = val;
     }
 
-    public void setWarnIfLonger(Integer val) {
+    public void setWarnIfLonger(String val) {
         warnIfLonger = val;
     }
 
-    public Integer getWarnIfLonger() {
+    public String getWarnIfLonger() {
         return warnIfLonger;
     }
 
-    public void setWarnIfShorter(Integer val) {
+    public void setWarnIfShorter(String val) {
         warnIfShorter = val;
     }
 
-    public Integer getWarnIfShorter() {
+    public String getWarnIfShorter() {
         return warnIfShorter;
     }
 

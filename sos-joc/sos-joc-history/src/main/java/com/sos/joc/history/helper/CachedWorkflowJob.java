@@ -6,11 +6,11 @@ public class CachedWorkflowJob {
 
     private final JobCriticality criticality;
     private final String title;
-    private final Integer warnIfLonger;
-    private final Integer warnIfShorter;
+    private final String warnIfLonger;
+    private final String warnIfShorter;
     private final String notification;
 
-    public CachedWorkflowJob(JobCriticality criticality, String title, Integer warnIfLonger, Integer warnIfShorter, String notification) {
+    public CachedWorkflowJob(JobCriticality criticality, String title, String warnIfLonger, String warnIfShorter, String notification) {
         this.criticality = criticality;
         this.title = title;
         this.warnIfLonger = warnIfLonger;
@@ -26,11 +26,11 @@ public class CachedWorkflowJob {
         return title;
     }
 
-    public Integer getWarnIfLonger() {
+    public String getWarnIfLonger() {
         return warnIfLonger;
     }
 
-    public Integer getWarnIfShorter() {
+    public String getWarnIfShorter() {
         return warnIfShorter;
     }
 

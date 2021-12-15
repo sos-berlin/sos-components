@@ -159,7 +159,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfShorter")
-    private Integer warnIfShorter;
+    private String warnIfShorter;
     /**
      * non negative integer
      * <p>
@@ -167,7 +167,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfLonger")
-    private Integer warnIfLonger;
+    private String warnIfLonger;
     /**
      * job notification
      * <p>
@@ -205,7 +205,7 @@ public class Job implements IConfigurationObject
      * @param skipIfNoAdmissionForOrderDay
      * @param documentationName
      */
-    public Job(String agentName, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, Integer warnIfShorter, Integer warnIfLonger, JobNotification notification) {
+    public Job(String agentName, Executable executable, AdmissionTimeScheme admissionTimeScheme, Boolean skipIfNoAdmissionForOrderDay, JobReturnCode returnCodeMeaning, Integer parallelism, Integer timeout, Integer graceTimeout, Boolean failOnErrWritten, String jobClass, Environment defaultArguments, List<String> jobResourceNames, String title, String documentationName, JobCriticality criticality, String warnIfShorter, String warnIfLonger, JobNotification notification) {
         super();
         this.agentName = agentName;
         this.executable = executable;
@@ -508,7 +508,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfShorter")
-    public Integer getWarnIfShorter() {
+    public String getWarnIfShorter() {
         return warnIfShorter;
     }
 
@@ -519,7 +519,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfShorter")
-    public void setWarnIfShorter(Integer warnIfShorter) {
+    public void setWarnIfShorter(String warnIfShorter) {
         this.warnIfShorter = warnIfShorter;
     }
 
@@ -530,7 +530,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfLonger")
-    public Integer getWarnIfLonger() {
+    public String getWarnIfLonger() {
         return warnIfLonger;
     }
 
@@ -541,7 +541,7 @@ public class Job implements IConfigurationObject
      * 
      */
     @JsonProperty("warnIfLonger")
-    public void setWarnIfLonger(Integer warnIfLonger) {
+    public void setWarnIfLonger(String warnIfLonger) {
         this.warnIfLonger = warnIfLonger;
     }
 

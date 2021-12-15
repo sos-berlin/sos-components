@@ -278,7 +278,7 @@ public class HistoryMonitoringModel implements Serializable {
         Map<Long, HistoryOrderStepResult> w = new HashMap<>();
         longerThan.entrySet().stream().forEach(entry -> {
             HistoryOrderStepBean hosb = entry.getValue();
-            HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb.getWarnIfLonger(), hosb.getStartTime(), new Date(), entry.getKey(), false);
+            HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb, hosb.getWarnIfLonger(), hosb.getStartTime(), new Date(), entry.getKey(), false);
             if (warn != null) {
                 HistoryOrderStepResult r = new HistoryOrderStepResult(hosb, warn);
                 w.put(entry.getKey(), r);
@@ -494,16 +494,18 @@ public class HistoryMonitoringModel implements Serializable {
             return new HistoryOrderStepResult(hosb, null);
         }
 
-        HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb.getWarnIfLonger(), hosb.getStartTime(), hosb.getEndTime(), hosb.getHistoryId(),
+        HistoryOrderStepResultWarn warn = analyzeLongerThan(hosb, hosb.getWarnIfLonger(), hosb.getStartTime(), hosb.getEndTime(), hosb.getHistoryId(),
                 true);
         if (warn == null) {
-            warn = analyzeShorterThan(hosb.getWarnIfShorter(), hosb.getStartTime(), hosb.getEndTime());
+            warn = analyzeShorterThan(hosb, hosb.getWarnIfShorter(), hosb.getStartTime(), hosb.getEndTime());
         }
         return new HistoryOrderStepResult(hosb, warn);
     }
 
-    private HistoryOrderStepResultWarn analyzeLongerThan(Integer definition, Date startTime, Date endDate, Long historyId, boolean remove) {
-        if (definition == null) {
+    private HistoryOrderStepResultWarn analyzeLongerThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate, Long historyId,
+            boolean remove) {
+        double configured = getConfiguredSeconds(hosb, definition);
+        if (configured == 0) {
             return null;
         }
 
@@ -512,9 +514,9 @@ public class HistoryMonitoringModel implements Serializable {
         }
 
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff > definition) {
+        if (diff > configured) {
             return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected duration of %s", SOSDate
-                    .getDuration(definition)));
+                    .getDuration(configured)));
         } else {
             if (!remove) {// remove old entries
                 if (diff > MAX_LONGER_THAN_SECONDS) {
@@ -525,16 +527,33 @@ public class HistoryMonitoringModel implements Serializable {
         return null;
     }
 
-    private HistoryOrderStepResultWarn analyzeShorterThan(Integer definition, Date startTime, Date endDate) {
-        if (definition == null) {
+    private HistoryOrderStepResultWarn analyzeShorterThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate) {
+        double configured = getConfiguredSeconds(hosb, definition);
+        if (configured == 0) {
             return null;
         }
         long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff < definition) {
+        if (diff < configured) {
             return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected duration of %s", SOSDate
-                    .getDuration(definition)));
+                    .getDuration(configured)));
         }
         return null;
+    }
+
+    private double getConfiguredSeconds(HistoryOrderStepBean hosb, String definition) {
+        if (SOSString.isEmpty(definition)) {
+            return 0;
+        }
+        double seconds = 0;
+        if (definition.endsWith("%")) {
+            int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
+            // TODO read from the database
+            int avg = 0;
+            seconds = percentage / 100 * avg;
+        } else {
+            seconds = Double.parseDouble(definition);
+        }
+        return seconds;
     }
 
     private boolean insert(EventType eventType, String orderId, Long historyId) {

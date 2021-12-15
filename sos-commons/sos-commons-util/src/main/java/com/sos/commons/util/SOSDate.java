@@ -191,6 +191,10 @@ public class SOSDate {
         return getDuration(Duration.ofSeconds(seconds));
     }
 
+    public static String getDuration(Double seconds) {
+        return getDuration(Duration.ofSeconds(seconds.longValue()));
+    }
+
     public static boolean equals(Date val1, Date val2) {
         if (val1 == null && val2 == null) {
             return true;
