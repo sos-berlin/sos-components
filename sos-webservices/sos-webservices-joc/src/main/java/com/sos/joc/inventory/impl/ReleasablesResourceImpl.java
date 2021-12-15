@@ -296,6 +296,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                 ResponseReleasables tree = null;
                 if (treeMap.containsKey(pFolder)) {
                     tree = treeMap.get(pFolder);
+                    tree.setReleasables(folder.getReleasables());
                 } else {
                     tree = folder;
                     tree.setFolders(Collections.emptyList());

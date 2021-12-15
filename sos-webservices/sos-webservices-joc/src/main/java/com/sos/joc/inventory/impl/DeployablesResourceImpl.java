@@ -321,6 +321,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 ResponseDeployables tree = null;
                 if (treeMap.containsKey(pFolder)) {
                     tree = treeMap.get(pFolder);
+                    tree.setDeployables(folder.getDeployables());
                 } else {
                     tree = folder;
                     tree.setFolders(Collections.emptyList());
