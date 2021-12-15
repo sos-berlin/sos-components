@@ -246,12 +246,11 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     getAgentNameAliasesByAgentIds(item.getValue().stream()
                             .map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()))));
             agentIds.stream().forEach(item -> {
-                Optional<Set<String>> opt = agentIdsWithAliasesByControllerIds.entrySet().stream()
-                        .map(entry -> entry.getValue())
-                        .map(agentEntry -> agentEntry.get(item.getAgentId())).findFirst();
-                        if (opt.isPresent()) {
-                            opt.get().add(item.getAgentName());
-                        }
+                Optional<Set<String>> opt = agentIdsWithAliasesByControllerIds.values().stream()
+                        .map(entry -> entry.get(item.getAgentId())).findFirst();
+                if (opt.isPresent()) {
+                    opt.get().add(item.getAgentName());
+                }
             });
             return agentIdsWithAliasesByControllerIds;
         } catch (Exception e) {
