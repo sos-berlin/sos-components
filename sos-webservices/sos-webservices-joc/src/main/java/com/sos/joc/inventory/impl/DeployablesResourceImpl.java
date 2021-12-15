@@ -20,13 +20,17 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.sos.auth.classes.SOSAuthFolderPermissions;
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -41,6 +45,9 @@ import com.sos.joc.model.inventory.deploy.ResponseDeployableVersion;
 import com.sos.joc.model.inventory.deploy.ResponseDeployables;
 import com.sos.joc.model.tree.Tree;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.data_for_java.controller.JControllerState;
 
 @javax.ws.rs.Path(JocInventory.APPLICATION_PATH)
 public class DeployablesResourceImpl extends JOCResourceImpl implements IDeployablesResource {
@@ -135,12 +142,21 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         in.getLatest()));
             }
             
+            final boolean withSync = in.getControllerId() != null && !in.getControllerId().isEmpty();
+            final JControllerState currentstate = getControllerState(in.getControllerId());
+            
+            
             if (withTree) {
                 final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
                         .emptySet());
-                final Map<String, TreeSet<ResponseDeployableTreeItem>> groupedDeployables = deployables.stream().filter(item -> !JocInventory
-                        .isFolder(item.getObjectType())).collect(Collectors.groupingBy(ResponseDeployableTreeItem::getFolder, Collectors.toCollection(
-                                () -> new TreeSet<>(comp))));
+                Stream<ResponseDeployableTreeItem> deployablesStream = deployables.stream().filter(item -> !JocInventory.isFolder(item
+                        .getObjectType()));
+                if (withSync) {
+                    deployablesStream = deployablesStream.peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item.getObjectName(),
+                            item.getObjectType())));
+                }
+                final Map<String, TreeSet<ResponseDeployableTreeItem>> groupedDeployables = deployablesStream.collect(Collectors.groupingBy(
+                        ResponseDeployableTreeItem::getFolder, Collectors.toCollection(() -> new TreeSet<>(comp))));
 
                 Path folderPath = Paths.get(in.getFolder());
                 SortedSet<ResponseDeployables> responseDeployablesFolder = initTreeByFolder(folderPath, in.getRecursive(), in.getOnlyValidObjects(),
@@ -163,7 +179,12 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             } else {
                 ResponseDeployables result = new ResponseDeployables();
                 result.setDeliveryDate(Date.from(Instant.now()));
-                result.setDeployables(deployables);
+                if (withSync) {
+                    result.setDeployables(deployables.stream().peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item
+                            .getObjectName(), item.getObjectType()))).collect(Collectors.toCollection(() -> new TreeSet<>(comp))));
+                } else {
+                    result.setDeployables(deployables);
+                }
                 result.setFolders(null);
                 return result;
             }
@@ -341,6 +362,17 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
             fillTreeMap(treeMap, parent, parentTree);
         }
+    }
+    
+    private JControllerState getControllerState(String controllerId) {
+        if (controllerId != null && !controllerId.isEmpty()) {
+            try {
+                return Proxy.of(controllerId).currentState();
+            } catch (Exception e) {
+                ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+            }
+        }
+        return null;
     }
 
 }

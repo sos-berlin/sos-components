@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "folder",
     "recursive",
     "objectTypes",
@@ -32,6 +33,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class DeployablesFilter {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -61,6 +70,28 @@ public class DeployablesFilter {
     @JsonProperty("latest")
     @JsonPropertyDescription("only relevant for deployed objects")
     private Boolean latest = false;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * path
@@ -166,12 +197,12 @@ public class DeployablesFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withRemovedObjects", withRemovedObjects).append("withoutDrafts", withoutDrafts).append("withoutDeployed", withoutDeployed).append("latest", latest).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("folder", folder).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("withRemovedObjects", withRemovedObjects).append("withoutDrafts", withoutDrafts).append("withoutDeployed", withoutDeployed).append("latest", latest).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(folder).append(withRemovedObjects).append(withoutDeployed).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(latest).toHashCode();
+        return new HashCodeBuilder().append(folder).append(controllerId).append(withRemovedObjects).append(withoutDeployed).append(withoutDrafts).append(objectTypes).append(recursive).append(onlyValidObjects).append(latest).toHashCode();
     }
 
     @Override
@@ -183,7 +214,7 @@ public class DeployablesFilter {
             return false;
         }
         DeployablesFilter rhs = ((DeployablesFilter) other);
-        return new EqualsBuilder().append(folder, rhs.folder).append(withRemovedObjects, rhs.withRemovedObjects).append(withoutDeployed, rhs.withoutDeployed).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(latest, rhs.latest).isEquals();
+        return new EqualsBuilder().append(folder, rhs.folder).append(controllerId, rhs.controllerId).append(withRemovedObjects, rhs.withRemovedObjects).append(withoutDeployed, rhs.withoutDeployed).append(withoutDrafts, rhs.withoutDrafts).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).append(latest, rhs.latest).isEquals();
     }
 
 }

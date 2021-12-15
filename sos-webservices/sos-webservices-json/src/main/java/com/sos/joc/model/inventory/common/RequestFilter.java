@@ -18,6 +18,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "id",
     "path",
     "objectType",
@@ -25,6 +26,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RequestFilter {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * non negative long
      * <p>
@@ -57,6 +66,28 @@ public class RequestFilter {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * non negative long
@@ -148,12 +179,12 @@ public class RequestFilter {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("objectType", objectType).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("id", id).append("path", path).append("objectType", objectType).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(id).append(auditLog).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(path).append(id).append(controllerId).append(auditLog).append(objectType).toHashCode();
     }
 
     @Override
@@ -165,7 +196,7 @@ public class RequestFilter {
             return false;
         }
         RequestFilter rhs = ((RequestFilter) other);
-        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(auditLog, rhs.auditLog).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(id, rhs.id).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(objectType, rhs.objectType).isEquals();
     }
 
 }

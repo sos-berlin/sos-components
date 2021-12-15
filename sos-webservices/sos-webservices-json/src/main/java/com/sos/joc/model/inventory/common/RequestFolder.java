@@ -21,6 +21,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
+    "controllerId",
     "path",
     "recursive",
     "objectTypes",
@@ -29,6 +30,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 })
 public class RequestFolder {
 
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    private String controllerId;
     /**
      * path
      * <p>
@@ -53,6 +62,28 @@ public class RequestFolder {
      */
     @JsonProperty("auditLog")
     private AuditParams auditLog;
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public String getControllerId() {
+        return controllerId;
+    }
+
+    /**
+     * controllerId
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("controllerId")
+    public void setControllerId(String controllerId) {
+        this.controllerId = controllerId;
+    }
 
     /**
      * path
@@ -132,12 +163,12 @@ public class RequestFolder {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("path", path).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("auditLog", auditLog).toString();
+        return new ToStringBuilder(this).append("controllerId", controllerId).append("path", path).append("recursive", recursive).append("objectTypes", objectTypes).append("onlyValidObjects", onlyValidObjects).append("auditLog", auditLog).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(path).append(objectTypes).append(auditLog).append(recursive).append(onlyValidObjects).toHashCode();
+        return new HashCodeBuilder().append(path).append(controllerId).append(auditLog).append(objectTypes).append(recursive).append(onlyValidObjects).toHashCode();
     }
 
     @Override
@@ -149,7 +180,7 @@ public class RequestFolder {
             return false;
         }
         RequestFolder rhs = ((RequestFolder) other);
-        return new EqualsBuilder().append(path, rhs.path).append(objectTypes, rhs.objectTypes).append(auditLog, rhs.auditLog).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
+        return new EqualsBuilder().append(path, rhs.path).append(controllerId, rhs.controllerId).append(auditLog, rhs.auditLog).append(objectTypes, rhs.objectTypes).append(recursive, rhs.recursive).append(onlyValidObjects, rhs.onlyValidObjects).isEquals();
     }
 
 }

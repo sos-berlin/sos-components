@@ -243,7 +243,7 @@ public class ResponseFolder {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(jobs).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(deliveryDate).append(jobResources).append(includeScripts).toHashCode();
+        return new HashCodeBuilder().append(includeScripts).append(jobs).append(jobClasses).append(workflows).append(locks).append(noticeBoards).append(path).append(fileOrderSources).append(calendars).append(schedules).append(deliveryDate).append(jobResources).toHashCode();
     }
 
     @Override
@@ -255,7 +255,7 @@ public class ResponseFolder {
             return false;
         }
         ResponseFolder rhs = ((ResponseFolder) other);
-        return new EqualsBuilder().append(jobs, rhs.jobs).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).append(includeScripts, rhs.includeScripts).isEquals();
+        return new EqualsBuilder().append(includeScripts, rhs.includeScripts).append(jobs, rhs.jobs).append(jobClasses, rhs.jobClasses).append(workflows, rhs.workflows).append(locks, rhs.locks).append(noticeBoards, rhs.noticeBoards).append(path, rhs.path).append(fileOrderSources, rhs.fileOrderSources).append(calendars, rhs.calendars).append(schedules, rhs.schedules).append(deliveryDate, rhs.deliveryDate).append(jobResources, rhs.jobResources).isEquals();
     }
 
 }

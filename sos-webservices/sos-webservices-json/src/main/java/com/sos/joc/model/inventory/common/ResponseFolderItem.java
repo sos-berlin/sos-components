@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.sos.controller.model.common.SyncState;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -28,7 +29,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
     "deployed",
     "released",
     "hasDeployments",
-    "hasReleases"
+    "hasReleases",
+    "syncState"
 })
 public class ResponseFolderItem {
 
@@ -88,6 +90,14 @@ public class ResponseFolderItem {
     private Boolean hasDeployments;
     @JsonProperty("hasReleases")
     private Boolean hasReleases;
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    private SyncState syncState;
 
     /**
      * non negative long
@@ -265,14 +275,36 @@ public class ResponseFolderItem {
         this.hasReleases = hasReleases;
     }
 
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public SyncState getSyncState() {
+        return syncState;
+    }
+
+    /**
+     * sync state
+     * <p>
+     * 
+     * 
+     */
+    @JsonProperty("syncState")
+    public void setSyncState(SyncState syncState) {
+        this.syncState = syncState;
+    }
+
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).toString();
+        return new ToStringBuilder(this).append("id", id).append("path", path).append("name", name).append("objectType", objectType).append("title", title).append("valid", valid).append("deleted", deleted).append("deployed", deployed).append("released", released).append("hasDeployments", hasDeployments).append("hasReleases", hasReleases).append("syncState", syncState).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(valid).append(path).append(deleted).append(hasDeployments).append(name).append(deployed).append(id).append(title).append(released).append(hasReleases).append(objectType).toHashCode();
+        return new HashCodeBuilder().append(hasDeployments).append(syncState).append(deployed).append(title).append(objectType).append(valid).append(path).append(deleted).append(name).append(id).append(released).append(hasReleases).toHashCode();
     }
 
     @Override
@@ -284,7 +316,7 @@ public class ResponseFolderItem {
             return false;
         }
         ResponseFolderItem rhs = ((ResponseFolderItem) other);
-        return new EqualsBuilder().append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(hasDeployments, rhs.hasDeployments).append(name, rhs.name).append(deployed, rhs.deployed).append(id, rhs.id).append(title, rhs.title).append(released, rhs.released).append(hasReleases, rhs.hasReleases).append(objectType, rhs.objectType).isEquals();
+        return new EqualsBuilder().append(hasDeployments, rhs.hasDeployments).append(syncState, rhs.syncState).append(deployed, rhs.deployed).append(title, rhs.title).append(objectType, rhs.objectType).append(valid, rhs.valid).append(path, rhs.path).append(deleted, rhs.deleted).append(name, rhs.name).append(id, rhs.id).append(released, rhs.released).append(hasReleases, rhs.hasReleases).isEquals();
     }
 
 }

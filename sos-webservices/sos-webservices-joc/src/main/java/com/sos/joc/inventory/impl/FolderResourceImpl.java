@@ -14,7 +14,10 @@ import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
@@ -24,6 +27,9 @@ import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.common.ResponseFolder;
 import com.sos.joc.model.inventory.common.ResponseFolderItem;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.data_for_java.controller.JControllerState;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class FolderResourceImpl extends JOCResourceImpl implements IFolderResource {
@@ -89,6 +95,16 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             ResponseFolder folder = new ResponseFolder();
             folder.setDeliveryDate(Date.from(Instant.now()));
             folder.setPath(in.getPath());
+            
+            boolean withSync = action.equals(IMPL_PATH) && in.getControllerId() != null && !in.getControllerId().isEmpty();
+            JControllerState currentstate = null;
+            if (withSync) {
+                try {
+                    currentstate = Proxy.of(in.getControllerId()).currentState();
+                } catch (Exception e) {
+                    ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+                }
+            }
 
             if (items != null && !items.isEmpty()) {
                 for (InventoryTreeFolderItem item : items) {
@@ -97,6 +113,9 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                         continue;
                     }
                     ConfigurationType type = config.getObjectType();
+                    if (withSync) {
+                        config.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type)); 
+                    }
                     if (type != null) {
                         switch (type) {
                         case WORKFLOW:

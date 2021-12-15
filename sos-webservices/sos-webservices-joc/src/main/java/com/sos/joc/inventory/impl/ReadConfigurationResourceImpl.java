@@ -7,12 +7,16 @@ import java.util.List;
 import javax.ws.rs.Path;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
+import com.sos.controller.model.common.SyncStateText;
 import com.sos.inventory.model.fileordersource.FileOrderSource;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.JOCDefaultResponse;
 import com.sos.joc.classes.JOCResourceImpl;
+import com.sos.joc.classes.ProblemHelper;
+import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
+import com.sos.joc.classes.proxy.Proxy;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -24,6 +28,9 @@ import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.ItemStateEnum;
 import com.sos.joc.model.inventory.common.RequestFilter;
 import com.sos.schema.JsonValidator;
+
+import io.vavr.control.Either;
+import js7.data_for_java.controller.JControllerState;
 
 @Path(JocInventory.APPLICATION_PATH)
 public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IReadConfigurationResource {
@@ -110,6 +117,16 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             }
             
             if (JocInventory.isDeployable(type)) {
+                
+                if (in.getControllerId() != null && !in.getControllerId().isEmpty()) {
+                    JControllerState currentstate = null;
+                    try {
+                        currentstate = Proxy.of(in.getControllerId()).currentState();
+                    } catch (Exception e) {
+                        ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+                    }
+                    item.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type));
+                }
                 
                 item.setReleased(false);
                 
