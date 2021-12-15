@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -238,19 +237,22 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
     public Map<String, Map<String, Set<String>>> getAgentWithAliasesByControllerIds(Collection<String> controllerIds) {
         try {
             List<DBItemInventoryAgentInstance> agentIds = getAgentsByControllerIds(controllerIds);
-            Map<String, Set<DBItemInventoryAgentInstance>> agentIdsByControllerId = 
-                    agentIds.stream().collect(Collectors.groupingBy(DBItemInventoryAgentInstance::getControllerId, Collectors.toSet()));
-            Map<String, Map<String, Set<String>>> agentIdsWithAliasesByControllerIds = new HashMap<String, Map<String,Set<String>>>();
-            agentIdsByControllerId.entrySet().stream().forEach(item -> agentIdsWithAliasesByControllerIds.put(
-                    item.getKey(), 
-                    getAgentNameAliasesByAgentIds(item.getValue().stream()
-                            .map(DBItemInventoryAgentInstance::getAgentId).collect(Collectors.toSet()))));
-            agentIds.stream().forEach(item -> {
-                Optional<Set<String>> opt = agentIdsWithAliasesByControllerIds.values().stream()
-                        .map(entry -> entry.get(item.getAgentId())).findFirst();
-                if (opt.isPresent()) {
-                    opt.get().add(item.getAgentName());
+            Map<String, String> agentIDWithAgentName = agentIds.stream().collect(
+                    Collectors.toMap(DBItemInventoryAgentInstance::getAgentId, DBItemInventoryAgentInstance::getAgentName, (K,V) -> V));
+            Map<String, Set<String>> agentIdsByControllerId = agentIds.stream().collect(
+                            Collectors.groupingBy(DBItemInventoryAgentInstance::getControllerId, 
+                                    Collectors.mapping(DBItemInventoryAgentInstance::getAgentId, Collectors.toSet())));
+            Map<String, Map<String, Set<String>>> agentIdsWithAliasesByControllerIds = new HashMap<>();
+            agentIdsByControllerId.forEach((K,V) -> {
+                Map<String, Set<String>> a = getAgentNameAliasesByAgentIds(V);
+                for (String agentId : V) {
+                    if (a.containsKey(agentId)) {
+                        a.get(agentId).add(agentIDWithAgentName.get(agentId));
+                    } else {
+                        a.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
+                    }
                 }
+                agentIdsWithAliasesByControllerIds.put(K, a);
             });
             return agentIdsWithAliasesByControllerIds;
         } catch (Exception e) {
