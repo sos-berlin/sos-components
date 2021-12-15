@@ -31,6 +31,8 @@ import com.sos.joc.exceptions.DBMissingDataException;
 import com.sos.joc.exceptions.JocObjectAlreadyExistException;
 import com.sos.joc.model.agent.SubagentDirectorType;
 
+import shapeless.newtype;
+
 public class InventoryAgentInstancesDBLayer extends DBLayer {
 
     private static final long serialVersionUID = 1L;
@@ -249,7 +251,7 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                     if (a.containsKey(agentId)) {
                         a.get(agentId).add(agentIDWithAgentName.get(agentId));
                     } else {
-                        a.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
+                        a = Collections.singletonMap(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
                     }
                 }
                 agentIdsWithAliasesByControllerIds.put(K, a);
