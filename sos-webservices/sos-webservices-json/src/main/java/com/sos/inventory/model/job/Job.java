@@ -153,7 +153,7 @@ public class Job implements IConfigurationObject
     @JsonProperty("criticality")
     private JobCriticality criticality;
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
@@ -161,7 +161,7 @@ public class Job implements IConfigurationObject
     @JsonProperty("warnIfShorter")
     private String warnIfShorter;
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
@@ -502,7 +502,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
@@ -513,7 +513,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
@@ -524,7 +524,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
@@ -535,7 +535,7 @@ public class Job implements IConfigurationObject
     }
 
     /**
-     * non negative integer
+     * HH:MM:SS|seconds|percentage%
      * <p>
      * 
      * 
