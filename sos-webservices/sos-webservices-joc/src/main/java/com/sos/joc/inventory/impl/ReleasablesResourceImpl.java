@@ -159,7 +159,7 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
                             return r;
                         }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseReleasables::getPath).reversed())));
 
-                ResponseReleasables result = getTree(responseReleasablesFolder, folderPath);
+                ResponseReleasables result = getTree(responseReleasablesFolder, folderPath, in.getRecursive());
                 result.setDeliveryDate(Date.from(Instant.now()));
                 result.setName(in.getFolder());
                 return result;
@@ -288,22 +288,26 @@ public class ReleasablesResourceImpl extends JOCResourceImpl implements IReleasa
         return paths.stream().parallel().anyMatch(filter);
     }
     
-    private static ResponseReleasables getTree(SortedSet<ResponseReleasables> folders, Path startFolder) {
+    private static ResponseReleasables getTree(SortedSet<ResponseReleasables> folders, Path startFolder, Boolean recursive) {
         Map<Path, ResponseReleasables> treeMap = new HashMap<>();
         for (ResponseReleasables folder : folders) {
 
-                Path pFolder = Paths.get(folder.getPath());
-                ResponseReleasables tree = null;
-                if (treeMap.containsKey(pFolder)) {
-                    tree = treeMap.get(pFolder);
-                    tree.setReleasables(folder.getReleasables());
-                } else {
-                    tree = folder;
-                    tree.setFolders(Collections.emptyList());
-                    tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
-                    treeMap.put(pFolder, tree);
+            Path pFolder = Paths.get(folder.getPath());
+            ResponseReleasables tree = null;
+            if (treeMap.containsKey(pFolder)) {
+                tree = treeMap.get(pFolder);
+                tree.setReleasables(folder.getReleasables());
+                if (recursive != null && recursive) {
+                    tree.getFolders().removeIf(child -> (child.getFolders() == null || child.getFolders().isEmpty()) && (child
+                            .getReleasables() == null || child.getReleasables().isEmpty()));
                 }
-                fillTreeMap(treeMap, pFolder, tree);
+            } else {
+                tree = folder;
+                tree.setFolders(Collections.emptyList());
+                tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
+                treeMap.put(pFolder, tree);
+            }
+            fillTreeMap(treeMap, pFolder, tree);
         }
         if (treeMap.isEmpty()) {
             return new ResponseReleasables();

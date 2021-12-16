@@ -172,7 +172,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                             return r;
                         }).collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(ResponseDeployables::getPath).reversed())));
 
-                ResponseDeployables result = getTree(responseDeployablesFolder, folderPath);
+                ResponseDeployables result = getTree(responseDeployablesFolder, folderPath, in.getRecursive());
                 result.setDeliveryDate(Date.from(Instant.now()));
                 result.setName(in.getFolder());
                 return result;
@@ -313,22 +313,26 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
         return folders;
     }
     
-    private static ResponseDeployables getTree(SortedSet<ResponseDeployables> folders, Path startFolder) {
+    private static ResponseDeployables getTree(SortedSet<ResponseDeployables> folders, Path startFolder, Boolean recursive) {
         Map<Path, ResponseDeployables> treeMap = new HashMap<>();
         for (ResponseDeployables folder : folders) {
 
-                Path pFolder = Paths.get(folder.getPath());
-                ResponseDeployables tree = null;
-                if (treeMap.containsKey(pFolder)) {
-                    tree = treeMap.get(pFolder);
-                    tree.setDeployables(folder.getDeployables());
-                } else {
-                    tree = folder;
-                    tree.setFolders(Collections.emptyList());
-                    tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
-                    treeMap.put(pFolder, tree);
+            Path pFolder = Paths.get(folder.getPath());
+            ResponseDeployables tree = null;
+            if (treeMap.containsKey(pFolder)) {
+                tree = treeMap.get(pFolder);
+                tree.setDeployables(folder.getDeployables());
+                if (recursive != null && recursive) {
+                    tree.getFolders().removeIf(child -> (child.getFolders() == null || child.getFolders().isEmpty()) && (child
+                            .getDeployables() == null || child.getDeployables().isEmpty()));
                 }
-                fillTreeMap(treeMap, pFolder, tree);
+            } else {
+                tree = folder;
+                tree.setFolders(Collections.emptyList());
+                tree.setName(pFolder.getFileName() == null ? "" : pFolder.getFileName().toString());
+                treeMap.put(pFolder, tree);
+            }
+            fillTreeMap(treeMap, pFolder, tree);
         }
         if (treeMap.isEmpty()) {
             return new ResponseDeployables();
