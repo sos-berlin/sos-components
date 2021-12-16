@@ -247,11 +247,17 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
             Map<String, Map<String, Set<String>>> agentIdsWithAliasesByControllerIds = new HashMap<>();
             agentIdsByControllerId.forEach((K,V) -> {
                 Map<String, Set<String>> a = getAgentNameAliasesByAgentIds(V);
+                Map<String, Set<String>> b = new HashMap<>(); 
                 for (String agentId : V) {
                     if (a.containsKey(agentId)) {
                         a.get(agentId).add(agentIDWithAgentName.get(agentId));
                     } else {
-                        a = Collections.singletonMap(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
+                        b.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
+                    }
+                }
+                if (b != null) {
+                    for (Map.Entry<String, Set<String>> entry : b.entrySet()) {
+                        a.put(entry.getKey(), entry.getValue());
                     }
                 }
                 agentIdsWithAliasesByControllerIds.put(K, a);
