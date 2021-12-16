@@ -362,7 +362,7 @@ public class Validator {
         if (job == null || job.getNotification() == null || job.getNotification().getMail() == null) {
             return;
         }
-        if (job.getNotification().getMail().getSuppress() == null || !job.getNotification().getMail().getSuppress()) {
+        if (job.getNotification().getTypes() != null && job.getNotification().getTypes().size() > 0) {
             // to is required, when cc or bcc defined and the mail is not suppressed
             if (SOSString.isEmpty(job.getNotification().getMail().getTo())) {
                 if (!SOSString.isEmpty(job.getNotification().getMail().getCc()) || !SOSString.isEmpty(job.getNotification().getMail().getBcc())) {

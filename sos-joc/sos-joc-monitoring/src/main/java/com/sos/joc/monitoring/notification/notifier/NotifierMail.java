@@ -242,12 +242,9 @@ public class NotifierMail extends ANotifier {
                     }
 
                     // check job notification
-                    NotifyResult r = checkJobMailSuppress(type, jn, mos.getJobName());
+                    NotifyResult r = checkJobNotificationTypes(type, jn, mos.getJobName());
                     if (r == null) {
                         r = checkJobMailTo(type, jn, mos.getJobName());
-                        if (r == null) {
-                            r = checkJobNotificationTypes(type, jn, mos.getJobName());
-                        }
                     }
                     if (r != null) {
                         return r;
@@ -285,12 +282,38 @@ public class NotifierMail extends ANotifier {
         return null;
     }
 
-    /** check mail suppress */
-    private NotifyResult checkJobMailSuppress(NotificationType type, JobNotification jn, String jobName) {
-        if (jn.getMail().getSuppress() != null && jn.getMail().getSuppress()) {
-            return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "suppress=true", jobName, jn.getMail().getTo(), jn.getMail()
+    /** check job notification types - compare with the current notification type(configured in the xml configuration) */
+    private NotifyResult checkJobNotificationTypes(NotificationType type, JobNotification jn, String jobName) {
+        // check if empty
+        if (jn.getTypes() == null || jn.getTypes().size() == 0) {
+            return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(type, null), jobName, jn.getMail().getTo(),
+                    jn.getMail().getCc(), jn.getMail().getBcc()));
+        }
+
+        // check if the job notification "mail on" types not configured in the global notification
+        Set<String> types = jn.getTypes().stream().map(e -> {
+            return e.name().toUpperCase();
+        }).collect(Collectors.toSet());
+        switch (type) {
+        case ERROR:
+        case SUCCESS:
+        case WARNING:
+            if (!types.contains(type.name().toUpperCase())) {
+                return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(type, types), jobName, jn.getMail()
+                        .getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
+            }
+            break;
+        case RECOVERED:
+            if (!types.contains(NotificationType.ERROR.name().toUpperCase())) {
+                return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(NotificationType.ERROR, types), jobName,
+                        jn.getMail().getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
+            }
+            break;
+        case ACKNOWLEDGED:
+            return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "not supported", jobName, jn.getMail().getTo(), jn.getMail()
                     .getCc(), jn.getMail().getBcc()));
         }
+
         return null;
     }
 
@@ -300,35 +323,6 @@ public class NotifierMail extends ANotifier {
         if (to.length() == 0) {
             return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "missing to", jobName, to, jn.getMail().getCc(), jn.getMail()
                     .getBcc()));
-        }
-        return null;
-    }
-
-    /** check job notification types - compare with the current notification type(configured in the xml configuration) */
-    private NotifyResult checkJobNotificationTypes(NotificationType type, JobNotification jn, String jobName) {
-        if (jn.getTypes() != null && jn.getTypes().size() > 0) {
-            Set<String> types = jn.getTypes().stream().map(e -> {
-                return e.name().toUpperCase();
-            }).collect(Collectors.toSet());
-            switch (type) {
-            case ERROR:
-            case SUCCESS:
-            case WARNING:
-                if (!types.contains(type.name().toUpperCase())) {
-                    return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(type, types), jobName, jn.getMail()
-                            .getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
-                }
-                break;
-            case RECOVERED:
-                if (!types.contains(NotificationType.ERROR.name().toUpperCase())) {
-                    return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, getNotConfiguredMsg(NotificationType.ERROR, types),
-                            jobName, jn.getMail().getTo(), jn.getMail().getCc(), jn.getMail().getBcc()));
-                }
-                break;
-            case ACKNOWLEDGED:
-                return new NotifyResult(mail.getBody(), getSendInfo(), getSkipCause(type, "not supported", jobName, jn.getMail().getTo(), jn.getMail()
-                        .getCc(), jn.getMail().getBcc()));
-            }
         }
         return null;
     }
@@ -347,7 +341,10 @@ public class NotifierMail extends ANotifier {
     }
 
     private String getNotConfiguredMsg(NotificationType type, Set<String> types) {
-        return String.format("% is not configured(configured=%s)", type.name(), String.join(",", types));
+        if (types == null) {
+            return String.format("job notification 'mail on' %s is not configured('mail on' is empty)", type.name());
+        }
+        return String.format("job notification 'mail on' %s is not configured('mail on'=%s)", type.name(), String.join(",", types));
     }
 
     private String getValue(String val) {

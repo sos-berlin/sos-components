@@ -19,8 +19,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 @JsonPropertyOrder({
     "to",
     "cc",
-    "bcc",
-    "suppress"
+    "bcc"
 })
 public class JobNotificationMail {
 
@@ -48,8 +47,6 @@ public class JobNotificationMail {
      */
     @JsonProperty("bcc")
     private String bcc;
-    @JsonProperty("suppress")
-    private Boolean suppress = false;
 
     /**
      * No args constructor for use in serialization
@@ -63,14 +60,12 @@ public class JobNotificationMail {
      * @param cc
      * @param bcc
      * @param to
-     * @param suppress
      */
-    public JobNotificationMail(String to, String cc, String bcc, Boolean suppress) {
+    public JobNotificationMail(String to, String cc, String bcc) {
         super();
         this.to = to;
         this.cc = cc;
         this.bcc = bcc;
-        this.suppress = suppress;
     }
 
     /**
@@ -139,24 +134,14 @@ public class JobNotificationMail {
         this.bcc = bcc;
     }
 
-    @JsonProperty("suppress")
-    public Boolean getSuppress() {
-        return suppress;
-    }
-
-    @JsonProperty("suppress")
-    public void setSuppress(Boolean suppress) {
-        this.suppress = suppress;
-    }
-
     @Override
     public String toString() {
-        return new ToStringBuilder(this).append("to", to).append("cc", cc).append("bcc", bcc).append("suppress", suppress).toString();
+        return new ToStringBuilder(this).append("to", to).append("cc", cc).append("bcc", bcc).toString();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(cc).append(to).append(bcc).append(suppress).toHashCode();
+        return new HashCodeBuilder().append(cc).append(to).append(bcc).toHashCode();
     }
 
     @Override
@@ -168,7 +153,7 @@ public class JobNotificationMail {
             return false;
         }
         JobNotificationMail rhs = ((JobNotificationMail) other);
-        return new EqualsBuilder().append(cc, rhs.cc).append(to, rhs.to).append(bcc, rhs.bcc).append(suppress, rhs.suppress).isEquals();
+        return new EqualsBuilder().append(cc, rhs.cc).append(to, rhs.to).append(bcc, rhs.bcc).isEquals();
     }
 
 }

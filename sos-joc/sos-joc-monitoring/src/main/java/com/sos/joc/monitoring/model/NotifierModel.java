@@ -260,7 +260,8 @@ public class NotifierModel {
                         if (nr.getSkipCause() == null) {
                             dbLayer.saveNotificationMonitor(mn, m, nr);
                         } else {
-                            LOGGER.info(String.format("[%s][skip]%s%s", i, nr.getSkipCause(), ANotifier.getInfo(analyzer, m, type)));
+                            LOGGER.info(String.format("[%s][skip]%s%s%s", i, ANotifier.getMainInfo(m), nr.getSkipCause(), ANotifier.getInfo(
+                                    analyzer)));
                         }
                     }
                 } catch (Throwable e) {

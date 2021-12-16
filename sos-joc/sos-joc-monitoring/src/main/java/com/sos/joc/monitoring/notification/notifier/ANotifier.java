@@ -128,13 +128,27 @@ public abstract class ANotifier {
         return "on " + type.value();
     }
 
-    public static StringBuilder getInfo(NotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
-        if (analyzer == null || monitor == null || type == null) {
+    public static StringBuilder getMainInfo(AMonitor monitor) {
+        return getMainInfo(monitor, null);
+    }
+
+    private static StringBuilder getMainInfo(AMonitor monitor, NotificationType type) {
+        if (monitor == null) {
             return null;
         }
         StringBuilder sb = new StringBuilder();
         sb.append("[").append(monitor.getType().value()).append(" monitor=").append(monitor.getMonitorName()).append("]");
-        sb.append("[").append(getTypeAsString(type)).append("]");
+        if (type != null) {
+            sb.append("[").append(getTypeAsString(type)).append("]");
+        }
+        return sb;
+    }
+
+    public static StringBuilder getInfo(NotifyAnalyzer analyzer, AMonitor monitor, NotificationType type) {
+        if (analyzer == null || monitor == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder(getMainInfo(monitor, type));
         return sb.append(getInfo(analyzer));
     }
 
