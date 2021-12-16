@@ -33,10 +33,9 @@ public class SOSInternAuthLogin implements ISOSLogin {
             SOSInternAuthWebserviceCredentials sosInternAuthWebserviceCredentials = new SOSInternAuthWebserviceCredentials();
             sosInternAuthWebserviceCredentials.setIdentityServiceId(identityService.getIdentityServiceId());
             sosInternAuthWebserviceCredentials.setAccount(account);
-            sosInternAuthWebserviceCredentials.setPassword(pwd);
             SOSInternAuthHandler sosInternAuthHandler = new SOSInternAuthHandler();
 
-            SOSInternAuthAccessToken sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials);
+            SOSInternAuthAccessToken sosInternAuthAccessToken = sosInternAuthHandler.login(sosInternAuthWebserviceCredentials,pwd);
             sosInternAuthSubject = new SOSInternAuthSubject();
             if (sosInternAuthAccessToken == null) {
                 sosInternAuthSubject.setAuthenticated(false);
@@ -75,7 +74,7 @@ public class SOSInternAuthLogin implements ISOSLogin {
     }
 
     
-    public void setIdentityServiceId(SOSIdentityService identityService) {
+    public void setIdentityService(SOSIdentityService identityService) {
         this.identityService = identityService;
     }
 

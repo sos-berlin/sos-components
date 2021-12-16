@@ -20,12 +20,19 @@ import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class SOSVaultSubject implements ISOSAuthSubject {
 
+
     private SOSVaultSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
     private Set<String> setOfRoles;
     private Set<DBItemIamPermissionWithName> setOfPermissions;
+    private SOSIdentityService identityService;
+
+    public SOSVaultSubject(SOSIdentityService identityService) {
+        super();
+        this.identityService = identityService;
+    }
 
     @Override
     public Boolean hasRole(String role) {
@@ -55,7 +62,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
 
     private SOSVaultSession getVaultSession() {
         if (session == null) {
-            session = new SOSVaultSession();
+            session = new SOSVaultSession(identityService);
         }
         return session;
     }
@@ -69,7 +76,7 @@ public class SOSVaultSubject implements ISOSAuthSubject {
         getVaultSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName, SOSIdentityService identityServiceId)
+    public void setPermissionAndRoles(List<String> listOfTokenRoles, String accountName, SOSIdentityService identityService)
             throws SOSHibernateException {
         SOSHibernateSession sosHibernateSession = null;
         try {
@@ -78,8 +85,8 @@ public class SOSVaultSubject implements ISOSAuthSubject {
             sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
             IamAccountDBLayer iamAccountDBLayer = new IamAccountDBLayer(sosHibernateSession);
 
-            if (IdentityServiceTypes.VAULT_JOC_ACTIVE == identityServiceId.getIdentyServiceType()) {
-                List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityServiceId
+            if (IdentityServiceTypes.VAULT_JOC_ACTIVE == identityService.getIdentyServiceType()) {
+                List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                         .getIdentityServiceId());
                 for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                     setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
@@ -88,14 +95,14 @@ public class SOSVaultSubject implements ISOSAuthSubject {
                 setOfRoles.addAll(listOfTokenRoles);
             }
 
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityServiceId
+            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDBLayer.getListOfRolesForAccountName(accountName, identityService
                     .getIdentityServiceId());
             setOfAccountPermissions = new HashSet<String>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
                 setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
             }
             List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDBLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
-                    identityServiceId.getIdentityServiceId());
+                    identityService.getIdentityServiceId());
             mapOfFolderPermissions = new HashMap<String, List<String>>();
             setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
             for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
@@ -120,5 +127,6 @@ public class SOSVaultSubject implements ISOSAuthSubject {
     public Map<String, List<String>> getMapOfFolderPermissions() {
         return this.mapOfFolderPermissions;
     }
+  
 
 }

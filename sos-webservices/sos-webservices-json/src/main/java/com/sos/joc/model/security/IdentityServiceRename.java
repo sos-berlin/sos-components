@@ -31,6 +31,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceOldName")
@@ -39,6 +40,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceNewName")
@@ -68,6 +70,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceOldName")
@@ -79,6 +82,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceOldName")
@@ -90,6 +94,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceNewName")
@@ -101,6 +106,7 @@ public class IdentityServiceRename {
      * string without < and >
      * <p>
      * 
+     * (Required)
      * 
      */
     @JsonProperty("identityServiceNewName")

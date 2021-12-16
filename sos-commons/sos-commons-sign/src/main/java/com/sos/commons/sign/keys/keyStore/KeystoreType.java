@@ -3,21 +3,21 @@ package com.sos.commons.sign.keys.keyStore;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum KeyStoreType {
+public enum KeystoreType {
 
 	PKCS12("PKCS12"),
 	JKS("JKS");
 	
     private final String value;
-    private final static Map<String, KeyStoreType> CONSTANTS = new HashMap<String, KeyStoreType>();
+    private final static Map<String, KeystoreType> CONSTANTS = new HashMap<String, KeystoreType>();
 
     static {
-        for (KeyStoreType c: values()) {
+        for (KeystoreType c: values()) {
             CONSTANTS.put(c.value, c);
         }
     }
 
-    private KeyStoreType(String value) {
+    private KeystoreType(String value) {
         this.value = value;
     }
 
@@ -30,8 +30,8 @@ public enum KeyStoreType {
         return this.value;
     }
 
-    public static KeyStoreType fromValue(String value) {
-    	KeyStoreType constant = CONSTANTS.get(value);
+    public static KeystoreType fromValue(String value) {
+    	KeystoreType constant = CONSTANTS.get(value);
         if (constant == null) {
             throw new IllegalArgumentException(value);
         } else {

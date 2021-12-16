@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.keyStore.KeyStoreCredentials;
-import com.sos.commons.sign.keys.keyStore.KeyStoreType;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.commons.util.SOSString;
 import com.typesafe.config.Config;
@@ -131,14 +131,14 @@ public class JobApiExecutor {
     	logInfo("read Trustore from: " + config.getConfigList(PRIVATE_CONF_JS7_PARAM_TRUSTORES_ARRAY).get(0).getString(PRIVATE_CONF_JS7_PARAM_TRUSTSTORES_SUB_FILEPATH));
     	KeyStore truststore = truststoresCredentials.stream().filter(item -> item.getPath().endsWith(truststoreFileName)).map(item -> {
             try {
-                return KeyStoreUtil.readTrustStore(item.getPath(), KeyStoreType.PKCS12, item.getStorePwd());
+                return KeyStoreUtil.readTrustStore(item.getPath(), KeystoreType.PKCS12, item.getStorePwd());
             } catch (Exception e) {
                 return null;
             }
         }).filter(Objects::nonNull).findFirst().get();
         KeyStoreCredentials credentials = readKeystoreCredentials(config);
     	logInfo("read Keystore from: " + config.getString(PRIVATE_CONF_JS7_PARAM_KEYSTORE_FILEPATH));
-        KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeyStoreType.PKCS12, credentials.getStorePwd());
+        KeyStore keystore = KeyStoreUtil.readKeyStore(credentials.getPath(), KeystoreType.PKCS12, credentials.getStorePwd());
 
         client = new SOSRestApiClient();
     	logInfo("initiate REST api client");

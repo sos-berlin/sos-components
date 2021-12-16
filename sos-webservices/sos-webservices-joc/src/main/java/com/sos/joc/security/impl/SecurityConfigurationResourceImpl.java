@@ -22,6 +22,7 @@ import com.sos.joc.db.security.IamIdentityServiceFilter;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.model.security.IdentityServiceTypes;
 import com.sos.joc.model.security.SecurityConfiguration;
+import com.sos.joc.model.security.SecurityConfigurationAccount;
 import com.sos.joc.model.security.permissions.SecurityConfigurationRole;
 import com.sos.joc.security.resource.ISecurityConfigurationResource;
 import com.sos.schema.JsonValidator;
@@ -82,6 +83,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
 
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(securityConfiguration));
             } finally {
+                securityConfiguration=null;
                 Globals.disconnect(sosHibernateSession);
             }
 
@@ -93,7 +95,6 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
         } finally {
             Globals.disconnect(sosHibernateSession);
         }
-
     }
 
     @Override
@@ -102,6 +103,7 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
             initLogging(API_CALL_WRITE, body, accessToken);
             JsonValidator.validate(body, SecurityConfiguration.class);
             SecurityConfiguration securityConfiguration = Globals.objectMapper.readValue(body, SecurityConfiguration.class);
+            String identityServiceName = securityConfiguration.getIdentityServiceName();
             if (securityConfiguration.getRoles() != null) {
                 for (Map.Entry<String, SecurityConfigurationRole> entry : securityConfiguration.getRoles().getAdditionalProperties().entrySet()) {
                     try {
@@ -123,11 +125,11 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                 sosHibernateSession = Globals.createSosHibernateStatelessConnection(API_CALL_WRITE);
                 IamIdentityServiceDBLayer iamIdentityServiceDBLayer = new IamIdentityServiceDBLayer(sosHibernateSession);
                 IamIdentityServiceFilter filter = new IamIdentityServiceFilter();
-                filter.setIdentityServiceName(securityConfiguration.getIdentityServiceName());
+                filter.setIdentityServiceName(identityServiceName);
                 DBItemIamIdentityService dbItemIamIdentityService = iamIdentityServiceDBLayer.getUniqueIdentityService(filter);
 
                 if (dbItemIamIdentityService == null) {
-                    throw new SOSMissingDataException("No identity service found for: " + securityConfiguration.getIdentityServiceName());
+                    throw new SOSMissingDataException("No identity service found for: " + identityServiceName);
                 }
 
                 sosSecurityConfiguration = new SOSSecurityDBConfiguration();
@@ -138,10 +140,14 @@ public class SecurityConfigurationResourceImpl extends JOCResourceImpl implement
                     s = sosSecurityConfiguration.writeConfiguration(securityConfiguration, dbItemIamIdentityService);
                 }
                 s.setDeliveryDate(Date.from(Instant.now()));
+                for (SecurityConfigurationAccount securityConfigurationAccount:s.getAccounts()) {
+                    securityConfigurationAccount.setPassword("********");
+                }
 
                 return JOCDefaultResponse.responseStatus200(Globals.objectMapper.writeValueAsBytes(s));
 
             } finally {
+                securityConfiguration = null;
                 Globals.disconnect(sosHibernateSession);
             }
         } catch (

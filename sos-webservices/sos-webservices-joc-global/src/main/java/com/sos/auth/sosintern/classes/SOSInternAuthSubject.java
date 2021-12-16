@@ -1,5 +1,6 @@
 package com.sos.auth.sosintern.classes;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.sos.auth.classes.SOSAuthHelper;
 import com.sos.auth.classes.SOSIdentityService;
 import com.sos.auth.interfaces.ISOSAuthSubject;
 import com.sos.auth.interfaces.ISOSSession;
@@ -19,12 +21,12 @@ import com.sos.joc.db.security.IamAccountDBLayer;
 
 public class SOSInternAuthSubject implements ISOSAuthSubject {
 
+   
     private SOSInternAuthSession session;
     private Boolean authenticated;
     private Map<String, List<String>> mapOfFolderPermissions;
     private Set<String> setOfAccountPermissions;
     private Set<String> setOfRoles;
-    private Set<DBItemIamPermissionWithName> setOfPermissions;
 
     @Override
     public Boolean hasRole(String role) {
@@ -34,9 +36,9 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
     @Override
     public Boolean isPermitted(String permission) {
         permission = permission + ":";
-        for (String accountPermission:setOfAccountPermissions) {
+        for (String accountPermission : setOfAccountPermissions) {
             accountPermission = accountPermission + ":";
-            if (permission.startsWith(accountPermission)){
+            if (permission.startsWith(accountPermission)) {
                 return true;
             }
         }
@@ -68,39 +70,48 @@ public class SOSInternAuthSubject implements ISOSAuthSubject {
         getInternAuthSession().setAccessToken(accessToken);
     }
 
-    public void setPermissionAndRoles(String accountName,SOSIdentityService identityServiceId) throws SOSHibernateException {
-        SOSHibernateSession sosHibernateSession = null;
-        try {
-            setOfRoles = new HashSet<String>();
-            
-            sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
-            IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
-            List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName,identityServiceId.getIdentityServiceId());
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
-                setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
-            }
-            List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles,accountName,identityServiceId.getIdentityServiceId());
-            mapOfFolderPermissions = new HashMap<String, List<String>>();
-            setOfAccountPermissions = new HashSet<String>();
-            setOfPermissions = new HashSet<DBItemIamPermissionWithName>();
-            for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
-                setOfPermissions.add(dbItemSOSPermissionWithName);
-                if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
-                    setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
-                }
-                if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
-                    if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
-                        mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
-                    }
-                    mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
-                }
-            }
+    public void setPermissionAndRoles(String accountName, SOSIdentityService identityServiceId) throws SOSHibernateException {
 
-        } finally {
-            Globals.disconnect(sosHibernateSession);
+        if (SOSAuthHelper.emergencyKeyExist()) {
+            setOfRoles = new HashSet<String>();
+            setOfRoles.add(SOSAuthHelper.EMERGENCY_ROLE);
+            setOfAccountPermissions = new HashSet<String>();
+            setOfAccountPermissions.add(SOSAuthHelper.EMERGENCY_PERMISSION);
+        } else {
+
+            SOSHibernateSession sosHibernateSession = null;
+            try {
+                setOfRoles = new HashSet<String>();
+
+                sosHibernateSession = Globals.createSosHibernateStatelessConnection("SOSSecurityDBConfiguration");
+                IamAccountDBLayer iamAccountDbLayer = new IamAccountDBLayer(sosHibernateSession);
+                List<DBItemIamPermissionWithName> listOfRoles = iamAccountDbLayer.getListOfRolesForAccountName(accountName, identityServiceId
+                        .getIdentityServiceId());
+                for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfRoles) {
+                    setOfRoles.add(dbItemSOSPermissionWithName.getRoleName());
+                }
+                List<DBItemIamPermissionWithName> listOfPermissions = iamAccountDbLayer.getListOfPermissionsFromRoleNames(setOfRoles, accountName,
+                        identityServiceId.getIdentityServiceId());
+                mapOfFolderPermissions = new HashMap<String, List<String>>();
+                setOfAccountPermissions = new HashSet<String>();
+                for (DBItemIamPermissionWithName dbItemSOSPermissionWithName : listOfPermissions) {
+                    if (dbItemSOSPermissionWithName.getAccountPermission() != null && !dbItemSOSPermissionWithName.getAccountPermission().isEmpty()) {
+                        setOfAccountPermissions.add(dbItemSOSPermissionWithName.getAccountPermission());
+                    }
+                    if (dbItemSOSPermissionWithName.getFolderPermission() != null && !dbItemSOSPermissionWithName.getFolderPermission().isEmpty()) {
+                        if (mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()) == null) {
+                            mapOfFolderPermissions.put(dbItemSOSPermissionWithName.getRoleName(), new ArrayList<String>());
+                        }
+                        mapOfFolderPermissions.get(dbItemSOSPermissionWithName.getRoleName()).add(dbItemSOSPermissionWithName.getFolderPermission());
+                    }
+                }
+
+            } finally {
+                Globals.disconnect(sosHibernateSession);
+            }
         }
     }
- 
+
     @Override
     public Map<String, List<String>> getMapOfFolderPermissions() {
         return mapOfFolderPermissions;

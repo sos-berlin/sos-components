@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sos.commons.httpclient.SOSRestApiClient;
 import com.sos.commons.sign.keys.certificate.CertificateUtils;
-import com.sos.commons.sign.keys.keyStore.KeyStoreType;
+import com.sos.commons.sign.keys.keyStore.KeystoreType;
 import com.sos.commons.sign.keys.keyStore.KeyStoreUtil;
 import com.sos.jitl.jobs.common.JobApiExecutor;
 import com.typesafe.config.Config;
@@ -35,7 +35,7 @@ public class HttpClientTests {
     @Ignore
     @Test
     public void testReadKeyStore() throws Exception {
-        KeyStore keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeyStoreType.PKCS12);
+        KeyStore keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeystoreType.PKCS12);
         assertNotNull(keyStore);
     }
 
@@ -45,7 +45,7 @@ public class HttpClientTests {
 
         KeyStore keyStore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeystoreType.PKCS12);
             X509Certificate cert = KeyStoreUtil.getX509CertificateFromKeyStore(keyStore, ALIAS_SP);
             assertNotNull(cert);
             CertificateUtils.logCertificateInfo(cert);
@@ -59,7 +59,7 @@ public class HttpClientTests {
     public void testCheckLicenceValid() {
         KeyStore keyStore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore(CERTSTORE_PATH, KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore(CERTSTORE_PATH, KeystoreType.PKCS12);
             X509Certificate cert = KeyStoreUtil.getX509CertificateFromKeyStore(keyStore, ALIAS_ICLOUD);
             assertNotNull(cert);
             // not public API
@@ -75,7 +75,7 @@ public class HttpClientTests {
     public void testCheckLicenceInvalid() {
         KeyStore keyStore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeystoreType.PKCS12);
             X509Certificate cert = KeyStoreUtil.getX509CertificateFromKeyStore(keyStore, ALIAS_SP);
             assertNotNull(cert);
             // not public API
@@ -92,8 +92,8 @@ public class HttpClientTests {
         KeyStore keyStore = null;
         KeyStore truststore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore("C:/temp/laptop-7rsacscv.p12", KeyStoreType.PKCS12);
-            truststore = KeyStoreUtil.readTrustStore("C:/temp/https-truststore.p12", KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore("C:/temp/laptop-7rsacscv.p12", KeystoreType.PKCS12);
+            truststore = KeyStoreUtil.readTrustStore("C:/temp/https-truststore.p12", KeystoreType.PKCS12);
             SOSRestApiClient restApiClient = new SOSRestApiClient();
             // restApiClient.setAutoCloseHttpClient(true);
             restApiClient.setSSLContext(keyStore, "".toCharArray(), truststore);
@@ -118,7 +118,7 @@ public class HttpClientTests {
     public void testReadCertificateChainFromKeyStore() {
         KeyStore keyStore = null;
         try {
-            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeyStoreType.PKCS12);
+            keyStore = KeyStoreUtil.readKeyStore(KEYSTORE_PATH, KeystoreType.PKCS12);
             Certificate[] certificateChain = keyStore.getCertificateChain(ALIAS_SP);
             if (certificateChain != null) {
                 int count = 1;

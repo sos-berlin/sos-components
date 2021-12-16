@@ -79,7 +79,7 @@ public class SOSInternAuthSession implements ISOSSession {
                 initSessionTimeout = Long.valueOf(Globals.sosCockpitProperties.getProperty("iam_session_timeout"));
             }
         } catch (NumberFormatException e) {
-            initSessionTimeout = 90000L;
+            initSessionTimeout = 300000L;
         }
 
     }

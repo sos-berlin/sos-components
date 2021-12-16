@@ -52,7 +52,6 @@ public class SOSAuthCurrentAccount {
     private static final Logger LOGGER = LoggerFactory.getLogger(SOSAuthCurrentAccount.class);
     private ISOSAuthSubject currentSubject;
     private String accountName;
-    private String password;
     private String accessToken;
     private SOSIdentityService identityServices;
     private Map<String, String> identyServiceAccessToken;
@@ -64,18 +63,16 @@ public class SOSAuthCurrentAccount {
     private Permissions sosPermissionJocCockpitControllers;
     private SOSAuthFolderPermissions sosShiroFolderPermissions;
 
-    public SOSAuthCurrentAccount(String accountName, String password) {
+    public SOSAuthCurrentAccount(String accountName) {
         super();
         initFolders();
         this.accountName = accountName;
-        this.password = password;
     }
 
-    public SOSAuthCurrentAccount(String accountName, String password, String authorization) {
+    public SOSAuthCurrentAccount(String accountName, String authorization) {
         super();
         this.accountName = accountName;
         this.authorization = authorization;
-        this.password = password;
     }
 
     public ControllerPermissions getControllerPermissions(String controllerId) {
@@ -145,9 +142,7 @@ public class SOSAuthCurrentAccount {
         return accountName;
     }
 
-    public String getPassword() {
-        return password;
-    }
+ 
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;

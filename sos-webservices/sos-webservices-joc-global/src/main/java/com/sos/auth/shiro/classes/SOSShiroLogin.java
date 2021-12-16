@@ -182,7 +182,7 @@ public class SOSShiroLogin implements ISOSLogin {
     }
 
     @Override
-    public void setIdentityServiceId(SOSIdentityService value) {
+    public void setIdentityService(SOSIdentityService value) {
         // not needed for shiro
     }
 

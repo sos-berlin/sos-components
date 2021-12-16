@@ -188,6 +188,10 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     checkRequiredParameter("objectType", configuration.getObjectType());
                     checkRequiredParameter("name", configuration.getName());
                 }
+            case IAM:
+                dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
+                account = ConfigurationGlobals.ACCOUNT;
+          
             case IGNORELIST:
             case PROFILE:
             case SETTING:
@@ -198,7 +202,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     filter.setControllerId(dbControllerId);
                     filter.setName(configuration.getName());
                     filter.setObjectType(configuration.getObjectType());
-                    List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurations(filter, 1);
+                    List<DBItemJocConfiguration> result = jocConfigurationDBLayer.getJocConfigurationList(filter, 1);
                     if (result != null && !result.isEmpty()) {
                         dbItem = result.get(0);
                         configuration.setId(dbItem.getId());
@@ -290,6 +294,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
+            case IAM:
             case GLOBALS:
 //                if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
 //                    return accessDeniedResponse();
