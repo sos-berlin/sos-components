@@ -255,13 +255,11 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                         b.put(agentId, Collections.singleton(agentIDWithAgentName.get(agentId)));
                     }
                 }
-                if (b != null) {
-                    for (Map.Entry<String, Set<String>> entry : b.entrySet()) {
-                        if (a != null && !a.isEmpty()) {
-                            a.put(entry.getKey(), entry.getValue());
-                        } else {
-                            a = Collections.singletonMap(entry.getKey(), entry.getValue());
-                        }
+                if (!b.isEmpty()) {
+                    if (a != null && !a.isEmpty()) {
+                        a.putAll(b);
+                    } else {
+                        a = b;
                     }
                 }
                 agentIdsWithAliasesByControllerIds.put(K, a);

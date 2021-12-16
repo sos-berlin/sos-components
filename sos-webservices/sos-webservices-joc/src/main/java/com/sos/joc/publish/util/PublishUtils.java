@@ -1950,7 +1950,7 @@ public abstract class PublishUtils {
         workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
             Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
             job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
-                    .getControllerId())).findFirst().get().getAgentId());
+                    .getControllerId())).findAny().get().getAgentId());
         });
     }
 
@@ -1962,7 +1962,7 @@ public abstract class PublishUtils {
             workflow.getJobs().getAdditionalProperties().keySet().stream().forEach(jobname -> {
                 Job job = workflow.getJobs().getAdditionalProperties().get(jobname);
                 job.setAgentPath(filteredUpdateables.stream().filter(item -> item.getJobName().equals(jobname) && controllerId.equals(item
-                        .getControllerId())).findFirst().get().getAgentId());
+                        .getControllerId())).findAny().get().getAgentId());
             });
         }
     }
@@ -1972,7 +1972,7 @@ public abstract class PublishUtils {
         Set<UpdateableFileOrderSourceAgentName> filteredUpdateables = updateableFOSAgentNames.stream().filter(item -> item.getFileOrderSourceId()
                 .equals(fileOrderSource.getPath())).collect(Collectors.toSet());
         if (!filteredUpdateables.isEmpty()) {
-            fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findFirst().get()
+            fileOrderSource.setAgentPath(filteredUpdateables.stream().filter(item -> controllerId.equals(item.getControllerId())).findAny().get()
                     .getAgentId());
         }
     }
