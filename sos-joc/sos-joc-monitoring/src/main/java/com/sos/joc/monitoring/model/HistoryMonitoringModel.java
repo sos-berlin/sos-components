@@ -1,6 +1,8 @@
 package com.sos.joc.monitoring.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -472,7 +474,7 @@ public class HistoryMonitoringModel implements Serializable {
             if (!dbLayer.updateOrderOnOrderStep(item.getHistoryOrderId(), item.getHistoryId())) {
                 insert(hosb.getEventType(), hosb.getOrderId(), item.getHistoryOrderId());
             }
-            if (hosb.getWarnIfLonger() != null) {
+            if (!SOSString.isEmpty(hosb.getWarnIfLonger())) {
                 longerThan.put(hosb.getHistoryId(), hosb);
             }
         } catch (SOSHibernateObjectOperationException e) {
@@ -504,8 +506,8 @@ public class HistoryMonitoringModel implements Serializable {
 
     private HistoryOrderStepResultWarn analyzeLongerThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate, Long historyId,
             boolean remove) {
-        double configured = getConfiguredSeconds(hosb, definition);
-        if (configured == 0) {
+        Long expected = getExpectedSeconds(JobWarning.LONGER_THAN, hosb, definition);
+        if (expected == null) {
             return null;
         }
 
@@ -513,10 +515,10 @@ public class HistoryMonitoringModel implements Serializable {
             longerThan.remove(historyId);
         }
 
-        long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff > configured) {
-            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected duration of %s", SOSDate
-                    .getDuration(configured)));
+        Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        if (diff > expected) {
+            return new HistoryOrderStepResultWarn(JobWarning.LONGER_THAN, String.format("Job runs longer than the expected %s",
+                    getExpectedDurationMessage(definition, expected)));
         } else {
             if (!remove) {// remove old entries
                 if (diff > MAX_LONGER_THAN_SECONDS) {
@@ -528,32 +530,63 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private HistoryOrderStepResultWarn analyzeShorterThan(HistoryOrderStepBean hosb, String definition, Date startTime, Date endDate) {
-        double configured = getConfiguredSeconds(hosb, definition);
-        if (configured == 0) {
+        Long expected = getExpectedSeconds(JobWarning.SHORTER_THAN, hosb, definition);
+        if (expected == null) {
             return null;
         }
-        long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
-        if (diff < configured) {
-            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected duration of %s", SOSDate
-                    .getDuration(configured)));
+        Long diff = SOSDate.getSeconds(endDate) - SOSDate.getSeconds(startTime);
+        if (diff < expected) {
+            return new HistoryOrderStepResultWarn(JobWarning.SHORTER_THAN, String.format("Job runs shorter than the expected %s",
+                    getExpectedDurationMessage(definition, expected)));
         }
         return null;
     }
 
-    private double getConfiguredSeconds(HistoryOrderStepBean hosb, String definition) {
-        if (SOSString.isEmpty(definition)) {
-            return 0;
+    private String getExpectedDurationMessage(String definition, Long expected) {
+        if (isPercentage(definition)) {
+            return String.format("avg duration(%s) of %s", definition, SOSDate.getDuration(expected));
+        } else if (isTime(definition)) {
+            return String.format("duration(%s) of %s", definition, SOSDate.getDuration(expected));
         }
-        double seconds = 0;
-        if (definition.endsWith("%")) {
+        return String.format("duration of %s", SOSDate.getDuration(expected));
+    }
+
+    private Long getExpectedSeconds(JobWarning type, HistoryOrderStepBean hosb, String definition) {
+        if (SOSString.isEmpty(definition)) {
+            return null;
+        }
+        Long seconds = null;
+        if (isPercentage(definition)) {
             int percentage = Integer.parseInt(definition.substring(0, definition.length() - 1));
-            // TODO read from the database
-            int avg = 0;
-            seconds = percentage / 100 * avg;
+            try {
+                Long avg = dbLayer.getJobAvg(hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName());
+                if (avg != null) {// job found
+                    seconds = new BigDecimal(percentage / 100 * avg).setScale(0, RoundingMode.HALF_UP).longValue();
+                }
+            } catch (SOSHibernateException e) {
+                LOGGER.error(String.format("[%s][%s][%s][workflowPath=%s,job=%s][%s definition=%s][error on get jobAvg]%s", serviceIdentifier,
+                        IDENTIFIER, hosb.getControllerId(), hosb.getWorkflowPath(), hosb.getJobName(), type, definition, e.toString()), e);
+            }
+        } else if (isSeconds(definition)) {
+            seconds = Long.parseLong(definition.substring(0, definition.length() - 1));
+        } else if (isTime(definition)) {
+            seconds = SOSDate.getTimeAsSeconds(definition);
         } else {
-            seconds = Double.parseDouble(definition);
+            seconds = Long.parseLong(definition);
         }
         return seconds;
+    }
+
+    private boolean isPercentage(String definition) {
+        return definition.endsWith("%");
+    }
+
+    private boolean isSeconds(String definition) {
+        return definition.toLowerCase().endsWith("s");
+    }
+
+    private boolean isTime(String definition) {
+        return definition.contains(":");
     }
 
     private boolean insert(EventType eventType, String orderId, Long historyId) {
@@ -595,29 +628,54 @@ public class HistoryMonitoringModel implements Serializable {
     }
 
     private void deserialize() {
+        int payloadsSize = 0;
+        int longerThanSize = 0;
+        DBItemJocVariable var = null;
         try {
-            DBItemJocVariable var = getJocVariable();
+            var = getJocVariable();
             if (var == null) {
                 return;
             }
-            SerializedResult sr = new SOSSerializer<SerializedResult>().deserializeCompressed(var.getBinaryValue());
-            int payloadsSize = 0;
-            int longerThanSize = 0;
-            if (sr.getPayloads() != null) {
-                payloadsSize = sr.getPayloads().size();
-                // payloads on start is maybe not empty (because event subscription)
-                payloads.addAll(sr.getPayloads());
-            }
-            if (sr.getLongerThan() != null) {
-                longerThanSize = sr.getLongerThan().size();
-                // longerThan on start is empty ... ?
-                longerThan.putAll(sr.getLongerThan());
-            }
-            LOGGER.info(String.format("[%s][%s][deserialized]payloads=%s,longerThan=%s", serviceIdentifier, IDENTIFIER, payloadsSize,
-                    longerThanSize));
-
+            deserialize(var, payloadsSize, longerThanSize);
         } catch (Throwable e) {
-            LOGGER.error(e.toString(), e);
+            if (var == null) {
+                LOGGER.error(e.toString(), e);
+                return;
+            }
+            LOGGER.warn(e.toString(), e);
+            try {
+                tryDeserializeVersion1Result(var, payloadsSize, longerThanSize);
+            } catch (Exception e1) {
+                LOGGER.error(e1.toString(), e1);
+            }
+        }
+        LOGGER.info(String.format("[%s][%s][deserialized]payloads=%s,longerThan=%s", serviceIdentifier, IDENTIFIER, payloadsSize, longerThanSize));
+    }
+
+    private void deserialize(DBItemJocVariable var, int payloadsSize, int longerThanSize) throws Exception {
+        SerializedResult sr = new SOSSerializer<SerializedResult>().deserializeCompressed(var.getBinaryValue());
+        if (sr.getPayloads() != null) {
+            payloadsSize = sr.getPayloads().size();
+            // payloads on start is maybe not empty (because event subscription)
+            payloads.addAll(sr.getPayloads());
+        }
+        if (sr.getLongerThan() != null) {
+            longerThanSize = sr.getLongerThan().size();
+            // longerThan on start is empty ... ?
+            longerThan.putAll(sr.getLongerThan());
+        }
+    }
+
+    // TODO deserialize problem because the SerializedResult(HistoryOrderStepBean) object was changed between JS7 versions ...
+    private void tryDeserializeVersion1Result(DBItemJocVariable var, int payloadsSize, int longerThanSize) throws Exception {
+        SerializedResult sr = new SOSSerializer<SerializedResult>().deserializeCompressed(var.getBinaryValue());
+        if (sr.getPayloads() != null) {
+            payloadsSize = sr.getPayloads().size();
+            payloads.addAll(sr.getPayloads());
+        }
+        if (sr.getLongerThan() != null) {
+            longerThanSize = sr.getLongerThan().size();
+            longerThan.putAll(sr.getLongerThan());
         }
     }
 

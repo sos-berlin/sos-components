@@ -7,6 +7,7 @@ import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.commons.hibernate.function.date.SOSHibernateSecondsDiff;
 import com.sos.commons.util.SOSString;
 import com.sos.history.JobWarning;
 import com.sos.inventory.model.deploy.DeployType;
@@ -408,6 +409,24 @@ public class DBLayerMonitoring extends DBLayer {
 
         getSession().save(item);
         return item;
+    }
+
+    public Long getJobAvg(String controllerId, String workflowPath, String jobName) throws SOSHibernateException {
+        StringBuilder hql = new StringBuilder("select ");
+        hql.append("round(");
+        hql.append("sum(").append(SOSHibernateSecondsDiff.getFunction("endTime", "startTime")).append(")/count(id)");
+        hql.append(",0) ");// ,0 precision only because of MSSQL
+        hql.append("from ").append(DBLayer.DBITEM_HISTORY_ORDER_STEPS).append(" ");
+        hql.append("where controllerId=:controllerId ");
+        hql.append("and workflowPath=:workflowPath ");
+        hql.append("and jobName=:jobName ");
+
+        // hibernate returns Long and not Double ...
+        Query<Long> query = getSession().createQuery(hql.toString());
+        query.setParameter("controllerId", controllerId);
+        query.setParameter("workflowPath", workflowPath);
+        query.setParameter("jobName", jobName);
+        return getSession().getSingleValue(query);
     }
 
     public DBItemMonitoringOrder convert(DBItemHistoryOrder history) {

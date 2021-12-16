@@ -1,5 +1,7 @@
 package com.sos.joc.monitoring.model;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -35,6 +37,23 @@ public class HistoryMonitoringModelTest {
         HistoryMonitoringModel model = new HistoryMonitoringModel();
         byte[] result = new SOSSerializer<SerializedResult>().serializeCompressed2bytes(model.new SerializedResult(payloads, longerThan));
         LOGGER.info("---bytes---:" + result);
+    }
+
+    @Ignore
+    @Test
+    public void testRound() throws Exception {
+        BigDecimal bg = new BigDecimal(1.1);
+        LOGGER.info("long=" + bg.longValue() + ", bg=" + bg);
+        bg = bg.setScale(0, RoundingMode.HALF_UP);
+        LOGGER.info("long=" + bg.longValue() + ", bg=" + bg);
+
+        LOGGER.info("----------------");
+
+        bg = new BigDecimal(1.8);
+        LOGGER.info("long=" + bg.longValue() + ", bg=" + bg);
+        bg = bg.setScale(0, RoundingMode.HALF_UP);
+        LOGGER.info("long=" + bg.longValue() + ", bg=" + bg);
+
     }
 
 }
