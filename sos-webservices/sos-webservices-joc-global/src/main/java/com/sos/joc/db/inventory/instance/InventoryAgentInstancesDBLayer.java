@@ -257,7 +257,11 @@ public class InventoryAgentInstancesDBLayer extends DBLayer {
                 }
                 if (b != null) {
                     for (Map.Entry<String, Set<String>> entry : b.entrySet()) {
-                        a.put(entry.getKey(), entry.getValue());
+                        if (a != null && !a.isEmpty()) {
+                            a.put(entry.getKey(), entry.getValue());
+                        } else {
+                            a = Collections.singletonMap(entry.getKey(), entry.getValue());
+                        }
                     }
                 }
                 agentIdsWithAliasesByControllerIds.put(K, a);
