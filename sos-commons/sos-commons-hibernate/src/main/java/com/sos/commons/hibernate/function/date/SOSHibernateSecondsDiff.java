@@ -24,7 +24,7 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
     }
 
     public static String getFunction(final String endTimeProperty, final String startTimeProperty) {
-        return new StringBuilder(NAME).append("('").append(endTimeProperty).append("',").append(startTimeProperty).append("')").toString();
+        return new StringBuilder(NAME).append("(").append(endTimeProperty).append(",").append(startTimeProperty).append(")").toString();
     }
 
     @SuppressWarnings("rawtypes")
@@ -37,15 +37,20 @@ public class SOSHibernateSecondsDiff extends StandardSQLFunction {
         String startTimeProperty = arguments.get(1).toString();
 
         Enum<SOSHibernateFactory.Dbms> dbms = this.factory.getDbms();
-
-        if (Dbms.PGSQL.equals(dbms)) {
-            return "EXTRACT(EPOCH FROM((" + endTimeProperty + ")-(" + startTimeProperty + ")))";
-        } else if (Dbms.H2.equals(dbms)) {// TODO check with MySQL mode
+        if (Dbms.MYSQL.equals(dbms)) {
+            return "(" + endTimeProperty + "-" + startTimeProperty + ")";
+        } else if (Dbms.MSSQL.equals(dbms)) {
+            return "DATEDIFF(SECOND," + startTimeProperty + "," + endTimeProperty + ")";
+        } else if (Dbms.ORACLE.equals(dbms)) {
+            return "ROUND(24*60*60*(" + endTimeProperty + "-" + startTimeProperty + "))";
+        } else if (Dbms.PGSQL.equals(dbms)) {
+            return "CAST(EXTRACT(EPOCH FROM(" + endTimeProperty + "-" + startTimeProperty + ")) AS INTEGER)";
+        } else if (Dbms.H2.equals(dbms)) {
             return "DATEDIFF(ss," + startTimeProperty + "," + endTimeProperty + ")";
         } else if (Dbms.SYBASE.equals(dbms)) {
             return "DATEDIFF(ss," + endTimeProperty + "," + startTimeProperty + ")";
         } else {
-            return "((" + endTimeProperty + ")-(" + startTimeProperty + "))";
+            return "(" + endTimeProperty + "-" + startTimeProperty + ")";
         }
     }
 
