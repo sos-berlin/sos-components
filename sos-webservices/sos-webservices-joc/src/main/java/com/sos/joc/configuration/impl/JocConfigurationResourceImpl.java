@@ -64,13 +64,13 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             /** check save specific required parameters */
             checkRequiredParameter("configurationType", configuration.getConfigurationType());
             checkRequiredParameter("configurationItem", configuration.getConfigurationItem());
-            
+
             String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_SAVE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
@@ -93,7 +93,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             }
             String oldConfiguration = null;
             boolean updateControllerCalendar = false;
-            
+
             switch (configuration.getConfigurationType()) {
             case GLOBALS:
                 // store only user settings without permissions
@@ -118,7 +118,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 dbItem.setAccount(ConfigurationGlobals.ACCOUNT);
                 dbItem.setShared(ConfigurationGlobals.SHARED);
                 dbItem.setObjectType(ConfigurationGlobals.OBJECT_TYPE == null ? null : ConfigurationGlobals.OBJECT_TYPE.name());
-                
+
                 if (!getJocPermissions(accessToken).getAdministration().getSettings().getManage()) {
                     // store only user settings without permissions
                     try {
@@ -160,14 +160,14 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                         if (!updateControllerCalendar) {
                             JsonReader rdr = Json.createReader(new StringReader(configuration.getConfigurationItem()));
                             JsonObject obj = rdr.readObject();
-                            
+
                             JsonObject oldDailyPlan = oldObj.get().getJsonObject(DefaultSections.dailyplan.name());
                             JsonObject curDailyPlan = obj.getJsonObject(DefaultSections.dailyplan.name());
                             if (curDailyPlan != null) {
                                 String oldTimeZone = oldDailyPlan == null || oldDailyPlan.getJsonObject("time_zone") == null ? "" : oldDailyPlan
                                         .getJsonObject("time_zone").getString("value", "");
-                                String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? ""
-                                        : oldDailyPlan.getJsonObject("period_begin").getString("value", "");
+                                String oldPeriodBegin = oldDailyPlan == null || oldDailyPlan.getJsonObject("period_begin") == null ? "" : oldDailyPlan
+                                        .getJsonObject("period_begin").getString("value", "");
                                 String curTimeZone = curDailyPlan.getJsonObject("time_zone") == null ? oldTimeZone : curDailyPlan.getJsonObject(
                                         "time_zone").getString("value", oldTimeZone);
                                 String curPeriodBegin = curDailyPlan.getJsonObject("period_begin") == null ? oldPeriodBegin : curDailyPlan
@@ -191,7 +191,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             case IAM:
                 dbControllerId = ConfigurationGlobals.CONTROLLER_ID;
                 account = ConfigurationGlobals.ACCOUNT;
-          
+
             case IGNORELIST:
             case PROFILE:
             case SETTING:
@@ -213,7 +213,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 if (!isNew) {
                     // owner doesn't need any permission
                     boolean owner = account.equals(dbItem.getAccount());
-                    
+
                     if (!owner) {
                         if (!getJocPermissions(accessToken).getAdministration().getCustomization().getManage()) {
                             return accessDeniedResponse();
@@ -225,7 +225,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     }
                     dbItem.setInstanceId(0L);
                     if (configuration.getName() != null && !configuration.getName().isEmpty()) {
-                        dbItem.setName(configuration.getName()); 
+                        dbItem.setName(configuration.getName());
                     }
                     dbItem.setShared(shouldBeShared);
                 } else {
@@ -239,21 +239,21 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 }
                 break;
             }
-            
+
             dbItem.setConfigurationType(configuration.getConfigurationType().name());
             dbItem.setConfigurationItem(configuration.getConfigurationItem());
             Date now = Date.from(Instant.now());
             dbItem.setModified(now);
-            
+
             if (isNew) {
                 connection.save(dbItem);
             } else {
                 connection.update(dbItem);
             }
-           
+
             if (oldConfiguration != null && configuration.getConfigurationType().equals(ConfigurationType.GLOBALS)) {
-                postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem(),
-                        accessToken, getJocError());
+                postGlobalsChangedEvent(configuration.getControllerId(), oldConfiguration, configuration.getConfigurationItem(), accessToken,
+                        getJocError());
             }
             if (updateControllerCalendar) {
                 DailyPlanCalendar.getInstance().updateDailyPlanCalendar(configuration.getControllerId(), accessToken, getJocError());
@@ -272,7 +272,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         }
 
     }
-    
+
     @Override
     public JOCDefaultResponse postReadConfiguration(String accessToken, byte[] body) {
         SOSHibernateSession connection = null;
@@ -282,23 +282,34 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_READ);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
-            /** get item from DB with the given id */
-            DBItemJocConfiguration dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
+            DBItemJocConfiguration dbItem = null;
+            if (configuration.getId() == 0) {
+                JocConfigurationFilter filter = new JocConfigurationFilter();
+                filter.setConfigurationType(configuration.getConfigurationType().value());
+                filter.setName(configuration.getName());
+                filter.setObjectType(configuration.getObjectType());
+                List<DBItemJocConfiguration> listOfdbItemJocConfiguration = jocConfigurationDBLayer.getJocConfigurations(filter, 0);
+                if (listOfdbItemJocConfiguration.size() == 1) {
+                    dbItem = listOfdbItemJocConfiguration.get(0);
+                }
+            } else {
+                dbItem = jocConfigurationDBLayer.getJocConfiguration(configuration.getId());
+            }
             if (dbItem == null) {
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
-            
+
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case IAM:
             case GLOBALS:
-//                if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-//                    return accessDeniedResponse();
-//                }
+                // if (!getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
+                // return accessDeniedResponse();
+                // }
                 break;
             default:
                 String account = getJobschedulerUser().getSOSAuthCurrentAccount().getAccountname();
@@ -310,16 +321,16 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                     }
                 }
             }
-            
+
             Configuration200 entity = new Configuration200();
             entity.setDeliveryDate(Date.from(Instant.now()));
             Configuration conf = setConfigurationValues(dbItem, configuration.getControllerId());
-            
+
             if (confType.equals(ConfigurationType.GLOBALS)) {
-                //user setting from conf.getConfigurationItem() are always sent independent the settings:view permission
+                // user setting from conf.getConfigurationItem() are always sent independent the settings:view permission
                 String confJson = conf.getConfigurationItem();
                 if (confJson != null && !getJocPermissions(accessToken).getAdministration().getSettings().getView()) {
-                    //delete all except user setting from conf.getConfigurationItem() 
+                    // delete all except user setting from conf.getConfigurationItem()
                     try {
                         JsonReader rdr = Json.createReader(new StringReader(confJson));
                         JsonObject obj = rdr.readObject();
@@ -357,7 +368,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_DELETE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
@@ -366,7 +377,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (dbItem == null) {
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
-            
+
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
@@ -415,7 +426,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (jocDefaultResponse != null) {
                 return jocDefaultResponse;
             }
-            
+
             connection = Globals.createSosHibernateStatelessConnection(API_CALL_SHARE);
             JocConfigurationDbLayer jocConfigurationDBLayer = new JocConfigurationDbLayer(connection);
 
@@ -424,7 +435,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (dbItem == null) {
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
-            
+
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
@@ -444,7 +455,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 connection.update(dbItem);
                 break;
             }
-            
+
             ConfigurationOk ok = new ConfigurationOk();
             ok.setId(dbItem.getId());
             ok.setDeliveryDate(Date.from(Instant.now()));
@@ -477,7 +488,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             if (dbItem == null) {
                 throw new DBMissingDataException(String.format("no entry found for configuration id: %d", configuration.getId()));
             }
-            
+
             ConfigurationType confType = ConfigurationType.fromValue(dbItem.getConfigurationType());
             switch (confType) {
             case GLOBALS:
@@ -511,13 +522,13 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
             Globals.disconnect(connection);
         }
     }
-    
+
     private Configuration getConfiguration(String action, String accessToken, byte[] body) throws SOSJsonSchemaException, IOException {
         initLogging(action, body, accessToken);
         JsonValidator.validateFailFast(body, Configuration.class);
         return Globals.objectMapper.readValue(body, Configuration.class);
     }
-    
+
     private void postGlobalsChangedEvent(String controllerId, String oldSettings, String currentSettings, String accessToken, JocError jocError) {
         try {
             GlobalSettings old = getSettings(oldSettings);
@@ -549,7 +560,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
                 ConfigurationGlobals configurations = new ConfigurationGlobals();
                 configurations.setConfigurationValues(current);
                 Globals.configurationGlobals = configurations;
-                
+
                 EventBus.getInstance().post(new ConfigurationGlobalsChanged(controllerId, ConfigurationType.GLOBALS.name(), sections));
             }
         } catch (Throwable e) {
@@ -584,7 +595,7 @@ public class JocConfigurationResourceImpl extends JOCResourceImpl implements IJo
         }
         return config;
     }
-    
+
     private static Optional<JsonObject> getOldJsonObject(String oldConfiguration) {
         Optional<JsonObject> oldObj = Optional.empty();
         if (oldConfiguration != null) {
