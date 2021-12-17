@@ -6,8 +6,8 @@ import java.util.List;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateException;
+import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.dailyplan.DBItemDailyPlanHistory;
 import com.sos.joc.db.joc.DBItemJocAuditLogDetails;
 import com.sos.joc.model.common.Folder;

@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate;
+package com.sos.joc.db.common;
 
 import java.util.Collection;
 import java.util.Objects;

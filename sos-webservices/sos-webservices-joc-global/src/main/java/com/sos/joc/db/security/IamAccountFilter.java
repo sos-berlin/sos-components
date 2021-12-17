@@ -1,7 +1,5 @@
 package com.sos.joc.db.security;
 
-import com.sos.commons.hibernate.SOSHibernateFilter;
-
 public class IamAccountFilter extends SOSHibernateFilter {
 
     private Long id;

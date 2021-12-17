@@ -1,6 +1,5 @@
 package com.sos.joc.db.security;
 
-import com.sos.commons.hibernate.SOSHibernateFilter;
 import com.sos.joc.model.security.IdentityServiceTypes;
 
 public class IamIdentityServiceFilter extends SOSHibernateFilter {

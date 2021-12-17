@@ -1,4 +1,4 @@
-package com.sos.commons.hibernate;
+package com.sos.joc.db.security;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

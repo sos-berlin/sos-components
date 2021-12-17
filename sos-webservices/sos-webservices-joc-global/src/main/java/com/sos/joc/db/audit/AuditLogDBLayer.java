@@ -14,10 +14,10 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 
 import com.sos.commons.hibernate.SOSHibernateSession;
-import com.sos.commons.hibernate.SearchStringHelper;
 import com.sos.commons.hibernate.exception.SOSHibernateInvalidSessionException;
 import com.sos.joc.classes.JobSchedulerDate;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.common.SearchStringHelper;
 import com.sos.joc.db.joc.DBItemJocAuditLog;
 import com.sos.joc.exceptions.DBConnectionRefusedException;
 import com.sos.joc.exceptions.DBInvalidDataException;
