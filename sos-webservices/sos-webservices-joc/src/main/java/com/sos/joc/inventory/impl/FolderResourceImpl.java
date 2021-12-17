@@ -1,10 +1,12 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -18,10 +20,13 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryTreeFolderItem;
 import com.sos.joc.exceptions.JocException;
 import com.sos.joc.inventory.resource.IFolderResource;
+import com.sos.joc.model.common.Folder;
 import com.sos.joc.model.inventory.common.ConfigurationType;
 import com.sos.joc.model.inventory.common.RequestFolder;
 import com.sos.joc.model.inventory.common.ResponseFolder;
@@ -98,9 +103,19 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
             
             boolean withSync = action.equals(IMPL_PATH) && in.getControllerId() != null && !in.getControllerId().isEmpty();
             JControllerState currentstate = null;
+            Map<Integer, Set<String>> deloyedNames = Collections.emptyMap();
             if (withSync) {
                 try {
+                    DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
+                    DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();
+                    deployedFilter.setControllerId(in.getControllerId());
+                    Folder fld = new Folder();
+                    fld.setFolder(in.getPath());
+                    fld.setRecursive(in.getRecursive());
+                    deployedFilter.setFolders(Collections.singleton(fld));
+                    deployedFilter.setObjectTypes(configTypes);
                     currentstate = Proxy.of(in.getControllerId()).currentState();
+                    deloyedNames = deployedDbLayer.getDeployedNames(deployedFilter);
                 } catch (Exception e) {
                     ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
                 }
@@ -114,7 +129,7 @@ public class FolderResourceImpl extends JOCResourceImpl implements IFolderResour
                     }
                     ConfigurationType type = config.getObjectType();
                     if (withSync) {
-                        config.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type)); 
+                        config.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type, deloyedNames.get(type.intValue()))); 
                     }
                     if (type != null) {
                         switch (type) {

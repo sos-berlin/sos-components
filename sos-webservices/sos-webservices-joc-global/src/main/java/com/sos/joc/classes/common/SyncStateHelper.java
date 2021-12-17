@@ -3,6 +3,7 @@ package com.sos.joc.classes.common;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.sos.controller.model.common.SyncState;
 import com.sos.controller.model.common.SyncStateText;
@@ -26,6 +27,7 @@ public class SyncStateHelper {
         {
             put(SyncStateText.IN_SYNC, 6);
             put(SyncStateText.NOT_IN_SYNC, 5);
+            put(SyncStateText.NOT_DEPLOYED, 4);
             put(SyncStateText.UNKNOWN, 2);
         }
     });
@@ -37,76 +39,96 @@ public class SyncStateHelper {
         return state;
     }
     
-    public static SyncState getState(JControllerState currentstate, WorkflowPath name) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (currentstate != null) {
-            stateText = getState(currentstate.repo().pathToWorkflow(name));
-        }
-        return SyncStateHelper.getState(stateText);
+//    public static SyncState getState(JControllerState currentstate, WorkflowPath name) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (currentstate != null) {
+//            stateText = getState(currentstate.repo().pathToWorkflow(name));
+//        }
+//        return SyncStateHelper.getState(stateText);
+//    }
+//    
+//    public static SyncState getState(JControllerState currentstate, BoardPath name) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (currentstate != null) {
+//            stateText = getState(currentstate.pathToBoard(name));
+//        }
+//        return SyncStateHelper.getState(stateText);
+//    }
+//    
+//    public static SyncState getState(JControllerState currentstate, LockPath name) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (currentstate != null) {
+//            stateText = getState(currentstate.pathToLock(name));
+//        }
+//        return SyncStateHelper.getState(stateText);
+//    }
+//    
+//    public static SyncState getState(JControllerState currentstate, JobResourcePath name) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (currentstate != null) {
+//            stateText = getState(currentstate.pathToJobResource(name));
+//        }
+//        return SyncStateHelper.getState(stateText);
+//    }
+//    
+//    public static SyncState getState(JControllerState currentstate, OrderWatchPath name) {
+//        SyncStateText stateText = SyncStateText.UNKNOWN;
+//        if (currentstate != null) {
+//            stateText = getState(currentstate.pathToFileWatch(name));
+//        }
+//        return SyncStateHelper.getState(stateText);
+//    }
+    
+    public static SyncState getState(JControllerState currentstate, String name, Integer type, Set<String> deployedNames) {
+        return getState(currentstate, name, ConfigurationType.fromValue(type), deployedNames);
     }
     
-    public static SyncState getState(JControllerState currentstate, BoardPath name) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (currentstate != null) {
-            stateText = getState(currentstate.pathToBoard(name));
-        }
-        return SyncStateHelper.getState(stateText);
-    }
-    
-    public static SyncState getState(JControllerState currentstate, LockPath name) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (currentstate != null) {
-            stateText = getState(currentstate.pathToLock(name));
-        }
-        return SyncStateHelper.getState(stateText);
-    }
-    
-    public static SyncState getState(JControllerState currentstate, JobResourcePath name) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (currentstate != null) {
-            stateText = getState(currentstate.pathToJobResource(name));
-        }
-        return SyncStateHelper.getState(stateText);
-    }
-    
-    public static SyncState getState(JControllerState currentstate, OrderWatchPath name) {
-        SyncStateText stateText = SyncStateText.UNKNOWN;
-        if (currentstate != null) {
-            stateText = getState(currentstate.pathToFileWatch(name));
-        }
-        return SyncStateHelper.getState(stateText);
-    }
-    
-    public static SyncState getState(JControllerState currentstate, String name, Integer type) {
-        return getState(currentstate, name, ConfigurationType.fromValue(type));
-    }
-    
-    public static SyncState getState(JControllerState currentstate, String name, ConfigurationType type) {
+    public static SyncState getState(JControllerState currentstate, String name, ConfigurationType type, Set<String> deployedNames) {
         SyncStateText stateText = SyncStateText.UNKNOWN;
         switch (type) {
         case WORKFLOW:
-            if (currentstate != null) {
-                stateText = getState(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
+            if (deployedNames == null || !deployedNames.contains(name)) {
+                stateText = SyncStateText.NOT_DEPLOYED;
+            } else {
+                if (currentstate != null) {
+                    stateText = getState(currentstate.repo().pathToWorkflow(WorkflowPath.of(name)));
+                }
             }
             break;
         case JOBRESOURCE:
-            if (currentstate != null) {
-                stateText = getState(currentstate.pathToJobResource(JobResourcePath.of(name)));
+            if (deployedNames == null || !deployedNames.contains(name)) {
+                stateText = SyncStateText.NOT_DEPLOYED;
+            } else {
+                if (currentstate != null) {
+                    stateText = getState(currentstate.pathToJobResource(JobResourcePath.of(name)));
+                }
             }
             break;
         case LOCK:
-            if (currentstate != null) {
-                stateText = getState(currentstate.pathToLock(LockPath.of(name)));
+            if (deployedNames == null || !deployedNames.contains(name)) {
+                stateText = SyncStateText.NOT_DEPLOYED;
+            } else {
+                if (currentstate != null) {
+                    stateText = getState(currentstate.pathToLock(LockPath.of(name)));
+                }
             }
             break;
         case FILEORDERSOURCE:
-            if (currentstate != null) {
-                stateText = getState(currentstate.pathToFileWatch(OrderWatchPath.of(name)));
+            if (deployedNames == null || !deployedNames.contains(name)) {
+                stateText = SyncStateText.NOT_DEPLOYED;
+            } else {
+                if (currentstate != null) {
+                    stateText = getState(currentstate.pathToFileWatch(OrderWatchPath.of(name)));
+                }
             }
             break;
         case NOTICEBOARD:
-            if (currentstate != null) {
-                stateText = getState(currentstate.pathToBoard(BoardPath.of(name)));
+            if (deployedNames == null || !deployedNames.contains(name)) {
+                stateText = SyncStateText.NOT_DEPLOYED;
+            } else {
+                if (currentstate != null) {
+                    stateText = getState(currentstate.pathToBoard(BoardPath.of(name)));
+                }
             }
             break;
         default:

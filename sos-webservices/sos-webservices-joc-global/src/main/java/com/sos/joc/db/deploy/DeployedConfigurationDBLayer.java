@@ -28,6 +28,7 @@ import com.sos.inventory.model.deploy.DeployType;
 import com.sos.joc.Globals;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.db.DBLayer;
+import com.sos.joc.db.deploy.items.Deployed;
 import com.sos.joc.db.deploy.items.DeployedContent;
 import com.sos.joc.db.deploy.items.NumOfDeployment;
 import com.sos.joc.db.inventory.items.InventoryNamePath;
@@ -222,6 +223,42 @@ public class DeployedConfigurationDBLayer {
                     DBLayer.DBITEM_DEP_HISTORY).append(getWhereForDepHistory(filter));
             Query<DeployedContent> query = createQuery(hql.toString(), filter);
             return session.getResultList(query);
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+    
+    public Map<Integer, Set<String>> getDeployedNames(DeployedConfigurationFilter filter) throws DBConnectionRefusedException,
+            DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select new ").append(Deployed.class.getName());
+            hql.append("(name, type) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS).append(getWhereForDepConfiguration(filter));
+            Query<Deployed> query = createQuery(hql.toString(), filter);
+            List<Deployed> result = session.getResultList(query);
+            if (result == null || result.isEmpty()) {
+                return Collections.emptyMap();
+            } else {
+                return result.stream().collect(Collectors.groupingBy(Deployed::getObjectType, Collectors.mapping(Deployed::getName, Collectors
+                        .toSet())));
+            }
+        } catch (SOSHibernateInvalidSessionException ex) {
+            throw new DBConnectionRefusedException(ex);
+        } catch (Exception ex) {
+            throw new DBInvalidDataException(ex);
+        }
+    }
+
+    public boolean isDeployed(String controllerId, String name, Integer type) throws DBConnectionRefusedException, DBInvalidDataException {
+        try {
+            StringBuilder hql = new StringBuilder("select count(id) from ").append(DBLayer.DBITEM_DEP_CONFIGURATIONS);
+            hql.append(" where controllerId = :controllerId and name = :name and type = :type");
+            Query<Long> query = session.createQuery(hql);
+            query.setParameter("controllerId", controllerId);
+            query.setParameter("name", name);
+            query.setParameter("type", type);
+            return session.getSingleResult(query) > 0;
         } catch (SOSHibernateInvalidSessionException ex) {
             throw new DBConnectionRefusedException(ex);
         } catch (Exception ex) {

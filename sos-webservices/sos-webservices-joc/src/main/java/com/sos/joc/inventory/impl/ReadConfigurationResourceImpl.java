@@ -1,6 +1,7 @@
 package com.sos.joc.inventory.impl;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,7 @@ import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.inventory.JsonSerializer;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.DBItemInventoryConfigurationTrash;
 import com.sos.joc.db.inventory.InventoryDBLayer;
@@ -119,13 +121,18 @@ public class ReadConfigurationResourceImpl extends JOCResourceImpl implements IR
             if (JocInventory.isDeployable(type)) {
                 
                 if (in.getControllerId() != null && !in.getControllerId().isEmpty()) {
-                    JControllerState currentstate = null;
-                    try {
-                        currentstate = Proxy.of(in.getControllerId()).currentState();
-                    } catch (Exception e) {
-                        ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+                    DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
+                    if (deployedDbLayer.isDeployed(in.getControllerId(), config.getName(), config.getType())) {
+                        JControllerState currentstate = null;
+                        try {
+                            currentstate = Proxy.of(in.getControllerId()).currentState();
+                        } catch (Exception e) {
+                            ProblemHelper.postExceptionEventIfExist(Either.left(e), null, getJocError(), null);
+                        }
+                        item.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type, Collections.singleton(config.getName())));
+                    } else {
+                        item.setSyncState(SyncStateHelper.getState(SyncStateText.NOT_DEPLOYED));
                     }
-                    item.setSyncState(SyncStateHelper.getState(currentstate, config.getName(), type));
                 }
                 
                 item.setReleased(false);

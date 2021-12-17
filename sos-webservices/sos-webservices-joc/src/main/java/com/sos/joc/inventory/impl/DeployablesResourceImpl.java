@@ -31,6 +31,8 @@ import com.sos.joc.classes.ProblemHelper;
 import com.sos.joc.classes.common.SyncStateHelper;
 import com.sos.joc.classes.inventory.JocInventory;
 import com.sos.joc.classes.proxy.Proxy;
+import com.sos.joc.db.deploy.DeployedConfigurationDBLayer;
+import com.sos.joc.db.deploy.DeployedConfigurationFilter;
 import com.sos.joc.db.inventory.DBItemInventoryConfiguration;
 import com.sos.joc.db.inventory.InventoryDBLayer;
 import com.sos.joc.db.inventory.items.InventoryDeploymentItem;
@@ -145,7 +147,9 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             final boolean withSync = in.getControllerId() != null && !in.getControllerId().isEmpty();
             final JControllerState currentstate = getControllerState(in.getControllerId());
             
-            
+            Map<Integer, Set<String>> deployedPaths = getDeployedInventoryPaths(in.getControllerId(), in.getFolder(), in.getRecursive(),
+                    deployableTypes, session);
+
             if (withTree) {
                 final Set<String> notPermittedParentFolders = folderPermissions.getNotPermittedParentFolders().getOrDefault("", Collections
                         .emptySet());
@@ -153,7 +157,7 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                         .getObjectType()));
                 if (withSync) {
                     deployablesStream = deployablesStream.peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item.getObjectName(),
-                            item.getObjectType())));
+                            item.getObjectType(), deployedPaths.get(item.getObjectType().intValue()))));
                 }
                 final Map<String, TreeSet<ResponseDeployableTreeItem>> groupedDeployables = deployablesStream.collect(Collectors.groupingBy(
                         ResponseDeployableTreeItem::getFolder, Collectors.toCollection(() -> new TreeSet<>(comp))));
@@ -181,7 +185,8 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
                 result.setDeliveryDate(Date.from(Instant.now()));
                 if (withSync) {
                     result.setDeployables(deployables.stream().peek(item -> item.setSyncState(SyncStateHelper.getState(currentstate, item
-                            .getObjectName(), item.getObjectType()))).collect(Collectors.toCollection(() -> new TreeSet<>(comp))));
+                            .getObjectName(), item.getObjectType(), deployedPaths.get(item.getObjectType().intValue())))).collect(Collectors
+                                    .toCollection(() -> new TreeSet<>(comp))));
                 } else {
                     result.setDeployables(deployables);
                 }
@@ -378,6 +383,21 @@ public class DeployablesResourceImpl extends JOCResourceImpl implements IDeploya
             }
         }
         return null;
+    }
+    
+    private Map<Integer, Set<String>> getDeployedInventoryPaths(String controllerId, String folder, Boolean recursive, Set<Integer> types, SOSHibernateSession session) {
+        if (controllerId != null && !controllerId.isEmpty()) {
+            DeployedConfigurationDBLayer deployedDbLayer = new DeployedConfigurationDBLayer(session);
+            DeployedConfigurationFilter deployedFilter = new DeployedConfigurationFilter();
+            deployedFilter.setControllerId(controllerId);
+            Folder fld = new Folder();
+            fld.setFolder(folder);
+            fld.setRecursive(recursive);
+            deployedFilter.setFolders(Collections.singleton(fld));
+            deployedFilter.setObjectTypes(types);
+            return deployedDbLayer.getDeployedNames(deployedFilter);
+        }
+        return Collections.emptyMap();
     }
 
 }

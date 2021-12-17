@@ -10,6 +10,7 @@ public enum SyncStateText {
 
     IN_SYNC("IN_SYNC"),
     NOT_IN_SYNC("NOT_IN_SYNC"),
+    NOT_DEPLOYED("NOT_DEPLOYED"),
     UNKNOWN("UNKNOWN");
     private final String value;
     private final static Map<String, SyncStateText> CONSTANTS = new HashMap<String, SyncStateText>();
