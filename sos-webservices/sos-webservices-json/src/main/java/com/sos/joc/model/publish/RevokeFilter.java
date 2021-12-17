@@ -33,6 +33,11 @@ public class RevokeFilter {
      */
     @JsonProperty("controllerIds")
     private List<String> controllerIds = new ArrayList<String>();
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     private List<Config> deployConfigurations = new ArrayList<Config>();
     /**
@@ -64,11 +69,21 @@ public class RevokeFilter {
         this.controllerIds = controllerIds;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public List<Config> getDeployConfigurations() {
         return deployConfigurations;
     }
 
+    /**
+     * 
+     * (Required)
+     * 
+     */
     @JsonProperty("deployConfigurations")
     public void setDeployConfigurations(List<Config> deployConfigurations) {
         this.deployConfigurations = deployConfigurations;
